@@ -9,9 +9,10 @@ import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
-import { createActions, createNestedActionGraph, useMutateActions } from './index';
+import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from './index';
 import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
 import { type MenuAction, type MenuActionHandler } from '../defs';
+import { useMenuActions } from '../hooks';
 import translations from '../translations';
 
 faker.seed(1234);
@@ -24,7 +25,7 @@ export default {
 };
 
 const menuActions = createActions() as MenuAction[];
-const nestedMenuActions = createNestedActionGraph();
+const nestedMenuActions = createNestedActionsResolver();
 
 const handleAction = (action: MenuAction) => console.log('[on action]', action);
 
@@ -48,6 +49,17 @@ export const Toolbar = {
   render: () => {
     return (
       <MenuProvider onAction={handleAction as MenuActionHandler} {...nestedMenuActions}>
+        <ToolbarMenu />
+      </MenuProvider>
+    );
+  },
+};
+
+export const UseMenuActionsToolbar = {
+  render: () => {
+    const menu = useMenuActions(createNestedActions);
+    return (
+      <MenuProvider onAction={handleAction as MenuActionHandler} {...menu}>
         <ToolbarMenu />
       </MenuProvider>
     );

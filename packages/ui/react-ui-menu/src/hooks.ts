@@ -38,7 +38,11 @@ const edgesArrayToRecord = (edges: { source: string; target: string }[]): Record
   );
 };
 
-export const useMenuActions = (actionCreator: () => { nodes: NodeArg<any>[]; edges: Edge[] }) => {
+export type ActionGraphNodes = NodeArg<any>[];
+export type ActionGraphEdges = Edge[];
+export type ActionGraphProps = { nodes: ActionGraphNodes; edges: ActionGraphEdges };
+
+export const useMenuActions = (actionCreator: () => ActionGraphProps) => {
   const initialMenuGraphProps = actionCreator();
 
   const [graph] = useState(

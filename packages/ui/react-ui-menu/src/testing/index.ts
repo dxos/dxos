@@ -10,6 +10,7 @@ import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
 import { type MenuAction, type MenuItemGroup, type MenuItem } from '../defs';
+import { type ActionGraphProps } from '../hooks';
 
 export type CreateActionsParams = Partial<{
   type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
@@ -56,7 +57,21 @@ export const createActions = (params?: CreateActionsParams) => {
   );
 };
 
-export const createNestedActionGraph = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
+export const createNestedActions = () => {
+  const result: ActionGraphProps = { edges: [], nodes: [] };
+  const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
+  actionGroups.forEach((group) => {
+    const actions = createActions();
+    result.nodes.push(group, ...actions);
+    result.edges.push(
+      { source: 'root', target: group.id },
+      ...actions.map((action) => ({ source: group.id, target: action.id })),
+    );
+  });
+  return result;
+};
+
+export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
   const graph = new Graph();
   const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
   actionGroups.forEach((group) => {
