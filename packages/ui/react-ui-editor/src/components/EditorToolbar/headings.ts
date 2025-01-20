@@ -3,7 +3,7 @@
 //
 
 import { type NodeArg } from '@dxos/app-graph';
-import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { translationKey } from '../../translations';
@@ -16,7 +16,7 @@ const createHeadingGroupAction = (value: string) =>
       applyActiveIcon: true,
       selectCardinality: 'single',
       value,
-    } as ToolbarActionGroupProperties,
+    } as ToolbarMenuActionGroupProperties,
     'ph--text-h--regular',
   );
 

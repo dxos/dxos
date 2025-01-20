@@ -3,7 +3,7 @@
 //
 
 import { type NodeArg } from '@dxos/app-graph';
-import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { type PayloadType } from '../../extensions';
@@ -13,7 +13,7 @@ const createBlockGroupAction = (value: string) =>
     variant: 'toggleGroup',
     selectCardinality: 'single',
     value,
-  } as ToolbarActionGroupProperties);
+  } as ToolbarMenuActionGroupProperties);
 
 const createBlockActions = (value: string, blankLine?: boolean) =>
   Object.entries({

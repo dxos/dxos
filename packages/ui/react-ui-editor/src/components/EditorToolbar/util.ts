@@ -10,7 +10,7 @@ import { type Label, type ThemedClassName } from '@dxos/react-ui';
 import {
   type MenuSeparator,
   type MenuItemGroup,
-  type ToolbarActionGroupProperties,
+  type ToolbarMenuActionGroupProperties,
   type MenuActionProperties,
 } from '@dxos/react-ui-menu';
 
@@ -64,7 +64,7 @@ export const createEditorAction = (
 
 export const createEditorActionGroup = (
   id: string,
-  props: Omit<ToolbarActionGroupProperties, 'label' | 'icon'>,
+  props: Omit<ToolbarMenuActionGroupProperties, 'label' | 'icon'>,
   icon?: string,
 ) =>
   ({
@@ -74,7 +74,7 @@ export const createEditorActionGroup = (
       ...props,
       label: [`${id} label`, { ns: translationKey }],
       icon,
-    } as ToolbarActionGroupProperties,
+    } as ToolbarMenuActionGroupProperties,
     data: actionGroupSymbol,
   }) satisfies MenuItemGroup;
 
@@ -86,30 +86,3 @@ export const editorToolbarGap = {
 } satisfies MenuSeparator;
 
 export const editorToolbarSearch = createEditorAction({ type: 'search' }, 'ph--magnifying-glass--regular');
-
-export const edgesArrayToRecord = (edges: { source: string; target: string }[]): Record<string, string[]> => {
-  return Object.fromEntries(
-    Object.entries(
-      edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
-        if (!acc[source]) {
-          acc[source] = { inbound: [], outbound: [] };
-        }
-        if (!acc[target]) {
-          acc[target] = { inbound: [], outbound: [] };
-        }
-
-        const sourceEdges = acc[source];
-        if (!sourceEdges.outbound.includes(target)) {
-          sourceEdges.outbound.push(target);
-        }
-
-        const targetEdges = acc[target];
-        if (!targetEdges.inbound.includes(source)) {
-          targetEdges.inbound.push(source);
-        }
-
-        return acc;
-      }, {}),
-    ).map(([id, { outbound }]): [string, string[]] => [id, outbound]),
-  );
-};

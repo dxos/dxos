@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
-import { Graph, type NodeArg, type Node } from '@dxos/app-graph';
-import { Toolbar, type MenuItem, type MenuItemGroup, MenuProvider, type MenuActionHandler } from '@dxos/react-ui-menu';
+import { type NodeArg } from '@dxos/app-graph';
+import { ToolbarMenu, MenuProvider, type MenuActionHandler, useMenuGraph } from '@dxos/react-ui-menu';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
@@ -14,7 +13,6 @@ import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
 import { createLists } from './lists';
 import {
-  edgesArrayToRecord,
   type EditorToolbarFeatureFlags,
   editorToolbarGap,
   type EditorToolbarProps,
@@ -75,30 +73,9 @@ const createToolbar = ({
 // Root
 //
 const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps) => {
-  const initialToolbar = createToolbar(props);
+  const menuCreator = useCallback(() => createToolbar(props), [props]);
 
-  const [graph] = useState(
-    new Graph({ nodes: initialToolbar.nodes as Node[], edges: edgesArrayToRecord(initialToolbar.edges) }),
-  );
-
-  useSignalEffect(() => {
-    const toolbar = createToolbar(props);
-    // @ts-ignore
-    graph._addNodes(toolbar.nodes);
-    // @ts-ignore
-    graph._addEdges(toolbar.edges);
-  });
-
-  const resolveGroupItems = useCallback(
-    (sourceNode: MenuItemGroup = graph.root as MenuItemGroup) => {
-      if (graph) {
-        return (graph.nodes(sourceNode, { filter: (n): n is any => true }) || null) as MenuItem[] | null;
-      } else {
-        return null;
-      }
-    },
-    [graph],
-  );
+  const { resolveGroupItems } = useMenuGraph(menuCreator);
 
   return { resolveGroupItems, onAction: onAction as MenuActionHandler };
 };
@@ -107,7 +84,7 @@ export const EditorToolbar = ({ classNames, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
   return (
     <MenuProvider {...menuProps}>
-      <Toolbar classNames={classNames} />
+      <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );
 };

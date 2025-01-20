@@ -3,7 +3,7 @@
 //
 
 import { type NodeArg } from '@dxos/app-graph';
-import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { type Formatting, type PayloadType } from '../../extensions';
@@ -21,7 +21,7 @@ const createFormattingGroup = (formatting: Formatting) =>
     variant: 'toggleGroup',
     selectCardinality: 'multiple',
     value: Object.keys(formats).filter((key) => !!formatting[key as keyof Formatting]),
-  } as ToolbarActionGroupProperties);
+  } as ToolbarMenuActionGroupProperties);
 
 const createFormattingActions = (formatting: Formatting) =>
   Object.entries(formats).map(([type, icon]) =>
