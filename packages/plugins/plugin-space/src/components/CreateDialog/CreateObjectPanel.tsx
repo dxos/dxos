@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type ComponentProps, useCallback, useMemo, useState } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
-import { type SpaceId, type Space, isSpace, getSpace } from '@dxos/react-client/echo';
+import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent, InputHeader, SelectInput } from '@dxos/react-ui-form';
+import { Form, type InputComponent, InputHeader } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
@@ -29,6 +30,21 @@ export type CreateObjectPanelProps = {
     data: Record<string, any>;
   }) => MaybePromise<void>;
 };
+
+const createInputSurface =
+  (data?: Record<string, any>) =>
+  ({
+    prop,
+    schema,
+    inputProps,
+  }: {
+    prop: string;
+    schema: S.Schema<any>;
+    inputProps: ComponentProps<InputComponent<any>>;
+  }) => {
+    const composedData = useMemo(() => ({ prop, schema, ...data }), [prop, schema, data]);
+    return <Surface role='form-input' data={composedData} {...inputProps} />;
+  };
 
 export const CreateObjectPanel = ({
   schemas,
@@ -118,28 +134,11 @@ export const CreateObjectPanel = ({
     </SearchList.Root>
   );
 
+  const InputSurface = useMemo(() => createInputSurface({ target }), [target]);
+
   const form = useMemo(() => {
     // TODO(ZaymonFC): Move this default object creation schema somewhere?
     const schema = (metadata?.creationSchema ?? S.Struct({ name: S.optional(S.String) })) as S.Schema<any>;
-
-    const Custom: Partial<Record<string, InputComponent<any>>> = {
-      initialSchema: (props) => {
-        const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
-        // TODO(ZaymonFC): Make this reactive.
-        const schemata = space?.db.schemaRegistry.query().runSync();
-
-        return (
-          <SelectInput<any>
-            {...props}
-            property={props.property as any}
-            options={schemata.map((schema) => ({ value: schema.typename }))}
-          />
-        );
-      },
-    };
 
     return (
       <Form
@@ -148,7 +147,7 @@ export const CreateObjectPanel = ({
         schema={schema}
         testId='create-object-form'
         onSave={handleCreateObject}
-        Custom={Custom as any}
+        LookupComponent={InputSurface}
       />
     );
   }, [initialName, handleCreateObject, metadata]);

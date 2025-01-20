@@ -4,7 +4,7 @@
 
 import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
-import React, { useEffect, useMemo } from 'react';
+import React, { type ComponentProps, type ComponentType, useEffect, useMemo } from 'react';
 
 import { AST, type BaseObject, S, type PropertyKey, type FormatEnum } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
@@ -47,6 +47,11 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
+    LookupComponent?: ComponentType<{
+      prop: string;
+      schema: S.Schema<any>;
+      inputProps: ComponentProps<InputComponent<T>>;
+    }>;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
@@ -69,6 +74,7 @@ export const Form = <T extends BaseObject>({
   onSave,
   onCancel,
   Custom,
+  LookupComponent,
 }: FormProps<T>) => {
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
   const { canSave, values, errors, handleSave, ...inputProps } = useForm<T>({
@@ -108,6 +114,19 @@ export const Form = <T extends BaseObject>({
           const key = [...path, name];
           const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
+
+          const FoundComponent = LookupComponent ? (
+            <LookupComponent prop={name} schema={schema} inputProps={inputProps} />
+          ) : null;
+
+          if (FoundComponent !== null) {
+            console.log('FoundComponent', FoundComponent, { name });
+            return (
+              <div key={name} role='none' className={padding}>
+                {FoundComponent}
+              </div>
+            );
+          }
 
           // Get generic input.
           // TODO(ZaymonFC): We might need to switch this to using globs since we're now indexing into arrays.
