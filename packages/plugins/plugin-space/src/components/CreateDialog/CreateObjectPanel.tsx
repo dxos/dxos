@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
-import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
+import { type SpaceId, type Space, isSpace, getSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, type InputComponent, InputHeader, SelectInput } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -26,8 +26,7 @@ export type CreateObjectPanelProps = {
   onCreateObject?: (params: {
     schema: TypedObject;
     target: Space | CollectionType;
-    name?: string;
-    creationData?: Record<string, any>;
+    data: Record<string, any>;
   }) => MaybePromise<void>;
 };
 
@@ -51,11 +50,11 @@ export const CreateObjectPanel = ({
   const handleClearTarget = useCallback(() => setTarget(undefined), []);
 
   const handleCreateObject = useCallback(
-    async ({ name, ...creationData }: { name?: string } & Record<string, any>) => {
+    async (props: Record<string, any>) => {
       if (!schema || !target) {
         return;
       }
-      await onCreateObject?.({ schema, target, name, creationData });
+      await onCreateObject?.({ schema, target, data: props });
     },
     [onCreateObject, schema, target],
   );
@@ -120,20 +119,26 @@ export const CreateObjectPanel = ({
   );
 
   const form = useMemo(() => {
-    let schema = S.Struct({ name: S.optional(S.String) }) as S.Schema<any>;
-    if (metadata?.creationSchema) {
-      const creationSchema = metadata.creationSchema as S.Schema<any>;
-      schema = S.extend(schema, creationSchema);
-    }
+    // TODO(ZaymonFC): Move this default object creation schema somewhere?
+    const schema = (metadata?.creationSchema ?? S.Struct({ name: S.optional(S.String) })) as S.Schema<any>;
 
     const Custom: Partial<Record<string, InputComponent<any>>> = {
-      initialSchema: (props) => (
-        <SelectInput<any>
-          {...props}
-          property={props.property as any}
-          options={schemas.map((schema) => ({ value: schema.typename }))}
-        />
-      ),
+      initialSchema: (props) => {
+        const space = isSpace(target) ? target : getSpace(target);
+        if (!space) {
+          return null;
+        }
+        // TODO(ZaymonFC): Make this reactive.
+        const schemata = space?.db.schemaRegistry.query().runSync();
+
+        return (
+          <SelectInput<any>
+            {...props}
+            property={props.property as any}
+            options={schemata.map((schema) => ({ value: schema.typename }))}
+          />
+        );
+      },
     };
 
     return (

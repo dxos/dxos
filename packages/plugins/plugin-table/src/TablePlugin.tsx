@@ -11,7 +11,6 @@ import {
   Capabilities,
   oneOf,
 } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -22,7 +21,7 @@ import { IntentResolver, ReactSurface } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { TableAction } from './types';
+import { CreateTableSchema, type CreateTableType, TableAction } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -40,9 +39,9 @@ export const TablePlugin = () =>
           id: TableType.typename,
           metadata: {
             // TODO(ZaymonFC): This should be shared with the create schema!
-            creationSchema: S.Struct({ initialSchema: S.optional(S.String) }).pipe(S.mutable),
-            createObject: (props: { name?: string; schema?: string; space: Space }) =>
-              createIntent(TableAction.Create, props),
+            creationSchema: CreateTableSchema,
+            createObject: (props: CreateTableType, options: { space: Space }) =>
+              createIntent(TableAction.Create, { ...props, space: options.space }),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
