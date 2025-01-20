@@ -9,7 +9,7 @@ import { nonNullable } from '@dxos/util';
 import { Workflow } from './workflow';
 import { compile } from '../compiler';
 import { type GraphDiagnostic } from '../compiler';
-import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from '../nodes';
+import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode, registry } from '../nodes';
 import { type ComputeGraph, ComputeGraphModel, type Executable } from '../types';
 
 type WorkflowLoaderParams = {
@@ -80,9 +80,10 @@ export class WorkflowLoader {
           case NODE_OUTPUT:
             executable = outputNode;
             break;
-          // case NodeType.Gpt:
-          //   executable = registry.gpt;
-          //   break;
+          // TODO(burdon): Handle from default.
+          case 'gpt':
+            executable = registry.gpt;
+            break;
           default: {
             const graphModel = graphMap.get(node.type);
             if (graphModel) {

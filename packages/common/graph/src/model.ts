@@ -165,23 +165,31 @@ export class GraphModel<
   }
 
   removeNode(id: string): GraphModel<Node, Edge> {
-    const nodes = removeBy(this._graph.nodes, (node) => node.id === id);
-    const edges = removeBy(this._graph.edges, (edge) => edge.source === id || edge.target === id);
-    return new GraphModel<Node, Edge>({ nodes, edges });
+    const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
+    const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
+    return this.copy({ nodes, edges });
   }
 
   removeNodes(ids: string[]): GraphModel<Node, Edge> {
     const graphs = ids.map((id) => this.removeNode(id));
-    return new GraphModel<Node, Edge>({ nodes: [], edges: [] }).addGraphs(graphs);
+    return this.copy().addGraphs(graphs);
   }
 
   removeEdge(id: string): GraphModel<Node, Edge> {
-    const edges = removeBy(this._graph.edges, (edge) => edge.id === id);
-    return new GraphModel<Node, Edge>({ nodes: [], edges });
+    const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.id === id);
+    return this.copy({ nodes: [], edges });
   }
 
   removeEdges(ids: string[]): GraphModel<Node, Edge> {
     const graphs = ids.map((id) => this.removeEdge(id));
-    return new GraphModel<Node, Edge>({ nodes: [], edges: [] }).addGraphs(graphs);
+    return this.copy().addGraphs(graphs);
+  }
+
+  /**
+   * Shallow copy of provided graph.
+   * @param graph
+   */
+  copy(graph?: Partial<GraphModel<Node, Edge>>): GraphModel<Node, Edge> {
+    return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
   }
 }

@@ -23,10 +23,10 @@ void main() {
 
   // TODO(burdon): Vary curl over time.
   c = mix(0.2, 1.0, 0.5 + (sin(t * 0.5) * 0.5));
-
   float p = clamp(uPerturbation, 0.2, 1.0);
   if (p > 0.3) {
-    c = 0.3;
+    // TODO(burdon): Smooth ramp.
+    c = c / 2.0;
   } else {
     c = uCurl;
   }

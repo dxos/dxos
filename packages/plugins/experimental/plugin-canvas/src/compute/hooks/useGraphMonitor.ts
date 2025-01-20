@@ -18,9 +18,11 @@ import { type ComputeShape } from '../shapes';
  * Listens for changes to the graph and updates the compute graph.
  * @param graph Compute graph to update on change.
  */
+// TODO(burdon): Generalize into sync function.
 export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
   return useMemo<GraphMonitor>(() => {
     return {
+      // TODO(burdon): onDelete.
       onCreate: ({ node }) => {
         if (!graph) {
           return;
@@ -34,6 +36,7 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
         (node as GraphNode<ComputeShape>).data.node = computeNode.id;
       },
 
+      // TODO(burdon): onUnlink.
       onLink: ({ graph: model, edge }) => {
         if (graph) {
           // TODO(burdon): Check type.
@@ -50,6 +53,10 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
             data: { output, input },
           });
         }
+      },
+
+      onDelete: ({ subgraph }) => {
+        console.log(JSON.stringify(subgraph, null, 2));
       },
     };
   }, [graph]);

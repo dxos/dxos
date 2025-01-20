@@ -40,7 +40,8 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
 
         // Create audio analyser node and connect it to the audio source.
         analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 32;
+        analyserRef.current.fftSize = 64;
+        // console.log(analyserRef.current.frequencyBinCount, analyserRef.current.smoothingTimeConstant);
         dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
 
         // Connect.

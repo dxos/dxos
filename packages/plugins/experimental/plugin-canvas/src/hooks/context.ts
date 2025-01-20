@@ -31,6 +31,7 @@ export type EditorOptions = {
 export interface GraphMonitor {
   onCreate: (props: { graph: CanvasGraphModel; node: GraphNode<Shape> }) => void;
   onLink: (props: { graph: CanvasGraphModel; edge: GraphEdge<Connection> }) => void;
+  onDelete: (props: { graph: CanvasGraphModel; subgraph: CanvasGraphModel }) => void;
 }
 
 export type EditorContextType = {

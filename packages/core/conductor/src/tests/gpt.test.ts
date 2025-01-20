@@ -14,8 +14,8 @@ import { createEdge, TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
-const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
 const SKIP_AI_SERVICE_TESTS = true;
+const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
 
 describe('Gpt pipelines', () => {
   it.effect('text output', ({ expect }) =>
@@ -25,7 +25,6 @@ describe('Gpt pipelines', () => {
 
       yield* Effect.gen(function* () {
         const scope = yield* Scope.make();
-
         const computeResult = yield* runtime
           .runGraph('dxn:compute:gpt1', makeValueBag({ prompt: 'What is the meaning of life?' }))
           .pipe(Scope.extend(scope), Effect.withSpan('runGraph'));
@@ -99,7 +98,6 @@ describe('Gpt pipelines', () => {
         ]);
 
         yield* Effect.promise(() => p);
-
         yield* Scope.close(scope, Exit.void);
       }),
     );
@@ -112,7 +110,6 @@ describe('Gpt pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-
         const computeResult = yield* runtime
           .runGraph(
             'dxn:compute:gpt1',
@@ -131,11 +128,9 @@ describe('Gpt pipelines', () => {
           );
 
         const text: ValueEffect<string> = computeResult.values.text;
-
         const llmTextOutput = yield* text;
         console.log({ llmTextOutput });
         expect(llmTextOutput.length).toBeGreaterThan(10);
-
         yield* Scope.close(scope, Exit.void);
       }),
     );
@@ -148,7 +143,6 @@ describe('Gpt pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-
         const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
           yield* runtime
             .runGraph(

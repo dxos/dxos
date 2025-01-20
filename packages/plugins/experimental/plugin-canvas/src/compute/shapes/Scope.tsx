@@ -7,7 +7,7 @@ import React from 'react';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
-import { useAudioStream, Chaos, shaderOptions } from './common';
+import { useAudioStream, Chaos, shaderPresets } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
@@ -39,7 +39,7 @@ export const ScopeComponent = ({ shape }: ShapeComponentProps<ScopeShape>) => {
 
   return (
     <div className='flex w-full justify-center items-center bg-black'>
-      <Chaos active={active} getValue={getAverage} options={{ ...shaderOptions.heptapod, zoom: 1.2 }} />
+      <Chaos active={active} getValue={getAverage} options={{ ...shaderPresets.heptapod, zoom: 1.2 }} />
     </div>
   );
 };

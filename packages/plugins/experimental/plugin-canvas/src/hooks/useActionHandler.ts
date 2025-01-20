@@ -207,8 +207,8 @@ export const useActionHandler = () => {
             graph.clear();
             void actionHandler?.({ type: 'center' });
           } else {
-            ids?.forEach((id) => graph.removeNode(id));
-            ids?.forEach((id) => graph.removeEdge(id));
+            const subgraph = graph.copy().addGraph(graph.removeNodes(ids)).addGraph(graph.removeEdges(ids));
+            graphMonitor?.onDelete({ graph, subgraph });
           }
           selection.clear();
           repaint(); // TODO(burdon): Hack since graph doesn't trigger layout update.
@@ -228,8 +228,9 @@ export const useActionHandler = () => {
           return true;
         }
 
-        default:
+        default: {
           return false;
+        }
       }
     };
 
