@@ -72,6 +72,7 @@ const DropdownMenuToolbarItem = ({ group, items: propsItems }: ToolbarMenuAction
   const items = useMenuItems(group, propsItems);
   const icon =
     ((group.properties as any).applyActiveIcon &&
+      // TODO(thure): Handle other menu item types.
       (items as MenuAction[])?.find((item) => !!item.properties.checked)?.properties.icon) ||
     group.properties.icon;
   return (
@@ -121,9 +122,12 @@ const ToggleGroupToolbarItem = ({ group, items: propsItems }: ToolbarMenuActionG
     // TODO(thure): The type here is difficult to manage, what do?
     // @ts-ignore
     <NaturalToolbar.ToggleGroup type={selectCardinality} value={value}>
-      {(items as MenuAction[]).map((action) => (
-        <ToggleGroupItem key={action.id} action={action} />
-      ))}
+      {
+        // TODO(thure): Handle other menu item types.
+        (items as MenuAction[]).map((action) => (
+          <ToggleGroupItem key={action.id} action={action} />
+        ))
+      }
     </NaturalToolbar.ToggleGroup>
   );
 };
@@ -137,11 +141,14 @@ export const ToolbarMenu = ({ ...props }: ToolbarMenuProps) => {
           <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
         ) : isMenuGroup(item) ? (
           item.properties.variant === 'dropdownMenu' ? (
+            // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
             <DropdownMenuToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
           ) : (
+            // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
             <ToggleGroupToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
           )
         ) : (
+          // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
           <ActionToolbarItem key={item.id} action={item as MenuAction} />
         ),
       )}
