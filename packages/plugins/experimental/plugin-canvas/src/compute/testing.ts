@@ -66,11 +66,11 @@ const factory: Partial<Record<NodeType, (props: CreateShapeProps<Polygon>) => Co
 // TODO(burdon): Auto-layout.
 
 export const createTest0 = () => {
-  const model = ComputeGraphModel.create();
-  model.builder2.call((builder) => {
+  const model = new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>();
+  model.builder.call((builder) => {
     const a = createNode({ type: 'switch', pos: { x: -4, y: 0 } });
     const b = createNode({ type: 'beacon', pos: { x: 4, y: 0 } });
-    builder.link({ node: a }, { node: b });
+    // builder.link({ node: a }, { node: b });
   });
 
   return model;

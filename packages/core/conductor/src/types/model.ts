@@ -3,23 +3,32 @@
 //
 
 import { ObjectId } from '@dxos/echo-schema';
-import { createEdgeId, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
+import {
+  AbstractGraphBuilder,
+  AbstractGraphModel,
+  createEdgeId,
+  type Graph,
+  type GraphEdge,
+  type GraphNode,
+} from '@dxos/graph';
 import { create, makeRef } from '@dxos/live-object';
 
 import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT } from './types';
 
-/**
- * Builder.
- */
-export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> {
+export class ComputeGraphModel extends AbstractGraphModel<
+  GraphNode<ComputeNode>,
+  GraphEdge<ComputeEdge>,
+  ComputeGraphModel,
+  ComputeGraphBuilder
+> {
   /**
    * Create new model.
    */
-  static create(): ComputeGraphModel {
+  static create(graph?: Partial<Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
       create(ComputeGraph, {
-        graph: { nodes: [], edges: [] },
+        graph: { nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] },
       }),
     );
   }
@@ -35,21 +44,22 @@ export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphE
     return this._root;
   }
 
-  // TODO(burdon): Specialize
-  get builder2() {
+  override get builder(): ComputeGraphBuilder {
     return new ComputeGraphBuilder(this);
+  }
+
+  override copy(graph?: Partial<Graph>) {
+    return ComputeGraphModel.create(graph);
   }
 }
 
-// TODO(burdon): Same pattern for GraphModel?
-class ComputeGraphBuilder {
-  constructor(private readonly _model: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>) {}
-
-  get model() {
-    return this._model;
-  }
-
-  call(cb: (builder: ComputeGraphBuilder) => void): this {
+class ComputeGraphBuilder extends AbstractGraphBuilder<
+  GraphNode<ComputeNode>,
+  GraphEdge<ComputeEdge>,
+  ComputeGraphModel,
+  ComputeGraphBuilder
+> {
+  override call(cb: (builder: ComputeGraphBuilder) => void): this {
     cb(this);
     return this;
   }

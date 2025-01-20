@@ -9,10 +9,10 @@ import { ComputeGraphModel } from './model';
 describe('graph builder', () => {
   test('graph', ({ expect }) => {
     const g1 = ComputeGraphModel.create();
-    g1.builder2.create('x');
+    g1.builder.create('x');
 
     const g2 = ComputeGraphModel.create();
-    g2.builder2
+    g2.builder
       .call((builder) => {
         builder.link(
           { node: builder.create('a'), property: 'result' },

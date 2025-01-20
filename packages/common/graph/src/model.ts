@@ -112,13 +112,18 @@ export class ReadonlyGraphModel<
 /**
  * Typed wrapper.
  */
-export class GraphModel<
-  Node extends BaseGraphNode = BaseGraphNode,
-  Edge extends BaseGraphEdge = BaseGraphEdge,
+export abstract class AbstractGraphModel<
+  Node extends BaseGraphNode,
+  Edge extends BaseGraphEdge,
+  Model extends AbstractGraphModel<Node, Edge, Model, Builder>,
+  Builder extends AbstractGraphBuilder<Node, Edge, Model, Builder>,
 > extends ReadonlyGraphModel<Node, Edge> {
-  get builder() {
-    return new GraphBuilder<Node, Edge>(this);
-  }
+  abstract get builder(): Builder;
+
+  /**
+   * Shallow copy of provided graph.
+   */
+  abstract copy(graph?: Partial<Graph>): Model;
 
   clear(): this {
     this._graph.nodes.length = 0;
@@ -126,13 +131,13 @@ export class GraphModel<
     return this;
   }
 
-  addGraph(graph: GraphModel<Node, Edge>): this {
+  addGraph(graph: Model): this {
     this.addNodes(graph.nodes);
     this.addEdges(graph.edges);
     return this;
   }
 
-  addGraphs(graphs: GraphModel<Node, Edge>[]): this {
+  addGraphs(graphs: Model[]): this {
     graphs.forEach((graph) => {
       this.addNodes(graph.nodes);
       this.addEdges(graph.edges);
@@ -168,40 +173,37 @@ export class GraphModel<
     return this;
   }
 
-  removeNode(id: string): GraphModel<Node, Edge> {
+  removeNode(id: string): Model {
     const nodes = removeBy<Node>(this._graph.nodes as Node[], (node) => node.id === id);
     const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.source === id || edge.target === id);
     return this.copy({ nodes, edges });
   }
 
-  removeNodes(ids: string[]): GraphModel<Node, Edge> {
+  removeNodes(ids: string[]): Model {
     const graphs = ids.map((id) => this.removeNode(id));
     return this.copy().addGraphs(graphs);
   }
 
-  removeEdge(id: string): GraphModel<Node, Edge> {
+  removeEdge(id: string): Model {
     const edges = removeBy<Edge>(this._graph.edges as Edge[], (edge) => edge.id === id);
     return this.copy({ nodes: [], edges });
   }
 
-  removeEdges(ids: string[]): GraphModel<Node, Edge> {
+  removeEdges(ids: string[]): Model {
     const graphs = ids.map((id) => this.removeEdge(id));
     return this.copy().addGraphs(graphs);
   }
-
-  /**
-   * Shallow copy of provided graph.
-   * @param graph
-   */
-  copy(graph?: Partial<GraphModel<Node, Edge>>): GraphModel<Node, Edge> {
-    return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
-  }
 }
 
-class GraphBuilder<Node extends BaseGraphNode = BaseGraphNode, Edge extends BaseGraphEdge = BaseGraphEdge> {
-  constructor(private readonly _model: GraphModel<Node, Edge>) {}
+export abstract class AbstractGraphBuilder<
+  Node extends BaseGraphNode,
+  Edge extends BaseGraphEdge,
+  Model extends GraphModel<Node, Edge>,
+  Builder extends AbstractGraphBuilder<Node, Edge, Model, Builder>,
+> {
+  constructor(protected readonly _model: Model) {}
 
-  get model() {
+  get model(): Model {
     return this._model;
   }
 
@@ -215,6 +217,31 @@ class GraphBuilder<Node extends BaseGraphNode = BaseGraphNode, Edge extends Base
 
   addEdge(edge: MakeOptional<Edge, 'id'>): this {
     this._model.addEdge(edge);
+    return this;
+  }
+
+  abstract call(cb: (builder: Builder) => void): this;
+}
+
+export class GraphModel<
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, GraphBuilder<Node, Edge>> {
+  override get builder() {
+    return new GraphBuilder<Node, Edge>(this);
+  }
+
+  override copy(graph?: Partial<Graph>) {
+    return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+  }
+}
+
+export class GraphBuilder<
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+> extends AbstractGraphBuilder<Node, Edge, GraphModel<Node, Edge>, GraphBuilder<Node, Edge>> {
+  override call(cb: (builder: GraphBuilder<Node, Edge>) => void) {
+    cb(this);
     return this;
   }
 }

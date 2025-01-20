@@ -26,6 +26,7 @@ import {
   createTest3,
   createTest4,
   createControlCircuit,
+  createTest0,
 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
@@ -192,7 +193,7 @@ export const Default: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(),
+    ...createMachine(createTest0()),
   },
 };
 
