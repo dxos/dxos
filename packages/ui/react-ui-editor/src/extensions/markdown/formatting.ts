@@ -15,7 +15,11 @@ import {
 } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+
+import { type ReactiveObject } from '@dxos/live-object';
+
+import { type EditorToolbarState } from '../../components';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -25,11 +29,11 @@ import { useMemo, useState } from 'react';
 // For inline styles `strong`, `emphasis`, `strikethrough`, and `code`,
 // the field only holds true when *all* selected text has the style,
 // or when the selection is a cursor inside such a style.
-export type Formatting = {
-  blankLine?: boolean;
+export type Formatting = Partial<{
+  blankLine: boolean;
   // The type of the block at the selection.
   // If multiple different block types are selected, this will hold null.
-  blockType?:
+  blockType:
     | 'codeblock'
     | 'heading1'
     | 'heading2'
@@ -41,20 +45,20 @@ export type Formatting = {
     | 'tablecell'
     | null;
   // Whether all selected text is wrapped in a blockquote.
-  blockQuote?: boolean;
+  blockQuote: boolean;
   // Whether the selected text is strong.
-  strong?: boolean;
+  strong: boolean;
   // Whether the selected text is emphasized.
-  emphasis?: boolean;
+  emphasis: boolean;
   // Whether the selected text is stricken through.
-  strikethrough?: boolean;
+  strikethrough: boolean;
   // Whether the selected text is inline code.
-  code?: boolean;
+  code: boolean;
   // Whether there are links in the selected text.
-  link?: boolean;
+  link: boolean;
   // If all selected blocks have the same (innermost) list style, that is indicated here.
-  listStyle?: null | 'ordered' | 'bullet' | 'task';
-};
+  listStyle: null | 'ordered' | 'bullet' | 'task';
+}>;
 
 export const formattingEquals = (a: Formatting, b: Formatting) =>
   a.blockType === b.blockType &&
@@ -1246,24 +1250,16 @@ export const getFormatting = (state: EditorState): Formatting => {
 /**
  * Hook provides an extension to compute the current formatting state.
  */
-export const useFormattingState = (): [Formatting | undefined, Extension] => {
-  const [state, setState] = useState<Formatting>();
-  const observer = useMemo(
+export const useFormattingState = (state: ReactiveObject<EditorToolbarState>): Extension => {
+  return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          setState((prevState) => {
-            const newState = getFormatting(update.state);
-            if (!prevState || !formattingEquals(prevState, newState)) {
-              return newState;
-            }
-
-            return prevState;
+          Object.entries(getFormatting(update.state)).forEach(([key, active]) => {
+            state[key as keyof Formatting] = active as any;
           });
         }
       }),
     [],
   );
-
-  return [state, observer];
 };
