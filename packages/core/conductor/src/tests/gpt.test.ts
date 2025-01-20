@@ -8,9 +8,10 @@ import { describe, test } from 'vitest';
 
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { EdgeGpt } from '../services';
 import { createEdge, TestRuntime, testServices } from '../testing';
-import { ComputeGraphModel, makeValueBag, unwrapValueBag, NodeType, type ValueEffect } from '../types';
+import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
@@ -195,18 +196,18 @@ describe('Gpt pipelines', () => {
 
 const gpt1 = () => {
   return ComputeGraphModel.create()
-    .addNode({ id: 'gpt1-INPUT', data: { type: NodeType.Input } })
-    .addNode({ id: 'gpt1-GPT', data: { type: NodeType.Gpt } })
-    .addNode({ id: 'gpt1-OUTPUT', data: { type: NodeType.Output } })
+    .addNode({ id: 'gpt1-INPUT', data: { type: NODE_INPUT } })
+    .addNode({ id: 'gpt1-GPT', data: { type: 'gpt' } })
+    .addNode({ id: 'gpt1-OUTPUT', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'gpt1-INPUT', output: 'prompt', target: 'gpt1-GPT', input: 'prompt' }))
     .addEdge(createEdge({ source: 'gpt1-GPT', output: 'text', target: 'gpt1-OUTPUT', input: 'text' }));
 };
 
 const gpt2 = () => {
   return ComputeGraphModel.create()
-    .addNode({ id: 'gpt2-INPUT', data: { type: NodeType.Input } })
-    .addNode({ id: 'gpt2-GPT', data: { type: NodeType.Gpt } })
-    .addNode({ id: 'gpt2-OUTPUT', data: { type: NodeType.Output } })
+    .addNode({ id: 'gpt2-INPUT', data: { type: NODE_INPUT } })
+    .addNode({ id: 'gpt2-GPT', data: { type: 'gpt' } })
+    .addNode({ id: 'gpt2-OUTPUT', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'gpt2-INPUT', output: 'prompt', target: 'gpt2-GPT', input: 'prompt' }))
     .addEdge(createEdge({ source: 'gpt2-GPT', output: 'text', target: 'gpt2-OUTPUT', input: 'text' }))
     .addEdge(createEdge({ source: 'gpt2-GPT', output: 'tokenStream', target: 'gpt2-OUTPUT', input: 'tokenStream' }));

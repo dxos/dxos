@@ -16,14 +16,8 @@ import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import {
-  makeValueBag,
-  unwrapValueBag,
-  type ComputeEffect,
-  type ValueBag,
-  type GptInput,
-  type GptOutput,
-} from '../../types';
+import { type GptInput, type GptOutput } from '../../nodes';
+import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
 import { IMAGE_TYPENAME, type GptService } from '../gpt';
 

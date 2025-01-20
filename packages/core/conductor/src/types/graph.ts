@@ -57,13 +57,3 @@ export class ComputeGraph extends TypedObject({
 }) {}
 
 export const isComputeGraph = S.is(ComputeGraph);
-
-/**
- * Well-known node types.
- */
-export const NodeType = Object.freeze({
-  Input: 'dxn:compute:input',
-  Output: 'dxn:compute:output',
-
-  Gpt: 'dxn:compute:gpt',
-});

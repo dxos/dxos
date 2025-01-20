@@ -11,11 +11,11 @@ import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { logCustomEvent } from '../services';
 import { createEdge, TestRuntime, testServices } from '../testing';
 import {
   ComputeGraphModel,
-  NodeType,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
@@ -120,9 +120,9 @@ const viewer = defineComputeNode({
  */
 const g1 = () => {
   return ComputeGraphModel.create()
-    .addNode({ id: 'I', data: { type: NodeType.Input } })
+    .addNode({ id: 'I', data: { type: NODE_INPUT } })
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .addNode({ id: 'O', data: { type: NodeType.Output } })
+    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'I', output: 'number1', target: 'X', input: 'a' }))
     .addEdge(createEdge({ source: 'I', output: 'number2', target: 'X', input: 'b' }))
     .addEdge(createEdge({ source: 'X', output: 'result', target: 'O', input: 'sum' }));
@@ -136,10 +136,10 @@ const g1 = () => {
 const g2 = () => {
   const g1Dxn = DXN.parse('dxn:test:g1');
   return ComputeGraphModel.create()
-    .addNode({ id: 'I', data: { type: NodeType.Input } })
+    .addNode({ id: 'I', data: { type: NODE_INPUT } })
     .addNode({ id: 'X', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
     .addNode({ id: 'Y', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
-    .addNode({ id: 'O', data: { type: NodeType.Output } })
+    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'number1' }))
     .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'number2' }))
     .addEdge(createEdge({ source: 'I', output: 'c', target: 'Y', input: 'number1' }))
@@ -150,11 +150,11 @@ const g2 = () => {
 // Branching computations.
 const g3 = () => {
   return ComputeGraphModel.create()
-    .addNode({ id: 'I', data: { type: NodeType.Input } })
+    .addNode({ id: 'I', data: { type: NODE_INPUT } })
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
     .addNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
-    .addNode({ id: 'O', data: { type: NodeType.Output } })
+    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'a' }))
     .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'b' }))
     .addEdge(createEdge({ source: 'X', output: 'result', target: 'V1', input: 'result' }))

@@ -8,9 +8,9 @@ import { nonNullable } from '@dxos/util';
 
 import { Workflow } from './workflow';
 import { compile } from '../compiler';
-import type { GraphDiagnostic } from '../compiler/topology';
-import { gptNode, inputNode, outputNode } from '../nodes';
-import { type ComputeGraph, ComputeGraphModel, type Executable, NodeType } from '../types';
+import { type GraphDiagnostic } from '../compiler';
+import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from '../nodes';
+import { type ComputeGraph, ComputeGraphModel, type Executable } from '../types';
 
 type WorkflowLoaderParams = {
   nodeResolver: (nodeType: string) => Promise<Executable>;
@@ -63,7 +63,6 @@ export class WorkflowLoader {
     compilationInProgress.add(graphDxnStr);
 
     const graphDxn = DXN.parse(graphDxnStr);
-
     const resolvedNodes = new Map<string, Executable>();
     const { inputNodeId, outputNodeId } = this._resolveInOut(graph);
     const compilationResult = await compile({
@@ -75,15 +74,15 @@ export class WorkflowLoader {
 
         let executable: Executable;
         switch (node.type) {
-          case NodeType.Input:
+          case NODE_INPUT:
             executable = inputNode;
             break;
-          case NodeType.Output:
+          case NODE_OUTPUT:
             executable = outputNode;
             break;
-          case NodeType.Gpt:
-            executable = gptNode;
-            break;
+          // case NodeType.Gpt:
+          //   executable = registry.gpt;
+          //   break;
           default: {
             const graphModel = graphMap.get(node.type);
             if (graphModel) {
@@ -137,9 +136,9 @@ export class WorkflowLoader {
   }
 
   private _resolveInOut(graph: ComputeGraphModel): { inputNodeId: string; outputNodeId: string } {
-    const inputNodes = graph.nodes.filter((node) => node.data.type === NodeType.Input);
+    const inputNodes = graph.nodes.filter((node) => node.data.type === NODE_INPUT);
     invariant(inputNodes.length === 1, 'Graph must have a single input.');
-    const outputNodes = graph.nodes.filter((node) => node.data.type === NodeType.Output);
+    const outputNodes = graph.nodes.filter((node) => node.data.type === NODE_OUTPUT);
     invariant(outputNodes.length === 1, 'Graph must have a single output.');
     return { inputNodeId: inputNodes[0].id, outputNodeId: outputNodes[0].id };
   }

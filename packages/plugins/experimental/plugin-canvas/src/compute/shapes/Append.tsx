@@ -4,12 +4,12 @@
 
 import React from 'react';
 
+import { AppendInput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { AppendInput } from '../graph';
 
 export const AppendShape = S.extend(
   ComputeShape,
