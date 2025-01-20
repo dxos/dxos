@@ -9,11 +9,27 @@ import { byDisposition } from '@dxos/util';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCapabilities } from './useCapabilities';
-import { Capabilities, type SurfaceProps } from '../common';
+import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
+import { type PluginsContext } from '../core';
 
 const useSurfaces = () => {
   const surfaces = useCapabilities(Capabilities.ReactSurface);
   return useMemo(() => surfaces.flat(), [surfaces]);
+};
+
+const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
+  return Object.values(surfaces)
+    .filter((definition) =>
+      Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
+    )
+    .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
+    .toSorted(byDisposition);
+};
+
+export const isSurfaceAvailable = (context: PluginsContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
+  const surfaces = context.requestCapabilities(Capabilities.ReactSurface);
+  const candidates = findCandidates(surfaces.flat(), { role, data });
+  return candidates.length > 0;
 };
 
 /**
@@ -31,12 +47,7 @@ export const Surface = memo(
       const data = useDefaultValue(_data, () => ({}));
 
       const candidates = useMemo(() => {
-        const definitions = Object.values(surfaces)
-          .filter((definition) =>
-            Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
-          )
-          .filter(({ filter }) => (filter ? filter(data) : true))
-          .toSorted(byDisposition);
+        const definitions = findCandidates(surfaces, { role, data });
         return limit ? definitions.slice(0, limit) : definitions;
       }, [surfaces, role, data, limit]);
 
