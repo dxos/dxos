@@ -8,6 +8,9 @@
   .sticky-top-0 {
     --sticky-top: 0;
   }
+  .contain-layout {
+    contain: layout;
+  }
 }
 
 @layer components {

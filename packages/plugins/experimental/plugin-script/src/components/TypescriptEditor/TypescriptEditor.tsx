@@ -13,8 +13,9 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   editorFullWidth,
-  editorGutter,
   editorMonospace,
+  EditorView,
+  folding,
   InputModeExtensions,
   useTextEditor,
   type UseTextEditorProps,
@@ -58,7 +59,14 @@ export const TypescriptEditor = ({
             content: { className: editorFullWidth },
           },
         }),
-        editorGutter,
+        // NOTE: Not using default editor gutter because folding for code works best right beside text.
+        EditorView.theme({
+          '.cm-gutters': {
+            // Match margin from content.
+            marginTop: '16px',
+          },
+        }),
+        folding(),
         // TODO(burdon): Factor out.
         [
           editorMonospace,

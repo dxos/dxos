@@ -9,6 +9,7 @@
     ],
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
