@@ -358,7 +358,7 @@ export class Toolbox {
 
         if (!this.config.tsconfig?.noDirectOutDir && `${tsConfigJson?.extends}`.endsWith('tsconfig.base.json')) {
           tsConfigJson.compilerOptions ??= {};
-          tsConfigJson.compilerOptions.outDir ??= `${project.path}/dist/types`;
+          tsConfigJson.compilerOptions.outDir ??= './dist/types';
         }
 
         const updated = sortJson(tsConfigJson, {
