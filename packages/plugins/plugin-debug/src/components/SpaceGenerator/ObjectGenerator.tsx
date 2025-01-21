@@ -3,7 +3,7 @@
 //
 
 import { addressToA1Notation } from '@dxos/compute';
-import { ComputeGraph, ComputeGraphModel, createEdge, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
+import { ComputeGraph, ComputeGraphModel, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -114,11 +114,11 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();
         model.builder
-          .addNode({ id: 'gpt-INPUT', data: { type: NODE_INPUT } })
-          .addNode({ id: 'gpt-GPT', data: { type: 'gpt' } })
-          .addNode({ id: 'gpt-OUTPUT', data: { type: NODE_OUTPUT } })
-          .addEdge(createEdge({ source: 'gpt-INPUT', output: 'prompt', target: 'gpt-GPT', input: 'prompt' }))
-          .addEdge(createEdge({ source: 'gpt-GPT', output: 'text', target: 'gpt-OUTPUT', input: 'text' }));
+          .createNode({ id: 'gpt-INPUT', data: { type: NODE_INPUT } })
+          .createNode({ id: 'gpt-GPT', data: { type: 'gpt' } })
+          .createNode({ id: 'gpt-OUTPUT', data: { type: NODE_OUTPUT } })
+          .createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' })
+          .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' });
 
         return space.db.add(model.root);
       });

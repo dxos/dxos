@@ -13,7 +13,7 @@ import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT, registry } from '../nodes';
 import { logCustomEvent } from '../services';
-import { createEdge, TestRuntime, testServices } from '../testing';
+import { TestRuntime, testServices } from '../testing';
 import {
   ComputeGraphModel,
   NotExecuted,
@@ -68,7 +68,6 @@ describe('Graph as a fiber runtime', () => {
   it.effect('runFromInput', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime()
-        //
         .registerNode('dxn:test:sum', sum)
         .registerNode('dxn:test:viewer', view)
         .registerGraph('dxn:test:g3', g3());
@@ -129,12 +128,12 @@ const view = defineComputeNode({
 const g1 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'I', data: { type: NODE_INPUT } })
-    .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
-    .addEdge(createEdge({ source: 'I', output: 'number1', target: 'X', input: 'a' }))
-    .addEdge(createEdge({ source: 'I', output: 'number2', target: 'X', input: 'b' }))
-    .addEdge(createEdge({ source: 'X', output: 'result', target: 'O', input: 'sum' }));
+    .createNode({ id: 'I', data: { type: NODE_INPUT } })
+    .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
+    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' })
+    .createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' })
+    .createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
 
   return model;
 };
@@ -143,15 +142,15 @@ const g2 = () => {
   const g1Dxn = DXN.parse('dxn:test:g1');
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'I', data: { type: NODE_INPUT } })
-    .addNode({ id: 'X', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
-    .addNode({ id: 'Y', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
-    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
-    .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'number1' }))
-    .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'number2' }))
-    .addEdge(createEdge({ source: 'I', output: 'c', target: 'Y', input: 'number1' }))
-    .addEdge(createEdge({ source: 'X', output: 'sum', target: 'Y', input: 'number2' }))
-    .addEdge(createEdge({ source: 'Y', output: 'sum', target: 'O', input: 'result' }));
+    .createNode({ id: 'I', data: { type: NODE_INPUT } })
+    .createNode({ id: 'X', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
+    .createNode({ id: 'Y', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
+    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
+    .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
+    .createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' })
+    .createEdge({ node: 'X', property: 'sum' }, { node: 'Y', property: 'number2' })
+    .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
 
   return model;
 };
@@ -159,15 +158,15 @@ const g2 = () => {
 const g3 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'I', data: { type: NODE_INPUT } })
-    .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .addNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
-    .addNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
-    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
-    .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'a' }))
-    .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'b' }))
-    .addEdge(createEdge({ source: 'X', output: 'result', target: 'V1', input: 'result' }))
-    .addEdge(createEdge({ source: 'X', output: 'result', target: 'V2', input: 'result' }));
+    .createNode({ id: 'I', data: { type: NODE_INPUT } })
+    .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
+    .createNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
+    .createNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
+    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' })
+    .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })
+    .createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' })
+    .createEdge({ node: 'X', property: 'result' }, { node: 'V2', property: 'result' });
 
   return model;
 };

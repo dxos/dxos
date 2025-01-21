@@ -209,8 +209,9 @@ export abstract class AbstractGraphBuilder<
 
   abstract call(cb: (builder: Builder) => void): this;
 
-  // TODO(burdon): Map method types?
-  // TODO(burdon): Implement other methods.
+  getNode(id: string): Node {
+    return this.model.getNode(id);
+  }
 
   addNode(node: Node): this {
     this._model.addNode(node);

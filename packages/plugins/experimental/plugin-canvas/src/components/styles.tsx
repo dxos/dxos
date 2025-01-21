@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): Theme.
+// TODO(burdon): Themes?
 export const styles = {
   gridLine: 'stroke-neutral-500',
-  frameContainer: 'flex flex-column overflow-hidden bg-base',
+  frameContainer: 'flex flex-column items-center box-border overflow-hidden bg-base',
   frameBorder: 'border-2 border-hoverSurface rounded-lg shadow-lg',
   framePreview: 'opacity-80',
   frameSelected: 'border-primary-500',

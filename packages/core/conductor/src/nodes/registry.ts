@@ -190,6 +190,7 @@ export const registry: Record<NodeType, Executable> = {
         if (condition) {
           return makeValueBag({
             true: Effect.succeed(value),
+            // TODO(burdon): Replace Effect.fail with Effect.succeedNone,
             false: Effect.fail(NotExecuted),
           });
         } else {
