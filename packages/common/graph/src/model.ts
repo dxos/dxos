@@ -145,6 +145,7 @@ export abstract class AbstractGraphModel<
     return this;
   }
 
+  // TODO(burdon): Generate random id.
   addNode(node: Node): Node {
     invariant(node.id);
     invariant(!this.findNode(node.id));
@@ -152,15 +153,15 @@ export abstract class AbstractGraphModel<
     return node;
   }
 
-  addNodes(nodes: Node[]): this {
-    nodes.forEach((node) => this.addNode(node));
-    return this;
+  addNodes(nodes: Node[]): Node[] {
+    return nodes.map((node) => this.addNode(node));
   }
 
   addEdge(edge: MakeOptional<Edge, 'id'>): Edge {
     invariant(edge.source);
     invariant(edge.target);
     if (!edge.id) {
+      // TODO(burdon): Generate random id.
       edge = { ...edge, id: createEdgeId(edge) };
     }
     invariant(!this.findNode(edge.id!));
@@ -168,9 +169,8 @@ export abstract class AbstractGraphModel<
     return edge as Edge;
   }
 
-  addEdges(edges: Edge[]): this {
-    edges.forEach((edge) => this.addEdge(edge));
-    return this;
+  addEdges(edges: Edge[]): Edge[] {
+    return edges.map((edge) => this.addEdge(edge));
   }
 
   removeNode(id: string): Model {
@@ -203,11 +203,11 @@ export abstract class AbstractGraphBuilder<
 > {
   constructor(protected readonly _model: Model) {}
 
-  abstract call(cb: (builder: Builder) => void): this;
-
   get model(): Model {
     return this._model;
   }
+
+  abstract call(cb: (builder: Builder) => void): this;
 
   // TODO(burdon): Map method types?
   // TODO(burdon): Implement other methods.
@@ -219,6 +219,16 @@ export abstract class AbstractGraphBuilder<
 
   addEdge(edge: MakeOptional<Edge, 'id'>): this {
     this._model.addEdge(edge);
+    return this;
+  }
+
+  addNodes(nodes: Node[]): this {
+    this._model.addNodes(nodes);
+    return this;
+  }
+
+  addEdges(edges: Edge[]): this {
+    this._model.addEdges(edges);
     return this;
   }
 }

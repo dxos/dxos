@@ -163,7 +163,7 @@ export const useActionHandler = () => {
           const { ids = selection.selected.value } = action;
           const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
           const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
-          clipboard.clear().addNodes(nodes).addEdges(edges);
+          clipboard.clear().builder.addNodes(nodes).addEdges(edges);
           return true;
         }
         case 'paste': {
