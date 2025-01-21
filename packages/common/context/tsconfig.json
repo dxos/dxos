@@ -20,6 +20,9 @@
       "path": "../node-std"
     },
     {
+      "path": "../test-utils"
+    },
+    {
       "path": "../util"
     }
   ]

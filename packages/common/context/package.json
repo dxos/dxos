@@ -29,6 +29,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "publishConfig": {
