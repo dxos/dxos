@@ -41,6 +41,7 @@ export type ToolboxConfig = {
       include: string[];
     };
     noProjectReferences?: boolean;
+    noDirectOutDir?: boolean;
   };
 };
 
@@ -353,6 +354,10 @@ export class Toolbox {
           });
         } else {
           tsConfigJson.references = [];
+        }
+
+        if (!this.config.tsconfig?.noDirectOutDir) {
+          tsConfigJson.compilerOptions.outDir ??= `${project.path}/dist/types`;
         }
 
         const updated = sortJson(tsConfigJson, {
