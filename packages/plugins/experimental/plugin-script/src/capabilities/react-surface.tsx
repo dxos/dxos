@@ -30,7 +30,7 @@ export default () =>
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)!.value;
-        return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
+        return <ScriptContainer role={role} script={data.subject} settings={settings} compiler={compiler} />;
       },
     }),
     createSurface({

@@ -11,15 +11,21 @@ import {
 import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 const defaultOptions: ts.CompilerOptions = {
   lib: ['DOM', 'es2022'],
   target: ts.ScriptTarget.ES2022,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
+  module: ts.ModuleKind.ESNext,
 };
 
 export class Compiler {
   private _env: VirtualTypeScriptEnvironment | undefined;
   private _fsMap: Map<string, string> | undefined;
+  private _httpTypeCache: Map<string, string> = new Map();
+  private _pendingFetches: Map<string, Promise<void>> = new Map();
+  private _processedUrls: Set<string> = new Set();
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
 
@@ -30,8 +36,8 @@ export class Compiler {
 
     // TODO(wittjosiah): Figure out how to get workers working in plugin packages.
     //   https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
-    this._fsMap = await createDefaultMapFromCDN(this._options, '5.5.4', true, ts);
-    const system = createSystem(this._fsMap);
+    this._fsMap = await createDefaultMapFromCDN(this._options, '5.7.2', true, ts);
+    const system = this._createCustomSystem();
     this._env = createVirtualTypeScriptEnvironment(system, [], ts, this._options);
   }
 
@@ -42,10 +48,199 @@ export class Compiler {
 
   setFile(fileName: string, content: string) {
     invariant(this._fsMap, 'File system map not initialized.');
+    log('set file', { fileName });
     this.environment.createFile(fileName, content);
   }
 
   compile(fileName: string) {
     return this.environment.languageService.getEmitOutput(fileName);
+  }
+
+  async processImports(fileName: string, content: string) {
+    const sourceFile = this.environment.languageService.getProgram()?.getSourceFile(fileName);
+    if (!sourceFile) {
+      this.setFile(fileName, content);
+    }
+
+    await this._processImportsInContent({ content });
+  }
+
+  private _createCustomSystem() {
+    invariant(this._fsMap, 'File system map not initialized.');
+    const baseSystem = createSystem(this._fsMap);
+    const getFile = (path: string) => this._fsMap?.get(path) ?? '';
+    const hasFile = (path: string) => this._fsMap?.has(path) ?? false;
+
+    return {
+      ...baseSystem,
+      readFile: (path: string) => {
+        const file = path.startsWith('https://') ? getFile(path) : baseSystem.readFile(path);
+        log('read file', { path });
+        return file;
+      },
+      fileExists: (path: string) => {
+        const exists = path.startsWith('https://') ? hasFile(path) : baseSystem.fileExists(path);
+        log('file exists', { path, exists });
+        return exists;
+      },
+      resolveModuleNames: (moduleNames: string[], containingFile: string) => {
+        return moduleNames.map((moduleName) => {
+          if (moduleName.startsWith('https://')) {
+            const typesUrl = moduleName.endsWith('.d.ts') ? moduleName : this._httpTypeCache.get(moduleName);
+            if (typesUrl) {
+              return {
+                resolvedFileName: typesUrl,
+                isExternalLibraryImport: true,
+              };
+            }
+          }
+
+          // Fall back to default resolution.
+          const result = ts.resolveModuleName(moduleName, containingFile, this._options, baseSystem);
+          return result.resolvedModule;
+        });
+      },
+    };
+  }
+
+  private _normalizeUrl(url: string, parent?: string): string | undefined {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    if (!parent || url.startsWith('node:')) {
+      return;
+    }
+
+    const parentUrl = new URL(parent);
+    if (url.startsWith('/')) {
+      // Absolute path - use parent's origin.
+      return new URL(url, parentUrl.origin).href;
+    } else {
+      // Relative path - resolve against parent's full URL.
+      return new URL(url, parentUrl).href;
+    }
+  }
+
+  private _findImportsInContent(content: string): string[] {
+    const imports: Set<string> = new Set();
+    const visit = (node: ts.Node) => {
+      // Existing cases
+      if (ts.isImportDeclaration(node)) {
+        const moduleSpecifier = node.moduleSpecifier;
+        if (ts.isStringLiteral(moduleSpecifier)) {
+          imports.add(moduleSpecifier.text);
+        }
+      } else if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
+        if (ts.isStringLiteral(node.moduleSpecifier)) {
+          imports.add(node.moduleSpecifier.text);
+        }
+      } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+        const argument = node.arguments[0];
+        if (argument && ts.isStringLiteral(argument)) {
+          imports.add(argument.text);
+        }
+      } else if (ts.isImportTypeNode(node)) {
+        const argument = node.argument;
+        if (ts.isLiteralTypeNode(argument) && ts.isStringLiteral(argument.literal)) {
+          imports.add(argument.literal.text);
+        }
+      }
+
+      // Recursively visit all children
+      ts.forEachChild(node, visit);
+    };
+
+    const sourceFile = ts.createSourceFile('temp.ts', content, this._options.target ?? ts.ScriptTarget.Latest, true);
+    visit(sourceFile);
+    return Array.from(imports);
+  }
+
+  private async _processImportsInContent({
+    content,
+    parentUrl,
+    types,
+  }: {
+    content: string;
+    parentUrl?: string;
+    types?: boolean;
+  }): Promise<void> {
+    const imports = this._findImportsInContent(content);
+    log('process imports', { parentUrl, imports });
+
+    await Promise.all(
+      imports.map(async (importUrl) => {
+        const normalizedUrl = this._normalizeUrl(importUrl, parentUrl);
+        if (!normalizedUrl) {
+          return;
+        }
+
+        if (this._pendingFetches.has(normalizedUrl)) {
+          return this._pendingFetches.get(normalizedUrl);
+        }
+
+        const fetchPromise = types ? this._prefetchHttpTypes(normalizedUrl) : this._prefetchHttpModule(normalizedUrl);
+
+        void fetchPromise.finally(() => {
+          this._pendingFetches.delete(normalizedUrl);
+        });
+
+        this._pendingFetches.set(normalizedUrl, fetchPromise);
+
+        await fetchPromise;
+      }),
+    );
+  }
+
+  private async _prefetchHttpModule(url: string): Promise<void> {
+    if (this._processedUrls.has(url)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(url);
+      const typesUrl = response.headers.get('x-typescript-types');
+      const content = await response.text();
+
+      this.setFile(url, content);
+      this._processedUrls.add(url);
+
+      if (typesUrl) {
+        this._httpTypeCache.set(url, typesUrl);
+        await this._prefetchHttpTypes(typesUrl);
+      } else {
+        this._createAmbientModuleDeclartion(url);
+      }
+    } catch (err) {
+      log.catch(err, { url });
+    }
+  }
+
+  private async _prefetchHttpTypes(url: string): Promise<void> {
+    if (this._processedUrls.has(url)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(url);
+      const content = await response.text();
+
+      this.setFile(url, content);
+      this._processedUrls.add(url);
+
+      // Process imports in type definitions with the types URL as parent.
+      await this._processImportsInContent({ content, parentUrl: url, types: true });
+    } catch (err) {
+      log.catch(err, { url });
+    }
+  }
+
+  private _createAmbientModuleDeclartion(url: string) {
+    const moduleDeclaration = `declare module '${url}' {
+      const content: any;
+      export = content;
+      export * from '${url}';
+    }`;
+    this.setFile(`${url}.d.ts`, moduleDeclaration);
   }
 }
