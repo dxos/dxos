@@ -11,17 +11,20 @@ import { StreamSchema } from '../util';
 // TODO(burdon): Split up node defs and move types to separate lib package?
 
 //
-// Misc
+// List
 //
 
 export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
 export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
+//
+// Database
+//
+
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
+// TODO(burdon): Generalize LLMTool?
 export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
-
-export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
 
 //
 // GPT
@@ -58,8 +61,10 @@ export const GptOutput = S.Struct({
 export type GptOutput = S.Schema.Type<typeof GptOutput>;
 
 //
-// Boolean
+// GPT Tools
 //
+
+export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
 
 //
 // Logic
@@ -86,3 +91,13 @@ export type ReducerInput = S.Schema.Type<typeof ReducerInput>;
 
 export const ReducerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
 export type ReducerOutput = S.Schema.Type<typeof ReducerOutput>;
+
+//
+// Trigger
+//
+
+export const TriggerInput = S.mutable(S.Struct({ values: S.Array(S.Any) }));
+export type TriggerInput = S.Schema.Type<typeof TriggerInput>;
+
+export const TriggerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
+export type TriggerOutput = S.Schema.Type<typeof TriggerOutput>;

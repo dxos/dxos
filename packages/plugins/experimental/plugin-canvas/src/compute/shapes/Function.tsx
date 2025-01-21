@@ -4,7 +4,7 @@
 
 import React, { type JSX, useRef, useState } from 'react';
 
-import { DefaultInput, VoidInput, VoidOutput } from '@dxos/conductor';
+import { AnyInput, AnyOutput, DefaultInput, VoidInput, VoidOutput } from '@dxos/conductor';
 import { AST, S } from '@dxos/echo-schema';
 import { useProjection } from '@dxos/react-ui-canvas';
 
@@ -37,10 +37,7 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
 };
 
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
-  return null;
-  // return (
-  // <FunctionBody shape={shape} name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
-  // )
+  return <FunctionBody shape={shape} inputSchema={AnyInput} outputSchema={AnyOutput} />;
 };
 
 export const functionShape: ShapeDef<FunctionShape> = {
@@ -49,7 +46,7 @@ export const functionShape: ShapeDef<FunctionShape> = {
   icon: 'ph--function--regular',
   component: FunctionComponent,
   createShape: createFunction,
-  // getAnchors: (shape) => createFunctionAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
+  getAnchors: (shape) => createFunctionAnchors(shape, AnyInput, AnyOutput),
 };
 
 //

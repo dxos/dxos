@@ -26,3 +26,13 @@ export const VoidOutput = S.Struct({});
 
 export type VoidInput = S.Schema.Type<typeof VoidInput>;
 export type VoidOutput = S.Schema.Type<typeof VoidOutput>;
+
+//
+// Any
+//
+
+export const AnyInput = S.Struct({ [DEFAULT_INPUT]: S.Any });
+export const AnyOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
+
+export type AnyInput = S.Schema.Type<typeof AnyInput>;
+export type AnyOutput = S.Schema.Type<typeof AnyOutput>;

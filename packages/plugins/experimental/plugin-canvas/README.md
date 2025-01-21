@@ -55,12 +55,12 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
   - [x] Bezier connectors.
   - [x] Pluggable drag/drop logic: determines which drag/drop targets are active; replaces current dragging/linking state.
   - [x] Select/edit Rectangle/ellipse/function name.
-  - [ ] Delete link when deleting anchor.
+  - [x] Delete link when deleting anchor.
   - [ ] Prevent input anchors being used multiple times (custom rule).
-  - [ ] Loop back path if anchors are not facing each other.
+  - [ ] Drag to move edge.
   - [ ] Green anchors if match.
-  - [ ] Cache layout.
   - [ ] Touch input (ipad).
+  - [ ] Close frame when resizing.
 
 ### Phase 3: State machine
 
@@ -69,19 +69,21 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - [x] State machine (local implementation); run mode.
   - [x] Function shape driven by schema; add property.
   - [x] All compute nodes should be driven by schema.
-  - [ ] Connect state machine.
+  - [x] Connect state machine.
 - [x] Logic gates (AND, etc.)
 - [x] Timer.
 - [ ] Select function via properties (show schema).
-- [ ] ECHO Query.
-- [ ] GPT (with prompt and base prompt inputs).
+- [x] GPT (with prompt and base prompt inputs).
 
 ### Phase 4:
 - [ ] Group/collapse nodes; hierarchical graph editor. 
 
 ### Technical Debt
-- [ ] `AttentionContainer` (and key management).
+- [x] `AttentionContainer` (and key management).
 - [ ] Factor out common Toolbar pattern (with state observers).
 - [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
 - [ ] Reconcile @antv layouts with `@dxos/plugin-debug`.
+- [ ] TypedObject and schema id property.
 
+### Design Issues
+- [ ] Represent all compute node properties as inputs? (e.g., trigger).

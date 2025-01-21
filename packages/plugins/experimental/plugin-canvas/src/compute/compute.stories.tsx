@@ -33,7 +33,6 @@ import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
-import { log } from '@dxos/log';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{

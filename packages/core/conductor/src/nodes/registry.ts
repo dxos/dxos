@@ -10,23 +10,40 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AppendInput, DatabaseOutput, GptInput, GptOutput, ListInput, ListOutput, TextToImageOutput } from './types';
+import {
+  AppendInput,
+  DatabaseOutput,
+  GptInput,
+  GptOutput,
+  ListInput,
+  ListOutput,
+  ReducerInput,
+  ReducerOutput,
+  TextToImageOutput,
+  TriggerInput,
+  TriggerOutput,
+} from './types';
 import { GptService } from '../services';
 import {
+  AnyInput,
+  AnyOutput,
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
   DefaultInput,
   DefaultOutput,
   type Executable,
+  NotExecuted,
   VoidInput,
   VoidOutput,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
   unwrapValueBag,
-  NotExecuted,
 } from '../types';
 
+/**
+ * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
+ */
 // TODO(burdon): Convert to DXNs.
 export type NodeType =
   | 'and'
@@ -36,6 +53,7 @@ export type NodeType =
   | 'chat'
   | 'constant'
   | 'database'
+  | 'function'
   | 'gpt'
   | 'gpt-realtime'
   | 'if'
@@ -44,10 +62,13 @@ export type NodeType =
   | 'list'
   | 'not'
   | 'or'
+  | 'reducer'
   | 'scope'
   | 'switch'
   | 'text'
   | 'text-to-image'
+  | 'timer'
+  | 'trigger'
   | 'thread'
   | 'view';
 
@@ -82,6 +103,16 @@ export const registry: Record<NodeType, Executable> = {
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
 
+  ['timer' as const]: defineComputeNode({
+    input: VoidInput,
+    output: VoidOutput,
+  }),
+
+  ['trigger' as const]: defineComputeNode({
+    input: TriggerInput,
+    output: TriggerOutput,
+  }),
+
   //
   // Outputs
   //
@@ -105,6 +136,11 @@ export const registry: Record<NodeType, Executable> = {
   ['json' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+  }),
+
+  ['reducer' as const]: defineComputeNode({
+    input: ReducerInput,
+    output: ReducerOutput,
   }),
 
   ['thread' as const]: defineComputeNode({
@@ -214,6 +250,11 @@ export const registry: Record<NodeType, Executable> = {
   //
   // Processing
   //
+
+  ['function' as const]: defineComputeNode({
+    input: AnyInput,
+    output: AnyOutput,
+  }),
 
   ['gpt' as const]: defineComputeNode({
     input: GptInput,

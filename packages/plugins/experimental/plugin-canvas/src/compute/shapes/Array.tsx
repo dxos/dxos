@@ -15,22 +15,22 @@ import { type ShapeComponentProps, type ShapeDef } from '../../components';
 // Data
 //
 
-export const ReduceShape = S.extend(
+export const ReducerShape = S.extend(
   ComputeShape,
   S.Struct({
-    type: S.Literal('reduce'),
+    type: S.Literal('reducer'),
   }),
 );
 
-export type ReduceShape = S.Schema.Type<typeof ReduceShape>;
+export type ReducerShape = S.Schema.Type<typeof ReducerShape>;
 
 //
 // Components
 //
 
-export type ReduceComponentProps = ShapeComponentProps<ReduceShape>;
+export type ReducerComponentProps = ShapeComponentProps<ReducerShape>;
 
-export const ReduceComponent = ({ shape }: ReduceComponentProps) => {
+export const ReducerComponent = ({ shape }: ReducerComponentProps) => {
   return <FunctionBody shape={shape} inputSchema={ReducerInput} outputSchema={ReducerOutput} />;
 };
 
@@ -38,24 +38,24 @@ export const ReduceComponent = ({ shape }: ReduceComponentProps) => {
 // Defs
 //
 
-export type CreateReduceProps = CreateShapeProps<ReduceShape> & { reduce?: string };
+export type CreateReduceProps = CreateShapeProps<ReducerShape> & { reduce?: string };
 
-export const createReduce = ({
+export const createReducer = ({
   id,
   size = { width: 192, height: getHeight(ReducerInput) },
   ...rest
-}: CreateReduceProps): ReduceShape => ({
+}: CreateReduceProps): ReducerShape => ({
   id,
-  type: 'reduce',
+  type: 'reducer',
   size,
   ...rest,
 });
 
-export const reduceShape: ShapeDef<ReduceShape> = {
-  type: 'reduce',
+export const reducerShape: ShapeDef<ReducerShape> = {
+  type: 'reducer',
   name: 'Reducer',
   icon: 'ph--repeat--regular',
-  component: (props) => <ReduceComponent {...props} />,
-  createShape: createReduce,
+  component: (props) => <ReducerComponent {...props} />,
+  createShape: createReducer,
   getAnchors: (shape) => createFunctionAnchors(shape, ReducerInput, ReducerOutput),
 };

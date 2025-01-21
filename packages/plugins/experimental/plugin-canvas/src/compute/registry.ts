@@ -11,7 +11,8 @@ import {
   constantShape,
   counterShape,
   databaseShape,
-  // functionShape,
+  functionShape,
+  gptRealtimeShape,
   gptShape,
   listShape,
   ifElseShape,
@@ -19,16 +20,15 @@ import {
   jsonShape,
   notShape,
   orShape,
-  // reduceShape,
+  reducerShape,
   scopeShape,
   switchShape,
-  // tableShape,
   textShape,
   threadShape,
-  // timerShape,
   textToImageShape,
+  timerShape,
+  triggerShape,
   viewShape,
-  gptRealtimeShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
 
@@ -40,12 +40,13 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
     title: 'Inputs',
     shapes: [
       //
-      // timerShape,
+      timerShape,
       constantShape,
       textShape,
       chatShape,
       switchShape,
       audioShape,
+      triggerShape,
     ],
   },
   {
@@ -54,7 +55,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       //
       gptShape,
       gptRealtimeShape,
-      // functionShape,
+      functionShape,
       databaseShape,
       textToImageShape,
     ],
@@ -68,7 +69,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       andShape,
       orShape,
       notShape,
-      // reduceShape,
+      reducerShape,
     ],
   },
   {
@@ -79,7 +80,6 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       appendShape,
       listShape,
       threadShape,
-      // tableShape,
       viewShape,
       counterShape,
       beaconShape,

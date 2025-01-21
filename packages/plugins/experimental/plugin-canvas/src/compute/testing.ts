@@ -287,7 +287,6 @@ export const createGPTRealtime = () => {
   });
 };
 
-// TODO(burdon): Break-apart state machine and graph.
 export const createMachine = (
   graph?: GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>,
   services?: Partial<Services>,
