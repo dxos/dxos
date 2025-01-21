@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import {
@@ -21,7 +21,7 @@ import { IntentResolver, ReactSurface } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { TableAction } from './types';
+import { CreateTableSchema, type CreateTableType, TableAction } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -38,7 +38,10 @@ export const TablePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
           metadata: {
-            createObject: (props: { name?: string; space: Space }) => createIntent(TableAction.Create, props),
+            // TODO(ZaymonFC): This should be shared with the create schema!
+            creationSchema: CreateTableSchema,
+            createObject: (props: CreateTableType, options: { space: Space }) =>
+              createIntent(TableAction.Create, { ...props, space: options.space }),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
