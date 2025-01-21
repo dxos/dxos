@@ -8,24 +8,27 @@ import { BaseGraphNode, Graph } from '@dxos/graph';
 /**
  * GraphNode payload.
  */
-export const ComputeNode = S.Struct({
-  /** DXN of the node specifier. */
-  // TODO(burdon): Remove? Use type in base node class.
-  type: S.optional(S.String),
+export const ComputeNode = S.mutable(
+  S.Struct({
+    /** DXN of the node specifier. */
+    // TODO(burdon): Remove? Use type in base node class.
+    type: S.optional(S.String),
 
-  /** For composition nodes. */
-  subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
+    /** For composition nodes. */
+    subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
 
-  /** For switch nodes. */
-  // TODO(dmaretskyi): Move to constants.
-  enabled: S.optional(S.Boolean),
+    /** For switch nodes. */
+    // TODO(dmaretskyi): Move to constants.
+    enabled: S.optional(S.Boolean),
 
-  /**
-   * For constant nodes.
-   */
-  // TODO(burdon): Rename value?
-  constant: S.optional(S.Any),
-}).pipe(S.mutable);
+    /**
+     * For constant nodes.
+     */
+    // TODO(burdon): Rename value?
+    // TODO(burdon): Make union of primitive types?
+    constant: S.optional(S.Any),
+  }),
+);
 
 export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 

@@ -33,6 +33,7 @@ export class ReadonlyGraphModel<
   /**
    * Return stable sorted JSON representation of graph.
    */
+  // TODO(burdon): Create separate toJson method with computed signal.
   toJSON() {
     const { id, nodes, edges } = getSnapshot(this._graph);
     nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
@@ -95,7 +96,7 @@ export class ReadonlyGraphModel<
     return this._traverse(root);
   }
 
-  _traverse(root: Node, visited: Set<string> = new Set()): Node[] {
+  private _traverse(root: Node, visited: Set<string> = new Set()): Node[] {
     if (visited.has(root.id)) {
       return [];
     }
@@ -116,8 +117,11 @@ export abstract class AbstractGraphModel<
   Node extends BaseGraphNode,
   Edge extends BaseGraphEdge,
   Model extends AbstractGraphModel<Node, Edge, Model, Builder>,
-  Builder extends AbstractGraphBuilder<Node, Edge, Model, Builder>,
+  Builder extends AbstractGraphBuilder<Node, Edge, Model>,
 > extends ReadonlyGraphModel<Node, Edge> {
+  /**
+   * Allows chaining.
+   */
   abstract get builder(): Builder;
 
   /**
@@ -195,11 +199,13 @@ export abstract class AbstractGraphModel<
   }
 }
 
+/**
+ * Chainable wrapper
+ */
 export abstract class AbstractGraphBuilder<
   Node extends BaseGraphNode,
   Edge extends BaseGraphEdge,
   Model extends GraphModel<Node, Edge>,
-  Builder extends AbstractGraphBuilder<Node, Edge, Model, Builder>,
 > {
   constructor(protected readonly _model: Model) {}
 
@@ -207,7 +213,7 @@ export abstract class AbstractGraphBuilder<
     return this._model;
   }
 
-  abstract call(cb: (builder: Builder) => void): this;
+  abstract call(cb: (builder: this) => void): this;
 
   getNode(id: string): Node {
     return this.model.getNode(id);
@@ -250,8 +256,8 @@ export class GraphModel<
 export class GraphBuilder<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
-> extends AbstractGraphBuilder<Node, Edge, GraphModel<Node, Edge>, GraphBuilder<Node, Edge>> {
-  override call(cb: (builder: GraphBuilder<Node, Edge>) => void) {
+> extends AbstractGraphBuilder<Node, Edge, GraphModel<Node, Edge>> {
+  override call(cb: (builder: this) => void) {
     cb(this);
     return this;
   }

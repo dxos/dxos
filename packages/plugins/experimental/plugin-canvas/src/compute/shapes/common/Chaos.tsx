@@ -164,6 +164,11 @@ const Particles = ({
     return () => clearTimeout(t);
   }, [options]);
 
+  // Current curl value.
+  const curl = useRef<{ start: number; delay: number; interval: number; initial: number; target: number } | undefined>(
+    undefined,
+  );
+
   // Update FBO and point-cloud every frame.
   // https://r3f.docs.pmnd.rs/api/hooks#useframe
   useFrame(({ gl, clock }, delta) => {
@@ -190,9 +195,45 @@ const Particles = ({
 
     invariant(simRef.current);
     const sim = simRef.current;
-    sim.uniforms.uCurl.value = options.curl / 1;
     sim.uniforms.uTime.value = clock.elapsedTime * options.speed;
-    sim.uniforms.uPerturbation.value = options.gain * (getValue?.() ?? 0);
+    const perturbation = options.gain * (getValue?.() ?? 0);
+    sim.uniforms.uPerturbation.value = 0.0; // perturbation;
+    if (perturbation > 0.1) {
+      const target = 0.01;
+      if (curl.current?.target !== target) {
+        curl.current = {
+          start: clock.elapsedTime,
+          delay: 0,
+          interval: 1,
+          initial: sim.uniforms.uCurl.value,
+          target,
+        };
+      }
+    } else {
+      // Start to decay after a while.
+      if (curl.current && curl.current.target !== options.curl) {
+        curl.current = {
+          start: clock.elapsedTime,
+          delay: 3,
+          interval: 3,
+          initial: sim.uniforms.uCurl.value,
+          target: options.curl,
+        };
+      }
+    }
+
+    // Interpolate curl over time.
+    if (curl.current) {
+      const { start, delay, interval, initial, target } = curl.current;
+      const t = Math.max(0, clock.elapsedTime - (start + delay)) / interval;
+      sim.uniforms.uCurl.value = THREE.MathUtils.lerp(initial, target, t);
+      if (t >= 1) {
+        curl.current = undefined;
+        console.log('done', t);
+      }
+    } else {
+      sim.uniforms.uCurl.value = options.curl;
+    }
   });
 
   return (

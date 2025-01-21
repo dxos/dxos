@@ -7,11 +7,11 @@ import { useMemo } from 'react';
 import { type ComputeGraphModel } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
-import { failedInvariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { type GraphMonitor } from '../../hooks';
 import { type Connection } from '../../types';
-import { createComputeNode } from '../graph';
+import { createComputeNode, isValidComputeNode } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 /**
@@ -25,6 +25,12 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
       // TODO(burdon): onDelete.
       onCreate: ({ node }) => {
         if (!graph) {
+          return;
+        }
+
+        // Ignore shapes that don't have a corresponding node factory.
+        invariant(node.data.type);
+        if (!isValidComputeNode(node.data.type)) {
           return;
         }
 
@@ -56,6 +62,7 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
       },
 
       onDelete: ({ subgraph }) => {
+        // TODO(burdon): Remove nodes and edges.
         console.log(JSON.stringify(subgraph, null, 2));
       },
     };

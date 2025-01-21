@@ -100,10 +100,9 @@ export class ComputeGraphModel extends AbstractGraphModel<
 class ComputeGraphBuilder extends AbstractGraphBuilder<
   GraphNode<ComputeNode>,
   GraphEdge<ComputeEdge>,
-  ComputeGraphModel,
-  ComputeGraphBuilder
+  ComputeGraphModel
 > {
-  override call(cb: (builder: ComputeGraphBuilder) => void): this {
+  override call(cb: (builder: this) => void): this {
     cb(this);
     return this;
   }

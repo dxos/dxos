@@ -16,6 +16,10 @@ export const resolveComputeNode = async (node: ComputeNode): Promise<Executable>
   return impl;
 };
 
+export const isValidComputeNode = (type: string): boolean => {
+  return nodeFactory[type as NodeType] !== undefined;
+};
+
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
   const type = shape.data.type ?? raise(new Error('Type not specified'));
   const factory = nodeFactory[type as NodeType] ?? raise(new Error(`Unknown shape type: ${type}`));
@@ -37,6 +41,7 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['function' as const]: () => createNode('function'),
   ['json' as const]: () => createNode('view'),
   ['list' as const]: () => createNode('list'),
+  ['map' as const]: () => createNode('map'),
   ['not' as const]: () => createNode('not'),
   ['or' as const]: () => createNode('or'),
   ['reducer' as const]: () => createNode('reducer'),

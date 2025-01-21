@@ -61,9 +61,9 @@ const factory: Partial<Record<NodeType, (props: CreateShapeProps<Polygon>) => Co
   ['beacon' as const]: createBeacon,
 };
 
-// TODO(burdon): Remove TypedObject (all schema should include id).
-// TODO(burdon): GraphNode id/type should not exist in generate sub type.
-// TODO(burdon): Auto-layout.
+// TODO(burdon): Sync/monitor.
+// TODO(burdon): Edit input properties.
+// TODO(burdon): Builder.
 
 export const createTest0 = () => {
   const model = new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>();
@@ -77,14 +77,6 @@ export const createTest0 = () => {
 };
 
 export const createLogicCircuit = () => {
-  const model = ComputeGraphModel.create();
-  // model.builder.call((builder) => {
-  // const s1 = builder.create();
-  // addNode(createNode({ type: 'switch', pos: { x: -4, y: -4 } }));
-  // const s2 = createNode({ type: 'switch', pos: { x: -4, y: 0 } });
-  // const and = createNode({ type: 'and', pos: { x: 0, y: -2 } });
-  // });
-
   const nodes: ComputeShape[] = [
     createSwitch({ id: 'a1', ...createLayout({ x: -4, y: -4 }) }),
     createSwitch({ id: 'a2', ...createLayout({ x: -4, y: 0 }) }),
@@ -191,36 +183,36 @@ export const createTest3 = ({
   viewText?: boolean;
 } = {}) => {
   const nodes: Shape[] = [
-    createChat({ id: 'chat', ...createLayout({ x: -12, y: 0 }) }),
+    createChat({ id: 'chat', ...createLayout({ x: -18, y: 0 }) }),
     ...(artifact
       ? [
           createConstant({
             id: 'systemPrompt',
-            ...createLayout({ x: -12, y: -10, width: 8, height: 4 }),
+            ...createLayout({ x: -18, y: -11, width: 8, height: 8 }),
             value: ARTIFACTS_SYSTEM_PROMPT,
           }),
-          createView({ id: 'artifact', ...createLayout({ x: 16, y: -10, width: 12, height: 10 }) }),
+          createView({ id: 'artifact', ...createLayout({ x: 18, y: -10, width: 10, height: 10 }) }),
         ]
       : []),
-    createGpt({ id: 'gpt', ...createLayout({ x: 0, y: 0 }) }),
+    createGpt({ id: 'gpt', ...createLayout({ x: 0, y: -4 }) }),
     ...(history
       ? [
           createConstant({
             id: 'history',
-            ...createLayout({ x: -18, y: 14, width: 8, height: 4 }),
+            ...createLayout({ x: -18, y: 9, width: 8, height: 4 }),
             value: ObjectId.random(),
           }),
         ]
       : []),
     ...(history
-      ? [createList({ id: 'thread', text: 'History', ...createLayout({ x: -6, y: 14, width: 10, height: 10 }) })]
+      ? [createList({ id: 'thread', text: 'History', ...createLayout({ x: -7, y: 9, width: 10, height: 10 }) })]
       : []),
-    ...(history ? [createAppend({ id: 'append', ...createLayout({ x: 20, y: 14 }) })] : []),
-    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 16, y: 2, width: 12, height: 10 }) })] : []),
+    ...(history ? [createAppend({ id: 'append', ...createLayout({ x: 18, y: 11 }) })] : []),
+    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 18, y: 2, width: 10, height: 10 }) })] : []),
     ...(db ? [createDatabase({ id: 'db', ...createLayout({ x: -10, y: 4 }) })] : []),
-    ...(textToImage ? [createTextToImage({ id: 'text-to-image', ...createLayout({ x: -10, y: 5 }) })] : []),
+    ...(textToImage ? [createTextToImage({ id: 'text-to-image', ...createLayout({ x: -10, y: -14 }) })] : []),
     ...(cot ? [createList({ id: 'cot', ...createLayout({ x: 0, y: -10, width: 8, height: 10 }) })] : []),
-    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 8, y: 14, width: 12, height: 10 }) })] : []),
+    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 5, y: 9, width: 10, height: 10 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [

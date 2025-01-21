@@ -28,31 +28,16 @@ export const parseAnchorId = (id: string): [PropertyKind | undefined, string] =>
 };
 
 //
-// Schema
-//
-
-export const createInputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_INPUT]: schema });
-export const createOutputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_OUTPUT]: schema });
-
-export type InputType<INPUT = any> = {
-  [DEFAULT_INPUT]: INPUT;
-};
-
-export type OutputType<OUTPUT = any> = {
-  [DEFAULT_OUTPUT]: OUTPUT;
-};
-
-//
 // Shapes
 //
 
 export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'size'>, 'type' | 'node'>;
 
-// TODO(burdon): Marker type for detection?
 export const ComputeShape = S.extend(
   Polygon,
   S.Struct({
-    node: S.optional(ObjectId),
+    // TODO(burdon): Rename computeNode?
+    node: S.optional(ObjectId.annotations({ [AST.DescriptionAnnotationId]: 'Compute node id' })),
   }).pipe(S.mutable),
 );
 

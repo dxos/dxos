@@ -14,25 +14,20 @@ varying vec2 vUv;
 #pragma glslify: curl = require(glsl-curl-noise2)
 #pragma glslify: noise = require(glsl-noise/classic/3d.glsl)
 
-float c = 1.0;
-
 void main() {
-  float t = uTime * 0.03;
   vec3 pos = texture2D(positions, vUv).rgb;
   vec3 curlPos = texture2D(positions, vUv).rgb;
 
-  // TODO(burdon): Vary curl over time.
-  c = mix(0.2, 1.0, 0.5 + (sin(t * 0.5) * 0.5));
-  float p = clamp(uPerturbation, 0.2, 1.0);
-  if (p > 0.3) {
-    // TODO(burdon): Smooth ramp.
-    c = c / 2.0;
-  } else {
-    c = uCurl;
+  float t = uTime * 0.03;
+  float c = uCurl;
+  float a = clamp(uPerturbation, 0.2, 1.0);
+  if (uPerturbation < 0.1) {
+    // Cycle curl over time when inactive; low values are smooth.
+    // c = mix(0.2, uCurl, 0.5 + (sin(t * 0.5) * 0.5));
   }
 
-  pos = curl(pos * c + t);
-  curlPos  = curl(curlPos * c + t);
+  pos = curl(t + pos * c);
+  curlPos  = curl(t + curlPos * c);
   for (int i = 0; i <= uChaos; i++) {
     float q = uCurls[i];
     curlPos += curl(curlPos * c * q) * 1.0 / q;
@@ -41,5 +36,5 @@ void main() {
   // Sets the output color of the fragment shader:
   // - mix(a, b, c) linearly interpolates between a and b by r.
   vec3 chaoticPos = mix(pos, curlPos, noise(pos + t)) * uAlpha;
-  gl_FragColor = vec4(mix(pos, chaoticPos, 1.0 - p), 1.0);
+  gl_FragColor = vec4(mix(pos, chaoticPos, 1.0 - a), 1.0);
 }

@@ -4,7 +4,7 @@
 
 import { DefaultFrameComponent } from './Default';
 import { defaultAnchors, createAnchorMap } from '../components';
-import { type ShapeComponentProps, type ShapeDef } from '../components';
+import { type ShapeDef } from '../components';
 import { type RectangleShape } from '../types';
 
 export type CreateRectangleProps = Omit<RectangleShape, 'type'>;
@@ -14,10 +14,6 @@ export const createRectangle = ({ id, ...rest }: CreateRectangleProps): Rectangl
   type: 'rectangle',
   ...rest,
 });
-
-export const RectangleComponent = ({ shape }: ShapeComponentProps<RectangleShape>) => {
-  return null;
-};
 
 export const rectangleShape: ShapeDef<RectangleShape> = {
   type: 'rectangle',

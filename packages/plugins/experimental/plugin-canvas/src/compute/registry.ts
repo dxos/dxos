@@ -18,6 +18,7 @@ import {
   ifElseShape,
   ifShape,
   jsonShape,
+  mapShape,
   notShape,
   orShape,
   reducerShape,
@@ -31,6 +32,7 @@ import {
   viewShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
+import { noteShape } from '../shapes';
 
 /**
  * Order used by toolbar.
@@ -84,6 +86,14 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       counterShape,
       beaconShape,
       scopeShape,
+      mapShape,
+    ],
+  },
+  {
+    title: 'Misc',
+    shapes: [
+      //
+      noteShape,
     ],
   },
 ];

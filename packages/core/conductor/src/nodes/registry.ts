@@ -60,6 +60,7 @@ export type NodeType =
   | 'if-else'
   | 'json'
   | 'list'
+  | 'map'
   | 'not'
   | 'or'
   | 'reducer'
@@ -141,6 +142,11 @@ export const registry: Record<NodeType, Executable> = {
   ['reducer' as const]: defineComputeNode({
     input: ReducerInput,
     output: ReducerOutput,
+  }),
+
+  ['map' as const]: defineComputeNode({
+    input: AnyInput,
+    output: VoidOutput,
   }),
 
   ['thread' as const]: defineComputeNode({

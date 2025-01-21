@@ -18,6 +18,7 @@ export * from './Gpt';
 export * from './Json';
 export * from './List';
 export * from './Logic';
+export * from './Map';
 export * from './Scope';
 export * from './Switch';
 export * from './Table';
