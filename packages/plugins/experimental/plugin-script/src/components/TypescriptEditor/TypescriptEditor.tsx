@@ -13,6 +13,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   editorFullWidth,
+  type EditorInputMode,
   editorMonospace,
   EditorView,
   folding,
@@ -24,6 +25,7 @@ import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
   id: string;
+  inputMode: EditorInputMode;
   env?: VirtualTypeScriptEnvironment;
   toolbar?: boolean;
 } & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
@@ -37,6 +39,7 @@ export const TypescriptEditor = ({
   scrollTo,
   selection,
   toolbar,
+  inputMode,
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
@@ -66,6 +69,7 @@ export const TypescriptEditor = ({
             marginTop: '16px',
           },
         }),
+        InputModeExtensions[inputMode],
         folding(),
         // TODO(burdon): Factor out.
         [
@@ -80,7 +84,7 @@ export const TypescriptEditor = ({
       selection,
       scrollTo,
     }),
-    [id, extensions, themeMode, selection, scrollTo],
+    [id, extensions, themeMode, inputMode, selection, scrollTo],
   );
 
   return (
