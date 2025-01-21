@@ -79,8 +79,7 @@ export const initializeTable = async ({
 
     table.view = makeRef(
       createView({
-        // TODO(ZaymonFC): Don't hardcode name?
-        name: 'Test',
+        name: 'View',
         typename: contactSchema.typename,
         jsonSchema: contactSchema.jsonSchema,
         fields: ['name', 'active', 'email', 'salary'],

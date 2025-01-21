@@ -50,6 +50,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     }) => React.ReactElement | undefined;
     /**
      * Map of custom renderers for specific properties.
+     * @deprecated Use lookupComponent instead.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
@@ -117,7 +118,7 @@ export const Form = <T extends BaseObject>({
 
           const FoundComponent = lookupComponent?.({
             prop: name,
-            schema,
+            schema: S.make(ast),
             inputProps: {
               property: name,
               type,

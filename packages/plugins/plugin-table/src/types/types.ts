@@ -9,7 +9,16 @@ import { FieldSchema } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
-export const CreateTableSchema = S.Struct({ name: S.optional(S.String), initialSchema: S.optional(S.String) });
+export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-table/annotation/InitialSchema');
+
+export const CreateTableSchema = S.Struct({
+  name: S.optional(S.String),
+  initialSchema: S.optional(
+    S.String.annotations({
+      [InitialSchemaAnnotationId]: true,
+    }),
+  ),
+});
 
 export type CreateTableType = S.Schema.Type<typeof CreateTableSchema>;
 
