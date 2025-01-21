@@ -5,6 +5,7 @@
 import { javascript } from '@codemirror/lang-javascript';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover } from '@valtown/codemirror-ts';
+import { continueKeymap } from '@valtown/codemirror-continue';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -71,6 +72,8 @@ export const TypescriptEditor = ({
         }),
         InputModeExtensions[inputMode],
         folding(),
+        // Continues block comments when you hit Enter.
+        Prec.high(keymap.of(continueKeymap)),
         // TODO(burdon): Factor out.
         [
           editorMonospace,

@@ -6742,6 +6742,9 @@ importers:
       '@typescript/vfs':
         specifier: ^1.6.0
         version: 1.6.0(typescript@5.7.2)
+      '@valtown/codemirror-continue':
+        specifier: ^2.3.1
+        version: 2.3.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
       '@valtown/codemirror-ts':
         specifier: ^2.2.0
         version: 2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)
@@ -21174,6 +21177,14 @@ packages:
     resolution: {integrity: sha512-7E5vnWCxeslWlxwZ8uKIcnUZVMTRMZ8cvSnLLKF1NkyNb3PnNiAzoXM4G1vTKJKRhgOTeI6wK1YsEpwo9ABV5w==}
     peerDependencies:
       react: ~18.2.0
+
+  '@valtown/codemirror-continue@2.3.1':
+    resolution: {integrity: sha512-GkKs4Lgkf2lKecVKY26sOw4th+aRT30N4jYhpx/c7OYtV9ld2y+phVMjXo401lt6KiYUP5CUO1SaRezHZ5bldg==}
+    peerDependencies:
+      '@codemirror/language': ^6
+      '@codemirror/state': ^6
+      '@codemirror/view': ^6
+      '@lezer/common': ^1
 
   '@valtown/codemirror-ts@2.2.0':
     resolution: {integrity: sha512-p5PDt/T2rz83w6QoFQj8N0ojgfNIk/48k9u7VoyTyeBMZSz+kSHB00sKOFZ+OjCrUbl3cyGAmn/u+MInIxmfMQ==}
@@ -45477,6 +45488,13 @@ snapshots:
     dependencies:
       '@use-gesture/core': 10.2.27
       react: 18.2.0
+
+  '@valtown/codemirror-continue@2.3.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)':
+    dependencies:
+      '@codemirror/language': 6.10.3
+      '@codemirror/state': 6.4.1
+      '@codemirror/view': 6.34.1
+      '@lezer/common': 1.2.2
 
   '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)':
     dependencies:
