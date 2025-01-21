@@ -7,8 +7,7 @@ import React from 'react';
 import { TriggerInput, TriggerOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
-import { createFunctionAnchors, getHeight } from './Function';
-import { Box } from './common';
+import { createFunctionAnchors, getHeight, FunctionBody } from './common';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
@@ -31,7 +30,7 @@ export const createTrigger = ({ id, ...rest }: CreateTriggerProps): TriggerShape
 });
 
 export const TriggerComponent = ({ shape }: ShapeComponentProps<TriggerShape>) => {
-  return <Box shape={shape} />;
+  return <FunctionBody shape={shape} inputSchema={TriggerInput} outputSchema={TriggerOutput} />;
 };
 
 export const triggerShape: ShapeDef<TriggerShape> = {

@@ -107,15 +107,15 @@ export const createLogicCircuit = () => {
 
 export const createControlCircuit = () => {
   const nodes: ComputeShape[] = [
-    createSwitch({ id: 's', ...createLayout({ x: -8, y: 0 }) }),
-    createConstant({ id: 'c1', ...createLayout({ x: -11, y: -10 }), value: 'hello' }),
-    createConstant({ id: 'c2', ...createLayout({ x: -11, y: -4 }), value: 'world' }),
-    createConstant({ id: 'c3', ...createLayout({ x: -11, y: 4 }), value: true }),
-    createIf({ id: 'if1', ...createLayout({ x: 0, y: 0 }) }),
+    createSwitch({ id: 's', ...createLayout({ x: -9, y: -1 }) }),
+    createConstant({ id: 'c1', ...createLayout({ x: -10, y: -10 }), value: 'hello' }),
+    createConstant({ id: 'c2', ...createLayout({ x: -10, y: -5 }), value: 'world' }),
+    createConstant({ id: 'c3', ...createLayout({ x: -10, y: 3 }), value: true }),
+    createIf({ id: 'if1', ...createLayout({ x: 0, y: 1 }) }),
     createIfElse({ id: 'if2', ...createLayout({ x: 0, y: -8 }) }),
-    createBeacon({ id: 'b1', ...createLayout({ x: 8, y: -2 }) }),
-    createBeacon({ id: 'b2', ...createLayout({ x: 8, y: 2 }) }),
-    createJson({ id: 'j', ...createLayout({ x: 11, y: -8 }) }),
+    createBeacon({ id: 'b1', ...createLayout({ x: 9, y: -1 }) }),
+    createBeacon({ id: 'b2', ...createLayout({ x: 9, y: 3 }) }),
+    createJson({ id: 'j', ...createLayout({ x: 12, y: -8 }) }),
   ];
 
   const edges: Omit<GraphEdge<Partial<Connection>>, 'id'>[] = [

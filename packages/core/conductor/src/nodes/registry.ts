@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 
 import {
   AppendInput,
+  ConstantOutput,
   DatabaseOutput,
   GptInput,
   GptOutput,
@@ -68,7 +69,6 @@ export type NodeType =
   | 'switch'
   | 'text'
   | 'text-to-image'
-  | 'timer'
   | 'trigger'
   | 'thread'
   | 'view';
@@ -90,8 +90,8 @@ export const registry: Record<NodeType, Executable> = {
 
   ['constant' as const]: defineComputeNode({
     input: VoidInput,
-    output: DefaultOutput,
-    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
+    output: ConstantOutput,
+    exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
 
   ['switch' as const]: defineComputeNode({
@@ -102,11 +102,6 @@ export const registry: Record<NodeType, Executable> = {
   ['text' as const]: defineComputeNode({
     input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-  }),
-
-  ['timer' as const]: defineComputeNode({
-    input: VoidInput,
-    output: VoidOutput,
   }),
 
   ['trigger' as const]: defineComputeNode({

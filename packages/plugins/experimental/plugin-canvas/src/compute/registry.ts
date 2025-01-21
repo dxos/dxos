@@ -27,7 +27,6 @@ import {
   textShape,
   threadShape,
   textToImageShape,
-  timerShape,
   triggerShape,
   viewShape,
 } from './shapes';
@@ -42,7 +41,6 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
     title: 'Inputs',
     shapes: [
       //
-      timerShape,
       constantShape,
       textShape,
       chatShape,

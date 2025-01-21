@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 
-import { createFunctionAnchors } from './Function';
+import { createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';

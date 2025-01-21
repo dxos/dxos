@@ -7,7 +7,7 @@ import React from 'react';
 import { AppendInput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
-import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
+import { createFunctionAnchors, FunctionBody, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 

@@ -24,7 +24,6 @@ export * from './Switch';
 export * from './Table';
 export * from './Text';
 export * from './Thread';
-export * from './Timer';
 export * from './TextToImage';
 export * from './Trigger';
 export * from './View';

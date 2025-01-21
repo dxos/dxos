@@ -50,7 +50,6 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['text' as const]: () => createNode('text'),
   ['text-to-image' as const]: () => createNode('text-to-image'),
   ['thread' as const]: () => createNode('thread'),
-  ['timer' as const]: () => createNode('timer'),
   ['trigger' as const]: () => createNode('trigger'),
   ['view' as const]: () => createNode('view'),
 };
