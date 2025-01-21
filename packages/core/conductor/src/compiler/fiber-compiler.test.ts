@@ -3,7 +3,7 @@
 //
 
 import { it } from '@effect/vitest';
-import { Effect } from 'effect';
+import { Effect, Either } from 'effect';
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
@@ -11,11 +11,12 @@ import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { NODE_INPUT, NODE_OUTPUT, registry } from '../nodes';
 import { logCustomEvent } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import {
   ComputeGraphModel,
+  NotExecuted,
   VoidOutput,
   defineComputeNode,
   makeValueBag,
@@ -46,7 +47,7 @@ describe('Graph as a fiber runtime', () => {
     }),
   );
 
-  test.only('composition', async ({ expect }) => {
+  test('composition', async ({ expect }) => {
     const runtime = new TestRuntime()
       .registerNode('dxn:test:sum', sum)
       .registerGraph('dxn:test:g1', g1())
@@ -85,6 +86,19 @@ describe('Graph as a fiber runtime', () => {
       const v2 = yield* unwrapValueBag(yield* result.V2);
       expect(v1).toEqual({ result: 3 });
       expect(v2).toEqual({ result: 3 });
+    }),
+  );
+
+  it.effect('if-else', ({ expect }) =>
+    Effect.gen(function* () {
+      const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4()).registerNode('if', registry['if']);
+
+      const result = yield* runtime
+        .runGraph('dxn:test:g4', makeValueBag({ condition: true, value: 1 }))
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped);
+
+      expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
+      expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
     }),
   );
 });
@@ -153,6 +167,20 @@ const g3 = () => {
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })
     .createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' })
     .createEdge({ node: 'X', property: 'result' }, { node: 'V2', property: 'result' });
+
+  return model;
+};
+
+const g4 = () => {
+  const model = ComputeGraphModel.create();
+  model.builder
+    .addNode({ id: 'I', data: { type: NODE_INPUT } })
+    .addNode({ id: 'X', data: { type: 'if' } })
+    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .addEdge(createEdge({ source: 'I', output: 'condition', target: 'X', input: 'condition' }))
+    .addEdge(createEdge({ source: 'I', output: 'value', target: 'X', input: 'value' }))
+    .addEdge(createEdge({ source: 'X', output: 'true', target: 'O', input: 'true' }))
+    .addEdge(createEdge({ source: 'X', output: 'false', target: 'O', input: 'false' }));
 
   return model;
 };

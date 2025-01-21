@@ -148,6 +148,9 @@ export class GraphExecutor {
       (computeNodeResolver
         ? async (node) => {
             const compute = await computeNodeResolver!(node);
+            if (!compute) {
+              throw new Error(`Unresolved node: ${node.type}`);
+            }
             return compute.meta;
           }
         : () => raise(new Error('Either compute node resolver or compute meta resolver must be provided')));

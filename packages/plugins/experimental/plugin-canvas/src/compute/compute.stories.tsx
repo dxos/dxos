@@ -33,6 +33,7 @@ import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
+import { log } from '@dxos/log';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -102,7 +103,12 @@ const Render = ({
       }),
 
       // TODO(burdon): Every node is called on every update.
-      machine.output.on(({ nodeId, property }) => {
+      machine.output.on(({ nodeId, property, value }) => {
+        if (value.type === 'not-executed') {
+          // If the node didn't execute, don't trigger.
+          return;
+        }
+
         const edge = graph.edges.find((edge) => {
           const source = graph.getNode(edge.source);
           return (source.data as ComputeShape).node === nodeId && (edge.data as Connection).output === property;
