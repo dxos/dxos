@@ -48,8 +48,6 @@ export default () =>
         // TODO(ZaymonFC): Make this reactive.
         const schemata = space?.db.schemaRegistry.query().runSync();
 
-        console.log('Rendering input surface with', { schemata, space, props });
-
         return (
           <SelectInput<any>
             {...props}
