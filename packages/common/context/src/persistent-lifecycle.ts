@@ -5,8 +5,9 @@
 import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
-import { LifecycleState, Resource } from './resource';
+
 import { cancelWithContext } from './promise-utils';
+import { LifecycleState, Resource } from './resource';
 
 const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;
@@ -45,7 +46,7 @@ export class PersistentLifecycle<T> extends Resource {
   private readonly _onRestart?: () => Promise<void>;
   private readonly _maxRestartDelay: number;
 
-  private _currentContext: T | undefined = undefined;
+  private _currentState: T | undefined = undefined;
   private _restartTask?: DeferredTask = undefined;
   private _restartAfter = 0;
 
@@ -55,6 +56,10 @@ export class PersistentLifecycle<T> extends Resource {
     this._stop = stop;
     this._onRestart = onRestart;
     this._maxRestartDelay = maxRestartDelay;
+  }
+
+  get state() {
+    return this._currentState;
   }
 
   @synchronized
@@ -67,7 +72,7 @@ export class PersistentLifecycle<T> extends Resource {
         this._restartTask?.schedule();
       }
     });
-    this._currentContext = await this._start().catch((err) => {
+    this._currentState = await this._start().catch((err) => {
       log.warn('Start failed', { err });
       this._restartTask?.schedule();
       return undefined;
@@ -76,13 +81,13 @@ export class PersistentLifecycle<T> extends Resource {
 
   protected override async _close() {
     await this._restartTask?.join();
-    await this._stopCurrentContext();
+    await this._stopCurrentState();
     this._restartTask = undefined;
   }
 
   private async _restart() {
     log(`restarting in ${this._restartAfter}ms`, { state: this._lifecycleState });
-    await this._stopCurrentContext();
+    await this._stopCurrentState();
     if (this._lifecycleState !== LifecycleState.OPEN) {
       return;
     }
@@ -91,21 +96,21 @@ export class PersistentLifecycle<T> extends Resource {
 
     // May fail if the connection is not established.
     await warnAfterTimeout(5_000, 'Connection establishment takes too long', async () => {
-      this._currentContext = await this._start();
+      this._currentState = await this._start();
     });
 
     this._restartAfter = 0;
     await this._onRestart?.();
   }
 
-  private async _stopCurrentContext() {
-    if (this._currentContext) {
+  private async _stopCurrentState() {
+    if (this._currentState) {
       try {
-        await this._stop(this._currentContext);
+        await this._stop(this._currentState);
       } catch (err) {
         log.catch(err);
       }
-      this._currentContext = undefined;
+      this._currentState = undefined;
     }
   }
 
