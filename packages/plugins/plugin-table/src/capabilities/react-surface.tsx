@@ -39,7 +39,6 @@ export default () =>
         }
 
         const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
-        console.log(annotation);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
