@@ -88,6 +88,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
     const files = { [`${filename}.ts`]: { content: source.content } };
 
     try {
+      // TODO(wittjosiah): Factor out to intent.
       const meta = getMeta(script);
       const githubKey = meta.keys.find(({ source }) => source === 'github.com');
       const gistId = githubKey?.id;
