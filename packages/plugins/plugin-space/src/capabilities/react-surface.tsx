@@ -27,13 +27,14 @@ import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { SpaceCapabilities } from './capabilities';
 import {
+  AdvancedObjectSettings,
+  BaseObjectSettings,
   CollectionMain,
   CollectionSection,
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
   CreateObjectDialog,
   CreateSpaceDialog,
-  DefaultObjectSettings,
   InlineSyncStatus,
   JOIN_DIALOG,
   JoinDialog,
@@ -92,11 +93,18 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <SpaceSettingsPanel space={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/object-settings-panel-fallback`,
+      id: `${SPACE_PLUGIN}/object-settings-base-panel`,
+      role: 'complementary--settings',
+      disposition: 'hoist',
+      filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+      component: ({ data }) => <BaseObjectSettings object={data.subject} />,
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/object-settings-advanced-panel`,
       role: 'complementary--settings',
       disposition: 'fallback',
       filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
-      component: ({ data }) => <DefaultObjectSettings object={data.subject} />,
+      component: ({ data }) => <AdvancedObjectSettings object={data.subject} />,
     }),
     createSurface({
       id: SPACE_SETTINGS_DIALOG,

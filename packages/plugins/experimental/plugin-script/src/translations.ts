@@ -2,11 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ScriptType } from '@dxos/functions';
+
 import { SCRIPT_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
+      [ScriptType.typename]: {
+        'typename label': 'Script',
+      },
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
         'object title placeholder': 'New script',

@@ -4,6 +4,7 @@
     "lib": [
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
