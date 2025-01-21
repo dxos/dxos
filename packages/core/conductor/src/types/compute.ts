@@ -42,6 +42,7 @@ export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
  * The whole bag itself can be a not-executed marker in case the entire node did not execute.
  */
 export type ValueBag<T extends ValueRecord = ValueRecord> = {
+  // TODO(dmaretskyi): Rename `_tag` to be consistent with effect.
   type: 'bag';
   values: {
     [K in keyof T]: ValueEffect<T[K]>;
