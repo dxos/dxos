@@ -356,7 +356,8 @@ export class Toolbox {
           tsConfigJson.references = [];
         }
 
-        if (!this.config.tsconfig?.noDirectOutDir) {
+        if (!this.config.tsconfig?.noDirectOutDir && tsConfigJson.extends?.endsWith('tsconfig.base.json')) {
+          tsConfigJson.compilerOptions ??= {};
           tsConfigJson.compilerOptions.outDir ??= `${project.path}/dist/types`;
         }
 
