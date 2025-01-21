@@ -4,3 +4,4 @@
 
 export * from './components';
 export * from './defs';
+export * from './hooks';

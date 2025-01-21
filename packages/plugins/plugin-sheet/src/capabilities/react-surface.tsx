@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { SheetContainer, SheetObjectSettings } from '../components';
+import { RangeList, SheetContainer } from '../components';
 import { SHEET_PLUGIN } from '../meta';
 import { SheetType } from '../types';
 
@@ -25,6 +25,6 @@ export default () =>
       id: `${SHEET_PLUGIN}/settings`,
       role: 'complementary--settings',
       filter: (data): data is { subject: SheetType } => data.subject instanceof SheetType,
-      component: ({ data }) => <SheetObjectSettings sheet={data.subject} />,
+      component: ({ data }) => <RangeList sheet={data.subject} />,
     }),
   ]);

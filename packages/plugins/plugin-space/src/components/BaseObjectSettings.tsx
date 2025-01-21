@@ -9,11 +9,11 @@ import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export type DefaultObjectSettingsProps = {
+export type BaseObjectSettingsProps = {
   object: ReactiveEchoObject<any>;
 };
 
-export const DefaultObjectSettings = ({ object }: DefaultObjectSettingsProps) => {
+export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   // TODO(burdon): Standardize forms.
   return (
