@@ -26,6 +26,8 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-react": "^1.3.8",
+    "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {

@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { ToolbarButton, ToolbarSeparator } from './common';
 import { translationKey } from '../../translations';
@@ -14,8 +14,7 @@ import { translationKey } from '../../translations';
 // Root
 //
 
-// TODO(Zan): This should become a union later.
-export type ToolbarAction = { type: 'add-row' } | { type: 'comment' };
+type ToolbarAction = { type: 'add-row' } | { type: 'comment' } | { type: 'save-view' };
 
 export type ToolbarActionType = ToolbarAction['type'];
 
@@ -46,25 +45,32 @@ const Editing = () => {
   const { t } = useTranslation(translationKey);
 
   return (
-    <>
-      <ToolbarButton
-        value='add-row'
-        icon='ph--plus--regular'
-        data-testid='table.toolbar.add-row'
-        onClick={() => onAction?.({ type: 'add-row' })}
-      >
-        {t('add row')}
-      </ToolbarButton>
-    </>
+    <ToolbarButton
+      value='add-row'
+      icon='ph--plus--regular'
+      data-testid='table.toolbar.add-row'
+      onClick={() => onAction?.({ type: 'add-row' })}
+    >
+      {t('add row label')}
+    </ToolbarButton>
   );
 };
 
-const Actions = () => {
+const Actions = ({ viewDirty }: { viewDirty?: boolean }) => {
   const { onAction } = useToolbarContext('Actions');
   const { t } = useTranslation(translationKey);
 
   return (
     <>
+      {viewDirty && (
+        <Button
+          value='save-view'
+          data-testid='table.toolbar.save-view'
+          onClick={() => onAction?.({ type: 'save-view' })}
+        >
+          {t('save view label')}
+        </Button>
+      )}
       <ToolbarButton
         value='comment'
         icon='ph--chat-text--regular'
