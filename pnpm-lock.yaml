@@ -1320,6 +1320,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
@@ -5705,6 +5708,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
