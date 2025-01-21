@@ -43,17 +43,17 @@ export class DXN {
 
   static parse(dxn: string): DXN {
     if (typeof dxn !== 'string') {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(typeof kind === 'string' && kind.length > 0)) {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(parts.length > 0)) {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
 
     return new DXN(kind, parts);

@@ -8,10 +8,10 @@ import { ComputeGraphModel } from './model';
 
 describe('graph builder', () => {
   test('graph', ({ expect }) => {
-    const g1 = ComputeGraphModel.create();
+    const g1 = ComputeGraphModel.create({ id: 'dxn:test:g1' });
     g1.builder.createNode({ id: 'x' });
 
-    const g2 = ComputeGraphModel.create();
+    const g2 = ComputeGraphModel.create({ id: 'dxn:test:g2' });
     g2.builder
       .call((builder) => {
         builder.createEdge(

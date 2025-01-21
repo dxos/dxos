@@ -5,6 +5,7 @@
 import { Effect } from 'effect';
 
 import { raise } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
@@ -20,24 +21,38 @@ import {
 import { WorkflowLoader } from '../workflow';
 
 export class TestRuntime {
-  readonly nodes = new Map<string, Executable>();
-  // TODO(burdon): Remove (make hierarchical?).
-  readonly graphs = new Map<string, ComputeGraphModel>();
+  // TODO(burdon): Index by DXN; ComputeGraph instances.
+  private readonly _graphs = new Map<string, ComputeGraphModel>();
+
+  private readonly _nodes = new Map<string, Executable>();
 
   private readonly _workflowLoader = new WorkflowLoader({
-    nodeResolver: async (nodeType: string) => this.nodes.get(nodeType)!,
-    graphLoader: async (graphDxn: DXN) => {
-      return this.graphs.get(graphDxn.toString())!.root;
-    },
+    graphLoader: async (graphDxn: DXN) => this.getGraph(graphDxn).root,
+    nodeResolver: async (nodeType: string) => this._nodes.get(nodeType)!,
   });
 
-  registerNode(nodeType: string, node: Executable): this {
-    this.nodes.set(nodeType, node);
+  get graphs() {
+    return this._graphs;
+  }
+
+  get nodes() {
+    return this._nodes;
+  }
+
+  getGraph(graphDxn: DXN): ComputeGraphModel {
+    const graph = this._graphs.get(graphDxn.toString());
+    invariant(graph, `Graph not found: ${graphDxn}`);
+    return graph;
+  }
+
+  // TODO(burdon): Require DXN to be set on graph.
+  registerGraph(graphDxn: string, graph: ComputeGraphModel): this {
+    this._graphs.set(graphDxn, graph);
     return this;
   }
 
-  registerGraph(graphDxn: string, graph: ComputeGraphModel): this {
-    this.graphs.set(graphDxn, graph);
+  registerNode(nodeType: string, node: Executable): this {
+    this._nodes.set(nodeType, node);
     return this;
   }
 
@@ -52,18 +67,20 @@ export class TestRuntime {
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
-  //                   There can be a graph which starts evaluating from constant nodes.
+  //  There can be a graph which starts evaluating from constant nodes.
   async runFromInput(
     graphDxn: string,
     inputNodeId: string,
     input: ValueBag<any>,
   ): Promise<Record<string, ComputeEffect<ValueBag<any>>>> {
-    const graph = this.graphs.get(graphDxn) ?? raise(new Error(`Graph not found: ${graphDxn}`));
     const workflow = await this._workflowLoader.load(DXN.parse(graphDxn));
     const executor = new GraphExecutor({
       computeNodeResolver: async (node: ComputeNode) => workflow.getStep(node.type!)!,
     });
+
+    const graph = this._graphs.get(graphDxn) ?? raise(new Error(`Graph not found: ${graphDxn}`));
     await executor.load(graph);
+
     executor.setOutputs(inputNodeId, input);
     const dependantNodes = executor.getAllDependantNodes(inputNodeId);
     const result: Record<string, ComputeEffect<ValueBag<any>>> = {};

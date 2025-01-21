@@ -15,6 +15,7 @@ import { NODE_INPUT, NODE_OUTPUT, registry } from '../nodes';
 import { logCustomEvent } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import {
+  type ComputeGraph,
   ComputeGraphModel,
   NotExecuted,
   VoidOutput,
@@ -30,7 +31,7 @@ describe('Graph as a fiber runtime', () => {
   it.effect('simple adder node', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime()
-        //
+        // Break line formatting.
         .registerNode('dxn:test:sum', sum)
         .registerGraph('dxn:test:g1', g1());
 
@@ -51,7 +52,27 @@ describe('Graph as a fiber runtime', () => {
     const runtime = new TestRuntime()
       .registerNode('dxn:test:sum', sum)
       .registerGraph('dxn:test:g1', g1())
-      .registerGraph('dxn:test:g2', g2());
+      .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
+
+    const result = await Effect.runPromise(
+      runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
+        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+        Effect.scoped,
+
+        // Unwrapping without services to test that computing values doesn't require services.
+        Effect.flatMap(unwrapValueBag),
+      ),
+    );
+    expect(result).toEqual({ result: 6 });
+  });
+
+  // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
+  test.skip('composition (with shortcut).', async ({ expect }) => {
+    const runtime = new TestRuntime();
+    runtime
+      .registerNode('dxn:test:sum', sum)
+      .registerGraph('dxn:test:g1', g1())
+      .registerGraph('dxn:test:g2', g2b(runtime.getGraph(DXN.parse('dxn:test:g1')).root));
 
     const result = await Effect.runPromise(
       runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
@@ -91,7 +112,7 @@ describe('Graph as a fiber runtime', () => {
 
   it.effect('if-else', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4()).registerNode('if', registry['if']);
+      const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4()).registerNode('if', registry['if' as const]);
 
       const result = yield* runtime
         .runGraph('dxn:test:g4', makeValueBag({ condition: true, value: 1 }))
@@ -126,7 +147,7 @@ const view = defineComputeNode({
 });
 
 const g1 = () => {
-  const model = ComputeGraphModel.create();
+  const model = ComputeGraphModel.create({ id: 'dxn:test:g1' });
   model.builder
     .createNode({ id: 'I', data: { type: NODE_INPUT } })
     .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
@@ -138,18 +159,31 @@ const g1 = () => {
   return model;
 };
 
-const g2 = () => {
-  const g1Dxn = DXN.parse('dxn:test:g1');
-  const model = ComputeGraphModel.create();
+const g2a = (g1: DXN) => {
+  const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
     .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
-    .createNode({ id: 'Y', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
+    .createNode({ id: 'X', data: { type: g1.toString(), subgraph: refFromDXN(g1) } })
+    .createNode({ id: 'Y', data: { type: g1.toString(), subgraph: refFromDXN(g1) } })
     .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
     .createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' })
     .createEdge({ node: 'X', property: 'sum' }, { node: 'Y', property: 'number2' })
+    .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
+
+  return model;
+};
+
+const g2b = (g1: ComputeGraph) => {
+  const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
+  model.builder
+    .createNode({ id: 'I', data: { type: NODE_INPUT } })
+    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' })
+    .createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' })
+    .createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' })
+    .createEdge({ node: 'X', property: 'sum' }, { node: g1, property: 'number2' })
     .createEdge({ node: 'Y', property: 'sum' }, { node: 'O', property: 'result' });
 
   return model;
@@ -174,13 +208,13 @@ const g3 = () => {
 const g4 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'I', data: { type: NODE_INPUT } })
-    .addNode({ id: 'X', data: { type: 'if' } })
-    .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
-    .addEdge(createEdge({ source: 'I', output: 'condition', target: 'X', input: 'condition' }))
-    .addEdge(createEdge({ source: 'I', output: 'value', target: 'X', input: 'value' }))
-    .addEdge(createEdge({ source: 'X', output: 'true', target: 'O', input: 'true' }))
-    .addEdge(createEdge({ source: 'X', output: 'false', target: 'O', input: 'false' }));
+    .createNode({ id: 'I', data: { type: NODE_INPUT } })
+    .createNode({ id: 'X', data: { type: 'if' } })
+    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' })
+    .createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' })
+    .createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' })
+    .createEdge({ node: 'X', property: 'false' }, { node: 'O', property: 'false' });
 
   return model;
 };

@@ -34,10 +34,10 @@ export class ReadonlyGraphModel<
    * Return stable sorted JSON representation of graph.
    */
   toJSON() {
-    const { nodes, edges } = getSnapshot(this._graph);
+    const { id, nodes, edges } = getSnapshot(this._graph);
     nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
     edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    return { nodes, edges };
+    return { id, nodes, edges };
   }
 
   get graph(): Graph {

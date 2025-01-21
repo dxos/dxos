@@ -53,6 +53,7 @@ export declare namespace GraphEdge {
  * Generic graph.
  */
 export const Graph = S.Struct({
+  id: S.optional(S.String),
   nodes: S.mutable(S.Array(BaseGraphNode)),
   edges: S.mutable(S.Array(BaseGraphEdge)),
 });

@@ -11,6 +11,7 @@ import {
   type GraphNode,
   createEdgeId,
 } from '@dxos/graph';
+import { DXN } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 
 import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
@@ -28,7 +29,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
   static create(graph?: Partial<Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
       create(ComputeGraph, {
-        graph: { nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] },
+        graph: { id: graph?.id ?? ObjectId.random(), nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] },
       }),
     );
   }
@@ -67,8 +68,16 @@ export class ComputeGraphModel extends AbstractGraphModel<
     target: { node: string | GraphNode<ComputeNode> | ComputeGraph; property?: string },
   ): GraphEdge<ComputeEdge> {
     const sourceId = typeof source.node === 'string' ? source.node : source.node.id;
-    const targetId = isComputeGraph(target.node) // Create local intermediate node with to the subgraph.
-      ? this.createNode({ data: { subgraph: makeRef(target.node) } }).id
+
+    // TODO(burdon): DXN from echo-schema is a different type.
+    // Create local intermediate node for the subgraph.
+    const targetId = isComputeGraph(target.node)
+      ? this.createNode({
+          data: {
+            type: DXN.parse(target.node.graph.id!).toString(),
+            subgraph: makeRef(target.node),
+          },
+        }).id
       : typeof target.node === 'string'
         ? target.node
         : target.node.id;

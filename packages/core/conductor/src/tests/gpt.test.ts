@@ -103,7 +103,7 @@ describe('Gpt pipelines', () => {
     );
   });
 
-  test.skipIf(SKIP_AI_SERVICE_TESTS).only('edge gpt output only', async ({ expect }) => {
+  test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
