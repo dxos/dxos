@@ -34,7 +34,8 @@ export const KanbanPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: KanbanType.typename,
           metadata: {
-            createObject: (props: { name?: string; space: Space }) => createIntent(KanbanAction.Create, props),
+            createObject: (props: { name?: string }, options: { space: Space }) =>
+              createIntent(KanbanAction.Create, { ...props, space: options.space }),
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
           },
