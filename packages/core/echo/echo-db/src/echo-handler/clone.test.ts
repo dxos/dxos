@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Expando } from '@dxos/echo-schema';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 
 import { clone } from './clone';
 import { EchoTestBuilder } from '../testing';
@@ -71,30 +71,34 @@ describe('clone', () => {
     const task1 = create(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: create(Expando, {
-        type: 'Person',
-        name: 'John Doe',
-      }),
+      assignee: makeRef(
+        create(Expando, {
+          type: 'Person',
+          name: 'John Doe',
+        }),
+      ),
     });
     db1.add(task1);
     await db1.flush();
 
-    const task2 = clone(task1, { additional: [task1.assignee] });
+    const task2 = clone(task1, { additional: [task1.assignee.target] });
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
     expect([...task2.tags]).to.deep.equal([...task1.tags]);
     expect(task2.assignee !== task1.assignee).to.be.true;
-    expect(task2.assignee.id).to.equal(task1.assignee.id);
-    expect(task2.assignee.name).to.equal(task1.assignee.name);
+    expect(task2.assignee.target !== task1.assignee.target).to.be.true;
+    expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
+    expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
 
     db2.add(task2);
     await db2.flush();
     expect(task2.id).to.equal(task1.id);
     expect(task2.assignee !== task1.assignee).to.be.true;
-    expect(task2.assignee.id).to.equal(task1.assignee.id);
-    expect(task2.assignee.name).to.equal(task1.assignee.name);
-    expect((await db2.query({ type: 'Person' }).run()).objects[0] === task2.assignee).to.be.true;
+    expect(task2.assignee.target !== task1.assignee.target).to.be.true;
+    expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
+    expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
+    expect((await db2.query({ type: 'Person' }).run()).objects[0] === task2.assignee.target).to.be.true;
   });
 
   test('clone with nested text objects', async () => {

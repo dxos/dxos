@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { inRange } from '@dxos/compute';
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
@@ -20,9 +21,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { inRange, cellClassNameForRange, rangeFromIndex } from '../../defs';
 import { parseThreadAnchorAsCellRange } from '../../integrations';
 import { type SheetModel } from '../../model';
+import { cellClassNameForRange, rangeFromIndex } from '../../types';
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(
@@ -54,7 +55,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));
   const threadRefs = model.sheet.threads
     ?.filter((thread) => {
-      const range = thread?.anchor && parseThreadAnchorAsCellRange(thread!.anchor);
+      const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
       return thread && range ? inRange(range, address) : false;
     })
     .map((thread) => fullyQualifiedId(thread!))

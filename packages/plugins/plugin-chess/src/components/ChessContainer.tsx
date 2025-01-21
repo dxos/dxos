@@ -5,6 +5,7 @@
 import React, { type ComponentProps } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { Chess } from './Chess';
 
@@ -15,9 +16,9 @@ const ChessContainer = ({ game, role }: Pick<ComponentProps<typeof Chess>, 'game
   }
 
   return (
-    <div role='none' className='flex flex-col row-span-2 is-full overflow-hidden'>
+    <StackItem.Content toolbar={false}>
       <Chess game={game} space={space} playerSelector={role === 'article'} />
-    </div>
+    </StackItem.Content>
   );
 };
 

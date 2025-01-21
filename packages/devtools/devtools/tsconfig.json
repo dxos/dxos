@@ -6,6 +6,7 @@
     "lib": [
       "DOM"
     ],
+    "outDir": "./dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -29,6 +30,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -45,6 +49,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/automerge"
     },
     {
       "path": "../../core/echo/echo-db"

@@ -4,13 +4,13 @@
 
 import { type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject, createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
-import { type MutableSchema, toJsonSchema } from '@dxos/echo-schema';
+import { type EchoSchema, toJsonSchema } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 
 // TODO(burdon): Evolve.
 export type RequestContext = {
-  schema?: Map<string, MutableSchema>;
+  schema?: Map<string, EchoSchema>;
   object?: ReactiveEchoObject<any>;
   text?: string;
 };
@@ -22,7 +22,7 @@ export const createContext = async (
 ): Promise<RequestContext> => {
   let object: ReactiveEchoObject<any> | undefined;
 
-  const contextObjectId = message.context?.id;
+  const contextObjectId = message.context?.target?.id;
   if (contextObjectId) {
     // TODO(burdon): Handle composite key?
     const idParts = contextObjectId.split(':');
@@ -35,17 +35,17 @@ export const createContext = async (
   let text: string | undefined;
   if (object instanceof DocumentType) {
     await loadObjectReferences(object, (doc) => doc.threads ?? []);
-    const comment = object.threads?.find((t) => t === thread);
-    if (object.content && comment?.anchor) {
-      const [start, end] = comment.anchor.split(':');
-      text = getTextInRange(createDocAccessor(object.content, ['content']), start, end) ?? '';
+    const comment = object.threads?.find((t) => t.target === thread);
+    if (object.content && comment?.target?.anchor) {
+      const [start, end] = comment.target.anchor.split(':');
+      text = getTextInRange(createDocAccessor(object.content.target!, ['content']), start, end) ?? '';
     }
   }
 
   // Create schema registry.
   // TODO(burdon): Filter?
-  const schemaList = await space.db.schemaRegistry.query();
-  const schema = schemaList.reduce<Map<string, MutableSchema>>((map, schema) => {
+  const schemaList = await space.db.schemaRegistry.query().run();
+  const schema = schemaList.reduce<Map<string, EchoSchema>>((map, schema) => {
     const jsonSchema = toJsonSchema(schema);
     if (jsonSchema.title) {
       map.set(jsonSchema.title, schema);

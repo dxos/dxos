@@ -5,7 +5,13 @@
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { type IntentDispatcher, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  createIntent,
+  NavigationAction,
+  type PromiseIntentDispatcher,
+  useCapabilities,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -29,12 +35,13 @@ import {
 import { defaultTx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from './types';
+import { MarkdownCapabilities } from './capabilities';
+import { type DocumentType, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
   document?: DocumentType;
-  dispatch?: IntentDispatcher;
+  dispatch?: PromiseIntentDispatcher;
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
@@ -42,14 +49,8 @@ type ExtensionsOptions = {
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
-export const useExtensions = ({
-  document,
-  settings,
-  viewMode,
-  editorStateStore,
-  extensionProviders,
-}: ExtensionsOptions & Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
-  const dispatch = useIntentDispatcher();
+export const useExtensions = ({ document, settings, viewMode, editorStateStore }: ExtensionsOptions): Extension[] => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
 
@@ -79,12 +80,14 @@ export const useExtensions = ({
     ],
   );
 
+  const extensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
+
   //
   // External extensions from other plugins.
   //
   const pluginExtensions = useMemo<Extension[] | undefined>(
     () =>
-      extensionProviders?.reduce((acc: Extension[], provider) => {
+      extensionProviders.flat().reduce((acc: Extension[], provider) => {
         const extension = typeof provider === 'function' ? provider({ document }) : provider;
         if (extension) {
           acc.push(extension);
@@ -105,7 +108,7 @@ export const useExtensions = ({
         document &&
           createDataExtensions({
             id: document.id,
-            text: document.content && createDocAccessor(document.content, ['content']),
+            text: document.content.target && createDocAccessor(document.content.target, ['content']),
             space,
             identity,
           }),
@@ -117,7 +120,7 @@ export const useExtensions = ({
         baseExtensions,
         pluginExtensions,
       ].filter(isNotFalsy),
-    [baseExtensions, pluginExtensions, document, document?.content, space, identity],
+    [baseExtensions, pluginExtensions, document, document?.content?.target, space, identity],
   );
 };
 
@@ -144,15 +147,14 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
           renderLinkButton:
             dispatch && document
               ? onRenderLink((id: string) => {
-                  void dispatch({
-                    action: NavigationAction.ADD_TO_ACTIVE,
-                    data: {
+                  void dispatch(
+                    createIntent(NavigationAction.AddToActive, {
                       id,
                       part: 'main',
                       pivotId: fullyQualifiedId(document),
                       scrollIntoView: true,
-                    },
-                  });
+                    }),
+                  );
                 })
               : undefined,
         }),

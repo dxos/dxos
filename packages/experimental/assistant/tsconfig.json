@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "module": "ESNext",
+    "outDir": "./dist/types",
     "types": [
       "vite/types/import-meta"
     ]
@@ -33,6 +34,9 @@
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/live-object"
     }
   ]
 }

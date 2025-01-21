@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type MutableSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { type ReactiveObject } from '@dxos/react-client/echo';
 
 import { type KanbanType } from './kanban';
@@ -12,7 +12,7 @@ import { type BaseKanbanItem, KanbanModel } from './kanban-model';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
   kanban?: KanbanType;
-  cardSchema?: MutableSchema;
+  cardSchema?: EchoSchema;
   items?: ReactiveObject<T>[];
 };
 
@@ -39,7 +39,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [kanban]);
+  }, [kanban, cardSchema, kanban?.columnField]);
 
   // Update data.
   useEffect(() => {

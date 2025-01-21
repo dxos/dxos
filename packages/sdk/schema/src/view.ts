@@ -15,7 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { create, type ReactiveObject } from '@dxos/live-object';
-import { stripUndefinedValues } from '@dxos/util';
+import { stripUndefined } from '@dxos/util';
 
 import { createFieldId } from './projection';
 import { getSchemaProperties } from './properties';
@@ -102,7 +102,7 @@ export const createView = ({
           : undefined;
 
       fields.push(
-        stripUndefinedValues({
+        stripUndefined({
           id: createFieldId(),
           path: property.name as JsonPath,
           referencePath,

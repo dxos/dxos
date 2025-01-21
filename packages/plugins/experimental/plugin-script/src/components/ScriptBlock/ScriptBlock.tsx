@@ -6,11 +6,11 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type ScriptType } from '@dxos/functions';
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
 import { Toolbar, Button, Icon } from '@dxos/react-ui';
 
 import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
-import { type ScriptType } from '../../types';
 import { FrameContainer } from '../FrameContainer';
 import { ScriptEditor } from '../ScriptEditor';
 
@@ -37,7 +37,7 @@ export type ScriptBlockProps = {
  */
 // TODO(burdon): Cache compiled results in context.
 export const ScriptBlock = ({ script, hideSelector, containerUrl }: ScriptBlockProps) => {
-  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
+  const source = useMemo(() => script.source && createDocAccessor(script.source.target!, ['content']), [script.source]);
   const [result, setResult] = useState<BundlerResult>();
   const bundler = useMemo(
     () => new Bundler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),
@@ -93,8 +93,10 @@ export const ScriptBlock = ({ script, hideSelector, containerUrl }: ScriptBlockP
         </Toolbar.Root>
       )}
 
-      <div className='flex'>
-        <ScriptEditor script={script} />
+      <div role='none' className='flex'>
+        <div role='none' className='flex flex-col'>
+          <ScriptEditor script={script} />
+        </div>
         {result && <FrameContainer key={script.id} result={result} containerUrl={containerUrl} />}
       </div>
     </div>

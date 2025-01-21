@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-files",
-  "version": "0.7.2",
+  "version": "0.7.4",
   "description": "DXOS Surface plugin for managing files.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,19 +11,11 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",
@@ -32,7 +24,9 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
@@ -42,8 +36,10 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.12.1",
     "localforage": "^1.10.0"
   },
   "devDependencies": {

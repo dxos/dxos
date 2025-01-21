@@ -33,6 +33,10 @@ export const sheetSememes = {
     light: ['neutral', 50],
     dark: ['neutral', 800],
   },
+  gridHeader: {
+    light: ['neutral', 25],
+    dark: ['neutral', 750],
+  },
   gridLine: {
     light: ['neutral', surfaceCadence.light[4]],
     dark: ['neutral', surfaceCadence.dark[3]],

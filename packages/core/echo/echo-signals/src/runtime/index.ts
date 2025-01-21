@@ -75,6 +75,10 @@ class CompositeSignal implements GenericSignal {
       signal.notifyWrite();
     }
   }
+
+  toString() {
+    return 'CompositeSignal';
+  }
 }
 
 class CompositeRuntime implements SignalRuntime {

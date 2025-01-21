@@ -1,6 +1,7 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
+    "outDir": "./dist/types",
     "types": [
       "@dxos/typings"
     ]
@@ -9,6 +10,9 @@
     "src"
   ],
   "references": [
+    {
+      "path": "../../../common/debug"
+    },
     {
       "path": "../../../common/effect"
     },

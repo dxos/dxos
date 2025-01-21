@@ -2,37 +2,45 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
-import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
-import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
-
 import { Event } from '@dxos/async';
+import {
+  addressFromA1Notation,
+  addressToA1Notation,
+  createSheetName,
+  isFormula,
+  type CellAddress,
+  type CellRange,
+  type CellScalarValue,
+  type ComputeGraph,
+  type ComputeNode,
+  type ComputeNodeEvent,
+  DetailedCellError,
+  ExportedCellChange,
+  type SimpleCellRange,
+  type SimpleCellAddress,
+  type SimpleDate,
+  type SimpleDateTime,
+} from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DetailedCellError, ExportedCellChange } from '#hyperformula';
-import { type ComputeGraph, type ComputeNode, type ComputeNodeEvent, createSheetName } from '../compute-graph';
 import {
-  addressFromA1Notation,
+  ReadonlyException,
   addressFromIndex,
-  addressToA1Notation,
   addressToIndex,
   initialize,
   insertIndices,
-  isFormula,
-  type CellAddress,
-  type CellRange,
-  ReadonlyException,
-  MAX_COLUMNS,
-  MAX_ROWS,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
-} from '../defs';
-import { type CellScalarValue, type CellValue, type SheetType, type RestoreAxis } from '../types';
+  MAX_ROWS,
+  MAX_COLS,
+} from '../types';
+import { type SheetAction, type CellValue, type SheetType } from '../types';
 
+// TODO(burdon): Move to compute.
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
@@ -176,12 +184,12 @@ export class SheetModel extends Resource {
   }
 
   insertColumns(i: number, n = 1) {
-    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLS);
     this.reset();
     return idx;
   }
 
-  dropRow(rowIndex: string): RestoreAxis {
+  dropRow(rowIndex: string): SheetAction.RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
       to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
@@ -195,7 +203,7 @@ export class SheetModel extends Resource {
     return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
   }
 
-  dropColumn(colIndex: string): RestoreAxis {
+  dropColumn(colIndex: string): SheetAction.RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
       to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
@@ -209,7 +217,7 @@ export class SheetModel extends Resource {
     return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
   }
 
-  restoreRow({ index, axisIndex, axisMeta, values }: RestoreAxis) {
+  restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis) {
     this._sheet.rows.splice(index, 0, axisIndex);
     values.forEach((value, col) => {
       if (value) {
@@ -222,7 +230,7 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
-  restoreColumn({ index, axisIndex, axisMeta, values }: RestoreAxis) {
+  restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis) {
     this._sheet.columns.splice(index, 0, axisIndex);
     values.forEach((value, row) => {
       if (value) {
@@ -373,7 +381,7 @@ export class SheetModel extends Resource {
       refresh = true;
     }
     if (cell.col >= this._sheet.columns.length) {
-      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLUMNS);
+      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLS);
       refresh = true;
     }
 

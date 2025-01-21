@@ -13,8 +13,9 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   editorFullWidth,
-  editorGutter,
   editorMonospace,
+  EditorView,
+  folding,
   InputModeExtensions,
   useTextEditor,
   type UseTextEditorProps,
@@ -24,6 +25,7 @@ import { nonNullable } from '@dxos/util';
 export type TypescriptEditorProps = {
   id: string;
   env?: VirtualTypeScriptEnvironment;
+  toolbar?: boolean;
 } & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
 
 export const TypescriptEditor = ({
@@ -34,6 +36,7 @@ export const TypescriptEditor = ({
   extensions,
   scrollTo,
   selection,
+  toolbar,
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
@@ -56,7 +59,14 @@ export const TypescriptEditor = ({
             content: { className: editorFullWidth },
           },
         }),
-        editorGutter,
+        // NOTE: Not using default editor gutter because folding for code works best right beside text.
+        EditorView.theme({
+          '.cm-gutters': {
+            // Match margin from content.
+            marginTop: '16px',
+          },
+        }),
+        folding(),
         // TODO(burdon): Factor out.
         [
           editorMonospace,
@@ -73,7 +83,9 @@ export const TypescriptEditor = ({
     [id, extensions, themeMode, selection, scrollTo],
   );
 
-  return <div ref={parentRef} className={className} {...focusAttributes} />;
+  return (
+    <div ref={parentRef} data-toolbar={toolbar ? 'enabled' : 'disabled'} className={className} {...focusAttributes} />
+  );
 };
 
 export default TypescriptEditor;

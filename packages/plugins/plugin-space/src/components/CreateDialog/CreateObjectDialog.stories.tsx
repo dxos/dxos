@@ -37,7 +37,9 @@ const meta: Meta<typeof CreateObjectDialog> = {
     withTheme,
     withLayout({ tooltips: true }),
   ],
-  parameters: { translations: [...translations, osTranslations] },
+  parameters: {
+    translations: [...translations, osTranslations],
+  },
   args: {
     schemas: [CollectionType],
   },

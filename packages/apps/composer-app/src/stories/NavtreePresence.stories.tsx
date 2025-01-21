@@ -25,7 +25,7 @@ faker.seed(3);
 //
 // const renderPresence = (node: TreeNode) => {
 //   if (isGraphNode(node)) {
-//     return <Surface role='presence' data={{ object: node.data }} />;
+//     return <Surface role='presence' data={{ subject: node.data }} />;
 //   }
 //
 //   return null;

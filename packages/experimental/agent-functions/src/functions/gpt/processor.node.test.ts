@@ -4,7 +4,7 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { ChainInputType, ChainPromptType, ChainType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 
@@ -31,21 +31,23 @@ describe('RequestProcessor', () => {
       space.db.add(
         create(ChainType, {
           prompts: [
-            create(ChainPromptType, {
-              command,
-              template,
-              inputs: [
-                {
-                  type: ChainInputType.VALUE,
-                  name: 'language',
-                  value: language,
-                },
-                {
-                  type: ChainInputType.PASS_THROUGH,
-                  name: 'input',
-                },
-              ],
-            }),
+            makeRef(
+              create(ChainPromptType, {
+                command,
+                template,
+                inputs: [
+                  {
+                    type: ChainInputType.VALUE,
+                    name: 'language',
+                    value: language,
+                  },
+                  {
+                    type: ChainInputType.PASS_THROUGH,
+                    name: 'input',
+                  },
+                ],
+              }),
+            ),
           ],
         }),
       );
@@ -86,37 +88,39 @@ describe('RequestProcessor', () => {
       space.db.add(
         create(ChainType, {
           prompts: [
-            create(ChainPromptType, {
-              command: 'extract',
-              template: str(
-                'List all people and companies mentioned in the content section below.',
-                '',
-                'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
-                'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
-                '',
-                '{company}',
-                '{contact}',
-                '---',
-                'Content:',
-                '{input}',
-              ),
-              inputs: [
-                {
-                  type: ChainInputType.PASS_THROUGH,
-                  name: 'input',
-                },
-                {
-                  type: ChainInputType.SCHEMA,
-                  name: 'company',
-                  value: 'example.com/type/organization',
-                },
-                {
-                  type: ChainInputType.SCHEMA,
-                  name: 'contact',
-                  value: 'example.com/type/contact',
-                },
-              ],
-            }),
+            makeRef(
+              create(ChainPromptType, {
+                command: 'extract',
+                template: str(
+                  'List all people and companies mentioned in the content section below.',
+                  '',
+                  'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
+                  'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
+                  '',
+                  '{company}',
+                  '{contact}',
+                  '---',
+                  'Content:',
+                  '{input}',
+                ),
+                inputs: [
+                  {
+                    type: ChainInputType.PASS_THROUGH,
+                    name: 'input',
+                  },
+                  {
+                    type: ChainInputType.SCHEMA,
+                    name: 'company',
+                    value: 'example.com/type/organization',
+                  },
+                  {
+                    type: ChainInputType.SCHEMA,
+                    name: 'contact',
+                    value: 'example.com/type/contact',
+                  },
+                ],
+              }),
+            ),
           ],
         }),
       );

@@ -6,16 +6,17 @@ import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { S, foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { create, getMeta } from '@dxos/live-object';
+import { create, getMeta, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ChainPromptType } from '@dxos/plugin-automation/types';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 import { nonNullable } from '@dxos/util';
 
-import { ModelInvokerFactory } from '../../chain';
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
+import { ModelInvokerFactory } from '../../chain';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
@@ -74,14 +75,16 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
       }
 
       // Separate messages that don't belong to an active thread.
-      const thread = threads.find((thread: ThreadType) => thread.messages.some((msg) => msg?.id === message.id));
+      const thread = threads.find((thread: ThreadType) =>
+        thread.messages.some((msg) => msg?.target?.id === message.id),
+      );
       if (!thread) {
         return [message, undefined] as [MessageType, ThreadType | undefined];
       }
 
       // Only react to the last message in the thread.
       // TODO(burdon): Need better marker.
-      if (thread.messages[thread.messages.length - 1]?.id !== message.id) {
+      if (thread.messages[thread.messages.length - 1]?.target?.id !== message.id) {
         return null;
       }
 
@@ -129,7 +132,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
               },
             );
 
-            thread.messages.push(response);
+            thread.messages.push(makeRef(response));
           } else if (success) {
             // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".

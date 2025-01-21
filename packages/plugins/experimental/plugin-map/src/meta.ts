@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const MAP_PLUGIN = 'dxos.org/plugin/map';
 
-export default {
+export const meta = {
   id: MAP_PLUGIN,
   name: 'Maps',
   description: 'Display objects on maps.',

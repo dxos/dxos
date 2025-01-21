@@ -87,9 +87,9 @@ export const isAction = (data: unknown): data is Action =>
 
 export const actionGroupSymbol = Symbol('ActionGroup');
 
-export type ActionGroup = Readonly<
-  Omit<Node<typeof actionGroupSymbol, Record<string, any>>, 'properties'> & {
-    properties: Readonly<Record<string, any>>;
+export type ActionGroup<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
+  Omit<Node<typeof actionGroupSymbol, TProperties>, 'properties'> & {
+    properties: Readonly<TProperties>;
   }
 >;
 

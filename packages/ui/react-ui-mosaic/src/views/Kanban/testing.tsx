@@ -5,6 +5,7 @@
 import React, { type FC, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Kanban, type KanbanColumn, type KanbanProps } from './Kanban';
 import { Mosaic, type MosaicDropEvent, Path, swapItems } from '../../mosaic';
@@ -32,8 +33,14 @@ export const DemoKanban: FC<DemoKanbanProps> = ({
   count = 3,
   debug = false,
 }) => {
-  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>(() => createKanban({ types, columns: count }));
+  const [columns, setColumns] = useState<KanbanColumn<TestItem>[]>([]);
 
+  useAsyncEffect(async () => {
+    const columns = await createKanban({ types, columns: count });
+    setColumns(columns);
+  }, []);
+
+  // const handleDelete = (id: string) => {
   // const handleDelete = (id: string) => {
   //   setItems1((cards) => cards.filter((card) => card.id !== id));
   // };

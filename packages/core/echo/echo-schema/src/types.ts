@@ -6,13 +6,13 @@ import { Schema as S } from '@effect/schema';
 
 import { Reference } from '@dxos/echo-protocol';
 import { AST, type JsonPath } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getObjectAnnotation, type HasId } from './ast';
+import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
 
 // TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_META = '@meta';
 
 //
@@ -25,6 +25,7 @@ export const ECHO_ATTR_META = '@meta';
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
+// TODO(dmaretskyi): Rename AnyProperties.
 export type BaseObject = { [key: string]: any };
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
@@ -44,11 +45,6 @@ export const RawObject = <S extends S.Schema<any>>(
 ): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
-
-/**
- * Reference to another ECHO object.
- */
-export type Ref<T extends WithId> = T | undefined;
 
 //
 // Data
@@ -90,8 +86,24 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+export const splitPath = (path: JsonPath): string[] => {
+  return path.match(/[a-zA-Z_$][\w$]*|\[\d+\]/g) ?? [];
+};
+
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
+  return getDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+  );
+};
+
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
+  return setDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    value,
+  );
+};
 
 /**
  * Returns a typename of a schema.
@@ -106,12 +118,14 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
 
+  const echoId = getEchoIdentifierAnnotation(schema);
+  if (echoId) {
+    return Reference.fromDXN(DXN.parse(echoId));
+  }
+
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;
-  }
-  if (annotation.schemaId) {
-    return Reference.localObjectReference(annotation.schemaId);
   }
 
   return Reference.fromLegacyTypename(annotation.typename);
@@ -129,4 +143,15 @@ export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   }
 
   return typeReference;
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getObjectAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };

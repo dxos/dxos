@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextType } from '@dxos/plugin-markdown/types';
-import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
+import { create, makeRef } from '@dxos/client/echo';
 import { Filter, hasType } from '@dxos/echo-db';
-import { create } from '@dxos/client/echo';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 const types = [TextType, ContactType, MessageType];
 
@@ -20,7 +20,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
   const objectsByEmail = new Map<string, ContactType>();
 
   let i = 0;
-  const getOrCreateContact = (recipient: ActorType): ContactType | undefined => {
+  const getOrCreateContact = (recipient: ActorType): ContactType => {
     invariant(recipient.email);
     let contact =
       objectsByEmail.get(recipient.email.toLowerCase()) ??
@@ -53,12 +53,12 @@ export const handler = subscriptionHandler(async ({ event }) => {
 
   // Lookup contacts.
   for (const message of messages ?? []) {
-    message.sender.contact = getOrCreateContact(message.sender);
+    message.sender.contact = makeRef(getOrCreateContact(message.sender));
     message.properties?.to?.forEach((to: ActorType) => {
-      to.contact = getOrCreateContact(to);
+      to.contact = makeRef(getOrCreateContact(to));
     });
     message.properties?.cc?.forEach((cc: ActorType) => {
-      cc.contact = getOrCreateContact(cc);
+      cc.contact = makeRef(getOrCreateContact(cc));
     });
   }
 

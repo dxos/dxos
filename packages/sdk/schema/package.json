@@ -1,6 +1,6 @@
 {
   "name": "@dxos/schema",
-  "version": "0.7.2",
+  "version": "0.7.4",
   "description": "Common data types and utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,7 +43,7 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "date-fns": "^3.3.1",
-    "effect": "^3.9.2",
+    "effect": "^3.12.1",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {

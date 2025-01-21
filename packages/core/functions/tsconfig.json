@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "outDir": "./dist/types",
     "types": [
       "@dxos/typings"
     ]
@@ -51,6 +52,9 @@
     },
     {
       "path": "../echo/live-object"
+    },
+    {
+      "path": "../mesh/edge-client"
     },
     {
       "path": "../protocols"

@@ -5,14 +5,14 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import {
-  useResolvePlugin,
-  parseNavigationPlugin,
-  parseGraphPlugin,
   NavigationAction,
   LayoutAction,
   type LayoutCoordinate,
   isLayoutParts,
   useIntentDispatcher,
+  createIntent,
+  useCapability,
+  Capabilities,
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -23,6 +23,8 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
+
+export const SEARCH_DIALOG = `${SEARCH_PLUGIN}/SearchDialog`;
 
 type SearchListResultProps = {
   node: Node;
@@ -45,55 +47,50 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
   );
 });
 
-export const SearchDialog = ({
-  subject,
-}: {
-  subject: { action: NavigationAction; layoutCoordinate: LayoutCoordinate; position: 'add-after' | 'add-before' };
-}) => {
+export type SearchDialogProps = {
+  layoutCoordinate: LayoutCoordinate;
+};
+
+export const SearchDialog = ({ layoutCoordinate }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const graph = graphPlugin?.provides.graph;
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
-  const providedClosed = navigationPlugin?.provides.location.closed ?? [];
+  const location = useCapability(Capabilities.Location);
+  const { graph } = useCapability(Capabilities.AppGraph);
+  const providedClosed = location.closed ?? [];
   const closed = (Array.isArray(providedClosed) ? providedClosed : [providedClosed])
     .map((id) => graph?.findNode(id))
     .filter(Boolean);
-  const active = navigationPlugin?.provides.location.active;
+  const active = location.active;
   const [queryString, setQueryString] = useState('');
   const client = useClient();
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleSelect = useCallback(
-    (nodeId: string) => {
+    async (nodeId: string) => {
       if (active && isLayoutParts(active)) {
         // If node is already present in the active parts, scroll to it and close the dialog.
         const index = active?.main?.findIndex((entry) => entry.id === nodeId);
         if (index !== -1) {
-          return dispatch([
-            { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-            { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
-          ]);
+          await dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
+          await dispatch(createIntent(LayoutAction.ScrollIntoView, { id: nodeId }));
+          return;
         }
 
-        return dispatch([
-          {
-            action: NavigationAction.ADD_TO_ACTIVE,
-            data: {
-              part: subject.layoutCoordinate.part,
-              id: nodeId,
-              pivotId: subject.layoutCoordinate.entryId,
-              positioning: 'end',
-            },
-          },
-          { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-          { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
-        ]);
+        await dispatch(
+          createIntent(NavigationAction.AddToActive, {
+            part: layoutCoordinate.part,
+            id: nodeId,
+            pivotId: layoutCoordinate.entryId,
+            positioning: 'end',
+          }),
+        );
+        await dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
+        await dispatch(createIntent(LayoutAction.ScrollIntoView, { id: nodeId }));
       }
     },
-    [subject, dispatch, active],
+    [layoutCoordinate, dispatch, active],
   );
 
   return (

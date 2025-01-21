@@ -9,13 +9,13 @@ import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
-import { type TableModel } from '../../model';
+import { type TableModel, type ModalController } from '../../model';
 
-type ColumnSettingsProps = { model?: TableModel; onNewColumn: () => void };
+type ColumnSettingsProps = { model?: TableModel; modals: ModalController; onNewColumn: () => void };
 
-export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
+export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
-  const state = model?.modalController.state.value;
+  const state = modals.state.value;
 
   const space = getSpace(model?.table);
 
@@ -34,17 +34,17 @@ export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.table?.view?.fields.find((f) => f.id === mode.fieldId);
+        return model?.table?.view?.target?.fields.find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.table?.view?.fields, state]);
+  }, [model?.table?.view?.target?.fields, state]);
 
   const field = existingField ?? newField;
 
   const handleSave = useCallback(() => {
-    model?.modalController.close();
-  }, [model?.modalController]);
+    modals.close();
+  }, [modals]);
 
   const handleCancel = useCallback(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
@@ -52,18 +52,18 @@ export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
     }
   }, [model?.projection, state, newField]);
 
-  if (!model?.table?.view || !model.projection || !field) {
+  if (!model?.table?.view?.target || !model.projection || !field) {
     return null;
   }
 
   return (
     <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'}>
-      <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
+      <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content classNames='md:is-64'>
           <DropdownMenu.Viewport>
             <FieldEditor
-              view={model.table.view}
+              view={model.table.view.target!}
               projection={model.projection}
               field={field}
               registry={space?.db.schemaRegistry}

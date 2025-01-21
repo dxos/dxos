@@ -7,36 +7,43 @@ import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import {
+  FUNCTIONS_PRESET_META_KEY,
+  FunctionType,
+  type ScriptType,
+  getInvocationUrl,
+  getUserFunctionUrlInMetadata,
+  setUserFunctionUrlInMetadata,
+  uploadWorkerFunction,
+  incrementSemverPatch,
+} from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { create, createDocAccessor, Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createDataExtensions, listener } from '@dxos/react-ui-editor';
+import {
+  createDataExtensions,
+  listener,
+  stackItemContentEditorClassNames,
+  stackItemContentToolbarClassNames,
+} from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
 import { type TemplateSelectProps, Toolbar, type ViewType } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
-import {
-  getInvocationUrl,
-  getUserFunctionUrlInMetadata,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-  FUNCTIONS_PRESET_META_KEY,
-  incrementSemverPatch,
-} from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { templates } from '../templates';
-import { FunctionType, type ScriptType } from '../types';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
+  role?: string;
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => {
+export const ScriptEditor = ({ role, classNames, script, env }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -47,19 +54,19 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     () => [
       listener({
         onChange: (text) => {
-          if (script.source && script.source?.content !== text) {
+          if (script.source.target && script.source.target.content !== text) {
             script.changed = true;
           }
         },
       }),
       createDataExtensions({
         id: script.id,
-        text: script.source && createDocAccessor(script.source, ['content']),
+        text: script.source.target && createDocAccessor(script.source.target, ['content']),
         space,
         identity,
       }),
     ],
-    [script, script.source, space, identity],
+    [script, script.source.target, space, identity],
   );
 
   const [view, setView] = useState<ViewType>('editor');
@@ -72,7 +79,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     }
 
     try {
-      script.source.content = await format(script.source.content, {
+      script.source.target!.content = await format(script.source.target!.content, {
         parser: 'typescript',
         plugins: [prettierPluginEstree, prettierPluginTypescript],
         semi: true,
@@ -88,7 +95,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     const template = templates.find((template) => template.id === id);
     if (template) {
       script.name = template.name;
-      script.source!.content = template.source;
+      script.source!.target!.content = template.source;
       const metaKeys = getMeta(script).keys;
       const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
       if (oldPresetIndex >= 0) {
@@ -111,7 +118,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
 
       const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-      const buildResult = await bundler.bundle(script.source.content);
+      const buildResult = await bundler.bundle(script.source.target!.content);
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;
       }
@@ -132,7 +139,8 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         fn.version = version;
       }
 
-      const deployedFunction = fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: script }));
+      const deployedFunction =
+        fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
 
       script.changed = false;
 
@@ -162,30 +170,34 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   }, [existingFunctionUrl, space]);
 
   return (
-    <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-      <Toolbar
-        deployed={Boolean(existingFunctionUrl) && !script.changed}
-        functionUrl={functionUrl}
-        error={error}
-        view={view}
-        templates={templates}
-        onDeploy={handleDeploy}
-        onFormat={handleFormat}
-        onViewChange={setView}
-        onTemplateSelect={handleTemplateChange}
-      />
-
-      {view !== 'preview' && (
-        <TypescriptEditor
-          id={script.id}
-          env={env}
-          initialValue={script.source?.content}
-          extensions={extensions}
-          className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
+    <>
+      <div role='none' className={stackItemContentToolbarClassNames(role)}>
+        <Toolbar
+          deployed={Boolean(existingFunctionUrl) && !script.changed}
+          functionUrl={functionUrl}
+          error={error}
+          view={view}
+          templates={templates}
+          onDeploy={handleDeploy}
+          onFormat={handleFormat}
+          onViewChange={setView}
+          onTemplateSelect={handleTemplateChange}
         />
-      )}
+      </div>
+      <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
+        {view !== 'debug' && (
+          <TypescriptEditor
+            id={script.id}
+            env={env}
+            initialValue={script.source?.target?.content}
+            extensions={extensions}
+            className={stackItemContentEditorClassNames(role)}
+            toolbar
+          />
+        )}
 
-      {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
-    </div>
+        {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
+      </div>
+    </>
   );
 };

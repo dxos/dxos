@@ -4,16 +4,16 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { getMeta, getSpace, type Space } from '@dxos/client/echo';
+import { getMeta, getSpace, makeRef, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { ChannelType, MessageType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
-import { getKey } from '../../util';
 import { ImapProcessor } from './imap-processor';
+import { getKey } from '../../util';
 
 const types = [TextType, ChannelType, MessageType];
 
@@ -79,7 +79,7 @@ const processMailbox = async (space: Space, mailbox: ChannelType, messages: Mess
   for (const message of messages) {
     const exists = current.find((m) => matchKeys(getMeta(m).keys, getMeta(message).keys));
     if (!exists) {
-      (mailbox.threads[0]!.messages ??= []).push(message);
+      (mailbox.threads[0].target!.messages ??= []).push(makeRef(message));
       added++;
     }
   }

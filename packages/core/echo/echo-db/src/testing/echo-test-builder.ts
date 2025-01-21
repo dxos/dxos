@@ -19,8 +19,18 @@ import { EchoClient } from '../client';
 import { type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 
+type OpenDatabaseOptions = {
+  client?: EchoClient;
+  reactiveSchemaQuery?: boolean;
+  preloadSchemaOnOpen?: boolean;
+};
+
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
+
+  get lastPeer(): EchoTestPeer | undefined {
+    return this._peers.at(-1);
+  }
 
   protected override async _close(ctx: Context): Promise<void> {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
@@ -40,6 +50,7 @@ export class EchoTestBuilder extends Resource {
     const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
     return {
+      peer,
       host: peer.host,
       db,
       graph: db.graph,
@@ -52,6 +63,8 @@ export class EchoTestPeer extends Resource {
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
+  private _lastDatabaseSpaceKey?: PublicKey = undefined;
+  private _lastDatabaseRootUrl?: string = undefined;
 
   constructor(private readonly _kv: LevelDB = createTestLevel()) {
     super();
@@ -116,25 +129,40 @@ export class EchoTestPeer extends Resource {
 
   async createDatabase(
     spaceKey: PublicKey = PublicKey.random(),
-    { client = this.client }: { client?: EchoClient } = {},
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
   ) {
     const root = await this.host.createSpaceRoot(spaceKey);
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey });
+    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
+    await db.open();
+
+    this._lastDatabaseSpaceKey = spaceKey;
+    this._lastDatabaseRootUrl = root.url;
+    return db;
+  }
+
+  async openDatabase(
+    spaceKey: PublicKey,
+    rootUrl: string,
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
+  ) {
+    // NOTE: Client closes the database when it is closed.
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
+    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;
   }
 
-  async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
-    // NOTE: Client closes the database when it is closed.
-    const spaceId = await createIdFromSpaceKey(spaceKey);
-    await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
-    const db = client.constructDatabase({ spaceId, spaceKey });
-    await db.setSpaceRoot(rootUrl);
-    await db.open();
-    return db;
+  async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
+    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!, {
+      client,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+    });
   }
 }
 

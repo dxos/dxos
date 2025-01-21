@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wildcard",
-  "version": "0.7.2",
+  "version": "0.7.4",
   "description": "Braneframe plugin which can render a card for any typed object",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,19 +11,11 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",

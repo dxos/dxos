@@ -23,14 +23,13 @@ export type NavTreeProps = Omit<
 
 export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId, ...props }: NavTreeProps) => {
   const renderColumns = useCallback<NonNullable<TreeProps<NavTreeItemGraphNode>['renderColumns']>>(
-    ({ item, path, menuOpen, setMenuOpen }) => {
+    ({ item, path, open }) => {
       return (
         <NavTreeColumns
           path={path}
           node={item}
           getActions={getActions}
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
+          open={open}
           loadDescendents={loadDescendents}
           renderItemEnd={renderItemEnd}
           popoverAnchorId={popoverAnchorId}
@@ -54,10 +53,9 @@ type NavTreeColumnsProps = {
   path: string[];
   node: Node;
   getActions: (node: Node) => FlattenedActions;
-  menuOpen: boolean;
-  setMenuOpen: (open: boolean) => void;
+  open: boolean;
   loadDescendents?: (node: Node) => MaybePromise<void>;
-  renderItemEnd?: FC<{ node: Node }>;
+  renderItemEnd?: FC<{ node: Node; open: boolean }>;
   popoverAnchorId?: string;
 };
 
@@ -65,8 +63,7 @@ const NavTreeColumns = ({
   path,
   node,
   getActions,
-  menuOpen,
-  setMenuOpen,
+  open,
   loadDescendents,
   renderItemEnd: ItemEnd,
   popoverAnchorId,
@@ -123,14 +120,12 @@ const NavTreeColumns = ({
             menuActions={actions}
             menuType='dropdown'
             caller={NAV_TREE_ITEM}
-            menuOpen={menuOpen}
-            onChangeMenuOpen={setMenuOpen}
           />
         ) : (
           <Treegrid.Cell />
         )}
       </ActionRoot>
-      {ItemEnd && <ItemEnd node={node} />}
+      {ItemEnd && <ItemEnd node={node} open={open} />}
     </>
   );
 };

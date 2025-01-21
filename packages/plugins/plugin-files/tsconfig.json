@@ -7,6 +7,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -37,7 +38,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../sdk/app-framework"
@@ -50,6 +57,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-theme"

@@ -5,6 +5,10 @@
       "DOM",
       "ESNext"
     ],
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "outDir": "./dist/types",
+    "skipLibCheck": true,
     "types": [
       "node"
     ]

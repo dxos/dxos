@@ -7,11 +7,11 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { SKETCH_PLUGIN } from '../meta';
+import { EXCALIDRAW_PLUGIN } from '../meta';
 import { type SketchSettingsProps } from '../types';
 
 export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) => {
-  const { t } = useTranslation(SKETCH_PLUGIN);
+  const { t } = useTranslation(EXCALIDRAW_PLUGIN);
 
   return (
     <>

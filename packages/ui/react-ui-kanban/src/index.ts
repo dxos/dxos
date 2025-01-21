@@ -3,4 +3,5 @@
 //
 
 export * from './components';
+export * from './defs';
 export { default as translations } from './translations';

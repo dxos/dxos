@@ -2,22 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IntentDispatcher, type Layout, LayoutAction, NavigationAction } from '@dxos/app-framework';
+import {
+  createIntent,
+  type Layout,
+  LayoutAction,
+  NavigationAction,
+  type PromiseIntentDispatcher,
+} from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
-import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
-import { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space';
+import { ClientAction } from '@dxos/plugin-client/types';
+import { HelpAction } from '@dxos/plugin-help/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
 import { type Credential, type Identity } from '@dxos/react-client/halo';
 
+import { WELCOME_SCREEN } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
 export type OnboardingManagerParams = {
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
   client: Client;
   layout: Layout;
   firstRun?: Trigger;
@@ -31,10 +38,9 @@ export type OnboardingManagerParams = {
 export class OnboardingManager {
   private readonly _ctx = new Context();
   private readonly _subscriptions = new EventSubscriptions();
-  private readonly _dispatch: IntentDispatcher;
+  private readonly _dispatch: PromiseIntentDispatcher;
   private readonly _client: Client;
   private readonly _layout: Layout;
-  private readonly _firstRun?: Trigger;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
@@ -49,7 +55,6 @@ export class OnboardingManager {
     dispatch,
     client,
     layout,
-    firstRun,
     hubUrl,
     token,
     recoverIdentity,
@@ -61,7 +66,6 @@ export class OnboardingManager {
     this._dispatch = dispatch;
     this._client = client;
     this._layout = layout;
-    this._firstRun = firstRun;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
     this._token = token;
@@ -90,7 +94,8 @@ export class OnboardingManager {
   async initialize() {
     await this.fetchCredential();
     if (this._credential && this._hubUrl) {
-      await this._upgradeCredential();
+      // Don't block app loading on network request.
+      void this._upgradeCredential();
       this._spaceInvitationCode && (await this._openJoinSpace());
       return;
     } else if (!this._skipAuth) {
@@ -173,75 +178,44 @@ export class OnboardingManager {
   }
 
   private async _showWelcome() {
-    await this._dispatch([
-      {
-        action: LayoutAction.SET_LAYOUT_MODE,
-        data: { layoutMode: 'fullscreen' },
-      },
-      {
-        action: NavigationAction.OPEN,
-        // NOTE: Active parts cannot contain '/' characters currently.
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-      },
-    ]);
+    await this._dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }));
+    // NOTE: Active parts cannot contain '/' characters currently.
+    await this._dispatch(
+      createIntent(NavigationAction.Open, { activeParts: { fullScreen: `surface:${WELCOME_SCREEN}` } }),
+    );
   }
 
   private async _closeWelcome() {
-    await this._dispatch([
-      ...(this._layout.layoutMode !== 'deck'
-        ? [
-            {
-              action: LayoutAction.SET_LAYOUT_MODE,
-              data: { layoutMode: 'solo' },
-            },
-          ]
-        : []),
-      {
-        action: NavigationAction.CLOSE,
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-      },
-    ]);
+    if (this._layout.layoutMode !== 'deck') {
+      await this._dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
+    }
+    await this._dispatch(
+      createIntent(NavigationAction.Close, { activeParts: { fullScreen: `surface:${WELCOME_SCREEN}` } }),
+    );
   }
 
   private async _createIdentity() {
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.CREATE_IDENTITY,
-    });
-    this._firstRun?.wake();
+    await this._dispatch(createIntent(ClientAction.CreateIdentity));
   }
 
   private async _createRecoveryCode() {
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.CREATE_RECOVERY_CODE,
-    });
+    await this._dispatch(createIntent(ClientAction.CreateRecoveryCode));
   }
 
   private async _createAgent() {
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.CREATE_AGENT,
-    });
+    await this._dispatch(createIntent(ClientAction.CreateAgent));
   }
 
   private async _openJoinIdentity() {
     invariant(this._deviceInvitationCode !== undefined);
 
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.JOIN_IDENTITY,
-      data: { invitationCode: this._deviceInvitationCode },
-    });
+    await this._dispatch(createIntent(ClientAction.JoinIdentity, { invitationCode: this._deviceInvitationCode }));
 
     removeQueryParamByValue(this._deviceInvitationCode);
   }
 
   private async _openRecoverIdentity() {
-    await this._dispatch({
-      plugin: CLIENT_PLUGIN,
-      action: ClientAction.RECOVER_IDENTITY,
-    });
+    await this._dispatch(createIntent(ClientAction.RecoverIdentity));
 
     removeQueryParamByValue('true');
   }
@@ -249,19 +223,12 @@ export class OnboardingManager {
   private async _openJoinSpace() {
     invariant(this._spaceInvitationCode);
 
-    await this._dispatch({
-      plugin: SPACE_PLUGIN,
-      action: SpaceAction.JOIN,
-      data: { invitationCode: this._spaceInvitationCode },
-    });
+    await this._dispatch(createIntent(SpaceAction.Join, { invitationCode: this._spaceInvitationCode }));
 
     removeQueryParamByValue(this._spaceInvitationCode);
   }
 
   private async _startHelp() {
-    await this._dispatch({
-      plugin: HELP_PLUGIN,
-      action: HelpAction.START,
-    });
+    await this._dispatch(createIntent(HelpAction.Start));
   }
 }

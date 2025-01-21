@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -34,14 +34,14 @@ const DefaultStory = () => {
     const space = client.spaces.default;
     return space.db.add(
       create(ChainType, {
-        prompts: [create(ChainPromptType, { command: 'test', template, inputs: [] })],
+        prompts: [makeRef(create(ChainPromptType, { command: 'test', template, inputs: [] }))],
       }),
     );
   });
 
   return (
     <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
-      <PromptEditor prompt={chain.prompts![0]!} />
+      <PromptEditor prompt={chain.prompts![0]!.target!} />
     </div>
   );
 };

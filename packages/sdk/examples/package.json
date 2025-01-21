@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.7.2",
+  "version": "0.7.4",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
@@ -19,6 +19,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/util": "workspace:*",

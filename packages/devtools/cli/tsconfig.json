@@ -55,6 +55,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -70,12 +73,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../plugins/experimental/plugin-script"
-    },
-    {
-      "path": "../../plugins/plugin-markdown"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
@@ -89,6 +86,9 @@
     },
     {
       "path": "../../sdk/observability"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../cli-base"

@@ -2,98 +2,55 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-
-import ChessContainer from './components/ChessContainer';
-import meta, { CHESS_PLUGIN } from './meta';
+import { IntentResolver, ReactSurface } from './capabilities';
+import { CHESS_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { ChessAction, type ChessPluginProvides, GameType, isObject } from './types';
+import { ChessAction, GameType } from './types';
 
-export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
-  return {
-    meta,
-    provides: {
-      metadata: {
-        records: {
-          [GameType.typename]: {
-            createObject: ChessAction.CREATE,
+export const ChessPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: GameType.typename,
+          metadata: {
+            createObject: (props: { name?: string }) => createIntent(ChessAction.Create, props),
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: 'ph--shield-chevron--regular',
           },
-        },
-      },
-      echo: {
-        schema: [GameType],
-      },
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: ChessAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${CHESS_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: CHESS_PLUGIN, action: ChessAction.CREATE },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create game label', { ns: CHESS_PLUGIN }],
-                    icon: 'ph--shield-chevron--regular',
-                    testId: 'chessPlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
-      },
-      translations,
-      surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article':
-            case 'section':
-              return isObject(data.object) ? <ChessContainer game={data.object} role={role} /> : null;
-            default:
-              return null;
-          }
-        },
-      },
-      intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case ChessAction.CREATE: {
-              return { data: create(GameType, {}) };
-            }
-          }
-        },
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupClient,
+      activate: () => contributes(ClientCapabilities.Schema, [GameType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.Startup,
+      activate: IntentResolver,
+    }),
+  ]);

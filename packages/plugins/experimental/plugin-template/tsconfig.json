@@ -7,6 +7,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -28,6 +29,9 @@
       "path": "../../../common/storybook-utils"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -35,6 +39,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-stack"
     },
     {
       "path": "../../../ui/react-ui-theme"

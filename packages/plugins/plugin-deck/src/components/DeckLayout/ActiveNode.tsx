@@ -21,7 +21,7 @@ export const ActiveNode = () => {
     <div role='none' className='sr-only'>
       {/* TODO(wittjosiah): Weird that this is a surface, feel like it's not really render logic.
             Probably this lives in React-land currently in order to access translations? */}
-      <Surface role='document-title' data={{ activeNode }} limit={1} />
+      <Surface role='document-title' data={{ subject: activeNode }} limit={1} />
     </div>
   );
 };

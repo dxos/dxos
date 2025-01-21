@@ -9,6 +9,7 @@
     ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -56,6 +57,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo-generator"
     },
     {
@@ -63,6 +67,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../sdk/app-framework"
@@ -132,6 +139,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

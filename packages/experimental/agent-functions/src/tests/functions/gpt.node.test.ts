@@ -8,13 +8,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { loadObjectReferences } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
 import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
+import { create, makeRef } from '@dxos/live-object';
 import { ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 import { type ChainResources, ModelInvokerFactory } from '../../chain';
 import { StubModelInvoker } from '../../functions/gpt/testing';
@@ -202,7 +201,7 @@ const waitForGptResponse = async (message: MessageType, thread?: ThreadType) => 
   const hasAiMeta = (obj: any) => getMeta(obj).keys[0].source === 'dxos.org/service/ai';
   if (thread) {
     await waitForCondition({ condition: () => hasAiMeta(thread.messages[thread.messages.length - 1]) });
-    return loadObjectReferences(thread, (t) => t.messages[t.messages.length - 1]?.text);
+    return (await thread.messages[thread.messages.length - 1].load())?.text;
   } else {
     // TODO(wittjosiah): Thread required.
     // await waitForCondition({ condition: () => hasAiMeta(message) });
@@ -238,7 +237,7 @@ const createMessage = (
   });
 
   if (options?.thread) {
-    options.thread.messages!.push(message);
+    options.thread.messages!.push(makeRef(message));
   } else {
     space.db.add(message);
   }

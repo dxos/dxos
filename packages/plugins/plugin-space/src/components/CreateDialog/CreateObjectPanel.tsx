@@ -4,8 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type MetadataResolver } from '@dxos/app-framework';
-import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
+import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, InputHeader } from '@dxos/react-ui-form';
@@ -17,15 +16,15 @@ import { type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
 export type CreateObjectPanelProps = {
-  schemas: AbstractTypedObject[];
+  schemas: TypedObject[];
   spaces: Space[];
   typename?: string;
   target?: Space | CollectionType;
   name?: string;
   defaultSpaceId?: SpaceId;
-  resolve?: MetadataResolver;
+  resolve?: (typename: string) => Record<string, any>;
   onCreateObject?: (params: {
-    schema: AbstractTypedObject;
+    schema: TypedObject;
     target: Space | CollectionType;
     name?: string;
   }) => MaybePromise<void>;
@@ -63,7 +62,7 @@ export const CreateObjectPanel = ({
 
   // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
   const schemaInput = (
-    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
+    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden'>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
@@ -89,7 +88,7 @@ export const CreateObjectPanel = ({
   );
 
   const spaceInput = (
-    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
+    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden'>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
@@ -126,7 +125,7 @@ export const CreateObjectPanel = ({
   return (
     <div role='form' className='flex flex-col gap-2'>
       {target && (
-        <div role='none' className='px-2'>
+        <div role='none'>
           <Input.Root>
             <InputHeader>
               <Input.Label>
@@ -148,7 +147,7 @@ export const CreateObjectPanel = ({
         </div>
       )}
       {schema && (
-        <div role='none' className='px-2'>
+        <div role='none'>
           <Input.Root>
             <InputHeader>
               <Input.Label>{t('creating object type label')}</Input.Label>

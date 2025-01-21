@@ -2,26 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphBuilderProvides,
-  GraphSerializerProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-space';
-import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
+import { S } from '@dxos/echo-schema';
+// TODO(wittjosiah): This pulls in UI code into the types entrypoint.
+import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
-import { type DocumentType } from './document';
+import { DocumentType } from './schema';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
-export enum MarkdownAction {
-  CREATE = `${MARKDOWN_ACTION}/create`,
-  SET_VIEW_MODE = `${MARKDOWN_ACTION}/set-view-mode`,
+export namespace MarkdownAction {
+  export class Create extends S.TaggedClass<Create>()(MARKDOWN_ACTION, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      content: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: DocumentType,
+    }),
+  }) {}
+
+  export class SetViewMode extends S.TaggedClass<SetViewMode>()(`${MARKDOWN_ACTION}/set-view-mode`, {
+    input: S.Struct({
+      id: S.String,
+      viewMode: EditorViewMode,
+    }),
+    output: S.Void,
+  }) {}
 }
 
 export type MarkdownProperties = Record<string, any>;
@@ -30,20 +37,6 @@ export type MarkdownProperties = Record<string, any>;
 export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => Extension | undefined;
 
 export type OnChange = (text: string) => void;
-
-export type MarkdownExtensionProvides = {
-  // TODO(burdon): Rename.
-  markdown: {
-    extensions: MarkdownExtensionProvider;
-  };
-};
-
-// TODO(wittjosiah): Factor out to graph plugin?
-type StackProvides = {
-  stack: {
-    creators?: Record<string, any>[];
-  };
-};
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
@@ -54,33 +47,18 @@ export type MarkdownPluginState = {
   viewMode: Record<string, EditorViewMode>;
 };
 
-export type MarkdownSettingsProps = {
-  defaultViewMode: EditorViewMode;
-  editorInputMode?: EditorInputMode;
-  experimental?: boolean;
-  debug?: boolean;
-  toolbar?: boolean;
-  typewriter?: string;
-  // TODO(burdon): Per document settings.
-  numberedHeadings?: boolean;
-  folding?: boolean;
-};
+export const MarkdownSettingsSchema = S.mutable(
+  S.Struct({
+    defaultViewMode: EditorViewMode,
+    editorInputMode: S.optional(EditorInputMode),
+    experimental: S.optional(S.Boolean),
+    debug: S.optional(S.Boolean),
+    toolbar: S.optional(S.Boolean),
+    typewriter: S.optional(S.String),
+    // TODO(burdon): Per document settings.
+    numberedHeadings: S.optional(S.Boolean),
+    folding: S.optional(S.Boolean),
+  }),
+);
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
-type ThreadProvides<T> = {
-  thread: {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-};
-
-export type MarkdownPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  GraphSerializerProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<MarkdownSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  StackProvides &
-  ThreadProvides<DocumentType>;
+export type MarkdownSettingsProps = S.Schema.Type<typeof MarkdownSettingsSchema>;

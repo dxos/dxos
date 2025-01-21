@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type SchemaResolver } from '@dxos/echo-db';
-import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos/echo-schema';
+import { type SchemaRegistry } from '@dxos/echo-db';
+import { FormatEnum, FormatEnums, formatToType, type EchoSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
@@ -16,16 +16,17 @@ import {
   type PropertyType,
   type ViewType,
   type ViewProjection,
+  type SchemaProperty,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormProps, SelectInput } from '../Form';
+import { Form, type FormProps, type InputComponent, SelectInput } from '../Form';
 
 export type FieldEditorProps = {
   view: ViewType;
   projection: ViewProjection;
   field: FieldType;
-  registry?: SchemaResolver;
+  registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
 };
@@ -38,15 +39,17 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
-  const [schemas, setSchemas] = useState<MutableSchema[]>([]);
+  const [schemas, setSchemas] = useState<EchoSchema[]>([]);
   useEffect(() => {
     if (!registry) {
       return;
     }
 
-    const subscription = registry.subscribe(setSchemas);
+    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
+
+    // TODO(dmaretskyi): This shouldn't be needed.
     const t = setTimeout(async () => {
-      const schemas = await registry.query();
+      const schemas = await registry.query().run();
       setSchemas(schemas);
     });
     return () => {
@@ -55,24 +58,36 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     };
   }, [registry]);
 
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();
   useEffect(() => {
-    setSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
+    setReferenceSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getFormatSchema(props?.format) });
+
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
-      // Update schema if format changed.
       // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
-      if (_props.format !== props.format) {
-        setFieldSchema({ fieldSchema: getFormatSchema(_props.format) });
-      }
-      if (_props.referenceSchema !== props.referenceSchema) {
-        setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
-      }
+      // TODO(Zaymon): Workout why old and new format values are the same sometimes even when
+      //   selecting novel format values.
+      setFieldSchema((prev) => {
+        const fieldSchema = getFormatSchema(_props.format);
+        if (prev.fieldSchema === fieldSchema) {
+          return prev;
+        }
+        return { fieldSchema };
+      });
+      setReferenceSchema((prev) => {
+        if (_props.referenceSchema !== prev?.typename) {
+          const newSchema = schemas.find((schema) => schema.typename === _props.referenceSchema);
+          if (newSchema) {
+            return newSchema;
+          }
+        }
+        return prev;
+      });
 
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
@@ -83,7 +98,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         return props;
       });
     },
-    [schemas, props],
+    [schemas, props.format, props.referenceSchema],
   );
 
   const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(
@@ -114,6 +129,46 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     onSave();
   }, [onSave]);
 
+  const Custom: Partial<Record<string, InputComponent<PropertyType>>> = useMemo(
+    () => ({
+      ['format' satisfies keyof PropertyType]: (props) => (
+        <SelectInput<PropertyType>
+          {...props}
+          options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
+            value,
+            label: t(`format ${value}`),
+          }))}
+        />
+      ),
+      ['referenceSchema' satisfies keyof PropertyType]: (props) => (
+        <SelectInput<PropertyType>
+          {...props}
+          options={schemas.map((schema) => ({
+            value: schema.typename,
+          }))}
+        />
+      ),
+      ['referencePath' satisfies keyof PropertyType]: (props) => (
+        <SelectInput<PropertyType>
+          {...props}
+          options={
+            referenceSchema
+              ? getSchemaProperties(referenceSchema.ast)
+                  .sort(sortProperties)
+                  .map((p) => ({ value: p.name }))
+              : []
+          }
+        />
+      ),
+    }),
+    [t, schemas, referenceSchema],
+  );
+
+  const propIsNotType = useCallback(
+    (props: SchemaProperty<PropertyType>[]) => props.filter((p) => p.name !== 'type'),
+    [],
+  );
+
   if (!fieldSchema) {
     log.warn('invalid format', { props });
     return null;
@@ -125,43 +180,13 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
       autoFocus
       values={props}
       schema={fieldSchema}
-      filter={(props) => props.filter((p) => p.name !== 'type')}
+      filter={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
       onSave={handleSave}
       onCancel={handleCancel}
-      Custom={{
-        ['format' satisfies keyof PropertyType]: (props) => (
-          <SelectInput<PropertyType>
-            {...props}
-            options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
-              value,
-              label: t(`format ${value}`),
-            }))}
-          />
-        ),
-        ['referenceSchema' satisfies keyof PropertyType]: (props) => (
-          <SelectInput<PropertyType>
-            {...props}
-            options={schemas.map((schema) => ({
-              value: schema.typename,
-            }))}
-          />
-        ),
-        ['referencePath' satisfies keyof PropertyType]: (props) => (
-          <SelectInput<PropertyType>
-            {...props}
-            options={
-              schema
-                ? getSchemaProperties(schema.schema.ast)
-                    .sort(sortProperties)
-                    .map((p) => ({ value: p.name }))
-                : []
-            }
-          />
-        ),
-      }}
+      Custom={Custom}
     />
   );
 };

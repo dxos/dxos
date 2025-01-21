@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "plugin-template-old",
+  "name": "plugin-template",
   "tags": [
     "scope:experimental",
     "scope:plugins"
@@ -13,7 +13,7 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.ts"
+          "{projectRoot}/src/types.ts"
         ],
         "platforms": [
           "browser"

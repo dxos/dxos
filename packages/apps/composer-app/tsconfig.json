@@ -78,16 +78,13 @@
       "path": "../../plugins/experimental/plugin-calls"
     },
     {
+      "path": "../../plugins/experimental/plugin-canvas"
+    },
+    {
       "path": "../../plugins/experimental/plugin-excalidraw"
     },
     {
       "path": "../../plugins/experimental/plugin-explorer"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-github"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-grid"
     },
     {
       "path": "../../plugins/experimental/plugin-inbox"
@@ -144,16 +141,10 @@
       "path": "../../plugins/plugin-help"
     },
     {
-      "path": "../../plugins/plugin-manager"
-    },
-    {
       "path": "../../plugins/plugin-markdown"
     },
     {
       "path": "../../plugins/plugin-mermaid"
-    },
-    {
-      "path": "../../plugins/plugin-metadata"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -169,6 +160,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-settings-interface"
     },
     {
       "path": "../../plugins/plugin-sheet"
@@ -195,6 +189,9 @@
       "path": "../../plugins/plugin-thread"
     },
     {
+      "path": "../../plugins/plugin-token-manager"
+    },
+    {
       "path": "../../plugins/plugin-wildcard"
     },
     {
@@ -217,6 +214,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"

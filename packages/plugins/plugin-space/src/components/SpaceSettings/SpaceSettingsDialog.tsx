@@ -13,6 +13,8 @@ import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSetting
 import { SPACE_PLUGIN } from '../../meta';
 import { COMPOSER_SPACE_LOCK, getSpaceDisplayName } from '../../util';
 
+export const SPACE_SETTINGS_DIALOG = `${SPACE_PLUGIN}/SpaceSettingsDialog`;
+
 export type SpaceSettingsTab = 'members' | 'settings';
 
 export type SpaceSettingsDialogProps = {
@@ -39,7 +41,7 @@ export const SpaceSettingsDialog = ({
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
     <Dialog.Content classNames='p-0 bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <div role='none' className='flex justify-between pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
+      <div role='none' className='flex justify-between pbs-2 pis-2 pie-2 @md:pbs-4 @md:pis-4 @md:pie-4'>
         <Dialog.Title
           onClick={() => setTabsActivePart('list')}
           aria-description={t('click to return to tablist description')}

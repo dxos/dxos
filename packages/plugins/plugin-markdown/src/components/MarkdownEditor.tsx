@@ -6,17 +6,17 @@ import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
-import { type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { useThemeContext, useTranslation, ElevationProvider } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
-  type Action,
+  type EditorAction,
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,
-  Toolbar,
+  EditorToolbar,
   type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -24,22 +24,23 @@ import {
   dropFile,
   editorContent,
   editorGutter,
-  processAction,
+  processEditorPayload,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
+  stackItemContentEditorClassNames,
+  stackItemContentToolbarClassNames,
+  useEditorToolbarState,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownPluginState } from '../types';
-
-const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 
 export type MarkdownEditorProps = {
   id: string;
@@ -75,8 +76,9 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const dispatch = useIntentDispatcher();
-  const [formattingState, formattingObserver] = useFormattingState();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const toolbarState = useEditorToolbarState({ viewMode });
+  const formattingObserver = useFormattingState(toolbarState);
   const { hasAttention } = useAttention(id);
 
   // Restore last selection and scroll point.
@@ -90,18 +92,10 @@ export const MarkdownEditor = ({
   );
 
   // TODO(Zan): Move these into thread plugin as well?
-  const [commentsState, commentObserver] = useCommentState();
-  const onCommentClick = useCallback(() => {
-    void dispatch([
-      {
-        action: NavigationAction.OPEN,
-        data: { activeParts: { complementary: 'comments' } },
-      },
-      {
-        action: LayoutAction.SET_LAYOUT,
-        data: { element: 'complementary', state: true },
-      },
-    ]);
+  const commentObserver = useCommentState(toolbarState);
+  const onCommentClick = useCallback(async () => {
+    await dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }));
+    await dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true }));
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 
@@ -110,7 +104,7 @@ export const MarkdownEditor = ({
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
     if (info) {
-      processAction(view, { type: 'image', data: info.url });
+      processEditorPayload(view, { type: 'image', data: info.url });
     }
   };
 
@@ -158,44 +152,37 @@ export const MarkdownEditor = ({
 
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
-  const handleAction = (action: Action) => {
-    switch (action.type) {
-      case 'search': {
-        if (editorView) {
-          openSearchPanel(editorView);
+  const handleAction = useCallback(
+    (action: EditorAction) => {
+      switch (action.properties.type) {
+        case 'search': {
+          if (editorView) {
+            openSearchPanel(editorView);
+          }
+          return;
         }
-        return;
+        case 'view-mode': {
+          onViewModeChange?.(id, action.properties.data);
+          return;
+        }
       }
-      case 'view-mode': {
-        onViewModeChange?.(id, action.data);
-        return;
-      }
-    }
 
-    handleToolbarAction?.(action);
-  };
+      handleToolbarAction?.(action);
+    },
+    [editorView, onViewModeChange],
+  );
 
   return (
-    <StackItem.Content toolbar={toolbar}>
+    <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
-        <div
-          role='none'
-          className={mx(
-            'attention-surface is-full border-be !border-separator',
-            role === 'section' && 'sticky block-start-0 z-[1] -mbe-px min-is-0',
-          )}
-        >
-          <Toolbar.Root
-            classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-            state={formattingState && { ...formattingState, ...commentsState }}
-            onAction={handleAction}
-          >
-            <Toolbar.Markdown />
-            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-            <Toolbar.Separator />
-            <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
-            <Toolbar.Actions />
-          </Toolbar.Root>
+        <div role='none' className={stackItemContentToolbarClassNames(role)}>
+          <ElevationProvider elevation='positioned'>
+            <EditorToolbar
+              classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
+              state={toolbarState}
+              onAction={handleAction}
+            />
+          </ElevationProvider>
         </div>
       )}
       <div
@@ -203,10 +190,7 @@ export const MarkdownEditor = ({
         ref={parentRef}
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className={mx(
-          'ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
-          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24',
-        )}
+        className={stackItemContentEditorClassNames(role)}
         {...focusAttributes}
       />
     </StackItem.Content>

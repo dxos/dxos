@@ -43,7 +43,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   // Query space to get info.
   const updateInfo = async () => {
     // Create schema map.
-    const mutableSchema = await space.db.schemaRegistry.query();
+    const echoSchema = await space.db.schemaRegistry.query().run();
     const staticSchema = space.db.graph.schemaRegistry.schemas;
 
     // Create object map.
@@ -62,7 +62,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     setInfo({
       schema: {
         static: staticSchema.length,
-        mutable: mutableSchema.length,
+        mutable: echoSchema.length,
       },
       objects: objectMap,
     });
@@ -86,7 +86,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     <div role='none' className='flex flex-col divide-y divide-separator'>
       <Toolbar.Root classNames='p-1'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-        <Toolbar.Expander />
+        <Toolbar.Separator variant='gap' />
         <div className='flex'>
           <Input.Root>
             <Input.TextInput

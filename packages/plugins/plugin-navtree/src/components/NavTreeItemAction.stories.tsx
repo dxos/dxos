@@ -53,5 +53,3 @@ export default {
 };
 
 export const Default = {};
-
-export const SearchList = { args: { menuType: 'searchList' } };

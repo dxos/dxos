@@ -41,7 +41,7 @@ export class AppManager {
     const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
 
-    await this.isAuthenticated();
+    await this.isAuthenticated({ timeout: 10_000 });
     await this.confirmRecoveryCode();
 
     this.shell = new ShellManager(this.page, this._inIframe);
@@ -246,7 +246,7 @@ export class AppManager {
   }
 
   async enablePlugin(plugin: string) {
-    await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
+    await this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]').click();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }
