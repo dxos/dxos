@@ -15,6 +15,11 @@ export type MenuActionProperties = {
   checked?: boolean;
 };
 
+export type MenuItemGroupProperties = {
+  label: Label;
+  icon?: string;
+};
+
 export type MenuAction = Action<MenuActionProperties>;
 
 export type MenuActionHandler<A extends Node = MenuAction> = (action: A) => void;
