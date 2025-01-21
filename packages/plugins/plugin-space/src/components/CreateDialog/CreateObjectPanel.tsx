@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, type InputComponent, InputHeader } from '@dxos/react-ui-form';
+import { Form, InputHeader, type InputProps } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
@@ -31,20 +31,28 @@ export type CreateObjectPanelProps = {
   }) => MaybePromise<void>;
 };
 
-const createInputSurface =
-  (data?: Record<string, any>) =>
-  ({
-    prop,
-    schema,
-    inputProps,
-  }: {
-    prop: string;
-    schema: S.Schema<any>;
-    inputProps: ComponentProps<InputComponent<any>>;
-  }) => {
-    const composedData = useMemo(() => ({ prop, schema, ...data }), [prop, schema, data]);
-    return <Surface role='form-input' data={composedData} {...inputProps} />;
-  };
+// TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
+/**
+ * Creates a surface input component based on plugin context.
+ * @param baseData Additional data that will be merged with form data and passed to the surface.
+ * This allows providing more context to the surface than what's available from the form itself.
+ */
+const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
+  const pluginManager = usePluginManager();
+
+  return useCallback(
+    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps<any> }) => {
+      const composedData = { prop, schema, ...baseData };
+
+      if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
+        return undefined;
+      }
+
+      return <Surface role='form-input' data={composedData} {...inputProps} />;
+    },
+    [pluginManager, baseData],
+  );
+};
 
 export const CreateObjectPanel = ({
   schemas,
@@ -134,7 +142,7 @@ export const CreateObjectPanel = ({
     </SearchList.Root>
   );
 
-  const InputSurface = useMemo(() => createInputSurface({ target }), [target]);
+  const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   const form = useMemo(() => {
     // TODO(ZaymonFC): Move this default object creation schema somewhere?
@@ -147,7 +155,7 @@ export const CreateObjectPanel = ({
         schema={schema}
         testId='create-object-form'
         onSave={handleCreateObject}
-        LookupComponent={InputSurface}
+        lookupComponent={inputSurfaceLookup}
       />
     );
   }, [initialName, handleCreateObject, metadata]);

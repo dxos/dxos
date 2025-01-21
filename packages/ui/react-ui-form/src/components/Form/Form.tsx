@@ -4,7 +4,7 @@
 
 import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
-import React, { type ComponentProps, type ComponentType, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { AST, type BaseObject, S, type PropertyKey, type FormatEnum } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
@@ -15,7 +15,7 @@ import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { SelectInput } from './Defaults';
-import { InputHeader, type InputComponent } from './Input';
+import { InputHeader, type InputProps, type InputComponent } from './Input';
 import { getInputComponent } from './factory';
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -43,15 +43,15 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     testId?: string;
     onCancel?: () => void;
 
+    lookupComponent?: (args: {
+      prop: string;
+      schema: S.Schema<any>;
+      inputProps: InputProps<T>;
+    }) => React.ReactElement | undefined;
     /**
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
-    LookupComponent?: ComponentType<{
-      prop: string;
-      schema: S.Schema<any>;
-      inputProps: ComponentProps<InputComponent<T>>;
-    }>;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
@@ -73,8 +73,8 @@ export const Form = <T extends BaseObject>({
   onValidate,
   onSave,
   onCancel,
+  lookupComponent,
   Custom,
-  LookupComponent,
 }: FormProps<T>) => {
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
   const { canSave, values, errors, handleSave, ...inputProps } = useForm<T>({
@@ -115,12 +115,21 @@ export const Form = <T extends BaseObject>({
           const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
-          const FoundComponent = LookupComponent ? (
-            <LookupComponent prop={name} schema={schema} inputProps={inputProps} />
-          ) : null;
+          const FoundComponent = lookupComponent?.({
+            prop: name,
+            schema,
+            inputProps: {
+              property: name,
+              type,
+              format,
+              label,
+              disabled: readonly,
+              placeholder,
+              ...inputProps,
+            },
+          });
 
-          if (FoundComponent !== null) {
-            console.log('FoundComponent', FoundComponent, { name });
+          if (FoundComponent) {
             return (
               <div key={name} role='none' className={padding}>
                 {FoundComponent}
