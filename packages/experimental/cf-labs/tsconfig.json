@@ -6,6 +6,7 @@
     ],
     "module": "Preserve",
     "moduleResolution": "Bundler",
+    "outDir": "./dist/types",
     "types": [
       "@cloudflare/workers-types"
     ]
