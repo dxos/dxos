@@ -11,7 +11,6 @@ import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime, testServices } from '../testing';
 import {
   ComputeGraphModel,
-  createEdge,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
@@ -87,14 +86,13 @@ const sumAggregator = defineComputeNode({
 const streamSum = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'stream-sum-INPUT', data: { type: NODE_INPUT } })
-    .addNode({ id: 'stream-sum-AGGREGATOR', data: { type: 'dxn:test:sum-aggregator' } })
-    .addNode({ id: 'stream-sum-OUTPUT', data: { type: NODE_OUTPUT } })
-    .addEdge(
-      createEdge({ source: 'stream-sum-INPUT', output: 'stream', target: 'stream-sum-AGGREGATOR', input: 'stream' }),
-    )
-    .addEdge(
-      createEdge({ source: 'stream-sum-AGGREGATOR', output: 'result', target: 'stream-sum-OUTPUT', input: 'result' }),
+    .createNode({ id: 'stream-sum-INPUT', data: { type: NODE_INPUT } })
+    .createNode({ id: 'stream-sum-AGGREGATOR', data: { type: 'dxn:test:sum-aggregator' } })
+    .createNode({ id: 'stream-sum-OUTPUT', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'stream-sum-INPUT', property: 'stream' }, { node: 'stream-sum-AGGREGATOR', property: 'stream' })
+    .createEdge(
+      { node: 'stream-sum-AGGREGATOR', property: 'result' },
+      { node: 'stream-sum-OUTPUT', property: 'result' },
     );
 
   return model;

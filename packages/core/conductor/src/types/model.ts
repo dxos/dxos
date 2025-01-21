@@ -51,6 +51,41 @@ export class ComputeGraphModel extends AbstractGraphModel<
   override copy(graph?: Partial<Graph>) {
     return ComputeGraphModel.create(graph);
   }
+
+  //
+  // Custom methods.
+  //
+
+  createNode({ id, data = {} }: { id?: string; data?: ComputeNode }): GraphNode<ComputeNode> {
+    const node: GraphNode<ComputeNode> = { id: id ?? ObjectId.random(), data };
+    this.addNode(node);
+    return node;
+  }
+
+  createEdge(
+    source: { node: string | GraphNode<ComputeNode>; property?: string },
+    target: { node: string | GraphNode<ComputeNode> | ComputeGraph; property?: string },
+  ): GraphEdge<ComputeEdge> {
+    const sourceId = typeof source.node === 'string' ? source.node : source.node.id;
+    const targetId = isComputeGraph(target.node) // Create local intermediate node with to the subgraph.
+      ? this.createNode({ data: { subgraph: makeRef(target.node) } }).id
+      : typeof target.node === 'string'
+        ? target.node
+        : target.node.id;
+
+    const edge: GraphEdge<ComputeEdge> = {
+      id: createEdgeId({ source: sourceId, target: targetId }),
+      source: sourceId,
+      target: targetId,
+      data: {
+        output: source.property ?? DEFAULT_INPUT,
+        input: target.property ?? DEFAULT_INPUT,
+      },
+    };
+
+    this.addEdge(edge);
+    return edge;
+  }
 }
 
 class ComputeGraphBuilder extends AbstractGraphBuilder<
@@ -64,49 +99,16 @@ class ComputeGraphBuilder extends AbstractGraphBuilder<
     return this;
   }
 
-  getNode(id: string): GraphNode<ComputeNode> {
-    return this._model.getNode(id);
+  createNode(props: { id?: string; data?: ComputeNode }): this {
+    this.model.createNode(props);
+    return this;
   }
 
-  createNode(id?: string, data: ComputeNode = {}): GraphNode<ComputeNode> {
-    const node: GraphNode<ComputeNode> = { id: id ?? ObjectId.random(), data };
-    this._model.addNode(node);
-    return node;
-  }
-
-  linkNodes(
-    source: { node: GraphNode<ComputeNode>; property?: string },
-    target: { node: GraphNode<ComputeNode> | ComputeGraph; property?: string },
-  ): GraphEdge<ComputeEdge> {
-    if (isComputeGraph(target.node)) {
-      // Create local intermediate node linked to the subgraph.
-      target = { ...target, node: this.createNode(ObjectId.random(), { subgraph: makeRef(target.node) }) };
-    }
-
-    const edge: GraphEdge<ComputeEdge> = {
-      id: createEdgeId({ source: source.node.id, target: target.node.id }),
-      source: source.node.id,
-      target: target.node.id,
-      data: {
-        output: source.property ?? DEFAULT_INPUT,
-        input: target.property ?? DEFAULT_INPUT,
-      },
-    };
-
-    this._model.addEdge(edge);
-    return edge;
+  createEdge(
+    source: { node: string | GraphNode<ComputeNode>; property?: string },
+    target: { node: string | GraphNode<ComputeNode> | ComputeGraph; property?: string },
+  ): this {
+    this.model.createEdge(source, target);
+    return this;
   }
 }
-
-// TODO(burdon): Move into builder.
-export const createEdge = (params: {
-  source: string;
-  output: string;
-  target: string;
-  input: string;
-}): GraphEdge<ComputeEdge> => ({
-  id: createEdgeId({ source: params.source, target: params.target, relation: `${params.output}-${params.input}` }),
-  source: params.source,
-  target: params.target,
-  data: { input: params.input, output: params.output },
-});

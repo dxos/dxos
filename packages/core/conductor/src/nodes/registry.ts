@@ -24,7 +24,6 @@ import {
   makeValueBag,
   synchronizedComputeFunction,
   unwrapValueBag,
-  NotExecuted,
 } from '../types';
 
 // TODO(burdon): Convert to DXNs.
@@ -191,11 +190,11 @@ export const registry: Record<NodeType, Executable> = {
           return makeValueBag({
             true: Effect.succeed(value),
             // TODO(burdon): Should not call fail since that would indicate an error. Special NotExecuted value?
-            false: Effect.succeed(NotExecuted),
+            false: Effect.succeedNone,
           });
         } else {
           return makeValueBag({
-            true: Effect.succeed(NotExecuted),
+            true: Effect.succeedNone,
             false: Effect.succeed(value),
           });
         }

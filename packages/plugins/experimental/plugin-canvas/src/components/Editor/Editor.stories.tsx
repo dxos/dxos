@@ -143,7 +143,6 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolea
 
 export const Default: Story = {
   args: {
-    sidebar: 'selected',
     init: true,
     spec: [{ type: Testing.OrgType, count: 1 }],
   },

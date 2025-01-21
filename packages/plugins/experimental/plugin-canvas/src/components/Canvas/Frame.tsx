@@ -195,7 +195,6 @@ export type FrameContentProps = PropsWithChildren<
 /**
  * Content rendered by frames and tools.
  */
-// TODO(burdon): Define type of child component; e.g., onEdit callback.
 export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
   (
     {
@@ -264,7 +263,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
           {...shapeAttrs(shape)}
           style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}
           className={mx(
-            'absolute overflow-hidden box-border',
+            'absolute',
             classNames,
             styles.frameContainer,
             styles.frameBorder,

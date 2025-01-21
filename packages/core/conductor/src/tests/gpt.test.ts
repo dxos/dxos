@@ -10,7 +10,7 @@ import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { EdgeGpt } from '../services';
-import { createEdge, TestRuntime, testServices } from '../testing';
+import { TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
@@ -191,11 +191,11 @@ describe('Gpt pipelines', () => {
 const gpt1 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'gpt1-INPUT', data: { type: NODE_INPUT } })
-    .addNode({ id: 'gpt1-GPT', data: { type: 'gpt' } })
-    .addNode({ id: 'gpt1-OUTPUT', data: { type: NODE_OUTPUT } })
-    .addEdge(createEdge({ source: 'gpt1-INPUT', output: 'prompt', target: 'gpt1-GPT', input: 'prompt' }))
-    .addEdge(createEdge({ source: 'gpt1-GPT', output: 'text', target: 'gpt1-OUTPUT', input: 'text' }));
+    .createNode({ id: 'gpt1-INPUT', data: { type: NODE_INPUT } })
+    .createNode({ id: 'gpt1-GPT', data: { type: 'gpt' } })
+    .createNode({ id: 'gpt1-OUTPUT', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' })
+    .createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
 
   return model;
 };
@@ -203,12 +203,12 @@ const gpt1 = () => {
 const gpt2 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .addNode({ id: 'gpt2-INPUT', data: { type: NODE_INPUT } })
-    .addNode({ id: 'gpt2-GPT', data: { type: 'gpt' } })
-    .addNode({ id: 'gpt2-OUTPUT', data: { type: NODE_OUTPUT } })
-    .addEdge(createEdge({ source: 'gpt2-INPUT', output: 'prompt', target: 'gpt2-GPT', input: 'prompt' }))
-    .addEdge(createEdge({ source: 'gpt2-GPT', output: 'text', target: 'gpt2-OUTPUT', input: 'text' }))
-    .addEdge(createEdge({ source: 'gpt2-GPT', output: 'tokenStream', target: 'gpt2-OUTPUT', input: 'tokenStream' }));
+    .createNode({ id: 'gpt2-INPUT', data: { type: NODE_INPUT } })
+    .createNode({ id: 'gpt2-GPT', data: { type: 'gpt' } })
+    .createNode({ id: 'gpt2-OUTPUT', data: { type: NODE_OUTPUT } })
+    .createEdge({ node: 'gpt2-INPUT', property: 'prompt' }, { node: 'gpt2-GPT', property: 'prompt' })
+    .createEdge({ node: 'gpt2-GPT', property: 'text' }, { node: 'gpt2-OUTPUT', property: 'text' })
+    .createEdge({ node: 'gpt2-GPT', property: 'tokenStream' }, { node: 'gpt2-OUTPUT', property: 'tokenStream' });
 
   return model;
 };
