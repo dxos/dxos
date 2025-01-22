@@ -78,7 +78,7 @@ describe('PluginManager', () => {
     });
     const Test = definePlugin(testMeta, [Hello]);
 
-    const manager = new PluginManager({ plugins: [Test], core: [], enabled: [Test.meta.id], pluginLoader });
+    const manager = new PluginManager({ plugins: [Test], enabled: [Test.meta.id], pluginLoader });
     expect(manager.plugins).toEqual([Test]);
     expect(manager.enabled).toEqual([Test.meta.id]);
     expect(manager.modules).toEqual([Hello]);
