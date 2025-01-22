@@ -13,6 +13,7 @@ import { type GraphMonitor } from '../../hooks';
 import { type Connection } from '../../types';
 import { createComputeNode, isValidComputeNode } from '../graph';
 import { type ComputeShape } from '../shapes';
+import { nonNullable } from '@dxos/util';
 
 /**
  * Listens for changes to the graph and updates the compute graph.
@@ -62,8 +63,21 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
       },
 
       onDelete: ({ subgraph }) => {
-        // TODO(burdon): Remove nodes and edges.
-        console.log(JSON.stringify(subgraph, null, 2));
+        if (graph) {
+          const computeNodeIds = subgraph.nodes.map((node) => (node.data as ComputeShape).node) as string[];
+          const edgeIdsToRemove = subgraph.edges
+            .map((shapeEdge) => {
+              return graph.edges.find((computeEdge) => {
+                const edgeData = computeEdge.data as Connection;
+                const shapeData = shapeEdge.data as Connection;
+                return edgeData.input === shapeData.input && edgeData.output === shapeData.output;
+              })?.id;
+            })
+            .filter(nonNullable);
+
+          graph.removeNodes(computeNodeIds);
+          graph.removeEdges(edgeIdsToRemove);
+        }
       },
     };
   }, [graph]);
