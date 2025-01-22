@@ -6,8 +6,8 @@ import { DeferredTask, sleep, synchronized } from '@dxos/async';
 import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-import { cancelWithContext } from './promise-utils';
-import { LifecycleState, Resource } from './resource';
+import { cancelWithContext } from '@dxos/context/src/promise-utils';
+import { LifecycleState, Resource } from '@dxos/context/src/resource';
 
 const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;

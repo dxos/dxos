@@ -7,8 +7,11 @@
   },
   "include": [
     "src"
-  ],
+, "../async/src/persistent-lifecycle.test.ts", "../async/src/persistent-lifecycle.ts"  ],
   "references": [
+    {
+      "path": "../async"
+    },
     {
       "path": "../debug"
     },
@@ -17,9 +20,6 @@
     },
     {
       "path": "../node-std"
-    },
-    {
-      "path": "../test-utils"
     },
     {
       "path": "../util"
