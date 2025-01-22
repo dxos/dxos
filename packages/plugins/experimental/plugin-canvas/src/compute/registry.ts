@@ -21,6 +21,7 @@ import {
   mapShape,
   notShape,
   orShape,
+  randomShape,
   reducerShape,
   scopeShape,
   switchShape,
@@ -47,6 +48,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       switchShape,
       audioShape,
       triggerShape,
+      randomShape,
     ],
   },
   {

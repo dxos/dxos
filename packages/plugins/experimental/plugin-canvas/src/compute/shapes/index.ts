@@ -19,6 +19,7 @@ export * from './Json';
 export * from './List';
 export * from './Logic';
 export * from './Map';
+export * from './RNG';
 export * from './Scope';
 export * from './Switch';
 export * from './Table';

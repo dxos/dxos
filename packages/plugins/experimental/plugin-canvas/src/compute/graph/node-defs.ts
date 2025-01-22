@@ -44,6 +44,7 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['map' as const]: () => createNode('map'),
   ['not' as const]: () => createNode('not'),
   ['or' as const]: () => createNode('or'),
+  ['rng' as const]: () => createNode('rng'),
   ['reducer' as const]: () => createNode('reducer'),
   ['scope' as const]: () => createNode('scope'),
   ['switch' as const]: () => createNode('switch'),

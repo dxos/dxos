@@ -25,6 +25,7 @@ import {
   TriggerOutput,
 } from './types';
 import { GptService } from '../services';
+import { EdgeClientService } from '../services/edge-client-service';
 import {
   AnyInput,
   AnyOutput,
@@ -41,8 +42,6 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
-import { EdgeClient } from '@dxos/edge-client';
-import { EdgeClientService } from '../services/edge-client-service';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -66,7 +65,7 @@ export type NodeType =
   | 'map'
   | 'not'
   | 'or'
-  | 'random'
+  | 'rng'
   | 'reducer'
   | 'scope'
   | 'switch'
@@ -112,9 +111,10 @@ export const registry: Record<NodeType, Executable> = {
     output: TriggerOutput,
   }),
 
-  ['random' as const]: defineComputeNode({
+  ['rng' as const]: defineComputeNode({
     input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Number }),
+    exec: () => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: Math.random() })),
   }),
 
   //
