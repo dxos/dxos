@@ -23,13 +23,14 @@ export class ComputeGraphModel extends AbstractGraphModel<
   ComputeGraphModel,
   ComputeGraphBuilder
 > {
-  /**
-   * Create new model.
-   */
   static create(graph?: Partial<Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
       create(ComputeGraph, {
-        graph: { id: graph?.id ?? ObjectId.random(), nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] },
+        graph: {
+          id: graph?.id ?? ObjectId.random(),
+          nodes: graph?.nodes ?? [],
+          edges: graph?.edges ?? [],
+        },
       }),
     );
   }
@@ -45,7 +46,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
     return this._root;
   }
 
-  override get builder(): ComputeGraphBuilder {
+  override get builder() {
     return new ComputeGraphBuilder(this);
   }
 
@@ -100,14 +101,8 @@ export class ComputeGraphModel extends AbstractGraphModel<
 class ComputeGraphBuilder extends AbstractGraphBuilder<
   GraphNode<ComputeNode>,
   GraphEdge<ComputeEdge>,
-  ComputeGraphModel,
-  ComputeGraphBuilder
+  ComputeGraphModel
 > {
-  override call(cb: (builder: ComputeGraphBuilder) => void): this {
-    cb(this);
-    return this;
-  }
-
   createNode(props: { id?: string; data?: ComputeNode }): this {
     this.model.createNode(props);
     return this;

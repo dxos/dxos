@@ -42,7 +42,7 @@ const Render = (args: ChaosProps) => {
           // Object.
           size: { value: defaultShaderOptions.size, min: 1, max: 500 },
           speed: { value: defaultShaderOptions.speed, min: 0, max: 100 },
-          curl: { value: defaultShaderOptions.curl, min: 0.01, max: 1 },
+          curl: { value: defaultShaderOptions.curl, min: 0.01, max: 5 },
           chaos: { value: defaultShaderOptions.chaos, min: 1, max: 5, step: 1 },
           alpha: { value: defaultShaderOptions.alpha, min: 0, max: 1 },
           gain: { value: defaultShaderOptions.gain, min: 0, max: 1 },

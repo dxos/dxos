@@ -2,13 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useRef } from 'react';
 
+import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef, type TextBoxProps } from '../../components';
+import {
+  type ShapeComponentProps,
+  type ShapeDef,
+  TextBox,
+  type TextBoxControl,
+  type TextBoxProps,
+} from '../../components';
 import { createAnchorMap } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -34,19 +41,21 @@ export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
 export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
-  const { node } = useComputeNodeState(shape);
+  const { node, runtime } = useComputeNodeState(shape);
+  const inputRef = useRef<TextBoxControl>(null);
+
+  const handleEnter: TextBoxProps['onEnter'] = (text) => {
+    const value = text.trim();
+    if (value.length) {
+      // TODO(burdon): Change type to union of scalar values.
+      runtime.setOutput(DEFAULT_OUTPUT, value);
+      inputRef.current?.focus();
+    }
+  };
 
   return (
     <Box shape={shape} name={title}>
-      <div className='p-2 truncate'>{String(node.data.constant)}</div>
-      {/* TODO(burdon): Editable. */}
-      {/* <TextBox */}
-      {/*  {...props} */}
-      {/*  value={node.data.constant} */}
-      {/*  onEnter={(value) => { */}
-      {/*    node.data.constant = value; */}
-      {/*  }} */}
-      {/* /> */}
+      <TextBox {...props} ref={inputRef} value={String(node.data.constant)} onEnter={handleEnter} />
     </Box>
   );
 };
@@ -60,7 +69,7 @@ export type CreateConstantProps = CreateShapeProps<ConstantShape>;
 export const createConstant = ({
   id,
   text,
-  size = { width: 256, height: 128 },
+  size = { width: 128, height: 128 },
   ...rest
 }: CreateConstantProps): ConstantShape => ({
   id,

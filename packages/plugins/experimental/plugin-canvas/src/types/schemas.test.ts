@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { isPolygon, isPath, type Shape } from './schema';
+import { type Shape } from './schema';
+import { isPolygon, isPath } from './shapes';
 import { createFunction } from '../compute';
 import { createEllipse, createRectangle, createPath } from '../shapes';
 

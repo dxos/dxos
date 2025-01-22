@@ -8,7 +8,7 @@ import type { ResultStreamEvent } from '@dxos/assistant';
 import { GptInput, GptOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
-import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
+import { createFunctionAnchors, FunctionBody, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';

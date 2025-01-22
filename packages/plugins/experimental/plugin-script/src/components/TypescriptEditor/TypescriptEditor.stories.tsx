@@ -9,6 +9,7 @@ import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { createDataExtensions } from '@dxos/react-ui-editor';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { TypescriptEditor } from './TypescriptEditor';
 import { templates } from '../../templates';
@@ -37,6 +38,7 @@ const meta: Meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
+  decorators: [withTheme],
 };
 
 export default meta;

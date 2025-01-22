@@ -4,12 +4,11 @@
 
 import React from 'react';
 
-import { GptMessage } from '@dxos/conductor';
+import { createInputSchema, createOutputSchema, GptMessage } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
-import { createFunctionAnchors } from './Function';
-import { Box } from './common';
-import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
+import { createFunctionAnchors, Box } from './common';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 const InputSchema = createInputSchema(GptMessage);

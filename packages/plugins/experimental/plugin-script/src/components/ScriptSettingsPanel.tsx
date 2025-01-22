@@ -7,7 +7,7 @@ import React, { type ChangeEvent, useCallback } from 'react';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Button, Icon, Input, useControlledValue, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Input, Separator, useControlledValue, useTranslation } from '@dxos/react-ui';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
@@ -20,13 +20,6 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
   const client = useClient();
   const space = getSpace(script);
   const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
-
-  const handleNameChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      script.name = event.target.value;
-    },
-    [script],
-  );
 
   const [binding, setBinding] = useControlledValue(fn?.binding ?? '');
   const handleBindingChange = useCallback(
@@ -50,20 +43,10 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
   const handleCopy = useCallback(() => functionUrl && navigator.clipboard.writeText(functionUrl), [functionUrl]);
 
   return (
-    <div role='form' className='flex flex-col w-full p-2 gap-4'>
-      <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('name label')}</Input.Label>
-          <Input.TextInput
-            placeholder={t('object title placeholder')}
-            value={script.name ?? ''}
-            onChange={handleNameChange}
-          />
-        </div>
-      </Input.Root>
-      {fn && (
-        <>
-          <hr className='border-separator' />
+    fn && (
+      <>
+        <Separator />
+        <div role='form' className='flex flex-col w-full p-2 gap-4'>
           <h2>{t('remote function settings heading')}</h2>
           <Input.Root>
             <div role='none' className='flex flex-col gap-1'>
@@ -93,8 +76,8 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
               />
             </div>
           </Input.Root>
-        </>
-      )}
-    </div>
+        </div>
+      </>
+    )
   );
 };

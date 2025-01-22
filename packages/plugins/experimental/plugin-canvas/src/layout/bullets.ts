@@ -100,11 +100,11 @@ export const createBullet = (
 
       // Pulse.
       bullet
-        .transition('s')
-        .duration(500)
+        .transition('x')
+        .duration(250)
         .attr('r', options.radius * 1.5)
         .transition()
-        .duration(300)
+        .duration(250)
         .attr('r', options.radius);
 
       bullet

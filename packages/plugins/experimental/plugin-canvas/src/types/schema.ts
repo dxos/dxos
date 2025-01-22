@@ -4,16 +4,8 @@
 
 import { S, TypedObject } from '@dxos/echo-schema';
 import { Graph, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
-import { Point, Dimension } from '@dxos/react-ui-canvas';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
-
-export const Connection = S.Struct({
-  input: S.String,
-  output: S.String,
-});
-
-export type Connection = S.Schema.Type<typeof Connection>;
 
 /**
  * Base type for all shapes.
@@ -32,59 +24,19 @@ export const Shape = S.mutable(
 export type Shape = S.Schema.Type<typeof Shape>;
 
 /**
- * Closed shape.
- * Common handling via Frame.
+ * Connections between shapes.
  */
-export const Polygon = S.mutable(
-  S.extend(
-    Shape,
-    S.Struct({
-      center: Point,
-      size: S.mutable(Dimension),
-    }),
-  ),
-);
+export const Connection = S.Struct({
+  input: S.String,
+  output: S.String,
+});
 
-export type Polygon = S.Schema.Type<typeof Polygon>;
-
-export const RectangleShape = S.extend(
-  Polygon,
-  S.Struct({
-    type: S.Literal('rectangle'),
-    rounded: S.optional(S.Number),
-  }),
-);
-
-export const EllipseShape = S.extend(
-  Polygon,
-  S.Struct({
-    type: S.Literal('ellipse'),
-  }),
-);
-
-export const PathShape = S.extend(
-  Shape,
-  S.Struct({
-    type: S.Literal('path'),
-    path: S.String,
-    start: S.optional(S.String),
-    end: S.optional(S.String),
-  }),
-);
+export type Connection = S.Schema.Type<typeof Connection>;
 
 // TODO(burdon): Rename scene?
 export const Layout = S.Struct({
   shapes: S.mutable(S.Array(Shape)),
 });
-
-// TODO(burdon): Factor out.
-export type RectangleShape = S.Schema.Type<typeof RectangleShape>;
-export type EllipseShape = S.Schema.Type<typeof EllipseShape>;
-export type PathShape = S.Schema.Type<typeof PathShape>;
-
-// TODO(burdon): Remove?
-export const isPolygon = S.is(Polygon);
-export const isPath = S.is(PathShape);
 
 export type Layout = S.Schema.Type<typeof Layout>;
 

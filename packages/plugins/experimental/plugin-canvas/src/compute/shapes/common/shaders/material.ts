@@ -83,7 +83,7 @@ export class SimulationMaterial extends THREE.ShaderMaterial {
         // uCurls: { value: [32.0, 16.0, 8.0, 4.0, 2.0] },
         uChaos: { value: chaos },
         uAlpha: { value: alpha },
-        uPerturbation: { value: 1.0 },
+        uPerturbation: { value: 0.0 },
       },
     });
   }

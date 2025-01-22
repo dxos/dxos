@@ -68,4 +68,5 @@ export const jsonShape: ShapeDef<JsonShape> = {
       [createAnchorId('input')]: { x: -1, y: 0 },
       [createAnchorId('output')]: { x: 1, y: 0 },
     }),
+  resizable: true,
 };

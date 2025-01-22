@@ -9,10 +9,12 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
+import { type ComputeGraphModel, ComputeNode, EdgeGpt } from '@dxos/conductor';
+import { S } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type StateMachine, type StateMachineContext } from './graph';
@@ -44,6 +46,8 @@ type RenderProps = EditorRootProps &
     gpt?: StateMachineContext['gpt'];
   }>;
 
+const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'state-machine', 'selected'] as const;
 
 // TODO(burdon): Move to async/context?
@@ -73,6 +77,15 @@ const Render = ({
   // Selection.
   const [selection, selected] = useSelection(graph);
 
+  const getComputeNode = (id?: string): ComputeNode | undefined => {
+    if (id) {
+      const node = graph?.getNode(id)?.data as ComputeShape;
+      if (node?.node) {
+        return machine?.graph.getNode(node.node);
+      }
+    }
+  };
+
   // Sidebar.
   const [sidebar, setSidebar] = useState(_sidebar);
   const json = useMemo(() => {
@@ -84,9 +97,9 @@ const Render = ({
       case 'state-machine':
         return machine?.nodeStates;
       case 'selected':
-        return { selected };
+        return { shape: selected, compute: getComputeNode(selected?.id) };
     }
-  }, [sidebar, selected]);
+  }, [graph, machine, sidebar, selected]);
 
   // State machine.
   useEffect(() => {
@@ -166,7 +179,11 @@ const Render = ({
             </Select.Root>
           </Toolbar.Root>
 
-          <div className='flex flex-col h-full overflow-hidden'>
+          <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
+            {sidebar === 'selected' && selected && (
+              <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />
+            )}
+
             <JsonFilter data={json} />
           </div>
         </Container>
@@ -196,7 +213,7 @@ export const Default: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'state-machine',
+    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(createTest0()),
   },

@@ -9,7 +9,7 @@ import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { createFunctionAnchors } from './Function';
+import { createFunctionAnchors } from './common';
 import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';

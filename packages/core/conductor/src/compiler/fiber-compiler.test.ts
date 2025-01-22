@@ -67,7 +67,7 @@ describe('Graph as a fiber runtime', () => {
   });
 
   // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
-  test.skip('composition (with shortcut).', async ({ expect }) => {
+  test.skip('composition (with shortcut)', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime
       .registerNode('dxn:test:sum', sum)
