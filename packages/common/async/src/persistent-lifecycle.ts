@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeferredTask, sleep, synchronized } from '@dxos/async';
+import { cancelWithContext, LifecycleState, Resource } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-import { cancelWithContext } from '@dxos/context/src/promise-utils';
-import { LifecycleState, Resource } from '@dxos/context/src/resource';
+import { synchronized } from './mutex';
+import { DeferredTask } from './task-scheduling';
+import { sleep } from './timeout';
 
 const INIT_RESTART_DELAY = 100;
 const DEFAULT_MAX_RESTART_DELAY = 5000;
