@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
+import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, InputHeader } from '@dxos/react-ui-form';
+import { Form, InputHeader, type InputProps } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
@@ -26,8 +27,31 @@ export type CreateObjectPanelProps = {
   onCreateObject?: (params: {
     schema: TypedObject;
     target: Space | CollectionType;
-    name?: string;
+    data: Record<string, any>;
   }) => MaybePromise<void>;
+};
+
+// TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
+/**
+ * Creates a surface input component based on plugin context.
+ * @param baseData Additional data that will be merged with form data and passed to the surface.
+ * This allows providing more context to the surface than what's available from the form itself.
+ */
+const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
+  const pluginManager = usePluginManager();
+
+  return useCallback(
+    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps<any> }) => {
+      const composedData = { prop, schema, ...baseData };
+
+      if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
+        return undefined;
+      }
+
+      return <Surface role='form-input' data={composedData} {...inputProps} />;
+    },
+    [pluginManager, baseData],
+  );
 };
 
 export const CreateObjectPanel = ({
@@ -50,15 +74,21 @@ export const CreateObjectPanel = ({
   const handleClearTarget = useCallback(() => setTarget(undefined), []);
 
   const handleCreateObject = useCallback(
-    async ({ name }: { name?: string }) => {
+    async (props: Record<string, any>) => {
       if (!schema || !target) {
         return;
       }
-
-      await onCreateObject?.({ schema, target, name });
+      await onCreateObject?.({ schema, target, data: props });
     },
     [onCreateObject, schema, target],
   );
+
+  const metadata = useMemo(() => {
+    if (!typename) {
+      return;
+    }
+    return resolve?.(typename);
+  }, [resolve, typename]);
 
   // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
   const schemaInput = (
@@ -112,15 +142,23 @@ export const CreateObjectPanel = ({
     </SearchList.Root>
   );
 
-  const form = (
-    <Form
-      autoFocus
-      values={{ name: initialName }}
-      schema={S.Struct({ name: S.optional(S.String) })}
-      testId='create-object-form'
-      onSave={handleCreateObject}
-    />
-  );
+  const inputSurfaceLookup = useInputSurfaceLookup({ target });
+
+  const form = useMemo(() => {
+    // TODO(ZaymonFC): Move this default object creation schema somewhere?
+    const schema = (metadata?.creationSchema ?? S.Struct({ name: S.optional(S.String) })) as S.Schema<any>;
+
+    return (
+      <Form
+        autoFocus
+        values={{ name: initialName }}
+        schema={schema}
+        testId='create-object-form'
+        onSave={handleCreateObject}
+        lookupComponent={inputSurfaceLookup}
+      />
+    );
+  }, [initialName, handleCreateObject, metadata]);
 
   return (
     <div role='form' className='flex flex-col gap-2'>

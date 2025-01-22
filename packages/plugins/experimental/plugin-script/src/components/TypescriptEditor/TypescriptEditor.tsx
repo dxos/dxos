@@ -34,14 +34,14 @@ import { type Compiler } from '../../compiler';
 
 export type TypescriptEditorProps = {
   id: string;
-  inputMode: EditorInputMode;
+  inputMode?: EditorInputMode;
   compiler?: Compiler;
   toolbar?: boolean;
 } & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
 
 export const TypescriptEditor = ({
   id,
-  inputMode,
+  inputMode = 'vscode',
   compiler,
   className,
   initialValue,

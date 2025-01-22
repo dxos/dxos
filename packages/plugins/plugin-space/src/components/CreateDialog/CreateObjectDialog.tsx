@@ -46,11 +46,11 @@ export const CreateObjectDialog = ({
     async ({
       schema,
       target: _target,
-      name,
+      data,
     }: {
       schema: TypedObject;
       target: CreateObjectPanelProps['target'];
-      name?: string;
+      data?: Record<string, any>;
     }) => {
       const target = isSpace(_target)
         ? (_target.properties[CollectionType.typename]?.target as CollectionType | undefined)
@@ -65,7 +65,7 @@ export const CreateObjectDialog = ({
       closeRef.current?.click();
 
       const space = isSpace(target) ? target : getSpace(target);
-      const result = await dispatch(createObjectIntent({ name, space }));
+      const result = await dispatch(createObjectIntent(data, { space }));
       const object = result.data?.object;
       if (isReactiveObject(object)) {
         const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object });
