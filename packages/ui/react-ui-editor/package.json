@@ -66,7 +66,6 @@
     "lodash.get": "^4.4.2",
     "lodash.merge": "^4.6.2",
     "lodash.sortby": "^4.7.0",
-    "react-dropzone": "^14.2.3",
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
