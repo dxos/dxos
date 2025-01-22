@@ -4,6 +4,7 @@
 
 import { S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
+import { EditorInputMode } from '@dxos/react-ui-editor';
 
 import { SCRIPT_PLUGIN } from './meta';
 
@@ -20,4 +21,10 @@ export namespace ScriptAction {
   }) {}
 }
 
-export type ScriptSettingsProps = {};
+export const ScriptSettingsSchema = S.mutable(
+  S.Struct({
+    editorInputMode: EditorInputMode,
+  }),
+);
+
+export type ScriptSettingsProps = S.Schema.Type<typeof ScriptSettingsSchema>;
