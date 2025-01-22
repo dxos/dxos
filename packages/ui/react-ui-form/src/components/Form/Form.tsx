@@ -15,7 +15,7 @@ import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { SelectInput } from './Defaults';
-import { InputHeader, type InputComponent } from './Input';
+import { InputHeader, type InputProps, type InputComponent } from './Input';
 import { getInputComponent } from './factory';
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -43,8 +43,14 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     testId?: string;
     onCancel?: () => void;
 
+    lookupComponent?: (args: {
+      prop: string;
+      schema: S.Schema<any>;
+      inputProps: InputProps<T>;
+    }) => React.ReactElement | undefined;
     /**
      * Map of custom renderers for specific properties.
+     * @deprecated Use lookupComponent instead.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
@@ -68,6 +74,7 @@ export const Form = <T extends BaseObject>({
   onValidate,
   onSave,
   onCancel,
+  lookupComponent,
   Custom,
 }: FormProps<T>) => {
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
@@ -108,6 +115,28 @@ export const Form = <T extends BaseObject>({
           const key = [...path, name];
           const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
+
+          const FoundComponent = lookupComponent?.({
+            prop: name,
+            schema: S.make(ast),
+            inputProps: {
+              property: name,
+              type,
+              format,
+              label,
+              disabled: readonly,
+              placeholder,
+              ...inputProps,
+            },
+          });
+
+          if (FoundComponent) {
+            return (
+              <div key={name} role='none' className={padding}>
+                {FoundComponent}
+              </div>
+            );
+          }
 
           // Get generic input.
           // TODO(ZaymonFC): We might need to switch this to using globs since we're now indexing into arrays.

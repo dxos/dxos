@@ -6869,12 +6869,18 @@ importers:
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
+      '@lezer/highlight':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       '@typescript/vfs':
         specifier: ^1.6.0
         version: 1.6.0(typescript@5.7.2)
+      '@valtown/codemirror-continue':
+        specifier: ^2.3.1
+        version: 2.3.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
       '@valtown/codemirror-ts':
         specifier: ^2.2.0
         version: 2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)
@@ -9144,6 +9150,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -16405,9 +16414,6 @@ packages:
   '@lezer/go@1.0.0':
     resolution: {integrity: sha512-co9JfT3QqX1YkrMmourYw2Z8meGC50Ko4d54QEcQbEYpvdUvN4yb0NBZdn/9ertgvjsySxHsKzH3lbm3vqJ4Jw==}
 
-  '@lezer/highlight@1.2.0':
-    resolution: {integrity: sha512-WrS5Mw51sGrpqjlh3d4/fOwpEV2Hd3YOkp9DBt4k8XZQcoTHZFB7sx030A6OcahF4J1nDQAa3jXlTVVYH50IFA==}
-
   '@lezer/highlight@1.2.1':
     resolution: {integrity: sha512-Z5duk4RN/3zuVO7Jq0pGLJ3qynpxUVsh7IbUbGj88+uV2ApSAn6kWg2au3iJb+0Zi7kKtqffIESgNcRXWZWmSA==}
 
@@ -21352,6 +21358,14 @@ packages:
     resolution: {integrity: sha512-Yy19y6O2GJq8f7CHf7L0nxL8bf4PZCPaVOCgJrusOeFHY1LvHgYXnmnXg6N5iwAnbgbZCDjo60SiM6IPJi9C5g==}
     peerDependencies:
       react: ~18.2.0
+
+  '@valtown/codemirror-continue@2.3.1':
+    resolution: {integrity: sha512-GkKs4Lgkf2lKecVKY26sOw4th+aRT30N4jYhpx/c7OYtV9ld2y+phVMjXo401lt6KiYUP5CUO1SaRezHZ5bldg==}
+    peerDependencies:
+      '@codemirror/language': ^6
+      '@codemirror/state': ^6
+      '@codemirror/view': ^6
+      '@lezer/common': ^1
 
   '@valtown/codemirror-ts@2.2.0':
     resolution: {integrity: sha512-p5PDt/T2rz83w6QoFQj8N0ojgfNIk/48k9u7VoyTyeBMZSz+kSHB00sKOFZ+OjCrUbl3cyGAmn/u+MInIxmfMQ==}
@@ -37972,7 +37986,7 @@ snapshots:
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.34.1
-      '@lezer/highlight': 1.2.0
+      '@lezer/highlight': 1.2.1
 
   '@codemirror/view@6.34.1':
     dependencies:
@@ -39263,10 +39277,6 @@ snapshots:
       '@lezer/common': 1.2.2
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
-
-  '@lezer/highlight@1.2.0':
-    dependencies:
-      '@lezer/common': 1.2.2
 
   '@lezer/highlight@1.2.1':
     dependencies:
@@ -45791,6 +45801,13 @@ snapshots:
     dependencies:
       '@use-gesture/core': 10.3.1
       react: 18.2.0
+
+  '@valtown/codemirror-continue@2.3.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)':
+    dependencies:
+      '@codemirror/language': 6.10.3
+      '@codemirror/state': 6.4.1
+      '@codemirror/view': 6.34.1
+      '@lezer/common': 1.2.2
 
   '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)':
     dependencies:
