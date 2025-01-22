@@ -83,7 +83,8 @@ export class Compiler {
         return exists;
       },
       resolveModuleNames: (moduleNames: string[], containingFile: string) => {
-        return moduleNames.map((moduleName) => {
+        return moduleNames.map((_moduleName) => {
+          const moduleName = _moduleName.replace(/^npm:/, 'https://esm.sh/');
           if (moduleName.startsWith('https://')) {
             const typesUrl = moduleName.endsWith('.d.ts') ? moduleName : this._httpTypeCache.get(moduleName);
             if (typesUrl) {
@@ -103,6 +104,10 @@ export class Compiler {
   }
 
   private _normalizeUrl(url: string, parent?: string): string | undefined {
+    if (url.startsWith('npm:')) {
+      return `https://esm.sh/${url.slice(4)}`;
+    }
+
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
