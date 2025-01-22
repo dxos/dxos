@@ -34,23 +34,23 @@ const createTableToolbarActions = (state: TableToolbarState) => {
   const add = createMenuAction<TableToolbarActionProperties>('add-row', {
     type: 'add-row',
     icon: 'ph--plus--regular',
-    label: ['add row label', { ns: translationKey }],
+    label: ['add row', { ns: translationKey }],
     testId: 'table.toolbar.add-row',
   });
   const save = createMenuAction<TableToolbarActionProperties>('save-view', {
     type: 'save-view',
-    label: ['save view label', { ns: translationKey }],
-    iconOnly: false,
     icon: 'ph--floppy-disk--regular',
+    label: ['save view label', { ns: translationKey }],
     testId: 'table.toolbar.save-view',
+    iconOnly: false,
     hidden: !state.viewDirty,
   });
   const gap = createGapSeparator('gap');
   const comment = createMenuAction('comment', {
     type: 'comment',
     icon: 'ph--chat-text--regular',
-    testId: 'table.toolbar.comment',
     label: ['create comment', { ns: translationKey }],
+    testId: 'table.toolbar.comment',
   });
   const nodes = [add, save, gap, comment];
   return {

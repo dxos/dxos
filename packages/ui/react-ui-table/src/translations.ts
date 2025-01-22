@@ -28,6 +28,7 @@ export default [
         'column deleted label': 'Column deleted',
         'new column button label': 'Create column',
         'create new object label': 'Create new object “{{text}}”',
+        'save view label': 'Save changes to view',
       },
     },
   },
