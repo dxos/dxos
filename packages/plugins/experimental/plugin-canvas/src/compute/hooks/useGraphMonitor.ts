@@ -69,9 +69,12 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
           const edgeIdsToRemove = subgraph.edges
             .map((shapeEdge) => {
               return graph.edges.find((computeEdge) => {
-                const edgeData = computeEdge.data as Connection;
-                const shapeData = shapeEdge.data as Connection;
-                return edgeData.input === shapeData.input && edgeData.output === shapeData.output;
+                const computeConnection = computeEdge.data as Connection;
+                const canvasConnection = shapeEdge.data as Connection;
+                return (
+                  computeConnection.input === canvasConnection.input &&
+                  computeConnection.output === canvasConnection.output
+                );
               })?.id;
             })
             .filter(nonNullable);
