@@ -15,17 +15,14 @@ import {
   Table,
   type TableController,
   TablePresentation,
-  Toolbar,
-  type ToolbarActionType,
+  TableToolbar,
+  type TableToolbarAction,
   type TableType,
   useTableModel,
 } from '@dxos/react-ui-table';
 import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
-
-// TODO(zantonio): Factor out, copied this from MarkdownPlugin.
-export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
@@ -86,8 +83,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, [dispatch, table]);
 
   const handleAction = useCallback(
-    (action: { type: ToolbarActionType }) => {
-      switch (action.type) {
+    (action: TableToolbarAction) => {
+      switch (action.properties.type) {
         case 'comment': {
           onThreadCreate();
           break;
@@ -107,11 +104,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
   return (
     <StackItem.Content toolbar role={role}>
-      <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
-        <Toolbar.Editing />
-        <Toolbar.Separator />
-        <Toolbar.Actions viewDirty={model?.isViewDirty} />
-      </Toolbar.Root>
+      <TableToolbar onAction={handleAction} classNames={['p-1 attention-surface', !hasAttention && 'opacity-20']} />
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
       </Table.Root>

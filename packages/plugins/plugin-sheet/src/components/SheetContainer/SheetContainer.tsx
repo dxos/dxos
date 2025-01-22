@@ -32,7 +32,7 @@ export const SheetContainer = ({
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <StackItem.Content toolbar statusbar {...(role === 'section' && { classNames: 'aspect-video' })}>
-        <SheetToolbar classNames={['pli-0.5 attention-surface', !hasAttention && 'opacity-20']} />
+        <SheetToolbar classNames={['pli-1 attention-surface', !hasAttention && 'opacity-20']} />
         <GridSheet />
         <FunctionEditor />
       </StackItem.Content>

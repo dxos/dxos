@@ -80,6 +80,9 @@
       "path": "../react-ui-grid"
     },
     {
+      "path": "../react-ui-menu"
+    },
+    {
       "path": "../react-ui-searchlist"
     },
     {

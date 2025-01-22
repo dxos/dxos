@@ -6,9 +6,10 @@ import { type ToolbarSeparatorProps, type Label, type IconButtonProps } from '@d
 
 export type MenuActionProperties = {
   label: Label;
-  icon: string;
+  icon?: string;
   value?: string;
   disabled?: boolean;
+  hidden?: boolean;
   iconOnly?: boolean;
   testId?: string;
   variant?: 'action' | 'toggle';
@@ -18,6 +19,7 @@ export type MenuActionProperties = {
 export type MenuItemGroupProperties = {
   label: Label;
   icon?: string;
+  iconOnly?: boolean;
 };
 
 export type MenuAction<P extends {} = {}> = Action<P & MenuActionProperties>;

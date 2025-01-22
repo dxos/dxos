@@ -4,8 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
-import { type ToolbarRootProps } from '@dxos/react-ui';
+import { type IconButtonProps, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
@@ -49,18 +48,19 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
-  const { icon, iconOnly = true, disabled, testId } = action.properties;
-  return (
-    <NaturalToolbar.IconButton
+  const { icon, iconOnly = true, disabled, testId, hidden } = action.properties;
+  const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
+  const rootProps = icon
+    ? { icon, iconSize, iconOnly, label: <ActionLabel action={action} /> }
+    : { children: <ActionLabel action={action} /> };
+  return hidden ? null : (
+    <Root
       key={action.id}
-      iconOnly={iconOnly}
-      icon={icon}
-      size={iconSize}
-      label={<ActionLabel action={action} />}
       disabled={disabled}
       onClick={handleClick}
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
+      {...(rootProps as IconButtonProps)}
     />
   );
 };
@@ -100,22 +100,23 @@ const DropdownMenuToolbarItem = ({
 
 const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
-  const { icon, iconOnly = true, disabled, testId } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden } = action.properties;
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
-  return (
-    <NaturalToolbar.ToggleGroupIconItem
+  const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
+  const rootProps = icon
+    ? { icon, iconSize, iconOnly, label: <ActionLabel action={action} /> }
+    : { children: <ActionLabel action={action} /> };
+  return hidden ? null : (
+    <Root
       key={action.id}
-      value={action.id}
-      icon={icon}
-      size={iconSize}
-      iconOnly={iconOnly}
+      value={action.id as any}
       disabled={disabled}
-      label={<ActionLabel action={action} />}
       onClick={handleClick}
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
+      {...(rootProps as IconButtonProps)}
     />
   );
 };
