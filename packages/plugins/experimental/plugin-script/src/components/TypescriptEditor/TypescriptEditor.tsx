@@ -156,7 +156,7 @@ function tsHttpTypeLoader({ compiler, path }: { compiler: Compiler; path: string
       constructor(view: EditorView) {
         // Process imports immediately when the plugin is initialized.
         const initialContent = view.state.doc.toString();
-        compiler.processImports(path, initialContent).catch(log.catch);
+        void compiler.processImports(path, initialContent).catch(log.catch);
       }
 
       update(update: ViewUpdate) {
@@ -168,7 +168,7 @@ function tsHttpTypeLoader({ compiler, path }: { compiler: Compiler; path: string
 
           this.debounceTimeout = setTimeout(() => {
             const content = update.state.doc.toString();
-            compiler.processImports(path, content).catch(log.catch);
+            void compiler.processImports(path, content).catch(log.catch);
           }, 300);
         }
       }
