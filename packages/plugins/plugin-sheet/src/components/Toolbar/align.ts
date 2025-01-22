@@ -15,6 +15,12 @@ export type AlignAction = { key: AlignKey; value: AlignValue };
 
 export type AlignState = { [alignKey]: AlignValue | undefined };
 
+const aligns: Record<AlignValue, string> = {
+  start: 'ph--text-align-left--regular',
+  center: 'ph--text-align-center--regular',
+  end: 'ph--text-align-right--regular',
+};
+
 export const useAlignState = (state: Partial<AlignState>) => {
   const { cursor, model } = useSheetContext();
   useEffect(() => {
@@ -34,15 +40,11 @@ const createAlignGroupAction = (value?: AlignValue) =>
     label: ['align label', { ns: SHEET_PLUGIN }],
     variant: 'toggleGroup',
     selectCardinality: 'single',
-    value,
+    value: `${alignKey}--${value}`,
   } as ToolbarMenuActionGroupProperties);
 
 const createAlignActions = (value?: AlignValue) =>
-  Object.entries({
-    start: 'ph--text-align-left--regular',
-    center: 'ph--text-align-center--regular',
-    end: 'ph--text-align-right--regular',
-  }).map(([alignValue, icon]) => {
+  Object.entries(aligns).map(([alignValue, icon]) => {
     return createMenuAction<AlignAction>(`${alignKey}--${alignValue}`, {
       key: alignKey,
       value: alignValue as AlignValue,
@@ -54,13 +56,13 @@ const createAlignActions = (value?: AlignValue) =>
   });
 
 export const createAlign = ({ [alignKey]: alignValue }: Partial<AlignState>) => {
-  const headingGroupAction = createAlignGroupAction(alignValue);
-  const headingActions = createAlignActions(alignValue);
+  const alignGroup = createAlignGroupAction(alignValue);
+  const alignActions = createAlignActions(alignValue);
   return {
-    nodes: [headingGroupAction, ...headingActions],
+    nodes: [alignGroup, ...alignActions],
     edges: [
-      { source: 'root', target: 'heading' },
-      ...headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })),
+      { source: 'root', target: 'align' },
+      ...alignActions.map(({ id }) => ({ source: alignGroup.id, target: id })),
     ],
   };
 };
