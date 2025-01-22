@@ -10,7 +10,7 @@ import React from 'react';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SheetToolbar } from './Toolbar';
+import { SheetToolbar } from './SheetToolbar';
 import translations from '../../translations';
 
 const DefaultStory = () => {

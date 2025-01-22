@@ -13,7 +13,7 @@ import { useComputeGraph } from '../ComputeGraph';
 import { FunctionEditor } from '../FunctionEditor';
 import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
-import { SheetToolbar } from '../Toolbar';
+import { SheetToolbar } from '../SheetToolbar';
 
 export const SheetContainer = ({
   space,
