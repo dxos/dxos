@@ -21,7 +21,7 @@ import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
 import { type Intersection } from './util';
-import { type CanvasGraphModel, createCanvasGraphModel, type Polygon } from '../types';
+import { CanvasGraphModel, type Polygon } from '../types';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.
@@ -45,7 +45,7 @@ export const doLayout = async <N extends object>(
   data: GraphModel<GraphNode<N>>,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
 ): Promise<CanvasGraphModel> => {
-  const graph = createCanvasGraphModel();
+  const graph = CanvasGraphModel.create();
   const opt = defaultsDeep({}, options, defaultLayoutOptions);
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {

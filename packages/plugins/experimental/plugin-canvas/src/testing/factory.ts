@@ -7,14 +7,14 @@ import { range } from '@dxos/util';
 
 import { type PointTransform } from '../layout';
 import { createRectangle } from '../shapes';
-import { type CanvasGraphModel, createCanvasGraphModel } from '../types';
+import { CanvasGraphModel } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
 export const createGraph = (snap: PointTransform = (p) => p): CanvasGraphModel => {
-  const graph = createCanvasGraphModel();
+  const graph = CanvasGraphModel.create();
 
   range(1).forEach((i) => {
     const a = createId();
@@ -62,23 +62,9 @@ export const createGraph = (snap: PointTransform = (p) => p): CanvasGraphModel =
       }),
     });
 
-    graph.addEdge({
-      id: createId(),
-      source: a,
-      target: b,
-    });
-
-    graph.addEdge({
-      id: createId(),
-      source: a,
-      target: c,
-    });
-
-    graph.addEdge({
-      id: createId(),
-      source: a,
-      target: d,
-    });
+    graph.addEdge({ id: createId(), source: a, target: b });
+    graph.addEdge({ id: createId(), source: a, target: c });
+    graph.addEdge({ id: createId(), source: a, target: d });
   });
 
   return graph;

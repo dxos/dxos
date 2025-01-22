@@ -10,12 +10,12 @@ import { type Connection, type Shape } from '../types';
 
 export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphModel<
   GraphNode<S>,
-  GraphEdge<Connection>,
+  GraphEdge.Optional<Connection>,
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
-  static create<S extends Shape>(graph?: Partial<Graph>): CanvasGraphModel<S> {
-    return new CanvasGraphModel(
+  static create<S extends Shape>(graph?: Partial<Graph>) {
+    return new CanvasGraphModel<S>(
       create(Graph, {
         nodes: graph?.nodes ?? [],
         edges: graph?.edges ?? [],
@@ -40,6 +40,6 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
 
 export class CanvasGraphBuilder<S extends Shape = Shape> extends AbstractGraphBuilder<
   GraphNode<S>,
-  GraphEdge<Connection>,
+  GraphEdge.Optional<Connection>,
   CanvasGraphModel<S>
 > {}

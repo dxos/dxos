@@ -27,7 +27,7 @@ import {
   SelectionModel,
 } from '../../hooks';
 import { defaultShapes } from '../../shapes';
-import { type CanvasGraphModel, createCanvasGraphModel } from '../../types';
+import { CanvasGraphModel } from '../../types';
 import { Canvas, ShapeRegistry } from '../Canvas';
 import { UI } from '../UI';
 import { type TestId } from '../defs';
@@ -80,8 +80,8 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
 
     // External state.
-    const graph = useMemo<CanvasGraphModel>(() => _graph ?? createCanvasGraphModel(), [_graph]);
-    const clipboard = useMemo(() => createCanvasGraphModel(), []);
+    const graph = useMemo<CanvasGraphModel>(() => _graph ?? CanvasGraphModel.create(), [_graph]);
+    const clipboard = useMemo(() => CanvasGraphModel.create(), []);
     const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
     const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
 

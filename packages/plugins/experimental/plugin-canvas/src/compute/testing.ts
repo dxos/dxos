@@ -2,10 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { AIServiceClientImpl } from '@dxos/assistant';
 import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, EdgeGpt, type NodeType } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
+import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { type GraphEdge, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
@@ -33,12 +36,8 @@ import {
   type CreateShapeProps,
 } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import { createCanvasGraphModel, type Connection, type Shape, type Polygon } from '../types';
+import { type Connection, type Polygon, type Shape } from '../types';
 import { CanvasGraphModel } from '../types/model';
-import { AIServiceClientImpl } from '@dxos/assistant';
-import { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
-import { createStubEdgeIdentity } from '@dxos/edge-client';
-import { SpaceId } from '@dxos/keys';
 
 const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
@@ -50,9 +49,16 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
   }
 };
 
-// TODO(burdon): Sync/monitor.
-// TODO(burdon): Edit input properties.
-// TODO(burdon): Builder.
+const create = ({ nodes, edges }: CanvasGraphModel) =>
+  CanvasGraphModel.create({
+    nodes: nodes.map((data) => ({ id: data.id, data })),
+    edges: edges.map(({ source, target, data }) => ({
+      id: createEdgeId({ source, target }),
+      source,
+      target,
+      data,
+    })),
+  });
 
 const createNode = ({ type, pos }: { type: NodeType; pos: Point }): GraphNode<ComputeShape> => {
   const id = ObjectId.random();
@@ -62,7 +68,7 @@ const createNode = ({ type, pos }: { type: NodeType; pos: Point }): GraphNode<Co
   return { id, data: ctor({ id, ...layout }) };
 };
 
-// TODO(burdon): Remove partial when filled.
+// TODO(burdon): Remove `Partial` when filled.
 const factory: Partial<Record<NodeType, (props: CreateShapeProps<Polygon>) => ComputeShape>> = {
   ['switch' as const]: createSwitch,
   ['and' as const]: createAnd,
@@ -162,7 +168,7 @@ export const createTest2 = () => {
     { source: 'c', target: 'd' },
   ];
 
-  return createCanvasGraphModel({
+  return CanvasGraphModel.create({
     nodes: nodes.map((data) => ({ id: data.id, data })),
     edges: edges.map(({ source, target, data }) => ({
       id: createEdgeId({ source, target }),
@@ -197,10 +203,10 @@ export const createTest3 = ({
             ...createLayout({ x: -18, y: -11, width: 8, height: 8 }),
             value: ARTIFACTS_SYSTEM_PROMPT,
           }),
-          createView({ id: 'artifact', ...createLayout({ x: 18, y: -10, width: 10, height: 10 }) }),
+          createView({ id: 'artifact', ...createLayout({ x: 19, y: -10, width: 10, height: 10 }) }),
         ]
       : []),
-    createGpt({ id: 'gpt', ...createLayout({ x: 0, y: -4 }) }),
+    createGpt({ id: 'gpt', ...createLayout({ x: 0, y: -8 }) }),
     ...(history
       ? [
           createConstant({
@@ -213,12 +219,12 @@ export const createTest3 = ({
     ...(history
       ? [createList({ id: 'thread', text: 'History', ...createLayout({ x: -7, y: 9, width: 10, height: 10 }) })]
       : []),
-    ...(history ? [createAppend({ id: 'append', ...createLayout({ x: 18, y: 11 }) })] : []),
-    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 18, y: 2, width: 10, height: 10 }) })] : []),
+    ...(history ? [createAppend({ id: 'append', ...createLayout({ x: 19, y: 12 }) })] : []),
+    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 19, y: 2, width: 10, height: 10 }) })] : []),
     ...(db ? [createDatabase({ id: 'db', ...createLayout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'text-to-image', ...createLayout({ x: -10, y: -14 }) })] : []),
     ...(cot ? [createList({ id: 'cot', ...createLayout({ x: 0, y: -10, width: 8, height: 10 }) })] : []),
-    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 5, y: 9, width: 10, height: 10 }) })] : []),
+    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 7, y: 9, width: 10, height: 10 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
@@ -320,21 +326,32 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
   return { machine, graph };
 };
 
-const EDGE_ENDPOINT = 'http://localhost:8787';
-// const AI_ENDPOINT = 'https://ai-service.dxos.workers.dev';
-const AI_ENDPOINT = 'http://localhost:8788';
+export type ServiceEndpoints = {
+  edge: string;
+  ai: string;
+};
 
-export const createServices = () => {
+/**
+ * pnpm -w nx dev edge --port 8787
+ * pnpm -w nx dev ai-service --port 8788
+ */
+// eslint-disable-next-line unused-imports/no-unused-vars
+const localServiceEndpoints = {
+  edge: 'http://localhost:8787',
+  ai: 'http://localhost:8788',
+};
+
+// eslint-disable-next-line unused-imports/no-unused-vars
+const remoteServiceEndpoints = {
+  edge: 'https://edge.dxos.workers.dev',
+  ai: 'https://ai-service.dxos.workers.dev',
+};
+
+export const createServices = (services: ServiceEndpoints = localServiceEndpoints) => {
   return {
-    gpt: new EdgeGpt(
-      new AIServiceClientImpl({
-        endpoint: AI_ENDPOINT,
-      }),
-    ),
-    edgeClient: new EdgeClient(createStubEdgeIdentity(), {
-      socketEndpoint: EDGE_ENDPOINT,
-    }),
-    edgeHttpClient: new EdgeHttpClient(EDGE_ENDPOINT),
+    gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: services.ai })),
+    edgeClient: new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: services.edge }),
+    edgeHttpClient: new EdgeHttpClient(services.edge),
   };
 };
 

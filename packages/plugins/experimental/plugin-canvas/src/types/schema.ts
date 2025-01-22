@@ -3,7 +3,7 @@
 //
 
 import { S, TypedObject } from '@dxos/echo-schema';
-import { Graph, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
+import { Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
@@ -45,13 +45,9 @@ export class CanvasBoardType extends TypedObject({
   version: '0.1.0',
 })({
   name: S.optional(S.String),
+
   /**
    * Graph of shapes positioned on the canvas.
    */
   layout: Graph,
 }) {}
-
-export type CanvasGraphModel = GraphModel<GraphNode<Shape, false>, GraphEdge<Connection, true>>;
-
-export const createCanvasGraphModel = (graph?: Graph): CanvasGraphModel =>
-  new GraphModel<GraphNode<Shape, false>, GraphEdge<Connection, true>>(graph);
