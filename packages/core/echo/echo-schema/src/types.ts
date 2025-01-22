@@ -2,52 +2,40 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Simplify } from 'effect/Types';
+import { Schema as S } from '@effect/schema';
 
-import { AST, type JsonPath, S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
+import { Reference } from '@dxos/echo-protocol';
+import { AST, type JsonPath } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
+import { getDeep, setDeep } from '@dxos/util';
 
-import { getProxyHandler } from './proxy';
-
-export const data = Symbol.for('@dxos/schema/Data');
-
-// TODO(burdon): Move to client-protocol.
-export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
+import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
+import type { ObjectMeta } from './object/meta';
 
 // TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_ID = '@id';
-export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
 
 //
-// ForeignKey
+// Objects
 //
 
-const _ForeignKeySchema = S.Struct({
-  source: S.String,
-  id: S.String,
-});
+/**
+ * Base type for all data objects (reactive, ECHO, and other raw objects).
+ * NOTE: This describes the base type for all database objects.
+ * It is stricter than `T extends {}` or `T extends object`.
+ */
+// TODO(burdon): Consider moving to lower-level base type lib.
+// TODO(dmaretskyi): Rename AnyProperties.
+export type BaseObject = { [key: string]: any };
 
-export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
+export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
-export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
+export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
-//
-// ObjectMeta
-//
+// TODO(burdon): Reconcile with ReactiveEchoObject.
+export type WithId = HasId & BaseObject;
 
-export const ObjectMetaSchema = S.mutable(
-  S.Struct({
-    keys: S.mutable(S.Array(ForeignKeySchema)),
-  }),
-);
-
-export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
-
-export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
-
-type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
+export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
@@ -58,17 +46,6 @@ export const RawObject = <S extends S.Schema<any>>(
   return S.make(AST.omit(schema.ast, ['id']));
 };
 
-/**
- * Reference to another ECHO object.
- */
-export type Ref<T> = T | undefined;
-
-/**
- * Reactive object marker interface (does not change the shape of the object.)
- * Accessing properties triggers signal semantics.
- */
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
-
 //
 // Data
 //
@@ -76,6 +53,7 @@ export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 export interface CommonObjectData {
   id: string;
   // TODO(dmaretskyi): Document cases when this can be null.
+  // TODO(dmaretskyi): Convert to @typename and @meta.
   __typename: string | null;
   __meta: ObjectMeta;
 }
@@ -99,12 +77,6 @@ export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
 // Utils
 //
 
-export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
-  const meta = getProxyHandler(obj).getMeta(obj);
-  invariant(meta);
-  return meta;
-};
-
 /**
  * Utility to split meta property from raw object.
  */
@@ -114,10 +86,72 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
+export const splitPath = (path: JsonPath): string[] => {
+  return path.match(/[a-zA-Z_$][\w$]*|\[\d+\]/g) ?? [];
+};
 
-export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
+  return getDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+  );
+};
+
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
+  return setDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    value,
+  );
+};
+
+/**
+ * Returns a typename of a schema.
+ */
+export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ */
+export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
+  if (!schema) {
+    return undefined;
+  }
+
+  const echoId = getEchoIdentifierAnnotation(schema);
+  if (echoId) {
+    return Reference.fromDXN(DXN.parse(echoId));
+  }
+
+  const annotation = getObjectAnnotation(schema);
+  if (annotation == null) {
+    return undefined;
+  }
+
+  return Reference.fromLegacyTypename(annotation.typename);
+};
+
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @throws If it is not possible to reference this schema.
+ */
+export const requireTypeReference = (schema: S.Schema<any>): Reference => {
+  const typeReference = getTypeReference(schema);
+  if (typeReference == null) {
+    // TODO(burdon): Catalog user-facing errors (this is too verbose).
+    throw new Error('Schema must be defined via TypedObject.');
+  }
+
+  return typeReference;
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getObjectAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+};

@@ -1,8 +1,38 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../effect"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

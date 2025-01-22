@@ -11,11 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.ts"
-        ],
-        "platforms": [
-          "browser"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

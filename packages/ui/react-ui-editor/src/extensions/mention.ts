@@ -8,17 +8,18 @@ import type { Extension } from '@codemirror/state';
 import { log } from '@dxos/log';
 
 export type MentionOptions = {
+  debug?: boolean;
   onSearch: (text: string) => string[];
 };
 
 // TODO(burdon): Can only have a single autocompletion. Merge configuration with autocomplete.
-export const mention = ({ onSearch }: MentionOptions): Extension => {
+export const mention = ({ debug, onSearch }: MentionOptions): Extension => {
   return autocompletion({
     // TODO(burdon): Not working.
     activateOnTyping: true,
     // activateOnTypingDelay: 100,
     // selectOnOpen: true,
-    closeOnBlur: false, // For debugging.
+    closeOnBlur: !debug,
     // defaultKeymap: false,
     icons: false,
     override: [

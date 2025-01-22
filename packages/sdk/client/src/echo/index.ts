@@ -4,17 +4,18 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
+export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
 export {
   create,
   getMeta,
   getSchema,
   getType,
-  getTypename,
   isReactiveObject,
-  Expando,
-  type ObjectMeta,
   type ReactiveObject,
-} from '@dxos/echo-schema';
+  compareForeignKeys,
+  makeRef,
+  RefArray,
+} from '@dxos/live-object';
 export {
   createDocAccessor,
   createObject,
@@ -30,16 +31,16 @@ export {
   toCursorRange,
   DocAccessor,
   type EchoDatabase,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   Filter,
   type FilterSource,
   type Hypergraph,
   type IDocHandle,
   Query,
+  ResultFormat,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  ResultFormat,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -58,7 +59,11 @@ export {
   fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
 } from './util';
+export { importSpace } from './import';

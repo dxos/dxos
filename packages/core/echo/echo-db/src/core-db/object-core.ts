@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { InspectOptionsStylized, inspect } from 'util';
+
 import { Event } from '@dxos/async';
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { inspectCustom } from '@dxos/debug';
 import {
   decodeReference,
   encodeReference,
@@ -13,8 +16,10 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
 
@@ -81,6 +86,14 @@ export class ObjectCore {
    * Handles link resolution as well as manual changes.
    */
   public readonly updates = new Event();
+
+  toString() {
+    return `ObjectCore { id: ${this.id} }`;
+  }
+
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+    return `ObjectCore ${inspectFn({ id: this.id }, options)}`;
+  }
 
   /**
    * Create local doc with initial state from this object.
@@ -336,14 +349,9 @@ export class ObjectCore {
     this._setRaw(path, this.encode(value));
   }
 
-  setType(reference: Reference) {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
-  }
-
-  setMeta(meta: ObjectMeta) {
-    this._setRaw([META_NAMESPACE], this.encode(meta));
-  }
-
+  /**
+   * Deletes key at path.
+   */
   delete(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
@@ -351,6 +359,37 @@ export class ObjectCore {
       const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
       delete value[fullPath[fullPath.length - 1]];
     });
+  }
+
+  getKind(): EntityKind {
+    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setKind(kind: EntityKind) {
+    this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
+  }
+
+  getSource(): Reference | undefined {
+    const res = this.getDecoded([SYSTEM_NAMESPACE, 'source']);
+    invariant(res === undefined || res instanceof Reference);
+    return res;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setSource(ref: Reference) {
+    this.setDecoded([SYSTEM_NAMESPACE, 'source'], ref);
+  }
+
+  getTarget(): Reference | undefined {
+    const res = this.getDecoded([SYSTEM_NAMESPACE, 'target']);
+    invariant(res === undefined || res instanceof Reference);
+    return res;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setTarget(ref: Reference) {
+    this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
   getType(): Reference | undefined {
@@ -361,6 +400,18 @@ export class ObjectCore {
 
     invariant(value instanceof Reference);
     return value;
+  }
+
+  setType(reference: Reference) {
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
+  getMeta(): ObjectMeta {
+    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
+  }
+
+  setMeta(meta: ObjectMeta) {
+    this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
   isDeleted() {
@@ -392,6 +443,33 @@ export class ObjectCore {
       __meta: this.getDecoded([META_NAMESPACE]) as ObjectMeta,
       ...dataMapped,
     };
+  }
+
+  /**
+   * DXNs of objects that this object strongly depends on.
+   * Strong references are loaded together with the source object.
+   * Currently this is the schema reference and the source and target for relations
+   */
+  getStrongDependencies(): DXN[] {
+    const res: DXN[] = [];
+
+    const type = this.getType()?.toDXN();
+    if (type && type.kind === DXN.kind.ECHO) {
+      res.push(type);
+    }
+
+    if (this.getKind() === EntityKind.Relation) {
+      const source = this.getSource()?.toDXN();
+      if (source) {
+        res.push(source);
+      }
+      const target = this.getTarget()?.toDXN();
+      if (target) {
+        res.push(target);
+      }
+    }
+
+    return res;
   }
 }
 

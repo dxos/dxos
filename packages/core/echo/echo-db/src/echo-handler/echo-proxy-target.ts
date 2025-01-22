@@ -8,7 +8,7 @@ import type { UnsubscribeCallback } from '@dxos/async';
 import { type GenericSignal } from '@dxos/echo-signals/runtime';
 import { type ComplexMap } from '@dxos/util';
 
-import { type EchoReactiveObject } from './create';
+import { type ReactiveEchoObject } from './create';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
@@ -74,7 +74,7 @@ export type ObjectInternals = {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  linkCache: Map<string, EchoReactiveObject<any>> | undefined;
+  linkCache: Map<string, ReactiveEchoObject<any>> | undefined;
 
   subscriptions: UnsubscribeCallback[];
 };

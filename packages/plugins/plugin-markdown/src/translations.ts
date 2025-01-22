@@ -3,10 +3,14 @@
 //
 
 import { MARKDOWN_PLUGIN } from './meta';
+import { DocumentType } from './types';
 
 export default [
   {
     'en-US': {
+      [DocumentType.typename]: {
+        'typename label': 'Document',
+      },
       [MARKDOWN_PLUGIN]: {
         'plugin name': 'Editor',
         'create stack section label': 'Create document',

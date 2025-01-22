@@ -6,7 +6,7 @@ import { type Schema as S } from '@effect/schema';
 
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
-import type { CoreDatabase, EchoReactiveObject } from '@dxos/echo-db';
+import type { CoreDatabase, ReactiveEchoObject } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -107,7 +107,7 @@ export type RawSubscriptionData = {
 
 export type SubscriptionData = {
   space?: Space;
-  objects?: EchoReactiveObject<any>[];
+  objects?: ReactiveEchoObject<any>[];
 };
 
 /**
@@ -135,7 +135,7 @@ export const subscriptionHandler = <TMeta>(
 
     registerTypes(space, types);
     const objects = space
-      ? data.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
+      ? data.objects?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
       : [];
 
     if (!!data.spaceKey && !space) {

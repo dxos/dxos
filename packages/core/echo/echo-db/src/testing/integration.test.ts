@@ -11,14 +11,27 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { create, Expando, getObjectAnnotation, getSchema, S, TypedObject } from '@dxos/echo-schema';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import {
+  Expando,
+  getObjectAnnotation,
+  getSchemaTypename,
+  getTypeReference,
+  RelationSourceId,
+  RelationTargetId,
+  S,
+  TypedObject,
+  type ObjectId,
+} from '@dxos/echo-schema';
+import { Contact, HasManager, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
+import { create, getSchema, makeRef } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { getSource, getTarget } from '../echo-handler/relations';
 import { Filter } from '../query';
 
 registerSignalsRuntime();
@@ -35,60 +48,56 @@ describe('Integration tests', () => {
   });
 
   test('read/write to one database', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion({ referenceEquality: true });
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
     await dataAssertion.verify(db);
   });
 
   test('reopen peer', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
 
     await peer.host.updateIndexes();
     await peer.close();
     await peer.open();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
 
   test('reopen peer - updating indexes after restart', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
 
     await peer.close();
     await peer.open();
     await peer.host.updateIndexes();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
 
   test('reload peer', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
     await db.flush();
     const heads = await db.coreDatabase.getDocumentHeads();
 
     await peer.reload();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
@@ -106,7 +115,7 @@ describe('Integration tests', () => {
     await peer.client.close();
     await peer.client.open();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
 
@@ -127,7 +136,39 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
+  // TODO(dmaretskyi): Test Ref.load() too.
+  // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
   test('references are loaded lazily and receive signal notifications', async () => {
+    await using peer = await builder.createPeer();
+
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase();
+      const inner = db.add({ name: 'inner' });
+      const outer = db.add({ inner: makeRef(inner) });
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openLastDatabase();
+      const outer = (await db.query({ id: outerId }).first()) as any;
+      const loaded = new Trigger();
+      using updates = updateCounter(() => {
+        if (outer.inner.target) {
+          loaded.wake();
+        }
+      });
+      expect(outer.inner.target).to.eq(undefined);
+
+      await loaded.wait();
+      expect(outer.inner.target).to.include({ name: 'inner' });
+      expect(updates.count).to.eq(1);
+    }
+  });
+
+  test('references can be loaded explicitly using ref.load()', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
 
@@ -137,7 +178,7 @@ describe('Integration tests', () => {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner });
+      const outer = db.add({ inner: makeRef(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -146,17 +187,12 @@ describe('Integration tests', () => {
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);
       const outer = (await db.query({ id: outerId }).first()) as any;
-      const loaded = new Trigger();
-      using updates = updateCounter(() => {
-        if (outer.inner) {
-          loaded.wake();
-        }
-      });
-      expect(outer.inner).to.eq(undefined);
+      expect(outer.inner.target).to.eq(undefined);
 
-      await loaded.wait();
-      expect(outer.inner).to.include({ name: 'inner' });
-      expect(updates.count).to.eq(1);
+      const target = await outer.inner.load();
+      expect(target).to.include({ name: 'inner' });
+      expect(outer.inner.target).to.include({ name: 'inner' });
+      expect(outer.inner.target === target).to.be.true;
     }
   });
 
@@ -349,6 +385,51 @@ describe('Integration tests', () => {
     await expect.poll(() => db2.getObjectById(obj1.id)).not.toEqual(undefined);
   });
 
+  describe('relations', () => {
+    test('relation source and target is eagerly loaded with the relation', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.schemaRegistry.addSchema([Contact, HasManager]);
+
+      let relationId!: ObjectId;
+      {
+        const alice = db.add(
+          create(Contact, {
+            name: 'Alice',
+          }),
+        );
+        const bob = db.add(
+          create(Contact, {
+            name: 'Bob',
+          }),
+        );
+        const hasManager = db.add(
+          create(HasManager, {
+            [RelationSourceId]: bob,
+            [RelationTargetId]: alice,
+            since: '2022',
+          }),
+        );
+        relationId = hasManager.id;
+        await db.flush({ indexes: true });
+      }
+
+      await peer.reload();
+      {
+        await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
+        const {
+          objects: [obj],
+        } = await db.query({ id: relationId }).run();
+        log.info('xxx', { obj });
+        expect(getSource(obj).name).toEqual('Bob');
+        expect(getTarget(obj).name).toEqual('Alice');
+      }
+    });
+  });
+
   describe('dynamic schema', () => {
     test('query object with dynamic schema', async () => {
       const [spaceKey] = PublicKey.randomSequence();
@@ -362,7 +443,7 @@ describe('Integration tests', () => {
         class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
           field: S.String,
         }) {}
-        const stored = db.schemaRegistry.addSchema(TestSchema);
+        const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(create(stored, { field: 'test' }));
@@ -376,7 +457,6 @@ describe('Integration tests', () => {
       {
         // Objects with stored schema get included in queries that select all objects..
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        await db.schemaRegistry.query(); // Have to preload schema.
         const { objects } = await db.query().run();
         expect(objects.length).to.eq(3);
       }
@@ -385,7 +465,6 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        await db.schemaRegistry.query(); // Have to preload schema.
         const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
         expect(objects.length).to.eq(1);
         expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
@@ -398,7 +477,6 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        await db.schemaRegistry.query(); // Have to preload schema.
         const schema = db.schemaRegistry.getSchema('example.com/type/Test');
 
         const { objects } = await db.query(Filter.schema(schema!)).run();
@@ -409,6 +487,33 @@ describe('Integration tests', () => {
         });
       }
     });
+  });
+
+  test('dynamic schema is eagerly loaded with objects', async () => {
+    await using peer = await builder.createPeer();
+
+    let typeDXN!: DXN;
+    {
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      const [schema] = await db.schemaRegistry.register([Contact]);
+      typeDXN = getTypeReference(schema)!.toDXN();
+      db.add(create(schema, { name: 'Bob' }));
+      await db.flush({ indexes: true });
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
+      const {
+        objects: [obj],
+      } = await db.query(Filter.typeDXN(typeDXN.toString())).run();
+      log.info('xxx', { typeDXN, obj });
+      expect(getSchema(obj)).toBeDefined();
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Contact.typename);
+    }
   });
 });
 

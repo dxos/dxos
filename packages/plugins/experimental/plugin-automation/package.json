@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-automation",
-  "version": "0.7.0",
+  "version": "0.7.4",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,11 +13,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs",
-      "node": "./dist/lib/node-esm/meta.mjs"
-    },
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
@@ -27,9 +22,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
       "types": [
         "dist/types/src/types/index.d.ts"
       ]
@@ -45,14 +37,16 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.1",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/chain": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -68,6 +62,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",

@@ -8,9 +8,10 @@ import { faker } from '@dxos/random';
 import { create } from '@dxos/react-client/echo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { range } from '@dxos/util';
 
 import { Mosaic } from '../../mosaic';
-import { TestObjectGenerator, range, Status, Priority } from '../../testing';
+import { TestObjectGenerator, Status, Priority } from '../../testing';
 
 // import { EchoKanban } from '../Kanban/testing';
 // import { GraphTree } from '../Tree/testing';
@@ -48,7 +49,7 @@ export default {
         const factory = generator.factories.project;
         const objects = [
           factory.schema,
-          ...range(factory.createObject, 10),
+          ...range(10, factory.createObject),
           create({
             type: 'kanban',
             title: 'Projects',

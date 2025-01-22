@@ -11,3 +11,5 @@ runtime:
       url: https://edge-main.dxos.workers.dev/
     agentHosting:
       type: LOCAL_TESTING
+    ai:
+      server: http://localhost:8787

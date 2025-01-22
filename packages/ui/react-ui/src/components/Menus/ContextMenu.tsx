@@ -6,9 +6,8 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
-import { ElevationProvider } from '../ElevationProvider';
 
 type ContextMenuRootProps = ContextMenuPrimitive.ContextMenuProps;
 
@@ -29,14 +28,15 @@ type ContextMenuContentProps = ThemedClassName<ContextMenuPrimitive.ContextMenuC
 const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const elevation = useElevationContext();
     return (
       <ContextMenuPrimitive.Content
         collisionPadding={8}
         {...props}
-        className={tx('menu.content', 'menu', {}, classNames)}
+        className={tx('menu.content', 'menu', { elevation }, classNames)}
         ref={forwardedRef}
       >
-        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+        {children}
       </ContextMenuPrimitive.Content>
     );
   },

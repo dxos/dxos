@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 
 import { Mutex } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createSubscriptionTrigger, createWebsocketTrigger, type TriggerFactory } from '@dxos/functions';
-import { FunctionTrigger } from '@dxos/functions/types';
+import { createSubscriptionTrigger, type TriggerFactory } from '@dxos/functions';
+import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -50,8 +50,6 @@ export const useLocalTriggerManager = (space: Space) => {
             let triggerFactory: TriggerFactory<any>;
             if (triggerSpec.type === 'subscription') {
               triggerFactory = createSubscriptionTrigger;
-            } else if (triggerSpec.type === 'websocket') {
-              triggerFactory = createWebsocketTrigger;
             } else {
               log.info('unsupported trigger', { type: triggerSpec.type });
               continue;

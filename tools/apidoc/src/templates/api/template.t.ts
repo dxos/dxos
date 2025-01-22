@@ -4,6 +4,7 @@
 import path from 'node:path';
 import { JSONOutput } from 'typedoc';
 import { directory } from '@dxos/plate';
+import { URL } from 'url';
 
 import * as url from 'url';
 const __filename = url.fileURLToPath(import.meta.url);

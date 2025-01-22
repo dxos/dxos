@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "outDir": "./dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -9,5 +10,24 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

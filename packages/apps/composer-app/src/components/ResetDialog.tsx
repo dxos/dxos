@@ -28,8 +28,11 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   const translatedMessage = t(`${error.name} message`, context);
   const message = translatedMessage === `${error.name} message` ? t('fatal error message') : translatedMessage;
 
+  const cause =
+    error.cause instanceof Error ? String(error.cause.stack) : error.cause ? String(error.cause) : undefined;
+
   // Removes indents.
-  const stack = String(error?.stack)
+  const stack = `${String(error.stack)}${cause ? `\nCaused by: ${cause}` : ''}`
     .split('\n')
     .map((text) => text.trim())
     .join('\n');
@@ -50,7 +53,7 @@ export const ResetDialog = ({
   open,
   onOpenChange,
 }: FatalErrorProps) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const error = propsError && parseError(t, propsError);
   const {
     needRefresh: [needRefresh, _setNeedRefresh],
@@ -109,12 +112,12 @@ export const ResetDialog = ({
           <div role='none' className='flex gap-2 mbs-4'>
             {showStack && (
               <Tooltip.Root>
-                <Tooltip.Trigger>
+                <Tooltip.Trigger asChild>
                   <Button onClick={handleCopyError}>
                     <Clipboard weight='duotone' size='1em' />
                   </Button>
                 </Tooltip.Trigger>
-                <Tooltip.Content classNames='z-[51]'>{t('copy error label')}</Tooltip.Content>
+                <Tooltip.Content>{t('copy error label')}</Tooltip.Content>
               </Tooltip.Root>
             )}
             <div role='none' className='flex-grow' />
@@ -125,7 +128,7 @@ export const ResetDialog = ({
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content side='top' classNames='z-[51]'>
+                <DropdownMenu.Content side='top'>
                   <DropdownMenu.Viewport>
                     <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
                       {t('reset client confirm label')}

@@ -10,8 +10,8 @@ import React, { useLayoutEffect, useRef } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack, useStackItem } from './StackContext';
-import { DEFAULT_EXTRINSIC_SIZE, type StackItemSize } from './StackItem';
+import { useStack, useStackItem, type StackItemSize } from './StackContext';
+import { DEFAULT_EXTRINSIC_SIZE } from './StackItem';
 
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
@@ -25,6 +25,8 @@ const measureStackItem = (element: HTMLButtonElement): { width: number; height: 
 const getNextSize = (startSize: number, location: DragLocationHistory, client: 'clientX' | 'clientY') => {
   return Math.max(MIN_SIZE, startSize + (location.current.input[client] - location.initial.input[client]) / REM);
 };
+
+export type StackItemResizeHandleProps = {};
 
 export const StackItemResizeHandle = () => {
   const { orientation } = useStack();
@@ -42,11 +44,10 @@ export const StackItemResizeHandle = () => {
       draggable({
         element: buttonRef.current,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          // we will be moving the line to indicate a drag
-          // we can disable the native drag preview
+          // We will be moving the line to indicate a drag; we can disable the native drag preview.
           disableNativeDragPreview({ nativeSetDragImage });
-          // we don't want any native drop animation for when the user
-          // does not drop on a drop target. we want the drag to finish immediately
+          // We don't want any native drop animation for when the user does not drop on a drop target.
+          // We want the drag to finish immediately.
           preventUnhandled.start();
         },
         onDragStart: () => {

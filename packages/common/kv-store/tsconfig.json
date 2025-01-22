@@ -1,9 +1,21 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
   "include": [
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../test-utils"
+    }
+  ]
 }

@@ -12,7 +12,7 @@ import { describe, test, expect } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
-import { FunctionType } from '@dxos/plugin-script/types';
+import { FunctionType } from '@dxos/functions';
 
 // TODO(burdon): Fix test infrastructure:
 //  - Need docs? esp. needed for config. need pristine example package?
@@ -34,7 +34,7 @@ describe('test', () => {
     //  - ERROR "process.nextTick is not a function"
     //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
-    const fn = space.db.add(create(FunctionType, { version: 1, binding: 'HELLO' }));
+    const fn = space.db.add(create(FunctionType, { name: 'test', version: '0.0.1', binding: 'HELLO' }));
     expect(fn).to.exist;
   });
 });

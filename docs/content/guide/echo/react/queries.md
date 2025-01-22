@@ -43,8 +43,7 @@ root.render(
 The API definition of `useQuery` is below. It returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 :::apidoc[@dxos/react-client.useQuery]
-
-### useQuery(\[spaceOrEcho\], \[filter\], \[options\], \[deps\])
+### useQuery(\[spaceOrEcho], \[filter], \[options], \[deps])
 
 Create subscription.
 
@@ -71,7 +70,7 @@ DXOS provides apis to define these types using [Effect Schema](https://effect.we
 
 ::: details Benefits of schema declarations
 
-- ability to generate type-safe data access code, which makes development faster and safer.
+* ability to generate type-safe data access code, which makes development faster and safer.
   :::
 
 Consider this expression of schema declared with Effect Schema:

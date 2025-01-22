@@ -1,9 +1,9 @@
 name: EDGE tests
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
 
   workflow_dispatch:
     inputs:
@@ -31,7 +31,6 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
-
 
       - name: Checkout DXOS
         uses: actions/checkout@v4

@@ -4,9 +4,10 @@
 
 import React from 'react';
 
+import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
 import { Icon } from '@dxos/react-ui';
 
-import { addressToA1Notation, isFormula, rangeToA1Notation } from '../../defs';
+import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 export const FunctionEditor = () => {
@@ -17,7 +18,7 @@ export const FunctionEditor = () => {
   if (cursor) {
     value = model.getCellValue(cursor);
     if (isFormula(value)) {
-      value = model.graph.mapFunctionBindingFromId(model.mapFormulaIndicesToRefs(value));
+      value = model.graph.mapFunctionBindingFromId(mapFormulaIndicesToRefs(model.sheet, value));
       formula = true;
     } else if (value != null) {
       value = String(value);

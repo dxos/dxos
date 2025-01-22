@@ -19,7 +19,7 @@ export const handleSnap = async (sketch: DiagramType) => {
   };
 
   // TODO(burdon): Use context to access document.
-  const accessor = createDocAccessor(sketch.canvas!, ['content']);
+  const accessor = createDocAccessor(sketch.canvas.target!, ['content']);
   accessor.handle.change((sketch) => {
     const map: Record<string, TLRecord> = getDeep(sketch, accessor.path);
     Object.entries(map ?? {}).forEach(([_id, item]) => {

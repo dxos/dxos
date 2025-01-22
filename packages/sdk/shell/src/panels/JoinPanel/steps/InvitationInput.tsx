@@ -67,8 +67,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
       <div role='none' className='grow flex flex-col justify-center'>
         <Input
           label={<StepHeading>{t('invitation input label')}</StepHeading>}
-          // TODO(burdon): Translation.
-          placeholder='Type an invitation code'
+          placeholder={t('invitation input placeholder')}
           disabled={disabled}
           value={inputValue}
           onChange={({ target: { value } }) => setInputValue(value)}

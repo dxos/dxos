@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { MessageType, type ActorType } from '@dxos/plugin-space/types';
-import { create, getMeta } from '@dxos/echo-schema';
+import { create, getMeta } from '@dxos/live-object';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

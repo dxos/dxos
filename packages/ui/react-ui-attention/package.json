@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.7.0",
+  "version": "0.7.4",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,11 +10,13 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs"
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -31,6 +33,7 @@
   ],
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/primitive": "^1.0.0",

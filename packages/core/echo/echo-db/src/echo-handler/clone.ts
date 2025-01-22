@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createObjectId } from '@dxos/echo-schema';
+import { type BaseObject, createObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { assertParameter } from '@dxos/protocols';
 
-import { type EchoReactiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
+import { type ReactiveEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 import { ObjectCore } from '../core-db';
@@ -19,10 +20,10 @@ export type CloneOptions = {
   /**
    * Additional list of objects to clone preserving references.
    */
-  additional?: (EchoReactiveObject<any> | undefined)[];
+  additional?: (ReactiveEchoObject<any> | undefined)[];
 };
 
-const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
+const requireAutomergeCore = (obj: ReactiveEchoObject<any>) => {
   const core = getObjectCore(obj);
   invariant(core, 'object is not an EchoObject');
   return core;
@@ -32,16 +33,17 @@ const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
  * Returns new unbound clone of the object.
  * @deprecated
  */
-export const clone = <T extends {}>(
-  obj: EchoReactiveObject<T>,
+export const clone = <T extends BaseObject>(
+  obj: ReactiveEchoObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
+  assertParameter('obj', isEchoObject(obj), 'ReactiveEchoObject');
   if (retainId === false && additional.length > 0) {
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
   const clone = cloneInner(obj, retainId ? obj.id : createObjectId());
-  const clones: EchoReactiveObject<any>[] = [clone];
+  const clones: ReactiveEchoObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
       clones.push(cloneInner(innerObj, retainId ? innerObj.id : createObjectId()));
@@ -67,7 +69,7 @@ export const clone = <T extends {}>(
   return clone;
 };
 
-const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObject<T> => {
+const cloneInner = <T extends BaseObject>(obj: ReactiveEchoObject<T>, id: string): ReactiveEchoObject<T> => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
   coreClone.initNewObject();

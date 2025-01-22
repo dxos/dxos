@@ -8,7 +8,7 @@ import {
   Filter,
   isSpace,
   type Echo,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   type FilterSource,
   type Query,
   type QueryOptions,
@@ -19,7 +19,7 @@ import {
  * Create subscription.
  */
 // TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
-export const useQuery = <T extends EchoReactiveObject<any>>(
+export const useQuery = <T extends ReactiveEchoObject<any>>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,

@@ -2,45 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { contributes, Events, defineModule, definePlugin, Capabilities, oneOf } from '@dxos/app-framework';
 
-import {
-  type PluginDefinition,
-  type LocationProvides,
-  type GraphProvides,
-  type Plugin,
-  resolvePlugin,
-  parseIntentPlugin,
-  parseGraphPlugin,
-  parseNavigationPlugin,
-  LayoutAction,
-  firstIdInPart,
-} from '@dxos/app-framework';
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { getActiveSpace } from '@dxos/plugin-space';
-
-import { SearchDialog, SearchMain } from './components';
-import { SearchContextProvider } from './context';
-import meta, { SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
+import { AppGraphBuilder, IntentResolver, ReactSurface, ReactContext } from './capabilities';
+import { meta, SEARCH_RESULT } from './meta';
 import type { SearchResult } from './search-sync';
 import translations from './translations';
-import { SearchAction, type SearchPluginProvides } from './types';
 
-export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
-  let navigationPlugin: Plugin<LocationProvides> | undefined;
-  let graphPlugin: Plugin<GraphProvides> | undefined;
-
-  return {
-    meta,
-    ready: async (plugins) => {
-      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-    },
-    provides: {
-      translations,
-      metadata: {
-        records: {
-          [SEARCH_RESULT]: {
+export const SearchPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: SEARCH_RESULT,
+          metadata: {
             parse: (item: SearchResult, type: string) => {
               switch (type) {
                 case 'node':
@@ -52,69 +34,26 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
               }
             },
           },
-        },
-      },
-      graph: {
-        builder: (plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          return createExtension({
-            id: SEARCH_PLUGIN,
-            filter: (node): node is Node<null> => node.id === 'root',
-            actions: () => [
-              {
-                id: SearchAction.SEARCH,
-                data: async () => {
-                  await intentPlugin?.provides.intent.dispatch({
-                    plugin: SEARCH_PLUGIN,
-                    action: SearchAction.SEARCH,
-                  });
-                },
-                properties: {
-                  label: ['search action label', { ns: SEARCH_PLUGIN }],
-                  icon: 'ph--magnifying-glass--regular',
-                  keyBinding: {
-                    macos: 'shift+meta+f',
-                    windows: 'shift+alt+f',
-                  },
-                  testId: 'searchPlugin.search',
-                },
-              },
-            ],
-          });
-        },
-      },
-      context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
-      surface: {
-        component: ({ data, role }) => {
-          const location = navigationPlugin?.provides.location;
-          const graph = graphPlugin?.provides.graph;
-          const space = graph && location ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
-
-          switch (role) {
-            case 'dialog':
-              return data.component === `${SEARCH_PLUGIN}/Dialog` ? (
-                <SearchDialog subject={data.subject as any} />
-              ) : null;
-            case 'search-input':
-              return space ? <SearchMain space={space} /> : null;
-          }
-
-          return null;
-        },
-      },
-      intent: {
-        resolver: (intent, plugins) => {
-          switch (intent.action) {
-            case SearchAction.SEARCH: {
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'complementary', state: true },
-              });
-            }
-          }
-        },
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-context`,
+      activatesOn: Events.Startup,
+      activate: ReactContext,
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
+    }),
+  ]);

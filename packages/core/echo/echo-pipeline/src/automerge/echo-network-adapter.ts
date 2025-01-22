@@ -246,6 +246,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._params.monitor?.recordMessageReceived(message);
   }
 
+  public onConnectionAuthScopeChanged(peer: PeerId) {
+    const entry = this._connections.get(peer);
+    if (entry) {
+      this._onConnectionAuthScopeChanged(entry.connection);
+    }
+  }
+
   /**
    * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
    * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo

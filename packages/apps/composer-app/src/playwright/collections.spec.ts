@@ -20,7 +20,7 @@ test.describe('Collection tests', () => {
 
   test('create collection', async () => {
     await host.createSpace();
-    await host.createCollection();
+    await host.createObject({ type: 'Collection', nth: 1 });
     await expect(host.getObject(2)).toContainText('New collection');
   });
 
@@ -29,8 +29,8 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createCollection(1);
-    await host.createCollection(1);
+    await host.createObject({ type: 'Collection', nth: 1 });
+    await host.createObject({ type: 'Collection', nth: 1 });
     await host.renameObject('Collection 1', 2);
     await host.renameObject('Collection 2', 3);
 
@@ -47,7 +47,7 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createCollection(1);
+    await host.createObject({ type: 'Collection', nth: 1 });
     await host.toggleCollectionCollapsed(2);
     await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 0, y: 0 });
     // Document is now inside the collection.
@@ -57,10 +57,10 @@ test.describe('Collection tests', () => {
 
   test('delete a collection', async () => {
     await host.createSpace();
-    await host.createCollection();
+    await host.createObject({ type: 'Collection', nth: 1 });
     await host.toggleCollectionCollapsed(2);
     // Create an item inside the collection.
-    await host.createObject('markdownPlugin');
+    await host.createObject({ type: 'Document', nth: 2 });
     await expect(host.getObjectLinks()).toHaveCount(4);
 
     // Delete the containing collection.
@@ -70,13 +70,13 @@ test.describe('Collection tests', () => {
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
-    await host.createCollection();
+    await host.createObject({ type: 'Collection', nth: 1 });
     await host.toggleCollectionCollapsed(2);
     // Create a collection inside the collection.
-    await host.createCollection();
+    await host.createObject({ type: 'Collection', nth: 2 });
     await host.toggleCollectionCollapsed(3);
     // Create an item inside the contained collection.
-    await host.createObject('markdownPlugin');
+    await host.createObject({ type: 'Document', nth: 3 });
     await expect(host.getObjectLinks()).toHaveCount(5);
 
     // Delete the containing collection.

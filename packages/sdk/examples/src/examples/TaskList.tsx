@@ -7,7 +7,7 @@ import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } f
 
 import type { PublicKey } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Button, Input } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';

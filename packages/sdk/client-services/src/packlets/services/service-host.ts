@@ -341,7 +341,7 @@ export class ClientServicesHost {
         context: this._serviceContext,
       }),
 
-      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider),
+      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
     });
 
     await this._serviceContext.open(ctx);

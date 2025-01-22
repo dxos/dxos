@@ -3,11 +3,19 @@
   "compilerOptions": {
     "lib": [
       "DOM"
-    ]
+    ],
+    "outDir": "./dist/types"
   },
   "include": [
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

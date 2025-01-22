@@ -9,10 +9,18 @@ import React, { useEffect, useState } from 'react';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
-import { Expando, create } from '@dxos/echo-schema';
-import { Filter, DocAccessor, createDocAccessor, useSpace, useQuery, type Space } from '@dxos/react-client/echo';
+import { Expando } from '@dxos/echo-schema';
+import {
+  DocAccessor,
+  Filter,
+  create,
+  createDocAccessor,
+  useQuery,
+  useSpace,
+  type Space,
+} from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
+import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 

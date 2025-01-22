@@ -5,15 +5,15 @@
 import { batch, effect, untracked } from '@preact/signals-core';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { type ReactiveObject, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { type MakeOptional, nonNullable, pick } from '@dxos/util';
 
-import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike, actionGroupSymbol } from './node';
+import { type Node, type NodeArg, type NodeFilter, type Relation, actionGroupSymbol, isActionLike } from './node';
 
 const graphSymbol = Symbol('graph');
-type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
+type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
 
 export const getGraph = (node: Node): Graph => {
@@ -66,8 +66,7 @@ export type GraphTraversalOptions = {
 };
 
 export type GraphParams = {
-  // TODO(wittjosiah): Make data optional instead of omitting.
-  nodes?: Omit<Node, 'data'>[];
+  nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, string[]>;
   onInitialNode?: Graph['_onInitialNode'];
   onInitialNodes?: Graph['_onInitialNodes'];
@@ -96,15 +95,26 @@ export class Graph {
   readonly _edges: Record<string, ReactiveObject<{ inbound: string[]; outbound: string[] }>> = {};
 
   constructor({ nodes, edges, onInitialNode, onInitialNodes, onRemoveNode }: GraphParams = {}) {
-    this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
+    this._onInitialNode = onInitialNode;
+    this._onInitialNodes = onInitialNodes;
+    this._onRemoveNode = onRemoveNode;
+
+    this._nodes[ROOT_ID] = this._constructNode({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      cacheable: [],
+      properties: {},
+      data: null,
+    });
     if (nodes) {
       nodes.forEach((node) => {
+        const cacheable = Object.keys(node.properties ?? {});
         if (node.type === ACTION_TYPE) {
-          this._addNode({ ...node, data: () => log.warn('Pickled action invocation') });
+          this._addNode({ cacheable, data: () => log.warn('Pickled action invocation'), ...node });
         } else if (node.type === ACTION_GROUP_TYPE) {
-          this._addNode({ ...node, data: actionGroupSymbol });
+          this._addNode({ cacheable, data: actionGroupSymbol, ...node });
         } else {
-          this._addNode(node);
+          this._addNode({ cacheable, ...node });
         }
       });
     }
@@ -118,10 +128,6 @@ export class Graph {
         this._sortEdges(source, 'outbound', edges);
       });
     }
-
-    this._onInitialNode = onInitialNode;
-    this._onInitialNodes = onInitialNodes;
-    this._onRemoveNode = onRemoveNode;
   }
 
   static from(pickle: string, options: Omit<GraphParams, 'nodes' | 'edges'> = {}) {
@@ -167,17 +173,23 @@ export class Graph {
   }
 
   pickle() {
-    const nodes = Object.values(this._nodes).map((node) => {
-      return {
-        id: node.id,
-        type: node.type,
-        properties: node.properties,
-      };
-    });
+    const nodes = Object.values(this._nodes)
+      .filter((node) => !!node.cacheable)
+      .map((node) => {
+        return {
+          id: node.id,
+          type: node.type,
+          properties: pick(node.properties, node.cacheable!),
+        };
+      });
+
+    const cacheable = new Set(nodes.map((node) => node.id));
 
     const edges = Object.fromEntries(
       Object.entries(this._edges)
-        .map(([id, { outbound }]): [string, string[]] => [id, outbound])
+        .filter(([id]) => cacheable.has(id))
+        .map(([id, { outbound }]): [string, string[]] => [id, outbound.filter((nodeId) => cacheable.has(nodeId))])
+        // TODO(wittjosiah): Why sort?
         .toSorted(([a], [b]) => a.localeCompare(b)),
     );
 
@@ -307,7 +319,6 @@ export class Graph {
 
       const nodes = this._getNodes({ node, relation, expansion });
       const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, expansion }, path));
-
       return () => {
         nodeSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
@@ -440,7 +451,7 @@ export class Graph {
 
   private _removeNode(id: string, edges = false) {
     untracked(() => {
-      const node = this.findNode(id);
+      const node = this.findNode(id, false);
       if (!node) {
         return;
       }

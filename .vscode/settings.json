@@ -52,5 +52,11 @@
   "circleci.persistedProjectSelection": [],
   "vitest.disableWorkspaceWarning": true,
   "typescript.tsserver.maxTsServerMemory": 8192,
-  "typescript.preferences.autoImportSpecifierExcludeRegexes": ["^.*/src/.*$", "node:console", "console"]
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^.*/src/.*$",
+    "node:console",
+    "console",
+    "effect/Effect",
+    "effect/Console"
+  ]
 }

@@ -29,7 +29,6 @@ import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
-import { ElevationProvider } from '../ElevationProvider';
 
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
@@ -227,7 +226,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           {...(!open && { inert: 'true' })}
           ref={ref}
         >
-          <ElevationProvider elevation='group'>{children}</ElevationProvider>
+          {children}
         </Root>
       </DialogRoot>
     );

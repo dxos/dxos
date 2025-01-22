@@ -3,5 +3,9 @@
 //
 
 export * from './annotations';
+// TODO(burdon): Circular dependency?
+// export * from './ref';
 export * from './schema-validator';
 export * from './types';
+export * from './json-schema-type';
+export * from './entity-kind';

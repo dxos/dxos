@@ -4,11 +4,12 @@
 
 import { type SpaceId } from '@dxos/keys';
 
+// TODO(burdon): Rename EdgerRouterEndpoint?
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
-  SWARM_SERVICE_ID = 'swarm',
-  SIGNAL_SERVICE_ID = 'signal',
+  SWARM = 'swarm',
+  SIGNAL = 'signal',
 }
 
 export type EdgeHttpSuccess<T> = {
@@ -91,6 +92,20 @@ export type GetAgentStatusResponseBody = {
   agent: {
     deviceKey?: string;
     status: EdgeAgentStatus;
+  };
+};
+
+export type UploadFunctionRequest = {
+  name?: string;
+  script: string;
+  version: string;
+};
+
+export type UploadFunctionResponseBody = {
+  functionId: string;
+  version: string;
+  meta: {
+    inputSchema?: object;
   };
 };
 

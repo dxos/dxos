@@ -18,7 +18,7 @@ import {
 } from '@radix-ui/react-tooltip';
 import React, { forwardRef, type FunctionComponent } from 'react';
 
-import { useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 type TooltipProviderProps = TooltipProviderPrimitiveProps;
@@ -54,12 +54,13 @@ type TooltipContentProps = ThemedClassName<TooltipContentPrimitiveProps>;
 
 const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  const elevation = useElevationContext();
   return (
     <TooltipContentPrimitive
       sideOffset={4}
       collisionPadding={8}
       {...props}
-      className={tx('tooltip.content', 'tooltip', {}, classNames)}
+      className={tx('tooltip.content', 'tooltip', { elevation }, classNames)}
       ref={forwardedRef}
     />
   );

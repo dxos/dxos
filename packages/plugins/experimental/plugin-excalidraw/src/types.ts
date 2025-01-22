@@ -2,39 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
+import { S } from '@dxos/echo-schema';
+import { DiagramType } from '@dxos/plugin-sketch/types';
 
-import { SKETCH_PLUGIN } from './meta';
+import { EXCALIDRAW_PLUGIN } from './meta';
 
-const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
+export namespace SketchAction {
+  const SKETCH_ACTION = `${EXCALIDRAW_PLUGIN}/action`;
 
-export enum SketchAction {
-  CREATE = `${SKETCH_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      schema: S.optional(S.String),
+      content: S.optional(S.Record({ key: S.String, value: S.Any })),
+    }),
+    output: S.Struct({
+      object: DiagramType,
+    }),
+  }) {}
 }
-
-export type SketchPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SettingsProvides<SketchSettingsProps> &
-  SchemaProvides &
-  StackProvides;
 
 export interface SketchModel {}
 
-export type SketchGridType = 'mesh' | 'dotted';
+export const SketchGridSchema = S.Literal('mesh', 'dotted');
+export type SketchGridType = S.Schema.Type<typeof SketchGridSchema>;
 
-export type SketchSettingsProps = {
-  autoHideControls?: boolean;
-  gridType?: SketchGridType;
-};
+export const SketchSettingsSchema = S.mutable(
+  S.Struct({
+    autoHideControls: S.optional(S.Boolean),
+    gridType: S.optional(SketchGridSchema),
+  }),
+);
+
+export type SketchSettingsProps = S.Schema.Type<typeof SketchSettingsSchema>;

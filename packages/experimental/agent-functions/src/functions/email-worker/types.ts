@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextType } from '@dxos/plugin-markdown/types';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
+import { TextType } from '@dxos/schema';
 
 export const SOURCE_ID = 'hub.dxos.network/mailbox';
 

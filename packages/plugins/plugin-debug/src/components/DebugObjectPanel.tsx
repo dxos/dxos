@@ -4,16 +4,17 @@
 
 import React from 'react';
 
-import { type EchoReactiveObject } from '@dxos/client/echo';
+import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
 };
 
+// TODO(burdon): Get schema and traverse references.
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   return (
-    <div role='form' className='flex flex-col'>
+    <div className='flex flex-col'>
       <SyntaxHighlighter classNames='flex text-xs' language='json'>
         {JSON.stringify(object, null, 2)}
       </SyntaxHighlighter>

@@ -2,26 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
-import { Path } from '@dxos/react-ui-mosaic';
 
+import { type TreeContextType, TreeProvider } from './TreeContext';
 import { TreeItem, type TreeItemProps } from './TreeItem';
-import { getMode } from './helpers';
-import { type ItemType } from './types';
 
-export type TreeProps<T extends ItemType = ItemType> = {
-  items: T[];
-  open: string[];
-  current: string[];
-} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
+export type TreeProps<T = any> = { id: string } & TreeContextType &
+  Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
   Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
 
-export const Tree = <T extends ItemType = ItemType>({
-  items,
-  open,
-  current,
+export const Tree = <T = any,>({
+  id,
+  getItems,
+  getProps,
+  isOpen,
+  isCurrent,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
@@ -30,27 +27,35 @@ export const Tree = <T extends ItemType = ItemType>({
   onOpenChange,
   onSelect,
 }: TreeProps<T>) => {
+  const context = useMemo(
+    () => ({
+      getItems,
+      getProps,
+      isOpen,
+      isCurrent,
+    }),
+    [getItems, getProps, isOpen, isCurrent],
+  );
+  const items = getItems();
+  const path = useMemo(() => [id], [id]);
+
   return (
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
-      {items.map((item, i) => {
-        const path = Path.create(...item.path);
-
-        return (
-          <TreeItem<T>
+      <TreeProvider value={context}>
+        {items.map((item, index) => (
+          <TreeItem
             key={item.id}
             item={item}
-            mode={getMode(items, i)}
-            open={open.includes(path)}
-            // TODO(wittjosiah): This should also be path-based.
-            current={current.includes(item.id)}
+            last={index === items.length - 1}
+            path={path}
             draggable={draggable}
             renderColumns={renderColumns}
             canDrop={canDrop}
             onOpenChange={onOpenChange}
             onSelect={onSelect}
           />
-        );
-      })}
+        ))}
+      </TreeProvider>
     </Treegrid.Root>
   );
 };

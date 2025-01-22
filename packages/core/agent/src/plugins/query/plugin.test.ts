@@ -7,7 +7,7 @@ import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vit
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
-import { type EchoReactiveObject, type ReactiveObject } from '@dxos/client/echo';
+import { type ReactiveEchoObject, type ReactiveObject } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Filter, type Query } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
@@ -181,7 +181,7 @@ describe('QueryPlugin', () => {
     });
 
     const waitForQueryResults = async (query: Query) => {
-      const results = new Trigger<EchoReactiveObject<any>[]>();
+      const results = new Trigger<ReactiveEchoObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);

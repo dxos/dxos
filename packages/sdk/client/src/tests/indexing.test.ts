@@ -3,14 +3,15 @@
 //
 
 import isEqual from 'lodash.isequal';
-import { describe, onTestFinished, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { type EchoReactiveObject, Filter, type Query } from '@dxos/echo-db';
-import { create, Expando } from '@dxos/echo-schema';
+import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
+import { Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { create, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -36,15 +37,19 @@ describe('Index queries', () => {
     documents: [
       create(DocumentType, {
         title: 'DXOS Design Doc',
-        content: create(TextV0Type, {
-          content: 'Very important design document',
-        }),
+        content: makeRef(
+          create(TextV0Type, {
+            content: 'Very important design document',
+          }),
+        ),
       }),
       create(DocumentType, {
         title: 'ECHO Architecture',
-        content: create(TextV0Type, {
-          content: 'Very important architecture document',
-        }),
+        content: makeRef(
+          create(TextV0Type, {
+            content: 'Very important architecture document',
+          }),
+        ),
       }),
     ],
     expandos: [
@@ -62,7 +67,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: EchoReactiveObject<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: ReactiveEchoObject<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);
@@ -72,8 +77,8 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: Query, objects: EchoReactiveObject<any>[]) => {
-    const receivedIndexedObject = new Trigger<EchoReactiveObject<any>[]>();
+  const matchObjects = async (query: Query, objects: ReactiveEchoObject<any>[]) => {
+    const receivedIndexedObject = new Trigger<ReactiveEchoObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
         const indexResults = query.results.filter((result) => result.resolution?.source === 'index');

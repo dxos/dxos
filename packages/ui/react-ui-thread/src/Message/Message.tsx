@@ -40,7 +40,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
               <Avatar.Fallback text={authorAvatarProps?.emoji || hexToEmoji(authorId ?? '0')} />
               {authorImgSrc && <Avatar.Image href={authorImgSrc} />}
             </Avatar.Frame>
-            {continues && <div role='none' className='is-px grow bg-bg-separator' />}
+            {continues && <div role='none' className='is-px grow bg-separator' />}
           </div>
           <div role='none' className='plb-1 min-is-0'>
             {children}

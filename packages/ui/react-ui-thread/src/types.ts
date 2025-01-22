@@ -4,6 +4,8 @@
 
 import { type FallbackValue } from '@dxos/util';
 
+// TODO(burdon): Move ThreadType S.Schema type here.
+
 export type MessageMetadata = {
   id: string;
   timestamp?: string;

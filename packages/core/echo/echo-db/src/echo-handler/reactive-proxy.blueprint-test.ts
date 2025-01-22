@@ -4,10 +4,10 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getProxyHandler, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { type S } from '@dxos/echo-schema';
+import { getTypeReference, type S } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { getProxyHandler, getSchema, getType } from '@dxos/live-object';
 
 registerSignalsRuntime();
 
@@ -23,6 +23,11 @@ const TEST_OBJECT: TestSchema = {
 // TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
   objectsHaveId: boolean;
+  /**
+   * Whether to test assigning objects to properties in other objects.
+   * @default true
+   */
+  allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
   createObjectFn: (props?: Partial<TestSchema>) => Promise<TestSchema>;
@@ -37,7 +42,13 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       continue;
     }
 
-    const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
+    const {
+      objectsHaveId,
+      beforeAllCb,
+      afterAllCb,
+      createObjectFn: createObject,
+      allowObjectAssignments = true,
+    } = testConfig;
 
     beforeAll(async () => {
       await beforeAllCb?.();
@@ -80,8 +91,11 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can assign object values', async () => {
         const obj = await createObject();
 
-        obj.object = { field: 'bar' };
+        const plainObject = { field: 'bar' };
+        obj.object = plainObject;
         expect(obj.object.field).to.eq('bar');
+
+        expect(obj.object).to.deep.eq(plainObject);
 
         obj.object.field = 'baz';
         expect(obj.object.field).to.eq('baz');
@@ -142,7 +156,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getTypeReference', async () => {
         const obj = await createObject({ number: 42 });
-        expect(getType(obj)).to.deep.eq(getTypeReference(getSchema(obj)));
+        expect(getType(obj)?.toDXN().toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
       });
 
       test('can assign arrays with objects', async () => {
@@ -179,7 +193,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(obj.objectArray === obj.objectArray).to.be.true;
       });
 
-      test('assigning another reactive object', async () => {
+      test.skipIf(!allowObjectAssignments)('assigning another reactive object', async () => {
         const obj = await createObject();
 
         const other = await createObject({ string: 'bar' });

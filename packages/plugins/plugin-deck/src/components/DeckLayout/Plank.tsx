@@ -5,15 +5,17 @@
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
+  createIntent,
+  indexInPart,
+  LayoutAction,
+  partLength,
+  Surface,
+  useIntentDispatcher,
+  type Layout,
   type LayoutCoordinate,
   type LayoutEntry,
   type LayoutPart,
   type LayoutParts,
-  Surface,
-  useIntentDispatcher,
-  type Layout,
-  indexInPart,
-  partLength,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
@@ -24,8 +26,8 @@ import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
-import { DeckAction } from '../../DeckPlugin';
 import { useNode, useMainSize } from '../../hooks';
+import { DeckAction } from '../../types';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -38,11 +40,10 @@ export type PlankProps = {
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
   order?: number;
-  last?: boolean;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }: PlankProps) => {
-  const dispatch = useIntentDispatcher();
+export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
   const { plankSizing } = useDeckContext();
@@ -61,7 +62,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const size = plankSizing?.[coordinate.entryId] as number | undefined;
   const setSize = useCallback(
     debounce((nextSize: number) => {
-      return dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: nextSize } });
+      return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: coordinate.entryId, size: nextSize }));
     }, 200),
     [dispatch, coordinate.entryId],
   );
@@ -75,8 +76,13 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
 
   useLayoutEffect(() => {
     if (scrollIntoView === coordinate.entryId) {
-      rootElement.current?.focus({ preventScroll: true });
-      layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      // TODO(wittjosiah): When focused on page load, the focus is always visible.
+      //   Forcing focus to something smaller than the plank prevents large focus ring in the interim.
+      const focusable = rootElement.current?.querySelector('button') || rootElement.current;
+      focusable?.focus({ preventScroll: true });
+      layoutMode === 'deck' && focusable?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      // Clear the scroll into view state once it has been actioned.
+      void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: undefined }));
     }
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
@@ -88,7 +94,8 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const data = useMemo(
     () =>
       node && {
-        ...(entry?.path ? { subject: node.data, path: entry.path } : { object: node.data }),
+        subject: node.data,
+        path: entry?.path,
         coordinate,
         popoverAnchorId,
       },
@@ -132,7 +139,14 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
           />
-          <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
+          <Surface
+            key={node.id}
+            role='article'
+            data={data}
+            limit={1}
+            fallback={PlankContentError}
+            placeholder={placeholder}
+          />
         </>
       ) : (
         <PlankError layoutCoordinate={coordinate} />

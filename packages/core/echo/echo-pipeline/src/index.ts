@@ -9,3 +9,4 @@ export * from './pipeline';
 export * from './space';
 export * from './automerge';
 export * from './edge';
+export * from './util';

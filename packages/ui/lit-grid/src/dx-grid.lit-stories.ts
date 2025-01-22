@@ -9,7 +9,7 @@ import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';
 
-import { defaultSizeCol, defaultSizeRow } from './defs.js';
+import { defaultSizeRow } from './defs.js';
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
 import { colToA1Notation, rowToA1Notation } from './util';
 
@@ -98,7 +98,10 @@ Basic.args = {
   } satisfies DxGridProps['frozen']),
 };
 
-export const Frozen = (props: DxGridProps) => {
+/**
+ * This story is for testing, please make changes in concert with changes to `dx-grid.spec.ts`.
+ */
+export const Spec = (props: DxGridProps) => {
   return html`<div class="dark" style="position:fixed;inset:0;">
     <dx-grid
       initialCells=${props.initialCells ?? nothing}
@@ -110,31 +113,30 @@ export const Frozen = (props: DxGridProps) => {
   </div>`;
 };
 
-Frozen.args = {
+Spec.args = {
   initialCells: JSON.stringify({
     grid: {},
-    ...initialLabels,
   } satisfies DxGridProps['initialCells']),
   columnDefault: JSON.stringify({
     grid: {
-      size: defaultSizeCol,
+      size: 31,
     },
     frozenColsStart: {
-      size: defaultSizeCol,
+      size: 15,
     },
     frozenColsEnd: {
-      size: defaultSizeCol,
+      size: 23,
     },
   } satisfies DxGridProps['columnDefault']),
   rowDefault: JSON.stringify({
     grid: {
-      size: defaultSizeRow,
+      size: 31,
     },
     frozenRowsStart: {
-      size: defaultSizeRow,
+      size: 15,
     },
     frozenRowsEnd: {
-      size: defaultSizeRow,
+      size: 23,
     },
   } satisfies DxGridProps['rowDefault']),
   columns: JSON.stringify({ grid: {} } satisfies DxGridProps['columns']),
@@ -142,8 +144,8 @@ Frozen.args = {
   frozen: JSON.stringify({
     frozenColsStart: 2,
     frozenRowsStart: 2,
-    frozenColsEnd: 2,
-    frozenRowsEnd: 2,
+    frozenColsEnd: 1,
+    frozenRowsEnd: 1,
   } satisfies DxGridProps['frozen']),
 };
 

@@ -15,11 +15,11 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, List } from '@dxos/react-ui';
+import { Button, ButtonGroup, Clipboard, List } from '@dxos/react-ui';
 import { getSize, groupSurface } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ClipboardProvider, IdentityListItem, SpaceListItem } from '../components';
+import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { osTranslations } from '../translations';
 
@@ -222,10 +222,10 @@ const Invitations = () => {
 export const Default = {
   render: () => {
     return (
-      // TODO(wittjosiah): Factor out ClipboardProvider to react-ui and include in layout decorator.
-      <ClipboardProvider>
+      // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.
+      <Clipboard.Provider>
         <Invitations />
-      </ClipboardProvider>
+      </Clipboard.Provider>
     );
   },
   decorators: [

@@ -5,13 +5,15 @@
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsRootProps, type TabsActivePart } from '@dxos/react-ui-tabs';
-import { ClipboardProvider, SpacePanel, type SpacePanelProps } from '@dxos/shell/react';
+import { SpacePanel, type SpacePanelProps } from '@dxos/shell/react';
 
 import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSettingsPanel';
 import { SPACE_PLUGIN } from '../../meta';
 import { COMPOSER_SPACE_LOCK, getSpaceDisplayName } from '../../util';
+
+export const SPACE_SETTINGS_DIALOG = `${SPACE_PLUGIN}/SpaceSettingsDialog`;
 
 export type SpaceSettingsTab = 'members' | 'settings';
 
@@ -39,7 +41,7 @@ export const SpaceSettingsDialog = ({
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
     <Dialog.Content classNames='p-0 bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <div role='none' className='flex justify-between pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
+      <div role='none' className='flex justify-between pbs-2 pis-2 pie-2 @md:pbs-4 @md:pis-4 @md:pie-4'>
         <Dialog.Title
           onClick={() => setTabsActivePart('list')}
           aria-description={t('click to return to tablist description')}
@@ -62,7 +64,7 @@ export const SpaceSettingsDialog = ({
         </Dialog.Title>
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={3} />
+            <Icon icon='ph--x--regular' size={4} />
           </Button>
         </Dialog.Close>
       </div>
@@ -92,9 +94,9 @@ export const SpaceSettingsDialog = ({
 
           {/* TODO(wittjosiah): Weird focus ring when tabpanel is focused. */}
           <Tabs.Tabpanel value='members' classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
-            <ClipboardProvider>
+            <Clipboard.Provider>
               <SpacePanel space={space} hideHeading target={target} createInvitationUrl={createInvitationUrl} />
-            </ClipboardProvider>
+            </Clipboard.Provider>
           </Tabs.Tabpanel>
         </Tabs.Viewport>
       </Tabs.Root>

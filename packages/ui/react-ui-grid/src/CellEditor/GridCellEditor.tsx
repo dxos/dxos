@@ -5,10 +5,10 @@
 import React, { useCallback } from 'react';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
-import { type GridScopedProps, useGridContext } from '../Grid';
+import { type GridScopedProps, useGridContext, type DxGridCellIndex } from '../Grid';
 
 export type GridCellEditorProps = GridScopedProps<
-  Pick<CellEditorProps, 'extension' | 'onBlur'> & { getCellContent: (index: string) => string | undefined }
+  Pick<CellEditorProps, 'extension' | 'onBlur'> & { getCellContent: (index: DxGridCellIndex) => string | undefined }
 >;
 
 export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope }: GridCellEditorProps) => {

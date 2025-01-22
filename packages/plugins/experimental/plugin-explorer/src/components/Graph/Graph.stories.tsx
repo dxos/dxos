@@ -8,9 +8,9 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
+import { create } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -27,13 +27,13 @@ const Story = () => {
   useEffect(() => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
-    void generator
-      .createObjects({
+    queueMicrotask(async () => {
+      await generator.addSchemas();
+      await generator.createObjects({
         [TestSchemaType.organization]: 20,
         [TestSchemaType.contact]: 50,
-      })
-      .catch(() => {});
+      });
+    });
 
     const view = space.db.add(create(ViewType, { name: '', type: '' }));
     setSpace(space);

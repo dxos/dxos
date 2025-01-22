@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type EchoReactiveObject, createDocAccessor } from '@dxos/echo-db';
+import { type ReactiveEchoObject, createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DiagramType, EXCALIDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
@@ -12,7 +12,7 @@ import { type DiagramType, EXCALIDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
 
 export const useStoreAdapter = (
-  object?: EchoReactiveObject<DiagramType>,
+  object?: ReactiveEchoObject<DiagramType>,
   options: ExcalidrawStoreAdapterProps = {},
 ) => {
   const [adapter] = useState(new ExcalidrawStoreAdapter(options));
@@ -22,14 +22,14 @@ export const useStoreAdapter = (
       return;
     }
 
-    if (object.canvas?.schema !== EXCALIDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: object.canvas?.schema });
+    if (object.canvas.target?.schema !== EXCALIDRAW_SCHEMA) {
+      log.warn('invalid schema', { schema: object.canvas.target?.schema });
       return;
     }
 
     const t = setTimeout(async () => {
       invariant(object.canvas);
-      const accessor = createDocAccessor(object.canvas, ['content']);
+      const accessor = createDocAccessor(object.canvas.target!, ['content']);
       await adapter.open(accessor);
       forceUpdate({});
     });

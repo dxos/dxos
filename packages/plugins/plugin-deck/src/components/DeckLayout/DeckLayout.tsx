@@ -6,9 +6,24 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
-import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
-import { type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { Button, Dialog, Main, Popover, useOnTransition, useTranslation, type MainProps } from '@dxos/react-ui';
+import {
+  firstIdInPart,
+  Surface,
+  usePluginManager,
+  type LayoutParts,
+  type Toast as ToastSchema,
+} from '@dxos/app-framework';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import {
+  AlertDialog,
+  Button,
+  Dialog as NaturalDialog,
+  Main,
+  Popover,
+  useOnTransition,
+  useTranslation,
+  type MainProps,
+} from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
@@ -46,14 +61,14 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     dialogOpen,
     dialogContent,
     dialogBlockAlign,
+    dialogType,
     popoverOpen,
     popoverContent,
     popoverAnchorId,
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
-  // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-  const attentionPlugin = usePlugin<AttentionPluginProvides>('dxos.org/plugin/attention');
+  const pluginManager = usePluginManager();
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const scrollLeftRef = useRef<number | null>();
@@ -63,7 +78,11 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
-    const attended = untracked(() => attentionPlugin?.provides.attention.attended ?? []);
+    // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
+    const attended = untracked(() => {
+      const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+      return attention.current;
+    });
     const firstId = isSoloModeLoaded ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
@@ -113,6 +132,8 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     return {};
   }, [layoutMode, overscroll, layoutParts.main]);
 
+  const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
+
   return (
     <Popover.Root
       modal
@@ -148,7 +169,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           </Main.Notch>
 
           {/* Left sidebar. */}
-          <Sidebar layoutParts={layoutParts} />
+          <Sidebar />
 
           {/* Right sidebar. */}
           <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />
@@ -186,7 +207,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 {...(isSoloModeLoaded && { inert: '' })}
               >
                 <Stack
-                  separators={false}
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
@@ -204,7 +224,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                         part='main'
                         layoutMode={layoutMode}
                         order={index * 2 + 1}
-                        last={index === layoutParts.main!.length - 1}
                       />
                     </Fragment>
                   ))}
@@ -215,9 +234,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
                 {...(!isSoloModeLoaded && { inert: '' })}
               >
-                <StackContext.Provider
-                  value={{ size: 'contain', orientation: 'horizontal', separators: false, rail: true }}
-                >
+                <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
                   <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
                 </StackContext.Provider>
               </div>
@@ -232,14 +249,13 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
       {/* Global popovers. */}
       <Popover.Portal>
         <Popover.Content
-          classNames='z-[60]'
           onEscapeKeyDown={() => {
             context.popoverOpen = false;
             context.popoverAnchorId = undefined;
           }}
         >
           <Popover.Viewport>
-            <Surface role='popover' data={popoverContent} />
+            <Surface role='popover' data={popoverContent} limit={1} />
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
@@ -248,7 +264,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
       {/* Global dialog. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <Dialog.Overlay blockAlign={dialogBlockAlign}>
-          <Surface role='dialog' data={dialogContent} />
+          <Surface role='dialog' data={dialogContent} limit={1} />
         </Dialog.Overlay>
       </Dialog.Root>
 

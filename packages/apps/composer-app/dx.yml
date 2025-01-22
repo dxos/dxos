@@ -29,3 +29,5 @@ runtime:
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
+    ai:
+      server: https://ai-service.dxos.workers.dev

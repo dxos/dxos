@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -39,6 +42,7 @@ const meta: Meta = {
     withComputeGraphDecorator(),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'grid' }),
+    withPluginManager(),
   ],
   parameters: { translations },
 };

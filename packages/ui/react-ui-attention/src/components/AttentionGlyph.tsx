@@ -3,13 +3,13 @@
 //
 
 import { type Primitive } from '@radix-ui/react-primitive';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const attentionGlyphStyles =
-  'inline-block rounded-sm is-3 bs-3 bg-transparent text-accentText transition-colors [[data-attention=true]_&]:bg-accentSurface [[data-attention=true]_&]:text-inverse [[aria-current][data-attention=true]_&]:bg-accentSurface [[aria-current][data-attention=true]_&]:text-inverse';
+  'inline-block rounded-sm is-3 bs-3 bg-transparent text-accentText transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accentSurface [[data-attention=true]_&]:text-inverse [[aria-current][data-attention=true]_&]:bg-accentSurface [[aria-current][data-attention=true]_&]:text-inverse';
 
 const presenceIconStyles =
   'is-3 bs-3 group-[[aria-current]_&:hover]/attentionGlyphButton:hidden group-[[aria-current]_&:focus]/attentionGlyphButton:hidden group-[[data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[data-attention=true]_&:focus]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:hover]/attentionGlyphButton:hidden group-[[aria-current][data-attention=true]_&:focus]/attentionGlyphButton:hidden';
@@ -48,17 +48,50 @@ const PresenceMany = () => {
   );
 };
 
+export const Syncing = () => {
+  const animationProps = useMemo<CSSProperties>(
+    () => ({
+      // Synchronize animations.
+      animationDelay: `-${Date.now() % 2_000}ms`,
+    }),
+    [],
+  );
+
+  return (
+    <div role='status' className='flex items-center'>
+      <Icon
+        icon='ph--circle-notch--regular'
+        size={3}
+        style={animationProps}
+        classNames='text-subdued animate-[spin_2s_linear_infinite]'
+      />
+    </div>
+  );
+};
+
 export type AttentionGlyphProps = {
+  attended?: boolean;
+  containsAttended?: boolean;
+  syncing?: boolean;
   presence?: 'none' | 'one' | 'many';
 } & ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'children'>>;
 
 export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
-  ({ presence, classNames, ...props }, forwardedRef) => {
+  ({ presence, attended, syncing, containsAttended, classNames, ...props }, forwardedRef) => {
+    const icon = syncing ? (
+      <Syncing />
+    ) : presence === 'many' ? (
+      <PresenceMany />
+    ) : presence === 'one' ? (
+      <PresenceOne />
+    ) : null;
+
     return (
-      <span role='none' {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
-        {presence === 'many' && <PresenceMany />}
-        {presence === 'one' && <PresenceOne />}
-      </span>
+      <div role='none' className='flex' data-attention={attended} data-contains-attended={containsAttended}>
+        <span role='none' {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
+          {icon}
+        </span>
+      </div>
     );
   },
 );

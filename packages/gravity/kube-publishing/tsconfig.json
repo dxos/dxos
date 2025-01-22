@@ -17,5 +17,18 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../devtools/cli"
+    }
+  ]
 }

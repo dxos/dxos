@@ -1,9 +1,15 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
   "include": [
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    }
+  ]
 }

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "declarationDir": "dist/types",
     "module": "ESNext",
+    "outDir": "./dist/types",
     "types": [
       "@dxos/typings",
       "node"
@@ -11,5 +12,18 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
 }

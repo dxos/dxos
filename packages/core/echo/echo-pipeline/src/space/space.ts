@@ -48,6 +48,7 @@ export type CreatePipelineParams = {
  * Spaces are globally addressable databases with access control.
  */
 // TODO(dmaretskyi): Extract database stuff.
+// TODO(dmaretskyi): Rename HaloGraph move to HALO.
 @trackLeaks('open', 'close')
 @trace.resource()
 export class Space extends Resource {

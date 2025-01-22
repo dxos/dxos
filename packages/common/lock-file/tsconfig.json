@@ -5,6 +5,7 @@
       "DOM",
       "es2019"
     ],
+    "outDir": "./dist/types",
     "skipLibCheck": true,
     "types": [
       "@dxos/typings",
@@ -18,5 +19,12 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
 }

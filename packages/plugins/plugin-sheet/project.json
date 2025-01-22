@@ -12,8 +12,7 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.ts",
-          "{projectRoot}/src/types.ts"
+          "{projectRoot}/src/types/index.ts"
         ],
         "platforms": [
           "browser",
@@ -21,17 +20,16 @@
         ]
       }
     },
-    "lint": {},
-    "prebuild": {
-      "executor": "nx:run-commands",
+    "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ],
       "options": {
-        "command": "./scripts/vendor.mjs",
-        "cwd": "{projectRoot}"
-      },
-      "outputs": [
-        "{projectRoot}/dist/vendor/*"
-      ]
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.ts"
+      }
     },
+    "lint": {},
     "test": {}
   },
   "implicitDependencies": [

@@ -13,7 +13,7 @@ const TestSchema = S.Struct({
   active: S.Boolean,
   email: Format.Email,
   age: S.Number,
-  location: Format.LatLng,
+  location: Format.GeoPoint,
   address: S.Struct({
     city: S.String,
     zip: S.String,
@@ -30,10 +30,19 @@ describe('properties', () => {
       'boolean',
       'string',
       'number',
-      'object',
+      'number',
       'object',
       'number',
     ]);
+  });
+
+  test('arrays', ({ expect }) => {
+    const props = getSchemaProperties(TestSchema.ast);
+    const arrayProp = props.find((prop) => prop.array);
+
+    expect(arrayProp).to.not.eq(undefined);
+    expect(arrayProp?.type).to.eq('number');
+    expect(arrayProp?.name).to.eq('scores');
   });
 
   test('discriminated unions', ({ expect }) => {
@@ -90,5 +99,18 @@ describe('properties', () => {
         expect(props.length).to.eq(1);
       }
     }
+  });
+
+  test('literal unions', ({ expect }) => {
+    const ColorSchema = S.Struct({
+      color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')),
+    });
+
+    const props = getSchemaProperties(ColorSchema.ast);
+    expect(props[0]).to.deep.include({
+      name: 'color',
+      type: 'literal',
+      options: ['red', 'green', 'blue'],
+    });
   });
 });

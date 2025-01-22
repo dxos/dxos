@@ -2,15 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, latch, Trigger } from '@dxos/async';
+import { asyncTimeout, latch, sleep, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
+import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { create, Expando, type HasId, type ReactiveObject, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { Expando, type HasId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
+import { create, type ReactiveObject, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -312,7 +314,8 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    hostDocument.content!.content = 'Hello, world!';
+    const text = create(TextV0Type, { content: 'Hello, world!' });
+    hostDocument.content = makeRef(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
@@ -358,6 +361,39 @@ describe('Spaces', () => {
     await waitForObject(guestSpace, hostDocument);
   });
 
+  test('peers do not gain access to documents from another space', async () => {
+    const [alice, bob] = await createInitializedClients(3);
+
+    [alice, bob].forEach(registerTypes);
+
+    const bobPersonalDoc = bob.spaces.get()[0].db.add(createDocument());
+
+    const [aliceSharedSpace, bobSharedSpace] = await createSharedSpace(alice, bob);
+    const sharedDoc = bobSharedSpace.db.add(createDocument());
+
+    await waitForObject(aliceSharedSpace, sharedDoc);
+    await sleep(50);
+    expect(aliceSharedSpace.db.getObjectById(bobPersonalDoc.id)).toBeUndefined();
+  });
+
+  test('peers do not gain transitive access to documents from another space', async () => {
+    const [alice, bob, eve] = await createInitializedClients(3);
+
+    [alice, bob, eve].forEach(registerTypes);
+
+    // Eve should not gain transitive access to the document created by bob in space A
+    const [aliceSpaceA, bobSpaceA] = await createSharedSpace(alice, bob);
+    const doc1 = bobSpaceA.db.add(createDocument());
+    const [__, eveSpaceB] = await createSharedSpace(bob, eve);
+
+    // Create a document in a space to which Eve shouldn't have access.
+    const doc2 = bobSpaceA.db.add(createDocument());
+
+    await Promise.all([doc1, doc2].map((doc) => waitForObject(aliceSpaceA, doc)));
+    await sleep(50);
+    [doc1, doc2].forEach((doc) => expect(eveSpaceB.db.getObjectById(doc.id)).toBeUndefined());
+  });
+
   test('share two spaces between clients', async () => {
     const [host, guest] = await createInitializedClients(2);
 
@@ -370,7 +406,8 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      (hostDocument.content as any).content = 'Hello, world!';
+      const text = create(TextV0Type, { content: 'Hello, world!' });
+      hostDocument.content = makeRef(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -382,7 +419,8 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      (hostDocument.content as any).content = 'Hello, world!';
+      const text = create(TextV0Type, { content: 'Hello, world!' });
+      hostDocument.content = makeRef(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -430,7 +468,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createObject({ entries: [createObject({ name: 'first' })] }));
+    const hostRoot = hostSpace.db.add(createObject({ entries: [makeRef(createObject({ name: 'first' }))] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
@@ -449,7 +487,7 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      hostRoot.entries.push(createObject({ name: 'second' }));
+      hostRoot.entries.push(makeRef(createObject({ name: 'second' })));
       await done.wait({ timeout: 1_000 });
     }
   });
@@ -485,7 +523,7 @@ describe('Spaces', () => {
   };
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return (space.db.getObjectById(documentId) as DocumentType).content!.content;
+    return (space.db.getObjectById(documentId) as DocumentType).content.target!.content;
   };
 
   const registerTypes = (client: Client) => {
@@ -493,8 +531,10 @@ describe('Spaces', () => {
   };
 
   const createDocument = (): ReactiveObject<DocumentType> => {
+    const text = create(TextV0Type, { content: 'Hello, world!' });
     return create(DocumentType, {
-      content: create(TextV0Type, { content: '' }),
+      title: 'Test document',
+      content: makeRef(text),
     });
   };
 

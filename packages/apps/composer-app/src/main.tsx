@@ -9,15 +9,15 @@ import { createRoot } from 'react-dom/client';
 
 import { createApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
-import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { getObservabilityGroup, isObservabilityDisabled, initializeAppObservability } from '@dxos/observability';
+import { Status, Tooltip, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey } from './constants';
-import { type PluginConfig, core, defaults, plugins, recommended } from './plugins';
+import { core, defaults, plugins, type PluginConfig } from './plugins';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 
@@ -26,7 +26,6 @@ const main = async () => {
 
   registerSignalsRuntime();
 
-  const { Trigger } = await import('@dxos/async');
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
@@ -52,7 +51,7 @@ const main = async () => {
 
   // Intentionally do not await, don't block app startup for telemetry.
   // namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
-  const observability = initializeAppObservability({ namespace: appKey, config });
+  const observability = initializeAppObservability({ namespace: appKey, config, replayEnable: true });
 
   // TODO(nf): refactor.
   const observabilityDisabled = await isObservabilityDisabled(appKey);
@@ -71,11 +70,8 @@ const main = async () => {
     !observabilityDisabled,
   );
 
-  const firstRun = new Trigger();
-
   const conf: PluginConfig = {
     appKey,
-    firstRun,
     config,
     services,
     observability,
@@ -95,6 +91,7 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
+    // TODO(burdon): Create skeleton.
     placeholder: (
       <ThemeProvider tx={defaultTx}>
         <div className='flex flex-col justify-end bs-dvh'>
@@ -103,9 +100,9 @@ const main = async () => {
       </ThemeProvider>
     ),
     plugins: plugins(conf),
-    meta: [...core(conf), ...defaults(conf), ...recommended(conf)],
-    core: core(conf).map((meta) => meta.id),
-    defaults: defaults(conf).map((meta) => meta.id),
+    core: core(conf),
+    defaults: defaults(conf),
+    cacheEnabled: true,
   });
 
   const root = document.getElementById('root')!;

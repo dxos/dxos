@@ -33,7 +33,7 @@ export const App = (props: ClientProviderProps) => {
   const themeMode = useThemeWatcher();
 
   return (
-    <ThemeProvider {...{ tx: defaultTx, themeMode }}>
+    <ThemeProvider {...{ tx: defaultTx, themeMode }} noCache>
       <ErrorBoundary>
         <ClientProvider {...props}>
           <Devtools />

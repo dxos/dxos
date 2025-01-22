@@ -8,24 +8,21 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { DeviceType, useDevices } from '@dxos/react-client/halo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../../meta';
 
-export type SpaceSettingsPanelProps = {
+export type SpaceSettingsPanelProps = ThemedClassName<{
   space: Space;
-};
+}>;
 
-export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
+export const SpaceSettingsPanel = ({ classNames, space }: SpaceSettingsPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   const client = useClient();
-  const devices = useDevices();
-  const managedDeviceAvailable = devices.find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
-  const edgeAgents = Boolean(client.config.values.runtime?.client?.edgeFeatures?.agents);
-  const edgeReplicationAvailable = edgeAgents && managedDeviceAvailable;
+  const edgeEnabled = Boolean(client.config.values.runtime?.client?.edgeFeatures?.echoReplicator);
 
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
@@ -44,7 +41,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
   );
 
   return (
-    <div role='form' className='flex flex-col'>
+    <div role='form' className={mx('flex flex-col', classNames)}>
       <DeprecatedFormInput label={t('name label')}>
         <Input.TextInput
           placeholder={t('unnamed space label')}
@@ -54,7 +51,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
           }}
         />
       </DeprecatedFormInput>
-      {edgeReplicationAvailable && (
+      {edgeEnabled && (
         <DeprecatedFormInput label={t('edge replication label')}>
           <Input.Switch checked={edgeReplication} onCheckedChange={toggleEdgeReplication} />
         </DeprecatedFormInput>

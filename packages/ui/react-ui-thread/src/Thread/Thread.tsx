@@ -26,7 +26,7 @@ export const Thread = forwardRef<HTMLDivElement, ThreadProps>(
         className={mx(
           threadLayout,
           hoverableFocusedWithinControls,
-          'plb-1.5 bg-[var(--surface-bg)] border-separator first:border-bs-0 border-be',
+          'pbs-2 pbe-4 bg-[var(--surface-bg)] border-separator first:border-bs-0 border-be',
           'current-related attention-surface [--controls-opacity:0]',
           classNames,
         )}

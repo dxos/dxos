@@ -3,10 +3,14 @@
 //
 
 import { SHEET_PLUGIN } from './meta';
+import { SheetType } from './types';
 
 export default [
   {
     'en-US': {
+      [SheetType.typename]: {
+        'typename label': 'Sheet',
+      },
       [SHEET_PLUGIN]: {
         'plugin name': 'Sheets',
         'sheet title placeholder': 'New sheet',

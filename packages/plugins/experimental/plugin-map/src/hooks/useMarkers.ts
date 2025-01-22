@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { MutableSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
+import { EchoSchema, getTypename, StoredSchema } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 
 import { useStabilizedObject } from './useStabilizedObject';
@@ -22,6 +22,8 @@ export const useMarkers = (map: MapType): MapMarker[] => {
     Filter.schema(StoredSchema, (schema) => schema && hasLocation(schema)),
   );
 
+  // TODO(dmaretskyi): I'm guessing this is a query for all objects that are from one of `latLongSchemas` schema.
+  // TODO(dmaretskyi): Rework this to use query DSL.
   const rows = useQuery(
     space,
     (obj) => {
@@ -58,7 +60,7 @@ export const useMarkers = (map: MapType): MapMarker[] => {
 };
 
 const hasLocation = (schema: StoredSchema): boolean => {
-  const properties = new MutableSchema(schema).getProperties();
+  const properties = new EchoSchema(schema).getProperties();
   return (
     properties.some((prop) => prop.name === 'latitude' && prop.type._tag === 'NumberKeyword') &&
     properties.some((prop) => prop.name === 'longitude' && prop.type._tag === 'NumberKeyword')

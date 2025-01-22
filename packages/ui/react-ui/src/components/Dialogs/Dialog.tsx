@@ -29,7 +29,11 @@ import { ElevationProvider } from '../ElevationProvider';
 
 type DialogRootProps = DialogRootPrimitiveProps;
 
-const DialogRoot: FunctionComponent<DialogRootProps> = DialogRootPrimitive;
+const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
+  <ElevationProvider elevation='dialog'>
+    <DialogRootPrimitive {...props} />
+  </ElevationProvider>
+);
 
 type DialogTriggerProps = DialogTriggerPrimitiveProps;
 
@@ -123,7 +127,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', 'dialog', { inOverlayLayout }, classNames)}
         ref={forwardedRef}
       >
-        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+        {children}
       </DialogContentPrimitive>
     );
   },

@@ -5,7 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Reference } from '@dxos/echo-protocol';
-import { create, S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { Filter } from './filter';
@@ -88,7 +89,7 @@ describe('Filter', () => {
       title: S.String,
     }) {}
     const { db } = await builder.createDatabase();
-    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const obj = db.add(create(schema, { title: 'test' }));
     const filter = Filter.schema(schema);
     expect(filterMatch(filter, getObjectCore(obj))).to.be.true;

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
-import { requireTypeReference, S } from '@dxos/echo-schema';
+import { isEncodedReference, type EncodedReference, type ForeignKey } from '@dxos/echo-protocol';
+import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
@@ -15,11 +15,11 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type EchoReactiveObject, getReferenceWithSpaceKey } from '../echo-handler';
+import { type ReactiveEchoObject, getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
-  <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
-  (object: EchoReactiveObject<any> | undefined): object is T =>
+  <T extends ReactiveEchoObject<T>>(type: { new (): T }) =>
+  (object: ReactiveEchoObject<any> | undefined): object is T =>
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
@@ -44,18 +44,21 @@ export interface PropertyFilter {
   [key: string]: any;
 }
 
-export type OperatorFilter<T extends {} = any> = (object: T) => boolean;
+export type OperatorFilter<T extends BaseObject = any> = (object: T) => boolean;
 
-export type FilterSource<T extends {} = any> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends BaseObject = any> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams<T extends {} = any> = {
+export type FilterParams<T extends BaseObject = any> = {
   type?: DXN[];
   properties?: Record<string, any>;
   objectIds?: string[];
   text?: string;
+  metaKeys?: ForeignKey[];
+
   predicate?: OperatorFilter<T>;
+
   not?: boolean;
   and?: Filter[];
   or?: Filter[];
@@ -70,8 +73,8 @@ export namespace Filter$ {
   export type Object<F extends Any> = F extends Filter<infer T> ? T : never;
 }
 
-export class Filter<T extends {} = any> {
-  static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
+export class Filter<T extends BaseObject = any> {
+  static from<T extends BaseObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
     } else if (source instanceof Filter) {
@@ -104,7 +107,7 @@ export class Filter<T extends {} = any> {
     }
   }
 
-  static fromFilterJson<T extends {}>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
+  static fromFilterJson<T extends BaseObject>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
     const { id, __typename, ...properties } = source;
 
     if (typeof id === 'string' || (Array.isArray(id) && id.length > 1)) {
@@ -139,13 +142,17 @@ export class Filter<T extends {} = any> {
     return new Filter({});
   }
 
-  // TODO(burdon): Tighten to AbstractTypedObject.
+  static nothing(): Filter {
+    return new Filter({ not: true });
+  }
+
+  // TODO(burdon): Tighten to TypedObject.
   static schema<S extends S.Schema.All>(
     schema: S,
     filter?: Record<string, any> | OperatorFilter<S.Schema.Type<S>>,
   ): Filter<S.Schema.Type<S>>;
 
-  // TODO(burdon): Tighten to AbstractTypedObject.
+  // TODO(burdon): Tighten to TypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
     if (!schema) {
       throw new TypeError('`schema` parameter is required.');
@@ -154,7 +161,7 @@ export class Filter<T extends {} = any> {
     // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
-    return this._fromTypeWithPredicate(typeReference.toDXN(), filter);
+    return Filter._fromTypeWithPredicate(typeReference.toDXN(), filter);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
@@ -165,7 +172,19 @@ export class Filter<T extends {} = any> {
       throw new TypeError('Dynamic schema references are not allowed.');
     }
 
-    return this._fromTypeWithPredicate(DXN.fromTypename(typename), filter);
+    return Filter._fromTypeWithPredicate(DXN.fromTypename(typename), filter);
+  }
+
+  static typenames(typenames: string[]) {
+    const dxns = typenames.map((typename) => {
+      if (typename.startsWith('dxn:echo:')) {
+        throw new TypeError('Dynamic schema references are not allowed.');
+      }
+
+      return DXN.fromTypename(typename);
+    });
+
+    return new Filter({ type: dxns });
   }
 
   static typeDXN(dxn: string): Filter {
@@ -173,6 +192,12 @@ export class Filter<T extends {} = any> {
       throw new TypeError('`dxn` parameter is required.');
     }
     return new Filter({ type: [DXN.parse(dxn)] });
+  }
+
+  static foreignKeys(keys: ForeignKey[]): Filter {
+    return new Filter({
+      metaKeys: keys,
+    });
   }
 
   private static _fromTypeWithPredicate(type: DXN, filter?: Record<string, any> | OperatorFilter<any>) {
@@ -188,17 +213,17 @@ export class Filter<T extends {} = any> {
     }
   }
 
-  static not<T extends {} = any>(source: Filter<T>): Filter<T> {
+  static not<T extends BaseObject = any>(source: Filter<T>): Filter<T> {
     return new Filter({ ...source, not: !source.not }, source.options);
   }
 
-  static and<T extends {} = any>(...filters: FilterSource<T>[]): Filter<T> {
+  static and<T extends BaseObject = any>(...filters: FilterSource<T>[]): Filter<T> {
     return new Filter({
       and: filters.map((filter) => Filter.from(filter)),
     });
   }
 
-  static or<T extends {} = any>(...filters: FilterSource<T>[]): Filter<T> {
+  static or<T extends BaseObject = any>(...filters: FilterSource<T>[]): Filter<T> {
     return new Filter({
       or: filters.map((filter) => Filter.from(filter)),
     });
@@ -232,6 +257,7 @@ export class Filter<T extends {} = any> {
   public readonly properties?: Record<string, any>;
   public readonly objectIds?: string[];
   public readonly text?: string;
+  public readonly metaKeys?: ForeignKey[];
   public readonly predicate?: OperatorFilter<any>;
   public readonly not: boolean;
   public readonly and: Filter[];
@@ -243,6 +269,7 @@ export class Filter<T extends {} = any> {
     this.properties = params.properties;
     this.objectIds = params.objectIds;
     this.text = params.text;
+    this.metaKeys = params.metaKeys;
     this.predicate = params.predicate;
     this.not = params.not ?? false;
     this.and = params.and ?? [];

@@ -7,11 +7,11 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type MutableSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { defaultSizeRow, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -27,23 +27,24 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ editing }: StoryProps) => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const { space } = useClientProvider();
+  invariant(space);
+
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
-    if (tables.length && !table) {
+    if (space && tables.length && !table) {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
-  }, [tables]);
+  }, [space, tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema, table.view);
+      return new ViewProjection(schema, table.view.target!);
     }
   }, [schema, table?.view]);
 
@@ -83,9 +84,9 @@ const meta: Meta<StoryProps> = {
       types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: ({ space }) => {
+      onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = initializeTable({ space, table });
+        const schema = await initializeTable({ space, table });
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             create(schema, {
@@ -107,7 +108,7 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     editing: {
-      index: '0,3',
+      index: 'grid,0,3',
       initialContent: 'Test',
     },
   },

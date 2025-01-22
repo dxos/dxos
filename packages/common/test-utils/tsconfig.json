@@ -5,6 +5,7 @@
     "lib": [
       "DOM"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -12,5 +13,12 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
 }

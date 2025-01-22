@@ -1,3 +1,4 @@
+// Base tsconfig for all projects.
 {
   "compilerOptions": {
     "allowJs": false,
@@ -20,7 +21,8 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2018"
+    "target": "ES2018",
+    "incremental": true
   },
   "include": [],
   "ts-node": {

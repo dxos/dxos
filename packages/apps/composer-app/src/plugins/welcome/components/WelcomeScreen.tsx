@@ -2,99 +2,119 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { type Trigger } from '@dxos/async';
+import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { ClientAction } from '@dxos/plugin-client/meta';
-import { SpaceAction } from '@dxos/plugin-space/meta';
+import { ClientAction } from '@dxos/plugin-client/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { isSpace } from '@dxos/react-client/echo';
-import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { type InvitationResult } from '@dxos/react-client/invitations';
 
 import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
 
-export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
+export const WELCOME_SCREEN = 'WelcomeScreen';
+
+export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
 
   const searchParams = new URLSearchParams(window.location.search);
-  const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+  const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
 
-  const handleSignup = async (email: string) => {
-    if (email.length === 0 || pendingRef.current) {
-      return;
-    }
+  const handleSignup = useCallback(
+    async (email: string) => {
+      if (email.length === 0 || pendingRef.current) {
+        return;
+      }
 
-    if (error) {
-      setError(false);
-    }
+      if (error) {
+        setError(false);
+      }
 
-    try {
-      // Prevent multiple signups.
-      pendingRef.current = true;
-      await signup({ hubUrl, email, identity });
-      setState(WelcomeState.EMAIL_SENT);
-    } catch (err) {
-      log.catch(err);
-      setError(true);
-    } finally {
-      pendingRef.current = false;
-    }
-  };
+      try {
+        // Prevent multiple signups.
+        pendingRef.current = true;
+        await signup({ hubUrl, email, identity, redirectUrl: location.origin });
+        setState(WelcomeState.EMAIL_SENT);
+      } catch (err) {
+        log.catch(err);
+        setError(true);
+      } finally {
+        pendingRef.current = false;
+      }
+    },
+    [hubUrl, identity],
+  );
 
-  const handleJoinIdentity = async () => {
-    await dispatch({ action: ClientAction.JOIN_IDENTITY });
-  };
+  const handleJoinIdentity = useCallback(async () => {
+    await dispatch(createIntent(ClientAction.JoinIdentity));
+  }, [dispatch]);
+
+  const handleRecoverIdentity = useCallback(async () => {
+    await dispatch(createIntent(ClientAction.RecoverIdentity));
+  }, [dispatch]);
 
   const handleSpaceInvitation = async () => {
-    const identityResult = await dispatch({ action: ClientAction.CREATE_IDENTITY });
-    const identity = identityResult?.data as Identity | undefined;
+    let identityCreated = true;
+    await dispatch(createIntent(ClientAction.CreateIdentity)).catch(() => {
+      identityCreated = false;
+    });
+    const identity = client.halo.identity.get();
     if (!identity) {
       return;
     }
 
-    firstRun?.wake();
-    const result = await dispatch({ action: SpaceAction.JOIN, data: { invitationCode: spaceInvitationCode } });
-    spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
+    const handleDone = async (result: InvitationResult | null) => {
+      await dispatch(
+        createIntent(NavigationAction.Close, {
+          activeParts: {
+            fullScreen: WELCOME_SCREEN,
+            main: client.spaces.default.id,
+          },
+        }),
+      );
+      await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
 
-    if (isSpace(result?.data.space)) {
-      const space = result?.data.space;
-      const credentials = client.halo.queryCredentials();
-      const spaceCredential = credentials.find((credential) => {
-        if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
-          return false;
-        }
-        const spaceKey = credential.subject.assertion.spaceKey;
-        return spaceKey instanceof PublicKey && spaceKey.equals(space.key);
-      });
-
-      if (spaceCredential) {
-        await activateAccount({ hubUrl, identity, referrer: spaceCredential.issuer });
-      } else {
-        // Log but continue so as not to block access to composer due to unexpected error.
-        log.error('space credential not found', { spaceId: space.id });
+      if (identityCreated) {
+        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
+        await dispatch(createIntent(ClientAction.CreateAgent));
       }
 
-      await dispatch([
-        {
-          action: NavigationAction.CLOSE,
-          data: { activeParts: { fullScreen: 'surface:WelcomeScreen', main: client.spaces.default.id } },
-        },
-        {
-          action: LayoutAction.SET_LAYOUT_MODE,
-          data: { layoutMode: 'solo' },
-        },
-        { action: NavigationAction.OPEN, data: { activeParts: { main: space.id } } },
-      ]);
-    }
+      const space = result?.spaceKey && client.spaces.get(result?.spaceKey);
+      if (space) {
+        const credentials = client.halo.queryCredentials();
+        const spaceCredential = credentials.find((credential) => {
+          if (credential.subject.assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+            return false;
+          }
+          const spaceKey = credential.subject.assertion.spaceKey;
+          return spaceKey instanceof PublicKey && spaceKey.equals(space.key);
+        });
+
+        if (spaceCredential) {
+          log.info('activate', { hubUrl, identity, referrer: spaceCredential.issuer });
+          try {
+            await activateAccount({ hubUrl, identity, referrer: spaceCredential.issuer });
+          } catch (err) {
+            log.catch(err);
+          }
+        } else {
+          // Log but continue so as not to block access to composer due to unexpected error.
+          log.error('space credential not found', { spaceId: space.id });
+        }
+      }
+    };
+
+    await dispatch(createIntent(SpaceAction.Join, { invitationCode: spaceInvitationCode, onDone: handleDone }));
+    spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
   };
 
   return (
@@ -104,6 +124,7 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
       error={error}
       onSignup={handleSignup}
       onJoinIdentity={!identity && !spaceInvitationCode ? handleJoinIdentity : undefined}
+      onRecoverIdentity={!identity && !spaceInvitationCode ? handleRecoverIdentity : undefined}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
     />
   );

@@ -47,7 +47,7 @@ export namespace Format {
   export const Duration = DateUtil.Duration;
 
   // Objects
-  export const LatLng = ObjectUtil.LatLng;
+  export const GeoPoint = ObjectUtil.GeoPoint;
 }
 
 /**

@@ -151,7 +151,11 @@ export class ServiceContext extends Resource {
       this._acceptIdentity.bind(this),
     );
 
-    this.echoHost = new EchoHost({ kv: this.level });
+    this.echoHost = new EchoHost({
+      kv: this.level,
+      peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
+      getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+    });
 
     this._meshReplicator = new MeshEchoReplicator();
 
@@ -377,10 +381,11 @@ export class ServiceContext extends Resource {
     let edgeIdentity: EdgeIdentity;
     const identity = this.identityManager.identity;
     if (identity) {
-      log.info('Setting identity on edge connection', {
+      log('setting identity on edge connection', {
         identity: identity.identityKey.toHex(),
         swarms: this.networkManager.topics,
       });
+
       if (params?.deviceCredential) {
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,

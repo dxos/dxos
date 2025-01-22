@@ -1,8 +1,17 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

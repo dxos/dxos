@@ -10,6 +10,7 @@ import fs from 'fs';
 import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
+import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
@@ -40,6 +41,7 @@ export type ToolboxConfig = {
       include: string[];
     };
     noProjectReferences?: boolean;
+    noDirectOutDir?: boolean;
   };
 };
 
@@ -354,6 +356,11 @@ export class Toolbox {
           tsConfigJson.references = [];
         }
 
+        if (!this.config.tsconfig?.noDirectOutDir && `${tsConfigJson?.extends}`.endsWith('tsconfig.base.json')) {
+          tsConfigJson.compilerOptions ??= {};
+          tsConfigJson.compilerOptions.outDir ??= './dist/types';
+        }
+
         const updated = sortJson(tsConfigJson, {
           depth: 3,
           map: {
@@ -416,6 +423,19 @@ export class Toolbox {
     await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
   }
 
+  async updateTsConfigAll() {
+    const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
+    tsconfigAll.references = this.projects
+      // TODO(dmaretskyi): Blade runner doesn't build.
+      .filter((project) => !project.name.includes('blade-runner'))
+      .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
+      .map((project) => {
+        return { path: relative(this.rootDir, join(project.path, 'tsconfig.json')) };
+      });
+
+    await saveJson(join(this.rootDir, 'tsconfig.all.json'), tsconfigAll, this.options.verbose);
+  }
+
   async printStats() {
     const stats: Record<
       string,
@@ -448,7 +468,7 @@ export class Toolbox {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
 
-      // Skip uncatagorized projects.
+      // Skip uncategorized projects.
       const relativePath = relative(this.rootDir, project.path);
       if (!relativePath.startsWith('packages') || relativePath.split('/').length < 3) {
         continue;

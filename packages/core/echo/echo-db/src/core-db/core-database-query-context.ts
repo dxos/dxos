@@ -86,7 +86,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const processedResults = await Promise.all(
       (response.results ?? []).map((result) => this._filterMapResult(ctx, filter, start, result)),
     );
-    const results = processedResults.filter(nonNullable);
+    let results = processedResults.filter(nonNullable);
 
     // TODO(dmaretskyi): Merge in results from local working set.
 
@@ -95,6 +95,10 @@ export class CoreDatabaseQueryContext implements QueryContext {
       fetchedFromIndex: response.results?.length ?? 0,
       loaded: results.length,
     });
+
+    if (typeof filter.options.limit === 'number') {
+      results = results.slice(0, filter.options.limit);
+    }
 
     return results;
   }

@@ -12,6 +12,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 export type CompletionOptions = {
+  debug?: boolean;
   onQuery: (text: string) => Promise<CompletionResult['options']>;
   onMatch: (data: any) => void;
 };
@@ -20,7 +21,7 @@ export type CompletionOptions = {
  * Autocomplete Codemirror extension.
  * https://codemirror.net/docs/ref/#autocomplete.autocompletion
  */
-export const completion = ({ onQuery, onMatch }: CompletionOptions): Extension => {
+export const completion = ({ debug, onQuery, onMatch }: CompletionOptions): Extension => {
   return [
     EditorView.theme({
       '.cm-completionDialog': {
@@ -31,6 +32,7 @@ export const completion = ({ onQuery, onMatch }: CompletionOptions): Extension =
     autocompletion({
       icons: false,
       activateOnTyping: true,
+      closeOnBlur: !debug,
       override: [
         async (context: CompletionContext): Promise<CompletionResult> => {
           const text = context.state.doc.toString();
@@ -44,9 +46,6 @@ export const completion = ({ onQuery, onMatch }: CompletionOptions): Extension =
       // TODO(burdon): Consts from grid (to line-up with grid).
       tooltipClass: () => 'cm-completionDialog !mt-[8px] !-ml-[4px] [&>ul]:!max-h-[264px]',
       optionClass: () => 'flex h-[33px] items-center',
-
-      // Uncomment to debug.
-      // closeOnBlur: true,
     }),
 
     // Check for accepted completion metadata in the transaction.

@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -14,5 +15,9 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../react-hooks"
+    }
+  ]
 }

@@ -8,6 +8,7 @@
       "ESNext"
     ],
     "module": "ESNext",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -20,5 +21,24 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/react-client"
+    }
+  ]
 }

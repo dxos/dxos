@@ -2,24 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Types } from 'effect';
+import { Option, type Types } from 'effect';
 
-import { AST, JSONSchema, S } from '@dxos/effect';
+import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { removeUndefinedProperties } from '@dxos/util';
+import { orderKeys } from '@dxos/util';
 
 import {
-  getObjectAnnotation,
+  EchoIdentifierAnnotationId,
+  EntityKind,
+  EntityKindSchema,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
   type JsonSchemaType,
+  LabelAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  ReferenceAnnotationId,
+  getEchoIdentifierAnnotation,
+  getObjectAnnotation,
 } from '../ast';
+import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
-import { createEchoReferenceSchema, Expando, ref, type JsonSchemaReferenceInfo } from '../handler';
+import { Expando, ObjectId } from '../object';
 
 /**
  * @internal
@@ -36,7 +43,7 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSche
 
   // TODO(dmaretskyi): Fix those in the serializer.
   jsonSchema.type = 'object';
-  delete (jsonSchema as any).anyOf;
+  delete jsonSchema.anyOf;
   return jsonSchema;
 };
 
@@ -44,15 +51,8 @@ interface EchoRefinement {
   type?: ObjectAnnotation;
   reference?: ObjectAnnotation;
   annotations?: PropertyMetaAnnotation;
+  generator?: string;
 }
-
-const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
-  [ObjectAnnotationId]: 'type',
-  [PropertyMetaAnnotationId]: 'annotations',
-
-  // TODO(dmaretskyi): Remove.
-  [ReferenceAnnotationId]: 'reference',
-};
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -93,69 +93,79 @@ export const toPropType = (type?: PropType): string => {
 export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
+  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
-    jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
+    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
+  }
+
+  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+  if (echoIdentifier) {
+    jsonSchema.$id = echoIdentifier;
   }
 
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
-    (jsonSchema as any).$id = `dxn:type:${objectAnnotation.typename}`;
-    (jsonSchema as any).version = objectAnnotation.version;
+    // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
+    if (!jsonSchema.$id) {
+      jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    }
+    jsonSchema.entityKind = objectAnnotation.kind;
+    jsonSchema.version = objectAnnotation.version;
+    jsonSchema.typename = objectAnnotation.typename;
   }
 
   // Fix field order.
   // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
   // TODO(dmaretskyi): `orderFields` util.
-  // jsonSchema = Object.assign(
-  //   {
-  //     $schema: undefined,
-  //     $id: undefined,
-  //     version: undefined,
-  //     type: undefined,
-  //   },
-  //   jsonSchema,
-  // );
+  jsonSchema = orderKeys(jsonSchema, [
+    '$schema',
+    '$id',
+    'entityKind',
+    'typename',
+    'version',
+
+    'type',
+
+    'enum',
+
+    'properties',
+    'required',
+    'propertyOrder',
+    'items',
+    'additionalProperties',
+
+    'anyOf',
+  ]);
 
   return jsonSchema;
 };
 
 const withEchoRefinements = (ast: AST.AST): AST.AST => {
-  let recursiveResult: AST.AST = ast;
-  if (AST.isTypeLiteral(ast)) {
-    recursiveResult = new AST.TypeLiteral(
-      ast.propertySignatures.map(
-        (prop) =>
-          new AST.PropertySignature(
-            prop.name,
-            withEchoRefinements(prop.type),
-            prop.isOptional,
-            prop.isReadonly,
-            prop.annotations,
-          ),
-      ),
-      ast.indexSignatures,
-    );
-  } else if (AST.isUnion(ast)) {
-    recursiveResult = AST.Union.make(
-      ast.types.map((t) => withEchoRefinements(t)),
-      ast.annotations,
-    );
-  } else if (AST.isTupleType(ast)) {
-    recursiveResult = new AST.TupleType(
-      ast.elements.map((t) => new AST.OptionalType(withEchoRefinements(t.type), t.isOptional, t.annotations)),
-      ast.rest.map((t) => new AST.Type(withEchoRefinements(t.type), t.annotations)),
-      ast.isReadonly,
-      ast.annotations,
-    );
+  let recursiveResult: AST.AST;
+  if (AST.isSuspend(ast)) {
+    // Precompute JSON schema for suspended AST since effect serializer does not support it.
+    const suspendedAst = ast.f();
+    const jsonSchema = toJsonSchema(S.make(suspendedAst));
+    recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
+      [AST.JSONSchemaAnnotationId]: jsonSchema,
+    });
+  } else if (AST.isTypeLiteral(ast)) {
+    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = makeAnnotatedRefinement(recursiveResult, {
+      [AST.JSONSchemaAnnotationId]: {
+        propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
+      } satisfies JsonSchemaType,
+    });
+  } else {
+    recursiveResult = mapAst(ast, withEchoRefinements);
   }
 
   const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
-    return new AST.Refinement(recursiveResult, () => null as any, {
+    return makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });
   }
@@ -252,7 +262,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
-  const fields: S.Struct.Fields = {};
+  let fields: S.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
   let immutableIdField: S.Schema<any> | undefined;
   for (const [key, value] of propertyList) {
@@ -264,6 +274,10 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
         ? toEffectSchema(value, defs)
         : S.optional(toEffectSchema(value, defs));
     }
+  }
+
+  if (root.propertyOrder) {
+    fields = orderKeys(fields, root.propertyOrder as any);
   }
 
   let schema: S.Schema<any, any, unknown>;
@@ -297,7 +311,8 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
-    return createEchoReferenceSchema(echoRefinement.reference);
+    const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
+    return createEchoReferenceSchema(echoId, echoRefinement.reference.typename, echoRefinement.reference.version);
   }
 
   return S.Any;
@@ -306,7 +321,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 // TODO(dmaretskyi): Types.
 const refToEffectSchema = (root: any): S.Schema<any> => {
   if (!('reference' in root)) {
-    return ref(Expando);
+    return Ref(Expando);
   }
   const reference: JsonSchemaReferenceInfo = root.reference;
   if (typeof reference !== 'object') {
@@ -317,17 +332,14 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
   invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
 
   return createEchoReferenceSchema(
-    removeUndefinedProperties({
-      typename: targetSchemaDXN.parts[0],
-      version: reference.schemaVersion,
-      schemaId: reference.schemaObject,
-    }),
+    targetSchemaDXN.toString(),
+    targetSchemaDXN.kind === DXN.kind.TYPE ? targetSchemaDXN.parts[0] : undefined,
+    reference.schemaVersion,
   );
 };
 
 //
 // Annotations
-// TODO(burdon): Pass in CustomAnnotations to keep separate.
 //
 
 /**
@@ -335,7 +347,19 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId];
+const ECHO_REFINEMENTS = [
+  ObjectAnnotationId,
+  PropertyMetaAnnotationId,
+  LabelAnnotationId,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
+];
+
+const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
+  // TODO(dmaretskyi): Extract out.
+  [PropertyMetaAnnotationId]: 'annotations',
+  [GeneratorAnnotationId]: 'generator',
+};
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
@@ -343,11 +367,19 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
   const echoRefinement: EchoRefinement = {};
   for (const annotation of ECHO_REFINEMENTS) {
     if (annotations[annotation] != null) {
-      echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      if (annotationToRefinementKey[annotation]) {
+        echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      }
     }
   }
   if (Object.keys(echoRefinement).length > 0) {
     schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
+  }
+
+  const echoIdentifier = annotations[EchoIdentifierAnnotationId];
+  if (echoIdentifier) {
+    schemaFields[ECHO_REFINEMENT_KEY] ??= {};
+    schemaFields[ECHO_REFINEMENT_KEY].schemaId = echoIdentifier;
   }
 
   // Custom (at end).
@@ -373,13 +405,32 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
     }
   }
 
-  // TODO(burdon): References.
-  // if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
-  //   annotations[ObjectAnnotationId] = {
-  //     typename: DXN.parse(schema.$id).parts[0],
-  //     version: (schema as any).version,
-  //   };
-  // }
+  // Limit to dxn:echo: URIs.
+  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
+    annotations[EchoIdentifierAnnotationId] = schema.$id;
+  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
+    const id = schema?.echo?.type?.schemaId;
+    if (ObjectId.isValid(id)) {
+      annotations[EchoIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
+    }
+  }
+
+  if (schema.typename) {
+    annotations[ObjectAnnotationId] ??= {
+      kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
+      typename: schema.typename,
+      version: schema.version ?? '0.1.0',
+    } satisfies ObjectAnnotation;
+  }
+
+  // Decode legacy schema.
+  if (!schema.typename && schema?.echo?.type) {
+    annotations[ObjectAnnotationId] ??= {
+      kind: EntityKind.Object,
+      typename: schema.echo.type.typename,
+      version: schema.echo.type.version,
+    } satisfies ObjectAnnotation;
+  }
 
   // Custom (at end).
   for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
@@ -389,4 +440,8 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   }
 
   return annotations;
+};
+
+const makeAnnotatedRefinement = (ast: AST.AST, annotations: AST.Annotations): AST.Refinement => {
+  return new AST.Refinement(ast, () => Option.none(), annotations);
 };

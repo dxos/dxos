@@ -155,7 +155,15 @@ export { GridRoot, GridContent, useGridContext, createGridScope };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
-export { colToA1Notation, rowToA1Notation, closestCell, commentedClassName } from '@dxos/lit-grid';
+export {
+  colToA1Notation,
+  rowToA1Notation,
+  closestCell,
+  commentedClassName,
+  toPlaneCellIndex,
+  parseCellIndex,
+  cellQuery,
+} from '@dxos/lit-grid';
 
 export type {
   DxGridRange,
@@ -165,8 +173,10 @@ export type {
   DxGridPlaneRange,
   DxGridPlaneCells,
   DxGridCellIndex,
+  DxGridPlaneCellIndex,
   DxGridCellValue,
   DxGridPlane,
   DxGridPosition,
+  DxGridPlanePosition,
   DxGridAxis,
 } from '@dxos/lit-grid';

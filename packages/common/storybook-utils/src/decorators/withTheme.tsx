@@ -30,7 +30,7 @@ export const withTheme: Decorator = (Story, context) => {
   }, [channel]);
 
   return (
-    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={context?.parameters?.translations}>
+    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={context?.parameters?.translations} noCache>
       <MemoizedStory />
     </ThemeProvider>
   );

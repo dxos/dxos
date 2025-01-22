@@ -7,6 +7,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -20,5 +21,39 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-observability"
+    }
+  ]
 }

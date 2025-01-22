@@ -25,15 +25,26 @@ export default [
         'trigger select label': 'Trigger',
         'trigger select placeholder': 'Trigger type',
 
-        'trigger type subscription': 'Subscription',
         'trigger type timer': 'Timer',
         'trigger type webhook': 'Webhook',
         'trigger type websocket': 'Websocket',
+        'trigger type subscription': 'Subscription',
+        'trigger type email': 'Email',
 
         'trigger filter': 'Filter',
         'trigger cron': 'Cron',
         'trigger method': 'Method',
         'trigger endpoint': 'Endpoint',
+
+        'trigger copy url': 'Copy URL',
+        'trigger copy email': 'Copy Email',
+
+        'trigger meta add': 'Add',
+        'trigger meta remove': 'Remove',
+        'trigger meta prop name placeholder': 'New meta property name',
+
+        'open assistant panel label': 'Show Assistant',
+        'assistant panel label': 'Assistant',
       },
     },
   },

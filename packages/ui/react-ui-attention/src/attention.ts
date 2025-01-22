@@ -4,7 +4,8 @@
 
 import { untracked } from '@preact/signals-core';
 
-import { create, type ReactiveObject, S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 export const AttentionSchema = S.mutable(
@@ -38,15 +39,17 @@ export class AttentionManager {
 
   /**
    * Currently attended element.
+   *
+   * @reactive
    */
-  get current() {
+  get current(): ReactiveObject<readonly string[]> {
     return this._state.current;
   }
 
   /**
    * All attention paths.
    */
-  keys() {
+  keys(): string[][] {
     return Array.from(this._map.keys());
   }
 
@@ -66,6 +69,8 @@ export class AttentionManager {
 
   /**
    * Update the currently attended element.
+   *
+   * @internal
    */
   update(nextKey: string[]) {
     const currentKey = untracked(() => this.current);

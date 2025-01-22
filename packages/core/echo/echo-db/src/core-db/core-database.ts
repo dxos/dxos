@@ -18,8 +18,15 @@ import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
+import {
+  encodeReference,
+  isEncodedReference,
+  Reference,
+  type ObjectStructure,
+  type SpaceDoc,
+  type SpaceState,
+} from '@dxos/echo-protocol';
+import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -28,7 +35,7 @@ import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues, setDeep } from '@dxos/util';
+import { chunkArray, deepMapValues, defaultMap, setDeep } from '@dxos/util';
 
 import {
   AutomergeDocumentLoaderImpl,
@@ -37,7 +44,7 @@ import {
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
 import { CoreDatabaseQueryContext } from './core-database-query-context';
-import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
+import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
@@ -60,6 +67,20 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
+export type ObjectPlacement = 'root-doc' | 'linked-doc';
+
+export type AddCoreOptions = {
+  /**
+   * Where to place the object in the Automerge document tree.
+   * Root document is always loaded with the space.
+   * Linked documents are loaded lazily.
+   * Placing large number of objects in the root document may slow down the initial load.
+   *
+   * @default 'linked-doc'
+   */
+  placeIn?: ObjectPlacement;
+};
+
 /**
  *
  */
@@ -74,6 +95,13 @@ export class CoreDatabase {
   private readonly _spaceKey: PublicKey;
 
   private readonly _objects = new Map<string, ObjectCore>();
+
+  /**
+   * DXN string -> ObjectId.
+   * Stores the targets of strong dependencies to the objects that depend on them.
+   * When we load an object that doesn't have it's strong deps resolved, we wait for the deps to be loaded first.
+   */
+  private readonly _strongDepsIndex = new Map<string, ObjectId[]>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -155,7 +183,7 @@ export class CoreDatabase {
     }
 
     const elapsed = performance.now() - start;
-    if (elapsed > 1000) {
+    if (elapsed > 1_000) {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
@@ -264,13 +292,20 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(
+    objectId: string,
+    { timeout, returnWithUnsatisfiedDeps }: LoadObjectOptions = {},
+  ): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
-    if (core) {
+    if (core && (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core))) {
       return core;
     }
+    const isReady = () => {
+      const core = this.getObjectCoreById(objectId);
+      return core ? returnWithUnsatisfiedDeps || this._areDepsSatisfied(core) : false;
+    };
     const waitForUpdate = this._updateEvent
-      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady())
       .then(() => this.getObjectCoreById(objectId));
     this._automergeDocLoader.loadObjectDocument(objectId);
 
@@ -279,7 +314,11 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
+    {
+      inactivityTimeout = 30_000,
+      returnDeleted = false,
+      returnWithUnsatisfiedDeps = false,
+    }: { inactivityTimeout?: number; returnDeleted?: boolean; returnWithUnsatisfiedDeps?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');
@@ -291,6 +330,8 @@ export class CoreDatabase {
       const objectId = objectIds[i];
       const core = this.getObjectCoreById(objectId);
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
+        result[i] = undefined;
+      } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
         result[i] = undefined;
       } else if (core != null) {
         result[i] = core;
@@ -320,7 +361,10 @@ export class CoreDatabase {
           if (updatedIds.includes(objectToLoad.id)) {
             clearTimeout(inactivityTimeoutTimer);
             result[objectToLoad.resultIndex] =
-              !returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()
+              (!returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()) ||
+              (!returnWithUnsatisfiedDeps &&
+                this._objects.get(objectToLoad.id) &&
+                !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!))
                 ? undefined
                 : this.getObjectCoreById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
@@ -404,7 +448,7 @@ export class CoreDatabase {
   }
 
   // TODO(dmaretskyi): Rename `addObjectCore`.
-  addCore(core: ObjectCore) {
+  addCore(core: ObjectCore, opts?: AddCoreOptions) {
     if (core.database) {
       // Already in the database.
       if (core.database !== this) {
@@ -421,17 +465,22 @@ export class CoreDatabase {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    // TODO: create all objects as linked.
-    // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
-    // All objects should be created linked to root space doc after query indexing is ready to make them
-    // discoverable.
     let spaceDocHandle: DocHandleProxy<SpaceDoc>;
-    if (shouldObjectGoIntoFragmentedSpace(core)) {
-      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
-      spaceDocHandle.on('change', this._onDocumentUpdate);
-    } else {
-      spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
+    const placement = opts?.placeIn ?? 'linked-doc';
+    switch (placement) {
+      case 'linked-doc': {
+        spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
+        spaceDocHandle.on('change', this._onDocumentUpdate);
+        break;
+      }
+      // TODO(dmaretskyi): In the future we should forbid object placement in the root doc.
+      case 'root-doc': {
+        spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+        this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
+        break;
+      }
+      default:
+        throw new TypeError(`Unknown object placement: ${placement}`);
     }
 
     core.bind({
@@ -475,6 +524,37 @@ export class CoreDatabase {
       const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(toUnlink);
     }
+  }
+
+  /**
+   * Resets the object to the new state.
+   * Intended way to change the type of the object (for schema migrations).
+   * Any concurrent changes made by other peers will be overwritten.
+   */
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+    const { data, type } = params;
+
+    const core = await this.loadObjectCoreById(id);
+    invariant(core);
+
+    const mappedData = deepMapValues(data, (value) => {
+      if (Ref.isRef(value)) {
+        return { '/': value.dxn.toString() };
+      }
+      return value;
+    });
+
+    const existingStruct: ObjectStructure = core.getDecoded([]) as any;
+    const newStruct: ObjectStructure = {
+      ...existingStruct,
+      data: mappedData,
+    };
+
+    if (type !== undefined) {
+      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+    }
+
+    core.setDecoded([], newStruct);
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
@@ -685,7 +765,7 @@ export class CoreDatabase {
       if (!objectCore) {
         createdObjectIds.push(updatedObject);
       } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
-        log.warn('object bound to incorrect document, going to rebind', {
+        log.verbose('object bound to incorrect document, going to rebind', {
           updatedObject,
           documentUrl: objectCore.docHandle.url,
           actualUrl: event.handle.url,
@@ -710,8 +790,23 @@ export class CoreDatabase {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded) {
     handle.on('change', this._onDocumentUpdate);
-    this._createObjectInDocument(handle, objectId);
-    this._scheduleThrottledUpdate([objectId]);
+    const core = this._createObjectInDocument(handle, objectId);
+    if (this._areDepsSatisfied(core)) {
+      this._scheduleThrottledUpdate([objectId]);
+    } else {
+      for (const dep of core.getStrongDependencies()) {
+        if (dep.isLocalObjectId()) {
+          const id = dep.parts[1];
+          this._automergeDocLoader.loadObjectDocument(id);
+        }
+      }
+    }
+    for (const dep of this._strongDepsIndex.get(objectId) ?? []) {
+      const core = this._objects.get(dep);
+      if (core && this._areDepsSatisfied(core)) {
+        this._scheduleThrottledUpdate([core.id]);
+      }
+    }
   }
 
   /**
@@ -735,6 +830,42 @@ export class CoreDatabase {
       docHandle,
       path: ['objects', core.id],
       assignFromLocalState: false,
+    });
+
+    const deps = core.getStrongDependencies();
+    for (const dxn of deps) {
+      if (!dxn.isLocalObjectId()) {
+        continue;
+      }
+      const depObjectId = dxn.parts[1];
+      if (this._objects.has(depObjectId)) {
+        continue;
+      }
+
+      defaultMap(this._strongDepsIndex, depObjectId, []).push(core.id);
+    }
+
+    return core;
+  }
+
+  private _areDepsSatisfied(core: ObjectCore, seen?: Set<ObjectId>): boolean {
+    seen ??= new Set<ObjectId>();
+    const deps = core.getStrongDependencies();
+
+    seen.add(core.id);
+    return deps.every((dep) => {
+      if (!dep.isLocalObjectId()) {
+        return true;
+      }
+      const depObjectId = dep.parts[1];
+      const depCore = this._objects.get(depObjectId);
+      if (!depCore) {
+        return false;
+      }
+      if (seen.has(depCore.id)) {
+        return true;
+      }
+      return this._areDepsSatisfied(depCore, seen);
     });
   }
 
@@ -815,14 +946,12 @@ export interface ItemsUpdatedEvent {
   itemsUpdated: Array<{ id: string }>;
 }
 
-export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
-  // NOTE: We need to store properties in the root document since space-list initialization
-  // expects it to be loaded as space become available.
-  return core.getType()?.objectId !== TYPE_PROPERTIES;
-};
-
 export type LoadObjectOptions = {
   timeout?: number;
+  /**
+   * Will not eagerly preload strong deps.
+   */
+  returnWithUnsatisfiedDeps?: boolean;
 };
 
 enum CoreDatabaseState {
@@ -844,6 +973,19 @@ export type GetObjectCoreByIdOptions = {
    * @default true
    */
   load?: boolean;
+};
+
+export type AtomicReplaceObjectParams = {
+  /**
+   * Update data.
+   * NOTE: This is not merged with the existing data.
+   */
+  data: any;
+
+  /**
+   * Update object type.
+   */
+  type?: DXN;
 };
 
 export type FlushOptions = {

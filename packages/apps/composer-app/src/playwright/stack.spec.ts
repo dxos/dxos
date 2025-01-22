@@ -27,7 +27,7 @@ test.describe('Stack tests', () => {
 
   test('create', async () => {
     await host.createSpace();
-    await host.createCollection(1);
+    await host.createObject({ type: 'Collection', nth: 1 });
     const stack = Stack.getStack(host.page);
     await expect(stack.sections()).toHaveCount(0);
     await expect(host.getObjectLinks()).toHaveCount(3);
@@ -35,9 +35,9 @@ test.describe('Stack tests', () => {
 
   test('create new document section', async () => {
     await host.createSpace();
-    await host.createCollection(1);
+    await host.createObject({ type: 'Collection', nth: 1 });
     await host.toggleCollectionCollapsed(2);
-    await Stack.createSection(host.page, 'markdownPlugin');
+    await Stack.createSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -50,8 +50,8 @@ test.describe('Stack tests', () => {
   // TODO(wittjosiah): This feature has been disabled.
   test.skip('create section from existing document', async () => {
     await host.createSpace();
-    await host.createObject('markdownPlugin');
-    await host.createCollection(1);
+    await host.createObject({ type: 'Document', nth: 1 });
+    await host.createObject({ type: 'Collection', nth: 1 });
     const stack = Stack.getStack(host.page);
     const doc = host.getObjectLinks().nth(1);
 
@@ -72,10 +72,10 @@ test.describe('Stack tests', () => {
   // TODO(wittjosiah): This feature has been disabled.
   test.skip('reorder sections', async () => {
     await host.createSpace();
-    await host.createCollection(1);
+    await host.createObject({ type: 'Collection', nth: 1 });
     await host.toggleCollectionCollapsed(2);
-    await Stack.createSection(host.page, 'markdownPlugin');
-    await Stack.createSection(host.page, 'markdownPlugin');
+    await Stack.createSection(host.page, 'Document');
+    await Stack.createSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     await expect(host.getObjectLinks()).toHaveCount(5);
     await expect(stack.sections()).toHaveCount(2);

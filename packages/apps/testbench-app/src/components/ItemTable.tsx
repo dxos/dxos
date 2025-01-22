@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/live-object';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table/deprecated';
 
 export type ItemTableProps<T> = {

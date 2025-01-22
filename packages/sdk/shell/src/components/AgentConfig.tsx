@@ -19,8 +19,8 @@ export const AgentConfig = ({
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
   const { t } = useTranslation('os');
   return (
-    <>
-      <h2 className={mx(descriptionText, 'text-center mbs-4')}>{t('agent heading')}</h2>
+    <div role='none' className='p-1'>
+      <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('agent heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(valenceColorText('error'), 'mlb-2')}>
           {validationMessage}
@@ -73,9 +73,7 @@ export const AgentConfig = ({
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side='bottom' classNames='z-50'>
-                    {t('destroy agent label')}
-                  </Tooltip.Content>
+                  <Tooltip.Content side='bottom'>{t('destroy agent label')}</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
             )}
@@ -124,6 +122,6 @@ export const AgentConfig = ({
           )}
         </>
       )}
-    </>
+    </div>
   );
 };

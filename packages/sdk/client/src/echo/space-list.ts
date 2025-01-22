@@ -17,9 +17,9 @@ import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query, type QueryOptions } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState, type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
@@ -300,7 +300,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(create(PropertiesType, meta ?? {}));
+    spaceProxy.db.add(create(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

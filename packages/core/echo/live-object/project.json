@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "live-object",
+  "tags": [
+    "scope:echo"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
+        ],
+        "injectGlobals": true,
+        "platforms": [
+          "browser",
+          "node"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
+}

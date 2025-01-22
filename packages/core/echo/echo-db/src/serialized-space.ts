@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EncodedReference, isLegacyReference, type LegacyEncodedReferenceObject } from '@dxos/echo-protocol';
-import { convertLegacyReference } from '@dxos/echo-protocol';
+import { type EncodedReference } from '@dxos/echo-protocol';
 import { deepMapValuesAsync } from '@dxos/util';
 
 /**
@@ -61,7 +60,7 @@ export type SerializedObject = {
   /**
    * Reference to a type.
    */
-  '@type'?: EncodedReference | LegacyEncodedReferenceObject | string;
+  '@type'?: EncodedReference | string;
 
   /**
    * Flag to indicate soft-deleted objects.
@@ -81,9 +80,6 @@ export type SerializedObject = {
  */
 export const normalizeSerializedObjectData = async (data: SerializedObject): Promise<SerializedObject> => {
   data = await deepMapValuesAsync(data, async (value, recurse) => {
-    if (isLegacyReference(value)) {
-      return convertLegacyReference(value);
-    }
     return recurse(value);
   });
 

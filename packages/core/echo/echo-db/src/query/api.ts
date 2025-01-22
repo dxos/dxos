@@ -7,7 +7,7 @@ import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dx
 
 import type { Filter$, FilterSource } from './filter';
 import { type Query } from './query';
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 
 /**
  * `query` API function declaration.
@@ -15,8 +15,8 @@ import { type EchoReactiveObject } from '../echo-handler';
 // TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
   (): Query;
-  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<EchoReactiveObject<Filter$.Object<F>>>;
-  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<EchoReactiveObject<any>>;
+  <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<ReactiveEchoObject<Filter$.Object<F>>>;
+  (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<ReactiveEchoObject<any>>;
 }
 
 /**
@@ -75,6 +75,11 @@ export type QueryOptions = {
    * @deprecated Use `spaceIds` instead.
    */
   spaces?: PublicKey[];
+
+  /**
+   * Return only the first `limit` results.
+   */
+  limit?: number;
 };
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
@@ -85,6 +90,7 @@ export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
     deleted: options.deleted,
     dataLocation: options.dataLocation,
     include: options.include,
+    limit: options.limit,
     spaces: options.spaces,
   };
 };

@@ -4,7 +4,7 @@
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import type { SpecificCredential } from '@dxos/credentials';
-import { type CoreDatabase, type EchoDatabase, type EchoReactiveObject } from '@dxos/echo-db';
+import { type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type CreateEpochRequest,
@@ -73,7 +73,7 @@ export interface Space {
   /**
    * Properties object.
    */
-  get properties(): EchoReactiveObject<any>;
+  get properties(): ReactiveEchoObject<any>;
 
   /**
    * Current state of the space.

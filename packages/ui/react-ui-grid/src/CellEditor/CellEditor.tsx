@@ -153,6 +153,7 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
 
   return (
     <div
+      data-testid='grid.cell-editor'
       ref={parentRef}
       className='absolute z-[1]'
       style={{

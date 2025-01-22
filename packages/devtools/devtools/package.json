@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.7.0",
+  "version": "0.7.4",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -34,7 +35,9 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",

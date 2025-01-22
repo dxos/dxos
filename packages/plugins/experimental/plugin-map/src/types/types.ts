@@ -4,43 +4,28 @@
 
 import { type LatLngLiteral } from 'leaflet';
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  TranslationsProvides,
-  SurfaceProvides,
-  MetadataRecordsProvides,
-} from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
-import { type SpaceInitProvides } from '@dxos/plugin-space';
-import { type StackProvides } from '@dxos/plugin-stack';
+import { S } from '@dxos/echo-schema';
 
-import { type MapControlType } from '../components';
+import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
 
-const MAP_ACTION = `${MAP_PLUGIN}/action`;
+export namespace MapAction {
+  const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
-export enum MapAction {
-  CREATE = `${MAP_ACTION}/create`,
-  TOGGLE = `${MAP_ACTION}/toggle`,
+  export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: MapType,
+    }),
+  }) {}
+
+  export class Toggle extends S.TaggedClass<Toggle>()(`${MAP_ACTION}/toggle`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
 }
-
-export type MapProvides = {};
-
-export type MapSettingsProps = {
-  type: MapControlType;
-  center?: LatLngLiteral;
-  zoom?: number;
-};
-
-export type MapPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides &
-  SpaceInitProvides &
-  StackProvides;
 
 export type MapMarker = {
   id: string;

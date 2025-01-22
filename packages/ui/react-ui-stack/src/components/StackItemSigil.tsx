@@ -159,7 +159,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }} side='bottom'>
+          <Tooltip.Content side='bottom'>
             {triggerLabel}
             <Tooltip.Arrow />
           </Tooltip.Content>

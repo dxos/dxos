@@ -63,7 +63,7 @@ export const IdentityActionChooserImpl = ({
     (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
   );
   return (
-    <div role='none' className='bs-40 grow overflow-y-auto overflow-x-hidden'>
+    <div role='none' className='bs-40 grow overflow-y-auto'>
       <DeviceList
         devices={devices}
         connectionState={connectionState}

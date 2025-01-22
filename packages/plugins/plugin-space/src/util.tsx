@@ -2,47 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
-import {
-  create,
-  isReactiveObject,
-  getTypename,
-  getSchema,
-  getObjectAnnotation,
-  type Expando,
-  EXPANDO_TYPENAME,
-} from '@dxos/echo-schema';
+import { createIntent, type PromiseIntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
-  ACTION_TYPE,
   ACTION_GROUP_TYPE,
-  actionGroupSymbol,
+  ACTION_TYPE,
+  cleanup,
+  getGraph,
+  memoize,
   type ActionData,
   type Graph,
-  type Node,
   type InvokeParams,
+  type Node,
   type NodeArg,
-  getGraph,
-  cleanup,
-  memoize,
 } from '@dxos/plugin-graph';
 import {
+  Filter,
   fullyQualifiedId,
   getSpace,
   isEchoObject,
   isSpace,
+  SpaceState,
   type Echo,
-  type EchoReactiveObject,
   type FilterSource,
   type Query,
   type QueryOptions,
+  type ReactiveEchoObject,
   type Space,
-  SpaceState,
 } from '@dxos/react-client/echo';
 
-import { SpaceAction, SPACE_PLUGIN } from './meta';
-import { CollectionType } from './types';
+import { SPACE_PLUGIN } from './meta';
+import { CollectionType, SpaceAction } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const SPACE_TYPE = 'dxos.org/type/Space';
@@ -59,12 +52,16 @@ const EMPTY_ARRAY: never[] = [];
  * @param options
  * @returns
  */
-export const memoizeQuery = <T extends EchoReactiveObject<any>>(
+export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
 ): T[] => {
-  const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
+  const key = JSON.stringify({
+    space: isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined,
+    filter: Filter.from(filter).toProto(),
+  });
+
   const query = memoize(
     () =>
       isSpace(spaceOrEcho)
@@ -78,6 +75,7 @@ export const memoizeQuery = <T extends EchoReactiveObject<any>>(
   return query?.objects ?? EMPTY_ARRAY;
 };
 
+// TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
   space: Space,
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
@@ -100,7 +98,7 @@ const getCollectionGraphNodePartials = ({
   navigable: boolean;
   collection: CollectionType;
   space: Space;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
     disabled: !navigable,
@@ -109,9 +107,9 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(isEchoObject);
+      collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
     },
-    onTransferStart: (child: Node<EchoReactiveObject<any>>, index?: number) => {
+    onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -129,19 +127,20 @@ const getCollectionGraphNodePartials = ({
       // } else {
 
       // Add child to destination collection.
-      if (!collection.objects.includes(child.data)) {
+      // TODO(dmaretskyi): Compare by id.
+      if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, child.data);
+          collection.objects.splice(index, 0, makeRef(child.data));
         } else {
-          collection.objects.push(child.data);
+          collection.objects.push(makeRef(child.data));
         }
       }
 
       // }
     },
-    onTransferEnd: (child: Node<EchoReactiveObject<any>>, destination: Node) => {
+    onTransferEnd: (child: Node<ReactiveEchoObject<any>>, destination: Node) => {
       // Remove child from origin collection.
-      const index = collection.objects.indexOf(child.data);
+      const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
         collection.objects.splice(index, 1);
       }
@@ -155,14 +154,14 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<EchoReactiveObject<any>>, index?: number) => {
+    onCopy: async (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
       if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, newObject);
+        collection.objects.splice(index, 0, makeRef(newObject));
       } else {
-        collection.objects.push(newObject);
+        collection.objects.push(makeRef(newObject));
       }
     },
   };
@@ -188,10 +187,10 @@ export const constructSpaceNode = ({
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
-  const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename];
+  const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename]?.target;
   const partials =
     space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
       ? getCollectionGraphNodePartials({ collection, space, resolve, navigable })
@@ -200,6 +199,7 @@ export const constructSpaceNode = ({
   return {
     id: space.id,
     type: SPACE_TYPE,
+    cacheable: ['label', 'icon', 'role'],
     data: space,
     properties: {
       ...partials,
@@ -212,68 +212,6 @@ export const constructSpaceNode = ({
   };
 };
 
-export const constructSpaceActionGroups = ({
-  space,
-  navigable,
-  dispatch,
-}: {
-  space: Space;
-  navigable: boolean;
-  dispatch: IntentDispatcher;
-}) => {
-  const state = space.state.get();
-  const hasPendingMigration = checkPendingMigration(space);
-  const getId = (id: string) => `${id}/${space.id}`;
-
-  if (state !== SpaceState.SPACE_READY || hasPendingMigration) {
-    return [];
-  }
-
-  const collection = space.properties[CollectionType.typename];
-  const actions: NodeArg<typeof actionGroupSymbol>[] = [
-    {
-      id: getId(SpaceAction.ADD_OBJECT),
-      type: ACTION_GROUP_TYPE,
-      data: actionGroupSymbol,
-      properties: {
-        label: ['create object in space label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--plus--regular',
-        disposition: 'toolbar',
-        menuType: 'searchList',
-        testId: 'spacePlugin.createObject',
-      },
-      nodes: [
-        {
-          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-          type: ACTION_TYPE,
-          data: () =>
-            dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
-              },
-              ...(navigable
-                ? [
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]
-                : []),
-            ]),
-          properties: {
-            label: ['create collection label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--cards-three--regular',
-            testId: 'spacePlugin.createCollection',
-          },
-        },
-      ],
-    },
-  ];
-
-  return actions;
-};
-
 export const constructSpaceActions = ({
   space,
   dispatch,
@@ -281,7 +219,7 @@ export const constructSpaceActions = ({
   migrating,
 }: {
   space: Space;
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
   personal?: boolean;
   migrating?: boolean;
 }) => {
@@ -292,10 +230,10 @@ export const constructSpaceActions = ({
 
   if (hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.MIGRATE),
+      id: getId(SpaceAction.Migrate._tag),
       type: ACTION_GROUP_TYPE,
       data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } });
+        await dispatch(createIntent(SpaceAction.Migrate, { space }));
       },
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
@@ -310,13 +248,26 @@ export const constructSpaceActions = ({
     const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
       {
-        id: getId(SpaceAction.SHARE),
+        id: getId(SpaceAction.OpenCreateObject._tag),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
+        },
+        properties: {
+          label: ['create object in space label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--plus--regular',
+          disposition: 'toolbar',
+          testId: 'spacePlugin.createObject',
+        },
+      },
+      {
+        id: getId(SpaceAction.Share._tag),
         type: ACTION_TYPE,
         data: async () => {
           if (locked) {
             return;
           }
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { space } });
+          await dispatch(createIntent(SpaceAction.Share, { space }));
         },
         properties: {
           label: ['share space label', { ns: SPACE_PLUGIN }],
@@ -329,14 +280,14 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: locked ? getId(SpaceAction.UNLOCK) : getId(SpaceAction.LOCK),
+        id: locked ? getId(SpaceAction.Unlock._tag) : getId(SpaceAction.Lock._tag),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({
-            plugin: SPACE_PLUGIN,
-            action: locked ? SpaceAction.UNLOCK : SpaceAction.LOCK,
-            data: { space },
-          });
+          if (locked) {
+            await dispatch(createIntent(SpaceAction.Unlock, { space }));
+          } else {
+            await dispatch(createIntent(SpaceAction.Lock, { space }));
+          }
         },
         properties: {
           label: [locked ? 'unlock space label' : 'lock space label', { ns: SPACE_PLUGIN }],
@@ -344,10 +295,10 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.RENAME),
+        id: getId(SpaceAction.Rename._tag),
         type: ACTION_TYPE,
         data: async (params: InvokeParams) => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } });
+          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params.caller }));
         },
         properties: {
           label: ['rename space label', { ns: SPACE_PLUGIN }],
@@ -359,10 +310,10 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.OPEN_SETTINGS),
+        id: getId(SpaceAction.OpenSettings._tag),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_SETTINGS, data: { space } });
+          await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
         },
         properties: {
           label: ['open space settings label', { ns: SPACE_PLUGIN }],
@@ -375,10 +326,10 @@ export const constructSpaceActions = ({
   // TODO(wittjosiah): Consider moving close space into the space settings dialog.
   if (state !== SpaceState.SPACE_INACTIVE && !hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.CLOSE),
+      id: getId(SpaceAction.Close._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } });
+        await dispatch(createIntent(SpaceAction.Close, { space }));
       },
       properties: {
         label: ['close space label', { ns: SPACE_PLUGIN }],
@@ -390,10 +341,10 @@ export const constructSpaceActions = ({
 
   if (state === SpaceState.SPACE_INACTIVE) {
     actions.push({
-      id: getId(SpaceAction.OPEN),
+      id: getId(SpaceAction.Open._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } });
+        await dispatch(createIntent(SpaceAction.Open, { space }));
       },
       properties: {
         label: ['open space label', { ns: SPACE_PLUGIN }],
@@ -412,10 +363,10 @@ export const createObjectNode = ({
   navigable = false,
   resolve,
 }: {
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
   space: Space;
   navigable?: boolean;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = getTypename(object);
   if (!type) {
@@ -435,6 +386,7 @@ export const createObjectNode = ({
   return {
     id: fullyQualifiedId(object),
     type,
+    cacheable: ['label', 'icon', 'role'],
     data: object,
     properties: {
       ...partials,
@@ -449,83 +401,40 @@ export const createObjectNode = ({
   };
 };
 
-export const constructObjectActionGroups = ({
-  object,
-  navigable,
-  dispatch,
-}: {
-  object: EchoReactiveObject<any>;
-  navigable: boolean;
-  dispatch: IntentDispatcher;
-}) => {
-  if (!(object instanceof CollectionType)) {
-    return [];
-  }
-
-  const collection = object;
-  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
-  const actions: NodeArg<typeof actionGroupSymbol>[] = [
-    {
-      id: getId(SpaceAction.ADD_OBJECT),
-      type: ACTION_GROUP_TYPE,
-      data: actionGroupSymbol,
-      properties: {
-        label: ['create object in collection label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--plus--regular',
-        disposition: 'toolbar',
-        menuType: 'searchList',
-        testId: 'spacePlugin.createObject',
-      },
-      nodes: [
-        {
-          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-          type: ACTION_TYPE,
-          data: () =>
-            dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
-              },
-              ...(navigable
-                ? [
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]
-                : []),
-            ]),
-          properties: {
-            label: ['create collection label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--cards-three--regular',
-            testId: 'spacePlugin.createCollection',
-          },
-        },
-      ],
-    },
-  ];
-
-  return actions;
-};
-
 export const constructObjectActions = ({
   node,
   dispatch,
+  navigable = false,
 }: {
-  node: Node<EchoReactiveObject<any>>;
-  dispatch: IntentDispatcher;
+  node: Node<ReactiveEchoObject<any>>;
+  dispatch: PromiseIntentDispatcher;
+  navigable?: boolean;
 }) => {
   const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
+    ...(object instanceof CollectionType
+      ? [
+          {
+            id: getId(SpaceAction.OpenCreateObject._tag),
+            type: ACTION_TYPE,
+            data: async () => {
+              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
+            },
+            properties: {
+              label: ['create object in collection label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--plus--regular',
+              disposition: 'toolbar',
+              testId: 'spacePlugin.createObject',
+            },
+          },
+        ]
+      : []),
     {
-      id: getId(SpaceAction.RENAME_OBJECT),
+      id: getId(SpaceAction.RenameObject._tag),
       type: ACTION_TYPE,
       data: async (params: InvokeParams) => {
-        await dispatch({
-          action: SpaceAction.RENAME_OBJECT,
-          data: { object, ...params },
-        });
+        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params.caller }));
       },
       properties: {
         label: [
@@ -539,19 +448,14 @@ export const constructObjectActions = ({
       },
     },
     {
-      id: getId(SpaceAction.REMOVE_OBJECTS),
+      id: getId(SpaceAction.RemoveObjects._tag),
       type: ACTION_TYPE,
       data: async () => {
         const graph = getGraph(node);
         const collection = graph
           .nodes(node, { relation: 'inbound' })
           .find(({ data }) => data instanceof CollectionType)?.data;
-        await dispatch([
-          {
-            action: SpaceAction.REMOVE_OBJECTS,
-            data: { objects: [object], collection },
-          },
-        ]);
+        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
         label: [
@@ -563,17 +467,34 @@ export const constructObjectActions = ({
         testId: 'spacePlugin.deleteObject',
       },
     },
+    ...(navigable || !(object instanceof CollectionType)
+      ? [
+          {
+            id: getId('copy-link'),
+            type: ACTION_TYPE,
+            data: async () => {
+              const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+              await navigator.clipboard.writeText(url);
+            },
+            properties: {
+              label: ['copy link label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--link--regular',
+              testId: 'spacePlugin.copyLink',
+            },
+          },
+        ]
+      : []),
+    // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId('copy-link'),
+      id: NavigationAction.Expose._tag,
       type: ACTION_TYPE,
       data: async () => {
-        const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
-        await navigator.clipboard.writeText(url);
+        await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(object) }));
       },
       properties: {
-        label: ['copy link label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--link--regular',
-        testId: 'spacePlugin.copyLink',
+        label: ['expose object label', { ns: SPACE_PLUGIN }],
+        icon: 'ph--eye--regular',
+        testId: 'spacePlugin.exposeObject',
       },
     },
   ];
@@ -601,21 +522,21 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: EchoReactiveObject<any>,
-  resolve: MetadataResolver,
-): Promise<EchoReactiveObject<any>[]> => {
+  object: ReactiveEchoObject<any>,
+  resolve: (typename: string) => Record<string, any>,
+): Promise<ReactiveEchoObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
     return [];
   }
 
   const metadata = resolve(type);
-  const loadReferences = metadata.loadReferences;
+  const loadReferences = metadata?.loadReferences;
   if (typeof loadReferences !== 'function') {
     return [];
   }
 
-  const objects: EchoReactiveObject<any>[] = await loadReferences(object);
+  const objects: ReactiveEchoObject<any>[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };
@@ -624,7 +545,11 @@ export const getNestedObjects = async (
  * @deprecated Workaround for ECHO not supporting clone.
  */
 // TODO(burdon): Remove.
-export const cloneObject = async (object: Expando, resolve: MetadataResolver, newSpace: Space): Promise<Expando> => {
+export const cloneObject = async (
+  object: Expando,
+  resolve: (typename: string) => Record<string, any>,
+  newSpace: Space,
+): Promise<Expando> => {
   const schema = getSchema(object);
   const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);

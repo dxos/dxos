@@ -4,47 +4,49 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { Dialog } from '@dxos/react-ui';
-import { ClipboardProvider, IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
+import { Clipboard, Dialog } from '@dxos/react-ui';
+import { IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
 
-import { ClientAction } from '../meta';
+import { CLIENT_PLUGIN } from '../meta';
+import { ClientAction } from '../types';
+
+export const IDENTITY_DIALOG = `${CLIENT_PLUGIN}/IdentityDialog`;
 
 export const IdentityDialog = (props: IdentityPanelProps) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
 
   const handleDone = useCallback(
     () =>
-      dispatch({
-        action: LayoutAction.SET_LAYOUT,
-        data: {
+      dispatch(
+        createIntent(LayoutAction.SetLayout, {
           element: 'dialog',
           state: false,
-        },
-      }),
+        }),
+      ),
     [dispatch],
   );
 
   const handleResetStorage = useCallback(async () => {
     await client.reset();
-    await dispatch({ action: ClientAction.RESET_STORAGE });
+    await dispatch(createIntent(ClientAction.ResetStorage));
   }, [dispatch]);
 
   const handleRecover = useCallback(async () => {
     await client.reset();
-    await dispatch({ action: ClientAction.RESET_STORAGE, data: { target: 'recoverIdentity' } });
+    await dispatch(createIntent(ClientAction.ResetStorage, { target: 'recoverIdentity' }));
   }, [dispatch]);
 
   const handleJoinNewIdentity = useCallback(async () => {
     await client.reset();
-    await dispatch({ action: ClientAction.RESET_STORAGE, data: { target: 'deviceInvitation' } });
+    await dispatch(createIntent(ClientAction.ResetStorage, { target: 'deviceInvitation' }));
   }, [dispatch]);
 
   return (
     <Dialog.Content>
-      <ClipboardProvider>
+      <Clipboard.Provider>
         <IdentityPanel
           {...props}
           doneActionParent={<Dialog.Close asChild />}
@@ -53,7 +55,7 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
           onRecover={handleRecover}
           onJoinNewIdentity={handleJoinNewIdentity}
         />
-      </ClipboardProvider>
+      </Clipboard.Provider>
     </Dialog.Content>
   );
 };

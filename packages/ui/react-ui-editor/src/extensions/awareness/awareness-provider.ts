@@ -120,6 +120,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
   private _handlePostMessage(message: ProtocolMessage) {
     invariant(message.kind === 'post');
+    // TODO(wittjosiah): Is it helpful or confusing to show cursors for self on other devices?
     this._remoteStates.set(message.state.peerId, message.state);
     this.remoteStateChange.emit();
   }

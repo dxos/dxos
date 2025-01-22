@@ -4,16 +4,18 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { create, Expando, getSchema } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
+import { Contact, Task } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { create, getSchema, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { Contact, EchoTestBuilder, Task } from './testing';
+import { EchoTestBuilder } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -124,16 +126,22 @@ describe('Serializer', () => {
         const obj = create({
           title: 'Main task',
           subtasks: [
-            create(Expando, {
-              title: 'Subtask 1',
-            }),
-            create(Expando, {
-              title: 'Subtask 2',
-            }),
+            makeRef(
+              create(Expando, {
+                title: 'Subtask 1',
+              }),
+            ),
+            makeRef(
+              create(Expando, {
+                title: 'Subtask 2',
+              }),
+            ),
           ],
-          previous: create(Expando, {
-            title: 'Previous task',
-          }),
+          previous: makeRef(
+            create(Expando, {
+              title: 'Previous task',
+            }),
+          ),
         });
         db.add(obj);
         await db.flush();
@@ -215,14 +223,6 @@ describe('Serializer', () => {
         expect(data.objects.length).to.eq(totalObjects);
       }
     });
-
-    test('loads v1 pre-dxn data', async () => {
-      const serializer = new Serializer();
-
-      const { db } = await builder.createDatabase();
-      await serializer.import(db, V1_PRE_DXN_DATA);
-      await assertNestedObjects(db);
-    });
   });
 });
 
@@ -232,63 +232,7 @@ const assertNestedObjects = async (db: EchoDatabase) => {
   const main = objects.find((object) => object.title === 'Main task')!;
   expect(main).to.exist;
   expect(main.subtasks).to.have.length(2);
-  expect(main.subtasks[0].title).to.eq('Subtask 1');
-  expect(main.subtasks[1].title).to.eq('Subtask 2');
-  expect(main.previous.title).to.eq('Previous task');
-};
-
-const V1_PRE_DXN_DATA = {
-  objects: [
-    {
-      '@id': '01J0B41Q6MG20DSWGFZYFAQS7R',
-      title: 'Subtask 1',
-      '@version': 1,
-      '@meta': { keys: [] },
-      '@timestamp': 'Fri, 14 Jun 2024 10:17:48 GMT',
-    },
-    {
-      '@id': '01J0B41Q6PNGJZ8EC1AT9G5QPZ',
-      title: 'Subtask 2',
-      '@version': 1,
-      '@meta': { keys: [] },
-      '@timestamp': 'Fri, 14 Jun 2024 10:17:48 GMT',
-    },
-    {
-      '@id': '01J0B41Q6PG9VCZXVQ060MXBCH',
-      title: 'Previous task',
-      '@version': 1,
-      '@meta': { keys: [] },
-      '@timestamp': 'Fri, 14 Jun 2024 10:17:48 GMT',
-    },
-    {
-      '@id': '01J0B41Q6Q65Z4W54TZ8MQWS8R',
-      previous: {
-        '@type': 'dxos.echo.model.document.Reference',
-        itemId: '01J0B41Q6PG9VCZXVQ060MXBCH',
-        protocol: null,
-        host: null,
-      },
-      subtasks: [
-        {
-          '@type': 'dxos.echo.model.document.Reference',
-          itemId: '01J0B41Q6MG20DSWGFZYFAQS7R',
-          protocol: null,
-          host: null,
-        },
-        {
-          '@type': 'dxos.echo.model.document.Reference',
-          itemId: '01J0B41Q6PNGJZ8EC1AT9G5QPZ',
-          protocol: null,
-          host: null,
-        },
-      ],
-      title: 'Main task',
-      '@version': 1,
-      '@meta': { keys: [] },
-      '@timestamp': 'Fri, 14 Jun 2024 10:17:48 GMT',
-    },
-  ],
-  version: 1,
-  timestamp: 'Fri, 14 Jun 2024 10:17:48 GMT',
-  spaceKey: '69d5a25c3e0ad3c9d1c56572e247f98e74a75efa770bf4ef0b3f9ba33b6b601e',
+  expect(main.subtasks[0].target?.title).to.eq('Subtask 1');
+  expect(main.subtasks[1].target?.title).to.eq('Subtask 2');
+  expect(main.previous.target?.title).to.eq('Previous task');
 };

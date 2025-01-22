@@ -5,11 +5,34 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "strict": false
   },
   "include": [
     "src",
     "stories"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../gem-core"
+    }
+  ]
 }

@@ -8,22 +8,21 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { createDocAccessor, type EchoReactiveObject } from '@dxos/client/echo';
+import { createDocAccessor, type ReactiveEchoObject } from '@dxos/client/echo';
+import { defaultFunctions } from '@dxos/compute';
+import { getRegisteredFunctionNames } from '@dxos/compute/testing';
 import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { HyperFormula } from '#hyperformula';
-import { defaultFunctions } from '../../compute-graph';
-import { createSheet } from '../../defs';
 import { sheetExtension } from '../../extensions';
-import { SheetType } from '../../types';
+import { createSheet, SheetType } from '../../types';
 
 type StoryProps = CellEditorProps;
 
 const Story = ({ value, ...props }: StoryProps) => {
   const extension = useMemo(() => {
-    const functionNames = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames();
+    const functionNames = getRegisteredFunctionNames();
     const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
     return [sheetExtension({ functions })];
   }, []);
@@ -33,7 +32,7 @@ const Story = ({ value, ...props }: StoryProps) => {
 
 const AutomergeStory = ({ value, ...props }: StoryProps) => {
   const cell = 'A1';
-  const [object, setObject] = useState<EchoReactiveObject<SheetType>>();
+  const [object, setObject] = useState<ReactiveEchoObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
       const client = new Client({ types: [SheetType] });
@@ -54,7 +53,7 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
       return [];
     }
 
-    const functionNames = HyperFormula.buildEmpty({ licenseKey: 'gpl-v3' }).getRegisteredFunctionNames();
+    const functionNames = getRegisteredFunctionNames();
     const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
     const accessor = createDocAccessor(object, ['cells', cell, 'value']);
     return [automerge(accessor), sheetExtension({ functions })];
@@ -87,8 +86,8 @@ export const Automerge = {
 const meta: Meta = {
   title: 'plugins/plugin-sheet/CellEditor',
   component: CellEditor,
-  render: (args: StoryProps) => <Story {...args} />,
   decorators: [withTheme],
+  render: (args: StoryProps) => <Story {...args} />,
 };
 
 export default meta;

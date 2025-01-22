@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';
 import { getObjectCore } from '@dxos/echo-db';
-import { getType, S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { getType } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
@@ -16,6 +17,16 @@ import { SpaceObjectGenerator } from './generator';
 faker.seed(3);
 
 describe('TestObjectGenerator', () => {
+  // TODO(burdon): Use TestBuilder.
+  const setupTest = async () => {
+    const client = new Client();
+    await client.initialize();
+    onTestFinished(async () => await client.destroy());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+    return { client, space };
+  };
+
   test('basic', async () => {
     const generator = createTestObjectGenerator();
 
@@ -28,7 +39,7 @@ describe('TestObjectGenerator', () => {
     const { space } = await setupTest();
 
     const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
+    await generator.addSchemas();
 
     // Create org object.
     const organization = await generator.createObject({ types: [TestSchemaType.organization] });
@@ -36,7 +47,7 @@ describe('TestObjectGenerator', () => {
 
     // Expect at least one person object with a linked org reference.
     const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
-    expect(objects.some((object) => object.org === organization)).to.be.true;
+    expect(objects.some((object) => object.org?.target === organization)).to.be.true;
   });
 
   test('idempotence', async () => {
@@ -46,14 +57,14 @@ describe('TestObjectGenerator', () => {
 
     {
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
       schemaId.push(getType(organization)!.objectId);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
       schemaId.push(getType(organization)!.objectId);
     }
@@ -65,7 +76,7 @@ describe('TestObjectGenerator', () => {
   test('mutations', async () => {
     const { space } = await setupTest();
     const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
+    await generator.addSchemas();
     const document = await generator.createObject({ types: [TestSchemaType.document] });
     expect(getType(document)).to.exist;
 
@@ -81,44 +92,35 @@ describe('TestObjectGenerator', () => {
   });
 
   test('create object with in memory schema', async () => {
-    class Todo extends TypedObject({
-      typename: 'example.org/type/Todo',
+    class Task extends TypedObject({
+      typename: 'example.org/type/Task',
       version: '0.1.0',
     })({
       name: S.optional(S.String),
     }) {}
 
     enum Types {
-      todo = 'example.org/type/Todo',
+      task = 'example.org/type/Task',
     }
 
     const { space } = await setupTest();
     const generator = new SpaceObjectGenerator<Types>(
       space,
-      { [Types.todo]: Todo },
+      { [Types.task]: Task },
       {
-        [Types.todo]: () => ({ name: 'Default' }),
+        [Types.task]: () => ({ name: 'Default' }),
       },
       {
-        [Types.todo]: async (todo, params) => {
+        [Types.task]: async (task, params) => {
           for (const _ in Array.from({ length: params.count })) {
-            todo.name = faker.lorem.sentence();
+            task.name = faker.lorem.sentence();
           }
         },
       },
     );
+    await generator.addSchemas();
 
-    const todo = await generator.createObject({ types: [Types.todo] });
-
+    const todo = await generator.createObject({ types: [Types.task] });
     expect(getType(todo)).to.exist;
   });
-
-  const setupTest = async () => {
-    const client = new Client();
-    await client.initialize();
-    onTestFinished(async () => await client.destroy());
-    await client.halo.createIdentity();
-    const space = await client.spaces.create();
-    return { client, space };
-  };
 });

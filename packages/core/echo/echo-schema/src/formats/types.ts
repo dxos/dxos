@@ -145,3 +145,13 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   // Objects
   [FormatEnum.LatLng]: TypeEnum.Object,
 };
+
+/**
+ * Allowed value options for select.
+ */
+export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
+
+export const getOptionsAnnotation = (node: AST.AST): OptionsAnnotationType[] | undefined =>
+  pipe(AST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+
+export type OptionsAnnotationType = string | number;

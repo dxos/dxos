@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -12,5 +13,39 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../config"
+    }
+  ]
 }

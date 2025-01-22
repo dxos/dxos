@@ -5,12 +5,14 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { FunctionType } from '@dxos/plugin-script/types';
+import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute';
+import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
+import { FunctionType } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 import { SheetModel } from './sheet-model';
-import { TestBuilder, testFunctionPlugins } from '../compute-graph/testing';
-import { addressFromA1Notation, createSheet } from '../defs';
-import { type CellScalarValue } from '../types';
+import { createTestGrid } from './testing';
+import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;
@@ -55,5 +57,31 @@ describe('SheetModel', () => {
     const v2 = await trigger.wait();
     expect(v2).to.eq(100);
     expect(graph.context.info.invocations.TEST).to.eq(1);
+  });
+
+  test('formula', async () => {
+    const space = await testBuilder.client.spaces.create();
+    const graph = testBuilder.registry.createGraph(space);
+    await graph.open();
+
+    const cols = 4;
+    const rows = 10;
+    const sheet = createTestGrid({ rows, cols });
+    const model = new SheetModel(graph, sheet);
+    await model.open();
+
+    for (let col = 1; col <= cols; col++) {
+      const cell = { col, row: rows };
+      const text = model.getCellText(cell);
+      const raw = model.getCellValue(cell);
+      const value = model.getValue(cell);
+      log('values', { text, raw, value });
+
+      expect(isFormula(text)).to.be.true;
+      expect(isFormula(raw)).to.be.true;
+      expect(typeof value).to.eq('number');
+      expect(mapFormulaRefsToIndices(sheet, text as string)).to.eq(raw);
+      expect(mapFormulaIndicesToRefs(sheet, raw as string)).to.eq(text);
+    }
   });
 });

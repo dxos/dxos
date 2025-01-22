@@ -26,16 +26,22 @@ export const matchServiceCredential =
 export const signup = async ({
   hubUrl,
   email,
+  redirectUrl,
   identity,
 }: {
   hubUrl: string;
   email: string;
+  redirectUrl?: string;
   identity: Identity | null;
 }): Promise<void> => {
   const response = await fetch(new URL('/account/signup', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined }),
+    body: JSON.stringify({
+      email,
+      identityDid: identity ? `did:key:${identity.identityKey.toHex()}` : undefined,
+      redirectUrl,
+    }),
   });
 
   if (!response.ok) {

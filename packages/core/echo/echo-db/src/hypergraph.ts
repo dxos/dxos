@@ -5,18 +5,19 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
-import { type Reference } from '@dxos/echo-protocol';
-import { RuntimeSchemaRegistry } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { RuntimeSchemaRegistry, type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
+import type { RefResolver } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from './core-db';
-import { type EchoReactiveObject, getObjectCore } from './echo-handler';
+import { type ReactiveEchoObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
@@ -48,7 +49,7 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<EchoReactiveObject<any>>>>();
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<ReactiveEchoObject<any>>>>();
 
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
@@ -142,6 +143,41 @@ export class Hypergraph {
   }
 
   /**
+   * @param hostDb Host database for reference resolution.
+   * @param middleware Called with the loaded object. The caller may change the object.
+   * @returns Result of `onLoad`.
+   */
+  getRefResolver(hostDb: EchoDatabase, middleware: (obj: BaseObject) => BaseObject = (obj) => obj): RefResolver {
+    // TODO(dmaretskyi): Cache per hostDb.
+    return {
+      // TODO(dmaretskyi): Respect `load` flag.
+      resolveSync: (dxn, load, onLoad) => {
+        const ref = Reference.fromDXN(dxn);
+        const res = this._lookupRef(hostDb, ref, onLoad ?? (() => {}));
+
+        if (res) {
+          return middleware(res);
+        } else {
+          return undefined;
+        }
+      },
+      resolve: async (dxn) => {
+        if (!dxn.isLocalObjectId()) {
+          throw new Error('Cross-space references are not supported');
+        }
+        const {
+          objects: [obj],
+        } = await hostDb.query({ id: dxn.parts[1] }).run();
+        if (obj) {
+          return middleware(obj);
+        } else {
+          return undefined;
+        }
+      },
+    };
+  }
+
+  /**
    * @internal
    * @param db
    * @param ref
@@ -150,8 +186,8 @@ export class Hypergraph {
   _lookupRef(
     db: EchoDatabase,
     ref: Reference,
-    onResolve: (obj: EchoReactiveObject<any>) => void,
-  ): EchoReactiveObject<any> | undefined {
+    onResolve: (obj: ReactiveEchoObject<any>) => void,
+  ): ReactiveEchoObject<any> | undefined {
     if (ref.host === undefined) {
       const local = db.getObjectById(ref.objectId);
       if (local) {
@@ -393,7 +429,7 @@ class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _filter: Filter | undefined = undefined;
-  private _results?: QueryResult<EchoReactiveObject<any>>[] = undefined;
+  private _results?: QueryResult<ReactiveEchoObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -437,7 +473,7 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(filter: Filter): Promise<QueryResult<EchoReactiveObject<any>>[]> {
+  async run(filter: Filter): Promise<QueryResult<ReactiveEchoObject<any>>[]> {
     if (!this._isValidSourceForFilter(filter)) {
       return [];
     }
@@ -449,14 +485,14 @@ class SpaceQuerySource implements QuerySource {
       return cores.map((core) => this._mapCoreToResult(core));
     }
 
-    let results: QueryResult<EchoReactiveObject<any>>[] = [];
+    let results: QueryResult<ReactiveEchoObject<any>>[] = [];
     prohibitSignalActions(() => {
       results = this._query(filter);
     });
     return results;
   }
 
-  getResults(): QueryResult<EchoReactiveObject<any>>[] {
+  getResults(): QueryResult<ReactiveEchoObject<any>>[] {
     if (!this._filter) {
       return [];
     }
@@ -470,7 +506,7 @@ class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  update(filter: Filter<EchoReactiveObject<any>>): void {
+  update(filter: Filter<ReactiveEchoObject<any>>): void {
     if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
@@ -486,7 +522,7 @@ class SpaceQuerySource implements QuerySource {
     this.changed.emit();
   }
 
-  private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
+  private _query(filter: Filter): QueryResult<ReactiveEchoObject<any>>[] {
     const filteredCores = filter.isObjectIdFilter()
       ? filter
           .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -499,7 +535,7 @@ class SpaceQuerySource implements QuerySource {
     return filteredCores.map((core) => this._mapCoreToResult(core));
   }
 
-  private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
+  private _isValidSourceForFilter(filter: Filter<ReactiveEchoObject<any>>): boolean {
     // Disabled by spaces filter.
     if (filter.spaceIds !== undefined && !filter.spaceIds.some((id) => id === this.spaceId)) {
       return false;
@@ -514,7 +550,7 @@ class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult<EchoReactiveObject<any>> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult<ReactiveEchoObject<any>> {
     return {
       id: core.id,
       spaceId: this.spaceId,

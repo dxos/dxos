@@ -13,6 +13,7 @@ import {
 } from '@dxos/react-client/invitations';
 import {
   Button,
+  Clipboard,
   ListItem,
   useTranslation,
   Avatar,
@@ -26,7 +27,6 @@ import { hexToEmoji } from '@dxos/util';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { AuthCode } from '../AuthCode';
-import { CopyButtonIconOnly } from '../Clipboard';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
@@ -162,7 +162,7 @@ export const InvitationListItemImpl = ({
           </Tooltip.Trigger>
         </Avatar.Root>
         <Tooltip.Portal>
-          <Tooltip.Content side='left' classNames='z-[70]'>
+          <Tooltip.Content side='left'>
             {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -181,10 +181,10 @@ export const InvitationListItemImpl = ({
                 <span>{t('open share panel label')}</span>
               </Button>
             </Tooltip.Trigger>
-            <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
+            <Clipboard.IconButton variant='ghost' value={invitationUrl} />
           </>
           <Tooltip.Portal>
-            <Tooltip.Content side='left' classNames='z-[70]'>
+            <Tooltip.Content side='left'>
               {invitationHasLifetime && <span>Expires {invitationTimeLeft}</span>}
             </Tooltip.Content>
           </Tooltip.Portal>

@@ -5,8 +5,9 @@
 import { create, insert, search } from '@orama/orama';
 import { describe, expect, test } from 'vitest';
 
-import { createTestObjectGenerator, range } from '@dxos/echo-generator';
+import { createTestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
+import { range } from '@dxos/util';
 
 faker.seed(1);
 
@@ -36,7 +37,7 @@ describe('Orama', () => {
     });
 
     {
-      const objects = range(() => generator.createObject(), 10);
+      const objects = range(10, () => generator.createObject());
       await Promise.all(objects.map((object) => insert<any>(db, object)));
     }
 

@@ -61,11 +61,10 @@ export class DxGridAxisResizeHandle extends LitElement {
       this.cleanup = draggable({
         element: element as HTMLButtonElement,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          // we will be moving the line to indicate a drag
-          // we can disable the native drag preview
+          // We will be moving the line to indicate a drag; we can disable the native drag preview.
           disableNativeDragPreview({ nativeSetDragImage });
-          // we don't want any native drop animation for when the user
-          // does not drop on a drop target. we want the drag to finish immediately
+          // We don't want any native drop animation for when the user does not drop on a drop target.
+          // We want the drag to finish immediately.
           preventUnhandled.start();
         },
         onDragStart() {

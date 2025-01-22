@@ -4,50 +4,53 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
-import { type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { createIntent, type PluginMeta, useIntentDispatcher, usePluginManager } from '@dxos/app-framework';
+import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { PluginList } from './PluginList';
-import { type RegistrySettingsProps } from '../RegistryPlugin';
 import { REGISTRY_PLUGIN } from '../meta';
+import { type RegistrySettings } from '../types';
 
 const sortPluginMeta = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
 
-export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
+export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { plugins, enabled, core, setPlugin, ...pluginContext } = usePlugins();
-  const dispatch = useIntentDispatcher();
+  const manager = usePluginManager();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Memoize to prevent plugins from disappearing when toggling enabled.
   const installed = useMemo(
     () =>
-      plugins
-        .filter(({ meta }) => !core.includes(meta.id))
-        .filter(({ meta }) => enabled.includes(meta.id))
+      manager.plugins
+        .filter(({ meta }) => !manager.core.includes(meta.id))
+        .filter(({ meta }) => manager.enabled.includes(meta.id))
         .map(({ meta }) => meta)
         .sort(sortPluginMeta),
     [],
   );
+  const pluginIds = useMemo(() => installed.map((meta) => meta.id), [installed]);
 
-  const pluginIds = plugins.map(({ meta }) => meta.id);
   const available = useMemo(
-    () => pluginContext.available.filter(({ id }) => !enabled.includes(id)).sort(sortPluginMeta),
+    () =>
+      manager.plugins
+        .map(({ meta }) => meta)
+        .filter(({ id }) => !manager.enabled.includes(id))
+        .sort(sortPluginMeta),
     [],
   );
   const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
   const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
 
   const handleChange = (id: string, enabled: boolean) => {
-    setPlugin(id, enabled);
-    void dispatch({
-      action: ObservabilityAction.SEND_EVENT,
-      data: {
+    enabled ? manager.enable(id) : manager.disable(id);
+    void dispatch(
+      createIntent(ObservabilityAction.SendEvent, {
         name: 'plugins.toggle',
         properties: { plugin: id, enabled },
-      },
-    });
+      }),
+    );
   };
 
   const handleReload = () => {
@@ -67,8 +70,8 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
       <Section label={t('settings section installed label')}>
         <PluginList
           plugins={installed}
-          loaded={pluginIds}
-          enabled={enabled}
+          installed={pluginIds}
+          enabled={manager.enabled}
           onChange={handleChange}
           onReload={handleReload}
         />
@@ -77,8 +80,8 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
       <Section label={t('settings section recommended label')}>
         <PluginList
           plugins={recommended}
-          loaded={pluginIds}
-          enabled={enabled}
+          installed={pluginIds}
+          enabled={manager.enabled}
           onChange={handleChange}
           onReload={handleReload}
         />
@@ -88,8 +91,8 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
         <Section label={t('settings section experimental label')}>
           <PluginList
             plugins={experimental}
-            loaded={pluginIds}
-            enabled={enabled}
+            installed={pluginIds}
+            enabled={manager.enabled}
             onChange={handleChange}
             onReload={handleReload}
           />

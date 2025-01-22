@@ -75,3 +75,27 @@ export const useSyncState = (): SpaceSyncStateMap => {
 
   return spaceState;
 };
+
+/**
+ * Hook Subscribes to sync state for a single space.
+ */
+// TODO(wittjosiah): Reconcile w/ useSyncState.
+export const useSpaceSyncState = (space: Space): PeerSyncState | undefined => {
+  const [spaceState, setSpaceState] = useState<PeerSyncState>();
+
+  useEffect(() => {
+    const ctx = new Context();
+    space.crud.subscribeToSyncState(ctx, ({ peers = [] }) => {
+      const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
+      if (syncState) {
+        setSpaceState(syncState);
+      }
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [space]);
+
+  return spaceState;
+};

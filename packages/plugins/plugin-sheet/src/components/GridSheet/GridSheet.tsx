@@ -13,7 +13,8 @@ import React, {
   useState,
 } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { rangeToA1Notation, type CellRange } from '@dxos/compute';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -23,18 +24,19 @@ import {
   Grid,
   GridCellEditor,
   type DxGridElement,
+  type DxGridPosition,
+  type DxGridCellIndex,
   type EditorKeyHandler,
   type EditorBlurHandler,
   type GridContentProps,
-  type DxGridPosition,
+  parseCellIndex,
 } from '@dxos/react-ui-grid';
 
-import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
+import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
-import { SheetAction } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -70,7 +72,7 @@ export const GridSheet = () => {
   // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
@@ -113,7 +115,7 @@ export const GridSheet = () => {
   const handleBlur = useCallback<EditorBlurHandler>(
     (value) => {
       if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+        model.setValue(parseCellIndex(editing!.index), value);
       }
     },
     [model, editing],
@@ -250,24 +252,21 @@ export const GridSheet = () => {
       switch (operation) {
         case 'insert-before':
         case 'insert-after':
-          return dispatch({
-            action: SheetAction.INSERT_AXIS,
-            data: {
+          return dispatch(
+            createIntent(SheetAction.InsertAxis, {
               model,
               axis: contextMenuAxis,
               index: contextMenuOpen![contextMenuAxis] + (operation === 'insert-before' ? 0 : 1),
-            } satisfies SheetAction.InsertAxis,
-          });
-          break;
+            }),
+          );
         case 'drop':
-          return dispatch({
-            action: SheetAction.DROP_AXIS,
-            data: {
+          return dispatch(
+            createIntent(SheetAction.DropAxis, {
               model,
               axis: contextMenuAxis,
               axisIndex: model.sheet[contextMenuAxis === 'row' ? 'rows' : 'columns'][contextMenuOpen![contextMenuAxis]],
-            } satisfies SheetAction.DropAxis,
-          });
+            }),
+          );
       }
     },
     [contextMenuAxis, contextMenuOpen, model, dispatch],
@@ -293,9 +292,8 @@ export const GridSheet = () => {
   );
 
   const getCellContent = useCallback(
-    (index: string) => {
-      const cell = dxGridCellIndexToSheetCellAddress(index);
-      return model.getCellText(cell);
+    (index: DxGridCellIndex) => {
+      return model.getCellText(parseCellIndex(index));
     },
     [model],
   );
@@ -308,7 +306,7 @@ export const GridSheet = () => {
       <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
-        limitColumns={DEFAULT_COLUMNS}
+        limitColumns={DEFAULT_COLS}
         limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}
@@ -335,21 +333,30 @@ export const GridSheet = () => {
         <DropdownMenu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
         <DropdownMenu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
           <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-before')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('insert-before')}
+              data-testid={`grid.${contextMenuAxis}.insert-before`}
+            >
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
               <span>{t(`add ${contextMenuAxis} before label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-after')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('insert-after')}
+              data-testid={`grid.${contextMenuAxis}.insert-after`}
+            >
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
               <span>{t(`add ${contextMenuAxis} after label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('drop')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('drop')}
+              data-testid={`grid.${contextMenuAxis}.drop`}
+            >
               <Icon size={5} icon='ph--backspace--regular' />
               <span>{t(`delete ${contextMenuAxis} label`)}</span>
             </DropdownMenu.Item>

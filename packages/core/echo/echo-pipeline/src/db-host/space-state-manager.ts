@@ -35,6 +35,10 @@ export class SpaceStateManager extends Resource {
     return this._roots.get(documentId);
   }
 
+  getSpaceRootDocumentId(spaceId: SpaceId): DocumentId | undefined {
+    return this._rootBySpace.get(spaceId);
+  }
+
   async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<SpaceDoc>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
     if (this._roots.has(handle.documentId)) {
@@ -67,7 +71,9 @@ export class SpaceStateManager extends Resource {
         const documentIds = [root.documentId, ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url))];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
-          this.spaceDocumentListUpdated.emit(new SpaceDocumentListUpdatedEvent(spaceId, documentIds));
+          this.spaceDocumentListUpdated.emit(
+            new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, prevRootId, documentIds),
+          );
         }
       },
       { maxFrequency: 50 },
@@ -85,6 +91,8 @@ export class SpaceStateManager extends Resource {
 export class SpaceDocumentListUpdatedEvent {
   constructor(
     public readonly spaceId: SpaceId,
+    public readonly spaceRootId: DocumentId,
+    public readonly previousRootId: DocumentId | undefined,
     public readonly documentIds: DocumentId[],
   ) {}
 }

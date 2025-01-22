@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.7.0",
+  "version": "0.7.4",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
@@ -12,12 +12,14 @@
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/util": "workspace:*",

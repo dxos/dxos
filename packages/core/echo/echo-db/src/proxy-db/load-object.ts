@@ -4,14 +4,14 @@
 
 import { asyncTimeout } from '@dxos/async';
 
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 
 /**
  * @param obj
  */
 // TODO(burdon): Rename/review SDK.
-export const loadObject = <T extends EchoReactiveObject<any>>(obj: T): T => {
+export const loadObject = <T extends ReactiveEchoObject<any>>(obj: T): T => {
   return getObjectCore(obj).getDecoded(['data']) as T;
 };
 
@@ -22,10 +22,12 @@ export const loadObject = <T extends EchoReactiveObject<any>>(obj: T): T => {
  *                        if return type is an array the method exits when all entries are non-null.
  *                        otherwise the method exits when valueAccessor is not null.
  * @param timeout - loading timeout, defaults to 5s.
+ *
+ * @deprecated Use `await Ref.load()` instead.
  */
 // TODO(burdon): Rename/review SDK.
 export const loadObjectReferences = async <
-  T extends EchoReactiveObject<any>,
+  T extends ReactiveEchoObject<any>,
   RefType,
   DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
 >(

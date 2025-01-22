@@ -6,14 +6,14 @@ import { useEffect, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type EchoReactiveObject, createDocAccessor } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, createDocAccessor } from '@dxos/react-client/echo';
 import { setDeep } from '@dxos/util';
 
 import { TLDrawStoreAdapter } from './adapter';
 import { type DiagramType, TLDRAW_SCHEMA } from '../types';
 import { getDeep } from '../util';
 
-export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
+export const useStoreAdapter = (object?: ReactiveEchoObject<DiagramType>) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
   useEffect(() => {
@@ -21,8 +21,8 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
       return;
     }
 
-    if (object.canvas?.schema !== TLDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: object.canvas?.schema });
+    if (object.canvas?.target?.schema !== TLDRAW_SCHEMA) {
+      log.warn('invalid schema', { schema: object.canvas.target?.schema });
       return;
     }
 
@@ -34,14 +34,14 @@ export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
         const accessor = createDocAccessor(object, ['content']);
         const oldData = getDeep(accessor.handle.docSync(), accessor.path);
         if (Object.keys(oldData ?? {}).length) {
-          object.canvas.content = oldData;
+          object.canvas.target!.content = oldData;
           accessor.handle.change((object) => setDeep(object, accessor.path, {}));
         }
       } catch (err) {
         log.catch(err);
       }
 
-      const accessor = createDocAccessor(object.canvas, ['content']);
+      const accessor = createDocAccessor(object.canvas.target!, ['content']);
       await adapter.open(accessor);
       forceUpdate({});
     });

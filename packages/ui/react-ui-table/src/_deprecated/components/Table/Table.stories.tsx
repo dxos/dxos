@@ -8,8 +8,8 @@ import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
@@ -128,7 +128,7 @@ const MinimalTable = (props: any) => {
 };
 
 export default {
-  title: 'ui/react-ui-table/Table',
+  title: 'ui/react-ui-table/deprecated/Table',
   component: MinimalTable,
   args: {
     header: true,

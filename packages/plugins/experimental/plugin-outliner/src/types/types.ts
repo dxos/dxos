@@ -2,29 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  TranslationsProvides,
-  SurfaceProvides,
-  MetadataRecordsProvides,
-} from '@dxos/app-framework';
-import type { SchemaProvides } from '@dxos/plugin-client';
-import type { StackProvides } from '@dxos/plugin-stack';
+import { S } from '@dxos/echo-schema';
 
+import { TreeType } from './tree';
 import { OUTLINER_PLUGIN } from '../meta';
 
-const OUTLINER_ACTION = `${OUTLINER_PLUGIN}/action`;
+export namespace OutlinerAction {
+  const OUTLINER_ACTION = `${OUTLINER_PLUGIN}/action`;
 
-export enum OutlinerAction {
-  CREATE = `${OUTLINER_ACTION}/create`,
-  TOGGLE_CHECKBOX = `${OUTLINER_ACTION}/toggle-checkbox`,
+  export class Create extends S.TaggedClass<Create>()(`${OUTLINER_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: TreeType,
+    }),
+  }) {}
+
+  export class ToggleCheckbox extends S.TaggedClass<ToggleCheckbox>()(`${OUTLINER_ACTION}/toggle-checkbox`, {
+    input: S.Struct({
+      object: TreeType,
+    }),
+    output: S.Void,
+  }) {}
 }
-
-export type OutlinerPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  StackProvides &
-  SchemaProvides;

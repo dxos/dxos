@@ -5,6 +5,7 @@
     "lib": [
       "DOM"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -12,5 +13,9 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    }
+  ]
 }
