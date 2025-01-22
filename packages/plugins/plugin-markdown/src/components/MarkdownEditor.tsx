@@ -7,8 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
 import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { useThemeContext, useTranslation, ElevationProvider } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorAction,
   type DNDOptions,
@@ -31,11 +30,9 @@ import {
   useFormattingState,
   useTextEditor,
   stackItemContentEditorClassNames,
-  stackItemContentToolbarClassNames,
   useEditorToolbarState,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -79,7 +76,6 @@ export const MarkdownEditor = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const toolbarState = useEditorToolbarState({ viewMode });
   const formattingObserver = useFormattingState(toolbarState);
-  const { hasAttention } = useAttention(id);
 
   // Restore last selection and scroll point.
   const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
@@ -174,17 +170,7 @@ export const MarkdownEditor = ({
 
   return (
     <StackItem.Content toolbar={!!toolbar}>
-      {toolbar && (
-        <div role='none' className={stackItemContentToolbarClassNames(role)}>
-          <ElevationProvider elevation='positioned'>
-            <EditorToolbar
-              classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-              state={toolbarState}
-              onAction={handleAction}
-            />
-          </ElevationProvider>
-        </div>
-      )}
+      {toolbar && <EditorToolbar state={toolbarState} onAction={handleAction} attendableId={id} role={role} />}
       <div
         role='none'
         ref={parentRef}
