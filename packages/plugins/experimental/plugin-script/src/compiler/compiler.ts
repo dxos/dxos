@@ -61,7 +61,7 @@ export class Compiler {
       this.setFile(fileName, content);
     }
 
-    await this._processImportsInContent({ content });
+    await this._processImportsInContent(content, fileName);
   }
 
   private _createCustomSystem() {
@@ -103,29 +103,6 @@ export class Compiler {
     };
   }
 
-  private _normalizeUrl(url: string, parent?: string): string | undefined {
-    if (url.startsWith('npm:')) {
-      return `https://esm.sh/${url.slice(4)}`;
-    }
-
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-
-    if (!parent || url.startsWith('node:')) {
-      return;
-    }
-
-    const parentUrl = new URL(parent);
-    if (url.startsWith('/')) {
-      // Absolute path - use parent's origin.
-      return new URL(url, parentUrl.origin).href;
-    } else {
-      // Relative path - resolve against parent's full URL.
-      return new URL(url, parentUrl).href;
-    }
-  }
-
   private _findImportsInContent(content: string): string[] {
     const imports: Set<string> = new Set();
     const visit = (node: ts.Node) => {
@@ -160,30 +137,24 @@ export class Compiler {
     return Array.from(imports);
   }
 
-  private async _processImportsInContent({
-    content,
-    parentUrl,
-    types,
-  }: {
-    content: string;
-    parentUrl?: string;
-    types?: boolean;
-  }): Promise<void> {
+  private _parseImportToUrl(moduleName: string): string | undefined {
+    if (moduleName.startsWith('npm:')) {
+      return `https://esm.sh/${moduleName.slice(4)}`;
+    }
+  }
+
+  private async _processImportsInContent(content: string, fileName?: string): Promise<void> {
     const imports = this._findImportsInContent(content);
-    log('process imports', { parentUrl, imports });
+    log('process imports', { imports, fileName });
 
     await Promise.all(
       imports.map(async (importUrl) => {
-        const normalizedUrl = this._normalizeUrl(importUrl, parentUrl);
-        if (!normalizedUrl) {
+        const url = this._parseImportToUrl(importUrl);
+        if (!url) {
           return;
         }
 
-        if (types) {
-          await this._prefetchHttpTypes(normalizedUrl);
-        } else {
-          await this._prefetchHttpModule(normalizedUrl);
-        }
+        await this._prefetchHttpModule(url);
       }),
     );
   }
@@ -204,12 +175,56 @@ export class Compiler {
         this._httpTypeCache.set(url, typesUrl);
         await this._prefetchHttpTypes(typesUrl);
       } else {
-        this._createAmbientModuleDeclartion(url);
+        this._createModuleDeclartion(url);
       }
     } catch (err) {
       this._processedUrls.delete(url);
       log.catch(err, { url });
     }
+  }
+
+  private _createModuleDeclartion(url: string) {
+    const moduleDeclaration = `declare module '${url}' {
+      const content: any;
+      export = content;
+      export * from '${url}';
+    }`;
+    this.setFile(`${url}.d.ts`, moduleDeclaration);
+  }
+
+  private _normalizeTypesUrl(url: string, parent?: string): string | undefined {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    if (!parent || url.startsWith('node:')) {
+      return;
+    }
+
+    const parentUrl = new URL(parent);
+    if (url.startsWith('/')) {
+      // Absolute path - use parent's origin.
+      return new URL(url, parentUrl.origin).href;
+    } else {
+      // Relative path - resolve against parent's full URL.
+      return new URL(url, parentUrl).href;
+    }
+  }
+
+  private async _processImportsInTypeDefinition(content: string, parentUrl?: string): Promise<void> {
+    const imports = this._findImportsInContent(content);
+    log('process imports', { parentUrl, imports });
+
+    await Promise.all(
+      imports.map(async (importUrl) => {
+        const normalizedUrl = this._normalizeTypesUrl(importUrl, parentUrl);
+        if (!normalizedUrl) {
+          return;
+        }
+
+        await this._prefetchHttpTypes(normalizedUrl);
+      }),
+    );
   }
 
   private async _prefetchHttpTypes(url: string): Promise<void> {
@@ -223,20 +238,10 @@ export class Compiler {
       const content = await response.text();
       this.setFile(url, content);
 
-      // Process imports in type definitions with the types URL as parent.
-      await this._processImportsInContent({ content, parentUrl: url, types: true });
+      await this._processImportsInTypeDefinition(content, url);
     } catch (err) {
       this._processedUrls.delete(url);
       log.catch(err, { url });
     }
-  }
-
-  private _createAmbientModuleDeclartion(url: string) {
-    const moduleDeclaration = `declare module '${url}' {
-      const content: any;
-      export = content;
-      export * from '${url}';
-    }`;
-    this.setFile(`${url}.d.ts`, moduleDeclaration);
   }
 }
