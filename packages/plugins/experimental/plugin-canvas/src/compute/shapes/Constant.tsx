@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
@@ -56,18 +56,28 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   const [type, setType] = useState(inferType(node.data.value) ?? types[0]);
   const inputRef = useRef<TextBoxControl>(null);
 
-  const handleEnter: TextBoxProps['onEnter'] = (text) => {
-    const value = text.trim();
-    if (value.length) {
-      // TODO(burdon): Change type to union of scalar values.
-      runtime.setOutput(DEFAULT_OUTPUT, value);
-      inputRef.current?.focus();
-    }
-  };
+  const handleEnter = useCallback<NonNullable<TextBoxProps['onEnter']>>(
+    (text) => {
+      const value = text.trim();
+      if (value.length) {
+        // TODO(burdon): Set filter.
+        if (type === 'number') {
+          const v = parseFloat(value);
+          if (!isNaN(v)) {
+            runtime.setOutput(DEFAULT_OUTPUT, value);
+          }
+        } else {
+          runtime.setOutput(DEFAULT_OUTPUT, value);
+        }
+
+        inputRef.current?.focus();
+      }
+    },
+    [type],
+  );
 
   return (
     <Box shape={shape} name={title} status={<TypeSelect value={type} onValueChange={setType} />}>
-      {/* TODO(burdon): Filter numbers. */}
       {(type === 'string' || type === 'number') && (
         <TextBox {...props} ref={inputRef} value={node.data.value} onEnter={handleEnter} />
       )}
