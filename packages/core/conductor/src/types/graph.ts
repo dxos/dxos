@@ -52,7 +52,8 @@ export class ComputeGraph extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
 })({
-  graph: Graph as S.Schema<Graph>, // Workaround for TS compiler bug.
+  // Workaround for TS compiler bug.
+  graph: Graph as S.Schema<Graph>,
 
   // Reference nodes.
   input: S.optional(BaseGraphNode),

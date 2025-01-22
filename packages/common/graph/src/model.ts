@@ -149,7 +149,6 @@ export abstract class AbstractGraphModel<
     return this;
   }
 
-  // TODO(burdon): Generate random id.
   addNode(node: Node): Node {
     invariant(node.id);
     invariant(!this.findNode(node.id));
@@ -213,7 +212,10 @@ export abstract class AbstractGraphBuilder<
     return this._model;
   }
 
-  abstract call(cb: (builder: this) => void): this;
+  call(cb: (builder: this) => void): this {
+    cb(this);
+    return this;
+  }
 
   getNode(id: string): Node {
     return this.model.getNode(id);
