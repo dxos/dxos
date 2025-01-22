@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type NodeArg } from '@dxos/app-graph';
+import { ElevationProvider } from '@dxos/react-ui';
 import {
   ToolbarMenu,
   MenuProvider,
@@ -12,6 +13,7 @@ import {
   useMenuActions,
   createGapSeparator,
 } from '@dxos/react-ui-menu';
+import { textBlockWidth } from '@dxos/react-ui-theme';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
@@ -25,6 +27,7 @@ import {
   type EditorToolbarState,
 } from './util';
 import { createViewMode } from './viewMode';
+import { stackItemContentToolbarClassNames } from '../../styles/stack-item-content-class-names';
 
 const createToolbar = ({
   state,
@@ -86,11 +89,15 @@ const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps)
   return { resolveGroupItems, onAction: onAction as MenuActionHandler };
 };
 
-export const EditorToolbar = ({ classNames, ...props }: EditorToolbarProps) => {
+export const EditorToolbar = ({ classNames, attendableId, role, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
   return (
-    <MenuProvider {...menuProps}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <div role='none' className={stackItemContentToolbarClassNames(role)}>
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <MenuProvider {...menuProps} attendableId={attendableId}>
+          <ToolbarMenu classNames={[textBlockWidth, '!bg-transparent', classNames]} />
+        </MenuProvider>
+      </ElevationProvider>
+    </div>
   );
 };

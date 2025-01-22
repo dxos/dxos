@@ -17,7 +17,7 @@ import { type ToolbarState, useToolbarState } from './useToolbarState';
 // Root
 //
 
-export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{}>>;
+export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ attendableId?: string }>>;
 
 const createToolbarActions = (state: ToolbarState) => {
   const align = createAlign(state);
@@ -30,7 +30,7 @@ const createToolbarActions = (state: ToolbarState) => {
   };
 };
 
-export const SheetToolbar = ({ classNames }: SheetToolbarProps) => {
+export const SheetToolbar = ({ attendableId, classNames }: SheetToolbarProps) => {
   const state = useToolbarState({});
   useAlignState(state);
   useStyleState(state);
@@ -41,7 +41,7 @@ export const SheetToolbar = ({ classNames }: SheetToolbarProps) => {
   const handleAction = useToolbarAction(state);
 
   return (
-    <MenuProvider {...menu} onAction={handleAction}>
+    <MenuProvider {...menu} attendableId={attendableId} onAction={handleAction}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );

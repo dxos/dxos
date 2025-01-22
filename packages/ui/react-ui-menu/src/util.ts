@@ -21,6 +21,8 @@ export const getShortcut = (action: ActionLike) => {
 
 export const fallbackIcon = 'ph--placeholder--regular';
 
+// TODO(thure,wittjosiah): This is probably a smell; consider the whether react-ui-menu should use action nodes if the
+//  callback in `data` is never used. See https://github.com/dxos/dxos/pull/8506#discussion_r1925855118
 const noop = () => {};
 
 export const createMenuAction = <P extends {} = {}>(id: string, properties: P & MenuActionProperties) =>

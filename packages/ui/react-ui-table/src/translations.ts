@@ -17,7 +17,6 @@ export default [
         'continue label': 'Continue',
         'create stack section label': 'Create table',
         'add row label': 'Add row',
-        'save view label': 'Save view',
         'create comment': 'Create thread',
         'column action sort descending': 'Sort Descending',
         'column action sort ascending': 'Sort Ascending',

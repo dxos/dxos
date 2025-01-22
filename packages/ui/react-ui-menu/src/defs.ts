@@ -49,4 +49,5 @@ export type MenuContextValue<A extends Node = MenuAction> = {
   resolveGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
   onAction: MenuActionHandler<A>;
+  attendableId?: string;
 };

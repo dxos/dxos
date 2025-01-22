@@ -9,7 +9,6 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
-import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -26,7 +25,6 @@ import { TableAction } from '../types';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
-  const { hasAttention } = useAttention(fullyQualifiedId(table));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
 
@@ -104,7 +102,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
   return (
     <StackItem.Content toolbar role={role}>
-      <TableToolbar onAction={handleAction} classNames={['p-1 attention-surface', !hasAttention && 'opacity-20']} />
+      <TableToolbar onAction={handleAction} attendableId={fullyQualifiedId(table)} />
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
       </Table.Root>

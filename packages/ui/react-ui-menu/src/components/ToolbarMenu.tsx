@@ -5,6 +5,7 @@
 import React, { useCallback, useRef } from 'react';
 
 import { type IconButtonProps, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 
 import { ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
@@ -142,10 +143,12 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
-export const ToolbarMenu = ({ __menuScope, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
+export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
+  const { attendableId } = useMenu('ToolbarMenu', __menuScope);
+  const { hasAttention } = useAttention(attendableId);
   return (
-    <NaturalToolbar.Root {...props}>
+    <NaturalToolbar.Root {...props} classNames={['p-1 attention-surface', !hasAttention && 'opacity-20', classNames]}>
       {items?.map((item: MenuItem, i: number) =>
         isSeparator(item) ? (
           <NaturalToolbar.Separator key={i} variant={item.properties.variant} />

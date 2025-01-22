@@ -40,7 +40,9 @@ export type EditorToolbarActionGraphProps = {
   onAction: (action: EditorAction) => void;
 };
 
-export type EditorToolbarProps = ThemedClassName<EditorToolbarActionGraphProps & EditorToolbarFeatureFlags>;
+export type EditorToolbarProps = ThemedClassName<
+  EditorToolbarActionGraphProps & EditorToolbarFeatureFlags & { attendableId?: string; role?: string }
+>;
 
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 
