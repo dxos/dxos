@@ -4,6 +4,5 @@
 
 export * from './context';
 export * from './context-disposed-error';
-export * from '../../async/src/persistent-lifecycle';
 export * from './promise-utils';
 export * from './resource';
