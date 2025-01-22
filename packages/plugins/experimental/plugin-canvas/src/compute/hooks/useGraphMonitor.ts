@@ -65,6 +65,7 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
       onDelete: ({ subgraph }) => {
         if (graph) {
           const computeNodeIds = subgraph.nodes.map((node) => (node.data as ComputeShape).node) as string[];
+          // NOTE(ZaymonFC): Based on the information we have, this is O(edges to remove * compute edges).
           const edgeIdsToRemove = subgraph.edges
             .map((shapeEdge) => {
               return graph.edges.find((computeEdge) => {
