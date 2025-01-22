@@ -31,7 +31,7 @@ import { nonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
   id: string;
-  inputMode: EditorInputMode;
+  inputMode?: EditorInputMode;
   env?: VirtualTypeScriptEnvironment;
   toolbar?: boolean;
 } & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
@@ -45,7 +45,7 @@ export const TypescriptEditor = ({
   scrollTo,
   selection,
   toolbar,
-  inputMode,
+  inputMode = 'vscode',
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
@@ -93,7 +93,6 @@ export const TypescriptEditor = ({
                 tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
               ]
             : [],
-          InputModeExtensions.vscode,
         ],
       ].filter(nonNullable),
       selection,
