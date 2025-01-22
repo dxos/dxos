@@ -6,7 +6,7 @@ import React, { useRef, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
+import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
@@ -41,12 +41,20 @@ export type ConstantShape = S.Schema.Type<typeof ConstantShape>;
 export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
+const inferType = (value: any): string | undefined => {
+  if (typeof value === 'string') {
+    return 'string';
+  } else if (typeof value === 'number') {
+    return 'number';
+  } else if (typeof value === 'boolean') {
+    return 'boolean';
+  }
+};
+
 export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
   const { node, runtime } = useComputeNodeState(shape);
-  const [type, setType] = useState(types[0]);
+  const [type, setType] = useState(inferType(node.data.value) ?? types[0]);
   const inputRef = useRef<TextBoxControl>(null);
-
-  console.log(node.data.value);
 
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
@@ -59,7 +67,22 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
 
   return (
     <Box shape={shape} name={title} status={<TypeSelect value={type} onValueChange={setType} />}>
-      <TextBox {...props} ref={inputRef} value={node.data.value} onEnter={handleEnter} />
+      {/* TODO(burdon): Filter numbers. */}
+      {(type === 'string' || type === 'number') && (
+        <TextBox {...props} ref={inputRef} value={node.data.value} onEnter={handleEnter} />
+      )}
+      {type === 'boolean' && (
+        <div className='flex grow justify-center items-center'>
+          <Input.Root>
+            <Input.Switch
+              checked={node.data.value}
+              onCheckedChange={(value) => {
+                node.data.value = value;
+              }}
+            />
+          </Input.Root>
+        </div>
+      )}
     </Box>
   );
 };
