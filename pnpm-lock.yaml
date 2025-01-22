@@ -5897,6 +5897,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../../core/mesh/edge-client
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../../common/graph

@@ -23,6 +23,8 @@ import {
   type UploadFunctionResponseBody,
   type ObjectId,
   type ExecuteWorkflowResponseBody,
+  type QueueQuery,
+  type QueryResult,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -107,6 +109,39 @@ export class EdgeHttpClient {
   ): Promise<UploadFunctionResponseBody> {
     const path = ['functions', pathParts.spaceId, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
     return this._call(path, { ...args, body, method: 'PUT' });
+  }
+
+  public async queryQueue(spaceId: SpaceId, query: QueueQuery, args?: EdgeHttpGetArgs): Promise<QueryResult> {
+    const { queueId, ...rest } = query;
+    const queryParams = new URLSearchParams();
+    if (query.after != null) {
+      queryParams.set('after', query.after);
+    }
+    if (query.before != null) {
+      queryParams.set('before', query.before);
+    }
+    if (query.limit != null) {
+      queryParams.set('limit', query.limit.toString());
+    }
+    if (query.reverse != null) {
+      queryParams.set('reverse', query.reverse.toString());
+    }
+    if (query.objectIds != null) {
+      queryParams.set('objectIds', query.objectIds.join(','));
+    }
+    return this._call(`/spaces/${spaceId}/queue/${queueId}/query?${queryParams.toString()}`, {
+      ...args,
+      method: 'GET',
+    });
+  }
+
+  public async insertIntoQueue(
+    spaceId: SpaceId,
+    queueId: ObjectId,
+    objects: unknown[],
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(`/spaces/${spaceId}/queue/${queueId}`, { ...args, body: { objects }, method: 'POST' });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {

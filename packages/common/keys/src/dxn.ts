@@ -6,6 +6,7 @@ import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+import type { SpaceId } from './space-id';
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -29,8 +30,19 @@ export class DXN {
    * Kind constants.
    */
   static kind = Object.freeze({
+    /**
+     * dxn:type:<type name>[:<version>]
+     */
     TYPE: 'type',
+    /**
+     * dxn:echo:<space id>:<echo id>
+     * dxn:echo:@:<echo id>
+     */
     ECHO: 'echo',
+    /**
+     * dxn:queue:<space id>:<queue id>[:object id]
+     */
+    QUEUE: 'queue',
   });
 
   static equals(a: DXN, b: DXN) {
@@ -123,7 +135,7 @@ export class DXN {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
-  asTypeDXN() {
+  asTypeDXN(): DXN.TypeDXN | undefined {
     if (this.kind !== DXN.kind.TYPE) {
       return undefined;
     }
@@ -131,6 +143,29 @@ export class DXN {
     return {
       type: this.#parts[0],
       version: this.#parts[1] as string | undefined,
+    };
+  }
+
+  asEchoDXN(): DXN.EchoDXN | undefined {
+    if (this.kind !== DXN.kind.ECHO) {
+      return undefined;
+    }
+
+    return {
+      spaceId: this.#parts[0] as SpaceId | undefined,
+      echoId: this.#parts[1],
+    };
+  }
+
+  asQueueDXN(): DXN.QueueDXN | undefined {
+    if (this.kind !== DXN.kind.QUEUE) {
+      return undefined;
+    }
+
+    return {
+      spaceId: this.#parts[0] as SpaceId,
+      queueId: this.#parts[1],
+      objectId: this.#parts[2] as string | undefined,
     };
   }
 
@@ -154,6 +189,24 @@ export class DXN {
       printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
     );
   }
+}
+
+export declare namespace DXN {
+  export type TypeDXN = {
+    type: string;
+    version?: string;
+  };
+
+  export type EchoDXN = {
+    spaceId?: SpaceId;
+    echoId: string; // TODO(dmaretskyi): ObjectId.
+  };
+
+  export type QueueDXN = {
+    spaceId: SpaceId;
+    queueId: string; // TODO(dmaretskyi): ObjectId.
+    objectId?: string; // TODO(dmaretskyi): ObjectId.
+  };
 }
 
 /**

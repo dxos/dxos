@@ -9,11 +9,13 @@ import { EventLogger, GptService, SpaceService } from '../services';
 import { MockGpt } from '../services/gpt/mock';
 import type { ComputeRequirements } from '../types';
 import { EdgeClientService } from '../services/edge-client-service';
-import type { EdgeClient } from '@dxos/edge-client';
+import { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
 
 export type TestServiceOptions = {
   enableLogging?: boolean;
   edgeClient?: EdgeClient;
+  edgeHttpClient?: EdgeHttpClient;
   logger?: Context.Tag.Service<EventLogger>;
   gpt?: Context.Tag.Service<GptService>;
 };
@@ -22,11 +24,16 @@ export const testServices = ({
   enableLogging = false,
   logger = enableLogging ? consoleLogger : noopLogger,
   edgeClient,
+  edgeHttpClient,
   gpt = DEFAULT_MOCK_GPT,
 }: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
+  invariant((edgeClient != null) !== (edgeHttpClient != null));
+
   const logLayer = Layer.succeed(EventLogger, logger);
   const edgeClientLayer =
-    edgeClient != null ? EdgeClientService.fromClient(edgeClient) : EdgeClientService.notAvailable;
+    edgeClient != null && edgeHttpClient != null
+      ? EdgeClientService.fromClient(edgeClient, edgeHttpClient)
+      : EdgeClientService.notAvailable;
   const gptLayer = Layer.succeed(GptService, gpt);
   const spaceLayer = SpaceService.empty;
   return Layer.mergeAll(logLayer, edgeClientLayer, gptLayer, spaceLayer);

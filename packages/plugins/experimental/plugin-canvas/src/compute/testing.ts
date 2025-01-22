@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, type NodeType } from '@dxos/conductor';
+import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, EdgeGpt, type NodeType } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -35,6 +35,10 @@ import {
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
 import { createCanvasGraphModel, type Connection, type Shape, type Polygon } from '../types';
 import { CanvasGraphModel } from '../types/model';
+import { AIServiceClientImpl } from '@dxos/assistant';
+import { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { createStubEdgeIdentity } from '@dxos/edge-client';
+import { SpaceId } from '@dxos/keys';
 
 const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
@@ -202,7 +206,7 @@ export const createTest3 = ({
           createConstant({
             id: 'history',
             ...createLayout({ x: -18, y: 9, width: 8, height: 4 }),
-            value: ObjectId.random(),
+            value: `dxn:queue:${SpaceId.random()}:${ObjectId.random()}`,
           }),
         ]
       : []),
@@ -314,6 +318,24 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
   }
 
   return { machine, graph };
+};
+
+const EDGE_ENDPOINT = 'http://localhost:8787';
+// const AI_ENDPOINT = 'https://ai-service.dxos.workers.dev';
+const AI_ENDPOINT = 'http://localhost:8788';
+
+export const createServices = () => {
+  return {
+    gpt: new EdgeGpt(
+      new AIServiceClientImpl({
+        endpoint: AI_ENDPOINT,
+      }),
+    ),
+    edgeClient: new EdgeClient(createStubEdgeIdentity(), {
+      socketEndpoint: EDGE_ENDPOINT,
+    }),
+    edgeHttpClient: new EdgeHttpClient(EDGE_ENDPOINT),
+  };
 };
 
 const ARTIFACTS_SYSTEM_PROMPT = `
