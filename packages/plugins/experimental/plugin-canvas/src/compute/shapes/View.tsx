@@ -37,23 +37,21 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   const value = input?.type === 'executed' ? input.value : 0;
 
   if (isImage(value)) {
-    if (value.source) {
-      return (
-        <Box shape={shape}>
+    return (
+      <Box shape={shape}>
+        {(value.source && (
           <img
-            src={`data:image/jpeg;base64,${value.source.data}`}
             className='grow object-cover'
+            src={`data:image/jpeg;base64,${value.source.data}`}
             alt={value.prompt ?? `Generated image [id=${value.id}]`}
           />
-        </Box>
-      );
-    } else {
-      return (
-        <Box shape={shape}>
-          Unresolved image of {value.prompt} [id={value.id}]
-        </Box>
-      );
-    }
+        )) || (
+          <div className='p-2'>
+            Unresolved image of {value.prompt} [id={value.id}]
+          </div>
+        )}
+      </Box>
+    );
   }
 
   const handleAction: BoxActionHandler = (action) => {

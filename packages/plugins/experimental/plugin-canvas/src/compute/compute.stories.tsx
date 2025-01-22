@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode, EdgeClientService, EdgeGpt } from '@dxos/conductor';
+import { type ComputeGraphModel, ComputeNode, EdgeGpt } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
@@ -36,7 +36,6 @@ import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
-import { createEphemeralEdgeIdentity, createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -275,14 +274,10 @@ export const GPTImage: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }), {
-      gpt: new EdgeGpt(
-        new AIServiceClientImpl({
-          // endpoint: 'https://ai-service.dxos.workers.dev',
-          endpoint: 'http://localhost:8787',
-        }),
-      ),
-    }),
+    ...createMachine(
+      createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }),
+      createServices(),
+    ),
   },
 };
 
