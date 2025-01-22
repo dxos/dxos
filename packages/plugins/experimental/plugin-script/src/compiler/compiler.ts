@@ -167,6 +167,7 @@ export class Compiler {
     try {
       this._processedUrls.add(url);
       const response = await fetch(url);
+      invariant(response.ok);
       const typesUrl = response.headers.get('x-typescript-types');
       const content = await response.text();
       this.setFile(url, content);
@@ -235,6 +236,7 @@ export class Compiler {
     try {
       this._processedUrls.add(url);
       const response = await fetch(url);
+      invariant(response.ok);
       const content = await response.text();
       this.setFile(url, content);
 
