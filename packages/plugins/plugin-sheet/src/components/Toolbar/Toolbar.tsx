@@ -41,10 +41,10 @@ export const SheetToolbar = ({ classNames }: SheetToolbarProps) => {
   useAlignState(state);
   useStyleState(state);
   useCommentState(state);
+
   const actionsCreator = useCallback(() => createToolbarActions(state), [state]);
   const menu = useMenuActions(actionsCreator);
-
-  const handleAction = useToolbarAction();
+  const handleAction = useToolbarAction(state);
 
   return (
     <MenuProvider {...menu} onAction={handleAction as MenuActionHandler}>

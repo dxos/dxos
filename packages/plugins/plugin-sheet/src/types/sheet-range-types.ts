@@ -8,7 +8,7 @@ import { type SheetType } from '../types';
 
 export const alignKey = 'alignment';
 export type AlignKey = typeof alignKey;
-export type AlignValue = 'start' | 'center' | 'end' | 'unset';
+export type AlignValue = 'start' | 'center' | 'end';
 
 export const commentKey = 'comment';
 export type CommentKey = typeof commentKey;
