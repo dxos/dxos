@@ -48,7 +48,7 @@ export const withPluginManager = ({
       });
 
       return () => pluginManager.context.removeCapability(capability.interface, capability.implementation);
-    });
+    }, []);
 
     return <App />;
   };
