@@ -100,7 +100,7 @@ const DropdownMenuToolbarItem = ({
 
 const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
-  const { icon, iconOnly = true, disabled } = action.properties;
+  const { icon, iconOnly = true, disabled, testId } = action.properties;
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
@@ -115,6 +115,7 @@ const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: Menu
       label={<ActionLabel action={action} />}
       onClick={handleClick}
       variant='ghost'
+      {...(testId && { 'data-testid': testId })}
     />
   );
 };
