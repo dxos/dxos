@@ -3,10 +3,9 @@
 //
 
 import { type ReactElement, useMemo } from 'react';
-import { of, switchMap } from 'rxjs';
 
 import { usePulledAudioTrack } from './PullAudioTracks';
-import { useStateObservable, useSubscribedState } from './hooks/rxjsHooks';
+import { usePromise } from './hooks/usePromise';
 import { useRoomContext } from './hooks/useRoomContext';
 import type { TrackObject } from './types';
 
@@ -17,7 +16,7 @@ interface PullTracksProps {
 }
 
 export const PullVideoTrack = ({ video, audio, children }: PullTracksProps) => {
-  const { peer } = useRoomContext()!;
+  const { client } = useRoomContext()!;
   const audioTrack = usePulledAudioTrack(audio);
 
   const [sessionId, trackName] = video?.split('/') ?? [];
@@ -33,11 +32,11 @@ export const PullVideoTrack = ({ video, audio, children }: PullTracksProps) => {
     [sessionId, trackName],
   );
 
-  const trackObject$ = useStateObservable(trackObject);
-  const pulledTrack$ = useMemo(
-    () => trackObject$.pipe(switchMap((track) => (track ? peer.pullTrack(of(track)) : of(undefined)))),
-    [peer, trackObject$],
+  const pulledTrackPromise = useMemo(
+    () => (trackObject ? client?.pullTrack(trackObject) : undefined),
+    [client, trackObject],
   );
-  const videoTrack = useSubscribedState(pulledTrack$);
+
+  const videoTrack = usePromise(pulledTrackPromise);
   return children({ videoTrack, audioTrack });
 };

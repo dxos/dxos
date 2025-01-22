@@ -28,7 +28,7 @@ export const Room = () => {
 const JoinedRoom = () => {
   const {
     userMedia,
-    peer,
+    client,
     dataSaverMode,
     pushedTracks,
     room: { otherUsers, updateUserState, identity },
@@ -47,7 +47,7 @@ const JoinedRoom = () => {
 
   useBroadcastStatus({
     userMedia,
-    peer,
+    client,
     updateUserState,
     identity,
     pushedTracks,

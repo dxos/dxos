@@ -3,9 +3,8 @@
 //
 
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
-import { of } from 'rxjs';
 
-import { useSubscribedState } from './hooks/rxjsHooks';
+import { usePromise } from './hooks/usePromise';
 import { useRoomContext } from './hooks/useRoomContext';
 
 interface AudioStreamProps {
@@ -78,7 +77,7 @@ const AudioTrack = ({
   const onTrackRemovedRef = useRef(onTrackRemoved);
   onTrackRemovedRef.current = onTrackRemoved;
 
-  const { peer } = useRoomContext();
+  const { client } = useRoomContext();
   const trackObject = useMemo(() => {
     const [sessionId, trackName] = track.split('/');
     return {
@@ -88,11 +87,11 @@ const AudioTrack = ({
     } as const;
   }, [track]);
 
-  const pulledTrack$ = useMemo(() => {
-    return peer.pullTrack(of(trackObject));
-  }, [peer, trackObject]);
+  const pulledTrackPromise = useMemo(() => {
+    return client?.pullTrack(trackObject);
+  }, [client, trackObject]);
 
-  const audioTrack = useSubscribedState(pulledTrack$);
+  const audioTrack = usePromise(pulledTrackPromise);
 
   useEffect(() => {
     if (!audioTrack) {

@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 
 import type { useRoom } from './useRoom';
 import type { UserMedia } from './useUserMedia';
-import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
+import type { CallsClient } from '../utils/calls-client';
 
 export type RoomContextType = {
   traceLink?: string;
@@ -18,7 +18,7 @@ export type RoomContextType = {
   dataSaverMode: boolean;
   setDataSaverMode: Dispatch<SetStateAction<boolean>>;
   userMedia: UserMedia;
-  peer: RxjsPeer;
+  client?: CallsClient;
   iceConnectionState: RTCIceConnectionState;
   room: ReturnType<typeof useRoom>;
   pushedTracks: {

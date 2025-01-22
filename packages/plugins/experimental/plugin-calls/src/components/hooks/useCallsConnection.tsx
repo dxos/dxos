@@ -4,14 +4,20 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { useSubscribedState } from './rxjsHooks';
+import { usePromise } from './usePromise';
 import { useStablePojo } from './useStablePojo';
-import { RxjsPeer, type PeerConfig } from '../utils/rxjs/RxjsPeer.client';
+import { CallsClient, type PeerConfig } from '../utils/calls-client';
 
-export const usePeerConnection = (config: PeerConfig) => {
+export const useCallsConnection = (config: PeerConfig) => {
   const stableConfig = useStablePojo(config);
-  const peer = useMemo(() => new RxjsPeer(stableConfig), [stableConfig]);
-  const peerConnection = useSubscribedState(peer.peerConnection$);
+  const clientPromise = useMemo(() => new CallsClient(stableConfig).open(), [stableConfig]);
+  const client = usePromise(clientPromise);
+  const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
+  useEffect(() => {
+    if (client?.session.peerConnection) {
+      setPeerConnection(client.session.peerConnection);
+    }
+  }, [client?.session.peerConnection]);
 
   const [iceConnectionState, setIceConnectionState] = useState<RTCIceConnectionState>('new');
 
@@ -30,7 +36,7 @@ export const usePeerConnection = (config: PeerConfig) => {
   }, [peerConnection]);
 
   return {
-    peer,
+    client,
     iceConnectionState,
   };
 };
