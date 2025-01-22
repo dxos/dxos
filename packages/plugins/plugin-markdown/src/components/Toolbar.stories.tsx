@@ -31,7 +31,6 @@ import {
   useTextEditor,
   useEditorToolbarState,
 } from '@dxos/react-ui-editor';
-import { textBlockWidth } from '@dxos/react-ui-theme';
 import { TextType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -81,7 +80,7 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
 
   return (
     <div role='none' className='fixed inset-0 flex flex-col'>
-      <EditorToolbar onAction={handleAction} state={toolbarState ?? {}} classNames={textBlockWidth} />
+      <EditorToolbar onAction={handleAction} state={toolbarState ?? {}} />
       <div ref={parentRef} />
     </div>
   );

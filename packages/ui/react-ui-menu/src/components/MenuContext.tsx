@@ -28,10 +28,17 @@ const MenuProvider = ({
   resolveGroupItems = menuContextDefaults.resolveGroupItems,
   onAction = menuContextDefaults.onAction,
   iconSize = menuContextDefaults.iconSize,
+  attendableId,
 }: PropsWithChildren<Partial<MenuContextValue>>) => {
   const { scope } = useMenuScope(undefined);
   return (
-    <MenuContextProvider resolveGroupItems={resolveGroupItems} onAction={onAction} iconSize={iconSize} scope={scope}>
+    <MenuContextProvider
+      resolveGroupItems={resolveGroupItems}
+      onAction={onAction}
+      iconSize={iconSize}
+      attendableId={attendableId}
+      scope={scope}
+    >
       {children}
     </MenuContextProvider>
   );
