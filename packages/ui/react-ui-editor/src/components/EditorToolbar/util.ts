@@ -33,6 +33,8 @@ export type EditorToolbarFeatureFlags = Partial<{
   comment: boolean;
   search: boolean;
   viewMode: boolean;
+  // TODO(wittjosiah): Factor out.
+  image: boolean;
 }>;
 
 export type EditorToolbarActionGraphProps = {

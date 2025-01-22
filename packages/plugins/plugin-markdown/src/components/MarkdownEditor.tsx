@@ -5,6 +5,7 @@
 import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 
 import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -146,6 +147,33 @@ export const MarkdownEditor = ({
   useTest(editorView);
   useSelectCurrentThread(editorView, id);
 
+  // https://react-dropzone.js.org/#src
+  const { acceptedFiles, getInputProps, open } = useDropzone({
+    multiple: false,
+    noDrag: true,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+    },
+  });
+
+  useEffect(() => {
+    if (editorView && onFileUpload && acceptedFiles.length) {
+      requestAnimationFrame(async () => {
+        // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
+        const f = acceptedFiles[0];
+        const file = new File([f], f.name, {
+          type: f.type,
+          lastModified: f.lastModified,
+        });
+
+        const info = await onFileUpload(file);
+        if (info) {
+          processEditorPayload(editorView, { type: 'image', data: info.url });
+        }
+      });
+    }
+  }, [acceptedFiles, editorView]);
+
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = useCallback(
@@ -161,16 +189,31 @@ export const MarkdownEditor = ({
           onViewModeChange?.(id, action.properties.data);
           return;
         }
+        case 'image': {
+          open();
+          return;
+        }
       }
 
       handleToolbarAction?.(action);
     },
-    [editorView, onViewModeChange],
+    [editorView, onViewModeChange, open],
   );
 
   return (
     <StackItem.Content toolbar={!!toolbar}>
-      {toolbar && <EditorToolbar state={toolbarState} onAction={handleAction} attendableId={id} role={role} />}
+      {toolbar && (
+        <>
+          <EditorToolbar
+            attendableId={id}
+            role={role}
+            state={toolbarState}
+            image={!!onFileUpload}
+            onAction={handleAction}
+          />
+          <input {...getInputProps()} />
+        </>
+      )}
       <div
         role='none'
         ref={parentRef}

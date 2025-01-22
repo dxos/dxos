@@ -19,6 +19,7 @@ import { createBlocks } from './blocks';
 import { createComment } from './comment';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
+import { createImage } from './image';
 import { createLists } from './lists';
 import {
   type EditorToolbarFeatureFlags,
@@ -57,6 +58,12 @@ const createToolbar = ({
     const blocks = createBlocks(state);
     nodes.push(...blocks.nodes);
     edges.push(...blocks.edges);
+  }
+  // TODO(wittjosiah): Factor out.
+  if (features.image ?? false) {
+    const image = createImage();
+    nodes.push(...image.nodes);
+    edges.push(...image.edges);
   }
   const editorToolbarGap = createGapSeparator();
   nodes.push(editorToolbarGap);
