@@ -24,11 +24,13 @@ export type TableToolbarAction = MenuAction<TableToolbarActionProperties>;
 
 export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 
-type ToolbarState = Partial<{ viewDirty: boolean }>;
+type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
-export type ToolbarProps = ThemedClassName<ToolbarState & { onAction?: MenuActionHandler<TableToolbarAction> }>;
+export type TableToolbarProps = ThemedClassName<
+  TableToolbarState & { onAction?: MenuActionHandler<TableToolbarAction> }
+>;
 
-const createTableToolbarActions = (state: ToolbarState) => {
+const createTableToolbarActions = (state: TableToolbarState) => {
   const add = createMenuAction<TableToolbarActionProperties>('add-row', {
     type: 'add-row',
     icon: 'ph--plus--regular',
@@ -57,8 +59,8 @@ const createTableToolbarActions = (state: ToolbarState) => {
   };
 };
 
-export const TableToolbar = ({ classNames, viewDirty, onAction }: ToolbarProps) => {
-  const state = useMemo(() => create<ToolbarState>({ viewDirty }), []);
+export const TableToolbar = ({ classNames, viewDirty, onAction }: TableToolbarProps) => {
+  const state = useMemo(() => create<TableToolbarState>({ viewDirty }), []);
   const actionsCreator = useCallback(() => createTableToolbarActions(state), [state]);
   const menu = useMenuActions(actionsCreator);
 
