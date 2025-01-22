@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { type S } from '@dxos/echo-schema';
+import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
@@ -13,6 +14,7 @@ import { TableType } from '@dxos/react-ui-table';
 
 import { TableContainer, TableViewEditor } from '../components';
 import { TABLE_PLUGIN } from '../meta';
+import { InitialSchemaAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -36,8 +38,8 @@ export default () =>
           return false;
         }
 
-        // TODO(ZaymonFC): use an annotation on the schema.
-        return true;
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+        return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
         const props = inputProps as any as InputProps<any>;
@@ -47,8 +49,6 @@ export default () =>
         }
         // TODO(ZaymonFC): Make this reactive.
         const schemata = space?.db.schemaRegistry.query().runSync();
-
-        console.log('Rendering input surface with', { schemata, space, props });
 
         return (
           <SelectInput<any>

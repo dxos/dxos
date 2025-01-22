@@ -43,17 +43,16 @@ export const initializeTable = async ({
       throw new Error(`Schema not found: ${initialSchema}`);
     }
 
-    // We need to get the schema properties here. For now, only simple types, not compound types
+    // We need to get the schema properties here. For now, only simple types and refs, not compound types
     // are going to be supported.
-
     const fields = getSchemaProperties(schema.ast)
-      .filter((prop) => prop.type !== 'object')
+      .filter((prop) => prop.type !== 'object' || prop.format === FormatEnum.Ref)
       .map((prop) => prop.name);
 
     table.view = makeRef(
       createView({
         // TODO(ZaymonFC): Don't hardcode name?
-        name: 'Test',
+        name: 'View',
         typename: schema.typename,
         jsonSchema: schema.jsonSchema,
         fields,
@@ -80,8 +79,7 @@ export const initializeTable = async ({
 
     table.view = makeRef(
       createView({
-        // TODO(ZaymonFC): Don't hardcode name?
-        name: 'Test',
+        name: 'View',
         typename: contactSchema.typename,
         jsonSchema: contactSchema.jsonSchema,
         fields: ['name', 'active', 'email', 'salary'],

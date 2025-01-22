@@ -26,6 +26,9 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
     .toSorted(byDisposition);
 };
 
+/**
+ * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
+ */
 export const isSurfaceAvailable = (context: PluginsContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
   const surfaces = context.requestCapabilities(Capabilities.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), { role, data });

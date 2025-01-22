@@ -11,6 +11,7 @@ import { Clipboard } from '@dxos/react-ui';
 import { ScriptCapabilities } from './capabilities';
 import { AutomationPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
 import { SCRIPT_PLUGIN } from '../meta';
+import { type ScriptSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -18,7 +19,10 @@ export default () =>
       id: `${SCRIPT_PLUGIN}/settings`,
       role: 'settings',
       filter: (data): data is any => data.subject === SCRIPT_PLUGIN,
-      component: () => <ScriptSettings settings={{}} />,
+      component: () => {
+        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)!.value;
+        return <ScriptSettings settings={settings} />;
+      },
     }),
     createSurface({
       id: `${SCRIPT_PLUGIN}/article`,
@@ -26,7 +30,8 @@ export default () =>
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
-        return <ScriptContainer role={role} script={data.subject} env={compiler.environment} />;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)!.value;
+        return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
     }),
     createSurface({
