@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { sleep, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { openAndClose } from '@dxos/test-utils';
 
 import { PersistentLifecycle } from './persistent-lifecycle';
 
@@ -19,7 +18,10 @@ describe('ConnectionState', () => {
       },
       stop: async () => {},
     });
-    await openAndClose(persistentLifecycle);
+    await persistentLifecycle.open();
+    onTestFinished(async () => {
+      await persistentLifecycle.close();
+    });
 
     const triggerTimestamp = Date.now();
     persistentLifecycle.scheduleRestart();
@@ -43,7 +45,10 @@ describe('ConnectionState', () => {
       stop: async () => {},
     });
 
-    await openAndClose(persistentLifecycle);
+    await persistentLifecycle.open();
+    onTestFinished(async () => {
+      await persistentLifecycle.close();
+    });
 
     const triggerTimestamp = Date.now();
     await sleep(10);
