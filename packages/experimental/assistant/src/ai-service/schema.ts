@@ -196,8 +196,14 @@ export interface LLMTool extends S.Schema.Type<typeof LLMTool> {}
 export const GenerateRequest = S.Struct({
   model: LLMModel,
 
-  spaceId: SpaceIdSchema,
-  threadId: ObjectId,
+  spaceId: S.optional(SpaceIdSchema),
+  threadId: S.optional(ObjectId),
+
+  /**
+   * History of messages to include in the context window.
+   */
+  history: S.optional(S.Array(Message)),
+
   /**
    * System instructions to the LLM.
    */
