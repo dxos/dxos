@@ -9,8 +9,10 @@ import React from 'react';
 
 import { Capabilities, contributes, createResolver, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SheetContainer } from './SheetContainer';
@@ -28,7 +30,11 @@ export const Basic = () => {
     return null;
   }
 
-  return <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />;
+  return (
+    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
+      <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
+    </AttendableContainer>
+  );
 };
 
 export const Spec = () => {
@@ -40,12 +46,14 @@ export const Spec = () => {
   }
 
   return (
-    <div role='none' className='grid grid-rows-[66%_33%] grid-cols-1'>
-      <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
-      <div role='none' data-testid='grid.range-list'>
-        <RangeList sheet={sheet} />
+    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
+      <div role='none' className='grid grid-rows-[66%_33%] grid-cols-1'>
+        <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
+        <div role='none' data-testid='grid.range-list'>
+          <RangeList sheet={sheet} />
+        </div>
       </div>
-    </div>
+    </AttendableContainer>
   );
 };
 
@@ -61,6 +69,7 @@ const meta: Meta = {
       tooltips: true,
       classNames: 'grid',
     }),
+    withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
       plugins: [IntentPlugin()],

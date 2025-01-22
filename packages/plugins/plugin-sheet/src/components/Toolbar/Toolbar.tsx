@@ -5,7 +5,6 @@
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
 import {
   createGapSeparator,
   type MenuActionHandler,
@@ -19,7 +18,6 @@ import { createComment, useCommentState } from './comment';
 import { createStyle, useStyleState } from './style';
 import { useToolbarAction } from './useToolbarAction';
 import { type ToolbarState, useToolbarState } from './useToolbarState';
-import { useSheetContext } from '../SheetContext';
 
 //
 // Root
@@ -39,9 +37,6 @@ const createToolbarActions = (state: ToolbarState) => {
 };
 
 export const SheetToolbar = ({ classNames }: SheetToolbarProps) => {
-  const { id } = useSheetContext();
-  const { hasAttention } = useAttention(id);
-
   const state = useToolbarState({});
   useAlignState(state);
   useStyleState(state);
@@ -53,7 +48,7 @@ export const SheetToolbar = ({ classNames }: SheetToolbarProps) => {
 
   return (
     <MenuProvider {...menu} onAction={handleAction as MenuActionHandler}>
-      <ToolbarMenu classNames={['pli-0.5 attention-surface', !hasAttention && 'opacity-20', classNames]} />
+      <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );
 };
