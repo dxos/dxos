@@ -32,6 +32,7 @@ import {
   useTextEditor,
   stackItemContentEditorClassNames,
   useEditorToolbarState,
+  createEditorAction,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, nonNullable } from '@dxos/util';
@@ -208,7 +209,7 @@ export const MarkdownEditor = ({
             attendableId={id}
             role={role}
             state={toolbarState}
-            image={!!onFileUpload}
+            customActions={onFileUpload ? createUploadAction : undefined}
             onAction={handleAction}
           />
           <input {...getInputProps()} />
@@ -236,3 +237,14 @@ const useTest = (view?: EditorView) => {
     }
   }, [view]);
 };
+
+export const createUploadAction = () => ({
+  nodes: [
+    createEditorAction(
+      { type: 'image', testId: 'editor.toolbar.image' },
+      'ph--image-square--regular',
+      'upload image label',
+    ),
+  ],
+  edges: [{ source: 'root', target: 'image' }],
+});

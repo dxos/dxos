@@ -13,6 +13,7 @@ import {
   type MenuActionProperties,
   createMenuAction,
   createMenuItemGroup,
+  type ActionGraphProps,
 } from '@dxos/react-ui-menu';
 
 import type { EditorAction, EditorActionPayload, EditorViewMode, Formatting } from '../../extensions';
@@ -33,12 +34,12 @@ export type EditorToolbarFeatureFlags = Partial<{
   comment: boolean;
   search: boolean;
   viewMode: boolean;
-  // TODO(wittjosiah): Factor out.
-  image: boolean;
 }>;
 
 export type EditorToolbarActionGraphProps = {
   state: ReactiveObject<EditorToolbarState>;
+  // TODO(wittjosiah): Control positioning.
+  customActions?: () => ActionGraphProps;
   onAction: (action: EditorAction) => void;
 };
 

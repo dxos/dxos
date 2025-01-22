@@ -19,21 +19,21 @@ import { createBlocks } from './blocks';
 import { createComment } from './comment';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
-import { createImage } from './image';
 import { createLists } from './lists';
 import {
+  type EditorToolbarActionGraphProps,
   type EditorToolbarFeatureFlags,
   type EditorToolbarProps,
   editorToolbarSearch,
-  type EditorToolbarState,
 } from './util';
 import { createViewMode } from './viewMode';
 import { stackItemContentToolbarClassNames } from '../../styles/stack-item-content-class-names';
 
 const createToolbar = ({
   state,
+  customActions,
   ...features
-}: EditorToolbarFeatureFlags & { state: EditorToolbarState }): {
+}: EditorToolbarFeatureFlags & Pick<EditorToolbarActionGraphProps, 'state' | 'customActions'>): {
   nodes: NodeArg<any>[];
   edges: { source: string; target: string }[];
 } => {
@@ -59,11 +59,10 @@ const createToolbar = ({
     nodes.push(...blocks.nodes);
     edges.push(...blocks.edges);
   }
-  // TODO(wittjosiah): Factor out.
-  if (features.image ?? false) {
-    const image = createImage();
-    nodes.push(...image.nodes);
-    edges.push(...image.edges);
+  if (customActions) {
+    const custom = customActions();
+    nodes.push(...custom.nodes);
+    edges.push(...custom.edges);
   }
   const editorToolbarGap = createGapSeparator();
   nodes.push(editorToolbarGap);
