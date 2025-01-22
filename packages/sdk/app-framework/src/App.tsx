@@ -55,7 +55,7 @@ export const createApp = ({
   pluginManager,
   pluginLoader: _pluginLoader,
   plugins = [],
-  core = [],
+  core = plugins.map(({ meta }) => meta.id),
   defaults = [],
   placeholder = null,
   fallback = DefaultFallback,
