@@ -7792,6 +7792,9 @@ importers:
       effect:
         specifier: ^3.12.1
         version: 3.12.1
+      react-dropzone:
+        specifier: ^14.2.3
+        version: 14.2.3(react@18.2.0)
     devDependencies:
       '@dxos/debug':
         specifier: workspace:*
@@ -10992,9 +10995,6 @@ importers:
       lodash.sortby:
         specifier: ^4.7.0
         version: 4.7.0
-      react-dropzone:
-        specifier: ^14.2.3
-        version: 14.2.3(react@18.2.0)
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
