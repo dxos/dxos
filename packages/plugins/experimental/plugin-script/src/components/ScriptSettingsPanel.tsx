@@ -15,6 +15,7 @@ import { AccessTokenType } from '@dxos/schema';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
+// TODO(wittjosiah): Factor out.
 // From https://stackoverflow.com/a/67243723/2804332
 const kebabize = (str: string) => str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase());
 
