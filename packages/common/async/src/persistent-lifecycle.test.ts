@@ -4,10 +4,11 @@
 
 import { describe, expect, test, onTestFinished } from 'vitest';
 
-import { sleep, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { PersistentLifecycle } from './persistent-lifecycle';
+import { sleep } from './timeout';
+import { Trigger } from './trigger';
 
 describe('ConnectionState', () => {
   test('first reconnect fires immediately', async () => {
