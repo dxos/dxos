@@ -42,22 +42,11 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         },
       ];
 
-      // Creating a temp thread for messages.
-      // TODO(dmaretskyi): Allow to pass messages into the generate method directly.
-      const spaceId = SpaceId.random();
-      const threadId = ObjectId.random();
-      yield* Effect.promise(() =>
-        this._client.insertMessages(
-          messages.map((msg) => ({ ...msg, id: ObjectId.random(), threadId, spaceId, foreignId: undefined })),
-        ),
-      );
-
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const result = yield* Effect.promise(() =>
         this._client.generate({
           model: '@anthropic/claude-3-5-sonnet-20241022',
-          threadId,
-          spaceId,
+          history: messages,
           systemPrompt,
           tools: tools as LLMTool[],
         }),

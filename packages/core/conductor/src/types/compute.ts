@@ -10,6 +10,7 @@ import { mapValues } from '@dxos/util';
 // TODO(burdon): Move to types to untangle circular deps.
 import type { ComputeNode } from './graph';
 import type { EventLogger, GptService, SpaceService } from '../services';
+import type { EdgeClientService } from '../services/edge-client-service';
 
 //
 // Errors
@@ -86,7 +87,7 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   node?: ComputeNode,
 ) => ComputeEffect<ValueBag<O>>;
 
-export type ComputeRequirements = EventLogger | GptService | SpaceService | Scope.Scope;
+export type ComputeRequirements = EventLogger | EdgeClientService | GptService | SpaceService | Scope.Scope;
 
 /**
  * For results of compute functions.

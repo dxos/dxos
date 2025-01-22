@@ -2442,6 +2442,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../mesh/edge-client
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
