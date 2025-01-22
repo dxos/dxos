@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
-import { IMAGE_TYPENAME, type GptService } from '../gpt';
+import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from '../gpt';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -42,22 +42,11 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         },
       ];
 
-      // Creating a temp thread for messages.
-      // TODO(dmaretskyi): Allow to pass messages into the generate method directly.
-      const spaceId = SpaceId.random();
-      const threadId = ObjectId.random();
-      yield* Effect.promise(() =>
-        this._client.insertMessages(
-          messages.map((msg) => ({ ...msg, id: ObjectId.random(), threadId, spaceId, foreignId: undefined })),
-        ),
-      );
-
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const result = yield* Effect.promise(() =>
         this._client.generate({
           model: '@anthropic/claude-3-5-sonnet-20241022',
-          threadId,
-          spaceId,
+          history: messages,
           systemPrompt,
           tools: tools as LLMTool[],
         }),
@@ -69,7 +58,10 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       const outputWithAPrompt = Effect.gen(function* () {
         const outputMessages = yield* outputMessagesEffect;
-        return [messages.at(-1)!, ...outputMessages];
+        return [messages.at(-1)!, ...outputMessages].map((msg) => ({
+          [ECHO_ATTR_TYPE]: `dxn:type:${MESSAGE_TYPENAME}:0.1.0`,
+          ...msg,
+        }));
       });
 
       const logger = yield* EventLogger;
@@ -82,7 +74,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
               type: 'custom',
               nodeId: logger.nodeId!,
               event,
-            });
+            });;
             return Effect.void;
           }),
           Stream.runDrain,

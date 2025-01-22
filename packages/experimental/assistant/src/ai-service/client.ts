@@ -90,8 +90,8 @@ export class AIServiceClientImpl implements AIServiceClient {
 }
 
 type GenerationParams = {
-  spaceId: SpaceId;
-  threadId: ObjectId;
+  spaceId?: SpaceId;
+  threadId?: ObjectId;
 };
 
 export class GenerationStream implements AsyncIterable<ResultStreamEvent> {

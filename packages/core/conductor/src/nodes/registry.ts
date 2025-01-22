@@ -7,7 +7,7 @@ import { Effect } from 'effect';
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import {
@@ -41,6 +41,8 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
+import { EdgeClient } from '@dxos/edge-client';
+import { EdgeClientService } from '../services/edge-client-service';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -163,12 +165,19 @@ export const registry: Record<NodeType, Executable> = {
     output: ListOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const gptService = yield* GptService;
-        const aiClient = (gptService.getAiServiceClient ?? failedInvariant())();
-        const messages = yield* Effect.promise(() => aiClient.getMessagesInThread(FAKE_SPACE_ID, id));
+        const { spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
+        invariant(SpaceId.isValid(spaceId), 'Invalid space id');
+        invariant(ObjectId.isValid(queueId), 'Invalid queue id');
+
+        const edgeClientService = yield* EdgeClientService;
+        const edgeClient = edgeClientService.getEdgeHttpClient();
+        const { objects: messages } = yield* Effect.promise(() => edgeClient.queryQueue(spaceId, { queueId }));
+
+        const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
+
         return {
           id,
-          items: messages,
+          items: decoded,
         };
       }),
     ),
@@ -179,20 +188,20 @@ export const registry: Record<NodeType, Executable> = {
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
-        const gptService = yield* GptService;
-        const aiClient = (gptService.getAiServiceClient ?? failedInvariant())();
-        invariant(ObjectId.isValid(id), 'Invalid thread id');
-        const toInsert = items.map(
-          (message): Message => ({
-            ...message,
-            spaceId: FAKE_SPACE_ID,
-            threadId: id as any, // TODO(dmaretskyi): Assistant has its own object id definition.
-            foreignId: undefined,
-          }),
-        );
+        const { spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
+        invariant(SpaceId.isValid(spaceId), 'Invalid space id');
+        invariant(ObjectId.isValid(queueId), 'Invalid queue id');
 
-        log.info('insertMessages', { id, toInsert });
-        yield* Effect.promise(() => aiClient.insertMessages(toInsert));
+        const edgeClientService = yield* EdgeClientService;
+        const edgeClient = edgeClientService.getEdgeHttpClient();
+
+        const toInsert = items.map((item) => ({
+          ...item,
+          id: item.id ?? ObjectId.random(),
+        }));
+
+        log.info('insertIntoQueue', { spaceId, queueId, items: toInsert });
+        yield* Effect.promise(() => edgeClient.insertIntoQueue(spaceId, queueId, toInsert as unknown[]));
         return {};
       }),
     ),

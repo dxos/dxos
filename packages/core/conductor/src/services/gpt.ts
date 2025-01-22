@@ -12,6 +12,8 @@ import type { ComputeEffect, ValueBag } from '../types';
 
 export const IMAGE_TYPENAME = 'example.org/type/Image';
 
+export const MESSAGE_TYPENAME = 'example.org/type/Message';
+
 export const Image = S.Struct({
   id: S.String,
   prompt: S.String,

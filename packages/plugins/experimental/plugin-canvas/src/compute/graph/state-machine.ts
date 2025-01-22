@@ -30,6 +30,8 @@ import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
+import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeClientService } from '@dxos/conductor';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -74,6 +76,8 @@ export type RuntimeValue =
 
 export type Services = {
   gpt: Context.Tag.Service<GptService>;
+  edgeClient?: EdgeClient;
+  edgeHttpClient?: EdgeHttpClient;
 };
 
 type ComputeOutputEvent = {
@@ -321,8 +325,13 @@ export class StateMachine extends Resource {
     const services = { ...DEFAULT_SERVICES, ...this._services };
     const logLayer = Layer.succeed(EventLogger, this._createLogger());
     const gptLayer = Layer.succeed(GptService, services.gpt!);
+    const edgeClientLayer =
+      services.edgeClient != null && services.edgeHttpClient != null
+        ? EdgeClientService.fromClient(services.edgeClient, services.edgeHttpClient)
+        : EdgeClientService.notAvailable;
+
     const spaceLayer = SpaceService.empty;
-    return Layer.mergeAll(logLayer, gptLayer, spaceLayer);
+    return Layer.mergeAll(logLayer, gptLayer, edgeClientLayer, spaceLayer);
   }
 
   private _createLogger(): Context.Tag.Service<EventLogger> {
