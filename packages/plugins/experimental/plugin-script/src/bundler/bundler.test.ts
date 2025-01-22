@@ -35,10 +35,10 @@ describe('Bundler', () => {
     expect(result.error).to.not.exist;
   });
 
-  test('HTTPS Import', async () => {
+  test('NPM Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle(`
-      import { Octokit } from 'https://esm.sh/octokit';
+      import { Octokit } from 'npm:octokit';
       const octokit = new Octokit();
     `);
     expect(result.bundle).to.exist;
