@@ -24,7 +24,6 @@ export class Compiler {
   private _env: VirtualTypeScriptEnvironment | undefined;
   private _fsMap: Map<string, string> | undefined;
   private _httpTypeCache: Map<string, string> = new Map();
-  private _pendingFetches: Map<string, Promise<void>> = new Map();
   private _processedUrls: Set<string> = new Set();
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
@@ -175,19 +174,11 @@ export class Compiler {
           return;
         }
 
-        if (this._pendingFetches.has(normalizedUrl)) {
-          return this._pendingFetches.get(normalizedUrl);
+        if (types) {
+          await this._prefetchHttpTypes(normalizedUrl);
+        } else {
+          await this._prefetchHttpModule(normalizedUrl);
         }
-
-        const fetchPromise = types ? this._prefetchHttpTypes(normalizedUrl) : this._prefetchHttpModule(normalizedUrl);
-
-        void fetchPromise.finally(() => {
-          this._pendingFetches.delete(normalizedUrl);
-        });
-
-        this._pendingFetches.set(normalizedUrl, fetchPromise);
-
-        await fetchPromise;
       }),
     );
   }
@@ -198,12 +189,11 @@ export class Compiler {
     }
 
     try {
+      this._processedUrls.add(url);
       const response = await fetch(url);
       const typesUrl = response.headers.get('x-typescript-types');
       const content = await response.text();
-
       this.setFile(url, content);
-      this._processedUrls.add(url);
 
       if (typesUrl) {
         this._httpTypeCache.set(url, typesUrl);
@@ -212,6 +202,7 @@ export class Compiler {
         this._createAmbientModuleDeclartion(url);
       }
     } catch (err) {
+      this._processedUrls.delete(url);
       log.catch(err, { url });
     }
   }
@@ -222,15 +213,15 @@ export class Compiler {
     }
 
     try {
+      this._processedUrls.add(url);
       const response = await fetch(url);
       const content = await response.text();
-
       this.setFile(url, content);
-      this._processedUrls.add(url);
 
       // Process imports in type definitions with the types URL as parent.
       await this._processImportsInContent({ content, parentUrl: url, types: true });
     } catch (err) {
+      this._processedUrls.delete(url);
       log.catch(err, { url });
     }
   }

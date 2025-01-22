@@ -97,7 +97,6 @@ export const TypescriptEditor = ({
                 tsHttpTypeLoader({ compiler, path: `./src/${id}.ts` }),
               ]
             : [],
-          InputModeExtensions.vscode,
         ],
       ].filter(nonNullable),
       selection,
