@@ -54,7 +54,12 @@ export class PluginManager {
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();
 
-  constructor({ pluginLoader, plugins = [], core = [], enabled = [] }: PluginManagerOptions) {
+  constructor({
+    pluginLoader,
+    plugins = [],
+    core = plugins.map(({ meta }) => meta.id),
+    enabled = [],
+  }: PluginManagerOptions) {
     this._pluginLoader = pluginLoader;
     this._state = create({
       plugins,
