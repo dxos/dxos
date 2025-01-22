@@ -61,6 +61,7 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
   - [ ] Green anchors if match.
   - [ ] Touch input (ipad).
   - [ ] Close frame when resizing.
+  - [ ] Scale resizing when zoomed.
 
 ### Phase 3: State machine
 
