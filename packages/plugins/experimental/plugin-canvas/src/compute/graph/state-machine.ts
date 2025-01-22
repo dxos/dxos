@@ -19,11 +19,9 @@ import {
   GraphExecutor,
   makeValueBag,
   SpaceService,
-  unwrapValueBag,
   type GptInput,
   type GptOutput,
   type ValueBag,
-  type ValueEffect,
   isNotExecuted,
 } from '@dxos/conductor';
 import { MockGpt } from '@dxos/conductor';
@@ -163,7 +161,11 @@ export class StateMachine extends Resource {
     return Object.fromEntries(
       ids.map((id) => [
         id,
-        { node: this._graph.getNode(id), input: this._runtimeStateInputs[id], output: this._runtimeStateOutputs[id] },
+        {
+          node: this._graph.getNode(id),
+          input: this._runtimeStateInputs[id],
+          output: this._runtimeStateOutputs[id],
+        },
       ]),
     );
   }

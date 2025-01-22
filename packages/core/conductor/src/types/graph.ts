@@ -14,18 +14,17 @@ export const ComputeNode = S.mutable(
     // TODO(burdon): Remove? Use type in base node class.
     type: S.optional(S.String),
 
+    /**
+     * NOTE: Rather than a discriminated union, we have a mixin of properties for different node types.
+     */
+
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
 
     /** For switch nodes. */
-    // TODO(dmaretskyi): Move to constants.
     enabled: S.optional(S.Boolean),
 
-    /**
-     * For constant nodes.
-     */
-    // TODO(burdon): Rename value?
-    // TODO(burdon): Make union of primitive types?
+    /** For constant nodes. */
     constant: S.optional(S.Any),
   }),
 );

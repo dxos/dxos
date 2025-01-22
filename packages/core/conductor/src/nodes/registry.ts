@@ -64,6 +64,7 @@ export type NodeType =
   | 'map'
   | 'not'
   | 'or'
+  | 'random'
   | 'reducer'
   | 'scope'
   | 'switch'
@@ -109,8 +110,13 @@ export const registry: Record<NodeType, Executable> = {
     output: TriggerOutput,
   }),
 
+  ['random' as const]: defineComputeNode({
+    input: VoidInput,
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.Number }),
+  }),
+
   //
-  // Outputs
+  // Outputs/views
   //
 
   ['beacon' as const]: defineComputeNode({
