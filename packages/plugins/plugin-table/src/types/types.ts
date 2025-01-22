@@ -9,14 +9,29 @@ import { FieldSchema } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
+export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-table/annotation/InitialSchema');
+
+export const CreateTableSchema = S.Struct({
+  name: S.optional(S.String),
+  initialSchema: S.optional(
+    S.String.annotations({
+      [InitialSchemaAnnotationId]: true,
+    }),
+  ),
+});
+
+export type CreateTableType = S.Schema.Type<typeof CreateTableSchema>;
+
 export namespace TableAction {
   const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
 
   export class Create extends S.TaggedClass<Create>()(`${TABLE_ACTION}/create`, {
-    input: S.Struct({
-      space: SpaceSchema,
-      name: S.optional(S.String),
-    }),
+    input: S.extend(
+      S.Struct({
+        space: SpaceSchema,
+      }),
+      CreateTableSchema,
+    ),
     output: S.Struct({
       object: TableType,
     }),
