@@ -9,11 +9,12 @@ import { Filter, RefArray } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
 import { FileType } from '@dxos/plugin-ipfs/types';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
 import { TableType } from '@dxos/react-ui-table/types';
+import { TextType } from '@dxos/schema';
 import { getDeep, isNode, nonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';

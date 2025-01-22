@@ -8,10 +8,12 @@ import { Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
+import { byDisposition, type Disposition, isNode, type MaybePromise, nonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
 import { type ActionData, actionGroupSymbol, type Node, type NodeArg, type Relation } from './node';
+
+const NODE_RESOLVER_TIMEOUT = 1_000;
 
 /**
  * Graph builder extension for adding nodes to the graph based on just the node id.
@@ -50,6 +52,7 @@ type GuardedNodeType<T> = T extends (value: any) => value is infer N ? (N extend
  * @param params.id The unique id of the extension.
  * @param params.relation The relation the graph is being expanded from the existing node.
  * @param params.type If provided, all nodes returned are expected to have this type.
+ * @param params.disposition Affects the order the extensions are processed in.
  * @param params.filter A filter function to determine if an extension should act on a node.
  * @param params.resolver A function to add nodes to the graph based on just the node id.
  * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
@@ -60,6 +63,7 @@ export type CreateExtensionOptions<T = any> = {
   id: string;
   relation?: Relation;
   type?: string;
+  disposition?: Disposition;
   filter?: (node: Node) => node is Node<T>;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
@@ -71,15 +75,16 @@ export type CreateExtensionOptions<T = any> = {
  * Create a graph builder extension.
  */
 export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): BuilderExtension[] => {
-  const { id, resolver, connector, actions, actionGroups, ...rest } = extension;
+  const { id, disposition = 'static', resolver, connector, actions, actionGroups, ...rest } = extension;
   const getId = (key: string) => `${id}/${key}`;
   return [
-    resolver ? { id: getId('resolver'), resolver } : undefined,
-    connector ? { ...rest, id: getId('connector'), connector } : undefined,
+    resolver ? { id: getId('resolver'), disposition, resolver } : undefined,
+    connector ? { ...rest, id: getId('connector'), disposition, connector } : undefined,
     actionGroups
       ? ({
           ...rest,
           id: getId('actionGroups'),
+          disposition,
           type: ACTION_GROUP_TYPE,
           relation: 'outbound',
           connector: ({ node }) =>
@@ -90,6 +95,7 @@ export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): 
       ? ({
           ...rest,
           id: getId('actions'),
+          disposition,
           type: ACTION_TYPE,
           relation: 'outbound',
           connector: ({ node }) => actions({ node })?.map((arg) => ({ ...arg, type: ACTION_TYPE })),
@@ -166,15 +172,16 @@ export const toSignal = <T>(
   return thisSignal.value;
 };
 
-export type BuilderExtension = {
+export type BuilderExtension = Readonly<{
   id: string;
+  disposition: Disposition;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   // Only for connector.
   relation?: Relation;
   type?: string;
   filter?: (node: Node) => boolean;
-};
+}>;
 
 type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
 
@@ -221,7 +228,16 @@ export class GraphBuilder {
       .filter((id) => id !== ROOT_ID)
       .forEach((id) => (this._initialized[id] = new Trigger()));
     Object.keys(this._graph._nodes).forEach((id) => this._onInitialNode(id));
-    await Promise.all(Object.values(this._initialized).map((trigger) => trigger.wait()));
+    await Promise.all(
+      Object.entries(this._initialized).map(async ([id, trigger]) => {
+        try {
+          await trigger.wait({ timeout: NODE_RESOLVER_TIMEOUT });
+        } catch {
+          log.error('node resolver timeout', { id });
+          this.graph._removeNodes([id]);
+        }
+      }),
+    );
   }
 
   get graph() {
@@ -310,7 +326,8 @@ export class GraphBuilder {
     this._resolverSubscriptions.set(
       nodeId,
       effect(() => {
-        for (const { id, resolver } of Object.values(this._extensions)) {
+        const extensions = Object.values(this._extensions).toSorted(byDisposition);
+        for (const { id, resolver } of extensions) {
           if (!resolver) {
             continue;
           }
@@ -367,7 +384,8 @@ export class GraphBuilder {
 
         // TODO(wittjosiah): Consider allowing extensions to collaborate on the same node by merging their results.
         const nodes: NodeArg<any>[] = [];
-        for (const { id, connector, filter, type, relation = 'outbound' } of Object.values(this._extensions)) {
+        const extensions = Object.values(this._extensions).toSorted(byDisposition);
+        for (const { id, connector, filter, type, relation = 'outbound' } of extensions) {
           if (
             !connector ||
             relation !== nodesRelation ||

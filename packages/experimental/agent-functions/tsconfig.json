@@ -5,7 +5,8 @@
     "lib": [
       "DOM",
       "ESNext"
-    ]
+    ],
+    "outDir": "./dist/types"
   },
   "exclude": [
     "functions"
@@ -91,6 +92,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/schema"
     }
   ]
 }

@@ -2,18 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, type Signal, signal, type ReadonlySignal } from '@preact/signals-core';
+import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
-import { getValue, FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortType } from '@dxos/echo-schema';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import { type PropertyType, type FieldType, type ViewProjection } from '@dxos/schema';
+import type { PropertyType, FieldType, ViewProjection, ViewType } from '@dxos/schema';
 
 import { type BaseTableRow } from './table-model';
-import { type TableType } from '../types';
 
-export type SortDirection = 'asc' | 'desc';
-export type SortConfig = { fieldId: string; direction: SortDirection };
+/**
+ * Represents the local sort state.
+ * - undefined: No local sort set, fallback to view sort.
+ * - cleared: Sort explicitly cleared by user.
+ * - active: Active local sort with sort configuration.
+ */
+type LocalSort = { type: 'cleared' } | { type: 'active'; sort: FieldSortType } | undefined;
 
 /**
  * Manages table sorting functionality through display and data index mapping.
@@ -38,32 +42,98 @@ export type SortConfig = { fieldId: string; direction: SortDirection };
  */
 export class TableSorting<T extends BaseTableRow> {
   private readonly _displayToDataIndex = new Map<number, number>();
-  private readonly _sorting = signal<SortConfig | undefined>(undefined);
   private readonly _rows: Signal<T[]>;
+  private readonly _localSort = signal<LocalSort>(undefined);
+  private readonly _isDirty: ReadonlySignal<boolean>;
   public readonly sortedRows: ReadonlySignal<T[]>;
 
   constructor(
     rows: Signal<T[]>,
-    private readonly _table: TableType,
+    private readonly _view: ViewType | undefined,
     private readonly _projection: ViewProjection,
   ) {
     this._rows = rows;
+    this._isDirty = computed(() => {
+      const local = this._localSort.value;
+      const viewSort = this._view?.query.sort?.[0];
+      if (local?.type === 'cleared') {
+        return viewSort !== undefined;
+      }
+      if (local?.type === 'active') {
+        if (!viewSort) {
+          return true;
+        }
+        return local.sort.fieldId !== viewSort.fieldId || local.sort.direction !== viewSort.direction;
+      }
+      return false;
+    });
     this.sortedRows = this.initialiseSortedRows();
   }
 
   /**
    * @reactive
+   * @returns Local sort if present, falls back to view sort.
    */
-  public get sorting(): SortConfig | undefined {
-    return this._sorting.value;
+  public get sorting(): FieldSortType | undefined {
+    const local = this._localSort.value;
+    if (local?.type === 'cleared') {
+      return undefined;
+    }
+    if (local?.type === 'active') {
+      return local.sort;
+    }
+    return this._view?.query.sort?.[0];
+  }
+
+  /**
+   * @reactive
+   * @returns Whether local sort differs from view sort.
+   */
+  public get isDirty(): boolean {
+    return this._isDirty.value;
   }
 
   public getDataIndex(displayIndex: number): number {
     return this._displayToDataIndex.get(displayIndex) ?? displayIndex;
   }
 
-  public setSort(fieldId: string, direction: SortDirection): void {
-    this._sorting.value = { fieldId, direction };
+  public setSort(fieldId: string, direction: SortDirectionType): void {
+    this._localSort.value = {
+      type: 'active',
+      sort: { fieldId, direction },
+    };
+  }
+
+  public toggleSort(fieldId: string): void {
+    if (!this._view || !this.sorting || this.sorting.fieldId !== fieldId) {
+      return;
+    }
+
+    switch (this.sorting.direction) {
+      case 'asc': {
+        this.setSort(fieldId, 'desc');
+        break;
+      }
+      case 'desc': {
+        this.setSort(fieldId, 'asc');
+        break;
+      }
+    }
+  }
+
+  public clearSort(): void {
+    this._localSort.value = { type: 'cleared' };
+  }
+
+  public save(): void {
+    if (this._view && this._localSort.value !== undefined) {
+      if (this._localSort.value.type === 'active') {
+        this._view.query.sort = [this._localSort.value.sort];
+      } else {
+        this._view.query.sort = [];
+      }
+      this._localSort.value = undefined;
+    }
   }
 
   //
@@ -73,12 +143,12 @@ export class TableSorting<T extends BaseTableRow> {
   private initialiseSortedRows(): ReadonlySignal<T[]> {
     return computed(() => {
       this._displayToDataIndex.clear();
-      const sort = this._sorting.value;
-      if (!sort) {
+      const sort = this.sorting;
+      if (!sort || !this._view) {
         return this._rows.value;
       }
 
-      const field = this._table.view?.target?.fields.find((f) => f.id === sort.fieldId);
+      const field = this._view.fields.find((f) => f.id === sort.fieldId);
       if (!field) {
         return this._rows.value;
       }

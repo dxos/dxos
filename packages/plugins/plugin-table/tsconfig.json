@@ -9,6 +9,7 @@
     ],
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -23,6 +24,9 @@
     "src/*.ts"
   ],
   "references": [
+    {
+      "path": "../../common/effect"
+    },
     {
       "path": "../../common/invariant"
     },

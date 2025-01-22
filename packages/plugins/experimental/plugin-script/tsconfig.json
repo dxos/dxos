@@ -8,6 +8,7 @@
       "ESNext"
     ],
     "module": "ESNext",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -81,6 +82,9 @@
     },
     {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/schema"
     },
     {
       "path": "../../../ui/react-ui"

@@ -5,7 +5,7 @@
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
+import { type FieldSortType, FormatEnum, getValue, setValue, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isReactiveObject, makeRef } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
@@ -19,7 +19,7 @@ import {
 import { type ViewProjection } from '@dxos/schema';
 
 import { SelectionModel } from './selection-model';
-import { type SortConfig, type SortDirection, TableSorting } from './table-sorting';
+import { TableSorting } from './table-sorting';
 import { type TableType } from '../types';
 import { touch } from '../util';
 
@@ -28,7 +28,7 @@ export type BaseTableRow = Record<JsonProp, any> & { id: string };
 export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   table: TableType;
   projection: ViewProjection;
-  sorting?: SortConfig[];
+  sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
   onInsertRow?: (index?: number) => void;
   onDeleteRows?: (index: number, obj: T[]) => void;
@@ -75,7 +75,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     super();
     this._table = table;
     this._projection = projection;
-    this._sorting = new TableSorting(this._rows, table, projection);
+    this._sorting = new TableSorting(this._rows, table.view?.target, projection);
 
     if (sorting.length > 0) {
       const [sort] = sorting;
@@ -105,8 +105,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   /**
    * @reactive
    */
-  public get sorting(): SortConfig | undefined {
-    return this._sorting.sorting;
+  public get sorting(): TableSorting<T> | undefined {
+    return this._sorting;
   }
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
@@ -120,6 +120,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public get selection() {
     return this._selection;
+  }
+
+  /** @reactive */
+  public get isViewDirty(): boolean {
+    return this._sorting.isDirty;
   }
 
   //
@@ -319,18 +324,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   }
 
   //
-  // Sorting
-  //
-
-  public setSort(fieldId: string, direction: SortDirection): void {
-    this._sorting.setSort(fieldId, direction);
-  }
-
-  public clearSort(): void {
-    this._sorting.setSort('', 'asc');
-  }
-
-  //
   // Pinning
   //
 
@@ -342,5 +335,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public unpinRow(rowIndex: number): void {
     this._pinnedRows.top = this._pinnedRows.top.filter((index: number) => index !== rowIndex);
     this._pinnedRows.bottom = this._pinnedRows.bottom.filter((index: number) => index !== rowIndex);
+  }
+
+  //
+  // View operations
+  //
+  public saveView(): void {
+    this._sorting.save();
   }
 }

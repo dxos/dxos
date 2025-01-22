@@ -7,6 +7,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -41,6 +42,9 @@
     },
     {
       "path": "../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../core/echo/live-object"
     },
     {
       "path": "../../sdk/app-framework"

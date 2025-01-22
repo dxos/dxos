@@ -6,8 +6,9 @@ import { type Space } from '@dxos/client/echo';
 import { AST } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 import { type RequestContext } from './context';
 import { type ParseResult } from './parser';

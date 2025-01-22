@@ -2,15 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type GraphBuilderProvides,
-  type IntentResolverProvides,
-  type Plugin,
-  type SurfaceProvides,
-  type TranslationsProvides,
-} from '@dxos/app-framework';
+import { type PluginsContext } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { Client, PublicKey, type ClientOptions } from '@dxos/react-client';
+import { type Client, PublicKey, type ClientOptions } from '@dxos/react-client';
+import { type MaybePromise } from '@dxos/util';
 
 import { CLIENT_PLUGIN } from './meta';
 
@@ -73,11 +68,6 @@ export namespace ClientAction {
 
 export type ClientPluginOptions = ClientOptions & {
   /**
-   * Used to track app-specific state in spaces.
-   */
-  appKey: string;
-
-  /**
    * Base URL for the invitation link.
    */
   invitationUrl?: string;
@@ -90,26 +80,10 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Run after the client has been initialized.
    */
-  onClientInitialized?: (client: Client) => Promise<void>;
-
-  /**
-   * Run after the identity has been successfully initialized.
-   * Run with client during plugin ready phase.
-   */
-  onReady?: (client: Client, plugins: Plugin[]) => Promise<void>;
+  onClientInitialized?: (context: PluginsContext, client: Client) => MaybePromise<void>;
 
   /**
    * Called when the client is reset.
    */
-  onReset?: (params: { target?: string }) => Promise<void>;
+  onReset?: (params: { target?: string }) => MaybePromise<void>;
 };
-
-export type ClientPluginProvides = IntentResolverProvides &
-  GraphBuilderProvides &
-  SurfaceProvides &
-  TranslationsProvides & {
-    client: Client;
-  };
-
-export const parseClientPlugin = (plugin?: Plugin) =>
-  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;

@@ -2,16 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
-import { type SchemaProvides } from '@dxos/plugin-space';
+import { EditorInputMode } from '@dxos/react-ui-editor';
 
 import { SCRIPT_PLUGIN } from './meta';
 
@@ -28,11 +21,10 @@ export namespace ScriptAction {
   }) {}
 }
 
-export type ScriptSettingsProps = {};
+export const ScriptSettingsSchema = S.mutable(
+  S.Struct({
+    editorInputMode: EditorInputMode,
+  }),
+);
 
-export type ScriptPluginProvides = IntentResolverProvides &
-  MetadataRecordsProvides &
-  SchemaProvides &
-  SettingsProvides<ScriptSettingsProps> &
-  SurfaceProvides &
-  TranslationsProvides;
+export type ScriptSettingsProps = S.Schema.Type<typeof ScriptSettingsSchema>;

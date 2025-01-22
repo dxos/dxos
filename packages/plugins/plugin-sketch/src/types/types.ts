@@ -4,16 +4,7 @@
 
 import { type TLStore } from '@tldraw/tlschema';
 
-import type {
-  GraphSerializerProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { DiagramType } from './diagram';
 import { SKETCH_PLUGIN } from '../meta';
@@ -33,20 +24,17 @@ export namespace SketchAction {
   }) {}
 }
 
-export type SketchPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphSerializerProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SettingsProvides<SketchSettingsProps> &
-  SchemaProvides;
-
 export interface SketchModel {
   store: TLStore;
 }
 
-export type SketchGridType = 'mesh' | 'dotted';
+export const SketchGridSchema = S.Literal('mesh', 'dotted');
+export type SketchGridType = S.Schema.Type<typeof SketchGridSchema>;
 
-export type SketchSettingsProps = {
-  gridType?: SketchGridType;
-};
+export const SketchSettingsSchema = S.mutable(
+  S.Struct({
+    gridType: S.optional(SketchGridSchema),
+  }),
+);
+
+export type SketchSettingsProps = S.Schema.Type<typeof SketchSettingsSchema>;

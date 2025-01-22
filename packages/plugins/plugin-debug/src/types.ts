@@ -4,15 +4,8 @@
 
 import { type Context, createContext } from 'react';
 
-import type {
-  GraphBuilderProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 import { S } from '@dxos/echo-schema';
-import { type PanelProvides } from '@dxos/plugin-deck/types';
 
 export type DebugContextType = {
   running: boolean;
@@ -35,9 +28,3 @@ export const DebugSettingsSchema = S.mutable(
 );
 
 export interface DebugSettingsProps extends S.Schema.Type<typeof DebugSettingsSchema> {}
-
-export type DebugPluginProvides = SurfaceProvides &
-  GraphBuilderProvides &
-  SettingsProvides<DebugSettingsProps> &
-  TranslationsProvides &
-  PanelProvides;

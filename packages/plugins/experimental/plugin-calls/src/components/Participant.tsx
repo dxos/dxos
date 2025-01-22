@@ -5,15 +5,16 @@
 import React, { forwardRef, useEffect } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 
+import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
+
 import { VideoSrcObject } from './VideoSrcObject';
 import { useRoomContext } from './hooks/useRoomContext';
-import type { User } from './types';
 import { cn } from './utils/style';
 
 interface Props {
   flipId: string;
   isScreenShare?: boolean;
-  user: User;
+  user: UserState;
   audioTrack?: MediaStreamTrack;
   videoTrack?: MediaStreamTrack;
   isSelf?: boolean;

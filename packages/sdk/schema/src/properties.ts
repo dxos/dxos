@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Option, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 
 import {
@@ -65,7 +65,8 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
   const knownProperties = AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
     // TODO(burdon): Handle special case?
-    if (name === 'id') {
+    const identifier = AST.getAnnotation(prop.type, AST.IdentifierAnnotationId).pipe(Option.getOrUndefined);
+    if (name === 'id' && identifier !== false) {
       return props;
     }
     const processed = processProperty(name, prop);

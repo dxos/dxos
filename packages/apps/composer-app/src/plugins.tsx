@@ -2,73 +2,56 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  createIntent,
-  type HostPluginParams,
-  LayoutAction,
-  NavigationAction,
-  parseIntentPlugin,
-  Plugin,
-  type PluginMeta,
-  resolvePlugin,
-} from '@dxos/app-framework';
-import { type Trigger } from '@dxos/async';
+import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
-import AttentionMeta from '@dxos/plugin-attention/meta';
-import AutomationMeta from '@dxos/plugin-automation/meta';
-import CallsMeta from '@dxos/plugin-calls/meta';
-import CanvasMeta from '@dxos/plugin-canvas/meta';
-import ChessMeta from '@dxos/plugin-chess/meta';
-import ClientMeta from '@dxos/plugin-client/meta';
-import { ClientAction } from '@dxos/plugin-client/types';
-import DebugMeta from '@dxos/plugin-debug/meta';
-import DeckMeta from '@dxos/plugin-deck/meta';
-import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
-import ExplorerMeta from '@dxos/plugin-explorer/meta';
-import FilesMeta from '@dxos/plugin-files/meta';
-import GraphMeta from '@dxos/plugin-graph/meta';
-import HelpMeta from '@dxos/plugin-help/meta';
-import InboxMeta from '@dxos/plugin-inbox/meta';
-import IpfsMeta from '@dxos/plugin-ipfs/meta';
-import KanbanMeta from '@dxos/plugin-kanban/meta';
-import ManagerMeta from '@dxos/plugin-manager/meta';
-import MapMeta from '@dxos/plugin-map/meta';
-import MarkdownMeta from '@dxos/plugin-markdown/meta';
-import MermaidMeta from '@dxos/plugin-mermaid/meta';
-import MetadataMeta from '@dxos/plugin-metadata/meta';
-import NativeMeta from '@dxos/plugin-native/meta';
-import NavTreeMeta from '@dxos/plugin-navtree/meta';
-import ObservabilityMeta from '@dxos/plugin-observability/meta';
-import OutlinerMeta from '@dxos/plugin-outliner/meta';
-import PresenterMeta from '@dxos/plugin-presenter/meta';
-import PwaMeta from '@dxos/plugin-pwa/meta';
-import RegistryMeta from '@dxos/plugin-registry/meta';
-import ScriptMeta from '@dxos/plugin-script/meta';
-import SearchMeta from '@dxos/plugin-search/meta';
-import SheetMeta from '@dxos/plugin-sheet/meta';
-import SketchMeta from '@dxos/plugin-sketch/meta';
-import SpaceMeta from '@dxos/plugin-space/meta';
-import { type CollectionType } from '@dxos/plugin-space/types';
-import StackMeta from '@dxos/plugin-stack/meta';
-import StatusBarMeta from '@dxos/plugin-status-bar/meta';
-import TableMeta from '@dxos/plugin-table/meta';
-import ThemeMeta from '@dxos/plugin-theme/meta';
-import ThreadMeta from '@dxos/plugin-thread/meta';
-import WildcardMeta from '@dxos/plugin-wildcard/meta';
-import WnfsMeta from '@dxos/plugin-wnfs/meta';
-import { makeRef } from '@dxos/react-client/echo';
-import { DeviceType } from '@dxos/react-client/halo';
+import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
+import { AutomationPlugin } from '@dxos/plugin-automation';
+import { CallsPlugin } from '@dxos/plugin-calls';
+import { CanvasPlugin } from '@dxos/plugin-canvas';
+import { ChessPlugin } from '@dxos/plugin-chess';
+import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
+import { DebugPlugin, DEBUG_PLUGIN } from '@dxos/plugin-debug';
+import { DeckPlugin, DECK_PLUGIN } from '@dxos/plugin-deck';
+import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
+import { ExplorerPlugin } from '@dxos/plugin-explorer';
+import { FilesPlugin, FILES_PLUGIN } from '@dxos/plugin-files';
+import { GraphPlugin, GRAPH_PLUGIN } from '@dxos/plugin-graph';
+import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
+import { InboxPlugin } from '@dxos/plugin-inbox';
+import { IpfsPlugin } from '@dxos/plugin-ipfs';
+import { KanbanPlugin } from '@dxos/plugin-kanban';
+import { MapPlugin } from '@dxos/plugin-map';
+import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
+import { MermaidPlugin } from '@dxos/plugin-mermaid';
+import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
+import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
+import { ObservabilityPlugin, OBSERVABILITY_PLUGIN } from '@dxos/plugin-observability';
+import { OutlinerPlugin } from '@dxos/plugin-outliner';
+import { PresenterPlugin } from '@dxos/plugin-presenter';
+import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
+import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
+import { ScriptPlugin } from '@dxos/plugin-script';
+import { SearchPlugin } from '@dxos/plugin-search';
+import { SettingsInterfacePlugin, SETTINGS_INTERFACE_PLUGIN } from '@dxos/plugin-settings-interface';
+import { SheetPlugin, SHEET_PLUGIN } from '@dxos/plugin-sheet';
+import { SketchPlugin, SKETCH_PLUGIN } from '@dxos/plugin-sketch';
+import { SpacePlugin, SPACE_PLUGIN } from '@dxos/plugin-space';
+import { StackPlugin } from '@dxos/plugin-stack';
+import { StatusBarPlugin, STATUS_BAR_PLUGIN } from '@dxos/plugin-status-bar';
+import { TablePlugin, TABLE_PLUGIN } from '@dxos/plugin-table';
+import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
+import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
+import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
+import { WildcardPlugin, WILDCARD_PLUGIN } from '@dxos/plugin-wildcard';
+import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
 
-import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
-import { meta as WelcomeMeta } from './plugins/welcome/meta';
-import { queryAllCredentials } from './util';
+import { WelcomePlugin, WELCOME_PLUGIN } from './plugins/welcome';
 
 export type State = {
   appKey: string;
-  firstRun: Trigger;
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability>;
@@ -82,210 +65,112 @@ export type PluginConfig = State & {
   isStrict?: boolean;
 };
 
-/**
- * NOTE: Order is important.
- */
-// TODO(burdon): Impl. plugin dependency graph (to determine order).
-export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
+export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
   [
-    ObservabilityMeta,
-    ThemeMeta,
-
-    // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
-    !isSocket && isPwa && PwaMeta,
-    isSocket && NativeMeta,
-    WelcomeMeta,
-
-    // Data integrations
-    ClientMeta,
-    SpaceMeta,
-    FilesMeta,
-
-    // Framework extensions
-    // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
-    //  Root folder needs to be created before the graph is built or else it's not ordered first.
-    GraphMeta,
-    MetadataMeta,
-
-    // UX
-    AttentionMeta,
-    DeckMeta,
-    HelpMeta,
-    NavTreeMeta,
-    ManagerMeta,
-    RegistryMeta,
-    StatusBarMeta,
-    WildcardMeta,
+    ATTENTION_PLUGIN,
+    CLIENT_PLUGIN,
+    DECK_PLUGIN,
+    FILES_PLUGIN,
+    GRAPH_PLUGIN,
+    HELP_PLUGIN,
+    INTENT_PLUGIN,
+    isSocket && NATIVE_PLUGIN,
+    NAVTREE_PLUGIN,
+    OBSERVABILITY_PLUGIN,
+    !isSocket && isPwa && PWA_PLUGIN,
+    REGISTRY_PLUGIN,
+    SETTINGS_PLUGIN,
+    SETTINGS_INTERFACE_PLUGIN,
+    SPACE_PLUGIN,
+    STATUS_BAR_PLUGIN,
+    THEME_PLUGIN,
+    TOKEN_MANAGER_PLUGIN,
+    WELCOME_PLUGIN,
+    WILDCARD_PLUGIN,
   ].filter(isNotFalsy);
 
-export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
+export const defaults = ({ isDev }: PluginConfig): string[] =>
   [
     // prettier-ignore
-    isDev && DebugMeta,
-    MarkdownMeta,
-    SketchMeta,
-    SheetMeta,
-    TableMeta,
-    ThreadMeta,
+    isDev && DEBUG_PLUGIN,
+    MARKDOWN_PLUGIN,
+    SHEET_PLUGIN,
+    SKETCH_PLUGIN,
+    TABLE_PLUGIN,
+    THREAD_PLUGIN,
   ].filter(isNotFalsy);
 
-// TODO(burdon): Use meta tags to determine default/recommended/labs.
-export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
+export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
   [
-    // prettier-ignore
-    !isDev && DebugMeta,
-    AutomationMeta,
-    CanvasMeta,
-    ChessMeta,
-    CallsMeta,
-    ExcalidrawMeta,
-    ExplorerMeta,
-    IpfsMeta,
-    KanbanMeta,
-    MapMeta,
-    MermaidMeta,
-    PresenterMeta,
-    ScriptMeta,
-    SearchMeta,
-    StackMeta,
-    WnfsMeta,
+    AttentionPlugin(),
+    AutomationPlugin(),
+    CallsPlugin(),
+    CanvasPlugin(),
+    ChessPlugin(),
+    ClientPlugin({
+      config,
+      services,
+      onClientInitialized: async (_, client) => {
+        const { LegacyTypes } = await import('./migrations');
+        client.addTypes([
+          LegacyTypes.DocumentType,
+          LegacyTypes.FileType,
+          LegacyTypes.FolderType,
+          LegacyTypes.MessageType,
+          LegacyTypes.SectionType,
+          LegacyTypes.StackType,
+          LegacyTypes.TableType,
+          LegacyTypes.TextType,
+          LegacyTypes.ThreadType,
+        ]);
+      },
+      onReset: ({ target }) => {
+        localStorage.clear();
 
-    ...(isLabs ? [InboxMeta, OutlinerMeta] : []),
+        if (target === 'deviceInvitation') {
+          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+        } else if (target === 'recoverIdentity') {
+          window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+        } else {
+          window.location.pathname = '/';
+        }
+      },
+    }),
+    DebugPlugin(),
+    DeckPlugin(),
+    ExcalidrawPlugin(),
+    ExplorerPlugin(),
+    FilesPlugin(),
+    GraphPlugin(),
+    HelpPlugin({ steps }),
+    InboxPlugin(),
+    IntentPlugin(),
+    IpfsPlugin(),
+    KanbanPlugin(),
+    MapPlugin(),
+    MarkdownPlugin(),
+    MermaidPlugin(),
+    isSocket && NativePlugin(),
+    NavTreePlugin(),
+    ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
+    OutlinerPlugin(),
+    PresenterPlugin(),
+    !isSocket && isPwa && PwaPlugin(),
+    RegistryPlugin(),
+    ScriptPlugin(),
+    SearchPlugin(),
+    SettingsPlugin(),
+    SettingsInterfacePlugin(),
+    SheetPlugin(),
+    SketchPlugin(),
+    SpacePlugin(),
+    StackPlugin(),
+    StatusBarPlugin(),
+    TablePlugin(),
+    ThemePlugin({ appName: 'Composer', noCache: isDev }),
+    ThreadPlugin(),
+    TokenManagerPlugin(),
+    WelcomePlugin(),
+    WildcardPlugin(),
+    WnfsPlugin(),
   ].filter(isNotFalsy);
-
-/**
- * Individual plugin constructors.
- */
-// TODO(burdon): Create registry of meta and constructors.
-export const plugins = ({
-  appKey,
-  config,
-  services,
-  firstRun,
-  observability,
-  isDev,
-  isPwa,
-  isSocket,
-}: PluginConfig): HostPluginParams['plugins'] => ({
-  [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
-  [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
-  [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
-  [CanvasMeta.id]: Plugin.lazy(() => import('@dxos/plugin-canvas')),
-  [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
-  [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
-    appKey,
-    config,
-    services,
-    onClientInitialized: async (client) => {
-      const { LegacyTypes } = await import('./migrations');
-      client.addTypes([
-        LegacyTypes.DocumentType,
-        LegacyTypes.FileType,
-        LegacyTypes.FolderType,
-        LegacyTypes.MessageType,
-        LegacyTypes.SectionType,
-        LegacyTypes.StackType,
-        LegacyTypes.TableType,
-        LegacyTypes.TextType,
-        LegacyTypes.ThreadType,
-      ]);
-    },
-    onReady: async (client, plugins) => {
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-      if (!dispatch) {
-        return;
-      }
-
-      const identity = client.halo.identity.get();
-      const credentials = await queryAllCredentials(client);
-      const recoveryCredential = credentials.find(
-        (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
-      );
-      if (identity && !recoveryCredential) {
-        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
-      }
-
-      const devices = client.halo.devices.get();
-      const edgeAgent = devices.find(
-        (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
-      );
-      if (identity && !edgeAgent) {
-        await dispatch(createIntent(ClientAction.CreateAgent));
-      }
-    },
-    onReset: async ({ target }) => {
-      localStorage.clear();
-
-      if (target === 'deviceInvitation') {
-        window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-      } else if (target === 'recoverIdentity') {
-        window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-      } else {
-        window.location.pathname = '/';
-      }
-    },
-  }),
-  [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
-  [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
-  [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
-  [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
-  [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
-  [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),
-  [InboxMeta.id]: Plugin.lazy(() => import('@dxos/plugin-inbox')),
-  [IpfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-ipfs')),
-  [KanbanMeta.id]: Plugin.lazy(() => import('@dxos/plugin-kanban')),
-  [DeckMeta.id]: Plugin.lazy(() => import('@dxos/plugin-deck'), { observability: true }),
-  [ManagerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-manager')),
-  [MapMeta.id]: Plugin.lazy(() => import('@dxos/plugin-map')),
-  [MarkdownMeta.id]: Plugin.lazy(() => import('@dxos/plugin-markdown')),
-  [MermaidMeta.id]: Plugin.lazy(() => import('@dxos/plugin-mermaid')),
-  [MetadataMeta.id]: Plugin.lazy(() => import('@dxos/plugin-metadata')),
-  ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-native')) } : {}),
-  [NavTreeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-navtree')),
-  [ObservabilityMeta.id]: Plugin.lazy(() => import('@dxos/plugin-observability'), {
-    namespace: appKey,
-    observability: () => observability,
-  }),
-  [OutlinerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-outliner')),
-  [PresenterMeta.id]: Plugin.lazy(() => import('@dxos/plugin-presenter')),
-  ...(!isSocket && isPwa ? { [PwaMeta.id]: Plugin.lazy(() => import('@dxos/plugin-pwa')) } : {}),
-  [RegistryMeta.id]: Plugin.lazy(() => import('@dxos/plugin-registry')),
-  [ScriptMeta.id]: Plugin.lazy(() => import('@dxos/plugin-script'), {
-    containerUrl: '/script-frame/index.html',
-  }),
-  [SearchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-search')),
-  [SheetMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sheet')),
-  [SketchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sketch')),
-  [SpaceMeta.id]: Plugin.lazy(() => import('@dxos/plugin-space'), {
-    firstRun,
-    onFirstRun: async ({ client, dispatch }) => {
-      const { fullyQualifiedId, create } = await import('@dxos/react-client/echo');
-      const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
-      const { CollectionType } = await import('@dxos/plugin-space/types');
-
-      const readme = create(DocumentType, {
-        name: INITIAL_DOC_TITLE,
-        content: makeRef(create(TextType, { content: INITIAL_CONTENT.join('\n\n') })),
-        threads: [],
-      });
-
-      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename].target as CollectionType;
-      defaultSpaceCollection?.objects.push(makeRef(readme));
-
-      await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
-      await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [fullyQualifiedId(readme)] } }));
-      await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(readme) }));
-    },
-  }),
-  [StatusBarMeta.id]: Plugin.lazy(() => import('@dxos/plugin-status-bar')),
-  [StackMeta.id]: Plugin.lazy(() => import('@dxos/plugin-stack')),
-  [TableMeta.id]: Plugin.lazy(() => import('@dxos/plugin-table')),
-  [ThemeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-theme'), {
-    appName: 'Composer',
-    noCache: isDev,
-  }),
-  [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
-  [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
-  [WildcardMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wildcard')),
-  [WnfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wnfs')),
-});

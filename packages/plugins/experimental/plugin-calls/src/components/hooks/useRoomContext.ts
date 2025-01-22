@@ -6,7 +6,7 @@ import { createContext, useContext, type Dispatch, type SetStateAction } from 'r
 
 import { invariant } from '@dxos/invariant';
 
-import type useRoom from './useRoom';
+import type { useRoom } from './useRoom';
 import type { UserMedia } from './useUserMedia';
 import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
 

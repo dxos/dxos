@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphBuilderProvides, SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
+import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { CALLS_PLUGIN } from './meta';
 
@@ -16,6 +16,9 @@ export enum CallsAction {
   CREATE = `${CALLS_ACTION}/create`,
 }
 
-export type CallsProvides = {};
+export type Call = {
+  type: string;
+  space: Space;
+};
 
-export type CallsPluginProvides = SurfaceProvides & GraphBuilderProvides & TranslationsProvides;
+export const isCall = (data: any): data is Call => data.type === `${CALLS_PLUGIN}/space` && isSpace(data.space);

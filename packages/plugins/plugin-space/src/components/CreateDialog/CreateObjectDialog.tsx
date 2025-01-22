@@ -5,7 +5,7 @@
 import { pipe } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import {
   getSpace,
@@ -24,7 +24,7 @@ import { CollectionType, SpaceAction } from '../../types';
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
-  resolve?: MetadataResolver;
+  resolve?: (typename: string) => Record<string, any>;
   shouldNavigate?: (object: ReactiveObject<any>) => boolean;
 };
 
@@ -46,11 +46,11 @@ export const CreateObjectDialog = ({
     async ({
       schema,
       target: _target,
-      name,
+      data,
     }: {
       schema: TypedObject;
       target: CreateObjectPanelProps['target'];
-      name?: string;
+      data?: Record<string, any>;
     }) => {
       const target = isSpace(_target)
         ? (_target.properties[CollectionType.typename]?.target as CollectionType | undefined)
@@ -65,7 +65,7 @@ export const CreateObjectDialog = ({
       closeRef.current?.click();
 
       const space = isSpace(target) ? target : getSpace(target);
-      const result = await dispatch(createObjectIntent({ name, space }));
+      const result = await dispatch(createObjectIntent(data, { space }));
       const object = result.data?.object;
       if (isReactiveObject(object)) {
         const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object });

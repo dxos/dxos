@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const SHEET_PLUGIN = 'dxos.org/plugin/sheet';
 
-export default {
+export const meta = {
   id: SHEET_PLUGIN,
   name: 'Sheet',
   description: 'A simple spreadsheet plugin.',
