@@ -25,7 +25,7 @@ export const ComputeNode = S.mutable(
     enabled: S.optional(S.Boolean),
 
     /** For constant nodes. */
-    constant: S.optional(S.Any),
+    value: S.optional(S.Any),
   }),
 );
 

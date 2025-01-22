@@ -10,13 +10,13 @@ import {
   type ComputeRequirements,
   type ComputeGraph,
   type WorkflowLoader,
-  OllamaGpt,
-  createDxosEventLogger,
   EventLogger,
   GptService,
+  OllamaGpt,
+  SpaceService,
+  createDxosEventLogger,
   makeValueBag,
   unwrapValueBag,
-  SpaceService,
 } from '@dxos/conductor';
 import { AST } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';

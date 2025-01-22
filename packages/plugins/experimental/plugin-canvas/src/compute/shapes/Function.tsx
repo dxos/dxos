@@ -41,5 +41,6 @@ export const functionShape: ShapeDef<FunctionShape> = {
   icon: 'ph--function--regular',
   component: FunctionComponent,
   createShape: createFunction,
+  // TODO(dmaretskyi): Can we fetch the schema dynamically?
   getAnchors: (shape) => createFunctionAnchors(shape, FunctionInput, AnyOutput),
 };

@@ -88,7 +88,6 @@ export const gptShape: ShapeDef<GptShape> = {
   icon: 'ph--brain--regular',
   component: GptComponent,
   createShape: createGpt,
-  // TODO(dmaretskyi): Can we fetch the schema dynamically?
   getAnchors: (shape) => createFunctionAnchors(shape, GptInput, GptOutput),
-  resizable: true,
+  openable: true,
 };

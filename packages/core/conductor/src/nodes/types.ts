@@ -16,7 +16,6 @@ import { StreamSchema } from '../util';
 
 // TODO(burdon): Define type.
 export const Scalar = S.Union(S.String, S.Number, S.Boolean);
-export const ConstantInput = S.Struct({ type: S.Literal('string', 'number', 'boolean') });
 export const ConstantOutput = S.Struct({ [DEFAULT_OUTPUT]: Scalar });
 
 //

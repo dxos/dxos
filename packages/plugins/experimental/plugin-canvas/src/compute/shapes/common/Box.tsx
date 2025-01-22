@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren } from 'react';
+import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
 
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -19,7 +19,7 @@ export type BoxProps = PropsWithChildren<
   ThemedClassName<{
     shape: Shape;
     name?: string;
-    status?: string;
+    status?: string | ReactNode;
     open?: boolean;
     onAction?: BoxActionHandler;
   }>
@@ -27,7 +27,7 @@ export type BoxProps = PropsWithChildren<
 
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, name: _name, status, open, onAction }, forwardedRef) => {
-    const { icon, name, resizable } = useShapeDef(shape.type) ?? { icon: 'ph--placeholder--regular', resizable: false };
+    const { icon, name, openable } = useShapeDef(shape.type) ?? { icon: 'ph--placeholder--regular' };
     const { debug } = useEditorContext();
 
     return (
@@ -51,8 +51,8 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
         </div>
         <div className={mx('flex flex-col h-full grow overflow-hidden', classNames)}>{children}</div>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-hoverSurface'>
-          <div className='grow ps-2 text-sm truncate'>{debug ? shape.id : status}</div>
-          {resizable && (
+          <div className='grow px-2 text-sm truncate'>{debug ? shape.id : status}</div>
+          {openable && (
             <IconButton
               classNames='p-1'
               variant='ghost'

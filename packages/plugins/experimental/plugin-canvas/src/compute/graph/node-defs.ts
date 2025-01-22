@@ -32,7 +32,10 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['audio' as const]: () => createNode('audio'),
   ['beacon' as const]: () => createNode('beacon'),
   ['chat' as const]: () => createNode('chat'),
-  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).value }),
+  ['constant' as const]: (shape) =>
+    createNode('constant', {
+      value: (shape.data as ConstantShape).value,
+    }),
   ['database' as const]: () => createNode('database'),
   ['gpt' as const]: () => createNode('gpt'),
   ['gpt-realtime' as const]: () => createNode('gpt-realtime'),
