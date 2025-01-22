@@ -288,14 +288,7 @@ export const GPTAudio: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest4(), {
-      gpt: new EdgeGpt(
-        new AIServiceClientImpl({
-          // endpoint: 'https://ai-service.dxos.workers.dev',
-          endpoint: 'http://localhost:8787',
-        }),
-      ),
-    }),
+    ...createMachine(createTest4(), createServices()),
   },
 };
 
@@ -338,13 +331,6 @@ export const GPTRealtime: Story = {
     //   { type: Testing.ContactType, count: 8 },
     // ],
     // registerSchema: true,
-    ...createMachine(createGPTRealtime(), {
-      gpt: new EdgeGpt(
-        new AIServiceClientImpl({
-          // endpoint: 'https://ai-service.dxos.workers.dev',
-          endpoint: 'http://localhost:8787',
-        }),
-      ),
-    }),
+    ...createMachine(createGPTRealtime(), createServices()),
   },
 };
