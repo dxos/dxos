@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { inRange } from '@dxos/compute';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import type { MenuAction } from '@dxos/react-ui-menu';
+import type { MenuAction, MenuActionHandler } from '@dxos/react-ui-menu';
 
 import { type AlignAction } from './align';
 import { type CommentAction } from './comment';
@@ -83,5 +83,5 @@ export const useToolbarAction = (state: ToolbarState) => {
       }
     },
     [model.sheet, cursorFallbackRange, cursor, dispatch],
-  );
+  ) as MenuActionHandler;
 };

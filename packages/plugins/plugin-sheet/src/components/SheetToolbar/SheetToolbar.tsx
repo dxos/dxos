@@ -5,13 +5,7 @@
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import {
-  createGapSeparator,
-  type MenuActionHandler,
-  MenuProvider,
-  ToolbarMenu,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { createAlign, useAlignState } from './align';
 import { createComment, useCommentState } from './comment';
@@ -47,7 +41,7 @@ export const SheetToolbar = ({ classNames }: SheetToolbarProps) => {
   const handleAction = useToolbarAction(state);
 
   return (
-    <MenuProvider {...menu} onAction={handleAction as MenuActionHandler}>
+    <MenuProvider {...menu} onAction={handleAction}>
       <ToolbarMenu classNames={classNames} />
     </MenuProvider>
   );
