@@ -51,7 +51,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
   const { icon, iconOnly = true, disabled, testId, hidden } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
-    ? { icon, iconSize, iconOnly, label: <ActionLabel action={action} /> }
+    ? { icon, size: iconSize, iconOnly, label: <ActionLabel action={action} /> }
     : { children: <ActionLabel action={action} /> };
   return hidden ? null : (
     <Root
@@ -70,7 +70,7 @@ const DropdownMenuToolbarItem = ({
   items: propsItems,
   __menuScope,
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
-  const { iconOnly = true, disabled, testId } = group.properties;
+  const { iconOnly, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
   const { iconSize } = useMenu('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
@@ -106,7 +106,7 @@ const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: Menu
   }, [action, onAction]);
   const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
   const rootProps = icon
-    ? { icon, iconSize, iconOnly, label: <ActionLabel action={action} /> }
+    ? { icon, size: iconSize, iconOnly, label: <ActionLabel action={action} /> }
     : { children: <ActionLabel action={action} /> };
   return hidden ? null : (
     <Root
