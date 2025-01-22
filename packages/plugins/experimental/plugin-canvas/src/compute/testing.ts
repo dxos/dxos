@@ -3,11 +3,11 @@
 //
 
 import { AIServiceClientImpl } from '@dxos/assistant';
-import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, EdgeGpt, type NodeType } from '@dxos/conductor';
+import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, EdgeGpt } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { type GraphEdge, type GraphNode, createEdgeId } from '@dxos/graph';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { type GraphEdge, createEdgeId } from '@dxos/graph';
+import { failedInvariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
@@ -33,11 +33,10 @@ import {
   createTextToImage,
   createView,
   type ComputeShape,
-  type CreateShapeProps,
 } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import { type Connection, type Polygon, type Shape } from '../types';
-import { CanvasGraphModel } from '../types/model';
+import { type Connection, type Shape } from '../types';
+import { CanvasGraphModel } from '../types';
 
 const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
@@ -49,36 +48,12 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
   }
 };
 
-const create = ({ nodes, edges }: CanvasGraphModel) =>
-  CanvasGraphModel.create({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data }) => ({
-      id: createEdgeId({ source, target }),
-      source,
-      target,
-      data,
-    })),
-  });
-
-const createNode = ({ type, pos }: { type: NodeType; pos: Point }): GraphNode<ComputeShape> => {
-  const id = ObjectId.random();
-  const layout = createLayout(pos);
-  const ctor = factory[type];
-  invariant(ctor);
-  return { id, data: ctor({ id, ...layout }) };
-};
-
-// TODO(burdon): Remove `Partial` when filled.
-const factory: Partial<Record<NodeType, (props: CreateShapeProps<Polygon>) => ComputeShape>> = {
-  ['switch' as const]: createSwitch,
-  ['and' as const]: createAnd,
-  ['or' as const]: createOr,
-  ['beacon' as const]: createBeacon,
-};
-
 export const createTest0 = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
+    // TODO(burdon): Converge Node and data object.
+    // const data = createSwitch(createLayout({ x: -4, y: 0 }));
+    // const a = model.addNode({ id: data.id, data });
     // TODO(burdon): Discriminated union of shapes?
     // const a = model.createNode({ type: 'switch', data: { pos: { x: -4, y: 0 } } });
     // const b = model.createNode({ type: 'beacon', data: { pos: { x: +4, y: 0 } } });
@@ -148,33 +123,6 @@ export const createControlCircuit = () => {
       source,
       target,
       data: { output, input },
-    })),
-  });
-};
-
-export const createTest2 = () => {
-  const nodes: Shape[] = [
-    // createTimer({ id: 'a', center: { x: -256, y: 0 } }),
-    // createFunction({ id: 'b', center: { x: 0, y: 0 } }),
-    createAnd({ id: 'c', center: { x: 0, y: -256 } }),
-    createBeacon({ id: 'd', center: { x: 256, y: -256 } }),
-    createSwitch({ id: 'e', center: { x: -256, y: -256 } }),
-  ];
-
-  const edges = [
-    { source: 'a', target: 'b', data: { input: 'input' } },
-    { source: 'e', target: 'c', data: { input: 'a' } },
-    { source: 'b', target: 'c', data: { input: 'b', output: 'result' } },
-    { source: 'c', target: 'd' },
-  ];
-
-  return CanvasGraphModel.create({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data }) => ({
-      id: createEdgeId({ source, target }),
-      source,
-      target,
-      data,
     })),
   });
 };

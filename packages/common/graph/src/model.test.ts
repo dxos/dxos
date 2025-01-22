@@ -4,8 +4,20 @@
 
 import { describe, test } from 'vitest';
 
+import { S } from '@dxos/echo-schema';
+
 import { GraphModel } from './model';
-import { type GraphNode } from './types';
+import { BaseGraphNode, type GraphNode } from './types';
+
+// TODO(burdon): Extend node.
+const TestNode = S.extend(
+  BaseGraphNode,
+  S.Struct({
+    value: S.String,
+  }),
+);
+
+type TestNode = S.Schema.Type<typeof TestNode>;
 
 type TestData = { value: string };
 
@@ -15,6 +27,12 @@ describe('Graph', () => {
     expect(graph.nodes).to.have.length(0);
     expect(graph.edges).to.have.length(0);
     expect(graph.toJSON()).to.deep.eq({ nodes: [], edges: [] });
+  });
+
+  test('extended', ({ expect }) => {
+    const graph = new GraphModel<TestNode>();
+    const node = graph.addNode({ id: 'test', value: 'test' });
+    expect(node.data.length).to.eq(4);
   });
 
   test('optional', ({ expect }) => {
