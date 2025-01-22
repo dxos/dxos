@@ -5,7 +5,13 @@
 import React, { useCallback } from 'react';
 
 import { type NodeArg } from '@dxos/app-graph';
-import { ToolbarMenu, MenuProvider, type MenuActionHandler, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  ToolbarMenu,
+  MenuProvider,
+  type MenuActionHandler,
+  useMenuActions,
+  createGapSeparator,
+} from '@dxos/react-ui-menu';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
@@ -14,7 +20,6 @@ import { createHeadings } from './headings';
 import { createLists } from './lists';
 import {
   type EditorToolbarFeatureFlags,
-  editorToolbarGap,
   type EditorToolbarProps,
   editorToolbarSearch,
   type EditorToolbarState,
@@ -50,6 +55,7 @@ const createToolbar = ({
     nodes.push(...blocks.nodes);
     edges.push(...blocks.edges);
   }
+  const editorToolbarGap = createGapSeparator();
   nodes.push(editorToolbarGap);
   edges.push({ source: 'root', target: editorToolbarGap.id });
   if (features.comment ?? true) {

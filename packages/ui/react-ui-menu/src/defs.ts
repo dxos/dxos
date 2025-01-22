@@ -20,7 +20,7 @@ export type MenuItemGroupProperties = {
   icon?: string;
 };
 
-export type MenuAction = Action<MenuActionProperties>;
+export type MenuAction<P extends {} = {}> = Action<P & MenuActionProperties>;
 
 export type MenuActionHandler<A extends Node = MenuAction> = (action: A) => void;
 

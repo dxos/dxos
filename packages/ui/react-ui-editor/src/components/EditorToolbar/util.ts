@@ -57,11 +57,4 @@ export const createEditorActionGroup = (
   icon?: string,
 ) => createMenuItemGroup(id, { icon, ...props });
 
-export const editorToolbarGap = {
-  id: 'gap',
-  type: '@dxos/react-ui-toolbar/separator',
-  properties: { variant: 'gap' },
-  data: undefined as never,
-} satisfies MenuSeparator;
-
 export const editorToolbarSearch = createEditorAction({ type: 'search' }, 'ph--magnifying-glass--regular');

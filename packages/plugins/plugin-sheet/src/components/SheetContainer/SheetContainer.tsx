@@ -12,7 +12,7 @@ import { useComputeGraph } from '../ComputeGraph';
 import { FunctionEditor } from '../FunctionEditor';
 import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
-import { Toolbar } from '../Toolbar';
+import { SheetToolbar } from '../Toolbar';
 
 export const SheetContainer = ({
   space,
@@ -30,12 +30,7 @@ export const SheetContainer = ({
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <StackItem.Content toolbar statusbar {...(role === 'section' && { classNames: 'aspect-video' })}>
-        <Toolbar.Root role={role}>
-          <Toolbar.Styles />
-          <Toolbar.Alignment />
-          <Toolbar.Separator />
-          <Toolbar.Actions />
-        </Toolbar.Root>
+        <SheetToolbar />
         <GridSheet />
         <FunctionEditor />
       </StackItem.Content>
