@@ -32,6 +32,7 @@ import {
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
+import { type GraphMonitor } from '../hooks';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
 
@@ -148,7 +149,7 @@ const Render = ({
             ref={editorRef}
             id={id}
             graph={graph}
-            graphMonitor={graphMonitor as any} // TODO(burdon): ???
+            graphMonitor={graphMonitor as GraphMonitor} // TODO(burdon): ???
             selection={selection}
             autoZoom
             {...props}

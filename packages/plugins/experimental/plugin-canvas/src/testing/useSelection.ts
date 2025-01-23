@@ -4,13 +4,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { type GraphModel } from '@dxos/graph';
 import { omit } from '@dxos/util';
 
 import { SelectionModel } from '../hooks';
-import type { Shape } from '../types';
+import type { CanvasGraphModel, Shape } from '../types';
 
-export const useSelection = (graph?: GraphModel): [SelectionModel, Shape | undefined] => {
+export const useSelection = (graph?: CanvasGraphModel): [SelectionModel, Shape | undefined] => {
   const selection = useMemo(() => new SelectionModel(), []);
   const [selected, setSelected] = useState<Shape | undefined>();
   useEffect(() => {
