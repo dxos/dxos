@@ -3,8 +3,7 @@
 //
 
 import { useEffect, useRef, useState } from 'react';
-import type { Observable } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, type Observable } from 'rxjs';
 
 export const useSubscribedState = <T>(observable: Observable<T>, defaultValue?: T): T => {
   const [state, setState] = useState(defaultValue);
@@ -30,21 +29,24 @@ export const useObservableEffect = <T>(observable: Observable<T>, fn: (value: T)
  * values when the value changes, and completes upon unmounting.
  */
 export const useStateObservable = <T>(value: T) => {
-  const ref = useRef(new BehaviorSubject(value));
-  const observableRef = useRef(ref.current.asObservable());
+  const ref = useRef<BehaviorSubject<T> | undefined>(new BehaviorSubject<T>(value));
+  const observableRef = useRef<Observable<T>>(ref.current!.asObservable());
   const previousValue = useRef<T>();
+
   if (previousValue.current !== value) {
     previousValue.current = value;
-    ref.current.next(value);
+    ref.current!.next(value);
   }
 
   useEffect(() => {
-    const { current } = ref;
-    if (!current) {
-      return;
+    if (ref.current === undefined) {
+      ref.current = new BehaviorSubject(value);
+      observableRef.current = ref.current!.asObservable();
     }
+
     return () => {
-      current.complete();
+      ref.current?.complete();
+      ref.current = undefined;
     };
   }, []);
 
