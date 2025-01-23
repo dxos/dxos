@@ -11,7 +11,7 @@ import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
  * Base type for all shapes.
  */
 export const Shape = S.extend(
-  S.omit<any, any, ['type']>('type')(BaseGraphNode),
+  BaseGraphNode.pipe(S.omit('type')),
   S.Struct({
     type: S.String,
     text: S.optional(S.String),
