@@ -14,7 +14,7 @@ import { Shape } from './schema';
 export const PathShape = S.extend(
   Shape,
   S.Struct({
-    type: S.Literal('path'),
+    kind: S.Literal('path'),
     path: S.String,
     start: S.optional(S.String),
     end: S.optional(S.String),

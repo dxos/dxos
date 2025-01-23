@@ -148,7 +148,7 @@ const Render = ({
             ref={editorRef}
             id={id}
             graph={graph}
-            graphMonitor={graphMonitor}
+            graphMonitor={graphMonitor as any} // TODO(burdon): ???
             selection={selection}
             autoZoom
             {...props}

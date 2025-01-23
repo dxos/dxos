@@ -146,7 +146,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
   // Custom anchors.
   const anchors = useMemo(
-    () => registry.getShapeDef(shape.type)?.getAnchors?.(shape) ?? {},
+    () => registry.getShapeDef(shape.type!)?.getAnchors?.(shape) ?? {},
     [shape.center, shape.size],
   );
 

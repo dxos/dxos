@@ -5,7 +5,6 @@
 import { type ComputeNode, type Executable, type NodeType, registry } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
-import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 
 import { type ComputeShape, type ConstantShape } from '../shapes';
@@ -20,13 +19,13 @@ export const isValidComputeNode = (type: string): boolean => {
   return nodeFactory[type as NodeType] !== undefined;
 };
 
-export const createComputeNode = (shape: GraphNode<ComputeShape>): ComputeNode => {
+export const createComputeNode = (shape: ComputeShape): ComputeNode => {
   const type = shape.data.type ?? raise(new Error('Type not specified'));
   const factory = nodeFactory[type as NodeType] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
 };
 
-const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => ComputeNode> = {
+const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
   ['audio' as const]: () => createNode('audio'),
@@ -58,13 +57,8 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => ComputeN
   ['view' as const]: () => createNode('view'),
 };
 
-const createNode = (type: string, props?: Partial<ComputeNode>) => ({
-  // TODO(burdon): Don't need to create id here?
+const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({
   id: ObjectId.random(),
   type,
-  data: {
-    // TODO(burdon): Don't put type on both node and data.
-    type,
-    ...props,
-  },
+  ...props,
 });

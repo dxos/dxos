@@ -3,19 +3,18 @@
 //
 
 import { S, TypedObject } from '@dxos/echo-schema';
-import { Graph } from '@dxos/graph';
+import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
 /**
  * Base type for all shapes.
  */
-export const Shape = S.mutable(
+export const Shape = S.extend(
+  S.omit<any, any, ['type']>('type')(BaseGraphNode),
   S.Struct({
-    id: S.String,
     type: S.String,
     text: S.optional(S.String),
-    // TODO(burdon): Generic tag?
     guide: S.optional(S.Boolean),
     classNames: S.optional(S.String),
   }),
@@ -26,10 +25,13 @@ export type Shape = S.Schema.Type<typeof Shape>;
 /**
  * Connections between shapes.
  */
-export const Connection = S.Struct({
-  input: S.String,
-  output: S.String,
-});
+export const Connection = S.extend(
+  BaseGraphEdge,
+  S.Struct({
+    input: S.optional(S.String),
+    output: S.optional(S.String),
+  }),
+);
 
 export type Connection = S.Schema.Type<typeof Connection>;
 

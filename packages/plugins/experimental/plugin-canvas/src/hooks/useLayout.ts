@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GraphNode, type ReadonlyGraphModel } from '@dxos/graph';
+import { type ReadonlyGraphModel } from '@dxos/graph';
+import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
 import { type DragDropPayload } from './useDragMonitor';
@@ -158,13 +159,14 @@ const createCurve = (source: Point, target: Point) => [
 ];
 
 const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: string): Point | undefined => {
+  invariant(shape.type);
   const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
   const anchor = anchors?.[anchorId];
   return pointAdd(shape.center, anchor?.pos ?? { x: 0, y: 0 });
 };
 
 export const getClosestAnchor = (
-  graph: ReadonlyGraphModel<GraphNode<any>>,
+  graph: ReadonlyGraphModel,
   registry: ShapeRegistry,
   pos: Point,
   test: (shape: Polygon, anchor: Anchor, d: number) => boolean,

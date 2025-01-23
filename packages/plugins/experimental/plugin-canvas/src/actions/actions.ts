@@ -32,7 +32,7 @@ export type Action =
   | { type: 'copy'; ids?: string[] }
   | { type: 'paste' }
   | { type: 'create'; shape?: Shape }
-  | { type: 'link'; source: string; target: string; connection?: Connection }
+  | { type: 'link'; connection: Omit<Connection, 'id'> }
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //

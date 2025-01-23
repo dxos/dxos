@@ -6,6 +6,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
+import { type MakeOptional } from '@dxos/util';
 
 import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT } from './types';
@@ -53,7 +54,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
   // Custom methods.
   //
 
-  createNode({ id, ...rest }: Partial<ComputeNode>): ComputeNode {
+  createNode({ id, ...rest }: MakeOptional<ComputeNode, 'id'>): ComputeNode {
     const node: ComputeNode = { id: id ?? ObjectId.random(), ...rest };
     this.addNode(node);
     return node;

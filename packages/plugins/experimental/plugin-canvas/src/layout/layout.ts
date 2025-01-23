@@ -16,7 +16,7 @@ import {
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type Graph, type GraphModel, type GraphNode } from '@dxos/graph';
+import { type Graph, type GraphModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
@@ -41,8 +41,8 @@ export const defaultLayoutOptions: LayoutOptions = {
   shapeSize: { width: 128, height: 64 },
 };
 
-export const doLayout = async <N extends object>(
-  data: GraphModel<GraphNode<N>>,
+export const doLayout = async (
+  data: GraphModel,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
 ): Promise<CanvasGraphModel> => {
   const graph = CanvasGraphModel.create();
@@ -59,7 +59,6 @@ export const doLayout = async <N extends object>(
 
   const layout = createLayout(opt.layout ?? defaultLayoutOptions.layout, defaultOptions);
   const { nodes, edges } = await layout.execute(toLayoutGraph(data.graph));
-
   for (const {
     id,
     data: { x, y },
@@ -79,10 +78,8 @@ export const doLayout = async <N extends object>(
         // TODO(burdon): Object.
         // data: node.data,
       };
-      graph.addNode({
-        id: node.id,
-        data,
-      });
+
+      graph.addNode(data);
     }
   }
 

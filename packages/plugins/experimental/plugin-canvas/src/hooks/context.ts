@@ -4,7 +4,6 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
@@ -27,14 +26,13 @@ export type EditorOptions = {
 /**
  * Model callback.
  */
-// TODO(burdon): Update, Delete, etc. Better way to keep in sync?
-export interface GraphMonitor {
-  onCreate: (props: { graph: CanvasGraphModel; node: GraphNode<Shape> }) => void;
-  onLink: (props: { graph: CanvasGraphModel; edge: GraphEdge<Connection> }) => void;
-  onDelete: (props: { graph: CanvasGraphModel; subgraph: CanvasGraphModel }) => void;
+export interface GraphMonitor<S extends Shape = Shape> {
+  onCreate: (props: { graph: CanvasGraphModel<S>; node: S }) => void;
+  onLink: (props: { graph: CanvasGraphModel<S>; edge: Connection }) => void;
+  onDelete: (props: { graph: CanvasGraphModel<S>; subgraph: CanvasGraphModel<S> }) => void;
 }
 
-export type EditorContextType = {
+export type EditorContextType<S extends Shape = Shape> = {
   id: string;
   options: EditorOptions;
   registry: ShapeRegistry;
@@ -51,8 +49,8 @@ export type EditorContextType = {
   snapToGrid: boolean;
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
-  graph: CanvasGraphModel;
-  graphMonitor?: GraphMonitor;
+  graph: CanvasGraphModel<S>;
+  graphMonitor?: GraphMonitor<S>;
   clipboard: CanvasGraphModel;
   selection: SelectionModel;
 

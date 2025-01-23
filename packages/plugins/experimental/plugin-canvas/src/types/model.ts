@@ -3,14 +3,15 @@
 //
 
 import { ObjectId } from '@dxos/echo-schema';
-import { AbstractGraphModel, AbstractGraphBuilder, Graph, type GraphEdge, type GraphNode } from '@dxos/graph';
+import { AbstractGraphModel, AbstractGraphBuilder, Graph } from '@dxos/graph';
 import { create } from '@dxos/live-object';
+import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from '../types';
 
 export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphModel<
-  GraphNode<S>,
-  GraphEdge.Optional<Connection>,
+  S,
+  Connection,
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
@@ -31,15 +32,15 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     return CanvasGraphModel.create<S>(graph);
   }
 
-  createNode({ id, data }: { id?: string; data: S }): GraphNode<S> {
-    const node: GraphNode<S> = { id: id ?? ObjectId.random(), data };
+  createNode({ id, ...rest }: MakeOptional<S, 'id'>): S {
+    const node: S = { id: id ?? ObjectId.random(), ...rest } as S;
     this.addNode(node);
     return node;
   }
 }
 
 export class CanvasGraphBuilder<S extends Shape = Shape> extends AbstractGraphBuilder<
-  GraphNode<S>,
-  GraphEdge.Optional<Connection>,
+  S,
+  Connection,
   CanvasGraphModel<S>
 > {}

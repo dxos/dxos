@@ -8,8 +8,6 @@ import { type Specialize } from '@dxos/util';
 export const BaseGraphNode = S.Struct({
   id: S.String,
   type: S.optional(S.String),
-
-  // TODO(burdon): Remove.
   data: S.optional(S.Any),
 });
 
@@ -29,11 +27,9 @@ export declare namespace GraphNode {
 export const BaseGraphEdge = S.Struct({
   id: S.String,
   type: S.optional(S.String),
+  data: S.optional(S.Any),
   source: S.String,
   target: S.String,
-
-  // TODO(burdon): Remove.
-  data: S.optional(S.Any),
 });
 
 /** Raw base type. */
