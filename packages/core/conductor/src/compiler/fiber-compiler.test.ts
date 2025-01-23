@@ -123,9 +123,10 @@ describe('Graph as a fiber runtime', () => {
   );
 });
 
-/**
- * Compute node.
- */
+//
+// Test nodes
+//
+
 const sum = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
@@ -135,6 +136,7 @@ const sum = defineComputeNode({
         operation: 'sum',
         operands: { a, b },
       });
+
       return { result: a + b };
     }),
   ),
@@ -144,6 +146,10 @@ const view = defineComputeNode({
   input: S.Struct({ result: S.Number }),
   output: VoidOutput,
 });
+
+//
+// Test graphs
+//
 
 const g1 = () => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g1' });

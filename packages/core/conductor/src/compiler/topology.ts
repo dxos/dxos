@@ -64,11 +64,12 @@ export type CreateTopologyParams = {
 };
 
 /**
+ * Creates a topology from a compute graph by resolving node metadata and building input/output connections.
+ * The topology represents the static structure and data flow of the graph.
  *
- * @param graph
- * @param inputNodeId
- * @param outputNodeId
- * @param computeMetaResolver
+ * @param params.graph - The compute graph model to create topology from
+ * @param params.computeMetaResolver - Function that resolves compute metadata for a given node
+ * @returns A topology containing nodes with their inputs/outputs and any diagnostics
  */
 export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyParams): Promise<Topology> => {
   const topology: Omit<Topology, 'inputSchema' | 'outputSchema'> = {

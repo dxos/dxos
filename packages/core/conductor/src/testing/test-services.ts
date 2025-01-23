@@ -28,7 +28,7 @@ export const testServices = ({
   enableLogging = false,
   logger = enableLogging ? consoleLogger : noopLogger,
 }: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
-  invariant((edgeClient != null) === (edgeHttpClient != null), 'specify one of edgeClient or edgeHttpClient');
+  invariant((edgeClient != null) === (edgeHttpClient != null), 'specify both or none of edgeClient and edgeHttpClient');
 
   const logLayer = Layer.succeed(EventLogger, logger);
   const edgeClientLayer =

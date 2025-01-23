@@ -31,7 +31,7 @@ describe('Graph', () => {
   test('extended', ({ expect }) => {
     const graph = new GraphModel<TestNode>();
     const node = graph.addNode({ id: 'test', value: 'test' });
-    expect(node.data.length).to.eq(4);
+    expect(node.value.length).to.eq(4);
   });
 
   test('optional', ({ expect }) => {
