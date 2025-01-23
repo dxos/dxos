@@ -18,6 +18,7 @@ import { entries, keys } from './util/object';
 import { dirname, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
+import { StatusBar } from './components/StatusBar';
 
 const App = () => {
   const { stdout } = useStdout();
@@ -305,15 +306,7 @@ const App = () => {
             })()}
         </Box>
       </Box>
-      <Box flexDirection='row'>
-        {actions.map(({ binding, description }) => (
-          <Text>
-            <Text bold>[{binding}]</Text> <Text color='gray'>{description}</Text>
-          </Text>
-        ))}
-        <Text bold>{' | '}</Text>
-        <Text color='gray'>{lockfile?.path != null ? resolve(lockfile?.path) : ''}</Text>
-      </Box>
+      <StatusBar actions={actions} statusText={lockfile?.path != null ? resolve(lockfile?.path) : ''} />
     </Box>
   );
 };
