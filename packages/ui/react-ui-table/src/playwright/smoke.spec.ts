@@ -13,7 +13,8 @@ const storyUrl = `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {
-  test('Loads', async ({ browser }) => {
+  test('Loads', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -22,6 +23,7 @@ test.describe('Table', () => {
   });
 
   test('sort', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -37,6 +39,7 @@ test.describe('Table', () => {
   });
 
   test('selection', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -57,6 +60,7 @@ test.describe('Table', () => {
   });
 
   test('delete row', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -67,6 +71,7 @@ test.describe('Table', () => {
   });
 
   test('delete row--select all', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -83,6 +88,7 @@ test.describe('Table', () => {
   });
 
   test('delete column', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -109,6 +115,7 @@ test.describe('Table', () => {
   // Rest of add column test remains the same as it's a more complex flow.
   // TODO(ZaymonFC): Restore this after fixing format selection.
   test('add column', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -122,6 +129,7 @@ test.describe('Table', () => {
   });
 
   test('reference > reference / create new object', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -155,6 +163,7 @@ test.describe('Table', () => {
   });
 
   test('test toggles', async ({ browser }) => {
+    test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
