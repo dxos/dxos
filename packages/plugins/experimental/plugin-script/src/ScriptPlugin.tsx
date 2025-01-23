@@ -13,6 +13,7 @@ import {
   Events,
   oneOf,
 } from '@dxos/app-framework';
+import { type Space } from '@dxos/client/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -46,7 +47,9 @@ export const ScriptPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(ScriptAction.Create, props),
+            creationSchema: ScriptAction.CreateScriptSchema,
+            createObject: (props: ScriptAction.CreateScriptProps, { space }: { space: Space }) =>
+              createIntent(ScriptAction.Create, { ...props, space }),
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.

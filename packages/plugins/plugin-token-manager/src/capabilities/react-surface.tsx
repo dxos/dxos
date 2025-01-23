@@ -11,6 +11,7 @@ import { meta, TOKEN_MANAGER_PLUGIN } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
+    // TODO(wittjosiah): Move to SpaceSettingsDialog?
     createSurface({
       id: meta.id,
       role: 'settings',
