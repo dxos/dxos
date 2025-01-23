@@ -25,10 +25,10 @@ describe('schema', () => {
       }),
     );
 
-    const polygons = shapes.filter((s) => isPolygon(s)).map((s) => s.center);
+    const polygons = shapes.filter((shape) => isPolygon(shape)).map((shape) => shape.center);
     expect(polygons).to.have.length(3);
 
-    const paths = shapes.filter((s) => isPath(s)).map((s) => s.path);
+    const paths = shapes.filter((shape) => isPath(shape)).map((shape) => shape.path);
     expect(paths).to.have.length(1);
   });
 });

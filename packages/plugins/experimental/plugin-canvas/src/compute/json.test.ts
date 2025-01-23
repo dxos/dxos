@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, test } from 'vitest';
+
 import { createTest3 } from './testing';
 
 describe('Compute Graph JSON encoding', () => {
