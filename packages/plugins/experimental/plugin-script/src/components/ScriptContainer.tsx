@@ -49,7 +49,7 @@ export const ScriptContainer = ({ role, classNames, script, settings, env }: Scr
     [script, script.source.target, space, identity],
   );
 
-  const state = useToolbarState();
+  const state = useToolbarState({ view: 'split' });
   useDeployState({ state, script });
 
   return (
