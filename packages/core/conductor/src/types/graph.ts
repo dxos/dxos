@@ -10,23 +10,19 @@ import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
  */
 export const ComputeNode = S.extend(
   BaseGraphNode,
-  S.Struct({
-    /** DXN of the node specifier. */
-    // TODO(burdon): Remove? Use type in base node class.
-    // type: S.optional(S.String),
 
-    /**
-     * NOTE: We have a mixin of properties for different node types rather than a discriminated union.
-     */
+  /**
+   * NOTE: We have a mixin of properties for different node types for simplicity,rather than a discriminated union.
+   */
+  S.Struct({
+    /** For constant nodes. */
+    value: S.optional(S.Any),
 
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
 
     /** For switch nodes. */
     enabled: S.optional(S.Boolean),
-
-    /** For constant nodes. */
-    value: S.optional(S.Any),
   }),
 );
 

@@ -45,7 +45,7 @@ type TopologyNodeOutput = {
 
 export type TopologyNode = {
   id: string;
-  graphNode: ComputeNode;
+  graphNode: ComputeNode; // TODO(burdon): Rename computeNode.
   meta: ComputeMeta;
   inputs: TopologyNodeInput[];
   outputs: TopologyNodeOutput[];
@@ -95,6 +95,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
   // Process edges.
   for (const edge of graph.edges) {
+    console.log('##', JSON.stringify(edge));
     const sourceNode = topology.nodes.find((node) => node.id === edge.source);
     const targetNode = topology.nodes.find((node) => node.id === edge.target);
     if (sourceNode == null || targetNode == null) {
@@ -129,7 +130,6 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
     // TODO(dmaretskyi): Check assignability.
 
-    // TODO(burdon): Set above? (i.e., let input = ...).
     const output = sourceNode.outputs.find((output) => output.name === edge.output);
     invariant(output);
     const input = targetNode.inputs.find((input) => input.name === edge.input);

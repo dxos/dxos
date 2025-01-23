@@ -266,7 +266,8 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
         id: ObjectId.random(),
         source: sourceId,
         target: targetId,
-        data: { output, input },
+        output,
+        input,
       });
     }
   }

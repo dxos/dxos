@@ -7,14 +7,12 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AIServiceClientImpl } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode, EdgeGpt } from '@dxos/conductor';
+import { type ComputeGraphModel, ComputeNode } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type StateMachine, type StateMachineContext } from './graph';
@@ -182,7 +180,8 @@ const Render = ({
 
           <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
             {sidebar === 'selected' && selected && (
-              <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />
+              <div>Form</div>
+              // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />
             )}
 
             <JsonFilter data={json} />

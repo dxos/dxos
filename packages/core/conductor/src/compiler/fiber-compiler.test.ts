@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
+import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT, registry } from '../nodes';
@@ -41,7 +42,7 @@ describe('Graph as a fiber runtime', () => {
 
         // Unwrapping without services to test that computing values doesn't require services.
         Effect.flatMap(unwrapValueBag),
-        Effect.withSpan('test'),
+        Effect.withSpan('test'), // TODO(burdon): Why span here and not in other tests?
       );
       expect(result).toEqual({ sum: 3 });
     }),
@@ -168,8 +169,8 @@ const g2a = (g1: DXN) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: 'dxn:test:sum' })
-    .createNode({ id: 'Y', type: 'dxn:test:sum' })
+    .createNode({ id: 'X', type: g1.toString(), subgraph: refFromDXN(g1) })
+    .createNode({ id: 'Y', type: g1.toString(), subgraph: refFromDXN(g1) })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
