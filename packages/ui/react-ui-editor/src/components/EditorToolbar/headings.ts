@@ -13,7 +13,7 @@ const createHeadingGroupAction = (value: string) =>
     'heading',
     {
       variant: 'dropdownMenu',
-      applyActiveIcon: true,
+      applyActive: true,
       selectCardinality: 'single',
       value,
     } as ToolbarMenuActionGroupProperties,

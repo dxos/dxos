@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Toolbar } from './Toolbar';
+import { ScriptToolbar } from './ScriptToolbar';
 import { templates } from '../../templates';
 
 export const Default = {
@@ -23,7 +23,7 @@ export const Default = {
 
 const meta: Meta = {
   title: 'plugins/plugin-script/Toolbar',
-  component: Toolbar,
+  component: ScriptToolbar,
   decorators: [withTheme, withLayout({ tooltips: true })],
 };
 

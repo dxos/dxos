@@ -46,18 +46,26 @@ export const createMenuItemGroup = <
     data: actionGroupSymbol,
   }) satisfies MenuItemGroup;
 
-export const createGapSeparator = (id: string = 'gap') =>
-  ({
-    id,
-    type: '@dxos/react-ui-toolbar/separator',
-    properties: { variant: 'gap' },
-    data: undefined as never,
-  }) satisfies MenuSeparator;
+export const createGapSeparator = (id: string = 'gap', source: string = 'root') => ({
+  nodes: [
+    {
+      id,
+      type: '@dxos/react-ui-toolbar/separator',
+      properties: { variant: 'gap' },
+      data: undefined as never,
+    } satisfies MenuSeparator,
+  ],
+  edges: [{ source, target: id }],
+});
 
-export const createLineSeparator = (id: string = 'line') =>
-  ({
-    id,
-    type: '@dxos/react-ui-toolbar/separator',
-    properties: { variant: 'line' },
-    data: undefined as never,
-  }) satisfies MenuSeparator;
+export const createLineSeparator = (id: string = 'line', source: string = 'root') => ({
+  nodes: [
+    {
+      id,
+      type: '@dxos/react-ui-toolbar/separator',
+      properties: { variant: 'line' },
+      data: undefined as never,
+    } satisfies MenuSeparator,
+  ],
+  edges: [{ source, target: id }],
+});
