@@ -209,6 +209,7 @@ const App = () => {
           paddingRight={1}
           flexBasis={'50%'}
           borderColor={selectedPanel === 0 ? 'blue' : 'white'}
+          overflow='hidden'
         >
           {filtered.map(({ name, version, dependents, importers, versionCount }, idx) => {
             const { width = 0, height = 0 } = listContainerRef.current ? measureElement(listContainerRef.current) : {};
@@ -243,6 +244,7 @@ const App = () => {
           paddingRight={1}
           flexBasis={'50%'}
           borderColor={selectedPanel === 1 ? 'blue' : 'white'}
+          overflow='hidden'
         >
           {selectedPackage &&
             selectedPackageVersions &&
