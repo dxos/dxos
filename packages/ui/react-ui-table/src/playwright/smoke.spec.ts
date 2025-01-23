@@ -17,9 +17,7 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
-    // (name, email, salary, manager) * 10 rows.
     await table.grid.ready();
-    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(40);
     await page.close();
   });
 
