@@ -13,11 +13,14 @@ import ts from 'typescript';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+const GLOBALS = 'globals.d.ts';
+
 const defaultOptions: ts.CompilerOptions = {
+  allowJs: true,
   lib: ['DOM', 'es2022'],
-  target: ts.ScriptTarget.ES2022,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
   module: ts.ModuleKind.ESNext,
+  target: ts.ScriptTarget.ES2022,
 };
 
 export class Compiler {
@@ -28,7 +31,7 @@ export class Compiler {
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
 
-  async initialize() {
+  async initialize(globals?: string) {
     if (this._env) {
       return;
     }
@@ -36,8 +39,15 @@ export class Compiler {
     // TODO(wittjosiah): Figure out how to get workers working in plugin packages.
     //   https://github.com/val-town/codemirror-ts?tab=readme-ov-file#setup-worker
     this._fsMap = await createDefaultMapFromCDN(this._options, '5.7.2', true, ts);
+
+    if (globals) {
+      this._fsMap.set(GLOBALS, globals);
+      await this._processImportsInContent(globals, GLOBALS);
+    }
+
+    const rootFiles = globals ? [GLOBALS] : [];
     const system = this._createCustomSystem();
-    this._env = createVirtualTypeScriptEnvironment(system, [], ts, this._options);
+    this._env = createVirtualTypeScriptEnvironment(system, rootFiles, ts, this._options);
   }
 
   get environment() {
@@ -46,15 +56,20 @@ export class Compiler {
   }
 
   setFile(fileName: string, content: string) {
-    invariant(this._fsMap, 'File system map not initialized.');
     log('set file', { fileName });
-    this.environment.createFile(fileName, content);
+    if (this._env) {
+      this._env.createFile(fileName, content);
+      return;
+    }
+    invariant(this._fsMap, 'File system map not initialized.');
+    this._fsMap.set(fileName, content);
   }
 
   compile(fileName: string) {
     return this.environment.languageService.getEmitOutput(fileName);
   }
 
+  // TODO(wittjosiah): Use text from source file?
   async processImports(fileName: string, content: string) {
     const sourceFile = this.environment.languageService.getProgram()?.getSourceFile(fileName);
     if (!sourceFile) {
@@ -106,7 +121,6 @@ export class Compiler {
   private _findImportsInContent(content: string): string[] {
     const imports: Set<string> = new Set();
     const visit = (node: ts.Node) => {
-      // Existing cases
       if (ts.isImportDeclaration(node)) {
         const moduleSpecifier = node.moduleSpecifier;
         if (ts.isStringLiteral(moduleSpecifier)) {
@@ -175,22 +189,11 @@ export class Compiler {
       if (typesUrl) {
         this._httpTypeCache.set(url, typesUrl);
         await this._prefetchHttpTypes(typesUrl);
-      } else {
-        this._createModuleDeclartion(url);
       }
     } catch (err) {
       this._processedUrls.delete(url);
       log.catch(err, { url });
     }
-  }
-
-  private _createModuleDeclartion(url: string) {
-    const moduleDeclaration = `declare module '${url}' {
-      const content: any;
-      export = content;
-      export * from '${url}';
-    }`;
-    this.setFile(`${url}.d.ts`, moduleDeclaration);
   }
 
   private _normalizeTypesUrl(url: string, parent?: string): string | undefined {
