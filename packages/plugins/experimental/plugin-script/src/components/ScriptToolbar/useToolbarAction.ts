@@ -5,6 +5,7 @@
 import { useCallback } from 'react';
 
 import { type ScriptType } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { type MenuAction, type MenuActionHandler } from '@dxos/react-ui-menu';
 
 import { type DeployActionProperties, useDeployHandler, useCopyHandler } from './deploy';
@@ -44,6 +45,8 @@ export const useToolbarAction = (props: { state: ScriptToolbarState; script: Scr
         case 'copy':
           void handleCopy();
           break;
+        default:
+          log.error('Unknown action type', action);
       }
     }) as MenuActionHandler,
     [handleTemplateSelect, handleFormat, handleDeploy, handleCopy],

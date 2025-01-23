@@ -26,18 +26,12 @@ export type ScriptToolbarProps = ThemedClassName<{
 const createToolbar = (state: ScriptToolbarState) => {
   const templateSelect = createTemplateSelect();
   const format = createFormat();
-  const gap = createGapSeparator('gap');
+  const gap = createGapSeparator();
   const deploy = createDeploy(state);
   const view = createView(state);
   return {
-    nodes: [...templateSelect.nodes, ...format.nodes, gap, ...deploy.nodes, ...view.nodes],
-    edges: [
-      ...templateSelect.edges,
-      ...format.edges,
-      { source: 'root', target: gap.id },
-      ...deploy.edges,
-      ...view.edges,
-    ],
+    nodes: [...templateSelect.nodes, ...format.nodes, ...gap.nodes, ...deploy.nodes, ...view.nodes],
+    edges: [...templateSelect.edges, ...format.edges, ...gap.edges, ...deploy.edges, ...view.edges],
   };
 };
 
