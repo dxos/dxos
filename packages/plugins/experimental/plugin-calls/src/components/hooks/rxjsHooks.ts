@@ -28,9 +28,9 @@ export const useObservableEffect = <T>(observable: Observable<T>, fn: (value: T)
  * Turns a value into a stable observable that will emit new
  * values when the value changes, and completes upon unmounting.
  */
-export const useStateObservable = <T>(value: T, name?: string) => {
+export const useStateObservable = <T>(value: T) => {
   const ref = useRef<BehaviorSubject<T> | undefined>(new BehaviorSubject<T>(value));
-  const observableRef = useRef<Observable<T> | undefined>(ref.current?.asObservable());
+  const observableRef = useRef<Observable<T>>(ref.current!.asObservable());
   const previousValue = useRef<T>();
 
   if (previousValue.current !== value) {
