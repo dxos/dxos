@@ -894,6 +894,11 @@
         },
         {
           "type": "json",
+          "path": "tools/lockfile-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/log-hook/package.json",
           "jsonpath": "$.version"
         },

@@ -523,6 +523,9 @@
       "path": "tools/lit-stories/tsconfig.json"
     },
     {
+      "path": "tools/lockfile-explorer/tsconfig.json"
+    },
+    {
       "path": "tools/log-hook/tsconfig.json"
     },
     {
