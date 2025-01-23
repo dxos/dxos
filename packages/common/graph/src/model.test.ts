@@ -9,7 +9,6 @@ import { S } from '@dxos/echo-schema';
 import { GraphModel } from './model';
 import { BaseGraphNode, type GraphNode } from './types';
 
-// TODO(burdon): Extend node.
 const TestNode = S.extend(
   BaseGraphNode,
   S.Struct({
