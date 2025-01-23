@@ -1,6 +1,10 @@
 // https://pnpm.io/pnpmfile
 
 function lockfileWarning() {
+  if (process.env.NO_LOCKFILE_WARNING) {
+    return;
+  }
+
   const fs = require('fs');
   const cp = require('child_process');
 
