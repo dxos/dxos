@@ -3,13 +3,12 @@
 //
 
 import { useMemo, useState } from 'react';
-import { combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
 
-import { useStateObservable, useSubscribedState } from './rxjsHooks';
+import { usePromise } from './usePromise';
 import { blackCanvasStreamTrack } from '../utils/blackCanvasStreamTrack';
-import { getUserMediaTrack$ } from '../utils/rxjs/getUserMediaTrack$';
+import { getUserMediaTrack } from '../utils/getUserMediaTrack';
 
-const useUserMedia = () => {
+export const useUserMedia = () => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
@@ -21,77 +20,50 @@ const useUserMedia = () => {
   const startScreenShare = () => setScreenShareEnabled(true);
   const endScreenShare = () => setScreenShareEnabled(false);
 
-  const videoEnabled$ = useStateObservable(videoEnabled);
-
-  const videoTrack$ = useMemo(
-    () =>
-      videoEnabled$.pipe(
-        switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack()))),
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
-      ),
-    [videoEnabled$],
+  const videoTrackPromise = useMemo(
+    async () => (videoEnabled ? getUserMediaTrack('videoinput') : blackCanvasStreamTrack()),
+    [videoEnabled],
   );
 
-  const videoTrack = useSubscribedState(videoTrack$);
+  const videoTrack = usePromise(videoTrackPromise);
   const videoDeviceId = videoTrack?.getSettings().deviceId;
-  const audioTrack$ = useMemo(
+
+  const audioTrackPromise = useMemo(() => getUserMediaTrack('audioinput'), []);
+  const alwaysOnAudioTrack = usePromise(audioTrackPromise);
+
+  const mutedAudioTrackPromise = useMemo(
     () =>
-      getUserMediaTrack$('audioinput').pipe(
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
-      ),
+      getUserMediaTrack('audioinput').then((track) => {
+        track.enabled = false;
+        return track;
+      }),
     [],
   );
-  const mutedAudioTrack$ = useMemo(() => {
-    return getUserMediaTrack$('audioinput').pipe(
-      tap({
-        next: (track) => {
-          track.enabled = false;
-        },
-      }),
-      shareReplay({
-        refCount: true,
-        bufferSize: 1,
-      }),
-    );
-  }, []);
 
-  const alwaysOnAudioStreamTrack = useSubscribedState(audioTrack$);
-  const audioDeviceId = alwaysOnAudioStreamTrack?.getSettings().deviceId;
-  const audioEnabled$ = useStateObservable(audioEnabled);
-  const publicAudioTrack$ = useMemo(
-    () =>
-      combineLatest([audioEnabled$, audioTrack$, mutedAudioTrack$]).pipe(
-        map(([enabled, alwaysOnTrack, mutedTrack]) => (enabled ? alwaysOnTrack : mutedTrack)),
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
-      ),
-    [audioEnabled$, audioTrack$, mutedAudioTrack$],
+  const publicAudioTrackPromise = useMemo(
+    () => (audioEnabled ? audioTrackPromise : mutedAudioTrackPromise),
+    [audioEnabled, audioTrackPromise, mutedAudioTrackPromise],
   );
-  const audioStreamTrack = useSubscribedState(publicAudioTrack$);
+  const publicAudioTrack = usePromise(publicAudioTrackPromise);
+
+  const audioDeviceId = publicAudioTrack?.getSettings().deviceId;
 
   return {
     turnMicOn,
     turnMicOff,
-    audioStreamTrack,
-    audioMonitorStreamTrack: alwaysOnAudioStreamTrack,
+    audioPromise: audioTrackPromise,
+    audioStreamTrack: publicAudioTrack,
+    audioMonitorStreamTrack: alwaysOnAudioTrack,
     audioEnabled,
-    publicAudioTrack$,
-    privateAudioTrack$: audioTrack$,
+    publicAudioTrackPromise,
+    privateAudioTrackPromise: audioTrackPromise,
     audioDeviceId,
     videoDeviceId,
     turnCameraOn,
     turnCameraOff,
     videoEnabled,
-    videoTrack$,
     videoStreamTrack: videoTrack,
+    videoPromise: videoTrackPromise,
 
     startScreenShare,
     endScreenShare,
@@ -99,5 +71,4 @@ const useUserMedia = () => {
   };
 };
 
-export default useUserMedia;
 export type UserMedia = ReturnType<typeof useUserMedia>;

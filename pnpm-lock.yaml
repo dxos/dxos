@@ -5705,6 +5705,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5744,9 +5750,6 @@ importers:
       react-use:
         specifier: ^17.5.1
         version: 17.5.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      rxjs:
-        specifier: ^7.8.1
-        version: 7.8.1
       tailwind-merge:
         specifier: ^2.2.1
         version: 2.2.1
@@ -5773,9 +5776,6 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
-      tailwindcss:
-        specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))
 
   packages/plugins/experimental/plugin-canvas:
     dependencies:

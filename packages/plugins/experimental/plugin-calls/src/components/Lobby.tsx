@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Button } from '@dxos/react-ui';
@@ -10,16 +10,14 @@ import { Button } from '@dxos/react-ui';
 import { CameraButton } from './CameraButton';
 import { MicButton } from './MicButton';
 import { SelfView } from './SelfView';
-import { useSubscribedState } from './hooks/rxjsHooks';
 import { useRoomContext } from './hooks/useRoomContext';
 
 export const Lobby: React.FC = () => {
   const { roomName } = useParams();
   const navigate = useNavigate();
-  const { setJoined, userMedia, room, peer } = useRoomContext()!;
+  const { setJoined, userMedia, room, client } = useRoomContext()!;
   const { videoStreamTrack } = userMedia;
-  const session = useSubscribedState(peer.session$);
-  const sessionError = useSubscribedState(peer.sessionError$);
+  const session = useMemo(() => client?.session, [client?.session]);
 
   const joinedUsers = new Set(room.otherUsers.filter((u) => u.tracks.audio).map((u) => u.name)).size;
 
@@ -36,11 +34,11 @@ export const Lobby: React.FC = () => {
         <div className='relative'>
           <SelfView className='aspect-[4/3] w-full' videoTrack={videoStreamTrack} />
         </div>
-        {sessionError && (
+        {/* {sessionError && (
           <div className='p-3 rounded-md text-sm text-zinc-800 bg-red-200 dark:text-zinc-200 dark:bg-red-700'>
             {sessionError}
           </div>
-        )}
+        )} */}
 
         <div className='flex gap-4 text-sm'>
           <Button

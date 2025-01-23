@@ -3,16 +3,19 @@
 //
 
 import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
-import { of } from 'rxjs';
 
 import { type PublicKey } from '@dxos/react-client';
 
-import { useStateObservable, useSubscribedState } from './hooks/rxjsHooks';
-import { usePeerConnection } from './hooks/usePeerConnection';
-import { useRoom } from './hooks/useRoom';
-import { RoomContext, type RoomContextType } from './hooks/useRoomContext';
-import { useStablePojo } from './hooks/useStablePojo';
-import useUserMedia from './hooks/useUserMedia';
+import {
+  useCallsConnection,
+  usePromise,
+  useRoom,
+  useStablePojo,
+  useUserMedia,
+  RoomContext,
+  type RoomContextType,
+} from './hooks';
+import {} from './hooks';
 import { CALLS_URL } from '../types';
 
 // Types for loader function response
@@ -79,7 +82,7 @@ const Room = ({
 
   const userMedia = useUserMedia();
   const room = useRoom({ roomId, username });
-  const { peer, iceConnectionState } = usePeerConnection({
+  const { client, iceConnectionState } = useCallsConnection({
     // apiExtraParams,
     iceServers,
     apiBase: `${CALLS_URL}/api/calls`,
@@ -100,27 +103,23 @@ const Room = ({
       scaleResolutionDownBy,
     },
   ]);
-  const videoTrackEncodingParams$ = useStateObservable<RTCRtpEncodingParameters[]>(videoEncodingParams);
-  const pushedVideoTrack$ = useMemo(
-    () => peer.pushTrack(userMedia.videoTrack$, videoTrackEncodingParams$),
-    [peer, userMedia.videoTrack$, videoTrackEncodingParams$],
+  const pushedVideoTrackPromise = useMemo(
+    () => client?.pushTrack(userMedia.videoPromise, videoEncodingParams),
+    [client, userMedia.videoPromise, videoEncodingParams],
   );
 
-  const pushedVideoTrack = useSubscribedState(pushedVideoTrack$);
+  const pushedVideoTrack = usePromise(pushedVideoTrackPromise);
 
-  const pushedAudioTrack$ = useMemo(
+  const pushedAudioTrackPromise = useMemo(
     () =>
-      peer.pushTrack(
-        userMedia.publicAudioTrack$,
-        of<RTCRtpEncodingParameters[]>([
-          {
-            networkPriority: 'high',
-          },
-        ]),
-      ),
-    [peer, userMedia.publicAudioTrack$],
+      client?.pushTrack(userMedia.publicAudioTrackPromise, [
+        {
+          networkPriority: 'high',
+        },
+      ] satisfies RTCRtpEncodingParameters[]),
+    [client, userMedia.publicAudioTrackPromise],
   );
-  const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
+  const pushedAudioTrack = usePromise(pushedAudioTrackPromise);
 
   const context: RoomContextType = {
     joined,
@@ -130,7 +129,7 @@ const Room = ({
     // traceLink,
     userMedia,
     userDirectoryUrl: undefined,
-    peer,
+    client,
     iceConnectionState,
     room,
     pushedTracks: {

@@ -2,19 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useUnmount } from 'react-use';
 
 import { type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
-import { useSubscribedState } from './rxjsHooks';
 import type { RoomContextType } from './useRoomContext';
 import type { UserMedia } from './useUserMedia';
-import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
+import { type CallsClient } from '../utils';
 
 interface Config {
   userMedia: UserMedia;
-  peer: RxjsPeer;
+  client?: CallsClient;
   identity?: UserState;
   updateUserState: (user: UserState) => void;
   pushedTracks: RoomContextType['pushedTracks'];
@@ -22,10 +21,11 @@ interface Config {
   raisedHand?: boolean;
 }
 
-export const useBroadcastStatus = ({ userMedia, identity, peer, pushedTracks, updateUserState }: Config) => {
+export const useBroadcastStatus = ({ userMedia, identity, client, pushedTracks, updateUserState }: Config) => {
   const { audioEnabled, videoEnabled, screenShareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
-  const { sessionId } = useSubscribedState(peer.session$) ?? {};
+
+  const sessionId = useMemo(() => client?.session.sessionId, [client?.session.sessionId]);
 
   const id = identity?.id;
   const name = identity?.name;
