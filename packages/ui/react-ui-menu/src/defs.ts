@@ -2,20 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 import { type Node, type Action, type ActionGroup, ACTION_GROUP_TYPE } from '@dxos/app-graph';
-import { type ToolbarSeparatorProps, type Label, type IconButtonProps } from '@dxos/react-ui';
+import { type ToolbarSeparatorProps, type Label, type IconButtonProps, type ClassNameValue } from '@dxos/react-ui';
 
 export type MenuActionProperties = {
   label: Label;
-  icon: string;
+  icon?: string;
   value?: string;
   disabled?: boolean;
+  hidden?: boolean;
   iconOnly?: boolean;
   testId?: string;
   variant?: 'action' | 'toggle';
   checked?: boolean;
+  classNames?: ClassNameValue;
 };
 
-export type MenuAction = Action<MenuActionProperties>;
+export type MenuItemGroupProperties = {
+  label: Label;
+  icon?: string;
+  iconOnly?: boolean;
+};
+
+export type MenuAction<P extends {} = {}> = Action<P & MenuActionProperties>;
 
 export type MenuActionHandler<A extends Node = MenuAction> = (action: A) => void;
 
@@ -42,4 +50,5 @@ export type MenuContextValue<A extends Node = MenuAction> = {
   resolveGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
   onAction: MenuActionHandler<A>;
+  attendableId?: string;
 };

@@ -6712,6 +6712,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-menu
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
@@ -7795,6 +7798,9 @@ importers:
       effect:
         specifier: ^3.12.1
         version: 3.12.1
+      react-dropzone:
+        specifier: ^14.2.3
+        version: 14.2.3(react@18.2.0)
     devDependencies:
       '@dxos/debug':
         specifier: workspace:*
@@ -8445,6 +8451,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -10992,9 +11001,6 @@ importers:
       lodash.sortby:
         specifier: ^4.7.0
         version: 4.7.0
-      react-dropzone:
-        specifier: ^14.2.3
-        version: 14.2.3(react@18.2.0)
       style-mod:
         specifier: ^4.1.0
         version: 4.1.0
@@ -11420,6 +11426,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11794,6 +11803,9 @@ importers:
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../react-ui-grid
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist

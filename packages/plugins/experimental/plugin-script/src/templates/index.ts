@@ -3,15 +3,15 @@
 //
 
 // @ts-ignore
-import chat from './templates/chat.ts?raw';
+import chat from './chat.ts?raw';
 // @ts-ignore
-import chess from './templates/chess.ts?raw';
+import chess from './chess.ts?raw';
 // @ts-ignore
-import echo from './templates/echo.ts?raw';
+import echo from './echo.ts?raw';
 // @ts-ignore
-import email from './templates/email.ts?raw';
+import email from './email.ts?raw';
 // @ts-ignore
-import forex from './templates/forex.ts?raw';
+import forex from './forex.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
