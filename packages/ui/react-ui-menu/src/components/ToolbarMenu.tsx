@@ -24,7 +24,7 @@ import {
 export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
   variant: 'dropdownMenu';
   icon: string;
-  applyActiveIcon?: boolean;
+  applyActive?: boolean;
 };
 
 export type ToolbarMenuToggleGroupActionGroup = Omit<MenuActionProperties, 'variant'> & {
@@ -49,7 +49,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
-  const { icon, iconOnly = true, disabled, testId, hidden } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
     ? { icon, size: iconSize, iconOnly, label: <ActionLabel action={action} /> }
@@ -62,6 +62,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
       {...(rootProps as IconButtonProps)}
+      classNames={classNames}
     />
   );
 };
@@ -75,10 +76,11 @@ const DropdownMenuToolbarItem = ({
   const suppressNextTooltip = useRef(false);
   const { iconSize } = useMenu('DropdownMenuToolbarItem', __menuScope);
   const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
+  const activeItem = items?.find((item) => !!(item as MenuAction).properties.checked);
   const icon =
-    ((group.properties as any).applyActiveIcon &&
+    ((group.properties as any).applyActive &&
       // TODO(thure): Handle other menu item types.
-      (items as MenuAction[])?.find((item) => !!item.properties.checked)?.properties.icon) ||
+      (activeItem as MenuAction)?.properties.icon) ||
     group.properties.icon;
   return (
     <DropdownMenu.Root group={group} items={items} suppressNextTooltip={suppressNextTooltip}>
@@ -90,7 +92,11 @@ const DropdownMenuToolbarItem = ({
           disabled={disabled}
           icon={icon}
           size={iconSize}
-          label={<ActionLabel action={group} />}
+          label={
+            <ActionLabel
+              action={(group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group}
+            />
+          }
           {...(testId && { 'data-testid': testId })}
           suppressNextTooltip={suppressNextTooltip}
         />
@@ -101,7 +107,7 @@ const DropdownMenuToolbarItem = ({
 
 const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
-  const { icon, iconOnly = true, disabled, testId, hidden } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
@@ -118,6 +124,7 @@ const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: Menu
       variant='ghost'
       {...(testId && { 'data-testid': testId })}
       {...(rootProps as IconButtonProps)}
+      classNames={classNames}
     />
   );
 };

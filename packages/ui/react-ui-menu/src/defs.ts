@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 import { type Node, type Action, type ActionGroup, ACTION_GROUP_TYPE } from '@dxos/app-graph';
-import { type ToolbarSeparatorProps, type Label, type IconButtonProps } from '@dxos/react-ui';
+import { type ToolbarSeparatorProps, type Label, type IconButtonProps, type ClassNameValue } from '@dxos/react-ui';
 
 export type MenuActionProperties = {
   label: Label;
@@ -14,6 +14,7 @@ export type MenuActionProperties = {
   testId?: string;
   variant?: 'action' | 'toggle';
   checked?: boolean;
+  classNames?: ClassNameValue;
 };
 
 export type MenuItemGroupProperties = {
