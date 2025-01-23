@@ -27,7 +27,7 @@ export const testServices = ({
   edgeHttpClient,
   gpt = DEFAULT_MOCK_GPT,
 }: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
-  invariant((edgeClient != null) !== (edgeHttpClient != null));
+  invariant((edgeClient != null) === (edgeHttpClient != null));
 
   const logLayer = Layer.succeed(EventLogger, logger);
   const edgeClientLayer =
