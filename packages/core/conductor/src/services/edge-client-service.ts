@@ -1,6 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Context, Layer } from 'effect';
-import { EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
+
 import { raise } from '@dxos/debug';
+import { type EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
 
 export class EdgeClientService extends Context.Tag('EdgeClientService')<
   EdgeClientService,

@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT, registry } from '../nodes';
@@ -149,9 +148,9 @@ const view = defineComputeNode({
 const g1 = () => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g1' });
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'dxn:test:sum' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' })
     .createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' })
     .createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
@@ -162,10 +161,10 @@ const g1 = () => {
 const g2a = (g1: DXN) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: g1.toString(), subgraph: refFromDXN(g1) } })
-    .createNode({ id: 'Y', data: { type: g1.toString(), subgraph: refFromDXN(g1) } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'dxn:test:sum' })
+    .createNode({ id: 'Y', type: 'dxn:test:sum' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
     .createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' })
@@ -178,8 +177,8 @@ const g2a = (g1: DXN) => {
 const g2b = (g1: ComputeGraph) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' })
     .createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' })
@@ -192,11 +191,11 @@ const g2b = (g1: ComputeGraph) => {
 const g3 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .createNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
-    .createNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'dxn:test:sum' })
+    .createNode({ id: 'V1', type: 'dxn:test:viewer' })
+    .createNode({ id: 'V2', type: 'dxn:test:viewer' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })
     .createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' })
@@ -208,9 +207,9 @@ const g3 = () => {
 const g4 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: 'if' } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'if' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' })
     .createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' })
     .createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' })

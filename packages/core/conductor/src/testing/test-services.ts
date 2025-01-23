@@ -4,30 +4,31 @@
 
 import { Layer, type Context, type Scope } from 'effect';
 
-import { consoleLogger, noopLogger } from './logger';
-import { EventLogger, GptService, SpaceService } from '../services';
-import { MockGpt } from '../services/gpt/mock';
-import type { ComputeRequirements } from '../types';
-import { EdgeClientService } from '../services/edge-client-service';
-import { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
+import { consoleLogger, noopLogger } from './logger';
+import { EventLogger, GptService, SpaceService, EdgeClientService } from '../services';
+import { MockGpt } from '../services/testing';
+import type { ComputeRequirements } from '../types';
+
 export type TestServiceOptions = {
-  enableLogging?: boolean;
+  gpt?: Context.Tag.Service<GptService>;
+  // TODO(burdon): Create common interface for EdgeClient and EdgeHttpClient?
   edgeClient?: EdgeClient;
   edgeHttpClient?: EdgeHttpClient;
+  enableLogging?: boolean;
   logger?: Context.Tag.Service<EventLogger>;
-  gpt?: Context.Tag.Service<GptService>;
 };
 
 export const testServices = ({
-  enableLogging = false,
-  logger = enableLogging ? consoleLogger : noopLogger,
+  gpt = DEFAULT_MOCK_GPT,
   edgeClient,
   edgeHttpClient,
-  gpt = DEFAULT_MOCK_GPT,
+  enableLogging = false,
+  logger = enableLogging ? consoleLogger : noopLogger,
 }: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
-  invariant((edgeClient != null) !== (edgeHttpClient != null));
+  invariant((edgeClient != null) === (edgeHttpClient != null), 'specify one of edgeClient or edgeHttpClient');
 
   const logLayer = Layer.succeed(EventLogger, logger);
   const edgeClientLayer =

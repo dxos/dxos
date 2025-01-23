@@ -38,6 +38,7 @@ export class EdgeHttpClient {
   private readonly _baseUrl: string;
 
   private _edgeIdentity: EdgeIdentity | undefined;
+
   /**
    * Auth header is cached until receiving the next 401 from EDGE, at which point it gets refreshed.
    */

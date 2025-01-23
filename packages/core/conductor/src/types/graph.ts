@@ -3,19 +3,20 @@
 //
 
 import { Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
-import { BaseGraphNode, Graph } from '@dxos/graph';
+import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 /**
  * GraphNode payload.
  */
-export const ComputeNode = S.mutable(
+export const ComputeNode = S.extend(
+  BaseGraphNode,
   S.Struct({
     /** DXN of the node specifier. */
     // TODO(burdon): Remove? Use type in base node class.
-    type: S.optional(S.String),
+    // type: S.optional(S.String),
 
     /**
-     * NOTE: Rather than a discriminated union, we have a mixin of properties for different node types.
+     * NOTE: We have a mixin of properties for different node types rather than a discriminated union.
      */
 
     /** For composition nodes. */
@@ -34,13 +35,16 @@ export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 /**
  * GraphEdge payload.
  */
-export const ComputeEdge = S.Struct({
-  /** Output property from source. */
-  output: S.String,
+export const ComputeEdge = S.extend(
+  BaseGraphEdge,
+  S.Struct({
+    /** Output property from source. */
+    output: S.String,
 
-  /** Input property to target. */
-  input: S.String,
-});
+    /** Input property to target. */
+    input: S.String,
+  }),
+);
 
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
@@ -51,7 +55,7 @@ export class ComputeGraph extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
 })({
-  // Workaround for TS compiler bug.
+  // NOTE: Cast required as workaround for TS compiler bug.
   graph: Graph as S.Schema<Graph>,
 
   // Reference nodes.

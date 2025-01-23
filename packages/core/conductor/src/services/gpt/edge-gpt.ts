@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
-import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from '../gpt';
+import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from './gpt';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

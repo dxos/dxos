@@ -9,7 +9,7 @@ export const BaseGraphNode = S.Struct({
   id: S.String,
   type: S.optional(S.String),
 
-  // TODO(burdon): Remove. Can extend with arbitrary properties?
+  // TODO(burdon): Remove.
   data: S.optional(S.Any),
 });
 
@@ -32,7 +32,7 @@ export const BaseGraphEdge = S.Struct({
   source: S.String,
   target: S.String,
 
-  // TODO(burdon): Remove. Can extend with arbitrary properties?
+  // TODO(burdon): Remove.
   data: S.optional(S.Any),
 });
 

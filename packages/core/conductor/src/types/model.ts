@@ -3,23 +3,18 @@
 //
 
 import { ObjectId } from '@dxos/echo-schema';
-import {
-  AbstractGraphBuilder,
-  AbstractGraphModel,
-  type Graph,
-  type GraphEdge,
-  type GraphNode,
-  createEdgeId,
-} from '@dxos/graph';
+import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 
 import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT } from './types';
 
+// TODO(burdon): DXN from echo-schema is a different type.
+
 export class ComputeGraphModel extends AbstractGraphModel<
-  GraphNode<ComputeNode>,
-  GraphEdge<ComputeEdge>,
+  ComputeNode,
+  ComputeEdge,
   ComputeGraphModel,
   ComputeGraphBuilder
 > {
@@ -58,39 +53,34 @@ export class ComputeGraphModel extends AbstractGraphModel<
   // Custom methods.
   //
 
-  createNode({ id, data = {} }: { id?: string; data?: ComputeNode }): GraphNode<ComputeNode> {
-    const node: GraphNode<ComputeNode> = { id: id ?? ObjectId.random(), data };
+  createNode({ id, ...rest }: Partial<ComputeNode>): ComputeNode {
+    const node: ComputeNode = { id: id ?? ObjectId.random(), ...rest };
     this.addNode(node);
     return node;
   }
 
   createEdge(
-    source: { node: string | GraphNode<ComputeNode>; property?: string },
-    target: { node: string | GraphNode<ComputeNode> | ComputeGraph; property?: string },
-  ): GraphEdge<ComputeEdge> {
+    source: { node: string | ComputeNode; property?: string },
+    target: { node: string | ComputeNode | ComputeGraph; property?: string },
+  ): ComputeEdge {
     const sourceId = typeof source.node === 'string' ? source.node : source.node.id;
 
-    // TODO(burdon): DXN from echo-schema is a different type.
     // Create local intermediate node for the subgraph.
     const targetId = isComputeGraph(target.node)
       ? this.createNode({
-          data: {
-            type: DXN.parse(target.node.graph.id!).toString(),
-            subgraph: makeRef(target.node),
-          },
+          type: DXN.parse(target.node.graph.id!).toString(),
+          subgraph: makeRef(target.node),
         }).id
       : typeof target.node === 'string'
         ? target.node
         : target.node.id;
 
-    const edge: GraphEdge<ComputeEdge> = {
+    const edge: ComputeEdge = {
       id: createEdgeId({ source: sourceId, target: targetId }),
       source: sourceId,
       target: targetId,
-      data: {
-        output: source.property ?? DEFAULT_INPUT,
-        input: target.property ?? DEFAULT_INPUT,
-      },
+      output: source.property ?? DEFAULT_INPUT,
+      input: target.property ?? DEFAULT_INPUT,
     };
 
     this.addEdge(edge);
@@ -98,19 +88,15 @@ export class ComputeGraphModel extends AbstractGraphModel<
   }
 }
 
-class ComputeGraphBuilder extends AbstractGraphBuilder<
-  GraphNode<ComputeNode>,
-  GraphEdge<ComputeEdge>,
-  ComputeGraphModel
-> {
-  createNode(props: { id?: string; data?: ComputeNode }): this {
+class ComputeGraphBuilder extends AbstractGraphBuilder<ComputeNode, ComputeEdge, ComputeGraphModel> {
+  createNode(props: Partial<ComputeNode>): this {
     this.model.createNode(props);
     return this;
   }
 
   createEdge(
-    source: { node: string | GraphNode<ComputeNode>; property?: string },
-    target: { node: string | GraphNode<ComputeNode> | ComputeGraph; property?: string },
+    source: { node: string | ComputeNode; property?: string },
+    target: { node: string | ComputeNode | ComputeGraph; property?: string },
   ): this {
     this.model.createEdge(source, target);
     return this;

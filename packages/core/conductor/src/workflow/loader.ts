@@ -128,8 +128,8 @@ export class WorkflowLoader {
     const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
     outputMap.set(dxnString, graph);
     for (const node of graph.nodes) {
-      if (node.data.subgraph) {
-        await this._loadRecursive(node.data.subgraph.dxn, outputMap);
+      if (node.subgraph) {
+        await this._loadRecursive(node.subgraph.dxn, outputMap);
       }
     }
 
@@ -137,9 +137,9 @@ export class WorkflowLoader {
   }
 
   private _resolveInOut(graph: ComputeGraphModel): { inputNodeId: string; outputNodeId: string } {
-    const inputNodes = graph.nodes.filter((node) => node.data.type === NODE_INPUT);
+    const inputNodes = graph.nodes.filter((node) => node.type === NODE_INPUT);
     invariant(inputNodes.length === 1, 'Graph must have a single input.');
-    const outputNodes = graph.nodes.filter((node) => node.data.type === NODE_OUTPUT);
+    const outputNodes = graph.nodes.filter((node) => node.type === NODE_OUTPUT);
     invariant(outputNodes.length === 1, 'Graph must have a single output.');
     return { inputNodeId: inputNodes[0].id, outputNodeId: outputNodes[0].id };
   }

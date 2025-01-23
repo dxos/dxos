@@ -174,15 +174,15 @@ export class StateMachine extends Resource {
     );
   }
 
-  addNode(node: GraphNode<ComputeNode>) {
+  addNode(node: ComputeNode) {
     this._graph.addNode(node);
   }
 
-  addEdge(edge: GraphEdge<ComputeEdge>) {
+  addEdge(edge: ComputeEdge) {
     this._graph.addEdge(edge);
   }
 
-  getComputeNode(nodeId: string): GraphNode<ComputeNode> {
+  getComputeNode(nodeId: string): ComputeNode {
     return this._graph.getNode(nodeId);
   }
 

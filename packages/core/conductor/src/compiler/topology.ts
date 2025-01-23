@@ -78,14 +78,14 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
   // Process nodes.
   for (const node of graph.nodes) {
-    const meta = await computeMetaResolver(node.data);
+    const meta = await computeMetaResolver(node);
     if (!meta) {
-      throw new Error(`No meta for node: ${node.data.type}`);
+      throw new Error(`No meta for node: ${node.type}`);
     }
 
     topology.nodes.push({
       id: node.id,
-      graphNode: node.data,
+      graphNode: node,
       meta,
       inputs: [],
       outputs: [],
@@ -100,38 +100,38 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       continue; // TODO(burdon): Warn.
     }
 
-    if (sourceNode.outputs.find((output) => output.name === edge.data.output) == null) {
-      const schema = pickProperty(sourceNode.meta.output, edge.data.output);
+    if (sourceNode.outputs.find((output) => output.name === edge.output) == null) {
+      const schema = pickProperty(sourceNode.meta.output, edge.output);
       sourceNode.outputs.push({
-        name: edge.data.output,
+        name: edge.output,
         schema,
         boundTo: [],
       });
       if (AST.isNeverKeyword(schema.ast)) {
         log.info('setting never output on node:', {
           sourceNode: sourceNode.graphNode.type,
-          output: edge.data.output,
+          output: edge.output,
           type: schema.ast,
           nodeOutputType: sourceNode.meta.output.ast,
         });
       }
     }
 
-    if (targetNode.inputs.find((input) => input.name === edge.data.input) == null) {
+    if (targetNode.inputs.find((input) => input.name === edge.input) == null) {
       targetNode.inputs.push({
-        name: edge.data.input,
-        schema: pickProperty(targetNode.meta.input, edge.data.input),
+        name: edge.input,
+        schema: pickProperty(targetNode.meta.input, edge.input),
         sourceNodeId: sourceNode.id,
-        sourceNodeOutput: edge.data.output,
+        sourceNodeOutput: edge.output,
       });
     }
 
     // TODO(dmaretskyi): Check assignability.
 
     // TODO(burdon): Set above? (i.e., let input = ...).
-    const output = sourceNode.outputs.find((output) => output.name === edge.data.output);
+    const output = sourceNode.outputs.find((output) => output.name === edge.output);
     invariant(output);
-    const input = targetNode.inputs.find((input) => input.name === edge.data.input);
+    const input = targetNode.inputs.find((input) => input.name === edge.input);
     invariant(input);
 
     output.boundTo.push({
