@@ -13,7 +13,7 @@ const createViewModeGroupAction = (value: string) =>
     'viewMode',
     {
       variant: 'dropdownMenu',
-      applyActiveIcon: true,
+      applyActive: true,
       selectCardinality: 'single',
       value,
     } as ToolbarMenuActionGroupProperties,
