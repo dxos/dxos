@@ -21,6 +21,7 @@ import { readFileSync } from 'node:fs';
 import { StatusBar } from './components/StatusBar';
 import { PackageList } from './components/PackageList';
 import { ellipsis } from './util/ellipsis';
+import { DependantList } from './components/DependantList';
 
 const App = () => {
   const { stdout } = useStdout();
@@ -210,73 +211,15 @@ const App = () => {
           isFocused={selectedPanel === 0}
           updatedPackages={updatedPackages}
         />
-        <Box
-          flexDirection='column'
-          borderStyle='double'
-          paddingLeft={1}
-          paddingRight={1}
-          flexBasis={'50%'}
-          borderColor={selectedPanel === 1 ? 'blue' : 'white'}
-          overflow='hidden'
-        >
-          {selectedPackage &&
-            selectedPackageVersions &&
-            (() => {
-              let rowBase = 0;
-
-              return (
-                <>
-                  {selectedPackageVersions.map(([version, { dependents, importers }]) => {
-                    const relativeSelection = rightSelected - rowBase;
-                    rowBase += dependents.length + importers.length + 1;
-
-                    return (
-                      <Box key={version} flexDirection='column' paddingBottom={1}>
-                        <Text color='blue' bold backgroundColor={relativeSelection === 0 ? '#444' : 'transparent'}>
-                          - {version}
-                        </Text>
-                        <Box paddingLeft={2} flexDirection='column'>
-                          {importers.map((importer, idx) => {
-                            const importerSpec = lockfile?.lockfile.importers[importer];
-                            const dep =
-                              importerSpec?.dependencies?.[selectedPackage.name] ??
-                              importerSpec?.optionalDependencies?.[selectedPackage.name] ??
-                              importerSpec?.devDependencies?.[selectedPackage.name];
-
-                            const isSelected = relativeSelection === idx + 1;
-
-                            return (
-                              <Text backgroundColor={isSelected ? '#444' : 'transparent'}>
-                                {dep?.specifier ?? ''} <Text color='gray'>in local package</Text> {importer}
-                              </Text>
-                            );
-                          })}
-                          {dependents.map((dependent, idx) => {
-                            const { name, version } = parsePackageId(dependent);
-
-                            const packageSpec = lockfile?.lockfile.snapshots[dependent];
-                            const dep =
-                              packageSpec?.dependencies?.[selectedPackage.name] ??
-                              packageSpec?.optionalDependencies?.[selectedPackage.name] ??
-                              packageSpec?.devDependencies?.[selectedPackage.name];
-
-                            const isSelected = relativeSelection === idx + 1 + importers.length;
-
-                            return (
-                              <Text backgroundColor={isSelected ? '#444' : 'transparent'}>
-                                <Text color='gray'>in dependency</Text> <Text>{name}</Text>
-                                <Text color='gray'>@{ellipsis(version, 40)}</Text>
-                              </Text>
-                            );
-                          })}
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </>
-              );
-            })()}
-        </Box>
+        {selectedPackage && selectedPackageVersions && lockfile && (
+          <DependantList
+            dependants={selectedPackageVersions}
+            lockfile={lockfile}
+            isFocused={selectedPanel === 1}
+            selectedIndex={rightSelected}
+            selectedPackage={selectedPackage.name}
+          />
+        )}
       </Box>
       <StatusBar actions={actions} statusText={lockfile?.path != null ? resolve(lockfile?.path) : ''} />
     </Box>
