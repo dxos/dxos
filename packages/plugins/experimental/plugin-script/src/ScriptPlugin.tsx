@@ -17,13 +17,18 @@ import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { Compiler, IntentResolver, ReactSurface } from './capabilities';
+import { Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
 
 export const ScriptPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: ScriptSettings,
+    }),
     defineModule({
       id: `${meta.id}/module/compiler`,
       activatesOn: Events.Startup,

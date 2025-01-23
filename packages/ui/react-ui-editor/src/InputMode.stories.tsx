@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { Toolbar as NaturalToolbar, Select, useThemeContext } from '@dxos/react-ui';
-import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { attentionSurface, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { EditorToolbar, useEditorToolbarState } from './components';
@@ -55,8 +55,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryP
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      {toolbarState && <EditorToolbar onAction={handleAction} state={toolbarState} classNames={textBlockWidth} />}
-
+      {toolbarState && <EditorToolbar onAction={handleAction} state={toolbarState} />}
       <div role='none' className='grow overflow-hidden'>
         <div className={attentionSurface} ref={parentRef} />
       </div>
