@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { type IconButtonProps, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { Icon, type IconButtonProps, Toolbar as NaturalToolbar, type ToolbarRootProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { ActionLabel } from './ActionLabel';
@@ -82,23 +82,28 @@ const DropdownMenuToolbarItem = ({
       // TODO(thure): Handle other menu item types.
       (activeItem as MenuAction)?.properties.icon) ||
     group.properties.icon;
+  const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
+  const label = (
+    <ActionLabel action={(group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group} />
+  );
+  const rootProps = icon
+    ? { icon, size: iconSize, iconOnly, label, caretDown: true, suppressNextTooltip }
+    : {
+        children: (
+          <>
+            {label}
+            <Icon size={3} icon='ph--caret-down--bold' classNames='mis-1' />
+          </>
+        ),
+      };
   return (
     <DropdownMenu.Root group={group} items={items} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
-        <NaturalToolbar.IconButton
+        <Root
           variant='ghost'
-          caretDown
-          iconOnly={iconOnly}
           disabled={disabled}
-          icon={icon}
-          size={iconSize}
-          label={
-            <ActionLabel
-              action={(group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group}
-            />
-          }
+          {...(rootProps as IconButtonProps)}
           {...(testId && { 'data-testid': testId })}
-          suppressNextTooltip={suppressNextTooltip}
         />
       </DropdownMenu.Trigger>
     </DropdownMenu.Root>

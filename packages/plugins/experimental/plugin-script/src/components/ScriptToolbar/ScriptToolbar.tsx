@@ -2,15 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { type ScriptType } from '@dxos/functions';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 
+import { createDeploy } from './deploy';
+import { createFormat } from './format';
+import { createTemplateSelect } from './templateSelect';
 import { useToolbarAction } from './useToolbarAction';
 import { type ScriptToolbarState } from './useToolbarState';
+import { createView } from './view';
 
 export type ScriptToolbarProps = ThemedClassName<{
   role?: string;
@@ -18,13 +23,32 @@ export type ScriptToolbarProps = ThemedClassName<{
   state: ScriptToolbarState;
 }>;
 
+const createToolbar = (state: ScriptToolbarState) => {
+  const templateSelect = createTemplateSelect();
+  const format = createFormat();
+  const gap = createGapSeparator('gap');
+  const deploy = createDeploy(state);
+  const view = createView(state);
+  return {
+    nodes: [...templateSelect.nodes, ...format.nodes, gap, ...deploy.nodes, ...view.nodes],
+    edges: [
+      ...templateSelect.edges,
+      ...format.edges,
+      { source: 'root', target: gap.id },
+      ...deploy.edges,
+      ...view.edges,
+    ],
+  };
+};
+
 export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
   const handleAction = useToolbarAction({ state, script });
-
+  const toolbarCreator = useCallback(() => createToolbar(state), [state]);
+  const menu = useMenuActions(toolbarCreator);
   return (
     <div role='none' className={stackItemContentToolbarClassNames(role)}>
       <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-        <MenuProvider onAction={handleAction}>
+        <MenuProvider {...menu} onAction={handleAction} attendableId={fullyQualifiedId(script)}>
           <ToolbarMenu classNames={classNames} />
         </MenuProvider>
       </ElevationProvider>

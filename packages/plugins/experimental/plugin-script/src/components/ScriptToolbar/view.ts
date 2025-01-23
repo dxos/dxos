@@ -18,7 +18,7 @@ const views: Record<ViewType, string> = {
   debug: 'ph--bug--regular',
 };
 
-const createViewGroupItem = (state: ViewState) => {
+const createViewGroupItem = (state: Partial<ViewState>) => {
   return createMenuItemGroup('view', {
     label: ['view group label', { ns: SCRIPT_PLUGIN }],
     variant: 'dropdownMenu',
@@ -27,7 +27,7 @@ const createViewGroupItem = (state: ViewState) => {
   });
 };
 
-const createViewActions = (state: ViewState) => {
+const createViewActions = (state: Partial<ViewState>) => {
   return Object.entries(views).map(([viewType, icon]) => {
     return createMenuAction<ViewActionProperties>(`view--${viewType}`, {
       type: 'view',
@@ -39,7 +39,7 @@ const createViewActions = (state: ViewState) => {
   });
 };
 
-export const createView = (state: ViewState) => {
+export const createView = (state: Partial<ViewState>) => {
   const viewGroupItem = createViewGroupItem(state);
   const viewActions = createViewActions(state);
   return {
