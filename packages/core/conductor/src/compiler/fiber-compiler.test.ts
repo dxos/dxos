@@ -42,7 +42,7 @@ describe('Graph as a fiber runtime', () => {
 
         // Unwrapping without services to test that computing values doesn't require services.
         Effect.flatMap(unwrapValueBag),
-        Effect.withSpan('test'),
+        Effect.withSpan('test'), // TODO(burdon): Why span here and not in other tests?
       );
       expect(result).toEqual({ sum: 3 });
     }),
@@ -124,9 +124,10 @@ describe('Graph as a fiber runtime', () => {
   );
 });
 
-/**
- * Compute node.
- */
+//
+// Test nodes
+//
+
 const sum = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
@@ -136,6 +137,7 @@ const sum = defineComputeNode({
         operation: 'sum',
         operands: { a, b },
       });
+
       return { result: a + b };
     }),
   ),
@@ -146,12 +148,16 @@ const view = defineComputeNode({
   output: VoidOutput,
 });
 
+//
+// Test graphs
+//
+
 const g1 = () => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g1' });
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'dxn:test:sum' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' })
     .createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' })
     .createEdge({ node: 'X', property: 'result' }, { node: 'O', property: 'sum' });
@@ -162,10 +168,10 @@ const g1 = () => {
 const g2a = (g1: DXN) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: g1.toString(), subgraph: refFromDXN(g1) } })
-    .createNode({ id: 'Y', data: { type: g1.toString(), subgraph: refFromDXN(g1) } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: g1.toString(), subgraph: refFromDXN(g1) })
+    .createNode({ id: 'Y', type: g1.toString(), subgraph: refFromDXN(g1) })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
     .createEdge({ node: 'I', property: 'c' }, { node: 'Y', property: 'number1' })
@@ -178,8 +184,8 @@ const g2a = (g1: DXN) => {
 const g2b = (g1: ComputeGraph) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: g1, property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: g1, property: 'number2' })
     .createEdge({ node: 'I', property: 'c' }, { node: g1, property: 'number1' })
@@ -192,11 +198,11 @@ const g2b = (g1: ComputeGraph) => {
 const g3 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: 'dxn:test:sum' } })
-    .createNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
-    .createNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'dxn:test:sum' })
+    .createNode({ id: 'V1', type: 'dxn:test:viewer' })
+    .createNode({ id: 'V2', type: 'dxn:test:viewer' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })
     .createEdge({ node: 'X', property: 'result' }, { node: 'V1', property: 'result' })
@@ -208,9 +214,9 @@ const g3 = () => {
 const g4 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .createNode({ id: 'I', data: { type: NODE_INPUT } })
-    .createNode({ id: 'X', data: { type: 'if' } })
-    .createNode({ id: 'O', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'I', type: NODE_INPUT })
+    .createNode({ id: 'X', type: 'if' })
+    .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'condition' }, { node: 'X', property: 'condition' })
     .createEdge({ node: 'I', property: 'value' }, { node: 'X', property: 'value' })
     .createEdge({ node: 'X', property: 'true' }, { node: 'O', property: 'true' })

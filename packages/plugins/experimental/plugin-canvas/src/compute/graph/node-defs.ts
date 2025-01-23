@@ -20,13 +20,13 @@ export const isValidComputeNode = (type: string): boolean => {
   return nodeFactory[type as NodeType] !== undefined;
 };
 
-export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
+export const createComputeNode = (shape: GraphNode<ComputeShape>): ComputeNode => {
   const type = shape.data.type ?? raise(new Error('Type not specified'));
   const factory = nodeFactory[type as NodeType] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
 };
 
-const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
+const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => ComputeNode> = {
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
   ['audio' as const]: () => createNode('audio'),

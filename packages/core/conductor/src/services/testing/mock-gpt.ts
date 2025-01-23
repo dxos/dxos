@@ -11,9 +11,9 @@ import { getDebugName } from '@dxos/util';
 
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
-import type { GptService } from '../gpt';
+import type { GptService } from '../gpt/gpt';
 
-export type GPTConfig = {
+export type MockGPTConfig = {
   initDelay?: number;
   minDelay?: number;
   maxDelay?: number;
@@ -22,9 +22,9 @@ export type GPTConfig = {
 };
 
 export class MockGpt implements Context.Tag.Service<GptService> {
-  private config: Required<GPTConfig>;
+  private config: Required<MockGPTConfig>;
 
-  constructor(config: GPTConfig = {}) {
+  constructor(config: MockGPTConfig = {}) {
     this.config = {
       initDelay: config.initDelay ?? 100,
       minDelay: config.minDelay ?? 10,

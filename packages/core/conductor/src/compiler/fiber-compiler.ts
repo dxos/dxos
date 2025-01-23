@@ -37,11 +37,12 @@ export type ValidateResult = {
 };
 
 /**
+ * Validates a compute graph by checking the input/output schemas and collecting diagnostics.
  *
- * @param graph
- * @param inputNodeId
- * @param outputNodeId
- * @param computeMetaResolver
+ * @param graph The compute graph model to validate
+ * @param inputNodeId ID of the input/entrypoint node
+ * @param outputNodeId ID of the output/terminal node
+ * @param computeMetaResolver Function that resolves compute metadata for a given node
  */
 export const validate = async ({
   graph,
@@ -133,7 +134,15 @@ type GraphExecutorParams = {
 };
 
 /**
+ * Executes a compute graph by resolving and caching node computations.
+ * Maintains topology and execution state for the graph.
  *
+ * The executor can:
+ * - Load a compute graph and build its topology
+ * - Resolve compute node implementations and metadata
+ * - Cache computed node results
+ * - Clone itself while preserving topology but discarding runtime state
+ * - Execute individual nodes and propagate values through the graph
  */
 export class GraphExecutor {
   private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;

@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { log } from '@dxos/log';
+
 import { ComputeGraphModel } from './model';
 
 describe('graph builder', () => {
@@ -33,7 +35,7 @@ describe('graph builder', () => {
     expect(g2.edges).to.have.length(3);
 
     // TODO(burdon): Util to create composite graph.
-    console.log(JSON.stringify(g1, null, 2));
-    console.log(JSON.stringify(g2, null, 2));
+    log('g1', JSON.stringify(g1, null, 2));
+    log('g2', JSON.stringify(g2, null, 2));
   });
 });

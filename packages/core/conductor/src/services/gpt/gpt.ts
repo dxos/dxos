@@ -7,8 +7,8 @@ import { Context } from 'effect';
 import { ImageSource, type AIServiceClient } from '@dxos/assistant';
 import { ECHO_ATTR_TYPE, S } from '@dxos/echo-schema';
 
-import { type GptInput, type GptOutput } from '../nodes';
-import type { ComputeEffect, ValueBag } from '../types';
+import { type GptInput, type GptOutput } from '../../nodes';
+import type { ComputeEffect, ValueBag } from '../../types';
 
 export const IMAGE_TYPENAME = 'example.org/type/Image';
 

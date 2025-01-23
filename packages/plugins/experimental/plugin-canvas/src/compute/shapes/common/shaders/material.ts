@@ -4,14 +4,16 @@
 
 import * as THREE from 'three';
 
+// NOTE: Adding ?raw to prevent vitest from importing these as TS files.
+
 // @ts-ignore
-import dofFrag from './glsl/dof.frag';
+import dofFrag from './glsl/dof.frag?raw';
 // @ts-ignore
-import dofVert from './glsl/dof.vert';
+import dofVert from './glsl/dof.vert?raw';
 // @ts-ignore
-import simFrag from './glsl/sim.frag';
+import simFrag from './glsl/sim.frag?raw';
 // @ts-ignore
-import simVert from './glsl/sim.vert';
+import simVert from './glsl/sim.vert?raw';
 
 // TODO(burdon): Compile shader using gl element.
 // const shader = gl.createShader(type)!;

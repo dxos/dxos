@@ -13,7 +13,7 @@ import { type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 export type ComputeNodeState = {
-  node: GraphNode<ComputeNode>;
+  node: ComputeNode;
   meta: ComputeMeta;
   runtime: {
     inputs: Record<string, RuntimeValue>;

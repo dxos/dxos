@@ -9,7 +9,6 @@ import { S } from '@dxos/echo-schema';
 import { GraphModel } from './model';
 import { BaseGraphNode, type GraphNode } from './types';
 
-// TODO(burdon): Extend node.
 const TestNode = S.extend(
   BaseGraphNode,
   S.Struct({
@@ -32,7 +31,7 @@ describe('Graph', () => {
   test('extended', ({ expect }) => {
     const graph = new GraphModel<TestNode>();
     const node = graph.addNode({ id: 'test', value: 'test' });
-    expect(node.data.length).to.eq(4);
+    expect(node.value.length).to.eq(4);
   });
 
   test('optional', ({ expect }) => {

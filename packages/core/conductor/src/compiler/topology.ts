@@ -45,7 +45,7 @@ type TopologyNodeOutput = {
 
 export type TopologyNode = {
   id: string;
-  graphNode: ComputeNode;
+  graphNode: ComputeNode; // TODO(burdon): Rename computeNode.
   meta: ComputeMeta;
   inputs: TopologyNodeInput[];
   outputs: TopologyNodeOutput[];
@@ -64,11 +64,12 @@ export type CreateTopologyParams = {
 };
 
 /**
+ * Creates a topology from a compute graph by resolving node metadata and building input/output connections.
+ * The topology represents the static structure and data flow of the graph.
  *
- * @param graph
- * @param inputNodeId
- * @param outputNodeId
- * @param computeMetaResolver
+ * @param params.graph - The compute graph model to create topology from
+ * @param params.computeMetaResolver - Function that resolves compute metadata for a given node
+ * @returns A topology containing nodes with their inputs/outputs and any diagnostics
  */
 export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyParams): Promise<Topology> => {
   const topology: Omit<Topology, 'inputSchema' | 'outputSchema'> = {
@@ -78,14 +79,14 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
   // Process nodes.
   for (const node of graph.nodes) {
-    const meta = await computeMetaResolver(node.data);
+    const meta = await computeMetaResolver(node);
     if (!meta) {
-      throw new Error(`No meta for node: ${node.data.type}`);
+      throw new Error(`No meta for node: ${node.type}`);
     }
 
     topology.nodes.push({
       id: node.id,
-      graphNode: node.data,
+      graphNode: node,
       meta,
       inputs: [],
       outputs: [],
@@ -94,44 +95,44 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
   // Process edges.
   for (const edge of graph.edges) {
+    console.log('##', JSON.stringify(edge));
     const sourceNode = topology.nodes.find((node) => node.id === edge.source);
     const targetNode = topology.nodes.find((node) => node.id === edge.target);
     if (sourceNode == null || targetNode == null) {
       continue; // TODO(burdon): Warn.
     }
 
-    if (sourceNode.outputs.find((output) => output.name === edge.data.output) == null) {
-      const schema = pickProperty(sourceNode.meta.output, edge.data.output);
+    if (sourceNode.outputs.find((output) => output.name === edge.output) == null) {
+      const schema = pickProperty(sourceNode.meta.output, edge.output);
       sourceNode.outputs.push({
-        name: edge.data.output,
+        name: edge.output,
         schema,
         boundTo: [],
       });
       if (AST.isNeverKeyword(schema.ast)) {
         log.info('setting never output on node:', {
           sourceNode: sourceNode.graphNode.type,
-          output: edge.data.output,
+          output: edge.output,
           type: schema.ast,
           nodeOutputType: sourceNode.meta.output.ast,
         });
       }
     }
 
-    if (targetNode.inputs.find((input) => input.name === edge.data.input) == null) {
+    if (targetNode.inputs.find((input) => input.name === edge.input) == null) {
       targetNode.inputs.push({
-        name: edge.data.input,
-        schema: pickProperty(targetNode.meta.input, edge.data.input),
+        name: edge.input,
+        schema: pickProperty(targetNode.meta.input, edge.input),
         sourceNodeId: sourceNode.id,
-        sourceNodeOutput: edge.data.output,
+        sourceNodeOutput: edge.output,
       });
     }
 
     // TODO(dmaretskyi): Check assignability.
 
-    // TODO(burdon): Set above? (i.e., let input = ...).
-    const output = sourceNode.outputs.find((output) => output.name === edge.data.output);
+    const output = sourceNode.outputs.find((output) => output.name === edge.output);
     invariant(output);
-    const input = targetNode.inputs.find((input) => input.name === edge.data.input);
+    const input = targetNode.inputs.find((input) => input.name === edge.input);
     invariant(input);
 
     output.boundTo.push({

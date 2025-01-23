@@ -7,6 +7,7 @@ import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
+import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { EdgeGpt } from '../services';
@@ -30,7 +31,6 @@ describe('Gpt pipelines', () => {
           .pipe(Scope.extend(scope), Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
-
         expect(text).toEqual('This is a mock response that simulates a GPT-like output.');
 
         yield* Scope.close(scope, Exit.void).pipe(Effect.withSpan('closeScope'));
@@ -56,9 +56,8 @@ describe('Gpt pipelines', () => {
           .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
-
-        const p = Effect.runPromise(output.values.text).then((x) => {
-          console.log({ x });
+        const logger = Effect.runPromise(output.values.text).then((token) => {
+          log.info('token', { token });
         });
 
         const tokenStream: Stream.Stream<ResultStreamEvent> = yield* output.values.tokenStream;
@@ -97,7 +96,7 @@ describe('Gpt pipelines', () => {
           '',
         ]);
 
-        yield* Effect.promise(() => p);
+        yield* Effect.promise(() => logger);
         yield* Scope.close(scope, Exit.void);
       }),
     );
@@ -129,7 +128,7 @@ describe('Gpt pipelines', () => {
 
         const text: ValueEffect<string> = computeResult.values.text;
         const llmTextOutput = yield* text;
-        console.log({ llmTextOutput });
+        log('llm', { llmTextOutput });
         expect(llmTextOutput.length).toBeGreaterThan(10);
         yield* Scope.close(scope, Exit.void);
       }),
@@ -191,9 +190,9 @@ describe('Gpt pipelines', () => {
 const gpt1 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .createNode({ id: 'gpt1-INPUT', data: { type: NODE_INPUT } })
-    .createNode({ id: 'gpt1-GPT', data: { type: 'gpt' } })
-    .createNode({ id: 'gpt1-OUTPUT', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'gpt1-INPUT', type: NODE_INPUT })
+    .createNode({ id: 'gpt1-GPT', type: 'gpt' })
+    .createNode({ id: 'gpt1-OUTPUT', type: NODE_OUTPUT })
     .createEdge({ node: 'gpt1-INPUT', property: 'prompt' }, { node: 'gpt1-GPT', property: 'prompt' })
     .createEdge({ node: 'gpt1-GPT', property: 'text' }, { node: 'gpt1-OUTPUT', property: 'text' });
 
@@ -203,9 +202,9 @@ const gpt1 = () => {
 const gpt2 = () => {
   const model = ComputeGraphModel.create();
   model.builder
-    .createNode({ id: 'gpt2-INPUT', data: { type: NODE_INPUT } })
-    .createNode({ id: 'gpt2-GPT', data: { type: 'gpt' } })
-    .createNode({ id: 'gpt2-OUTPUT', data: { type: NODE_OUTPUT } })
+    .createNode({ id: 'gpt2-INPUT', type: NODE_INPUT })
+    .createNode({ id: 'gpt2-GPT', type: 'gpt' })
+    .createNode({ id: 'gpt2-OUTPUT', type: NODE_OUTPUT })
     .createEdge({ node: 'gpt2-INPUT', property: 'prompt' }, { node: 'gpt2-GPT', property: 'prompt' })
     .createEdge({ node: 'gpt2-GPT', property: 'text' }, { node: 'gpt2-OUTPUT', property: 'text' })
     .createEdge({ node: 'gpt2-GPT', property: 'tokenStream' }, { node: 'gpt2-OUTPUT', property: 'tokenStream' });

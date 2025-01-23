@@ -57,7 +57,8 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
             id: ObjectId.random(),
             source: sourceNode?.data.node ?? failedInvariant(),
             target: targetNode?.data.node ?? failedInvariant(),
-            data: { output, input },
+            output,
+            input,
           });
         }
       },
