@@ -19,6 +19,8 @@ import { dirname, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { StatusBar } from './components/StatusBar';
+import { PackageList } from './components/PackageList';
+import { ellipsis } from './util/ellipsis';
 
 const App = () => {
   const { stdout } = useStdout();
@@ -202,42 +204,12 @@ const App = () => {
         <Input value={filter} onChange={setFilter} color='blue' />
       </Box>
       <Box height={'100%'}>
-        <Box
-          ref={listContainerRef}
-          flexDirection='column'
-          borderStyle='double'
-          paddingLeft={1}
-          paddingRight={1}
-          flexBasis={'50%'}
-          borderColor={selectedPanel === 0 ? 'blue' : 'white'}
-          overflow='hidden'
-        >
-          {filtered.map(({ name, version, dependents, importers, versionCount }, idx) => {
-            const { width = 0, height = 0 } = listContainerRef.current ? measureElement(listContainerRef.current) : {};
-            const isSelected = leftSelected === idx;
-            const isUpdated = updatedPackages.includes(name);
-            return (
-              <Box key={name + '@' + version} flexDirection='row' width={'100%'}>
-                <Text backgroundColor={isSelected ? '#444' : 'transparent'}>
-                  <Transform transform={(output) => output.padEnd(width - 2, ' ')}>
-                    {isUpdated ? (
-                      <Text color='red'>{'# '}</Text>
-                    ) : versionCount > 1 ? (
-                      <Text color={'yellowBright'}>{'! '}</Text>
-                    ) : (
-                      <Text color='gray'>{'  '}</Text>
-                    )}
-                    <Text bold color='white'>
-                      {name}
-                    </Text>
-                    <Text color={'gray'}>@{ellipsis(version, 40)}</Text>
-                  </Transform>
-                </Text>
-                <Spacer />
-              </Box>
-            );
-          })}
-        </Box>
+        <PackageList
+          packages={filtered}
+          selectedIndex={leftSelected}
+          isFocused={selectedPanel === 0}
+          updatedPackages={updatedPackages}
+        />
         <Box
           flexDirection='column'
           borderStyle='double'
@@ -317,5 +289,3 @@ export const runApp = async () => {
   // const lockfile = await loadLockfile(findLockfile(process.cwd()));
   // console.log(inspect(lockfile.packageIndex, { depth: null, colors: true }));
 };
-
-const ellipsis = (text: string, length: number) => (text.length > length ? text.slice(0, length) + '...' : text);
