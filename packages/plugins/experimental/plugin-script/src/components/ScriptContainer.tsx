@@ -39,6 +39,10 @@ import { SCRIPT_PLUGIN } from '../meta';
 import { templates } from '../templates';
 import { type ScriptSettingsProps } from '../types';
 
+const BANNER = {
+  js: 'import { defineFunction } from "npm:@dxos/functions@main";',
+};
+
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
   settings: ScriptSettingsProps;
@@ -120,7 +124,7 @@ export const ScriptContainer = ({ role, classNames, compiler, settings, script }
     try {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
 
-      const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
+      const bundler = new Bundler({ platform: 'browser', banner: BANNER, sandboxedModules: [], remoteModules: {} });
       const buildResult = await bundler.bundle(script.source.target!.content);
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;

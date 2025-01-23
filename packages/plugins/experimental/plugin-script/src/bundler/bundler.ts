@@ -24,10 +24,9 @@ export type BundlerResult = {
 };
 
 export type BundlerOptions = {
-  platform: BuildOptions['platform'];
   sandboxedModules: string[];
   remoteModules: Record<string, string>;
-};
+} & Pick<BuildOptions, 'banner' | 'platform'>;
 
 let initialized: Promise<void>;
 export const initializeBundler = async (options: { wasmUrl: string }) => {
@@ -53,7 +52,7 @@ export class Bundler {
       };
     };
 
-    if (this._options.platform === 'browser') {
+    if (options.platform === 'browser') {
       invariant(initialized, 'Compiler not initialized.');
       await initialized;
     }
@@ -63,6 +62,7 @@ export class Bundler {
     // https://esbuild.github.io/api/#build
     try {
       const result = await build({
+        banner: options.banner,
         platform: options.platform,
         conditions: ['workerd', 'browser'],
         metafile: true,
@@ -74,14 +74,6 @@ export class Bundler {
           {
             name: 'memory',
             setup: (build) => {
-              build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
-                return { path, external: true };
-              });
-
-              build.onResolve({ filter: /^dxos:functions$/ }, ({ path }) => {
-                return { path: './runtime.js', external: true };
-              });
-
               build.onResolve({ filter: /^memory:/ }, ({ path }) => {
                 return { path: path.split(':')[1], namespace: 'memory' };
               });
@@ -95,6 +87,7 @@ export class Bundler {
                 }
               });
 
+              // TODO(wittjosiah): Remove?
               for (const module of providedModules) {
                 build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => {
                   return { path, namespace: 'injected-module' };
