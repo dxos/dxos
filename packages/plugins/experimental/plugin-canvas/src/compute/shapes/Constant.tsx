@@ -60,11 +60,11 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
     (text) => {
       const value = text.trim();
       if (value.length) {
-        // TODO(burdon): Set filter.
+        // TODO(burdon): Set text filter.
         if (type === 'number') {
-          const v = parseFloat(value);
-          if (!isNaN(v)) {
-            runtime.setOutput(DEFAULT_OUTPUT, value);
+          const floatValue = parseFloat(value);
+          if (!isNaN(floatValue)) {
+            runtime.setOutput(DEFAULT_OUTPUT, floatValue);
           }
         } else {
           runtime.setOutput(DEFAULT_OUTPUT, value);
@@ -88,6 +88,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
               checked={node.data.value}
               onCheckedChange={(value) => {
                 node.data.value = value;
+                runtime.setOutput(DEFAULT_OUTPUT, value);
               }}
             />
           </Input.Root>
@@ -103,7 +104,7 @@ const types = ['string', 'number', 'boolean'];
 const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
     <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full' />
+      <Select.TriggerButton variant='ghost' classNames='w-full !px-0' />
       <Select.Portal>
         <Select.Content>
           <Select.ScrollUpButton />

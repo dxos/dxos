@@ -95,9 +95,9 @@ export const createLogicCircuit = () => {
 export const createControlCircuit = () => {
   const nodes: ComputeShape[] = [
     createSwitch({ id: 's', ...createLayout({ x: -9, y: -1 }) }),
-    createConstant({ id: 'c1', ...createLayout({ x: -10, y: -10 }), value: 'hello' }),
-    createConstant({ id: 'c2', ...createLayout({ x: -10, y: -5 }), value: 'world' }),
-    createConstant({ id: 'c3', ...createLayout({ x: -10, y: 3 }), value: true }),
+    createConstant({ id: 'c1', value: 'hello', ...createLayout({ x: -10, y: -10 }) }),
+    createConstant({ id: 'c2', value: 'world', ...createLayout({ x: -10, y: -5 }) }),
+    createConstant({ id: 'c3', value: true, ...createLayout({ x: -10, y: 3 }) }),
     createIf({ id: 'if1', ...createLayout({ x: 0, y: 1 }) }),
     createIfElse({ id: 'if2', ...createLayout({ x: 0, y: -8 }) }),
     createBeacon({ id: 'b1', ...createLayout({ x: 9, y: -1 }) }),
