@@ -20,20 +20,20 @@ import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
+  createControlCircuit,
   createGPTRealtime,
-  createMachine,
   createLogicCircuit,
+  createMachine,
+  createServices,
+  createBasicTest,
   createTest3,
   createTest4,
-  createControlCircuit,
-  createTest0,
-  createServices,
 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
+import { type GraphMonitor } from '../hooks';
 import { useSelection } from '../testing';
-import { type Connection } from '../types';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -78,7 +78,7 @@ const Render = ({
 
   const getComputeNode = (id?: string): ComputeNode | undefined => {
     if (id) {
-      const node = graph?.getNode(id)?.data as ComputeShape;
+      const node = graph?.getNode(id) as ComputeShape;
       if (node?.node) {
         return machine?.graph.getNode(node.node);
       }
@@ -122,7 +122,7 @@ const Render = ({
 
         const edge = graph.edges.find((edge) => {
           const source = graph.getNode(edge.source);
-          return (source.data as ComputeShape).node === nodeId && (edge.data as Connection).output === property;
+          return (source as ComputeShape).node === nodeId && edge.output === property;
         });
 
         if (edge) {
@@ -148,7 +148,7 @@ const Render = ({
             ref={editorRef}
             id={id}
             graph={graph}
-            graphMonitor={graphMonitor}
+            graphMonitor={graphMonitor as GraphMonitor} // TODO(burdon): ???
             selection={selection}
             autoZoom
             {...props}
@@ -215,7 +215,7 @@ export const Default: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest0()),
+    ...createMachine(createBasicTest()),
   },
 };
 
@@ -318,18 +318,10 @@ export const GPTAudio: Story = {
 
 export const GPTRealtime: Story = {
   args: {
-    // debug: true,
     showGrid: false,
     snapToGrid: false,
-    // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    // spec: [
-    //   { type: Testing.OrgType, count: 2 },
-    //   { type: Testing.ProjectType, count: 4 },
-    //   { type: Testing.ContactType, count: 8 },
-    // ],
-    // registerSchema: true,
     ...createMachine(createGPTRealtime(), createServices()),
   },
 };

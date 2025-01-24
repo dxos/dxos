@@ -83,13 +83,17 @@ export class SchemaValidator {
     }
 
     const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
+    if (propertyType == null) {
+      return S.Any; // TODO(burdon): HACK.
+    }
+
     invariant(propertyType, `invalid property: ${prop.toString()}`);
     return S.make(propertyType);
   }
 }
 
 /**
- * tuple AST is used both for:
+ * Tuple AST is used both for:
  * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.String, S.Number] }
  * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.Union(S.String, S.Number)] }
  */

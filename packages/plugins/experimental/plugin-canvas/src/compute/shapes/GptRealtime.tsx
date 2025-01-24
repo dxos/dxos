@@ -115,7 +115,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
 
       dataChannel.addEventListener('message', async (ev) => {
         const msg = JSON.parse(ev.data);
-        console.log('realtime gpt event', msg);
+        // console.log('realtime gpt event', msg);
         // Handle function calls
         if (msg.type === 'response.function_call_arguments.done') {
           // const fn = fns[msg.name];

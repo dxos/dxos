@@ -6,13 +6,12 @@ import { AIServiceClientImpl } from '@dxos/assistant';
 import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, EdgeGpt } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { type GraphEdge, createEdgeId } from '@dxos/graph';
-import { failedInvariant } from '@dxos/invariant';
+import { createEdgeId } from '@dxos/graph';
 import { DXN, SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
 import { createComputeNode, StateMachine, type Services } from './graph';
+import { mapEdge } from './hooks';
 import {
   createAnd,
   createAppend,
@@ -27,6 +26,7 @@ import {
   createIfElse,
   createJson,
   createList,
+  createNot,
   createOr,
   createScope,
   createSwitch,
@@ -38,6 +38,8 @@ import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
 import { type Connection, type Shape } from '../types';
 import { CanvasGraphModel } from '../types';
 
+export const foo = () => {};
+
 const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
   const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
@@ -48,16 +50,15 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
   }
 };
 
-export const createTest0 = () => {
+export const createBasicTest = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    // TODO(burdon): Converge Node and data object.
-    // const data = createSwitch(createLayout({ x: -4, y: 0 }));
-    // const a = model.addNode({ id: data.id, data });
-    // TODO(burdon): Discriminated union of shapes?
-    // const a = model.createNode({ type: 'switch', data: { pos: { x: -4, y: 0 } } });
-    // const b = model.createNode({ type: 'beacon', data: { pos: { x: +4, y: 0 } } });
-    // model.createEdge({ node: a }, { node: b });
+    model.createNode(createSwitch({ id: 'a', ...createLayout({ x: -4, y: 0 }) }));
+    model.createNode(createBeacon({ id: 'b', ...createLayout({ x: 4, y: 0 }) }));
+    model.createNode(createBeacon({ id: 'c', ...createLayout({ x: 4, y: 4 }) }));
+    model.createNode(createNot({ id: 'd', ...createLayout({ x: 0, y: 4 }) }));
+    model.addEdge({ source: 'a', target: 'b' });
+    model.addEdge({ source: 'd', target: 'c' });
   });
 
   return model;
@@ -73,25 +74,30 @@ export const createLogicCircuit = () => {
     createBeacon({ id: 'd1', ...createLayout({ x: 8, y: 0 }) }),
   ];
 
-  const edges: Omit<GraphEdge<Partial<Connection>>, 'id'>[] = [
-    { source: 'a1', target: 'b1', data: { input: 'a' } },
-    { source: 'a2', target: 'b1', data: { input: 'b' } },
-    { source: 'b1', target: 'c1', data: { input: 'a' } },
-    { source: 'a3', target: 'c1', data: { input: 'b' } },
-    { source: 'c1', target: 'd1', data: {} },
+  const edges: Omit<Connection, 'id'>[] = [
+    { source: 'a1', target: 'b1', input: 'a' },
+    { source: 'a2', target: 'b1', input: 'b' },
+    { source: 'b1', target: 'c1', input: 'a' },
+    { source: 'a3', target: 'c1', input: 'b' },
+    { source: 'c1', target: 'd1' },
   ];
 
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data: { output = DEFAULT_OUTPUT, input = DEFAULT_INPUT } }) => ({
+    nodes: nodes.map((data) => data),
+    edges: edges.map(({ source, target, input, output = DEFAULT_OUTPUT }) => ({
       id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
       source,
       target,
-      data: { output, input },
+      output,
+      input,
     })),
   });
 };
 
+/**
+ * Creates a circuit with control flow nodes (if/else) to demonstrate conditional routing of values.
+ * @returns A CanvasGraphModel containing switches, constants, if/else nodes, and beacons wired together.
+ */
 export const createControlCircuit = () => {
   const nodes: ComputeShape[] = [
     createSwitch({ id: 's', ...createLayout({ x: -9, y: -1 }) }),
@@ -105,43 +111,41 @@ export const createControlCircuit = () => {
     createJson({ id: 'j', ...createLayout({ x: 12, y: -8 }) }),
   ];
 
-  const edges: Omit<GraphEdge<Partial<Connection>>, 'id'>[] = [
-    { source: 's', target: 'if1', data: { input: 'condition' } },
-    { source: 's', target: 'if2', data: { input: 'condition' } },
-    { source: 'c1', target: 'if2', data: { input: 'true' } },
-    { source: 'c2', target: 'if2', data: { input: 'false' } },
-    { source: 'c3', target: 'if1', data: { input: 'value' } },
-    { source: 'if1', target: 'b1', data: { output: 'true' } },
-    { source: 'if1', target: 'b2', data: { output: 'false' } },
-    { source: 'if2', target: 'j', data: {} },
+  const edges: Omit<Connection, 'id'>[] = [
+    { source: 's', target: 'if1', input: 'condition' },
+    { source: 's', target: 'if2', input: 'condition' },
+    { source: 'c1', target: 'if2', input: 'true' },
+    { source: 'c2', target: 'if2', input: 'false' },
+    { source: 'c3', target: 'if1', input: 'value' },
+    { source: 'if1', target: 'b1', output: 'true' },
+    { source: 'if1', target: 'b2', output: 'false' },
+    { source: 'if2', target: 'j' },
   ];
 
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data: { output = DEFAULT_OUTPUT, input = DEFAULT_INPUT } }) => ({
+    nodes: nodes.map((data) => data),
+    edges: edges.map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => ({
       id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
       source,
       target,
-      data: { output, input },
+      output,
+      input,
     })),
   });
 };
 
-export const createTest3 = ({
-  cot = false,
-  history = false,
-  artifact = false,
-  db = false,
-  textToImage = false,
-  viewText = false,
-}: {
+type TestOptions = {
   db?: boolean;
   cot?: boolean;
   artifact?: boolean;
   history?: boolean;
   textToImage?: boolean;
   viewText?: boolean;
-} = {}) => {
+};
+
+export const createTest3 = (options: TestOptions = {}) => {
+  const { db, cot, artifact, history, textToImage, viewText } = options;
+
   const nodes: Shape[] = [
     createChat({ id: 'chat', ...createLayout({ x: -18, y: 0 }) }),
     ...(artifact
@@ -175,70 +179,51 @@ export const createTest3 = ({
     ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 7, y: 9, width: 10, height: 10 }) })] : []),
   ];
 
-  const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
-    { source: 'chat', target: 'gpt', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
-    ...(artifact
-      ? [{ source: 'systemPrompt', target: 'gpt', data: { output: DEFAULT_OUTPUT, input: 'systemPrompt' } }]
-      : []),
-    // { source: 'gpt', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
-    // { source: 'gpt', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
-    ...(viewText ? [{ source: 'gpt', target: 'text', data: { output: 'text', input: DEFAULT_INPUT } }] : []),
-    ...(history
-      ? [{ source: 'history', target: 'thread', data: { output: DEFAULT_OUTPUT, input: DEFAULT_INPUT } }]
-      : []),
-    ...(history ? [{ source: 'thread', target: 'gpt', data: { output: 'items', input: 'history' } }] : []),
-    ...(history ? [{ source: 'thread', target: 'history-json', data: { output: 'id', input: DEFAULT_INPUT } }] : []),
-    ...(history ? [{ source: 'history-json', target: 'append', data: { output: DEFAULT_OUTPUT, input: 'id' } }] : []),
-    ...(history ? [{ source: 'gpt', target: 'append', data: { output: 'messages', input: 'items' } }] : []),
-    ...(db ? [{ source: 'db', target: 'gpt', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
-    ...(textToImage
-      ? [{ source: 'text-to-image', target: 'gpt', data: { input: 'tools', output: DEFAULT_OUTPUT } }]
-      : []),
-    ...(cot ? [{ source: 'gpt', target: 'cot', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
-    ...(artifact ? [{ source: 'gpt', target: 'artifact', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
+  const edges: Omit<Connection, 'id'>[] = [
+    { source: 'chat', target: 'gpt', input: 'prompt', output: DEFAULT_OUTPUT },
+    ...(artifact ? [{ source: 'systemPrompt', target: 'gpt', output: DEFAULT_OUTPUT, input: 'systemPrompt' }] : []),
+    ...(viewText ? [{ source: 'gpt', target: 'text', output: 'text', input: DEFAULT_INPUT }] : []),
+    ...(history ? [{ source: 'history', target: 'thread', output: DEFAULT_OUTPUT, input: DEFAULT_INPUT }] : []),
+    ...(history ? [{ source: 'thread', target: 'gpt', output: 'items', input: 'history' }] : []),
+    ...(history ? [{ source: 'thread', target: 'history-json', output: 'id', input: DEFAULT_INPUT }] : []),
+    ...(history ? [{ source: 'history-json', target: 'append', output: DEFAULT_OUTPUT, input: 'id' }] : []),
+    ...(history ? [{ source: 'gpt', target: 'append', output: 'messages', input: 'items' }] : []),
+    ...(db ? [{ source: 'db', target: 'gpt', input: 'tools', output: DEFAULT_OUTPUT }] : []),
+    ...(textToImage ? [{ source: 'text-to-image', target: 'gpt', input: 'tools', output: DEFAULT_OUTPUT }] : []),
+    ...(cot ? [{ source: 'gpt', target: 'cot', output: 'cot', input: DEFAULT_INPUT }] : []),
+    ...(artifact ? [{ source: 'gpt', target: 'artifact', output: 'artifact', input: DEFAULT_INPUT }] : []),
   ];
 
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data }) => ({
+    nodes: nodes.map((data) => data),
+    edges: edges.map(({ source, target, ...rest }) => ({
       id: createEdgeId({ source, target }),
       source,
       target,
-      data,
+      ...rest,
     })),
   });
 };
 
 export const createTest4 = () => {
-  const nodes: Shape[] = [
-    createAudio({ id: 'audio', ...createLayout({ x: -6, y: 0 }) }),
-    createScope({ id: 'scope', ...createLayout({ x: 6, y: 0 }) }),
-  ];
-
-  const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
-    { source: 'audio', target: 'scope', data: { input: DEFAULT_INPUT, output: DEFAULT_OUTPUT } },
-  ];
-
-  return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data }) => ({
-      id: createEdgeId({ source, target }),
-      source,
-      target,
-      data,
-    })),
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call(({ model }) => {
+    model.createNode(createAudio({ id: 'a', ...createLayout({ x: -4, y: -4 }) }));
+    model.createNode(createScope({ id: 'b', ...createLayout({ x: 4, y: -4 }) }));
+    model.addEdge({ source: 'a', target: 'b' });
   });
+
+  return model;
 };
 
 export const createGPTRealtime = () => {
-  const nodes: Shape[] = [createGptRealtime({ id: 'gpt-realtime', ...createLayout({ x: 0, y: 0 }) })];
-
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
+    nodes: [createGptRealtime({ id: 'gpt-realtime', ...createLayout({ x: 0, y: 0 }) })],
     edges: [],
   });
 };
 
+// TODO(burdon): Reconcile with useGraphMonitor.
 export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
   const machine = new StateMachine(ComputeGraphModel.create());
   machine.setServices(services ?? {});
@@ -246,29 +231,13 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {
     for (const shape of graph.nodes) {
-      log('create', { shape });
       const node = createComputeNode(shape);
       machine.addNode(node);
-      shape.data.node = node.id;
+      shape.node = node.id;
     }
 
     for (const edge of graph.edges) {
-      const data = (edge.data ?? {}) as Connection;
-      const { output, input } = data;
-
-      const source = graph.getNode(edge.source);
-      const target = graph.getNode(edge.target);
-
-      const sourceId = source.data.node ?? failedInvariant();
-      const targetId = target.data.node ?? failedInvariant();
-
-      machine.addEdge({
-        id: ObjectId.random(),
-        source: sourceId,
-        target: targetId,
-        output,
-        input,
-      });
+      machine.addEdge(mapEdge(graph, edge));
     }
   }
 

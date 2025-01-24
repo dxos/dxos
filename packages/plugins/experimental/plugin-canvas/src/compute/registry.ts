@@ -18,6 +18,7 @@ import {
   ifElseShape,
   ifShape,
   jsonShape,
+  jsonTransformShape,
   mapShape,
   notShape,
   orShape,
@@ -79,6 +80,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
     shapes: [
       //
       jsonShape,
+      jsonTransformShape,
       appendShape,
       listShape,
       threadShape,

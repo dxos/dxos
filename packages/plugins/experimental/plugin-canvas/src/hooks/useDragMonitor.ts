@@ -243,7 +243,8 @@ export const useDragMonitor = () => {
 
           case 'anchor': {
             // Snap to closest anchor.
-            const target = getClosestAnchor(graph, registry, pos, (shape, anchor, d) => {
+            // TODO(burdon): Cast ???
+            const target = getClosestAnchor(graph as any, registry, pos, (shape, anchor, d) => {
               return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
             });
             dragMonitor.update({
@@ -282,11 +283,11 @@ export const useDragMonitor = () => {
             const node = graph.getNode(state.value.shape.id);
             if (!node) {
               // TODO(burdon): Copy from external canvas/component.
-              // graph.addNode({ id: shape.id, data: { ...shape } });
+              // graph.addNode(shape);
               log.info('copy', { shape: state.value.shape });
             } else {
-              invariant(isPolygon(node.data));
-              node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
+              invariant(isPolygon(node));
+              node.center = snapPoint(pointAdd(pos, dragMonitor.offset));
             }
             break;
           }
@@ -297,9 +298,9 @@ export const useDragMonitor = () => {
           case 'resize': {
             const node = graph.getNode(state.value.shape.id);
             if (node) {
-              invariant(isPolygon(node.data));
-              node.data.center = state.value.shape.center;
-              node.data.size = state.value.shape.size;
+              invariant(isPolygon(node));
+              node.center = state.value.shape.center;
+              node.size = state.value.shape.size;
             }
             break;
           }
@@ -314,7 +315,10 @@ export const useDragMonitor = () => {
             switch (target?.type) {
               case 'frame': {
                 if (source.shape.type === 'rectangle') {
-                  await actionHandler({ type: 'link', source: source.shape.id, target: target.shape.id });
+                  await actionHandler({
+                    type: 'link',
+                    connection: { source: source.shape.id, target: target.shape.id },
+                  });
                 }
                 break;
               }
@@ -326,16 +330,22 @@ export const useDragMonitor = () => {
                 if (sourceDirection === 'output') {
                   await actionHandler({
                     type: 'link',
-                    source: source.shape.id,
-                    target: target.shape.id,
-                    connection: { input: targetAnchorId, output: sourceAnchorId },
+                    connection: {
+                      source: source.shape.id,
+                      target: target.shape.id,
+                      output: sourceAnchorId,
+                      input: targetAnchorId,
+                    },
                   });
                 } else {
                   await actionHandler({
                     type: 'link',
-                    source: target.shape.id,
-                    target: source.shape.id,
-                    connection: { input: sourceAnchorId, output: targetAnchorId },
+                    connection: {
+                      source: target.shape.id,
+                      target: source.shape.id,
+                      output: targetAnchorId,
+                      input: sourceAnchorId,
+                    },
                   });
                 }
                 break;
@@ -346,7 +356,10 @@ export const useDragMonitor = () => {
                 if (source.shape.type === 'rectangle') {
                   const shape = createRectangle({ id: createId(), center: pos, size: itemSize });
                   await actionHandler({ type: 'create', shape });
-                  await actionHandler({ type: 'link', source: source.shape.id, target: shape.id });
+                  await actionHandler({
+                    type: 'link',
+                    connection: { source: source.shape.id, target: shape.id },
+                  });
                   await actionHandler({ type: 'select', ids: [shape.id] });
                 }
                 break;

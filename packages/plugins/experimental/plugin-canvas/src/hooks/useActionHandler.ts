@@ -4,7 +4,6 @@
 
 import { useEffect } from 'react';
 
-import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, ProjectionMapper, useProjection, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
@@ -16,7 +15,7 @@ import { type TestId } from '../components';
 import { doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { isPolygon, type Shape } from '../types';
+import { type Connection, isPolygon } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
@@ -186,16 +185,15 @@ export const useActionHandler = () => {
             shape = createRectangle({ id, center: { x: 0, y: 0 }, size: itemSize });
           }
           invariant(shape);
-          const node: GraphNode<Shape> = { id: shape.id, data: shape };
-          graphMonitor?.onCreate({ graph, node });
-          graph.addNode(node);
+          graphMonitor?.onCreate({ graph, node: shape });
+          graph.addNode(shape);
           selection.setSelected([shape.id]);
           return true;
         }
         case 'link': {
-          const { source, target, connection } = action;
+          const { connection } = action;
           const id = createId();
-          const edge: GraphEdge = { id, source, target, data: connection };
+          const edge: Connection = { id, ...connection };
           graph.addEdge(edge);
           graphMonitor?.onLink({ graph, edge });
           selection.setSelected([id]);

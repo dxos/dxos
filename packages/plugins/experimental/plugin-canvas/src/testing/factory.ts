@@ -22,45 +22,41 @@ export const createGraph = (snap: PointTransform = (p) => p): CanvasGraphModel =
     const c = createId();
     const d = createId();
 
-    graph.addNode({
-      id: a,
-      data: createRectangle({
+    graph.addNode(
+      createRectangle({
         id: a,
         center: snap({ x: 0, y: 0 }),
         size: itemSize,
         text: 'A',
       }),
-    });
+    );
 
-    graph.addNode({
-      id: b,
-      data: createRectangle({
+    graph.addNode(
+      createRectangle({
         id: b,
         center: snap({ x: -itemSize.width * 2, y: 0 }),
         size: itemSize,
         text: 'B',
       }),
-    });
+    );
 
-    graph.addNode({
-      id: c,
-      data: createRectangle({
+    graph.addNode(
+      createRectangle({
         id: c,
         center: snap({ x: itemSize.width * 2, y: 0 }),
         size: itemSize,
         text: 'C',
       }),
-    });
+    );
 
-    graph.addNode({
-      id: d,
-      data: createRectangle({
+    graph.addNode(
+      createRectangle({
         id: d,
         center: snap({ x: 0, y: 128 }),
         size: itemSize,
         text: 'D',
       }),
-    });
+    );
 
     graph.addEdge({ id: createId(), source: a, target: b });
     graph.addEdge({ id: createId(), source: a, target: c });

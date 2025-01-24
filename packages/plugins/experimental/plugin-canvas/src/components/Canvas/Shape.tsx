@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { raise } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
@@ -57,6 +58,7 @@ export type ShapeComponentProps<S extends Shape = Shape> = PropsWithChildren<
 export const ShapeComponent = (props: ShapeComponentProps<any>) => {
   const { registry } = useEditorContext();
   const { shape } = props;
+  invariant(shape.type);
   if (isPolygon(shape)) {
     const { component, resizable } =
       registry.getShapeDef(shape.type) ?? raise(new Error(`ShapeDef not found for ${shape.type}`));

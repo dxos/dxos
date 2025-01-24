@@ -4,6 +4,7 @@
 
 import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -27,6 +28,7 @@ export type BoxProps = PropsWithChildren<
 
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, name: _name, status, open, onAction }, forwardedRef) => {
+    invariant(shape.type);
     const { icon, name, openable } = useShapeDef(shape.type) ?? { icon: 'ph--placeholder--regular' };
     const { debug } = useEditorContext();
 

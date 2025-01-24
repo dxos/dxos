@@ -174,6 +174,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
     }
+
     return value;
   }
 

@@ -53,7 +53,7 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
       <KeyboardContainer id={id}>
-        <Editor.Root id={id} ref={editorRef} graph={graph} graphMonitor={graphMonitor} registry={registry}>
+        <Editor.Root id={id} ref={editorRef} registry={registry} graph={graph} graphMonitor={graphMonitor as any}>
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>

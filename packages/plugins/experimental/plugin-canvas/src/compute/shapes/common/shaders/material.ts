@@ -54,7 +54,7 @@ export class DofPointsMaterial extends THREE.ShaderMaterial {
       uniforms: {
         positions: { value: null },
         uTime: { value: 0 },
-        uBlur: { value: 1 },
+        uBlur: { value: 0 },
         uFocus: { value: distance + focus },
         uFov: { value: fov },
         uColor: { value: color },

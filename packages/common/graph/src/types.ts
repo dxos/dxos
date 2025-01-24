@@ -5,13 +5,17 @@
 import { S } from '@dxos/echo-schema';
 import { type Specialize } from '@dxos/util';
 
-export const BaseGraphNode = S.Struct({
-  id: S.String,
-  type: S.optional(S.String),
-
-  // TODO(burdon): Remove.
-  data: S.optional(S.Any),
-});
+export const BaseGraphNode = S.Struct(
+  {
+    id: S.String,
+    type: S.optional(S.String),
+    data: S.optional(S.Any),
+  },
+  // {
+  //   key: S.String,
+  //   value: S.Any,
+  // },
+);
 
 /** Raw base type. */
 export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
@@ -29,11 +33,9 @@ export declare namespace GraphNode {
 export const BaseGraphEdge = S.Struct({
   id: S.String,
   type: S.optional(S.String),
+  data: S.optional(S.Any),
   source: S.String,
   target: S.String,
-
-  // TODO(burdon): Remove.
-  data: S.optional(S.Any),
 });
 
 /** Raw base type. */

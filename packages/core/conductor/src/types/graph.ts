@@ -24,7 +24,7 @@ export const ComputeNode = S.extend(
     /** For switch nodes. */
     enabled: S.optional(S.Boolean),
   }),
-);
+).pipe(S.mutable);
 
 export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 

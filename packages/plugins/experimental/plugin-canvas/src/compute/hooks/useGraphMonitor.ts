@@ -4,87 +4,83 @@
 
 import { useMemo } from 'react';
 
-import { type ComputeGraphModel } from '@dxos/conductor';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeEdge, type ComputeGraphModel } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
-import { type GraphNode } from '@dxos/graph';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
 import { type GraphMonitor } from '../../hooks';
-import { type Connection } from '../../types';
+import { type CanvasGraphModel, type Connection } from '../../types';
 import { createComputeNode, isValidComputeNode } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 /**
+ * Map canvas edge to compute edge.
+ */
+export const mapEdge = (
+  graph: CanvasGraphModel,
+  { source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }: Connection,
+): ComputeEdge => {
+  const sourceNode = graph.findNode(source) as ComputeShape;
+  const targetNode = graph.findNode(target) as ComputeShape;
+  invariant(sourceNode?.node);
+  invariant(targetNode?.node);
+
+  return {
+    id: ObjectId.random(),
+    source: sourceNode.node,
+    target: targetNode.node,
+    output,
+    input,
+  };
+};
+
+/**
  * Listens for changes to the graph and updates the compute graph.
- * @param graph Compute graph to update on change.
+ * @param model Compute graph to update on change.
  */
 // TODO(burdon): Generalize into sync function.
-export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
-  return useMemo<GraphMonitor>(() => {
+export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<ComputeShape> => {
+  return useMemo<GraphMonitor<ComputeShape>>(() => {
     return {
-      // TODO(burdon): onDelete.
       onCreate: ({ node }) => {
-        if (!graph) {
+        if (!model) {
           return;
         }
 
         // Ignore shapes that don't have a corresponding node factory.
-        invariant(node.data.type);
-        if (!isValidComputeNode(node.data.type)) {
+        invariant(node.type);
+        if (!isValidComputeNode(node.type)) {
           return;
         }
 
-        // TODO(burdon): Check type (e.g., ignore comments).
-        const computeNode = createComputeNode(node as GraphNode<ComputeShape>);
-        graph.addNode(computeNode);
-
-        // TODO(burdon): Create node first then remove optional node.id from shape?
-        (node as GraphNode<ComputeShape>).data.node = computeNode.id;
+        const computeNode = createComputeNode(node);
+        model.addNode(computeNode);
+        node.node = computeNode.id;
       },
 
-      // TODO(burdon): onUnlink.
-      onLink: ({ graph: model, edge }) => {
-        if (graph) {
-          // TODO(burdon): Check type.
-          const data = edge.data as Connection;
-          const { output, input } = data ?? {};
-
-          const sourceNode = model.findNode(edge.source) as GraphNode<ComputeShape>;
-          const targetNode = model.findNode(edge.target) as GraphNode<ComputeShape>;
-
-          graph.addEdge({
-            id: ObjectId.random(),
-            source: sourceNode?.data.node ?? failedInvariant(),
-            target: targetNode?.data.node ?? failedInvariant(),
-            output,
-            input,
-          });
+      onLink: ({ graph, edge }) => {
+        if (model) {
+          model.addEdge(mapEdge(graph, edge));
         }
       },
 
       onDelete: ({ subgraph }) => {
-        if (graph) {
-          const nodeIds = subgraph.nodes.map((node) => (node.data as ComputeShape).node) as string[];
+        if (model) {
+          const nodeIds = subgraph.nodes.map((shape) => (shape as ComputeShape).node) as string[];
 
           // NOTE(ZaymonFC): Based on the information we have, this is O(edges to remove * compute edges).
           const edgeIds = subgraph.edges
-            .map((shapeEdge) => {
-              return graph.edges.find((computeEdge) => {
-                const computeConnection = computeEdge.data as Connection;
-                const canvasConnection = shapeEdge.data as Connection;
-                return (
-                  computeConnection.input === canvasConnection.input &&
-                  computeConnection.output === canvasConnection.output
-                );
-              })?.id;
+            .map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => {
+              return model.edges.find((computeEdge) => computeEdge.input === input && computeEdge.output === output)
+                ?.id;
             })
             .filter(nonNullable);
 
-          graph.removeNodes(nodeIds);
-          graph.removeEdges(edgeIds);
+          model.removeNodes(nodeIds);
+          model.removeEdges(edgeIds);
         }
       },
     };
-  }, [graph]);
+  }, [model]);
 };
