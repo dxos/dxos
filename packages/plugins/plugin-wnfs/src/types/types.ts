@@ -24,6 +24,7 @@ export namespace WnfsAction {
       [UploadAnnotationId]: {
         // Accept file types.
         'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+        // TODO(wittjosiah): Add more file types.
       },
     }),
   });
