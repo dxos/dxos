@@ -18,6 +18,7 @@ export default [
         'value placeholder': 'Enter value...',
         'select preset template placeholder': 'Select preset',
         'open automation panel label': 'Show Automations',
+        'automation panel label': 'Automations',
 
         'function select label': 'Function',
         'function select placeholder': 'Select function',
