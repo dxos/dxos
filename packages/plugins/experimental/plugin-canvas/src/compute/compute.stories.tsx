@@ -283,7 +283,7 @@ export const GPT: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest3({ db: false, viewText: true, history: true }), createServices()),
+    ...createMachine(createTest3({ db: false, view: true, history: true }), createServices()),
   },
 };
 
@@ -293,10 +293,9 @@ export const GPTImage: Story = {
     showGrid: false,
     snapToGrid: false,
     // sidebar: 'json',
-    sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(
-      createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }),
+      createTest3({ db: false, view: true, history: true, image: true, artifact: true }),
       createServices(),
     ),
   },
@@ -321,12 +320,6 @@ export const GPTAudio: Story = {
 //     sidebar: 'selected',
 //     // sidebar: 'state-machine',
 //     registry: new ShapeRegistry(computeShapes),
-//     spec: [
-//       { type: Testing.OrgType, count: 2 },
-//       { type: Testing.ProjectType, count: 4 },
-//       { type: Testing.ContactType, count: 8 },
-//     ],
-//     registerSchema: true,
 //     ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
 //     model: '@anthropic/claude-3-5-sonnet-20241022',
 //     gpt: new EdgeGptExecutor(

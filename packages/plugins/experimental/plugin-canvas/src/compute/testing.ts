@@ -3,10 +3,9 @@
 //
 
 import { AIServiceClientImpl } from '@dxos/assistant';
-import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, EdgeGpt } from '@dxos/conductor';
+import { ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { createEdgeId } from '@dxos/graph';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
@@ -38,7 +37,6 @@ import {
 } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
 import { createNote } from '../shapes';
-import { type Connection, type Shape } from '../types';
 import { CanvasGraphModel } from '../types';
 
 export const foo = () => {};
@@ -138,75 +136,74 @@ export const createControlCircuit = () => {
   return model;
 };
 
-type TestOptions = {
+export const createTest3 = (options: {
   db?: boolean;
   cot?: boolean;
-  artifact?: boolean;
+  view?: boolean;
+  image?: boolean;
   history?: boolean;
-  textToImage?: boolean;
-  viewText?: boolean;
-};
+  artifact?: boolean;
+}) => {
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call((builder) => {
+    const gpt = model.createNode(createGpt(createLayout({ x: 0, y: -12 })));
+    const prompt = model.createNode(createChat(createLayout({ x: -18, y: -4 })));
+    builder.createEdge({ source: prompt.id, target: gpt.id, input: 'prompt' });
 
-export const createTest3 = (options: TestOptions = {}) => {
-  const { db, cot, artifact, history, textToImage, viewText } = options;
+    if (options.history) {
+      const queue = model.createNode(
+        createConstant({
+          value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+          ...createLayout({ x: -18, y: 5, width: 8, height: 6 }),
+        }),
+      );
 
-  const nodes: Shape[] = [
-    createChat({ id: 'chat', ...createLayout({ x: -18, y: 0 }) }),
-    ...(artifact
-      ? [
-          createConstant({
-            id: 'systemPrompt',
-            ...createLayout({ x: -18, y: -11, width: 8, height: 8 }),
-            value: ARTIFACTS_SYSTEM_PROMPT,
-          }),
-          createView({ id: 'artifact', ...createLayout({ x: 19, y: -10, width: 10, height: 10 }) }),
-        ]
-      : []),
-    createGpt({ id: 'gpt', ...createLayout({ x: 0, y: -8 }) }),
-    ...(history
-      ? [
-          createConstant({
-            id: 'history',
-            ...createLayout({ x: -18, y: 9, width: 8, height: 5 }),
-            value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
-          }),
-        ]
-      : []),
-    ...(history
-      ? [createList({ id: 'thread', text: 'History', ...createLayout({ x: -7, y: 9, width: 10, height: 10 }) })]
-      : []),
-    ...(history ? [createAppend({ id: 'append', ...createLayout({ x: 19, y: 12 }) })] : []),
-    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 19, y: 2, width: 10, height: 10 }) })] : []),
-    ...(db ? [createDatabase({ id: 'db', ...createLayout({ x: -10, y: 4 }) })] : []),
-    ...(textToImage ? [createTextToImage({ id: 'text-to-image', ...createLayout({ x: -10, y: -14 }) })] : []),
-    ...(cot ? [createList({ id: 'cot', ...createLayout({ x: 0, y: -10, width: 8, height: 10 }) })] : []),
-    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 7, y: 9, width: 10, height: 10 }) })] : []),
-  ];
+      const thread = model.createNode(createList(createLayout({ x: -3, y: 3, width: 14, height: 10 })));
+      const append = model.createNode(createAppend(createLayout({ x: 10, y: 6 })));
 
-  const edges: Omit<Connection, 'id'>[] = [
-    { source: 'chat', target: 'gpt', input: 'prompt', output: DEFAULT_OUTPUT },
-    ...(artifact ? [{ source: 'systemPrompt', target: 'gpt', output: DEFAULT_OUTPUT, input: 'systemPrompt' }] : []),
-    ...(viewText ? [{ source: 'gpt', target: 'text', output: 'text', input: DEFAULT_INPUT }] : []),
-    ...(history ? [{ source: 'history', target: 'thread', output: DEFAULT_OUTPUT, input: DEFAULT_INPUT }] : []),
-    ...(history ? [{ source: 'thread', target: 'gpt', output: 'items', input: 'history' }] : []),
-    ...(history ? [{ source: 'thread', target: 'history-json', output: 'id', input: DEFAULT_INPUT }] : []),
-    ...(history ? [{ source: 'history-json', target: 'append', output: DEFAULT_OUTPUT, input: 'id' }] : []),
-    ...(history ? [{ source: 'gpt', target: 'append', output: 'messages', input: 'items' }] : []),
-    ...(db ? [{ source: 'db', target: 'gpt', input: 'tools', output: DEFAULT_OUTPUT }] : []),
-    ...(textToImage ? [{ source: 'text-to-image', target: 'gpt', input: 'tools', output: DEFAULT_OUTPUT }] : []),
-    ...(cot ? [{ source: 'gpt', target: 'cot', output: 'cot', input: DEFAULT_INPUT }] : []),
-    ...(artifact ? [{ source: 'gpt', target: 'artifact', output: 'artifact', input: DEFAULT_INPUT }] : []),
-  ];
+      builder
+        .createEdge({ source: queue.id, target: thread.id })
+        .createEdge({ source: thread.id, target: gpt.id, output: 'items', input: 'history' })
+        .createEdge({ source: queue.id, target: append.id, input: 'id' })
+        .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+    }
 
-  return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => data),
-    edges: edges.map(({ source, target, ...rest }) => ({
-      id: createEdgeId({ source, target }),
-      source,
-      target,
-      ...rest,
-    })),
+    if (options.artifact) {
+      const artifact = model.createNode(createView(createLayout({ x: 19, y: -10, width: 10, height: 10 })));
+      const prompt = model.createNode(
+        createConstant({
+          value: ARTIFACTS_SYSTEM_PROMPT,
+          ...createLayout({ x: -18, y: -11, width: 8, height: 8 }),
+        }),
+      );
+
+      builder
+        .createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' })
+        .createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
+    }
+
+    if (options.view) {
+      const text = model.createNode(createView(createLayout({ x: 19, y: 2, width: 10, height: 12 })));
+      builder.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+    }
+
+    if (options.db) {
+      const database = model.createNode(createDatabase(createLayout({ x: -10, y: 4 })));
+      builder.createEdge({ source: database.id, target: gpt.id, input: 'tools' });
+    }
+
+    if (options.cot) {
+      const cot = model.createNode(createList(createLayout({ x: 0, y: -10, width: 8, height: 10 })));
+      builder.createEdge({ source: gpt.id, target: cot.id, output: 'cot' });
+    }
+
+    if (options.image) {
+      const tool = model.createNode(createTextToImage(createLayout({ x: -8, y: -14 })));
+      builder.createEdge({ source: tool.id, target: gpt.id, input: 'tools' });
+    }
   });
+
+  return model;
 };
 
 export const createTest4 = () => {
