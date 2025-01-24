@@ -9,7 +9,7 @@ import { S } from '@dxos/echo-schema';
 import { Icon, type IconProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -17,6 +17,8 @@ export const RandomShape = S.extend(
   ComputeShape,
   S.Struct({
     type: S.Literal('rng'),
+    min: S.optional(S.Number),
+    max: S.optional(S.Number),
   }),
 );
 
@@ -24,12 +26,8 @@ export type RandomShape = S.Schema.Type<typeof RandomShape>;
 
 export type CreateRandomProps = CreateShapeProps<RandomShape>;
 
-export const createRandom = ({ id, ...rest }: CreateRandomProps): RandomShape => ({
-  id,
-  type: 'rng',
-  size: { width: 64, height: 64 },
-  ...rest,
-});
+export const createRandom = (props: CreateRandomProps) =>
+  createShape<RandomShape>({ type: 'rng', size: { width: 64, height: 64 }, ...props });
 
 const icons = [
   'ph--dice-one--regular',
@@ -42,6 +40,7 @@ const icons = [
 
 const pickIcon = () => icons[Math.floor(Math.random() * icons.length)];
 
+// TODO(burdon): Optional range.
 export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => {
   const { runtime } = useComputeNodeState(shape);
 
@@ -64,7 +63,7 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
   }, [spin]);
 
   const handleClick: IconProps['onClick'] = (ev) => {
-    ev.preventDefault();
+    ev.stopPropagation();
     runtime.setOutput(DEFAULT_OUTPUT, Math.random());
     setSpin(true);
   };

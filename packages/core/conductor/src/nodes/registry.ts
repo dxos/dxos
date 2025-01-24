@@ -3,12 +3,14 @@
 //
 
 import { Effect } from 'effect';
+import { JSONPath } from 'jsonpath-plus';
 
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { safeParseJson } from '@dxos/util';
 
 import {
   AppendInput,
@@ -16,6 +18,7 @@ import {
   DatabaseOutput,
   GptInput,
   GptOutput,
+  JsonTransformInput,
   ListInput,
   ListOutput,
   ReducerInput,
@@ -24,8 +27,7 @@ import {
   TriggerInput,
   TriggerOutput,
 } from './types';
-import { GptService } from '../services';
-import { EdgeClientService } from '../services/edge-client-service';
+import { GptService, EdgeClientService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -75,6 +77,17 @@ export type NodeType =
   | 'trigger'
   | 'thread'
   | 'view';
+
+export const isFalsy = (value: any) =>
+  value === 'false' ||
+  value === 'FALSE' ||
+  value === '0' ||
+  value === false ||
+  value === null ||
+  value === undefined ||
+  (Array.isArray(value) && value.length === 0);
+
+export const isTruthy = (value: any) => !isFalsy(value);
 
 export const registry: Record<NodeType, Executable> = {
   //
@@ -145,10 +158,14 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['json-transform' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
+    input: JsonTransformInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
-    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => {
-      return Effect.succeed({ [DEFAULT_OUTPUT]: input });
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
+      const json =
+        typeof input === 'string' ? safeParseJson(input, {}) : typeof input !== 'object' ? { value: input } : input;
+
+      const result = JSONPath({ json, path: expression });
+      return Effect.succeed({ [DEFAULT_OUTPUT]: result });
     }),
   }),
 
@@ -186,7 +203,6 @@ export const registry: Record<NodeType, Executable> = {
         );
 
         const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
-
         return {
           id,
           items: decoded,
@@ -226,19 +242,21 @@ export const registry: Record<NodeType, Executable> = {
   ['and' as const]: defineComputeNode({
     input: S.Struct({ a: S.Boolean, b: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a && b })),
+    exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) && isTruthy(b) })),
   }),
 
   ['or' as const]: defineComputeNode({
     input: S.Struct({ a: S.Boolean, b: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a || b })),
+    exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(a) || isTruthy(b) })),
   }),
 
   ['not' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: !input })),
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) =>
+      Effect.succeed({ [DEFAULT_OUTPUT]: !isTruthy(input) }),
+    ),
   }),
 
   //
@@ -251,7 +269,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: (input) =>
       Effect.gen(function* () {
         const { value, condition } = yield* unwrapValueBag(input);
-        if (condition) {
+        if (isTruthy(condition)) {
           return makeValueBag({
             true: Effect.succeed(value),
             // TODO(burdon): Replace Effect.fail with Effect.succeedNone,
@@ -271,7 +289,7 @@ export const registry: Record<NodeType, Executable> = {
     input: S.Struct({ condition: S.Boolean, true: S.Any, false: S.Any }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
     exec: synchronizedComputeFunction(({ condition, true: trueValue, false: falseValue }) =>
-      Effect.succeed({ [DEFAULT_OUTPUT]: condition ? trueValue : falseValue }),
+      Effect.succeed({ [DEFAULT_OUTPUT]: isTruthy(condition) ? trueValue : falseValue }),
     ),
   }),
 

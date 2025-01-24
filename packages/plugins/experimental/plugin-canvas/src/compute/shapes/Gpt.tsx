@@ -9,7 +9,7 @@ import { GptInput, GptOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -24,14 +24,12 @@ export type GptShape = S.Schema.Type<typeof GptShape>;
 
 export type CreateGptProps = CreateShapeProps<GptShape>;
 
-export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
-  return {
-    id,
+export const createGpt = (props: CreateGptProps) =>
+  createShape<GptShape>({
     type: 'gpt',
     size: { width: 256, height: Math.max(getHeight(GptInput), getHeight(GptOutput)) },
-    ...rest,
-  };
-};
+    ...props,
+  });
 
 export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   const { meta, runtime } = useComputeNodeState(shape);

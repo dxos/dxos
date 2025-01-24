@@ -8,7 +8,7 @@ import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -48,9 +48,9 @@ export type ChatShape = S.Schema.Type<typeof ChatShape>;
 export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps & { title?: string; chat?: boolean };
 
 export const TextComponent = ({ shape, title, chat, ...props }: TextComponentProps) => {
+  const { runtime } = useComputeNodeState(shape);
   const [reset, setReset] = useState({});
   const inputRef = useRef<TextBoxControl>(null);
-  const { runtime } = useComputeNodeState(shape);
 
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
@@ -83,21 +83,13 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
 
 export type CreateTextProps = CreateShapeProps<TextShape> & { text?: string };
 
-export const createText = ({ id, text, size = { width: 256, height: 128 }, ...rest }: CreateTextProps): TextShape => ({
-  id,
-  type: 'text',
-  size,
-  ...rest,
-});
+export const createText = (props: CreateTextProps) =>
+  createShape<TextShape>({ type: 'text', size: { width: 256, height: 128 }, ...props });
 
 export type CreateChatProps = CreateShapeProps<TextShape>;
 
-export const createChat = ({ id, ...rest }: CreateChatProps): ChatShape => ({
-  id,
-  type: 'chat',
-  size: { width: 256, height: 128 },
-  ...rest,
-});
+export const createChat = (props: CreateChatProps) =>
+  createShape<ChatShape>({ type: 'chat', size: { width: 256, height: 128 }, ...props });
 
 export const textShape: ShapeDef<TextShape> = {
   type: 'text',

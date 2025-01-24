@@ -10,7 +10,7 @@ import { createEdgeId } from '@dxos/graph';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
-import { createComputeNode, StateMachine, type Services } from './graph';
+import { createComputeNode, isValidComputeNode, StateMachine, type Services } from './graph';
 import { mapEdge } from './hooks';
 import {
   createAnd,
@@ -25,9 +25,11 @@ import {
   createIf,
   createIfElse,
   createJson,
+  createJsonTransform,
   createList,
   createNot,
   createOr,
+  createRandom,
   createScope,
   createSwitch,
   createTextToImage,
@@ -35,6 +37,7 @@ import {
   type ComputeShape,
 } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
+import { createNote } from '../shapes';
 import { type Connection, type Shape } from '../types';
 import { CanvasGraphModel } from '../types';
 
@@ -53,45 +56,53 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
 export const createBasicTest = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    model.createNode(createSwitch({ id: 'a', ...createLayout({ x: -4, y: 0 }) }));
-    model.createNode(createBeacon({ id: 'b', ...createLayout({ x: 4, y: 0 }) }));
-    model.createNode(createBeacon({ id: 'c', ...createLayout({ x: 4, y: 4 }) }));
-    model.createNode(createNot({ id: 'd', ...createLayout({ x: 0, y: 4 }) }));
-    model.addEdge({ source: 'a', target: 'b' });
-    model.addEdge({ source: 'd', target: 'c' });
+    const a = model.createNode(createSwitch(createLayout({ x: -4, y: 0 })));
+    const b = model.createNode(createBeacon(createLayout({ x: 4, y: 0 })));
+    const c = model.createNode(createBeacon(createLayout({ x: 4, y: 4 })));
+    const d = model.createNode(createNot(createLayout({ x: 0, y: 4 })));
+    model.createEdge({ source: a.id, target: b.id });
+    model.createEdge({ source: d.id, target: c.id });
+  });
+
+  return model;
+};
+
+export const createTransformTest = () => {
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call(({ model }) => {
+    const a = model.createNode(createRandom(createLayout({ x: -8, y: -2 })));
+    const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...createLayout({ x: -8, y: 2 }) }));
+    const c = model.createNode(createJsonTransform(createLayout({ x: 0, y: 0 })));
+    const d = model.createNode(createBeacon(createLayout({ x: 8, y: 0 })));
+    model.createNode(
+      createNote({ id: ObjectId.random(), text: 'Random number generator', ...createLayout({ x: 0, y: -6 }) }),
+    );
+    model.createEdge({ source: a.id, target: c.id });
+    model.createEdge({ source: b.id, target: c.id, input: 'expression' });
+    model.createEdge({ source: c.id, target: d.id });
   });
 
   return model;
 };
 
 export const createLogicCircuit = () => {
-  const nodes: ComputeShape[] = [
-    createSwitch({ id: 'a1', ...createLayout({ x: -4, y: -4 }) }),
-    createSwitch({ id: 'a2', ...createLayout({ x: -4, y: 0 }) }),
-    createSwitch({ id: 'a3', ...createLayout({ x: -4, y: 4 }) }),
-    createAnd({ id: 'b1', ...createLayout({ x: 0, y: -2 }) }),
-    createOr({ id: 'c1', ...createLayout({ x: 4, y: 0 }) }),
-    createBeacon({ id: 'd1', ...createLayout({ x: 8, y: 0 }) }),
-  ];
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call(({ model }) => {
+    const a1 = model.createNode(createSwitch(createLayout({ x: -4, y: -4 })));
+    const a2 = model.createNode(createSwitch(createLayout({ x: -4, y: 0 })));
+    const a3 = model.createNode(createSwitch(createLayout({ x: -4, y: 4 })));
+    const b1 = model.createNode(createAnd(createLayout({ x: 0, y: -2 })));
+    const c1 = model.createNode(createOr(createLayout({ x: 4, y: 0 })));
+    const d1 = model.createNode(createBeacon(createLayout({ x: 8, y: 0 })));
 
-  const edges: Omit<Connection, 'id'>[] = [
-    { source: 'a1', target: 'b1', input: 'a' },
-    { source: 'a2', target: 'b1', input: 'b' },
-    { source: 'b1', target: 'c1', input: 'a' },
-    { source: 'a3', target: 'c1', input: 'b' },
-    { source: 'c1', target: 'd1' },
-  ];
-
-  return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => data),
-    edges: edges.map(({ source, target, input, output = DEFAULT_OUTPUT }) => ({
-      id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
-      source,
-      target,
-      output,
-      input,
-    })),
+    model.createEdge({ source: a1.id, target: b1.id, input: 'a' });
+    model.createEdge({ source: a2.id, target: b1.id, input: 'b' });
+    model.createEdge({ source: b1.id, target: c1.id, input: 'a' });
+    model.createEdge({ source: a3.id, target: c1.id, input: 'b' });
+    model.createEdge({ source: c1.id, target: d1.id });
   });
+
+  return model;
 };
 
 /**
@@ -99,39 +110,32 @@ export const createLogicCircuit = () => {
  * @returns A CanvasGraphModel containing switches, constants, if/else nodes, and beacons wired together.
  */
 export const createControlCircuit = () => {
-  const nodes: ComputeShape[] = [
-    createSwitch({ id: 's', ...createLayout({ x: -9, y: -1 }) }),
-    createConstant({ id: 'c1', value: 'hello', ...createLayout({ x: -10, y: -10 }) }),
-    createConstant({ id: 'c2', value: 'world', ...createLayout({ x: -10, y: -5 }) }),
-    createConstant({ id: 'c3', value: true, ...createLayout({ x: -10, y: 3 }) }),
-    createIf({ id: 'if1', ...createLayout({ x: 0, y: 1 }) }),
-    createIfElse({ id: 'if2', ...createLayout({ x: 0, y: -8 }) }),
-    createBeacon({ id: 'b1', ...createLayout({ x: 9, y: -1 }) }),
-    createBeacon({ id: 'b2', ...createLayout({ x: 9, y: 3 }) }),
-    createJson({ id: 'j', ...createLayout({ x: 12, y: -8 }) }),
-  ];
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call((builder) => {
+    const model = builder.model;
 
-  const edges: Omit<Connection, 'id'>[] = [
-    { source: 's', target: 'if1', input: 'condition' },
-    { source: 's', target: 'if2', input: 'condition' },
-    { source: 'c1', target: 'if2', input: 'true' },
-    { source: 'c2', target: 'if2', input: 'false' },
-    { source: 'c3', target: 'if1', input: 'value' },
-    { source: 'if1', target: 'b1', output: 'true' },
-    { source: 'if1', target: 'b2', output: 'false' },
-    { source: 'if2', target: 'j' },
-  ];
+    const s = model.createNode(createSwitch(createLayout({ x: -9, y: -1 })));
+    const c1 = model.createNode(createConstant({ value: 'hello', ...createLayout({ x: -10, y: -10 }) }));
+    const c2 = model.createNode(createConstant({ value: 'world', ...createLayout({ x: -10, y: -5 }) }));
+    const c3 = model.createNode(createConstant({ value: true, ...createLayout({ x: -10, y: 3 }) }));
+    const if1 = model.createNode(createIf(createLayout({ x: 0, y: 1 })));
+    const if2 = model.createNode(createIfElse(createLayout({ x: 0, y: -8 })));
+    const b1 = model.createNode(createBeacon(createLayout({ x: 9, y: -1 })));
+    const b2 = model.createNode(createBeacon(createLayout({ x: 9, y: 3 })));
+    const j = model.createNode(createJson(createLayout({ x: 12, y: -8 })));
 
-  return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => data),
-    edges: edges.map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => ({
-      id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
-      source,
-      target,
-      output,
-      input,
-    })),
+    builder
+      .createEdge({ source: s.id, target: if1.id, input: 'condition' })
+      .createEdge({ source: s.id, target: if2.id, input: 'condition' })
+      .createEdge({ source: c1.id, target: if2.id, input: 'true' })
+      .createEdge({ source: c2.id, target: if2.id, input: 'false' })
+      .createEdge({ source: c3.id, target: if1.id, input: 'value' })
+      .createEdge({ source: if1.id, target: b1.id, output: 'true' })
+      .createEdge({ source: if1.id, target: b2.id, output: 'false' })
+      .createEdge({ source: if2.id, target: j.id });
   });
+
+  return model;
 };
 
 type TestOptions = {
@@ -163,7 +167,7 @@ export const createTest3 = (options: TestOptions = {}) => {
       ? [
           createConstant({
             id: 'history',
-            ...createLayout({ x: -18, y: 9, width: 8, height: 4 }),
+            ...createLayout({ x: -18, y: 9, width: 8, height: 5 }),
             value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
           }),
         ]
@@ -208,9 +212,9 @@ export const createTest3 = (options: TestOptions = {}) => {
 export const createTest4 = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    model.createNode(createAudio({ id: 'a', ...createLayout({ x: -4, y: -4 }) }));
-    model.createNode(createScope({ id: 'b', ...createLayout({ x: 4, y: -4 }) }));
-    model.addEdge({ source: 'a', target: 'b' });
+    const a = model.createNode(createAudio(createLayout({ x: -4, y: -4 })));
+    const b = model.createNode(createScope(createLayout({ x: 4, y: -4 })));
+    model.createEdge({ source: a.id, target: b.id });
   });
 
   return model;
@@ -218,8 +222,7 @@ export const createTest4 = () => {
 
 export const createGPTRealtime = () => {
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: [createGptRealtime({ id: 'gpt-realtime', ...createLayout({ x: 0, y: 0 }) })],
-    edges: [],
+    nodes: [createGptRealtime(createLayout({ x: 0, y: 0 }))],
   });
 };
 
@@ -231,9 +234,11 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {
     for (const shape of graph.nodes) {
-      const node = createComputeNode(shape);
-      machine.addNode(node);
-      shape.node = node.id;
+      if (isValidComputeNode(shape.type)) {
+        const node = createComputeNode(shape);
+        machine.addNode(node);
+        shape.node = node.id;
+      }
     }
 
     for (const edge of graph.edges) {

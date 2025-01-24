@@ -8,7 +8,7 @@ import { AppendInput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 export const AppendShape = S.extend(
@@ -22,12 +22,12 @@ export type AppendShape = S.Schema.Type<typeof AppendShape>;
 
 export type CreateAppendProps = CreateShapeProps<AppendShape>;
 
-export const createAppend = ({ id, ...rest }: CreateAppendProps): AppendShape => ({
-  id,
-  type: 'append',
-  size: { width: 128, height: getHeight(AppendInput) },
-  ...rest,
-});
+export const createAppend = (props: CreateAppendProps) =>
+  createShape<AppendShape>({
+    type: 'append',
+    size: { width: 128, height: getHeight(AppendInput) },
+    ...props,
+  });
 
 export const AppendComponent = ({ shape }: ShapeComponentProps<AppendShape>) => {
   return <FunctionBody shape={shape} inputSchema={AppendInput} />;

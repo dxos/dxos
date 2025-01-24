@@ -8,7 +8,7 @@ import { ReducerInput, ReducerOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 //
@@ -44,12 +44,12 @@ export const createReducer = ({
   id,
   size = { width: 192, height: getHeight(ReducerInput) },
   ...rest
-}: CreateReduceProps): ReducerShape => ({
-  id,
-  type: 'reducer',
-  size,
-  ...rest,
-});
+}: CreateReduceProps): ReducerShape =>
+  createShape<ReducerShape>({
+    type: 'reducer',
+    size,
+    ...rest,
+  });
 
 export const reducerShape: ShapeDef<ReducerShape> = {
   type: 'reducer',

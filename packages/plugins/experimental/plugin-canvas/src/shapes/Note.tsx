@@ -19,7 +19,8 @@ export const createNote = ({ id, ...rest }: CreateNoteProps): NoteShape => ({
 });
 
 export const NoteComponent = ({ shape }: ShapeComponentProps<NoteShape>) => {
-  return <TextBox />;
+  const { text } = shape;
+  return <TextBox value={text} />;
 };
 
 export const noteShape: ShapeDef<NoteShape> = {

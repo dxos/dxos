@@ -8,9 +8,8 @@ import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 
 import { createFunctionAnchors } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { useComputeNodeState } from '../hooks';
 
 export const GptRealtimeShape = S.extend(
   ComputeShape,
@@ -23,17 +22,10 @@ export type GptRealtimeShape = S.Schema.Type<typeof GptRealtimeShape>;
 
 export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
 
-export const createGptRealtime = ({ id, ...rest }: CreateGptRealtimeProps): GptRealtimeShape => {
-  return {
-    id,
-    type: 'gpt-realtime',
-    size: { width: 256, height: 256 },
-    ...rest,
-  };
-};
+export const createGptRealtime = (props: CreateGptRealtimeProps) =>
+  createShape<GptRealtimeShape>({ type: 'gpt-realtime', size: { width: 256, height: 256 }, ...props });
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
-  const { meta, runtime } = useComputeNodeState(shape);
   const [isLive, setIsLive] = useState(false);
   const [isReady, setIsReady] = useState(false);
 

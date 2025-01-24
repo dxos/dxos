@@ -6,9 +6,10 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { safeParseJson } from '@dxos/util';
 
 import { Box } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -47,6 +48,8 @@ const inferType = (value: any): string | undefined => {
     return 'number';
   } else if (typeof value === 'boolean') {
     return 'boolean';
+  } else if (typeof value === 'object') {
+    return 'object';
   }
 };
 
@@ -65,6 +68,8 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
           if (!isNaN(floatValue)) {
             node.value = floatValue;
           }
+        } else if (type === 'object') {
+          node.value = safeParseJson(value, {});
         } else {
           node.value = value;
         }
@@ -96,7 +101,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   );
 };
 
-const types = ['string', 'number', 'boolean'];
+const types = ['string', 'number', 'boolean', 'object'];
 
 // TODO(burdon): Factor out.
 const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
@@ -127,23 +132,14 @@ const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'o
 
 export type CreateConstantProps = CreateShapeProps<ConstantShape>;
 
-export const createConstant = ({
-  id,
-  text,
-  size = { width: 128, height: 192 },
-  ...rest
-}: CreateConstantProps): ConstantShape => ({
-  id,
-  type: 'constant',
-  size,
-  ...rest,
-});
+export const createConstant = (props: CreateConstantProps) =>
+  createShape<ConstantShape>({ type: 'constant', size: { width: 192, height: 128 }, ...props });
 
 export const constantShape: ShapeDef<ConstantShape> = {
   type: 'constant',
   name: 'Value',
   icon: 'ph--dots-three-circle--regular',
-  component: (props) => <ConstantComponent {...props} placeholder={'Text'} />,
+  component: (props) => <ConstantComponent {...props} placeholder={'Constant'} />,
   createShape: createConstant,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
   resizable: true,

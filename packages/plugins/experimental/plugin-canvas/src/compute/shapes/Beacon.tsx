@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { DEFAULT_INPUT } from '@dxos/conductor';
+import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -24,12 +24,8 @@ export type BeaconShape = S.Schema.Type<typeof BeaconShape>;
 
 export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 
-export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape => ({
-  id,
-  type: 'beacon',
-  size: { width: 64, height: 64 },
-  ...rest,
-});
+export const createBeacon = (props: CreateBeaconProps) =>
+  createShape<BeaconShape>({ type: 'beacon', size: { width: 64, height: 64 }, ...props });
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   const { runtime } = useComputeNodeState(shape);
@@ -40,7 +36,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon='ph--sun--regular'
-        classNames={mx('transition opacity-20 duration-1000', value && 'opacity-100 text-yellow-500')}
+        classNames={mx('transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500')}
         size={8}
       />
     </div>

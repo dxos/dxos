@@ -4,11 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -23,18 +22,14 @@ export type AudioShape = S.Schema.Type<typeof AudioShape>;
 
 export type CreateAudioProps = CreateShapeProps<AudioShape>;
 
-export const createAudio = ({ id, ...rest }: CreateAudioProps): AudioShape => ({
-  id,
-  type: 'audio',
-  size: { width: 64, height: 64 },
-  ...rest,
-});
+export const createAudio = (props: CreateAudioProps) =>
+  createShape<AudioShape>({ type: 'audio', size: { width: 64, height: 64 }, ...props });
 
 export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
-  const { runtime } = useComputeNodeState(shape);
+  const { node } = useComputeNodeState(shape);
   const [active, setActive] = useState(false);
   useEffect(() => {
-    runtime.setOutput(DEFAULT_OUTPUT, active);
+    node.value = active;
   }, [active]);
 
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props

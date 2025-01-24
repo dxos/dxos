@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
 
@@ -22,12 +22,8 @@ export type MapShape = S.Schema.Type<typeof MapShape>;
 
 export type CreateMapProps = CreateShapeProps<MapShape>;
 
-export const createMap = ({ id, ...rest }: CreateMapProps): MapShape => ({
-  id,
-  type: 'map',
-  size: { width: 256, height: 256 },
-  ...rest,
-});
+export const createMap = (props: CreateMapProps) =>
+  createShape<MapShape>({ type: 'map', size: { width: 256, height: 256 }, ...props });
 
 export const MapComponent = ({ shape }: ShapeComponentProps<MapShape>) => {
   // const { runtime } = useComputeNodeState(shape);

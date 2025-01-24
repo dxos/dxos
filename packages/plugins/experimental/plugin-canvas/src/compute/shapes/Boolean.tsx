@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { ComputeShape, createAnchorId } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { type ShapeDef } from '../../components';
 import { createAnchors, getAnchorPoints } from '../../components';
 
@@ -26,12 +26,13 @@ const GateShape = S.extend(
 
 type GateShape = S.Schema.Type<typeof GateShape>;
 
-type CreateGateProps = Omit<GateShape, 'type' | 'size'> & { type: GateType };
+type CreateGateProps = CreateShapeProps<GateShape> & { type: GateType };
 
-const createGate = (props: CreateGateProps): GateShape => ({
-  ...props,
-  size: { width: 64, height: 64 },
-});
+const createGate = (props: CreateGateProps): GateShape =>
+  createShape<GateShape>({
+    size: { width: 64, height: 64 },
+    ...props,
+  });
 
 const GateComponent = (Symbol: FC<GateSymbolProps>) => () => {
   return (

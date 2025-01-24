@@ -8,7 +8,7 @@ import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 //
@@ -55,16 +55,8 @@ export const IfElseComponent = ({ shape, ...props }: IfElseComponentProps) => {
 
 export type CreateIfProps = CreateShapeProps<IfShape> & { if?: string };
 
-export const createIf = ({
-  id,
-  size = { width: 192, height: getHeight(IfInput) },
-  ...rest
-}: CreateIfProps): IfShape => ({
-  id,
-  type: 'if',
-  size,
-  ...rest,
-});
+export const createIf = (props: CreateIfProps) =>
+  createShape<IfShape>({ type: 'if', size: { width: 192, height: getHeight(IfInput) }, ...props });
 
 export const ifShape: ShapeDef<IfShape> = {
   type: 'if',
@@ -77,16 +69,8 @@ export const ifShape: ShapeDef<IfShape> = {
 
 export type CreateIfElseProps = CreateShapeProps<IfShape> & { if?: string };
 
-export const createIfElse = ({
-  id,
-  size = { width: 192, height: getHeight(IfElseInput) },
-  ...rest
-}: CreateIfElseProps): IfElseShape => ({
-  id,
-  type: 'if-else',
-  size,
-  ...rest,
-});
+export const createIfElse = (props: CreateIfElseProps) =>
+  createShape<IfElseShape>({ type: 'if-else', size: { width: 192, height: getHeight(IfElseInput) }, ...props });
 
 export const ifElseShape: ShapeDef<IfElseShape> = {
   type: 'if-else',

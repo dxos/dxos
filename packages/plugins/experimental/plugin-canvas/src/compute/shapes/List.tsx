@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors } from './common';
 import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -26,12 +26,8 @@ export type ListShape = S.Schema.Type<typeof ListShape>;
 
 export type CreateListProps = CreateShapeProps<ListShape>;
 
-export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
-  id,
-  type: 'list',
-  size: { width: 256, height: 512 },
-  ...rest,
-});
+export const createList = (props: CreateListProps) =>
+  createShape<ListShape>({ type: 'list', size: { width: 256, height: 512 }, ...props });
 
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
   const { runtime } = useComputeNodeState(shape);

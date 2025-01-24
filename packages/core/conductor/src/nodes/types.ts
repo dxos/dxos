@@ -33,15 +33,21 @@ export const FunctionInput = S.Struct({
   [DEFAULT_INPUT]: S.Any,
   function: S.String, // TODO(burdon): DXN.
 });
+export type FunctionInput = S.Schema.Type<typeof FunctionInput>;
 
 //
-// Database
+// Data
 //
+
+export const JsonTransformInput = S.Struct({ [DEFAULT_INPUT]: S.Any, expression: S.String });
+export type JsonTransformInput = S.Schema.Type<typeof JsonTransformInput>;
 
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+export type AppendInput = S.Schema.Type<typeof AppendInput>;
 
 // TODO(burdon): Generalize LLMTool?
 export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
+export type DatabaseOutput = S.Schema.Type<typeof DatabaseOutput>;
 
 //
 // Logic

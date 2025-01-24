@@ -8,7 +8,7 @@ import { TriggerInput, TriggerOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, getHeight, FunctionBody } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 export const TriggerShape = S.extend(
@@ -22,12 +22,8 @@ export type TriggerShape = S.Schema.Type<typeof TriggerShape>;
 
 export type CreateTriggerProps = CreateShapeProps<TriggerShape>;
 
-export const createTrigger = ({ id, ...rest }: CreateTriggerProps): TriggerShape => ({
-  id,
-  type: 'trigger',
-  size: { width: 192, height: getHeight(TriggerInput) },
-  ...rest,
-});
+export const createTrigger = (props: CreateTriggerProps) =>
+  createShape<TriggerShape>({ type: 'trigger', size: { width: 192, height: getHeight(TriggerInput) }, ...props });
 
 export const TriggerComponent = ({ shape }: ShapeComponentProps<TriggerShape>) => {
   return <FunctionBody shape={shape} inputSchema={TriggerInput} outputSchema={TriggerOutput} />;
