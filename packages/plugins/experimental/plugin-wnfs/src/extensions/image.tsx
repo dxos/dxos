@@ -3,187 +3,117 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, StateField, type Range, StateEffect } from '@codemirror/state';
-import { Decoration, EditorView, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorState, type Extension, StateField, type Range } from '@codemirror/state';
+import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import type { Blockstore } from 'interface-blockstore';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import type { PrivateDirectory, PrivateForest } from 'wnfs';
 
-import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
+import { focusField } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import { type WnfsCapabilities } from '../capabilities';
 import { store } from '../common';
 import { loadWnfs } from '../load';
 
+const WAIT_UNTIL_LOADER = 1500;
+
 export type ImageOptions = {
   blockstore: Blockstore;
+  instances: WnfsCapabilities.Instances;
   space: Space;
 };
 
+/**
+ * Create WNFS image decorations.
+ */
 export const image = (options: ImageOptions): Extension[] => {
-  return [stateField(options), viewPlugin(options)];
-};
+  const blobUrlCache: Record<string, string> = {};
+  const preloaded = new Set<string>();
 
-// GLOBAL STATE
+  const preload = (url: string) => {
+    if (!preloaded.has(url)) {
+      const img = document.createElement('img');
+      img.src = url;
+      preloaded.add(url);
+    }
+  };
 
-/** Indexed by space id */
-const loadedWnfsInstances: Record<string, { directory: PrivateDirectory; forest: PrivateForest }> = {};
-
-// EFFECT + EXTENSIONS
-
-const stateEffect = StateEffect.define<{
-  decorations: Range<Decoration>[];
-  from: number;
-  to: number;
-}>({});
-
-const stateField = (options: ImageOptions) =>
-  StateField.define({
-    create: () => {
-      return Decoration.none;
-    },
-    update: (value, tr) => {
-      for (const effect of tr.effects) {
-        if (effect.is(stateEffect)) {
-          return value.map(tr.changes).update({
-            filterFrom: effect.value.from,
-            filterTo: effect.value.to,
-            filter: () => false,
-            add: effect.value.decorations,
-          });
+  return [
+    StateField.define({
+      create: (state) => {
+        return Decoration.set(
+          buildDecorations({ from: 0, to: state.doc.length, state, blobUrlCache, preload, options }),
+        );
+      },
+      update: (value, tr) => {
+        if (!tr.docChanged && !tr.selection) {
+          return value;
         }
-      }
 
-      return value;
-    },
-    provide: (f) => {
-      return EditorView.decorations.from(f);
-    },
-  });
-
-const viewPlugin = (options: ImageOptions) =>
-  ViewPlugin.define((view: EditorView) => {
-    // Initial decoration set on document load
-    buildDecorations({
-      from: 0,
-      to: view.state.doc.length,
-      state: view.state,
-      options,
-    })
-      .then((decorations) => {
-        view.dispatch({
-          effects: stateEffect.of({
-            decorations,
-            from: 0,
-            to: view.state.doc.length,
-          }),
+        // Find range of changes and cursor changes.
+        const cursor = tr.state.selection.main.head;
+        const oldCursor = tr.changes.mapPos(tr.startState.selection.main.head);
+        let from = Math.min(cursor, oldCursor);
+        let to = Math.max(cursor, oldCursor);
+        tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+          from = Math.min(from, fromB);
+          to = Math.max(to, toB);
         });
-      })
-      .catch((err) => {
-        throw new Error(err);
-      });
 
-    const update = (update: ViewUpdate) => {
-      if (!update.docChanged) {
-        return;
-      }
+        // Expand to cover lines.
+        from = tr.state.doc.lineAt(from).from;
+        to = tr.state.doc.lineAt(to).to;
 
-      const { from, to } = changedRange(update);
-      buildDecorations({
-        from,
-        to,
-        state: view.state,
-        options,
-      })
-        .then((decorations) => {
-          view.dispatch({
-            effects: stateEffect.of({
-              decorations,
-              from,
-              to,
-            }),
-          });
-        })
-        .catch((err) => {
-          log.catch(err);
+        return value.map(tr.changes).update({
+          filterFrom: from,
+          filterTo: to,
+          filter: () => false,
+          add: buildDecorations({ from, to, state: tr.state, blobUrlCache, preload, options }),
         });
-    };
-
-    return { update };
-  });
-
-// 🛠️
-
-const changedRange = (update: ViewUpdate) => {
-  // Find range of changes and cursor changes.
-  const cursor = update.state.selection.main.head;
-  const oldCursor = update.changes.mapPos(update.startState.selection.main.head);
-
-  let from = Math.min(cursor, oldCursor);
-  let to = Math.max(cursor, oldCursor);
-
-  update.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
-    from = Math.min(from, fromB);
-    to = Math.max(to, toB);
-  });
-
-  // Expand to cover lines.
-  from = update.state.doc.lineAt(from).from;
-  to = update.state.doc.lineAt(to).to;
-
-  // Fin
-  return { from, to };
+      },
+      provide: (field) => EditorView.decorations.from(field),
+    }),
+  ];
 };
 
-const buildDecorations = async ({
+const buildDecorations = ({
   from,
   to,
   state,
+  blobUrlCache,
+  preload,
   options,
 }: {
   from: number;
   to: number;
   state: EditorState;
+  blobUrlCache: Record<string, string>;
+  preload: (url: string) => void;
   options: ImageOptions;
 }) => {
+  const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
-  let nodes: { from: number; hide: boolean; to: number; url: string }[] = [];
-
   syntaxTree(state).iterate({
     enter: (node) => {
-      if (node.name === 'Image') {
-        const urlNode = node.node.getChild('URL');
-        if (urlNode) {
-          const hide = state.readOnly || cursor < node.from || cursor > node.to;
-          const url = state.sliceDoc(urlNode.from, urlNode.to);
-
-          if (url.startsWith('wnfs://')) {
-            nodes.push({
-              from: node.from,
-              to: node.to,
-              hide,
-              url,
-            });
-          }
-        }
+      if (node.name !== 'Image') {
+        return;
       }
-    },
-    from,
-    to,
-  });
 
-  // Nodes must be sorted by `from`
-  nodes = nodes.sort((a, b) => {
-    return a.from - b.from;
-  });
+      const urlNode = node.node.getChild('URL');
+      if (!urlNode) {
+        return;
+      }
 
-  const decorations = await nodes.reduce(
-    async (acc, node) => {
-      const array = await acc;
-      const path = node.url
+      const hide = state.readOnly || cursor < node.from || cursor > node.to;
+      const url = state.sliceDoc(urlNode.from, urlNode.to);
+      if (!url.startsWith('wnfs://')) {
+        return;
+      }
+
+      const path = url
         .replace(/^wnfs:\/\//, '')
         .split('/')
         .map((p) => decodeURIComponent(p));
@@ -191,48 +121,63 @@ const buildDecorations = async ({
       // Cannot load images from other spaces
       const spaceIdFromUrl = path[1];
       if (spaceIdFromUrl !== options.space.properties.id) {
-        return array;
+        return;
       }
 
       const cacheKey = options.space.properties.wnfs_private_forest_cid;
 
-      const { directory, forest } = loadedWnfsInstances[cacheKey]
-        ? loadedWnfsInstances[cacheKey]
-        : await loadWnfs(options.space, options.blockstore);
-
-      loadedWnfsInstances[cacheKey] = {
-        directory,
-        forest,
-      };
-
-      const wnfsStore = store(options.blockstore);
-
       // Load image contents into memory blob
       const blobUrlPromise = (async () => {
+        const { directory, forest } = options.instances[cacheKey]
+          ? options.instances[cacheKey]
+          : await loadWnfs(options.space, options.blockstore);
+
+        options.instances[cacheKey] = {
+          directory,
+          forest,
+        };
+
+        const wnfsStore = store(options.blockstore);
+
         const { result } = await directory.read(path, true, forest, wnfsStore);
         const blob = new Blob([result]);
-        return URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        blobUrlCache[path.join('/')] = url;
+        preload(url);
+        return url;
       })();
 
-      // Create decoration
-      return [
-        ...array,
+      decorations.push(
         Decoration.replace({
           block: true, // Prevent cursor from entering.
-          widget: new WnfsImageWidget(node.url, blobUrlPromise),
-        }).range(node.hide ? node.from : node.to, node.to),
-      ];
+          widget: new WnfsImageWidget(url, blobUrlCache[path.join('/')] ?? blobUrlPromise),
+        }).range(hide ? node.from : node.to, node.to),
+      );
     },
-    Promise.resolve([] as Range<Decoration>[]),
-  );
+    from,
+    to,
+  });
 
   return decorations;
+};
+
+const createImg = (view: EditorView, url: string) => {
+  const img = document.createElement('img');
+  img.setAttribute('src', url);
+  img.setAttribute('class', 'cm-image');
+  // If focused, hide image until successfully loaded to avoid flickering effects.
+  if (view.state.field(focusField)) {
+    img.onload = () => img.classList.add('cm-loaded-image');
+  } else {
+    img.classList.add('cm-loaded-image');
+  }
+  return img;
 };
 
 class WnfsImageWidget extends WidgetType {
   constructor(
     readonly _wnfsUrl: string,
-    readonly _urlPromise: Promise<string>,
+    readonly _url: Promise<string> | string,
   ) {
     super();
   }
@@ -242,49 +187,32 @@ class WnfsImageWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
-    return this._toDOM();
-  }
+    if (typeof this._url === 'string') {
+      return createImg(view, this._url);
+    }
 
-  _toDOM() {
+    const widget = document.createElement('div');
     const loader = document.createElement('div');
-    loader.className = 'mx-auto transition-opacity';
+    let loaderAdded = false;
 
-    const root = createRoot(loader);
-    const imageWrapper = document.createElement('div');
-    imageWrapper.setAttribute('class', 'cm-image-wrapper');
+    const timeout = setTimeout(() => {
+      const root = createRoot(loader);
+      root.render(
+        <ThemeProvider tx={defaultTx}>
+          <Status indeterminate />
+        </ThemeProvider>,
+      );
+      widget.appendChild(loader);
+      loaderAdded = true;
+    }, WAIT_UNTIL_LOADER);
 
-    const timeoutId = setTimeout(() => {
-      imageWrapper.appendChild(loader);
-    }, 1500);
+    void this._url.then((url) => {
+      clearTimeout(timeout);
+      const img = createImg(view, url);
+      loaderAdded && widget.removeChild(loader);
+      widget.appendChild(img);
+    });
 
-    this._urlPromise
-      .then((blobUrl) => {
-        const img = document.createElement('img');
-        img.setAttribute('loading', 'lazy');
-        img.setAttribute('src', blobUrl);
-        img.setAttribute('class', 'cm-image-with-loader');
-        img.onload = () => {
-          setTimeout(() => {
-            clearTimeout(timeoutId);
-            img.classList.add('cm-loaded-image');
-            img.closest('.cm-image-wrapper')?.classList?.add('cm-loaded-image');
-            loader.classList.add('opacity-0');
-          }, 0);
-        };
-
-        imageWrapper.appendChild(img);
-      })
-      .catch((err) => {
-        // eslint-disable-next-line
-        console.error(err);
-      });
-
-    root.render(
-      <ThemeProvider tx={defaultTx}>
-        <Status indeterminate />
-      </ThemeProvider>,
-    );
-
-    return imageWrapper;
+    return widget;
   }
 }

@@ -44,6 +44,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@ipld/car": "^5.3.3",
@@ -58,6 +59,7 @@
     "wnfs": "0.2.2"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

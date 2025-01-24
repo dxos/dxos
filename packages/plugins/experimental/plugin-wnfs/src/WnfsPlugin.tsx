@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { Blockstore, FileUploader, Markdown, ReactSurface } from './capabilities';
+import { Blockstore, FileUploader, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
 import { meta, WNFS_PLUGIN } from './meta';
 import translations from './translations';
 import { FileType } from './types';
@@ -19,6 +19,14 @@ export const WnfsPlugin = () =>
       id: `${meta.id}/module/blockstore`,
       activatesOn: ClientEvents.ClientReady,
       activate: Blockstore,
+    }),
+    defineModule({
+      id: `${meta.id}/module/instances`,
+      activatesOn: Events.Startup,
+      activate: () => {
+        const instances: WnfsCapabilities.Instances = {};
+        return contributes(WnfsCapabilities.Instances, instances);
+      },
     }),
     defineModule({
       id: `${meta.id}/module/translations`,

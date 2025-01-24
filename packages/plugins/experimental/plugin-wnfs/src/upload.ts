@@ -7,6 +7,7 @@ import { CID } from 'multiformats';
 import * as Raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 
+import { type FileInfo } from '@dxos/app-framework';
 import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
@@ -14,7 +15,15 @@ import { Rng, filePath, store } from './common';
 import { loadWnfs } from './load';
 import { wnfsUrl } from './wnfs-url';
 
-export const upload = async ({ blockstore, file, space }: { blockstore: Blockstore; file: File; space: Space }) => {
+export const upload = async ({
+  blockstore,
+  file,
+  space,
+}: {
+  blockstore: Blockstore;
+  file: File;
+  space: Space;
+}): Promise<FileInfo> => {
   const { directory, forest } = await loadWnfs(space, blockstore);
   const wnfsStore = store(blockstore);
 
@@ -39,7 +48,7 @@ export const upload = async ({ blockstore, file, space }: { blockstore: Blocksto
   // Generate `wnfs://` URL & return the info.
   const info = {
     url: wnfsUrl(path),
-  };
+  } satisfies FileInfo;
 
   log('upload', { file, info });
   return info;
