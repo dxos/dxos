@@ -11,8 +11,8 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { FilePreview } from './FilePreview';
 import { WnfsCapabilities } from '../capabilities';
-import { type FileType } from '../types';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
+import { type FileType } from '../types';
 
 const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);

@@ -6,8 +6,8 @@ import { contributes, Capabilities, createResolver, type PluginsContext } from '
 import { create } from '@dxos/react-client/echo';
 
 import { WnfsCapabilities } from './capabilities';
-import { FileType, WnfsAction } from '../types';
 import { upload } from '../helpers';
+import { FileType, WnfsAction } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [

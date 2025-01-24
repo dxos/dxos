@@ -175,7 +175,7 @@ class WnfsImageWidget extends WidgetType {
     }
 
     const widget = document.createElement('div');
-    widget.className = 'cm-image-wrapper'
+    widget.className = 'cm-image-wrapper';
     const loader = document.createElement('div');
     loader.className = 'mx-auto transition-opacity';
     let loaderAdded = false;
