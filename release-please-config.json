@@ -524,11 +524,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-wnfs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },
@@ -655,6 +650,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-wildcard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -23,7 +23,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { image } from './image';
 import { create as createBlockstore } from '../blockstore';
-import { upload } from '../upload';
+import { upload } from '../helpers';
 
 faker.seed(1);
 const initialValue = faker.lorem.paragraphs(100);

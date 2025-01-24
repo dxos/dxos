@@ -7,7 +7,7 @@ import { Effect, pipe } from 'effect';
 import { Capabilities, chain, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import { SpaceAction } from '@dxos/plugin-space/types';
 
-import { WnfsAction } from '../types/types';
+import { WnfsAction } from '../types';
 
 export default (context: PluginsContext) => {
   return contributes(Capabilities.FileUploader, (file, space) => {

@@ -15,8 +15,7 @@ import { focusField } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { type WnfsCapabilities } from '../capabilities';
-import { loadWnfs } from '../load';
-import { getBlobUrl, getPathFromUrl } from '../wnfs-url';
+import { getBlobUrl, getPathFromUrl, loadWnfs } from '../helpers';
 
 const WAIT_UNTIL_LOADER = 1500;
 

@@ -111,9 +111,6 @@
       "path": "../../plugins/experimental/plugin-template"
     },
     {
-      "path": "../../plugins/experimental/plugin-wnfs"
-    },
-    {
       "path": "../../plugins/plugin-attention"
     },
     {
@@ -190,6 +187,9 @@
     },
     {
       "path": "../../plugins/plugin-wildcard"
+    },
+    {
+      "path": "../../plugins/plugin-wnfs"
     },
     {
       "path": "../../sdk/app-framework"
