@@ -70,7 +70,7 @@ export const createBasicTest = () => {
 export const createTransformTest = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    const a = model.createNode(createRandom(createLayout({ x: -8, y: -2 })));
+    const a = model.createNode(createRandom(createLayout({ x: -8, y: -3 })));
     const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...createLayout({ x: -8, y: 2 }) }));
     const c = model.createNode(createJsonTransform(createLayout({ x: 0, y: 0 })));
     const d = model.createNode(createBeacon(createLayout({ x: 8, y: 0 })));
