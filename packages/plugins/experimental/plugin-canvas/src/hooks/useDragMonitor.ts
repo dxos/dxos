@@ -285,8 +285,8 @@ export const useDragMonitor = () => {
               // graph.addNode(shape);
               log.info('copy', { shape: state.value.shape });
             } else {
-              invariant(isPolygon(node.data));
-              node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
+              invariant(isPolygon(node));
+              node.center = snapPoint(pointAdd(pos, dragMonitor.offset));
             }
             break;
           }
@@ -297,9 +297,9 @@ export const useDragMonitor = () => {
           case 'resize': {
             const node = graph.getNode(state.value.shape.id);
             if (node) {
-              invariant(isPolygon(node.data));
-              node.data.center = state.value.shape.center;
-              node.data.size = state.value.shape.size;
+              invariant(isPolygon(node));
+              node.center = state.value.shape.center;
+              node.size = state.value.shape.size;
             }
             break;
           }
