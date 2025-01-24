@@ -30,7 +30,7 @@ export const DebugPlugin = () => {
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'debug',
-          label: ['open debug panel label', { ns: DEBUG_PLUGIN }],
+          label: ['debug label', { ns: DEBUG_PLUGIN }],
           icon: 'ph--bug--regular',
         }),
     }),

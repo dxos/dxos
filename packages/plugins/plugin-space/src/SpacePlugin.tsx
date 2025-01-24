@@ -95,7 +95,7 @@ export const SpacePlugin = ({
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'settings',
-          label: ['open settings panel label', { ns: SPACE_PLUGIN }],
+          label: ['settings panel label', { ns: SPACE_PLUGIN }],
           icon: 'ph--gear--regular',
         }),
     }),
