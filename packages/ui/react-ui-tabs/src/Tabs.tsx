@@ -9,6 +9,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect, useRef } from 'react';
 
 import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { focusRing, ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
@@ -18,7 +19,8 @@ const TABS_NAME = 'Tabs';
 type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
-} & Pick<TabsPrimitive.TabsProps, 'orientation'>;
+  attendableId?: string;
+} & Pick<TabsPrimitive.TabsProps, 'orientation' | 'value'>;
 
 const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
   activePart: 'list',
@@ -31,6 +33,7 @@ type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
     activePart: TabsActivePart;
     onActivePartChange: (nextActivePart: TabsActivePart) => void;
     defaultActivePart: TabsActivePart;
+    attendableId?: string;
   }>;
 
 const TabsRoot = ({
@@ -44,6 +47,7 @@ const TabsRoot = ({
   defaultValue,
   orientation = 'vertical',
   activationMode = 'manual',
+  attendableId,
   ...props
 }: TabsRootProps) => {
   const [activePart = 'list', setActivePart] = useControllableState({
@@ -75,7 +79,13 @@ const TabsRoot = ({
   }, [activePart]);
 
   return (
-    <TabsContextProvider orientation={orientation} activePart={activePart} setActivePart={setActivePart}>
+    <TabsContextProvider
+      orientation={orientation}
+      activePart={activePart}
+      setActivePart={setActivePart}
+      value={value}
+      attendableId={attendableId}
+    >
       <TabsPrimitive.Root
         activationMode={activationMode}
         data-active={activePart}
@@ -122,10 +132,17 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
+  const { orientation } = useTabsContext('TabsTablist');
   return (
     <TabsPrimitive.List
       {...props}
-      className={mx('place-self-start max-bs-full is-full overflow-y-auto p-1', classNames)}
+      className={mx(
+        'place-self-start max-bs-full is-full',
+        orientation === 'vertical'
+          ? 'overflow-y-auto p-1'
+          : 'flex items-stretch justify-start gap-2 overflow-x-auto p-2',
+        classNames,
+      )}
     >
       {children}
     </TabsPrimitive.List>
@@ -158,7 +175,8 @@ const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName
 type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
 const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
-  const { setActivePart } = useTabsContext('TabsTab');
+  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
+  const { hasAttention } = useAttention(attendableId);
   const handleClick = useCallback(
     // NOTE: this handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -172,12 +190,15 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
     <TabsPrimitive.Trigger value={value} asChild>
       <Button
         density='fine'
-        variant='ghost'
+        variant={
+          orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost'
+        }
         {...props}
         onClick={handleClick}
         classNames={[
-          'block is-full justify-start text-start pli-2 rounded-sm',
-          ghostSelectedContainerMd,
+          'pli-2 rounded-sm',
+          orientation === 'vertical' && 'block justify-start text-start is-full',
+          orientation === 'vertical' && ghostSelectedContainerMd,
           ghostHover,
           classNames,
         ]}

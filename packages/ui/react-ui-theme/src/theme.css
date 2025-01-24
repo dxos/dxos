@@ -26,8 +26,10 @@
   --topbar-size: theme(spacing.12);
   --statusbar-size: theme(spacing.8);
   --sticky-top: 0;
-  --rail-size: 49px;
-  --rail-action: 40px;
+  --rail-content: 3rem;
+  --rail-size: calc(var(--rail-content) + 1px);
+  --rail-action: calc(var(--rail-content) - .5rem);
+  --rail-item: calc(var(--rail-content) - 1rem);
   --nav-sidebar-size: 16.875rem;
   --complementary-sidebar-size: 22.5rem;
 }
