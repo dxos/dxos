@@ -88,7 +88,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                 iconOnly
                 variant='ghost'
                 size={4}
-                icon='ph--arrow-line-right--regular'
+                icon='ph--caret-line-right--regular'
                 label={t('close complementary sidebar label')}
                 classNames='!rounded-none border-is border-separator ch-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-right))]'
                 onClick={() =>
