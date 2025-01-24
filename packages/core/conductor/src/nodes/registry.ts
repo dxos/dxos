@@ -93,7 +93,8 @@ export const registry: Record<NodeType, Executable> = {
   ['constant' as const]: defineComputeNode({
     input: VoidInput,
     output: ConstantOutput,
-    exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.value })),
+    // TODO(dmaretskyi): Despite the types node is { id, type, data: { value } } .
+    exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: (node as any)!.data!.value })),
   }),
 
   ['switch' as const]: defineComputeNode({
