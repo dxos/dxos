@@ -69,12 +69,12 @@ export const createBasicTest = () => {
 export const createTransformTest = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    const a = model.createNode(createRandom(createLayout({ x: -4, y: -2 })));
-    const b = model.createNode(createConstant(createLayout({ x: -4, y: 2 })));
+    const a = model.createNode(createRandom(createLayout({ x: -8, y: -2 })));
+    const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...createLayout({ x: -8, y: 2 }) }));
     const c = model.createNode(createJsonTransform(createLayout({ x: 0, y: 0 })));
-    const d = model.createNode(createBeacon(createLayout({ x: 4, y: 0 })));
+    const d = model.createNode(createBeacon(createLayout({ x: 8, y: 0 })));
     model.createEdge({ source: a.id, target: c.id });
-    model.createEdge({ source: b.id, target: c.id });
+    model.createEdge({ source: b.id, target: c.id, input: 'expression' });
     model.createEdge({ source: c.id, target: d.id });
   });
 

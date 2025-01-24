@@ -4,6 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 
+import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
@@ -47,14 +48,14 @@ export type ChatShape = S.Schema.Type<typeof ChatShape>;
 export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps & { title?: string; chat?: boolean };
 
 export const TextComponent = ({ shape, title, chat, ...props }: TextComponentProps) => {
-  const { node } = useComputeNodeState(shape);
+  const { runtime } = useComputeNodeState(shape);
   const [reset, setReset] = useState({});
   const inputRef = useRef<TextBoxControl>(null);
 
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {
-      node.value = value;
+      runtime.setOutput(DEFAULT_OUTPUT, value);
       if (chat) {
         setReset({});
       }

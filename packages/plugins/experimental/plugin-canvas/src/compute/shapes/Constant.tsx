@@ -6,6 +6,7 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { safeParseJson } from '@dxos/util';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
@@ -47,6 +48,8 @@ const inferType = (value: any): string | undefined => {
     return 'number';
   } else if (typeof value === 'boolean') {
     return 'boolean';
+  } else if (typeof value === 'object') {
+    return 'object';
   }
 };
 
@@ -54,6 +57,8 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   const { node } = useComputeNodeState(shape);
   const [type, setType] = useState(inferType(node.value) ?? types[0]);
   const inputRef = useRef<TextBoxControl>(null);
+
+  console.log(node.value);
 
   const handleEnter = useCallback<NonNullable<TextBoxProps['onEnter']>>(
     (text) => {
@@ -65,6 +70,8 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
           if (!isNaN(floatValue)) {
             node.value = floatValue;
           }
+        } else if (type === 'object') {
+          node.value = safeParseJson(value, {});
         } else {
           node.value = value;
         }
@@ -96,7 +103,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   );
 };
 
-const types = ['string', 'number', 'boolean'];
+const types = ['string', 'number', 'boolean', 'object'];
 
 // TODO(burdon): Factor out.
 const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {

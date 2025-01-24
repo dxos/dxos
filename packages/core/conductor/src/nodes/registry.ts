@@ -3,12 +3,14 @@
 //
 
 import { Effect } from 'effect';
+import { JSONPath } from 'jsonpath-plus';
 
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { safeParseJson } from '@dxos/util';
 
 import {
   AppendInput,
@@ -148,8 +150,11 @@ export const registry: Record<NodeType, Executable> = {
     input: JsonTransformInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
-      console.log(input, expression);
-      return Effect.succeed({ [DEFAULT_OUTPUT]: input });
+      const json =
+        typeof input === 'string' ? safeParseJson(input, {}) : typeof input !== 'object' ? { value: input } : input;
+
+      const result = JSONPath({ json, path: expression });
+      return Effect.succeed({ [DEFAULT_OUTPUT]: result });
     }),
   }),
 

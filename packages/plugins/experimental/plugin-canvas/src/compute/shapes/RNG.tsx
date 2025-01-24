@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Icon, type IconProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -16,6 +17,8 @@ export const RandomShape = S.extend(
   ComputeShape,
   S.Struct({
     type: S.Literal('rng'),
+    min: S.optional(S.Number),
+    max: S.optional(S.Number),
   }),
 );
 
@@ -37,8 +40,9 @@ const icons = [
 
 const pickIcon = () => icons[Math.floor(Math.random() * icons.length)];
 
+// TODO(burdon): Optional range.
 export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => {
-  const { node } = useComputeNodeState(shape);
+  const { runtime } = useComputeNodeState(shape);
 
   const [spin, setSpin] = useState(false);
   const [icon, setIcon] = useState(pickIcon());
@@ -59,8 +63,8 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
   }, [spin]);
 
   const handleClick: IconProps['onClick'] = (ev) => {
-    ev.preventDefault();
-    node.value = Math.random();
+    ev.stopPropagation();
+    runtime.setOutput(DEFAULT_OUTPUT, Math.random());
     setSpin(true);
   };
 

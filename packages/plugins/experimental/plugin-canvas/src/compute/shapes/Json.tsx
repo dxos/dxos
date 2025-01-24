@@ -63,7 +63,7 @@ export const JsonTransformComponent = ({ shape, ...props }: JsonTransformCompone
 // Defs
 //
 
-export type CreateJsonProps = CreateShapeProps<JsonShape> & { json?: any };
+export type CreateJsonProps = CreateShapeProps<JsonShape>;
 
 export const createJson = (props: CreateJsonProps) =>
   createShape<JsonShape>({ type: 'json', size: { width: 256, height: 256 }, ...props });
@@ -82,7 +82,7 @@ export const jsonShape: ShapeDef<JsonShape> = {
   resizable: true,
 };
 
-export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape> & { json?: any };
+export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape> & { expression?: string };
 
 export const createJsonTransform = (props: CreateJsonTransformProps) =>
   createShape<JsonTransformShape>({

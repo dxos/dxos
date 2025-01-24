@@ -26,6 +26,7 @@ export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 export const createSwitch = (props: CreateSwitchProps) =>
   createShape<SwitchShape>({ type: 'switch', size: { width: 64, height: 64 }, ...props });
 
+// TODO(burdon): Should model as a constant.
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const [value, setValue] = useState(false);
