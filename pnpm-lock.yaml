@@ -9251,6 +9251,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@ipld/car':
         specifier: ^5.3.3
         version: 5.3.3

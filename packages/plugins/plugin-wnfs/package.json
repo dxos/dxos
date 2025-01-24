@@ -47,6 +47,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@ipld/car": "^5.3.3",
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",

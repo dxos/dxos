@@ -13,6 +13,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { focusField } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { type MaybePromise } from '@dxos/util';
 
 import { type WnfsCapabilities } from '../capabilities';
 import { getBlobUrl, getPathFromUrl, loadWnfs } from '../helpers';
@@ -159,7 +160,7 @@ const createImg = (view: EditorView, url: string) => {
 class WnfsImageWidget extends WidgetType {
   constructor(
     readonly _wnfsUrl: string,
-    readonly _url: Promise<string> | string,
+    readonly _url: MaybePromise<string>,
   ) {
     super();
   }
@@ -176,6 +177,7 @@ class WnfsImageWidget extends WidgetType {
     const widget = document.createElement('div');
     widget.className = 'cm-image-wrapper'
     const loader = document.createElement('div');
+    loader.className = 'mx-auto transition-opacity';
     let loaderAdded = false;
 
     const timeout = setTimeout(() => {
