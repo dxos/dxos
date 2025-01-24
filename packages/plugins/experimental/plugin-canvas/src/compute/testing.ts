@@ -10,7 +10,7 @@ import { createEdgeId } from '@dxos/graph';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
-import { createComputeNode, StateMachine, type Services } from './graph';
+import { createComputeNode, isValidComputeNode, StateMachine, type Services } from './graph';
 import { mapEdge } from './hooks';
 import {
   createAnd,
@@ -37,6 +37,7 @@ import {
   type ComputeShape,
 } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
+import { createNote } from '../shapes';
 import { type Connection, type Shape } from '../types';
 import { CanvasGraphModel } from '../types';
 
@@ -73,6 +74,9 @@ export const createTransformTest = () => {
     const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...createLayout({ x: -8, y: 2 }) }));
     const c = model.createNode(createJsonTransform(createLayout({ x: 0, y: 0 })));
     const d = model.createNode(createBeacon(createLayout({ x: 8, y: 0 })));
+    model.createNode(
+      createNote({ id: ObjectId.random(), text: 'Random number generator', ...createLayout({ x: 0, y: -6 }) }),
+    );
     model.createEdge({ source: a.id, target: c.id });
     model.createEdge({ source: b.id, target: c.id, input: 'expression' });
     model.createEdge({ source: c.id, target: d.id });
@@ -230,9 +234,11 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {
     for (const shape of graph.nodes) {
-      const node = createComputeNode(shape);
-      machine.addNode(node);
-      shape.node = node.id;
+      if (isValidComputeNode(shape.type)) {
+        const node = createComputeNode(shape);
+        machine.addNode(node);
+        shape.node = node.id;
+      }
     }
 
     for (const edge of graph.edges) {

@@ -58,8 +58,6 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   const [type, setType] = useState(inferType(node.value) ?? types[0]);
   const inputRef = useRef<TextBoxControl>(null);
 
-  console.log(node.value);
-
   const handleEnter = useCallback<NonNullable<TextBoxProps['onEnter']>>(
     (text) => {
       const value = text.trim();

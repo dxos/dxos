@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { DEFAULT_INPUT } from '@dxos/conductor';
+import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -27,9 +27,6 @@ export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 export const createBeacon = (props: CreateBeaconProps) =>
   createShape<BeaconShape>({ type: 'beacon', size: { width: 64, height: 64 }, ...props });
 
-const isFalsy = (value: any) =>
-  value === false || value === null || value === undefined || (Array.isArray(value) && value.length === 0);
-
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
@@ -39,7 +36,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon='ph--sun--regular'
-        classNames={mx('transition opacity-20 duration-1000', !isFalsy(value) && 'opacity-100 text-yellow-500')}
+        classNames={mx('transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500')}
         size={8}
       />
     </div>
