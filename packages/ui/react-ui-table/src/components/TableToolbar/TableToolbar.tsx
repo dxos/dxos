@@ -45,14 +45,14 @@ const createTableToolbarActions = (state: TableToolbarState) => {
     iconOnly: false,
     hidden: !state.viewDirty,
   });
-  const gap = createGapSeparator('gap');
+  const gap = createGapSeparator();
   const comment = createMenuAction('comment', {
     type: 'comment',
     icon: 'ph--chat-text--regular',
     label: ['create comment', { ns: translationKey }],
     testId: 'table.toolbar.comment',
   });
-  const nodes = [add, save, gap, comment];
+  const nodes = [add, save, ...gap.nodes, comment];
   return {
     nodes,
     edges: nodes.map(({ id: target }) => ({ source: 'root', target })),

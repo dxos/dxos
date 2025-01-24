@@ -65,8 +65,8 @@ const createToolbar = ({
     edges.push(...custom.edges);
   }
   const editorToolbarGap = createGapSeparator();
-  nodes.push(editorToolbarGap);
-  edges.push({ source: 'root', target: editorToolbarGap.id });
+  nodes.push(...editorToolbarGap.nodes);
+  edges.push(...editorToolbarGap.edges);
   if (features.comment ?? true) {
     const comment = createComment(state);
     nodes.push(...comment.nodes);

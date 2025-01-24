@@ -146,7 +146,7 @@ const buildDecorations = ({
 const createImg = (view: EditorView, url: string) => {
   const img = document.createElement('img');
   img.setAttribute('src', url);
-  img.setAttribute('class', 'cm-image');
+  img.setAttribute('class', 'cm-image-with-loader');
   // If focused, hide image until successfully loaded to avoid flickering effects.
   if (view.state.field(focusField)) {
     img.onload = () => img.classList.add('cm-loaded-image');
@@ -174,6 +174,7 @@ class WnfsImageWidget extends WidgetType {
     }
 
     const widget = document.createElement('div');
+    widget.className = 'cm-image-wrapper'
     const loader = document.createElement('div');
     let loaderAdded = false;
 

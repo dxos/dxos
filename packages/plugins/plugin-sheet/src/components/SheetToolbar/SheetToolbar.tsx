@@ -25,8 +25,8 @@ const createToolbarActions = (state: ToolbarState) => {
   const gap = createGapSeparator();
   const comment = createComment(state);
   return {
-    nodes: [...align.nodes, ...style.nodes, gap, ...comment.nodes],
-    edges: [...align.edges, ...style.edges, { source: 'root', target: gap.id }, ...comment.edges],
+    nodes: [...align.nodes, ...style.nodes, ...gap.nodes, ...comment.nodes],
+    edges: [...align.edges, ...style.edges, ...gap.edges, ...comment.edges],
   };
 };
 

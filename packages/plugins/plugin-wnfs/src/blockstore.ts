@@ -3,6 +3,7 @@
 //
 
 import { CarWriter } from '@ipld/car';
+import type { Block } from '@ipld/car/api';
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
 import debounce from 'debounce';
@@ -160,7 +161,7 @@ export class MixedBlockstore extends BaseBlockstore {
       return;
     }
 
-    // Create CAR file
+    // Collect blocks
     const blocks = await Promise.all(
       keys.map(async (key) => {
         const cid = CID.parse(key);
@@ -169,19 +170,17 @@ export class MixedBlockstore extends BaseBlockstore {
       }),
     );
 
-    const { writer, out } = CarWriter.create();
-    const outPromise = all(out);
-
+    // TODO: Create & submit CAR
+    //       DEPENDS ON EDGE BLOB-SERVICE CHANGES
+    // const car = await this.#createCar(blocks);
+    // await this.putCarRemote(car);
+    //
+    // Temporary solution:
     await Promise.all(
-      blocks.map((block) => {
-        return writer.put(block);
+      blocks.map((block: Block) => {
+        return this.putRemote(block.cid, block.bytes);
       }),
     );
-
-    await writer.close();
-    const carBytes = Uint8Arrays.concat(await outPromise);
-
-    await this.putCarRemote(carBytes);
 
     // Adjust queue
     const queue = [...this.#queue].filter((k) => {
@@ -207,5 +206,21 @@ export class MixedBlockstore extends BaseBlockstore {
     const arr = [...items];
     this.#queue = arr;
     await IDB.set(this.queueCacheName, arr);
+  }
+
+  // 🛠️
+
+  async #createCar(blocks: Block[]) {
+    const { writer, out } = CarWriter.create();
+    const outPromise = all(out);
+
+    await Promise.all(
+      blocks.map((block) => {
+        return writer.put(block);
+      }),
+    );
+
+    await writer.close();
+    return Uint8Arrays.concat(await outPromise);
   }
 }
