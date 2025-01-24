@@ -9,6 +9,8 @@ import { findAnnotation, type S } from '@dxos/effect';
 import { mx } from '@dxos/react-ui-theme';
 
 import { WnfsAction } from '../types';
+import { useTranslation } from '@dxos/react-ui';
+import { WNFS_PLUGIN } from '../meta';
 
 export type FileInputProps = {
   schema: S.Schema.Any;
@@ -16,6 +18,7 @@ export type FileInputProps = {
 };
 
 export const FileInput = ({ schema, onChange }: FileInputProps) => {
+  const { t } = useTranslation(WNFS_PLUGIN);
   const accept = findAnnotation<Record<string, string[]>>(schema.ast, WnfsAction.UploadAnnotationId);
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);
@@ -40,7 +43,7 @@ export const FileInput = ({ schema, onChange }: FileInputProps) => {
       {acceptedFiles[0] ? (
         <p>{acceptedFiles[0].name}</p>
       ) : (
-        <p>Drag &apos;n&apos; drop some files here, or click to select files</p>
+        <p>{t('file input placeholder')}</p>
       )}
     </div>
   );

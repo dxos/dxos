@@ -15,6 +15,7 @@ export default [
         'plugin name': 'Files',
         'file title placeholder': 'New file',
         'delete object label': 'Delete',
+        'file input placeholder': "Drop a file here, or click to select a file",
       },
     },
   },
