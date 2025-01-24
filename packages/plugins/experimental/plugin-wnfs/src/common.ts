@@ -15,7 +15,7 @@ import { type Space } from '@dxos/react-client/echo';
 //
 
 export const filePath = (fileName: string, space: Space) => {
-  return ['spaces', space.properties.id, 'files', fileName];
+  return ['spaces', space.id, 'files', fileName];
 };
 
 //

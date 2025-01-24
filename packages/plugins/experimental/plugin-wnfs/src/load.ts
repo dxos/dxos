@@ -16,9 +16,14 @@ import { Rng, store } from './common';
 //
 
 export const loadWnfs = async (space: Space, blockstore: Blockstore) => {
-  const exists =
-    space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined;
+  // TODO(wittjosiah): Remove.
+  // Delete old properties if they exist.
+  if (space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined) {
+    delete space.properties.wnfs_access_key;
+    delete space.properties.wnfs_private_forest_cid;
+  }
 
+  const exists = !!space.properties.wnfs;
   return exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
 };
 
@@ -40,8 +45,10 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 
   const cidBytes = await newForest.store(wnfsStore);
 
-  space.properties.wnfs_access_key = Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64');
-  space.properties.wnfs_private_forest_cid = CID.decode(cidBytes).toString();
+  space.properties.wnfs = {
+    accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
+    privateForestCid: CID.decode(cidBytes).toString(),
+  };
 
   return {
     directory: dir,
@@ -52,8 +59,11 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 const loadWnfsDir = async (blockstore: Blockstore, space: Space) => {
   const wnfsStore = store(blockstore);
 
-  const accessKey = AccessKey.fromBytes(Uint8Arrays.fromString(space.properties.wnfs_access_key, 'base64'));
-  const forest = await PrivateForest.load(CID.parse(space.properties.wnfs_private_forest_cid).bytes, wnfsStore);
+  const accessKey = AccessKey.fromBytes(Uint8Arrays.fromString(space.properties.wnfs.accessKey, 'base64'));
+  const forest: PrivateForest = await PrivateForest.load(
+    CID.parse(space.properties.wnfs.privateForestCid).bytes,
+    wnfsStore,
+  );
   const node: PrivateNode = await PrivateNode.load(accessKey, forest, wnfsStore);
 
   return {

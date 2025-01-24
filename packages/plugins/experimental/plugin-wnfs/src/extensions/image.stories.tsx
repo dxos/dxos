@@ -36,7 +36,7 @@ const Story = () => {
 
   useEffect(() => {
     if (space) {
-      console.log('SPACE ID', space.properties.id);
+      console.log('SPACE ID', space.id);
     }
 
     const create = async () => {

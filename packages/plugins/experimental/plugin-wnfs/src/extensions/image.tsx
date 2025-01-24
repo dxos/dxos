@@ -120,11 +120,11 @@ const buildDecorations = ({
 
       // Cannot load images from other spaces
       const spaceIdFromUrl = path[1];
-      if (spaceIdFromUrl !== options.space.properties.id) {
+      if (spaceIdFromUrl !== options.space.id) {
         return;
       }
 
-      const cacheKey = options.space.properties.wnfs_private_forest_cid;
+      const cacheKey = options.space.properties.wnfs.privateForestCid;
 
       // Load image contents into memory blob
       const blobUrlPromise = (async () => {

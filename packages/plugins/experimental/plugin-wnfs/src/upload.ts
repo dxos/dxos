@@ -43,7 +43,7 @@ export const upload = async ({
   const cidBytes = await updatedForest.store(wnfsStore);
 
   // Update the forest pointer on the associated space.
-  space.properties.wnfs_private_forest_cid = CID.decode(cidBytes).toString();
+  space.properties.wnfs.privateForestCid = CID.decode(cidBytes).toString();
 
   // Generate `wnfs://` URL & return the info.
   const info = {
