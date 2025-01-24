@@ -489,11 +489,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-ipfs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },

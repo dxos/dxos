@@ -90,9 +90,6 @@
       "path": "../../plugins/experimental/plugin-inbox"
     },
     {
-      "path": "../../plugins/experimental/plugin-ipfs"
-    },
-    {
       "path": "../../plugins/experimental/plugin-kanban"
     },
     {

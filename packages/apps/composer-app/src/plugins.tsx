@@ -19,7 +19,6 @@ import { FilesPlugin, FILES_PLUGIN } from '@dxos/plugin-files';
 import { GraphPlugin, GRAPH_PLUGIN } from '@dxos/plugin-graph';
 import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { IpfsPlugin } from '@dxos/plugin-ipfs';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
@@ -44,7 +43,7 @@ import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
 import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
 import { WildcardPlugin, WILDCARD_PLUGIN } from '@dxos/plugin-wildcard';
-import { WnfsPlugin } from '@dxos/plugin-wnfs';
+import { WNFS_PLUGIN, WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
 
 import { steps } from './help';
@@ -87,6 +86,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
     WILDCARD_PLUGIN,
+    WNFS_PLUGIN,
   ].filter(isNotFalsy);
 
 export const defaults = ({ isDev }: PluginConfig): string[] =>
@@ -145,7 +145,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     HelpPlugin({ steps }),
     InboxPlugin(),
     IntentPlugin(),
-    IpfsPlugin(),
     KanbanPlugin(),
     MapPlugin(),
     MarkdownPlugin(),

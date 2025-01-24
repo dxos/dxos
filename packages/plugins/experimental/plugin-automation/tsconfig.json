@@ -119,10 +119,10 @@
       "path": "../plugin-inbox"
     },
     {
-      "path": "../plugin-ipfs"
+      "path": "../plugin-script"
     },
     {
-      "path": "../plugin-script"
+      "path": "../plugin-wnfs"
     }
   ]
 }

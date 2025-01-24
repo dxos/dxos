@@ -2,16 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FileCloud, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
+import { pipe } from 'effect';
 
-import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
+import {
+  Capabilities,
+  Events,
+  chain,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  oneOf,
+} from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { type Space } from '@dxos/react-client/echo';
 
-import { Blockstore, FileUploader, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
+import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
 import { meta, WNFS_PLUGIN } from './meta';
 import translations from './translations';
-import { FileType } from './types';
+import { FileType, WnfsAction } from './types';
 
 export const WnfsPlugin = () =>
   definePlugin(meta, [
@@ -40,15 +49,20 @@ export const WnfsPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: FileType.typename,
           metadata: {
+            creationSchema: WnfsAction.UploadFileSchema,
+            createObject: ({ file }: WnfsAction.UploadFileForm, { space }: { space: Space }) =>
+              pipe(createIntent(WnfsAction.Upload, { file, space }), chain(WnfsAction.Create, {})),
+            label: (object: any) => (object instanceof FileType ? object.name : undefined),
             placeholder: ['file title placeholder', { ns: WNFS_PLUGIN }],
-            icon: (props: IconProps) => <FileCloud {...props} />,
+            // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
+            icon: 'ph--file--regular',
           },
         }),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupClient,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [FileType]),
+      activate: () => contributes(ClientCapabilities.Schema, [FileType]),
     }),
     defineModule({
       id: `${meta.id}/module/file-uploader`,
@@ -64,5 +78,10 @@ export const WnfsPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.Startup,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
     }),
   ]);

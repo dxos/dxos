@@ -12,5 +12,4 @@ export const meta = {
   description: 'Upload & view files with WNFS.',
   icon: 'ph--file-cloud--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-wnfs',
-  tags: ['experimental'],
 } satisfies PluginMeta;

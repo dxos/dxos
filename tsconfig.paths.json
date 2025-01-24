@@ -40,15 +40,6 @@
       "@dxos/plugin-inbox/types": [
         "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
       ],
-      "@dxos/plugin-ipfs": [
-        "packages/plugins/experimental/plugin-ipfs/src/index.ts"
-      ],
-      "@dxos/plugin-ipfs/meta": [
-        "packages/plugins/experimental/plugin-ipfs/src/meta.ts"
-      ],
-      "@dxos/plugin-ipfs/types": [
-        "packages/plugins/experimental/plugin-ipfs/src/types/index.ts"
-      ],
       "@dxos/plugin-kanban": [
         "packages/plugins/experimental/plugin-kanban/src/index.ts"
       ],

@@ -2,20 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Effect, pipe } from 'effect';
 
-import { WnfsCapabilities } from './capabilities';
-import { upload } from '../upload';
+import { Capabilities, chain, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
+import { SpaceAction } from '@dxos/plugin-space/types';
 
-// TODO(burdon): Add intent to upload file.
+import { WnfsAction } from '../types/types';
+
 export default (context: PluginsContext) => {
-  const blockstore = context.requestCapability(WnfsCapabilities.Blockstore);
+  return contributes(Capabilities.FileUploader, (file, space) => {
+    const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
 
-  return contributes(Capabilities.FileUploader, async (file, space) => {
-    if (!blockstore) {
-      throw new Error('Blockstore is not ready yet');
-    }
+    const program = Effect.gen(function* () {
+      // TODO(wittjosiah): Dispatch effect should return Option of data.
+      const { data: fileInfo } = yield* dispatch(createIntent(WnfsAction.Upload, { file, space }));
+      yield* dispatch(pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: space })));
+      return fileInfo;
+    });
 
-    return await upload({ blockstore, file, space });
+    return Effect.runPromise(program);
   });
 };

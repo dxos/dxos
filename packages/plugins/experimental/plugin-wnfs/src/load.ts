@@ -9,13 +9,22 @@ import { AccessKey, PrivateForest, PrivateDirectory, PrivateNode } from 'wnfs';
 
 import { type Space } from '@dxos/react-client/echo';
 
+import { type WnfsCapabilities } from './capabilities';
 import { Rng, store } from './common';
 
 //
 // LOAD
 //
 
-export const loadWnfs = async (space: Space, blockstore: Blockstore) => {
+export const loadWnfs = async ({
+  space,
+  blockstore,
+  instances,
+}: {
+  space: Space;
+  blockstore: Blockstore;
+  instances?: WnfsCapabilities.Instances;
+}) => {
   // TODO(wittjosiah): Remove.
   // Delete old properties if they exist.
   if (space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined) {
@@ -23,8 +32,18 @@ export const loadWnfs = async (space: Space, blockstore: Blockstore) => {
     delete space.properties.wnfs_private_forest_cid;
   }
 
+  const cacheKey = space.properties.wnfs.privateForestCid;
+  if (instances?.[cacheKey]) {
+    return instances[cacheKey];
+  }
+
   const exists = !!space.properties.wnfs;
-  return exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
+  const instance = exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
+  if (instances) {
+    instances[cacheKey] = instance;
+  }
+
+  return instance;
 };
 
 //

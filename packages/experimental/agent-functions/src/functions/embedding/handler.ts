@@ -12,8 +12,8 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
+import { FileType } from '@dxos/plugin-wnfs/types';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';

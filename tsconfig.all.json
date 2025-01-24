@@ -280,9 +280,6 @@
       "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-ipfs/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
     },
     {

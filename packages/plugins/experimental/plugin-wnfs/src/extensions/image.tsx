@@ -15,8 +15,8 @@ import { focusField } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import { type WnfsCapabilities } from '../capabilities';
-import { store } from '../common';
 import { loadWnfs } from '../load';
+import { getBlobUrl, getPathFromUrl } from '../wnfs-url';
 
 const WAIT_UNTIL_LOADER = 1500;
 
@@ -85,7 +85,7 @@ const buildDecorations = ({
   state,
   blobUrlCache,
   preload,
-  options,
+  options: { blockstore, instances, space },
 }: {
   from: number;
   to: number;
@@ -108,40 +108,23 @@ const buildDecorations = ({
       }
 
       const hide = state.readOnly || cursor < node.from || cursor > node.to;
-      const url = state.sliceDoc(urlNode.from, urlNode.to);
-      if (!url.startsWith('wnfs://')) {
+      const wnfsUrl = state.sliceDoc(urlNode.from, urlNode.to);
+      if (!wnfsUrl.startsWith('wnfs://')) {
         return;
       }
 
-      const path = url
-        .replace(/^wnfs:\/\//, '')
-        .split('/')
-        .map((p) => decodeURIComponent(p));
+      const path = getPathFromUrl(wnfsUrl);
 
       // Cannot load images from other spaces
-      const spaceIdFromUrl = path[1];
-      if (spaceIdFromUrl !== options.space.id) {
+      const spaceId = path[1];
+      if (spaceId !== space.id) {
         return;
       }
-
-      const cacheKey = options.space.properties.wnfs.privateForestCid;
 
       // Load image contents into memory blob
       const blobUrlPromise = (async () => {
-        const { directory, forest } = options.instances[cacheKey]
-          ? options.instances[cacheKey]
-          : await loadWnfs(options.space, options.blockstore);
-
-        options.instances[cacheKey] = {
-          directory,
-          forest,
-        };
-
-        const wnfsStore = store(options.blockstore);
-
-        const { result } = await directory.read(path, true, forest, wnfsStore);
-        const blob = new Blob([result]);
-        const url = URL.createObjectURL(blob);
+        const { directory, forest } = await loadWnfs({ blockstore, instances, space });
+        const url = await getBlobUrl({ wnfsUrl, blockstore, directory, forest });
         blobUrlCache[path.join('/')] = url;
         preload(url);
         return url;
@@ -150,7 +133,7 @@ const buildDecorations = ({
       decorations.push(
         Decoration.replace({
           block: true, // Prevent cursor from entering.
-          widget: new WnfsImageWidget(url, blobUrlCache[path.join('/')] ?? blobUrlPromise),
+          widget: new WnfsImageWidget(wnfsUrl, blobUrlCache[path.join('/')] ?? blobUrlPromise),
         }).range(hide ? node.from : node.to, node.to),
       );
     },
