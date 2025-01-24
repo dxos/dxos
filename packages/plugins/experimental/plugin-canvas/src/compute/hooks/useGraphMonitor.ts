@@ -20,6 +20,7 @@ import { type ComputeShape } from '../shapes';
 export const mapEdge = (graph: CanvasGraphModel, { source, target, output, input }: Connection): ComputeEdge => {
   const sourceNode = graph.findNode(source) as ComputeShape;
   const targetNode = graph.findNode(target) as ComputeShape;
+  console.log(sourceNode, targetNode, output, input);
   invariant(sourceNode?.node);
   invariant(targetNode?.node);
   invariant(output);
@@ -71,14 +72,9 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
           // NOTE(ZaymonFC): Based on the information we have, this is O(edges to remove * compute edges).
           const edgeIds = subgraph.edges
             .map((shapeEdge) => {
-              return model.edges.find((computeEdge) => {
-                const computeConnection = computeEdge.data as Connection;
-                const canvasConnection = shapeEdge.data as Connection;
-                return (
-                  computeConnection.input === canvasConnection.input &&
-                  computeConnection.output === canvasConnection.output
-                );
-              })?.id;
+              return model.edges.find(
+                (computeEdge) => computeEdge.input === shapeEdge.input && computeEdge.output === shapeEdge.output,
+              )?.id;
             })
             .filter(nonNullable);
 

@@ -24,14 +24,12 @@ import {
   type ValueBag,
   isNotExecuted,
 } from '@dxos/conductor';
-import { MockGpt } from '@dxos/conductor';
+import { MockGpt, EdgeClientService } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import { type GraphEdge, type GraphNode } from '@dxos/graph';
+import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
-import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
-import { EdgeClientService } from '@dxos/conductor';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -276,7 +274,7 @@ export class StateMachine extends Resource {
     const triggerNodes =
       startFromNode != null
         ? [this._graph.getNode(startFromNode)]
-        : this._graph.nodes.filter((node) => node.data.type != null && AUTO_TRIGGER_NODES.includes(node.data.type));
+        : this._graph.nodes.filter((node) => node.type != null && AUTO_TRIGGER_NODES.includes(node.type));
     const allAffectedNodes = [...new Set(triggerNodes.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
     const services = this._createServiceLayer();

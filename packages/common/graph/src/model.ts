@@ -150,8 +150,8 @@ export abstract class AbstractGraphModel<
   }
 
   addNode(node: Node): Node {
-    invariant(node.id);
-    invariant(!this.findNode(node.id));
+    invariant(node.id, 'ID is required');
+    invariant(!this.findNode(node.id), `node already exists: ${node.id}`);
     this._graph.nodes.push(node);
     return node;
   }

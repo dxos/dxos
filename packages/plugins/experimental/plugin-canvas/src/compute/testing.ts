@@ -52,6 +52,16 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
 export const createTest0 = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
+    const n = createSwitch({ id: 'a1', ...createLayout({ x: -4, y: -4 }) });
+    console.log('==', JSON.stringify(n, null, 2));
+    try {
+      model.createNode(n);
+    } catch (err) {
+      console.error(err);
+    }
+    console.log('!!');
+
+    // TODO(burdon): Converge Node and data object.
     // TODO(burdon): Converge Node and data object.
     // const data = createSwitch(createLayout({ x: -4, y: 0 }));
     // const a = model.addNode({ id: data.id, data });
@@ -95,6 +105,10 @@ export const createLogicCircuit = () => {
   });
 };
 
+/**
+ * Creates a circuit with control flow nodes (if/else) to demonstrate conditional routing of values.
+ * @returns A CanvasGraphModel containing switches, constants, if/else nodes, and beacons wired together.
+ */
 export const createControlCircuit = () => {
   const nodes: ComputeShape[] = [
     createSwitch({ id: 's', ...createLayout({ x: -9, y: -1 }) }),
@@ -131,21 +145,18 @@ export const createControlCircuit = () => {
   });
 };
 
-export const createTest3 = ({
-  cot = false,
-  history = false,
-  artifact = false,
-  db = false,
-  textToImage = false,
-  viewText = false,
-}: {
+type TestOptions = {
   db?: boolean;
   cot?: boolean;
   artifact?: boolean;
   history?: boolean;
   textToImage?: boolean;
   viewText?: boolean;
-} = {}) => {
+};
+
+export const createTest3 = (options: TestOptions = {}) => {
+  const { db, cot, artifact, history, textToImage, viewText } = options;
+
   const nodes: Shape[] = [
     createChat({ id: 'chat', ...createLayout({ x: -18, y: 0 }) }),
     ...(artifact
@@ -242,7 +253,7 @@ export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?:
     for (const shape of graph.nodes) {
       const node = createComputeNode(shape);
       machine.addNode(node);
-      shape.data.node = node.id;
+      shape.node = node.id;
     }
 
     for (const edge of graph.edges) {

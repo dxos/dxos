@@ -53,7 +53,7 @@ const inferType = (value: any): string | undefined => {
 
 export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
   const { node, runtime } = useComputeNodeState(shape);
-  const [type, setType] = useState(inferType(node.data.value) ?? types[0]);
+  const [type, setType] = useState(inferType(node.value) ?? types[0]);
   const inputRef = useRef<TextBoxControl>(null);
 
   const handleEnter = useCallback<NonNullable<TextBoxProps['onEnter']>>(
@@ -79,15 +79,15 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   return (
     <Box shape={shape} name={title} status={<TypeSelect value={type} onValueChange={setType} />}>
       {(type === 'string' || type === 'number') && (
-        <TextBox {...props} ref={inputRef} value={node.data.value} onEnter={handleEnter} />
+        <TextBox {...props} ref={inputRef} value={node.value} onEnter={handleEnter} />
       )}
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
           <Input.Root>
             <Input.Switch
-              checked={node.data.value}
+              checked={node.value}
               onCheckedChange={(value) => {
-                node.data.value = value;
+                node.value = value;
                 runtime.setOutput(DEFAULT_OUTPUT, value);
               }}
             />

@@ -20,7 +20,7 @@ export const isValidComputeNode = (type: string): boolean => {
 };
 
 export const createComputeNode = (shape: ComputeShape): ComputeNode => {
-  const type = shape.data.type ?? raise(new Error('Type not specified'));
+  const type = shape.type ?? raise(new Error('Type not specified'));
   const factory = nodeFactory[type as NodeType] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
 };
@@ -33,7 +33,7 @@ const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
   ['chat' as const]: () => createNode('chat'),
   ['constant' as const]: (shape) =>
     createNode('constant', {
-      value: (shape.data as ConstantShape).value,
+      value: (shape as ConstantShape).value,
     }),
   ['database' as const]: () => createNode('database'),
   ['gpt' as const]: () => createNode('gpt'),
