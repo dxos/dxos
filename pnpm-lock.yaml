@@ -6742,6 +6742,9 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
+      '@octokit/core':
+        specifier: ^4.0.4
+        version: 4.1.0(encoding@0.1.13)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7449,9 +7452,6 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../../ui/react-ui-text-tooltip
@@ -11900,9 +11900,6 @@ importers:
 
   packages/ui/react-ui-tabs:
     dependencies:
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
