@@ -169,7 +169,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
     return schema.annotations.bind(schema);
   }
 
-  public get pipe() {
+  public get pipe(): S.Schema.AnyNoContext['pipe'] {
     const schema = this._getSchema();
     return schema.pipe.bind(schema);
   }
