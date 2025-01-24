@@ -6,7 +6,8 @@
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext"
+    "module": "ESNext",
+    "outDir": "./dist/types"
   },
   "include": [
     "playwright",

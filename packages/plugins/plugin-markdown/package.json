@@ -59,9 +59,11 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.12.1"
+    "effect": "^3.12.1",
+    "react-dropzone": "^14.2.3"
   },
   "devDependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

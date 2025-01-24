@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "strict": false
   },
   "include": [

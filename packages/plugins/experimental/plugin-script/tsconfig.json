@@ -8,6 +8,7 @@
       "ESNext"
     ],
     "module": "ESNext",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -96,6 +97,9 @@
     },
     {
       "path": "../../../ui/react-ui-form"
+    },
+    {
+      "path": "../../../ui/react-ui-menu"
     },
     {
       "path": "../../../ui/react-ui-mosaic"

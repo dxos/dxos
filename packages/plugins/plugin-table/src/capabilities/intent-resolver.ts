@@ -14,9 +14,9 @@ import { TableAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
-    createResolver(TableAction.Create, async ({ space, name }) => {
+    createResolver(TableAction.Create, async ({ space, name, initialSchema }) => {
       const table = create(TableType, { name, threads: [] });
-      await initializeTable({ space, table });
+      await initializeTable({ space, table, initialSchema });
       return { data: { object: table } };
     }),
     createResolver(TableAction.DeleteColumn, ({ table, fieldId, deletionData }, undo) => {

@@ -9,6 +9,7 @@
     ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -105,6 +106,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-stack"

@@ -5,6 +5,7 @@
       "DOM",
       "ESNext"
     ],
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
@@ -77,6 +78,9 @@
     },
     {
       "path": "../react-ui-grid"
+    },
+    {
+      "path": "../react-ui-menu"
     },
     {
       "path": "../react-ui-searchlist"
