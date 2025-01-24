@@ -9,7 +9,7 @@ import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -24,12 +24,8 @@ export type BeaconShape = S.Schema.Type<typeof BeaconShape>;
 
 export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 
-export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape => ({
-  id,
-  type: 'beacon',
-  size: { width: 64, height: 64 },
-  ...rest,
-});
+export const createBeacon = (props: CreateBeaconProps) =>
+  createShape<BeaconShape>({ type: 'beacon', size: { width: 64, height: 64 }, ...props });
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   const { runtime } = useComputeNodeState(shape);

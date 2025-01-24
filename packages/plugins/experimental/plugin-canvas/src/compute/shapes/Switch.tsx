@@ -8,7 +8,7 @@ import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -23,16 +23,12 @@ export type SwitchShape = S.Schema.Type<typeof SwitchShape>;
 
 export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 
-export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape => ({
-  id,
-  type: 'switch',
-  size: { width: 64, height: 64 },
-  ...rest,
-});
+export const createSwitch = (props: CreateSwitchProps) =>
+  createShape<SwitchShape>({ type: 'switch', size: { width: 64, height: 64 }, ...props });
 
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
-  const [value, setValue] = useState(false);
   const { runtime } = useComputeNodeState(shape);
+  const [value, setValue] = useState(false);
   useEffect(() => {
     runtime.setOutput(DEFAULT_OUTPUT, value);
   }, [value]);

@@ -8,7 +8,7 @@ import { DEFAULT_INPUT, isImage } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
 import { useComputeNodeState } from '../hooks';
@@ -24,12 +24,8 @@ export type ViewShape = S.Schema.Type<typeof ViewShape>;
 
 export type CreateViewProps = CreateShapeProps<ViewShape>;
 
-export const createView = ({ id, ...rest }: CreateViewProps): ViewShape => ({
-  id,
-  type: 'view',
-  size: { width: 320, height: 512 },
-  ...rest,
-});
+export const createView = (props: CreateViewProps) =>
+  createShape<ViewShape>({ type: 'view', size: { width: 320, height: 512 }, ...props });
 
 export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   const { runtime } = useComputeNodeState(shape);

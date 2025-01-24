@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
 
 import { Box } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -127,17 +127,8 @@ const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'o
 
 export type CreateConstantProps = CreateShapeProps<ConstantShape>;
 
-export const createConstant = ({
-  id,
-  text,
-  size = { width: 192, height: 128 },
-  ...rest
-}: CreateConstantProps): ConstantShape => ({
-  id,
-  type: 'constant',
-  size,
-  ...rest,
-});
+export const createConstant = (props: CreateConstantProps) =>
+  createShape<ConstantShape>({ type: 'constant', size: { width: 192, height: 128 }, ...props });
 
 export const constantShape: ShapeDef<ConstantShape> = {
   type: 'constant',

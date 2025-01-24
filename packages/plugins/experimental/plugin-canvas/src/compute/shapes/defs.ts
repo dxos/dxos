@@ -31,7 +31,7 @@ export const parseAnchorId = (id: string): [PropertyKind | undefined, string] =>
 // Shapes
 //
 
-export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'size'>, 'type' | 'node'>;
+export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'id' | 'size'>, 'type' | 'node'>;
 
 export const ComputeShape = S.extend(
   Polygon,
@@ -42,3 +42,10 @@ export const ComputeShape = S.extend(
 );
 
 export type ComputeShape = S.Schema.Type<typeof ComputeShape>;
+
+export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { type: string }): S => {
+  return {
+    id: id ?? ObjectId.random(),
+    ...rest,
+  } as S;
+};

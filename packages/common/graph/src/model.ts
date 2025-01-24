@@ -165,7 +165,7 @@ export abstract class AbstractGraphModel<
     invariant(edge.target);
     if (!edge.id) {
       // TODO(burdon): Generate random id.
-      edge = { ...edge, id: createEdgeId(edge) };
+      edge = { id: createEdgeId(edge), ...edge };
     }
     invariant(!this.findNode(edge.id!));
     this._graph.edges.push(edge as Edge);

@@ -8,7 +8,7 @@ import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { useAudioStream, Chaos, shaderPresets } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -23,13 +23,13 @@ export type ScopeShape = S.Schema.Type<typeof ScopeShape>;
 
 export type CreateScopeProps = CreateShapeProps<ScopeShape>;
 
-export const createScope = ({ id, ...rest }: CreateScopeProps): ScopeShape => ({
-  id,
-  type: 'scope',
-  size: { width: 128, height: 128 },
-  classNames: 'rounded-full border-primary-800',
-  ...rest,
-});
+export const createScope = (props: CreateScopeProps) =>
+  createShape<ScopeShape>({
+    type: 'scope',
+    size: { width: 128, height: 128 },
+    classNames: 'rounded-full border-primary-800',
+    ...props,
+  });
 
 export const ScopeComponent = ({ shape }: ShapeComponentProps<ScopeShape>) => {
   const { runtime } = useComputeNodeState(shape);

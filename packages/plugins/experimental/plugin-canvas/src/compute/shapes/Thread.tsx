@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors, Box } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 const InputSchema = createInputSchema(GptMessage);
@@ -27,15 +27,10 @@ export type ThreadShape = S.Schema.Type<typeof ThreadShape>;
 
 export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 
-export const createThread = ({ id, ...rest }: CreateThreadProps): ThreadShape => ({
-  id,
-  type: 'thread',
-  size: { width: 384, height: 768 },
-  ...rest,
-});
+export const createThread = (props: CreateThreadProps) =>
+  createShape<ThreadShape>({ type: 'thread', size: { width: 384, height: 768 }, ...props });
 
 export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => {
-  // const items = shape.node.items.value;
   const items: any[] = [];
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

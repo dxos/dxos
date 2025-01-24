@@ -8,7 +8,7 @@ import { DEFAULT_INPUT, DefaultOutput, JsonTransformInput } from '@dxos/conducto
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, getHeight, Box } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { JsonFilter, createAnchorMap } from '../../components';
 import { useComputeNodeState } from '../hooks';
@@ -65,12 +65,8 @@ export const JsonTransformComponent = ({ shape, ...props }: JsonTransformCompone
 
 export type CreateJsonProps = CreateShapeProps<JsonShape> & { json?: any };
 
-export const createJson = ({ id, json, size = { width: 256, height: 256 }, ...rest }: CreateJsonProps): JsonShape => ({
-  id,
-  type: 'json',
-  size,
-  ...rest,
-});
+export const createJson = (props: CreateJsonProps) =>
+  createShape<JsonShape>({ type: 'json', size: { width: 256, height: 256 }, ...props });
 
 export const jsonShape: ShapeDef<JsonShape> = {
   type: 'json',
@@ -88,17 +84,12 @@ export const jsonShape: ShapeDef<JsonShape> = {
 
 export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape> & { json?: any };
 
-export const createJsonTransform = ({
-  id,
-  json,
-  size = { width: 128, height: getHeight(JsonTransformInput) },
-  ...rest
-}: CreateJsonTransformProps): JsonTransformShape => ({
-  id,
-  type: 'json-transform',
-  size,
-  ...rest,
-});
+export const createJsonTransform = (props: CreateJsonTransformProps) =>
+  createShape<JsonTransformShape>({
+    type: 'json-transform',
+    size: { width: 128, height: getHeight(JsonTransformInput) },
+    ...props,
+  });
 
 export const jsonTransformShape: ShapeDef<JsonTransformShape> = {
   type: 'json-transform',

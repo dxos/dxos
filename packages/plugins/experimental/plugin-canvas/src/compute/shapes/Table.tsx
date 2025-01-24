@@ -8,7 +8,7 @@ import { createInputSchema, createOutputSchema, GptMessage } from '@dxos/conduct
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, Box } from './common';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 
 const InputSchema = createInputSchema(GptMessage);
@@ -25,12 +25,8 @@ export type TableShape = S.Schema.Type<typeof TableShape>;
 
 export type CreateTableProps = CreateShapeProps<TableShape>;
 
-export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
-  id,
-  type: 'table',
-  size: { width: 320, height: 512 },
-  ...rest,
-});
+export const createTable = (props: CreateTableProps) =>
+  createShape<TableShape>({ type: 'table', size: { width: 320, height: 512 }, ...props });
 
 export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => {
   // const items = shape.node.items.value;

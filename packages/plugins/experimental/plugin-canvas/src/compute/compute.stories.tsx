@@ -28,6 +28,7 @@ import {
   createBasicTest,
   createTest3,
   createTest4,
+  createTransformTest,
 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
@@ -215,7 +216,28 @@ export const Default: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
+  },
+};
+
+export const Beacon: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'selected',
+    registry: new ShapeRegistry(computeShapes),
     ...createMachine(createBasicTest()),
+  },
+};
+
+export const Transform: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'selected',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createTransformTest()),
   },
 };
 

@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
 
@@ -22,12 +22,8 @@ export type TextToImageShape = S.Schema.Type<typeof TextToImageShape>;
 
 export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 
-export const createTextToImage = ({ id, ...rest }: CreateTextToImageProps): TextToImageShape => ({
-  id,
-  type: 'text-to-image',
-  size: { width: 128, height: 64 },
-  ...rest,
-});
+export const createTextToImage = (props: CreateTextToImageProps) =>
+  createShape<TextToImageShape>({ type: 'text-to-image', size: { width: 128, height: 64 }, ...props });
 
 export const TextToImageComponent = ({ shape }: ShapeComponentProps<TextToImageShape>) => {
   return <Box shape={shape} />;
