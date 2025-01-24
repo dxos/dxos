@@ -116,7 +116,7 @@ export const ThreadPlugin = () =>
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'comments',
-          label: ['open comments panel label', { ns: THREAD_PLUGIN }],
+          label: ['comments panel label', { ns: THREAD_PLUGIN }],
           icon: 'ph--chat-text--regular',
         }),
     }),
