@@ -16,6 +16,7 @@ import {
   DatabaseOutput,
   GptInput,
   GptOutput,
+  JsonTransformInput,
   ListInput,
   ListOutput,
   ReducerInput,
@@ -24,8 +25,7 @@ import {
   TriggerInput,
   TriggerOutput,
 } from './types';
-import { GptService } from '../services';
-import { EdgeClientService } from '../services/edge-client-service';
+import { GptService, EdgeClientService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -145,9 +145,10 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['json-transform' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
+    input: JsonTransformInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
-    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => {
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input, expression }) => {
+      console.log(input, expression);
       return Effect.succeed({ [DEFAULT_OUTPUT]: input });
     }),
   }),
@@ -186,7 +187,6 @@ export const registry: Record<NodeType, Executable> = {
         );
 
         const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
-
         return {
           id,
           items: decoded,

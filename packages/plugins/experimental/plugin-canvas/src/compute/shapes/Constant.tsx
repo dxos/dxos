@@ -130,7 +130,7 @@ export type CreateConstantProps = CreateShapeProps<ConstantShape>;
 export const createConstant = ({
   id,
   text,
-  size = { width: 128, height: 192 },
+  size = { width: 192, height: 128 },
   ...rest
 }: CreateConstantProps): ConstantShape => ({
   id,
@@ -143,7 +143,7 @@ export const constantShape: ShapeDef<ConstantShape> = {
   type: 'constant',
   name: 'Value',
   icon: 'ph--dots-three-circle--regular',
-  component: (props) => <ConstantComponent {...props} placeholder={'Text'} />,
+  component: (props) => <ConstantComponent {...props} placeholder={'Constant'} />,
   createShape: createConstant,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
   resizable: true,

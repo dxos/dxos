@@ -53,12 +53,13 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
 export const createBasicTest = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    model.createNode(createSwitch({ id: 'a', ...createLayout({ x: -4, y: 0 }) }));
-    model.createNode(createBeacon({ id: 'b', ...createLayout({ x: 4, y: 0 }) }));
-    model.createNode(createBeacon({ id: 'c', ...createLayout({ x: 4, y: 4 }) }));
-    model.createNode(createNot({ id: 'd', ...createLayout({ x: 0, y: 4 }) }));
-    model.addEdge({ source: 'a', target: 'b' });
-    model.addEdge({ source: 'd', target: 'c' });
+    // TODO(burdon): Auto-set id.
+    const a = model.createNode(createSwitch({ id: 'a', ...createLayout({ x: -4, y: 0 }) }));
+    const b = model.createNode(createBeacon({ id: 'b', ...createLayout({ x: 4, y: 0 }) }));
+    const c = model.createNode(createBeacon({ id: 'c', ...createLayout({ x: 4, y: 4 }) }));
+    const d = model.createNode(createNot({ id: 'd', ...createLayout({ x: 0, y: 4 }) }));
+    model.addEdge({ source: a.id, target: b.id });
+    model.addEdge({ source: d.id, target: c.id });
   });
 
   return model;
@@ -163,7 +164,7 @@ export const createTest3 = (options: TestOptions = {}) => {
       ? [
           createConstant({
             id: 'history',
-            ...createLayout({ x: -18, y: 9, width: 8, height: 4 }),
+            ...createLayout({ x: -18, y: 9, width: 8, height: 5 }),
             value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
           }),
         ]
