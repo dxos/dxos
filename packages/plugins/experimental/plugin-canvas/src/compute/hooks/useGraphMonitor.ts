@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type ComputeEdge, type ComputeGraphModel } from '@dxos/conductor';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeEdge, type ComputeGraphModel } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
@@ -17,14 +17,14 @@ import { type ComputeShape } from '../shapes';
 /**
  * Map canvas edge to compute edge.
  */
-export const mapEdge = (graph: CanvasGraphModel, { source, target, output, input }: Connection): ComputeEdge => {
+export const mapEdge = (
+  graph: CanvasGraphModel,
+  { source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }: Connection,
+): ComputeEdge => {
   const sourceNode = graph.findNode(source) as ComputeShape;
   const targetNode = graph.findNode(target) as ComputeShape;
-  console.log(sourceNode, targetNode, output, input);
   invariant(sourceNode?.node);
   invariant(targetNode?.node);
-  invariant(output);
-  invariant(input);
 
   return {
     id: ObjectId.random(),
@@ -71,10 +71,9 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
 
           // NOTE(ZaymonFC): Based on the information we have, this is O(edges to remove * compute edges).
           const edgeIds = subgraph.edges
-            .map((shapeEdge) => {
-              return model.edges.find(
-                (computeEdge) => computeEdge.input === shapeEdge.input && computeEdge.output === shapeEdge.output,
-              )?.id;
+            .map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => {
+              return model.edges.find((computeEdge) => computeEdge.input === input && computeEdge.output === output)
+                ?.id;
             })
             .filter(nonNullable);
 

@@ -19,7 +19,16 @@ import { type StateMachine, type StateMachineContext } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
-import { createMachine, createTest0 } from './testing';
+import {
+  createControlCircuit,
+  createGPTRealtime,
+  createLogicCircuit,
+  createMachine,
+  createServices,
+  createBasicTest,
+  createTest3,
+  createTest4,
+} from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
@@ -201,36 +210,36 @@ type Story = StoryObj<RenderProps>;
 
 export const Default: Story = {
   args: {
-    debug: true,
+    // debug: true,
     showGrid: false,
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest0()),
+    ...createMachine(createBasicTest()),
   },
 };
 
-// export const Logic: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'compute',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createLogicCircuit()),
-//   },
-// };
+export const Logic: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'compute',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createLogicCircuit()),
+  },
+};
 
-// export const Control: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'compute',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createControlCircuit()),
-//   },
-// };
+export const Control: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'compute',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createControlCircuit()),
+  },
+};
 
 // export const Ollama: Story = {
 //   args: {
@@ -244,43 +253,43 @@ export const Default: Story = {
 //   },
 // };
 
-// export const GPT: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     // sidebar: 'json',
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest3({ db: false, viewText: true, history: true }), createServices()),
-//   },
-// };
+export const GPT: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createTest3({ db: false, viewText: true, history: true }), createServices()),
+  },
+};
 
-// export const GPTImage: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     // sidebar: 'json',
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(
-//       createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }),
-//       createServices(),
-//     ),
-//   },
-// };
+export const GPTImage: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(
+      createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }),
+      createServices(),
+    ),
+  },
+};
 
-// export const GPTAudio: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest4(), createServices()),
-//   },
-// };
+export const GPTAudio: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createTest4(), createServices()),
+  },
+};
 
 // export const GPTArtifact: Story = {
 //   args: {
@@ -307,12 +316,12 @@ export const Default: Story = {
 //   },
 // };
 
-// export const GPTRealtime: Story = {
-//   args: {
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createGPTRealtime(), createServices()),
-//   },
-// };
+export const GPTRealtime: Story = {
+  args: {
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createGPTRealtime(), createServices()),
+  },
+};

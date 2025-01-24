@@ -26,6 +26,7 @@ import {
   createIfElse,
   createJson,
   createList,
+  createNot,
   createOr,
   createScope,
   createSwitch,
@@ -49,26 +50,15 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
   }
 };
 
-export const createTest0 = () => {
+export const createBasicTest = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {
-    const n = createSwitch({ id: 'a1', ...createLayout({ x: -4, y: -4 }) });
-    console.log('==', JSON.stringify(n, null, 2));
-    try {
-      model.createNode(n);
-    } catch (err) {
-      console.error(err);
-    }
-    console.log('!!');
-
-    // TODO(burdon): Converge Node and data object.
-    // TODO(burdon): Converge Node and data object.
-    // const data = createSwitch(createLayout({ x: -4, y: 0 }));
-    // const a = model.addNode({ id: data.id, data });
-    // TODO(burdon): Discriminated union of shapes?
-    // const a = model.createNode({ type: 'switch', pos: { x: -4, y: 0 } });
-    // const b = model.createNode({ type: 'beacon', pos: { x: +4, y: 0 } });
-    // model.createEdge({ node: a }, { node: b });
+    model.createNode(createSwitch({ id: 'a', ...createLayout({ x: -4, y: 0 }) }));
+    model.createNode(createBeacon({ id: 'b', ...createLayout({ x: 4, y: 0 }) }));
+    model.createNode(createBeacon({ id: 'c', ...createLayout({ x: 4, y: 4 }) }));
+    model.createNode(createNot({ id: 'd', ...createLayout({ x: 0, y: 4 }) }));
+    model.addEdge({ source: 'a', target: 'b' });
+    model.addEdge({ source: 'd', target: 'c' });
   });
 
   return model;
@@ -93,9 +83,8 @@ export const createLogicCircuit = () => {
   ];
 
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
+    nodes: nodes.map((data) => data),
     edges: edges.map(({ source, target, input, output = DEFAULT_OUTPUT }) => ({
-      // TODO(burdon): Clean-up.
       id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
       source,
       target,
@@ -134,7 +123,7 @@ export const createControlCircuit = () => {
   ];
 
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
+    nodes: nodes.map((data) => data),
     edges: edges.map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => ({
       id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
       source,
@@ -206,7 +195,7 @@ export const createTest3 = (options: TestOptions = {}) => {
   ];
 
   return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
+    nodes: nodes.map((data) => data),
     edges: edges.map(({ source, target, ...rest }) => ({
       id: createEdgeId({ source, target }),
       source,
@@ -217,24 +206,14 @@ export const createTest3 = (options: TestOptions = {}) => {
 };
 
 export const createTest4 = () => {
-  const nodes: ComputeShape[] = [
-    createAudio({ id: 'audio', ...createLayout({ x: -6, y: 0 }) }),
-    createScope({ id: 'scope', ...createLayout({ x: 6, y: 0 }) }),
-  ];
-
-  const edges: Omit<Connection, 'id'>[] = [
-    { source: 'audio', target: 'scope', input: DEFAULT_INPUT, output: DEFAULT_OUTPUT },
-  ];
-
-  return CanvasGraphModel.create<ComputeShape>({
-    nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, ...rest }) => ({
-      id: createEdgeId({ source, target }),
-      source,
-      target,
-      ...rest,
-    })),
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call(({ model }) => {
+    model.createNode(createAudio({ id: 'a', ...createLayout({ x: -4, y: -4 }) }));
+    model.createNode(createScope({ id: 'b', ...createLayout({ x: 4, y: -4 }) }));
+    model.addEdge({ source: 'a', target: 'b' });
   });
+
+  return model;
 };
 
 export const createGPTRealtime = () => {
@@ -244,6 +223,7 @@ export const createGPTRealtime = () => {
   });
 };
 
+// TODO(burdon): Reconcile with useGraphMonitor.
 export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
   const machine = new StateMachine(ComputeGraphModel.create());
   machine.setServices(services ?? {});

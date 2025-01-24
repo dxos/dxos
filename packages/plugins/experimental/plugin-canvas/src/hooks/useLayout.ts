@@ -31,12 +31,25 @@ export const useLayout = (): Layout => {
       ? dragging.shape
       : shape;
 
-  type LinkProps = { id: string; source: Polygon; target: Polygon; connection?: Connection };
-  const createPathForEdge = ({ id, source, target, connection }: LinkProps): PathShape | undefined => {
+  const createPathForEdge = ({
+    id,
+    source: sourceId,
+    target: targetId,
+    output,
+    input,
+  }: Connection): PathShape | undefined => {
+    const sourceNode = graph.getNode(sourceId);
+    const targetNode = graph.getNode(targetId);
+    if (!sourceNode || !targetNode || !isPolygon(sourceNode) || !isPolygon(targetNode)) {
+      return;
+    }
+
+    const source = getShape(sourceNode);
+    const target = getShape(targetNode);
     // TODO(burdon): Custom logic for function anchors. Generalize.
-    if (connection) {
-      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', connection.output));
-      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', connection.input));
+    if (output && input) {
+      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', output));
+      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', input));
       if (sourceAnchor && targetAnchor) {
         return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
       }
@@ -58,16 +71,8 @@ export const useLayout = (): Layout => {
   //
   // Edges.
   //
-  graph.edges.forEach(({ id, source: sourceId, target: targetId, data: connection }) => {
-    const sourceNode = graph.getNode(sourceId);
-    const targetNode = graph.getNode(targetId);
-    if (!sourceNode || !targetNode || !isPolygon(sourceNode.data) || !isPolygon(targetNode.data)) {
-      return;
-    }
-
-    const source = getShape(sourceNode.data);
-    const target = getShape(targetNode.data);
-    const path = createPathForEdge({ id, source, target, connection });
+  graph.edges.forEach((edge) => {
+    const path = createPathForEdge(edge);
     if (path) {
       shapes.push(path);
     }
@@ -108,7 +113,7 @@ export const useLayout = (): Layout => {
   //
   // Nodes.
   //
-  graph.nodes.forEach(({ data: shape }) => {
+  graph.nodes.forEach((shape) => {
     shapes.push(shape);
   });
 
@@ -166,14 +171,14 @@ const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: strin
 };
 
 export const getClosestAnchor = (
-  graph: ReadonlyGraphModel,
+  graph: ReadonlyGraphModel<Polygon>,
   registry: ShapeRegistry,
   pos: Point,
   test: (shape: Polygon, anchor: Anchor, d: number) => boolean,
 ): Extract<DragDropPayload, { type: 'anchor' }> | undefined => {
   let min = Infinity;
   let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
-  graph.nodes.forEach(({ data: shape }) => {
+  graph.nodes.forEach((shape) => {
     const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
     if (anchors) {
       for (const anchor of Object.values(anchors)) {
