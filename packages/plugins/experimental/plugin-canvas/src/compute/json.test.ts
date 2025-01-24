@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { BaseGraphEdge, BaseGraphNode } from '@dxos/graph';
 
-import { createTest3 } from './testing';
+import { createGptCircuit } from './testing';
 
 export const Shape = S.extend(
   BaseGraphNode,
@@ -28,7 +28,7 @@ export const Connection = S.extend(
 
 describe('Compute Graph JSON encoding', () => {
   test('compute graph toJSON', async ({ expect }) => {
-    const model = createTest3({ db: true, artifact: true, cot: true });
+    const model = createGptCircuit({ db: true, artifact: true, cot: true });
     const json = JSON.stringify(model.graph, null, 2);
     expect(json).to.exist;
   });

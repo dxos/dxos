@@ -19,8 +19,8 @@ import {
   GptInput,
   GptOutput,
   JsonTransformInput,
-  ListInput,
-  ListOutput,
+  QueueInput,
+  QueueOutput,
   ReducerInput,
   ReducerOutput,
   TextToImageOutput,
@@ -29,10 +29,10 @@ import {
 } from './types';
 import { GptService, EdgeClientService } from '../services';
 import {
-  AnyInput,
-  AnyOutput,
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
+  AnyInput,
+  AnyOutput,
   DefaultInput,
   DefaultOutput,
   type Executable,
@@ -50,6 +50,7 @@ import {
  */
 // TODO(burdon): Convert to DXNs.
 export type NodeType =
+  | 'text-to-image' // TODO(burdon): Rename 'ai-image-tool'.
   | 'and'
   | 'append'
   | 'audio'
@@ -64,16 +65,15 @@ export type NodeType =
   | 'if-else'
   | 'json'
   | 'json-transform'
-  | 'list'
   | 'map'
   | 'not'
   | 'or'
+  | 'queue'
   | 'rng'
   | 'reducer'
   | 'scope'
   | 'switch'
   | 'text'
-  | 'text-to-image'
   | 'trigger'
   | 'thread'
   | 'view';
@@ -187,9 +187,9 @@ export const registry: Record<NodeType, Executable> = {
     }),
   }),
 
-  ['list' as const]: defineComputeNode({
-    input: ListInput,
-    output: ListOutput,
+  ['queue' as const]: defineComputeNode({
+    input: QueueInput,
+    output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { subspaceTag, spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
@@ -204,8 +204,7 @@ export const registry: Record<NodeType, Executable> = {
 
         const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
         return {
-          id,
-          items: decoded,
+          [DEFAULT_OUTPUT]: decoded,
         };
       }),
     ),
@@ -217,19 +216,17 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         const { subspaceTag, spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
-        invariant(SpaceId.isValid(spaceId), 'Invalid space id');
-        invariant(ObjectId.isValid(queueId), 'Invalid queue id');
+        invariant(SpaceId.isValid(spaceId), 'invalid space id');
+        invariant(ObjectId.isValid(queueId), 'invalid queue id');
+
+        const mappedItems = items.map((item) => ({ ...item, id: item.id ?? ObjectId.random() }));
+        log.info('insert', { subspaceTag, spaceId, queueId, items: mappedItems });
 
         const edgeClientService = yield* EdgeClientService;
         const edgeClient = edgeClientService.getEdgeHttpClient();
-
-        const toInsert = items.map((item) => ({
-          ...item,
-          id: item.id ?? ObjectId.random(),
-        }));
-
-        log.info('insertIntoQueue', { subspaceTag, spaceId, queueId, items: toInsert });
-        yield* Effect.promise(() => edgeClient.insertIntoQueue(subspaceTag, spaceId, queueId, toInsert as unknown[]));
+        yield* Effect.promise(() =>
+          edgeClient.insertIntoQueue(subspaceTag, spaceId, queueId, mappedItems as unknown[]),
+        );
         return {};
       }),
     ),
@@ -341,9 +338,6 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(() => Effect.succeed({ [DEFAULT_OUTPUT]: [textToImageTool] })),
   }),
 };
-
-// TODO(dmaretskyi): Have to hardcode this since ai-service requires spaceId.
-const FAKE_SPACE_ID = SpaceId.random();
 
 const textToImageTool: LLMTool = {
   name: 'textToImage',

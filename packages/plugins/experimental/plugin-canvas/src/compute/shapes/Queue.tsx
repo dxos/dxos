@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { ListInput, ListOutput } from '@dxos/conductor';
+import { DEFAULT_OUTPUT, QueueInput, QueueOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,23 +15,23 @@ import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
-export const ListShape = S.extend(
+export const QueueShape = S.extend(
   ComputeShape,
   S.Struct({
-    type: S.Literal('list'),
+    type: S.Literal('queue'),
   }),
 );
 
-export type ListShape = S.Schema.Type<typeof ListShape>;
+export type QueueShape = S.Schema.Type<typeof QueueShape>;
 
-export type CreateListProps = CreateShapeProps<ListShape>;
+export type CreateQueueProps = CreateShapeProps<QueueShape>;
 
-export const createList = (props: CreateListProps) =>
-  createShape<ListShape>({ type: 'list', size: { width: 256, height: 512 }, ...props });
+export const createQueue = (props: CreateQueueProps) =>
+  createShape<QueueShape>({ type: 'queue', size: { width: 256, height: 512 }, ...props });
 
-export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
+export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
   const { runtime } = useComputeNodeState(shape);
-  const items = runtime.outputs.items?.type === 'executed' ? runtime.outputs.items.value : [];
+  const items = runtime.outputs[DEFAULT_OUTPUT]?.type === 'executed' ? runtime.outputs[DEFAULT_OUTPUT].value : [];
 
   const handleAction: BoxActionHandler = (action) => {
     if (action === 'run') {
@@ -43,14 +43,14 @@ export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
     <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
       <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].map((item, i) => (
-          <ListItem key={i} classNames='p-1 px-2' item={item} />
+          <QueueItem key={i} classNames='p-1 px-2' item={item} />
         ))}
       </div>
     </Box>
   );
 };
 
-export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+export const QueueItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
     return <div className={mx(classNames, 'whitespace-pre-wrap')}>{item}</div>;
   }
@@ -67,12 +67,12 @@ export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
   );
 };
 
-export const listShape: ShapeDef<ListShape> = {
-  type: 'list',
-  name: 'List',
-  icon: 'ph--list-dashes--regular',
-  component: ListComponent,
-  createShape: createList,
-  getAnchors: (shape) => createFunctionAnchors(shape, ListInput, ListOutput),
+export const queueShape: ShapeDef<QueueShape> = {
+  type: 'queue',
+  name: 'Queue',
+  icon: 'ph--queue--regular',
+  component: QueueComponent,
+  createShape: createQueue,
+  getAnchors: (shape) => createFunctionAnchors(shape, QueueInput, QueueOutput),
   resizable: true,
 };

@@ -19,11 +19,11 @@ export const Scalar = S.Union(S.String, S.Number, S.Boolean);
 export const ConstantOutput = S.Struct({ [DEFAULT_OUTPUT]: Scalar });
 
 //
-// List
+// Queue
 //
 
-export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
-export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+export const QueueInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
+export const QueueOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Message) });
 
 //
 // Function

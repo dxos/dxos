@@ -21,18 +21,23 @@ import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
   createControlCircuit,
-  createGPTRealtime,
+  createGPTRealtimeCircuit,
   createLogicCircuit,
   createMachine,
   createServices,
-  createBasicTest,
-  createTest3,
-  createTest4,
-  createTransformTest,
+  createBasicCircuit,
+  createGptCircuit,
+  createAudioCircuit,
+  createTransformCircuit,
 } from './testing';
-import { Editor, type EditorController, type EditorRootProps } from '../components';
-import { JsonFilter, ShapeRegistry } from '../components';
-import { Container } from '../components/Container';
+import {
+  Container,
+  Editor,
+  type EditorController,
+  type EditorRootProps,
+  JsonFilter,
+  ShapeRegistry,
+} from '../components';
 import { type GraphMonitor } from '../hooks';
 import { useSelection } from '../testing';
 
@@ -226,7 +231,7 @@ export const Beacon: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createBasicTest()),
+    ...createMachine(createBasicCircuit()),
   },
 };
 
@@ -237,7 +242,7 @@ export const Transform: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTransformTest()),
+    ...createMachine(createTransformCircuit()),
   },
 };
 
@@ -283,7 +288,7 @@ export const GPT: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest3({ db: false, view: true, history: true }), createServices()),
+    ...createMachine(createGptCircuit({ db: false, view: true, history: true }), createServices()),
   },
 };
 
@@ -295,7 +300,7 @@ export const GPTImage: Story = {
     // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(
-      createTest3({ db: false, view: true, history: true, image: true, artifact: true }),
+      createGptCircuit({ db: false, view: true, history: true, image: true, artifact: true }),
       createServices(),
     ),
   },
@@ -308,7 +313,7 @@ export const GPTAudio: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest4(), createServices()),
+    ...createMachine(createAudioCircuit(), createServices()),
   },
 };
 
@@ -337,6 +342,6 @@ export const GPTRealtime: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGPTRealtime(), createServices()),
+    ...createMachine(createGPTRealtimeCircuit(), createServices()),
   },
 };

@@ -26,6 +26,7 @@ export const createComputeNode = (shape: ComputeShape): ComputeNode => {
 };
 
 const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
+  ['text-to-image' as const]: () => createNode('text-to-image'),
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
   ['audio' as const]: () => createNode('audio'),
@@ -43,16 +44,15 @@ const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
   ['function' as const]: () => createNode('function'),
   ['json' as const]: () => createNode('json'),
   ['json-transform' as const]: () => createNode('json-transform'),
-  ['list' as const]: () => createNode('list'),
   ['map' as const]: () => createNode('map'),
   ['not' as const]: () => createNode('not'),
   ['or' as const]: () => createNode('or'),
+  ['queue' as const]: () => createNode('queue'),
   ['rng' as const]: () => createNode('rng'),
   ['reducer' as const]: () => createNode('reducer'),
   ['scope' as const]: () => createNode('scope'),
   ['switch' as const]: () => createNode('switch'),
   ['text' as const]: () => createNode('text'),
-  ['text-to-image' as const]: () => createNode('text-to-image'),
   ['thread' as const]: () => createNode('thread'),
   ['trigger' as const]: () => createNode('trigger'),
   ['view' as const]: () => createNode('view'),

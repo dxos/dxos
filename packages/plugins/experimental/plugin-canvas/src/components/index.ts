@@ -9,6 +9,7 @@ export * from './defs';
 export * from './styles';
 
 export * from './Canvas';
+export * from './Container';
 export * from './Editor';
 export * from './JsonFilter';
 export * from './TextBox';

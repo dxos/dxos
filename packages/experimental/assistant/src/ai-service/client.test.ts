@@ -154,6 +154,7 @@ describe('AI Service Client', () => {
         },
       ],
     });
+
     for await (const event of stream) {
       log.info('event', event);
     }

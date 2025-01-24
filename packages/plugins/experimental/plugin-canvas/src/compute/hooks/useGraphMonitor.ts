@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeEdge, type ComputeGraphModel } from '@dxos/conductor';
+import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeEdge } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
@@ -83,4 +83,22 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
       },
     };
   }, [model]);
+};
+
+export const createComputeGraph = (graph: CanvasGraphModel<ComputeShape>) => {
+  const computeGraph = ComputeGraphModel.create();
+
+  for (const shape of graph.nodes) {
+    if (isValidComputeNode(shape.type)) {
+      const node = createComputeNode(shape);
+      computeGraph.addNode(node);
+      shape.node = node.id;
+    }
+  }
+
+  for (const edge of graph.edges) {
+    computeGraph.addEdge(mapEdge(graph, edge));
+  }
+
+  return computeGraph;
 };
