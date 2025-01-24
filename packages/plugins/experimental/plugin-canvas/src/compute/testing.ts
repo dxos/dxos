@@ -8,7 +8,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { type GraphEdge, createEdgeId } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
@@ -160,7 +160,7 @@ export const createTest3 = ({
           createConstant({
             id: 'history',
             ...createLayout({ x: -18, y: 9, width: 8, height: 4 }),
-            value: `dxn:queue:${SpaceId.random()}:${ObjectId.random()}`,
+            value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
           }),
         ]
       : []),

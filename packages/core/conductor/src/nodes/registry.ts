@@ -166,13 +166,15 @@ export const registry: Record<NodeType, Executable> = {
     output: ListOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const { spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
+        const { subspaceTag, spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
         invariant(SpaceId.isValid(spaceId), 'Invalid space id');
         invariant(ObjectId.isValid(queueId), 'Invalid queue id');
 
         const edgeClientService = yield* EdgeClientService;
         const edgeClient = edgeClientService.getEdgeHttpClient();
-        const { objects: messages } = yield* Effect.promise(() => edgeClient.queryQueue(spaceId, { queueId }));
+        const { objects: messages } = yield* Effect.promise(() =>
+          edgeClient.queryQueue(subspaceTag, spaceId, { queueId }),
+        );
 
         const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
 
@@ -189,7 +191,7 @@ export const registry: Record<NodeType, Executable> = {
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
-        const { spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
+        const { subspaceTag, spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
         invariant(SpaceId.isValid(spaceId), 'Invalid space id');
         invariant(ObjectId.isValid(queueId), 'Invalid queue id');
 
@@ -201,8 +203,8 @@ export const registry: Record<NodeType, Executable> = {
           id: item.id ?? ObjectId.random(),
         }));
 
-        log.info('insertIntoQueue', { spaceId, queueId, items: toInsert });
-        yield* Effect.promise(() => edgeClient.insertIntoQueue(spaceId, queueId, toInsert as unknown[]));
+        log.info('insertIntoQueue', { subspaceTag, spaceId, queueId, items: toInsert });
+        yield* Effect.promise(() => edgeClient.insertIntoQueue(subspaceTag, spaceId, queueId, toInsert as unknown[]));
         return {};
       }),
     ),

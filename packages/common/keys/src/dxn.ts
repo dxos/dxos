@@ -40,7 +40,9 @@ export class DXN {
      */
     ECHO: 'echo',
     /**
-     * dxn:queue:<space id>:<queue id>[:object id]
+     * dxn:queue:<subspace tag>:<space id>:<queue id>[:object id]
+     * dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
+     * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
      */
     QUEUE: 'queue',
   });
@@ -140,9 +142,10 @@ export class DXN {
       return undefined;
     }
 
+    const [type, version] = this.#parts;
     return {
-      type: this.#parts[0],
-      version: this.#parts[1] as string | undefined,
+      type,
+      version: version as string | undefined,
     };
   }
 
@@ -151,9 +154,10 @@ export class DXN {
       return undefined;
     }
 
+    const [spaceId, echoId] = this.#parts;
     return {
-      spaceId: this.#parts[0] as SpaceId | undefined,
-      echoId: this.#parts[1],
+      spaceId: spaceId as SpaceId | undefined,
+      echoId,
     };
   }
 
@@ -162,10 +166,15 @@ export class DXN {
       return undefined;
     }
 
+    const [subspaceTag, spaceId, queueId, objectId] = this.#parts;
+    if (typeof queueId !== 'string') {
+      return undefined;
+    }
     return {
-      spaceId: this.#parts[0] as SpaceId,
-      queueId: this.#parts[1],
-      objectId: this.#parts[2] as string | undefined,
+      subspaceTag,
+      spaceId: spaceId as SpaceId,
+      queueId,
+      objectId: objectId as string | undefined,
     };
   }
 
@@ -203,6 +212,7 @@ export declare namespace DXN {
   };
 
   export type QueueDXN = {
+    subspaceTag: string;
     spaceId: SpaceId;
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.
@@ -213,3 +223,8 @@ export declare namespace DXN {
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
  */
 export const LOCAL_SPACE_TAG = '@';
+
+export const QueueSubspaceTags = Object.freeze({
+  DATA: 'data',
+  TRACE: 'trace',
+});

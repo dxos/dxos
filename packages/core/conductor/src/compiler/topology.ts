@@ -95,7 +95,6 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
 
   // Process edges.
   for (const edge of graph.edges) {
-    console.log('##', JSON.stringify(edge));
     const sourceNode = topology.nodes.find((node) => node.id === edge.source);
     const targetNode = topology.nodes.find((node) => node.id === edge.target);
     if (sourceNode == null || targetNode == null) {

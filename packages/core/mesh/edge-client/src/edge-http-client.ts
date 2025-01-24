@@ -112,7 +112,12 @@ export class EdgeHttpClient {
     return this._call(path, { ...args, body, method: 'PUT' });
   }
 
-  public async queryQueue(spaceId: SpaceId, query: QueueQuery, args?: EdgeHttpGetArgs): Promise<QueryResult> {
+  public async queryQueue(
+    subspaceTag: string,
+    spaceId: SpaceId,
+    query: QueueQuery,
+    args?: EdgeHttpGetArgs,
+  ): Promise<QueryResult> {
     const { queueId, ...rest } = query;
     const queryParams = new URLSearchParams();
     if (query.after != null) {
@@ -130,19 +135,24 @@ export class EdgeHttpClient {
     if (query.objectIds != null) {
       queryParams.set('objectIds', query.objectIds.join(','));
     }
-    return this._call(`/spaces/${spaceId}/queue/${queueId}/query?${queryParams.toString()}`, {
+    return this._call(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query?${queryParams.toString()}`, {
       ...args,
       method: 'GET',
     });
   }
 
   public async insertIntoQueue(
+    subspaceTag: string,
     spaceId: SpaceId,
     queueId: ObjectId,
     objects: unknown[],
     args?: EdgeHttpGetArgs,
   ): Promise<void> {
-    return this._call(`/spaces/${spaceId}/queue/${queueId}`, { ...args, body: { objects }, method: 'POST' });
+    return this._call(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, {
+      ...args,
+      body: { objects },
+      method: 'POST',
+    });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {

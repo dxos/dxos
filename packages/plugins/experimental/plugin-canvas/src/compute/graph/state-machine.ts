@@ -133,7 +133,11 @@ export class StateMachine extends Resource {
   toJSON() {
     return {
       graph: this._graph,
-      state: this._runtimeStateInputs,
+      forcedOutputs: this._forcedOutputs,
+      state: {
+        inputs: this._runtimeStateInputs,
+        outputs: this._runtimeStateOutputs,
+      },
     };
   }
 
@@ -214,6 +218,7 @@ export class StateMachine extends Resource {
   }
 
   async evalNode(nodeId: string) {
+    console.log('eval node', { nodeId });
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
