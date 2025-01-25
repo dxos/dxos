@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
@@ -16,16 +15,15 @@ import {
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   AlertDialog,
-  Button,
   Dialog as NaturalDialog,
   Main,
   Popover,
   useOnTransition,
-  useTranslation,
   type MainProps,
+  useMediaQuery,
 } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
-import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
+import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ComplementarySidebar, type ComplementarySidebarProps } from './ComplementarySidebar';
@@ -35,7 +33,6 @@ import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
-import { DECK_PLUGIN } from '../../meta';
 import { type Overscroll } from '../../types';
 import { calculateOverscroll } from '../../util';
 import { useDeckContext } from '../DeckContext';
@@ -66,7 +63,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     popoverContent,
     popoverAnchorId,
   } = context;
-  const { t } = useTranslation(DECK_PLUGIN);
+  const [isLg] = useMediaQuery('lg');
   const { plankSizing } = useDeckContext();
   const pluginManager = usePluginManager();
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
@@ -158,16 +155,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           complementarySidebarOpen={context.complementarySidebarOpen}
           onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
         >
-          {/* Notch */}
-          <Main.Notch classNames='z-[21]'>
-            <Surface role='notch-start' />
-            <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
-              <span className='sr-only'>{t('open navigation sidebar label')}</span>
-              <MenuIcon weight='light' className={getSize(5)} />
-            </Button>
-            <Surface role='notch-end' />
-          </Main.Notch>
-
           {/* Left sidebar. */}
           <Sidebar />
 
@@ -241,8 +228,8 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
             </Main.Content>
           )}
 
-          {/* Footer status. */}
-          <StatusBar showHints={showHints} />
+          {/* Status bar. */}
+          {isLg && <StatusBar showHints={showHints} />}
         </Main.Root>
       )}
 
