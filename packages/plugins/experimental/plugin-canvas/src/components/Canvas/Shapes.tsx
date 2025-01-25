@@ -5,7 +5,7 @@
 import React, { forwardRef, type HTMLAttributes, useCallback } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Markers, useProjection } from '@dxos/react-ui-canvas';
+import { Markers, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DEFS_ID, MARKER_PREFIX, ShapeComponent, type ShapeComponentProps } from './Shape';
@@ -19,7 +19,7 @@ export type ShapesProps = ThemedClassName<{ layout: Layout }> & HTMLAttributes<H
 export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
   ({ classNames, layout: { shapes }, ...props }, forwardRef) => {
     const { debug, selection } = useEditorContext();
-    const { styles: projectionStyles } = useProjection();
+    const { styles: projectionStyles } = useCanvasContext();
 
     const handleSelection = useCallback<NonNullable<ShapeComponentProps['onSelect']>>(
       (id, options) => {

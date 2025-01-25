@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Dimension, type Point, useProjection } from '@dxos/react-ui-canvas';
+import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
@@ -171,7 +171,7 @@ export class DragMonitor {
 // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
 export const useDragMonitor = () => {
   const { graph, selection, dragMonitor, registry, actionHandler } = useEditorContext();
-  const { root, projection } = useProjection();
+  const { root, projection } = useCanvasContext();
   const snapPoint = useSnap();
 
   const state = dragMonitor.state();

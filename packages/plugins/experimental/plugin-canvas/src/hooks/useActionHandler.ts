@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DATA_TEST_ID, ProjectionMapper, useProjection, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
+import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
 import { isNotFalsy } from '@dxos/util';
 
 import { useEditorContext } from './useEditorContext';
@@ -32,7 +32,7 @@ export const useActionHandler = () => {
     setActionHandler,
     repaint,
   } = useEditorContext();
-  const { root, projection, setProjection } = useProjection();
+  const { root, projection, setProjection } = useCanvasContext();
 
   useEffect(() => {
     const actionHandler: ActionHandler = async (action) => {

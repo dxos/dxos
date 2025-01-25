@@ -9,7 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useProjection, type Dimension } from '@dxos/react-ui-canvas';
+import { useCanvasContext, type Dimension } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
@@ -43,7 +43,7 @@ export type AnchorProps = ThemedClassName<{
  */
 export const AnchorComponent = ({ classNames, type, shape, anchor, size = defaultAnchorSize }: AnchorProps) => {
   const { dragMonitor } = useEditorContext();
-  const { root, projection } = useProjection();
+  const { root, projection } = useCanvasContext();
 
   const [active, setActive] = useState(false);
 

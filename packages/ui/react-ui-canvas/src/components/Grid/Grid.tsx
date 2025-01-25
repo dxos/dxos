@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { useForwardedRef, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useProjection } from '../../hooks';
+import { useCanvasContext } from '../../hooks';
 import { type Point } from '../../types';
 import { GridPattern, testId } from '../../util';
 
@@ -82,6 +82,6 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
 
 // TODO(burdon): Use id of parent canvas.
 export const Grid = (props: GridProps) => {
-  const { scale, offset } = useProjection();
+  const { scale, offset } = useCanvasContext();
   return <GridComponent {...props} scale={scale} offset={offset} />;
 };

@@ -24,6 +24,6 @@ export type CanvasContext = ProjectionState & {
 // TODO(burdon): Use radix?
 export const CanvasContext = createContext<CanvasContext | null>(null);
 
-export const useProjection = (): CanvasContext => {
+export const useCanvasContext = (): CanvasContext => {
   return useContext(CanvasContext) ?? raise(new Error('Missing CanvasContext'));
 };

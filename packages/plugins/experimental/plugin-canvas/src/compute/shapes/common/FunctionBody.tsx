@@ -6,7 +6,7 @@ import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import { AST, type S } from '@dxos/echo-schema';
-import { useProjection } from '@dxos/react-ui-canvas';
+import { useCanvasContext } from '@dxos/react-ui-canvas';
 
 import { getParentShapeElement, createAnchors, rowHeight } from '../../../components';
 import { type Polygon, type Shape } from '../../../types';
@@ -32,7 +32,7 @@ export const FunctionBody = ({
   outputSchema = VoidOutput,
   ...props
 }: FunctionBodyProps) => {
-  const { scale } = useProjection();
+  const { scale } = useCanvasContext();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
 

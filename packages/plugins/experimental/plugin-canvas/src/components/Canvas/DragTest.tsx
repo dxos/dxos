@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { type Dimension, useProjection, type Point } from '@dxos/react-ui-canvas';
+import { type Dimension, useCanvasContext, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { getInputPoint, pointSubtract } from '../../layout';
@@ -18,7 +18,7 @@ import { getInputPoint, pointSubtract } from '../../layout';
 const size: Dimension = { width: 128, height: 128 };
 
 export const DragTest = () => {
-  const { projection } = useProjection();
+  const { projection } = useCanvasContext();
 
   const draggingRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Point>(projection.toScreen([{ x: 0, y: 0 }])[0]);

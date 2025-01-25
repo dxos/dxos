@@ -93,7 +93,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
     // Repaint.
     const [, forceUpdate] = useState({});
-    const repaint = useCallback(() => forceUpdate({}), []);
+    const repaint = useCallback(() => {}, []);
 
     // Canvas layout.
     const overlayRef = useRef<SVGSVGElement>(null);
@@ -174,6 +174,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
             ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
             classNames,
           )}
+          style={{ contain: 'layout' }}
         >
           {children}
         </div>

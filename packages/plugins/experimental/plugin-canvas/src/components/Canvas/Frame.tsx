@@ -20,7 +20,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
-import { useProjection } from '@dxos/react-ui-canvas';
+import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { AnchorComponent } from './Anchor';
@@ -56,7 +56,7 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { shape } = baseProps;
   const { dragMonitor, registry, editing, setEditing } = useEditorContext();
-  const { root, projection, styles: projectionStyles } = useProjection();
+  const { root, projection, styles: projectionStyles } = useCanvasContext();
 
   const dragging = dragMonitor.state(
     (state) => (state.type === 'frame' || state.type === 'resize') && state.shape.id === shape.id,

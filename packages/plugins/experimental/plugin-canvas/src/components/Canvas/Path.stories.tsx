@@ -7,7 +7,7 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { Canvas, type CanvasController, Grid, useProjection, useWheel } from '@dxos/react-ui-canvas';
+import { Canvas, type CanvasController, Grid, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useRope } from '../../hooks';
@@ -29,7 +29,7 @@ const Render = () => {
 
 // TODO(burdon): Create <spring /> elements with common simulation.
 const Rope = () => {
-  const { styles } = useProjection();
+  const { styles } = useCanvasContext();
   useWheel();
 
   const g = useRef<SVGGElement>(null);

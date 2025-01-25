@@ -10,7 +10,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Canvas } from './Canvas';
-import { useProjection, useWheel } from '../../hooks';
+import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
@@ -43,7 +43,7 @@ const Content = () => {
 };
 
 const Item = (p: Point) => {
-  const { projection } = useProjection();
+  const { projection } = useCanvasContext();
   const r = (projection.scale * size) / 2;
   const [{ x, y }] = projection.toScreen([p]);
   const rect = {

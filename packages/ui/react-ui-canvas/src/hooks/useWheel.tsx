@@ -6,7 +6,7 @@ import { bindAll } from 'bind-event-listener';
 import { useEffect } from 'react';
 
 import { getZoomTransform } from './projection';
-import { useProjection } from './useProjection';
+import { useCanvasContext } from './useProjection';
 import { getRelativePoint } from '../util';
 
 export type WheelOptions = {
@@ -21,7 +21,7 @@ const defaultOptions: WheelOptions = {
  * Handle wheel events to update the transform state (zoom and offset).
  */
 export const useWheel = (options: WheelOptions = defaultOptions) => {
-  const { root, setProjection } = useProjection();
+  const { root, setProjection } = useCanvasContext();
   useEffect(() => {
     if (!root) {
       return;

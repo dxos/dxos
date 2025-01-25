@@ -3,10 +3,10 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { type PropsWithChildren, useEffect, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
+import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Frame } from './Frame';
@@ -38,7 +38,7 @@ export const Canvas = ({ children }: PropsWithChildren) => {
 
 export const CanvasContent = ({ children }: PropsWithChildren) => {
   const { id, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
-  const { root, styles: projectionStyles, scale, offset } = useProjection();
+  const { root, styles: projectionStyles, scale, offset } = useCanvasContext();
   const shapesRef = useRef<HTMLDivElement>(null);
 
   const dragging = dragMonitor.state((state) => state.type === 'tool').value;
