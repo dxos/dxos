@@ -3,8 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React from 'react';
-import { type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
@@ -149,6 +148,10 @@ const DefaultFallback = ({ error }: { error: Error }) => {
 };
 
 const composeContexts = (contexts: Capabilities.ReactContext[]) => {
+  if (contexts.length === 0) {
+    return ({ children }: PropsWithChildren) => <>{children}</>;
+  }
+
   return topologicalSort(contexts)
     .map(({ context }) => context)
     .reduce((Acc, Next) => ({ children }) => (
