@@ -288,7 +288,7 @@ export const GPT: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGptCircuit({ db: false, view: true, history: true }), createServices()),
+    ...createMachine(createGptCircuit({ history: true }), createServices()),
   },
 };
 
@@ -299,10 +299,7 @@ export const GPTImage: Story = {
     snapToGrid: false,
     // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(
-      createGptCircuit({ db: false, view: true, history: true, image: true, artifact: true }),
-      createServices(),
-    ),
+    ...createMachine(createGptCircuit({ history: true, image: true, artifact: true }), createServices()),
   },
 };
 

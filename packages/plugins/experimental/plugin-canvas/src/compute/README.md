@@ -3,6 +3,20 @@
 - This folder represents a "compute plugin" for the Canvas component.
 - It defines a set of Shapes that implement a state machine.
 
+### Notes (burdon)
+
+- Text/markdown view (parse cot, etc.)
+- Surface view
+- Prompt with handlebar variables (dynamic schema)
+
+- Function node (call script)
+- Chess GPT tool
+- Chess surface storybook
+- Prompt to generate and process FEN?
+- Group nodes
+- Markdown node
+- Auto layout
+
 ### Notes (dmaretskyi)
 
 - Consider how different types of edges affect computations:

@@ -13,6 +13,7 @@ import { CanvasGraphModel } from '../../types';
 import { StateMachine, type Services } from '../graph';
 import { createComputeGraph } from '../hooks';
 import {
+  type ComputeShape,
   createAnd,
   createAppend,
   createAudio,
@@ -33,19 +34,9 @@ import {
   createScope,
   createSwitch,
   createTextToImage,
-  createView,
-  type ComputeShape,
+  createSurface,
+  createText,
 } from '../shapes';
-
-const position = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
-  const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
-  const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
-  if (width && height) {
-    return { center: { x, y }, size: width && height ? { width, height } : undefined };
-  } else {
-    return { center: { x, y } };
-  }
-};
 
 export const createMachine = (graph: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
   const computeGraph = createComputeGraph(graph);
@@ -65,6 +56,7 @@ export const createBasicCircuit = () => {
     const b = model.createNode(createBeacon(position({ x: 4, y: 0 })));
     const c = model.createNode(createBeacon(position({ x: 4, y: 4 })));
     const d = model.createNode(createNot(position({ x: 0, y: 4 })));
+
     model.createEdge({ source: a.id, target: b.id });
     model.createEdge({ source: d.id, target: c.id });
   });
@@ -79,12 +71,13 @@ export const createTransformCircuit = () => {
     const b = model.createNode(createConstant({ value: '$[?(@ > 0.5)]', ...position({ x: -8, y: 2 }) }));
     const c = model.createNode(createJsonTransform(position({ x: 0, y: 0 })));
     const d = model.createNode(createBeacon(position({ x: 8, y: 0 })));
-    model.createNode(
-      createNote({ id: ObjectId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }),
-    );
-    model.createEdge({ source: a.id, target: c.id });
-    model.createEdge({ source: b.id, target: c.id, input: 'expression' });
-    model.createEdge({ source: c.id, target: d.id });
+
+    model.builder
+      // TODO(burdon): Make id optional.
+      .createNode(createNote({ id: ObjectId.random(), text: 'Random number generator', ...position({ x: 0, y: -6 }) }))
+      .createEdge({ source: a.id, target: c.id })
+      .createEdge({ source: b.id, target: c.id, input: 'expression' })
+      .createEdge({ source: c.id, target: d.id });
   });
 
   return model;
@@ -100,20 +93,17 @@ export const createLogicCircuit = () => {
     const c1 = model.createNode(createOr(position({ x: 4, y: 0 })));
     const d1 = model.createNode(createBeacon(position({ x: 8, y: 0 })));
 
-    model.createEdge({ source: a1.id, target: b1.id, input: 'a' });
-    model.createEdge({ source: a2.id, target: b1.id, input: 'b' });
-    model.createEdge({ source: b1.id, target: c1.id, input: 'a' });
-    model.createEdge({ source: a3.id, target: c1.id, input: 'b' });
-    model.createEdge({ source: c1.id, target: d1.id });
+    model.builder
+      .createEdge({ source: a1.id, target: b1.id, input: 'a' })
+      .createEdge({ source: a2.id, target: b1.id, input: 'b' })
+      .createEdge({ source: b1.id, target: c1.id, input: 'a' })
+      .createEdge({ source: a3.id, target: c1.id, input: 'b' })
+      .createEdge({ source: c1.id, target: d1.id });
   });
 
   return model;
 };
 
-/**
- * Creates a circuit with control flow nodes (if/else) to demonstrate conditional routing of values.
- * @returns A CanvasGraphModel containing switches, constants, if/else nodes, and beacons wired together.
- */
 export const createControlCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call((builder) => {
@@ -146,7 +136,6 @@ export const createControlCircuit = () => {
 export const createGptCircuit = (options: {
   db?: boolean;
   cot?: boolean;
-  view?: boolean;
   image?: boolean;
   history?: boolean;
   artifact?: boolean;
@@ -154,8 +143,11 @@ export const createGptCircuit = (options: {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call((builder) => {
     const gpt = model.createNode(createGpt(position({ x: 0, y: -13 })));
-    const prompt = model.createNode(createChat(position({ x: -18, y: -3 })));
-    builder.createEdge({ source: prompt.id, target: gpt.id, input: 'prompt' });
+    const chat = model.createNode(createChat(position({ x: -18, y: -2 })));
+    const text = model.createNode(createText(position({ x: 19, y: 2, width: 10, height: 12 })));
+    builder
+      .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
+      .createEdge({ source: gpt.id, target: text.id, output: 'text' });
 
     if (options.history) {
       const queue = model.createNode(
@@ -175,33 +167,29 @@ export const createGptCircuit = (options: {
     }
 
     if (options.artifact) {
-      const artifact = model.createNode(createView(position({ x: 19, y: -11, width: 10, height: 10 })));
+      // TODO(burdon): Change to template.
       const prompt = model.createNode(
         createConstant({
           value: ARTIFACTS_SYSTEM_PROMPT,
           ...position({ x: -18, y: -11, width: 8, height: 10 }),
         }),
       );
+      const artifact = model.createNode(createSurface(position({ x: 19, y: -11, width: 10, height: 10 })));
 
       builder
         .createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' })
         .createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
     }
 
-    if (options.view) {
-      const text = model.createNode(createView(position({ x: 19, y: 2, width: 10, height: 12 })));
-      builder.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+    if (options.cot) {
+      const cot = model.createNode(createText(position({ x: 0, y: -10, width: 8, height: 10 })));
+      builder.createEdge({ source: gpt.id, target: cot.id, output: 'cot' });
     }
 
     if (options.db) {
       const database = model.createNode(createDatabase(position({ x: -10, y: 4 })));
       builder.createEdge({ source: database.id, target: gpt.id, input: 'tools' });
     }
-
-    // if (options.cot) {
-    //   const cot = model.createNode(createQueue(createLayout({ x: 0, y: -10, width: 8, height: 10 })));
-    //   builder.createEdge({ source: gpt.id, target: cot.id, output: 'cot' });
-    // }
 
     if (options.image) {
       const tool = model.createNode(createTextToImage(position({ x: -8, y: -15 })));
@@ -227,4 +215,18 @@ export const createAudioCircuit = () => {
   });
 
   return model;
+};
+
+//
+// Utils
+//
+
+const position = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
+  const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
+  const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
+  if (width && height) {
+    return { center: { x, y }, size: width && height ? { width, height } : undefined };
+  } else {
+    return { center: { x, y } };
+  }
 };

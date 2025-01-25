@@ -34,7 +34,6 @@ import {
   AnyInput,
   AnyOutput,
   DefaultInput,
-  DefaultOutput,
   type Executable,
   NotExecuted,
   VoidInput,
@@ -65,18 +64,18 @@ export type NodeType =
   | 'if-else'
   | 'json'
   | 'json-transform'
-  | 'map'
   | 'not'
   | 'or'
   | 'queue'
   | 'rng'
   | 'reducer'
   | 'scope'
+  | 'surface'
   | 'switch'
+  | 'template'
   | 'text'
   | 'trigger'
-  | 'thread'
-  | 'view';
+  | 'thread';
 
 export const isFalsy = (value: any) =>
   value === 'false' ||
@@ -115,7 +114,7 @@ export const registry: Record<NodeType, Executable> = {
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
   }),
 
-  ['text' as const]: defineComputeNode({
+  ['template' as const]: defineComputeNode({
     input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
@@ -145,10 +144,9 @@ export const registry: Record<NodeType, Executable> = {
     output: VoidOutput,
   }),
 
-  ['view' as const]: defineComputeNode({
+  ['text' as const]: defineComputeNode({
     input: DefaultInput,
-    output: DefaultOutput,
-    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
+    output: VoidOutput,
   }),
 
   ['json' as const]: defineComputeNode({
@@ -169,14 +167,14 @@ export const registry: Record<NodeType, Executable> = {
     }),
   }),
 
+  ['surface' as const]: defineComputeNode({
+    input: DefaultInput,
+    output: VoidOutput,
+  }),
+
   ['reducer' as const]: defineComputeNode({
     input: ReducerInput,
     output: ReducerOutput,
-  }),
-
-  ['map' as const]: defineComputeNode({
-    input: AnyInput,
-    output: VoidOutput,
   }),
 
   ['thread' as const]: defineComputeNode({

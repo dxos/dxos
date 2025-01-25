@@ -18,19 +18,19 @@ import {
   ifShape,
   jsonShape,
   jsonTransformShape,
-  mapShape,
   notShape,
   orShape,
   queueShape,
   randomShape,
   reducerShape,
   scopeShape,
+  surfaceShape,
   switchShape,
-  textShape,
+  templateShape,
   threadShape,
   textToImageShape,
   triggerShape,
-  viewShape,
+  textShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
 import { noteShape } from '../shapes';
@@ -44,7 +44,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
     shapes: [
       //
       constantShape,
-      textShape,
+      templateShape,
       chatShape,
       switchShape,
       audioShape,
@@ -84,11 +84,11 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       appendShape,
       queueShape,
       threadShape,
-      viewShape,
+      textShape,
+      surfaceShape,
       counterShape,
       beaconShape,
       scopeShape,
-      mapShape,
     ],
   },
   {

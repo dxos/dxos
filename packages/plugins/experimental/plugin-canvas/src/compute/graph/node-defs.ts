@@ -26,7 +26,7 @@ export const createComputeNode = (shape: ComputeShape): ComputeNode => {
 };
 
 const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
-  ['text-to-image' as const]: () => createNode('text-to-image'),
+  ['text-to-image' as const]: () => createNode('text-to-image'), // TODO(burdon): Rename ai-impage-tool
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
   ['audio' as const]: () => createNode('audio'),
@@ -44,18 +44,18 @@ const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
   ['function' as const]: () => createNode('function'),
   ['json' as const]: () => createNode('json'),
   ['json-transform' as const]: () => createNode('json-transform'),
-  ['map' as const]: () => createNode('map'),
   ['not' as const]: () => createNode('not'),
   ['or' as const]: () => createNode('or'),
   ['queue' as const]: () => createNode('queue'),
   ['rng' as const]: () => createNode('rng'),
   ['reducer' as const]: () => createNode('reducer'),
   ['scope' as const]: () => createNode('scope'),
+  ['surface' as const]: () => createNode('surface'),
   ['switch' as const]: () => createNode('switch'),
+  ['template' as const]: () => createNode('template'),
   ['text' as const]: () => createNode('text'),
   ['thread' as const]: () => createNode('thread'),
   ['trigger' as const]: () => createNode('trigger'),
-  ['view' as const]: () => createNode('view'),
 };
 
 const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({

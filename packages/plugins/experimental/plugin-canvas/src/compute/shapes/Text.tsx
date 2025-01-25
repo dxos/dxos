@@ -2,26 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
-import { DEFAULT_OUTPUT } from '@dxos/conductor';
+import { DEFAULT_INPUT, isImage } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './common';
+import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
-import {
-  type ShapeComponentProps,
-  type ShapeDef,
-  TextBox,
-  type TextBoxControl,
-  type TextBoxProps,
-} from '../../components';
+import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
 import { useComputeNodeState } from '../hooks';
-
-//
-// Data
-//
 
 export const TextShape = S.extend(
   ComputeShape,
@@ -32,81 +22,53 @@ export const TextShape = S.extend(
 
 export type TextShape = S.Schema.Type<typeof TextShape>;
 
-export const ChatShape = S.extend(
-  ComputeShape,
-  S.Struct({
-    type: S.Literal('chat'),
-  }),
-);
+export type CreateTextProps = CreateShapeProps<TextShape>;
 
-export type ChatShape = S.Schema.Type<typeof ChatShape>;
+export const createText = (props: CreateTextProps) =>
+  createShape<TextShape>({ type: 'text', size: { width: 320, height: 512 }, ...props });
 
-//
-// Component
-//
-
-export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps & { title?: string; chat?: boolean };
-
-export const TextComponent = ({ shape, title, chat, ...props }: TextComponentProps) => {
+export const TextComponent = ({ shape }: ShapeComponentProps<TextShape>) => {
   const { runtime } = useComputeNodeState(shape);
-  const [reset, setReset] = useState({});
-  const inputRef = useRef<TextBoxControl>(null);
+  const input = runtime.inputs[DEFAULT_INPUT];
+  const value = input?.type === 'executed' ? input.value : 0;
 
-  const handleEnter: TextBoxProps['onEnter'] = (text) => {
-    const value = text.trim();
-    if (value.length) {
-      runtime.setOutput(DEFAULT_OUTPUT, value);
-      if (chat) {
-        setReset({});
-      }
+  if (isImage(value)) {
+    return (
+      <Box shape={shape}>
+        {(value.source && (
+          <img
+            className='grow object-cover'
+            src={`data:image/jpeg;base64,${value.source.data}`}
+            alt={value.prompt ?? `Generated image [id=${value.id}]`}
+          />
+        )) || (
+          <div className='p-2'>
+            Unresolved image of {value.prompt} [id={value.id}]
+          </div>
+        )}
+      </Box>
+    );
+  }
 
-      inputRef.current?.focus();
+  const handleAction: BoxActionHandler = (action) => {
+    if (action === 'run') {
+      runtime.evalNode();
     }
   };
 
   return (
-    <Box shape={shape} name={title}>
-      <TextBox
-        ref={inputRef}
-        reset={reset}
-        onEnter={handleEnter}
-        // value={chat ? '' : shape.node.getText()}
-        {...props}
-      />
+    <Box shape={shape} onAction={handleAction}>
+      <TextBox value={value} />
     </Box>
   );
 };
-
-//
-// Defs
-//
-
-export type CreateTextProps = CreateShapeProps<TextShape> & { text?: string };
-
-export const createText = (props: CreateTextProps) =>
-  createShape<TextShape>({ type: 'text', size: { width: 256, height: 128 }, ...props });
-
-export type CreateChatProps = CreateShapeProps<TextShape>;
-
-export const createChat = (props: CreateChatProps) =>
-  createShape<ChatShape>({ type: 'chat', size: { width: 256, height: 128 }, ...props });
 
 export const textShape: ShapeDef<TextShape> = {
   type: 'text',
   name: 'Text',
   icon: 'ph--article--regular',
-  component: (props) => <TextComponent {...props} placeholder={'Text'} />,
+  component: TextComponent,
   createShape: createText,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-  resizable: true,
-};
-
-export const chatShape: ShapeDef<TextShape> = {
-  type: 'chat',
-  name: 'Chat',
-  icon: 'ph--textbox--regular',
-  component: (props) => <TextComponent {...props} title={'Prompt'} placeholder={'Message'} chat />,
-  createShape: createText,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
   resizable: true,
 };
