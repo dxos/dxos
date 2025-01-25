@@ -84,9 +84,6 @@ const createToolbar = ({
   return { nodes, edges };
 };
 
-//
-// Root
-//
 const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps) => {
   const menuCreator = useCallback(() => createToolbar(props), [props]);
 

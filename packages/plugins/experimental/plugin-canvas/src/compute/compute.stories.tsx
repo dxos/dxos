@@ -7,8 +7,10 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
+import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode } from '@dxos/conductor';
+import { type ComputeGraphModel, ComputeNode, isImage } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
@@ -198,6 +200,21 @@ const Render = ({
   );
 };
 
+const TestComponent = ({ role, data }: any) => {
+  const { value } = data;
+  if (isImage(value)) {
+    return (
+      <img
+        className='grow object-cover'
+        src={`data:image/jpeg;base64,${value.source.data}`}
+        alt={value.prompt ?? `Generated image [id=${value.id}]`}
+      />
+    );
+  }
+
+  return <div>TestComponent</div>;
+};
+
 const meta: Meta<EditorRootProps> = {
   title: 'plugins/plugin-canvas/compute',
   component: Editor.Root,
@@ -207,6 +224,18 @@ const meta: Meta<EditorRootProps> = {
     withTheme,
     withAttention,
     withLayout({ fullscreen: true, tooltips: true }),
+    withPluginManager({
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'test',
+            role: 'canvas-node',
+            component: ({ role, data }) => <TestComponent role={role} data={data} />,
+          }),
+        ),
+      ],
+    }),
   ],
 };
 

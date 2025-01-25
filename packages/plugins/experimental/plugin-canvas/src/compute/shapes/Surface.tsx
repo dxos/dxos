@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { DEFAULT_INPUT, isImage } from '@dxos/conductor';
+import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box, type BoxActionHandler } from './common';
@@ -31,25 +31,7 @@ export const createSurface = (props: CreateSurfaceProps) =>
 export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
-  const value = input?.type === 'executed' ? input.value : 0;
-
-  if (isImage(value)) {
-    return (
-      <Box shape={shape}>
-        {(value.source && (
-          <img
-            className='grow object-cover'
-            src={`data:image/jpeg;base64,${value.source.data}`}
-            alt={value.prompt ?? `Generated image [id=${value.id}]`}
-          />
-        )) || (
-          <div className='p-2'>
-            Unresolved image of {value.prompt} [id={value.id}]
-          </div>
-        )}
-      </Box>
-    );
-  }
+  const value = input?.type === 'executed' ? input.value : null;
 
   const handleAction: BoxActionHandler = (action) => {
     if (action === 'run') {
@@ -59,7 +41,7 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
 
   return (
     <Box shape={shape} onAction={handleAction}>
-      <Surface />
+      {value !== null && <Surface role='canvas-node' data={{ value }} />}
     </Box>
   );
 };
