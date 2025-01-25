@@ -68,8 +68,8 @@ export type ChessboardProps = {
 };
 
 /**
- * https://www.npmjs.com/package/chess.js
- * https://www.npmjs.com/package/react-chessboard
+ * https://github.com/jhlywa/chess.js
+ * https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
  */
 export const Chessboard = ({
   model: { chess },
@@ -79,7 +79,7 @@ export const Chessboard = ({
   pieces = ChessPieces.STANDARD,
   onUpdate,
 }: ChessboardProps) => {
-  const { ref, width } = useResizeDetector();
+  const { ref, width, height } = useResizeDetector();
   const style = boardStyles[boardStyle];
 
   const handleDrop = (source: any, target: any, piece: any) => {
@@ -99,19 +99,23 @@ export const Chessboard = ({
     }
   };
 
-  // https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
   return (
-    <div ref={ref} className='flex grow aspect-square overflow-hidden'>
-      <ReactChessboard
-        boardWidth={width}
-        position={chess.fen()}
-        boardOrientation={orientation === 'w' ? 'white' : 'black'}
-        arePiecesDraggable={!readonly}
-        onPieceDrop={handleDrop}
-        customPieces={chessPieces[pieces]}
-        {...style}
-        {...props}
-      />
+    <div ref={ref} className='flex w-full h-full justify-center items-center'>
+      <div
+        className='flex w-full justify-center'
+        style={{ width: width && height ? Math.min(width, height) : undefined }}
+      >
+        <ReactChessboard
+          position={chess.fen()}
+          boardWidth={width && height ? Math.min(width, height) : undefined}
+          boardOrientation={orientation === 'w' ? 'white' : 'black'}
+          arePiecesDraggable={!readonly}
+          customPieces={chessPieces[pieces]}
+          onPieceDrop={handleDrop}
+          {...style}
+          {...props}
+        />
+      </div>
     </div>
   );
 };

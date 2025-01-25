@@ -120,6 +120,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../plugin-chess"
+    },
+    {
       "path": "../../plugin-client"
     },
     {

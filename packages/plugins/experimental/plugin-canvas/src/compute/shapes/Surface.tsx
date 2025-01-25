@@ -31,7 +31,8 @@ export const createSurface = (props: CreateSurfaceProps) =>
 export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
-  const value = input?.type === 'executed' ? input.value : null;
+  const value =
+    input?.type === 'executed' ? input.value : 'r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1 b - c3 0 19';
 
   const handleAction: BoxActionHandler = (action) => {
     if (action === 'run') {
