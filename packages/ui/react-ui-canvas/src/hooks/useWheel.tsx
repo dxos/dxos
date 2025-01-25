@@ -6,7 +6,7 @@ import { bindAll } from 'bind-event-listener';
 import { useEffect } from 'react';
 
 import { getZoomTransform } from './projection';
-import { useCanvasContext } from './useProjection';
+import { useCanvasContext } from './useCanvasContext';
 import { getRelativePoint } from '../util';
 
 export type WheelOptions = {
