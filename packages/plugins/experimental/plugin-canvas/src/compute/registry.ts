@@ -61,10 +61,11 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       functionShape,
       databaseShape,
       textToImageShape,
+      appendShape,
     ],
   },
   {
-    title: 'Logic',
+    title: 'Operations',
     shapes: [
       //
       ifShape,
@@ -73,6 +74,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       orShape,
       notShape,
       reducerShape,
+      jsonTransformShape,
     ],
   },
   {
@@ -80,8 +82,6 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
     shapes: [
       //
       jsonShape,
-      jsonTransformShape,
-      appendShape,
       queueShape,
       threadShape,
       textShape,
