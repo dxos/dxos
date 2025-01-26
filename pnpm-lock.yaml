@@ -4732,8 +4732,8 @@ importers:
         specifier: ^2.0.0
         version: 2.1.0
       chess.js:
-        specifier: ^1.0.0-beta.8
-        version: 1.0.0-beta.8
+        specifier: ^1.0.0
+        version: 1.0.0
       cross-fetch:
         specifier: ^3.1.5
         version: 3.1.5(encoding@0.1.13)
@@ -6027,6 +6027,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugin-chess
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -6064,8 +6067,8 @@ importers:
         specifier: 0.165.0
         version: 0.165.0
       chess.js:
-        specifier: ^1.0.0-beta.8
-        version: 1.0.0-beta.8
+        specifier: ^1.0.0
+        version: 1.0.0
       ollama:
         specifier: ^0.5.11
         version: 0.5.12
@@ -7277,8 +7280,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       chess.js:
-        specifier: ^1.0.0-beta.8
-        version: 1.0.0-beta.8
+        specifier: ^1.0.0
+        version: 1.0.0
       react-chessboard:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@22.10.2)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -22875,8 +22878,8 @@ packages:
     resolution: {integrity: sha512-9LDHQy1jHc/eXMzPN6/oah9Qba4CjdKECC7YYEE/2zge/tsGwt19NQp5NFdfd5Lx6TZlyC5SXNQkG41P9r6XDg==}
     engines: {node: '>= 0.6'}
 
-  chess.js@1.0.0-beta.8:
-    resolution: {integrity: sha512-UngzUMXmexcQaQA/UEJuJj5vatEy34awYMD5YMOp/FW3HM7lqspp7ymYs5JAmquDq0WROtURRfSffoa/vrCCyw==}
+  chess.js@1.0.0:
+    resolution: {integrity: sha512-zHaSRub6xkUXxvX9lqgovwRiBvbOmVCTh47rZ0I/HVyCiNc0T5bVLwzshL5X6JtrP+rN/CTmIxdpFr943eP97Q==}
 
   chevrotain@6.5.0:
     resolution: {integrity: sha512-BwqQ/AgmKJ8jcMEjaSnfMybnKMgGTrtDKowfTP3pX4jwVy0kNjRsT/AP6h+wC3+3NC+X8X15VWBnTCQlX+wQFg==}
@@ -47750,7 +47753,7 @@ snapshots:
       lodash: 4.17.21
       parse5: 3.0.3
 
-  chess.js@1.0.0-beta.8: {}
+  chess.js@1.0.0: {}
 
   chevrotain@6.5.0:
     dependencies:

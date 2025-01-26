@@ -5,15 +5,12 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { Chess } from 'chess.js';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode, isImage } from '@dxos/conductor';
+import { type ComputeGraphModel, ComputeNode } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
-import { Chessboard } from '@dxos/plugin-chess';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -33,6 +30,7 @@ import {
   createGptCircuit,
   createAudioCircuit,
   createTransformCircuit,
+  capabilities,
 } from './testing';
 import {
   Container,
@@ -202,38 +200,6 @@ const Render = ({
   );
 };
 
-const isChessGame = (value: any) => {
-  if (typeof value !== 'string') {
-    return false;
-  }
-  try {
-    new Chess(value).fen();
-    return true;
-  } catch (err) {
-    return false;
-  }
-};
-
-const TestComponent = ({ data }: any) => {
-  const { value } = data;
-
-  if (isImage(value)) {
-    return (
-      <img
-        className='grow object-cover'
-        src={`data:image/jpeg;base64,${value.source.data}`}
-        alt={value.prompt ?? `Generated image [id=${value.id}]`}
-      />
-    );
-  }
-
-  if (isChessGame(value)) {
-    return <Chessboard model={{ chess: new Chess(value) }} />;
-  }
-
-  return <JsonFilter data={data} />;
-};
-
 const meta: Meta<EditorRootProps> = {
   title: 'plugins/plugin-canvas/compute',
   component: Editor.Root,
@@ -243,18 +209,7 @@ const meta: Meta<EditorRootProps> = {
     withTheme,
     withAttention,
     withLayout({ fullscreen: true, tooltips: true }),
-    withPluginManager({
-      capabilities: [
-        contributes(
-          Capabilities.ReactSurface,
-          createSurface({
-            id: 'test',
-            role: 'canvas-node',
-            component: ({ role, data }) => <TestComponent role={role} data={data} />,
-          }),
-        ),
-      ],
-    }),
+    withPluginManager({ capabilities }),
   ],
 };
 

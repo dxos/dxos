@@ -130,6 +130,9 @@
     },
     {
       "path": "../../plugin-space"
+    },
+    {
+      "path": "../plugin-map"
     }
   ]
 }
