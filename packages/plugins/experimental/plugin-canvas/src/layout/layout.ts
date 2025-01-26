@@ -16,20 +16,16 @@ import {
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
+import { type Graph, type GraphModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
-import { type Shape } from '../types';
+import { type Intersection } from './util';
+import { CanvasGraphModel, type Polygon } from '../types';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.
 //  - Inherits always goes up.
-
-// TODO(burdon): Util.
-export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
-  ? First & Intersection<Rest>
-  : unknown;
 
 export type LayoutOptions = {
   layout: LayoutKind;
@@ -45,12 +41,11 @@ export const defaultLayoutOptions: LayoutOptions = {
   shapeSize: { width: 128, height: 64 },
 };
 
-// TODO(burdon): N should be an referenceable object.
-export const doLayout = async <N extends object>(
-  data: GraphModel<GraphNode<N>>,
+export const doLayout = async (
+  data: GraphModel,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
-): Promise<GraphModel<GraphNode<Shape>>> => {
-  const graph = new GraphModel<GraphNode<Shape>>();
+): Promise<CanvasGraphModel> => {
+  const graph = CanvasGraphModel.create();
   const opt = defaultsDeep({}, options, defaultLayoutOptions);
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
@@ -64,7 +59,6 @@ export const doLayout = async <N extends object>(
 
   const layout = createLayout(opt.layout ?? defaultLayoutOptions.layout, defaultOptions);
   const { nodes, edges } = await layout.execute(toLayoutGraph(data.graph));
-
   for (const {
     id,
     data: { x, y },
@@ -75,23 +69,22 @@ export const doLayout = async <N extends object>(
       // const label = node.data.text,
       const label = (node.data as any).name;
       const center = { x, y };
-      graph.addNode({
+      const data: Polygon = {
         id: node.id,
-        data: {
-          id: node.id,
-          type: 'rectangle',
-          text: label,
-          center,
-          size: { ...opt.shapeSize },
-          // TODO(burdon): Object.
-          // data: node.data,
-        },
-      });
+        type: 'rectangle',
+        text: label,
+        center,
+        size: { ...opt.shapeSize },
+        // TODO(burdon): Object.
+        // data: node.data,
+      };
+
+      graph.addNode(data);
     }
   }
 
-  for (const edge of edges) {
-    graph.addEdge(edge);
+  for (const { id, source, target } of edges) {
+    graph.addEdge({ id: id as string, source: source as string, target: target as string });
   }
 
   return graph;

@@ -4,20 +4,20 @@
 
 import React, {
   type CSSProperties,
+  type HTMLAttributes,
   type PropsWithChildren,
   forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
   useState,
-  type HTMLAttributes,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { defaultOffset, CanvasContext, ProjectionMapper, type ProjectionState } from '../../hooks';
+import { defaultOrigin, CanvasContext, ProjectionMapper, type ProjectionState } from '../../hooks';
 
 export interface CanvasController {
   setProjection(projection: ProjectionState): Promise<void>;
@@ -30,14 +30,17 @@ export type CanvasProps = ThemedClassName<PropsWithChildren<Partial<ProjectionSt
  * Manages CSS projection.
  */
 export const Canvas = forwardRef<CanvasController, CanvasProps>(
-  ({ children, classNames, scale: _scale = 1, offset: _offset = defaultOffset, ...props }, forwardedRef) => {
+  ({ children, classNames, scale: _scale = 1, offset: _offset = defaultOrigin, ...props }, forwardedRef) => {
     // Size.
     const { ref, width = 0, height = 0 } = useResizeDetector();
+
+    // Ready when initially resized.
+    const [ready, setReady] = useState(false);
 
     // Projection.
     const [{ scale, offset }, setProjection] = useState<ProjectionState>({ scale: _scale, offset: _offset });
     useEffect(() => {
-      if (width && height && offset === defaultOffset) {
+      if (width && height && offset === defaultOrigin) {
         setProjection({ scale, offset: { x: width / 2, y: height / 2 } });
       }
     }, [width, height, scale, offset]);
@@ -46,6 +49,9 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     const projection = useMemo(() => new ProjectionMapper(), []);
     useEffect(() => {
       projection.update({ width, height }, scale, offset);
+      if (offset !== defaultOrigin) {
+        setReady(true);
+      }
     }, [projection, scale, offset, width, height]);
 
     // CSS transforms.
@@ -72,10 +78,10 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
 
     return (
       <CanvasContext.Provider
-        value={{ root: ref.current, width, height, scale, offset, styles, projection, setProjection }}
+        value={{ root: ref.current, ready, width, height, scale, offset, styles, projection, setProjection }}
       >
         <div role='none' {...props} className={mx('absolute inset-0 overflow-hidden', classNames)} ref={ref}>
-          {children}
+          {ready ? children : null}
         </div>
       </CanvasContext.Provider>
     );

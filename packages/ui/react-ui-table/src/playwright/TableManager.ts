@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Locator, type Page } from '@playwright/test';
+import { Locator, type Page } from '@playwright/test';
 
 import { DxGridManager } from '@dxos/lit-grid/testing';
 

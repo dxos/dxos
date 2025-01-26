@@ -127,8 +127,12 @@ describe('RtcTransportChannel', () => {
 
   const handleClose = (channel: RtcTransportChannel) => {
     let emitted = false;
-    channel.closed.on(() => (emitted = true));
-    return { expectWasEmitted: async () => expect(emitted).toBeTruthy() };
+    channel.closed.on(() => {
+      emitted = true;
+    });
+    return {
+      expectWasEmitted: async () => expect(emitted).toBeTruthy(),
+    };
   };
 
   const createChannelController = () => {

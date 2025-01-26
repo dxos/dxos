@@ -15,6 +15,7 @@ export const useAsyncState = <T>(
   useEffect(() => {
     const t = setTimeout(async () => {
       const data = await cb();
+      // TODO(dmaretskyi): Potential race condition here.
       setValue(data);
     });
 

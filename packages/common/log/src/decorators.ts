@@ -54,6 +54,59 @@ export const createMethodLogDecorator =
     Object.defineProperty(descriptor.value, 'name', { value: methodName + '$log' });
   };
 
+export const createFunctionLogDecorator =
+  (log: LogMethods) =>
+  <F extends (...args: any[]) => any>(
+    name: string,
+    fn: F,
+    opts: { transformOutput?: (result: ReturnType<F>) => Promise<any> | any } = {},
+  ): F => {
+    const decoratedFn = function (this: any, ...args: any) {
+      const combinedMeta = {
+        F: '',
+        L: 0,
+      } as CallMetadata;
+
+      const formattedArgs = args.map((arg: any) => inspect(arg, false, 1, true)).join(', ');
+
+      try {
+        const startTime = performance.now();
+        const result = fn.apply(this, args);
+
+        let transformedResult = result;
+        if (opts.transformOutput) {
+          if (isThenable(result)) {
+            transformedResult = result.then(opts.transformOutput as any);
+          } else {
+            transformedResult = opts.transformOutput(result);
+          }
+        }
+
+        if (isThenable(transformedResult)) {
+          const id = nextPromiseId++;
+          logAsyncBegin(log, name, formattedArgs, id, combinedMeta);
+          transformedResult.then(
+            (resolvedValue) => {
+              logAsyncResolved(log, name, resolvedValue, id, startTime, combinedMeta);
+            },
+            (err) => {
+              logAsyncRejected(log, name, err, id, startTime, combinedMeta);
+            },
+          );
+        } else {
+          logSyncCall(log, name, formattedArgs, transformedResult, combinedMeta);
+        }
+
+        return result;
+      } catch (err: any) {
+        logSyncError(log, name, formattedArgs, err, combinedMeta);
+        throw err;
+      }
+    };
+    Object.defineProperty(decoratedFn, 'name', { value: name + '$log' });
+    return decoratedFn as F;
+  };
+
 const isThenable = (obj: any): obj is Promise<unknown> => obj && typeof obj.then === 'function';
 
 const logSyncCall = (

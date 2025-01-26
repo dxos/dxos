@@ -5,56 +5,57 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { S, getTypename } from '@dxos/echo-schema';
-import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
+import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
+import { createGraph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from '@dxos/schema/testing';
+import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
-import { RectangleShape, type Shape } from '../../types';
-import { KeyboardContainer } from '../KeyboardContainer';
+import { useSelection } from '../../testing';
+import { type CanvasGraphModel, RectangleShape } from '../../types';
+import { DragTest } from '../Canvas/DragTest';
+import { Container } from '../Container';
 
 const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
-type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 'json' | 'selected' };
-
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
 
-const AttentionContainer = ({ id, children, ...props }: AttendableContainerProps) => (
-  <AttendableContainer {...props} id={id}>
-    <KeyboardContainer id={id}>{children}</KeyboardContainer>
-  </AttendableContainer>
-);
+type RenderProps = EditorRootProps &
+  PropsWithChildren<{
+    init?: boolean;
+    sidebar?: 'json' | 'selected';
+    computeGraph?: CanvasGraphModel;
+  }>;
 
-const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
+const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
+  const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
-  // Do layout.
-  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>>>();
+  // Layout.
   useEffect(() => {
     if (!space || !init) {
       return;
     }
 
+    // Load objects.
     const t = setTimeout(async () => {
       const { objects } = await space.db
         .query((object: ReactiveEchoObject<any>) => types.some((type) => type.typename === getTypename(object)))
         .run();
+
       const model = await doLayout(createGraph(objects));
       setGraph(model);
     });
@@ -62,47 +63,39 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
     return () => clearTimeout(t);
   }, [space, init]);
 
-  // selection.
-  const selection = useMemo(() => new SelectionModel(), []);
-  const [selected, setSelected] = useState();
-  useEffect(() => {
-    return selection.selected.subscribe((selected) => {
-      if (selection.size) {
-        const [id] = selected.values();
-        setSelected(graph?.getNode(id)?.data);
-      } else {
-        setSelected(undefined);
-      }
-    });
-  }, [graph, selection]);
+  // Selection.
+  const [selection, selected] = useSelection(graph);
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
-      <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
+      <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
-          <Editor.Canvas />
+          <Editor.Canvas>{children}</Editor.Canvas>
           <Editor.UI />
         </Editor.Root>
-      </AttentionContainer>
-      {/* TODO(burdon): Autosave saves too early (before blur event). */}
-      {sidebar === 'selected' && selected && (
-        <Form
-          schema={RectangleShapeWithoutRef}
-          values={selected}
-          Custom={{
-            // TODO(burdon): Replace by type.
-            ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
-            ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
-          }}
-          autoSave
-        />
-      )}
-      {sidebar === 'json' && (
-        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ graph }, null, 2)}
-          </SyntaxHighlighter>
-        </AttentionContainer>
+      </Container>
+
+      {/* TODO(burdon): Need to set schema based on what is selected. */}
+      {sidebar && (
+        <Container id='sidebar' classNames='flex grow overflow-hidden'>
+          {sidebar === 'selected' && selected && (
+            <Form
+              schema={RectangleShapeWithoutRef}
+              values={selected}
+              Custom={{
+                // TODO(burdon): Replace by type.
+                ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
+                ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+              }}
+            />
+          )}
+
+          {sidebar === 'json' && (
+            <SyntaxHighlighter language='json' classNames='text-xs'>
+              {JSON.stringify({ graph: graph?.graph }, null, 2)}
+            </SyntaxHighlighter>
+          )}
+        </Container>
       )}
     </div>
   );
@@ -116,11 +109,25 @@ const meta: Meta<EditorRootProps> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }, { args: { spec } }) => {
+      onSpaceCreated: async ({ space }, { args: { spec, registerSchema } }) => {
         if (spec) {
-          space.db.graph.schemaRegistry.addSchema(types);
+          if (registerSchema) {
+            // Replace all schema in the spec with the registered schema.
+            const registeredSchema = await space.db.schemaRegistry.register([
+              ...new Set(spec.map((schema: any) => schema.type)),
+            ] as S.Schema.AnyNoContext[]);
+
+            spec = spec.map((schema: any) => ({
+              ...schema,
+              type: registeredSchema.find((s) => getSchemaTypename(s) === getSchemaTypename(schema.type)),
+            }));
+          } else {
+            space.db.graph.schemaRegistry.addSchema(types);
+          }
+
           const createObjects = createObjectFactory(space.db, generator);
           await createObjects(spec as TypeSpec[]);
+          await space.db.flush({ indexes: true });
         }
       },
     }),
@@ -132,23 +139,21 @@ const meta: Meta<EditorRootProps> = {
 
 export default meta;
 
-type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
+type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolean }>;
 
 export const Default: Story = {
   args: {
-    sidebar: 'json',
-    debug: true,
+    init: true,
+    spec: [{ type: Testing.OrgType, count: 1 }],
   },
 };
 
-export const Json: Story = {
+export const Dragging: Story = {
   args: {
     sidebar: 'json',
-    init: true,
-    spec: [
-      { type: Testing.OrgType, count: 2 },
-      { type: Testing.ContactType, count: 4 },
-    ],
+    showGrid: false,
+    snapToGrid: false,
+    children: <DragTest />,
   },
 };
 
@@ -163,5 +168,3 @@ export const Query: Story = {
     ],
   },
 };
-
-// TODO(burdon): Graph builder demo.

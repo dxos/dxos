@@ -2,35 +2,73 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { ImageSource, MessageContentBlock } from '../ai-service';
 import type { ConversationEvent } from '../conversation';
 
-export const createLogger =
-  ({ stream, filter }: { stream?: boolean; filter?: (event: ConversationEvent) => boolean } = {}) =>
-  (event: ConversationEvent) => {
+export const createLogger = ({
+  stream,
+  filter,
+  onImage,
+}: {
+  stream?: boolean;
+  filter?: (event: ConversationEvent) => boolean;
+  onImage?: (img: { id: string; description?: string; source: ImageSource }) => void;
+} = {}) => {
+  const images: Record<string, any> = {};
+  let currentText = '';
+
+  return (event: ConversationEvent) => {
     if (typeof filter === 'function' && !filter(event)) {
       return;
     }
+
+    const printContentBlock = (content: MessageContentBlock) => {
+      switch (content.type) {
+        case 'text':
+          process.stdout.write(content.text);
+          break;
+        case 'tool_use':
+          process.stdout.write(`⚙️ [Tool Use] ${content.name}\n`);
+          break;
+        case 'image': {
+          if (content.id && content.source) {
+            images[content.id] = content.source;
+          }
+          process.stdout.write(`[Image id=${content.id} media_type=${content.source?.media_type}]`);
+          break;
+        }
+      }
+    };
+
+    const onTextBlockPrinted = (text: string) => {
+      const imageMatch = text.match(/<image id="([^"]+)"(?:\s+prompt="([^"]+)")?\s*\/>/);
+      if (imageMatch && onImage && images[imageMatch[1]]) {
+        onImage({
+          id: imageMatch[1],
+          description: imageMatch[2], // Extract prompt as description if present
+          source: images[imageMatch[1]],
+        });
+      }
+    };
 
     if (stream) {
       switch (event.type) {
         case 'message_start': {
           process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
+          for (const content of event.message.content) {
+            printContentBlock(content);
+          }
           break;
         }
         case 'content_block_start': {
-          switch (event.content.type) {
-            case 'text':
-              process.stdout.write(event.content.text);
-              break;
-            case 'tool_use':
-              process.stdout.write(`⚙️ [Tool Use] ${event.content.name}\n`);
-              break;
-          }
+          currentText = '';
+          printContentBlock(event.content);
           break;
         }
         case 'content_block_delta': {
           switch (event.delta.type) {
             case 'text_delta': {
+              currentText += event.delta.text;
               process.stdout.write(event.delta.text);
               break;
             }
@@ -43,6 +81,8 @@ export const createLogger =
         }
         case 'content_block_stop': {
           process.stdout.write('\n');
+          onTextBlockPrinted(currentText);
+          currentText = '';
           break;
         }
         case 'message_delta': {
@@ -63,6 +103,7 @@ export const createLogger =
             switch (block.type) {
               case 'text':
                 process.stdout.write(block.text + '\n');
+                onTextBlockPrinted(block.text);
                 break;
               case 'tool_use':
                 process.stdout.write(`⚙️ [Tool Use] ${block.name}\n`);
@@ -84,3 +125,4 @@ export const createLogger =
       }
     }
   };
+};

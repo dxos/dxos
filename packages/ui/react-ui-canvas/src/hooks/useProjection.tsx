@@ -10,6 +10,7 @@ import { type Projection, type ProjectionState } from './projection';
 
 export type CanvasContext = ProjectionState & {
   root: HTMLDivElement;
+  ready: boolean;
   width: number;
   height: number;
   styles: CSSProperties;
