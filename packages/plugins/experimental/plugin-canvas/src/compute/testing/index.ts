@@ -3,5 +3,5 @@
 //
 
 export * from './circuits';
-export * from './fake-plugins';
+export * from './plugins';
 export * from './services';

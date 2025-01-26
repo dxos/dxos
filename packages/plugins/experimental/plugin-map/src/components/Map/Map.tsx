@@ -78,7 +78,7 @@ const MapCanvas = ({ markers = [], center, zoom, onChange }: MapCanvasProps) => 
     } else if (zoom !== undefined) {
       map.setZoom(zoom);
     }
-  }, [center, zoom]);
+  }, [map, center, zoom]);
 
   // Events.
   useEffect(() => {
