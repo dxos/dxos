@@ -52,13 +52,12 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
     }
 
     const i = setInterval(() => setIcon(pickIcon()), 250);
-    const t = setTimeout(() => {
-      clearInterval(i);
-      setSpin(false);
-    }, 1_100);
+    const t1 = setTimeout(() => clearInterval(i), 900);
+    const t2 = setTimeout(() => setSpin(false), 1_100);
     return () => {
       clearInterval(i);
-      clearTimeout(t);
+      clearTimeout(t1);
+      clearTimeout(t2);
     };
   }, [spin]);
 

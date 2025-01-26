@@ -10,6 +10,7 @@
 - [ ] Prompt with handlebar variables (dynamic schema)
 - [ ] Artifact tool (find artifact defintions AND instances); conext (e.g., current game).
   - [ ] Chess plugin defines artifact to generate and process FEN?
+  - [ ] Deploy funciton to play game.
 - [ ] Function node (call script)
 - [ ] Group nodes (sub-graph)
 - [ ] Markdown surface node (parse COT)
