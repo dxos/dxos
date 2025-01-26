@@ -10,92 +10,70 @@ import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData, useEditorContext } from '../../hooks';
-import { createEllipse, createRectangle } from '../../layout';
-import { type PolygonShape } from '../../types';
+import { type DragDropPayload, useEditorContext } from '../../hooks';
+import { getCenter } from '../../layout';
+import { createId } from '../../testing';
+import { type ShapeRegistry } from '../Canvas';
 
-export type ToolsProps = ThemedClassName<{}>;
+export type ToolsProps = ThemedClassName<{
+  registry: ShapeRegistry;
+}>;
 
-export const Tools = ({ classNames }: ToolsProps) => {
+// TODO(burdon): Toolbar/menu.
+export const Tools = ({ classNames, registry }: ToolsProps) => {
   return (
-    <div className={mx('flex p-1 gap-2', classNames)}>
-      <Tool id={'rectangle'} icon={'ph--rectangle--regular'} />
-      <Tool id={'ellipse'} icon={'ph--circle--regular'} />
-      <Tool id={'textbox'} icon={'ph--article--regular'} />
-      <Tool id={'form'} icon={'ph--textbox--regular'} />
-      <Tool id={'table'} icon={'ph--table--regular'} />
-      <Tool id={'function'} icon={'ph--function--regular'} />
-      <Tool id={'database'} icon={'ph--database--regular'} />
-      <Tool id={'timer'} icon={'ph--alarm--regular'} />
+    <div className={mx('flex gap-4', classNames)}>
+      {registry.defs.map(({ shapes }, i) => (
+        <div key={i} className='flex p-1 gap-2 items-center bg-base rounded-md border border-separator'>
+          {shapes.map((shape) => (
+            <Tool key={shape.type} type={shape.type} icon={shape.icon} />
+          ))}
+        </div>
+      ))}
     </div>
   );
 };
 
-export type ToolKind = 'rectangle' | 'ellipse' | 'textbox' | 'form' | 'table' | 'function' | 'database' | 'timer';
-
 type ToolProps = {
-  id: ToolKind;
+  type: string;
   icon: string;
 };
 
-const Tool = ({ id, icon }: ToolProps) => {
-  const { dragging, setDragging } = useEditorContext();
-  const isDragging = dragging;
+const Tool = ({ type, icon }: ToolProps) => {
+  const { registry, dragMonitor } = useEditorContext();
+
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'tool', tool: id }) satisfies DragPayloadData,
-      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+      getInitialData: () => {
+        // Create shape from registry.
+        const shape = registry.createShape(type, { id: createId(), center: { x: 0, y: 0 } });
+        return { type: 'tool', tool: type, shape } satisfies DragDropPayload;
+      },
+      onGenerateDragPreview: ({ nativeSetDragImage, source }) => {
+        const data = source.data as DragDropPayload;
+        invariant(data.type === 'tool');
         setCustomNativeDragPreview({
           nativeSetDragImage,
+          // TODO(burdon): Adjust for scale (need to get projection).
           getOffset: () => {
-            // TODO(burdon): Based on type.
-            return { x: 64, y: 32 };
+            return getCenter(data.shape.size);
           },
+          // TODO(burdon): Same preview pattern as frame?
           render: ({ container }) => {
-            // TODO(burdon): Custom shape depending on tool.
-            let shape: PolygonShape;
-            switch (id) {
-              case 'timer':
-              case 'function':
-              case 'database':
-              case 'textbox':
-              case 'form':
-              case 'table':
-              case 'rectangle': {
-                shape = createRectangle({
-                  id,
-                  center: { x: 0, y: 0 },
-                  size: { width: 128, height: 64 },
-                });
-                break;
-              }
-              case 'ellipse': {
-                shape = createEllipse({
-                  id,
-                  center: { x: 0, y: 0 },
-                  size: { width: 128, height: 64 },
-                });
-                break;
-              }
-              default:
-                return;
-            }
-
-            setDragging({ container, shape });
+            dragMonitor.start({ container, type: 'tool', shape: data.shape });
           },
         });
       },
     });
-  }, []);
+  }, [dragMonitor]);
 
+  // TODO(burdon): Tooltip.
   return (
-    <>
-      <div ref={ref} className={mx('flex', isDragging && 'opacity-50')}>
-        <Icon icon={icon} size={6} />
-      </div>
-    </>
+    <div ref={ref} className='flex' title={type}>
+      <Icon icon={icon} size={6} />
+    </div>
   );
 };

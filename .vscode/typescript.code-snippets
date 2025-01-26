@@ -23,5 +23,15 @@
 			"// Copyright 2022 DXOS.org",
 			"//",
 		]
+	},
+	"log": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "log",
+		"body": ["console.log('$1');"]
+	},
+	"todo": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "todo",
+		"body": ["TODO(): $1"]
 	}
 }

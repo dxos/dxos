@@ -128,7 +128,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
 
-  return Reference.fromLegacyTypename(annotation.typename);
+  return Reference.fromDXN(DXN.fromTypenameAndVersion(annotation.typename, annotation.version));
 };
 
 /**

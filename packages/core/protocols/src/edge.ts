@@ -44,6 +44,12 @@ export type GetNotarizationResponseBody = {
   awaitingNotarization: { credentials: string[] };
 };
 
+export type ExecuteWorkflowResponseBody = {
+  success: boolean;
+  reason?: string;
+  output?: any;
+};
+
 export type PostNotarizationRequestBody = {
   credentials: string[];
 };

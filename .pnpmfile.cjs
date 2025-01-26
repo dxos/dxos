@@ -1,6 +1,10 @@
 // https://pnpm.io/pnpmfile
 
 function lockfileWarning() {
+  if (process.env.NO_LOCKFILE_WARNING) {
+    return;
+  }
+
   const fs = require('fs');
   const cp = require('child_process');
 
@@ -49,7 +53,7 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // Package has an unneccessarily strict peer dep of 17.0.1
+    // Package has an unnecessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
       packageJson.peerDependencies['react'] = '^18.0.0';
       break;

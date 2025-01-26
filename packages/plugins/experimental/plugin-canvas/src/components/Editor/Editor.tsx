@@ -10,76 +10,52 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useCallback,
 } from 'react';
 
-import { GraphModel, type GraphNode } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
 import {
-  type DraggingState,
+  DragMonitor,
   type EditingState,
   EditorContext,
   type EditorContextType,
   type EditorOptions,
   SelectionModel,
 } from '../../hooks';
-import { type Shape } from '../../types';
-import { Canvas } from '../Canvas';
+import { defaultShapes } from '../../shapes';
+import { CanvasGraphModel } from '../../types';
+import { Canvas, ShapeRegistry } from '../Canvas';
 import { UI } from '../UI';
 import { type TestId } from '../defs';
 
-// Scenario:
-//  - ECHO query/editor.
-//  - Basic UML (internal use; generate from GH via function).
-//  - Basic processing pipeline (AI).
-
-// TODO(burdon): Phase 1: Basic plugin.
-//  - Group/collapse nodes; hierarchical editor.
-//    - Bounding box/hierarchy. [DIFFERENTIATOR]
-//  - Property panels (e.g. line style). Shape schema.
-//    - Line options (1-to-many, inherits, etc.)
-//  - Surface/form storybook; auto-size.
-//  - Reactive wrapper for graph.
-
-// TODO(burdon): Phase 2
-//  - Auto-layout (reconcile with plugin-debug).
-//    - AI generated layout from mermaid.
-//    - UML of this package using Beast and mermaid.
-//  - Drop/snap visualization.
-//  - Resize frames.
-//  - Move all selected.
-//  - Undo.
-
-// Ontology:
-// TODO(burdon): Separate shapes/layout from data graph.
-//  - Graph is a view-like projection of underlying objects.
-//  - Layout is a static or dynamic layout of shapes associated with graph nodes.
-//  - Shapes are the visual representation of the layout.
-
-// TODO(burdon): Debt:
-//  - Factor out common Toolbar pattern (with state observers).
-
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
-  gridSnap: 32,
+  gridSnap: 16,
   zoomFactor: 2,
   zoomDuration: 300,
 };
 
 interface EditorController {
+  action?: ActionHandler;
   zoomToFit(): void;
+  update(): void;
 }
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
-      id: string;
-      selection?: SelectionModel;
-      autoZoom?: boolean;
-    }
+    Pick<EditorContextType, 'id'> &
+      Partial<
+        Pick<
+          EditorContextType,
+          'options' | 'debug' | 'showGrid' | 'snapToGrid' | 'graph' | 'graphMonitor' | 'selection' | 'registry'
+        >
+      > & {
+        autoZoom?: boolean;
+      }
   >
 >;
 
@@ -91,31 +67,41 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       id,
       options: _options = defaultEditorOptions,
       debug: _debug = false,
+      showGrid: _showGrid = true,
+      snapToGrid: _snapToGrid = true,
       graph: _graph,
+      graphMonitor,
       selection: _selection,
+      registry: _registry,
       autoZoom,
     },
     forwardedRef,
   ) => {
-    // External state.
-    const graph = useMemo<GraphModel<GraphNode<Shape>>>(() => _graph ?? new GraphModel<GraphNode<Shape>>(), [_graph]);
-    const clipboard = useMemo<GraphModel>(() => new GraphModel<GraphNode<Shape>>(), []);
-    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+
+    // External state.
+    const graph = useMemo<CanvasGraphModel>(() => _graph ?? CanvasGraphModel.create(), [_graph]);
+    const clipboard = useMemo(() => CanvasGraphModel.create(), []);
+    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
+    const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
 
     // Canvas state.
     const [debug, setDebug] = useState(_debug);
     const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
-    const [showGrid, setShowGrid] = useState(true);
-    const [snapToGrid, setSnapToGrid] = useState(true);
+    const [showGrid, setShowGrid] = useState(_showGrid);
+    const [snapToGrid, setSnapToGrid] = useState(_snapToGrid);
+
+    // Repaint.
+    const [, forceUpdate] = useState({});
+    const repaint = useCallback(() => forceUpdate({}), []);
 
     // Canvas layout.
-    const overlaySvg = useRef<SVGSVGElement>(null);
+    const overlayRef = useRef<SVGSVGElement>(null);
 
     // Editor state.
-    const [dragging, setDragging] = useState<DraggingState>();
-    const [linking, setLinking] = useState<DraggingState>();
-    const [editing, setEditing] = useState<EditingState>();
+    const [ready, setReady] = useState(!autoZoom);
+    const [dragMonitor] = useState(() => new DragMonitor());
+    const [editing, setEditing] = useState<EditingState<any>>();
 
     // Actions.
     const [actionHandler, setActionHandler] = useState<ActionHandler>();
@@ -123,15 +109,12 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const context: EditorContextType = {
       id,
       options,
+      registry,
 
       graph,
+      graphMonitor,
       clipboard,
       selection,
-
-      overlaySvg,
-
-      actionHandler,
-      setActionHandler: (handler) => setActionHandler(() => handler),
 
       debug,
       gridSize,
@@ -142,12 +125,16 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       setShowGrid,
       setSnapToGrid,
 
-      dragging,
-      linking,
+      ready,
+      dragMonitor,
       editing,
-      setDragging,
-      setLinking,
       setEditing,
+
+      actionHandler,
+      setActionHandler: (handler) => setActionHandler(() => handler),
+
+      overlayRef,
+      repaint,
     };
 
     // Controller.
@@ -155,11 +142,13 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       forwardedRef,
       () => {
         return {
+          action: actionHandler,
           zoomToFit: () => {
             requestAnimationFrame(() => {
               void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
             });
           },
+          update: () => forceUpdate({}),
         };
       },
       [actionHandler],
@@ -167,9 +156,10 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
     // Trigger on graph change.
     useEffect(() => {
-      if (graph.nodes.length && autoZoom) {
-        setTimeout(() => {
-          void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+      if (autoZoom) {
+        requestAnimationFrame(async () => {
+          await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          setReady(true);
         });
       }
     }, [actionHandler, graph, autoZoom]);
@@ -179,7 +169,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
         <div
           {...testId<TestId>('dx-editor')}
           tabIndex={0}
-          className={mx('relative w-full h-full overflow-hidden', classNames)}
+          className={mx(
+            'relative w-full h-full overflow-hidden',
+            ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
+            classNames,
+          )}
         >
           {children}
         </div>

@@ -17,18 +17,18 @@ import { eventsAuto, eventsNone } from '../styles';
  * UI components.
  */
 export const UI = () => {
-  const { debug, graph, showGrid, snapToGrid, dragging, linking, selection, actionHandler } = useEditorContext();
+  const { debug, registry, dragMonitor, graph, showGrid, snapToGrid, selection, actionHandler } = useEditorContext();
+  const dragging = dragMonitor.state().value;
   const info = {
     debug,
     graph: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,
     },
+    dragging,
     selected: selection.selected.value,
     showGrid,
     snapToGrid,
-    dragging,
-    linking,
   };
 
   return (
@@ -38,9 +38,7 @@ export const UI = () => {
       </div>
       <div>
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
-          <div className='p-1 bg-base rounded-md border border-separator'>
-            <Tools classNames={mx(eventsAuto)} />
-          </div>
+          <Tools classNames={mx(eventsAuto)} registry={registry} />
         </div>
       </div>
       <div>

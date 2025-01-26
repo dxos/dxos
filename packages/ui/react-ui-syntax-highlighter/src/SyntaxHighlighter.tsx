@@ -32,6 +32,7 @@ export const SyntaxHighlighter = ({
   ...props
 }: SyntaxHighlighterProps) => {
   const { themeMode } = useThemeContext();
+
   return (
     <NativeSyntaxHighlighter
       className={mx('w-full p-0.5', classNames)}

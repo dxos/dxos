@@ -6,7 +6,6 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { log } from '@dxos/log';
 import { Config, PublicKey, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -16,7 +15,6 @@ import { Calls } from './Calls';
 const roomId = PublicKey.fromHex(
   '04a1d1911703b8e929d0649021a965767483e9be254b488809946dfa1eb4a3b939a5d78a56495077b00f5c88e8cf8b8ec76ca9c77f19c138b5132c7b325c27e1a8',
 );
-log.info('>>> roomId', { roomId });
 
 const Story = () => {
   const client = useClient();

@@ -124,6 +124,9 @@
       "path": "packages/core/compute/tsconfig.json"
     },
     {
+      "path": "packages/core/conductor/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/automerge/tsconfig.json"
     },
     {
@@ -505,6 +508,9 @@
       "path": "tools/codemods/tsconfig.json"
     },
     {
+      "path": "tools/codemorph/tsconfig.json"
+    },
+    {
       "path": "tools/executors/esbuild/tsconfig.json"
     },
     {
@@ -515,6 +521,9 @@
     },
     {
       "path": "tools/lit-stories/tsconfig.json"
+    },
+    {
+      "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
       "path": "tools/log-hook/tsconfig.json"

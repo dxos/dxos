@@ -38,7 +38,7 @@ describe('Serializer', () => {
       expect(data).to.deep.include({
         '@id': task.id,
         '@meta': { keys: [] },
-        '@type': { '/': `dxn:type:${Task.typename}` },
+        '@type': { '/': `dxn:type:${Task.typename}:${Task.version}` },
         title: 'Testing',
       });
     });

@@ -52,7 +52,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@types/jsonpath": "~0.2.4",
+    "@types/jsonpath": "^0.2.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "fast-check": "^3.19.0",

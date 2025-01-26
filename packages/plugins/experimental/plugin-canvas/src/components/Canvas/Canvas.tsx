@@ -3,14 +3,17 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useEffect, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { FrameDragPreview, getShapeBounds, Line, Shapes } from './shapes';
+import { Frame } from './Frame';
+import { getShapeBounds } from './Shape';
+import { Shapes } from './Shapes';
 import {
+  type DragDropPayload,
   useActionHandler,
   useDragMonitor,
   useEditorContext,
@@ -25,21 +28,20 @@ import { eventsNone, styles } from '../styles';
 /**
  * Main canvas component.
  */
-export const Canvas = () => {
-  // TODO(burdon): Controller.
+export const Canvas = ({ children }: PropsWithChildren) => {
   return (
     <NativeCanvas {...testId<TestId>('dx-canvas')}>
-      <CanvasContent />
+      <CanvasContent>{children}</CanvasContent>
     </NativeCanvas>
   );
 };
 
-export const CanvasContent = () => {
-  const { id, overlaySvg, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
-  const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
+export const CanvasContent = ({ children }: PropsWithChildren) => {
+  const { id, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { root, styles: projectionStyles, scale, offset } = useProjection();
+  const shapesRef = useRef<HTMLDivElement>(null);
 
-  // Actions.
-  useActionHandler();
+  const dragging = dragMonitor.state((state) => state.type === 'tool').value;
 
   // Drop target.
   useEffect(() => {
@@ -49,7 +51,7 @@ export const CanvasContent = () => {
 
     return dropTargetForElements({
       element: root,
-      getData: () => ({ type: 'canvas' }),
+      getData: () => ({ type: 'canvas' }) satisfies DragDropPayload,
       canDrop: () => true,
     });
   }, [root]);
@@ -57,17 +59,19 @@ export const CanvasContent = () => {
   // Keyboard shortcuts.
   useShortcuts();
 
+  // Actions.
+  useActionHandler();
+
   // Pan and zoom.
-  useWheel(root, setProjection);
+  useWheel();
 
   // Dragging and linking.
-  const { frameDragging, overlay } = useDragMonitor(root);
+  useDragMonitor();
 
   // Layout.
-  const layout = useLayout(graph, frameDragging, debug);
+  const layout = useLayout();
 
   // Selection.
-  const shapesRef = useRef<HTMLDivElement>(null);
   const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
     // NOTE: bounds will be undefined if clicking on an object.
     if (bounds === null) {
@@ -87,41 +91,34 @@ export const CanvasContent = () => {
 
   return (
     <>
-      {/* Background. */}
-      <Background />
-
       {/* Grid. */}
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
-      {/* Content. */}
-      <div ref={shapesRef} {...testId<TestId>('dx-layout', true)} style={transformStyles} className='absolute'>
-        <Shapes layout={layout} />
-      </div>
+      {/* Layout. */}
+      {<Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />}
+
+      {/* External content. */}
+      {children}
 
       {/* Overlays. */}
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>
         {/* Selection overlay. */}
         {selectionRect && <SelectionBox rect={selectionRect} />}
 
-        {/* Drag preview (NOTE: styles should be included to apply scale). */}
-        {dragging &&
+        {/* Tool dragging. */}
+        {dragging.type === 'tool' &&
           createPortal(
-            <div style={transformStyles}>
-              <FrameDragPreview scale={scale} shape={dragging.shape} />
+            <div style={projectionStyles}>
+              <Frame shape={dragging.shape} />
             </div>,
             dragging.container,
           )}
 
-        {/* Linking overlay. */}
-        <div className='absolute' style={transformStyles}>
-          {overlay && <Line scale={scale} shape={overlay} />}
-        </div>
-
         {/* Misc overlay. */}
         <svg
-          ref={overlaySvg}
+          ref={overlayRef}
           className='absolute overflow-visible pointer-events-none'
-          style={transformStyles}
+          style={projectionStyles}
           width={1}
           height={1}
         >
@@ -129,15 +126,6 @@ export const CanvasContent = () => {
         </svg>
       </div>
     </>
-  );
-};
-
-const Background = () => {
-  return (
-    <div
-      {...testId<TestId>('dx-background')}
-      className={mx('absolute inset-0 _bg-base _attention-surface', eventsNone)}
-    />
   );
 };
 

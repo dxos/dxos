@@ -16,3 +16,11 @@ export const getInputPoint = (el: HTMLElement, input: Input): Point => {
     y: input.clientY - rect.top,
   };
 };
+
+/**
+ * Create intersection type.
+ */
+// TODO(burdon): Move to util.
+export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
+  ? First & Intersection<Rest>
+  : unknown;

@@ -4,22 +4,17 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { type GraphModel, type GraphNode } from '@dxos/graph';
+import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
+import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
-import type { PolygonShape, Shape } from '../types';
+import { type ShapeRegistry } from '../components';
+import type { CanvasGraphModel, Connection, Polygon, Shape } from '../types';
 
-// TODO(burdon): Reconcile with DragPayloadData.
-export type DraggingState = {
-  container: HTMLElement;
-  shape: PolygonShape;
-  anchor?: string;
-};
-
-export type EditingState = {
-  shape: PolygonShape;
+export type EditingState<S extends Polygon> = {
+  shape: S;
 };
 
 export type EditorOptions = {
@@ -29,14 +24,20 @@ export type EditorOptions = {
   zoomDuration: number;
 };
 
+/**
+ * Model callback.
+ */
+// TODO(burdon): Update, Delete, etc. Better way to keep in sync?
+export interface GraphMonitor {
+  onCreate: (props: { graph: CanvasGraphModel; node: GraphNode<Shape> }) => void;
+  onLink: (props: { graph: CanvasGraphModel; edge: GraphEdge<Connection> }) => void;
+  onDelete: (props: { graph: CanvasGraphModel; subgraph: CanvasGraphModel }) => void;
+}
+
 export type EditorContextType = {
   id: string;
   options: EditorOptions;
-
-  overlaySvg: RefObject<SVGSVGElement>;
-
-  actionHandler: ActionHandler | undefined;
-  setActionHandler: (cb: ActionHandler | undefined) => void;
+  registry: ShapeRegistry;
 
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
@@ -47,21 +48,24 @@ export type EditorContextType = {
   showGrid: boolean;
   setShowGrid: Dispatch<SetStateAction<boolean>>;
 
-  graph: GraphModel<GraphNode<Shape>>;
-  clipboard: GraphModel<GraphNode<Shape>>;
-  selection: SelectionModel;
-
   snapToGrid: boolean;
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
-  dragging?: DraggingState;
-  setDragging: Dispatch<SetStateAction<DraggingState | undefined>>;
+  graph: CanvasGraphModel;
+  graphMonitor?: GraphMonitor;
+  clipboard: CanvasGraphModel;
+  selection: SelectionModel;
 
-  linking?: DraggingState;
-  setLinking: Dispatch<SetStateAction<DraggingState | undefined>>;
+  ready: boolean;
+  dragMonitor: DragMonitor;
+  editing?: EditingState<any>;
+  setEditing: Dispatch<SetStateAction<EditingState<any> | undefined>>;
 
-  editing?: EditingState;
-  setEditing: Dispatch<SetStateAction<EditingState | undefined>>;
+  actionHandler: ActionHandler | undefined;
+  setActionHandler: (cb: ActionHandler | undefined) => void;
+
+  overlayRef: RefObject<SVGSVGElement>;
+  repaint: () => void;
 };
 
 /**
