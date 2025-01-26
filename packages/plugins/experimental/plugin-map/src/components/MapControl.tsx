@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Map, type MapCanvasProps } from './Map';
 
-export type MapControlProps = MapCanvasProps & { onToggle: () => void };
+export type MapControlProps = MapCanvasProps & { onToggle?: () => void };
 
 export const MapControl = ({ classNames, markers, center, zoom, onToggle, onChange }: MapControlProps) => {
   return (

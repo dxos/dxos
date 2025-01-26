@@ -142,9 +142,9 @@ export const createGptCircuit = (options: {
 }) => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call((builder) => {
-    const gpt = model.createNode(createGpt(position({ x: 0, y: -13 })));
+    const gpt = model.createNode(createGpt(position({ x: 0, y: -14 })));
     const chat = model.createNode(createChat(position({ x: -18, y: -2 })));
-    const text = model.createNode(createText(position({ x: 19, y: 2, width: 10, height: 12 })));
+    const text = model.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
     builder
       .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
       .createEdge({ source: gpt.id, target: text.id, output: 'text' });
@@ -172,10 +172,10 @@ export const createGptCircuit = (options: {
         // createTemplate({ text: ARTIFACTS_SYSTEM_PROMPT }),
         createConstant({
           value: ARTIFACTS_SYSTEM_PROMPT,
-          ...position({ x: -18, y: -11, width: 8, height: 10 }),
+          ...position({ x: -18, y: -12, width: 8, height: 10 }),
         }),
       );
-      const artifact = model.createNode(createSurface(position({ x: 19, y: -11, width: 10, height: 10 })));
+      const artifact = model.createNode(createSurface(position({ x: 17, y: -10, width: 14, height: 14 })));
 
       builder
         .createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' })
@@ -193,7 +193,7 @@ export const createGptCircuit = (options: {
     }
 
     if (options.image) {
-      const tool = model.createNode(createTextToImage(position({ x: -8, y: -15 })));
+      const tool = model.createNode(createTextToImage(position({ x: -8, y: -16 })));
       builder.createEdge({ source: tool.id, target: gpt.id, input: 'tools' });
     }
   });

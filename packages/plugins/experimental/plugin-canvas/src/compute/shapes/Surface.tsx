@@ -41,7 +41,7 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
 
   return (
     <Box shape={shape} onAction={handleAction}>
-      {value !== null && <Surface role='canvas-node' data={{ value }} />}
+      {value !== null && <Surface role='canvas-node' data={{ value }} limit={1} />}
     </Box>
   );
 };

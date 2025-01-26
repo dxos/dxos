@@ -38,6 +38,7 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
     //     }),
     //   ),
     // });
+
     void machine.open();
 
     return () => {
