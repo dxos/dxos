@@ -30,6 +30,9 @@ import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
+import { type CanvasGraphModel } from '../../types';
+import { createComputeGraph } from '../hooks';
+import { type ComputeShape } from '../shapes';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -88,6 +91,13 @@ type ComputeOutputEvent = {
  * Nodes that will automatically trigger the execution of the graph on startup.
  */
 const AUTO_TRIGGER_NODES = ['chat', 'switch', 'constant'];
+
+export const createMachine = (graph: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
+  const computeGraph = createComputeGraph(graph);
+  const machine = new StateMachine(computeGraph);
+  machine.setServices(services ?? {});
+  return { machine, graph };
+};
 
 /**
  * Client proxy to the state machine.

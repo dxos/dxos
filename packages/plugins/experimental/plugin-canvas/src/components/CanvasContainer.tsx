@@ -10,10 +10,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { ShapeRegistry } from './Canvas';
 import { Editor, type EditorController } from './Editor';
 import { KeyboardContainer } from './KeyboardContainer';
-import { type ComputeShape, computeShapes, useGraphMonitor } from '../compute';
-import { createMachine } from '../compute/testing';
+import { type ComputeShape, computeShapes, createMachine, useGraphMonitor } from '../compute';
 import { type CanvasBoardType } from '../types';
-import { CanvasGraphModel } from '../types/model';
+import { CanvasGraphModel } from '../types';
 
 export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
   const id = fullyQualifiedId(canvas);

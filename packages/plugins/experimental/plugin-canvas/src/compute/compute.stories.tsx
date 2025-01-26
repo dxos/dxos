@@ -21,16 +21,16 @@ import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
+  capabilities,
+  createEdgeServices,
   createControlCircuit,
   createGPTRealtimeCircuit,
   createLogicCircuit,
   createMachine,
-  createServices,
   createBasicCircuit,
   createGptCircuit,
   createAudioCircuit,
   createTransformCircuit,
-  capabilities,
 } from './testing';
 import {
   Container,
@@ -291,7 +291,7 @@ export const GPT: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGptCircuit({ history: true }), createServices()),
+    ...createMachine(createGptCircuit({ history: true }), createEdgeServices()),
   },
 };
 
@@ -302,7 +302,7 @@ export const GPTImage: Story = {
     snapToGrid: false,
     // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGptCircuit({ history: true, image: true, artifact: true }), createServices()),
+    ...createMachine(createGptCircuit({ history: true, image: true, artifact: true }), createEdgeServices()),
   },
 };
 
@@ -313,7 +313,7 @@ export const GPTAudio: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createAudioCircuit(), createServices()),
+    ...createMachine(createAudioCircuit(), createEdgeServices()),
   },
 };
 
@@ -342,6 +342,6 @@ export const GPTRealtime: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGPTRealtimeCircuit(), createServices()),
+    ...createMachine(createGPTRealtimeCircuit(), createEdgeServices()),
   },
 };

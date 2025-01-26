@@ -27,7 +27,7 @@ const remoteServiceEndpoints = {
   ai: 'https://ai-service.dxos.workers.dev',
 };
 
-export const createServices = (services: ServiceEndpoints = localServiceEndpoints) => {
+export const createEdgeServices = (services: ServiceEndpoints = localServiceEndpoints) => {
   return {
     gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: services.ai })),
     edgeClient: new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: services.edge }),
