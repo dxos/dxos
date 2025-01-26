@@ -26,7 +26,7 @@ import { useComputeNodeState } from '../hooks';
 export const TemplateShape = S.extend(
   ComputeShape,
   S.Struct({
-    type: S.Literal('text'),
+    type: S.Literal('template'),
   }),
 );
 
@@ -39,8 +39,10 @@ export type TemplateShape = S.Schema.Type<typeof TemplateShape>;
 type TextInputComponentProps = ShapeComponentProps<TemplateShape> & TextBoxProps & { title?: string };
 
 const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps) => {
-  const { runtime } = useComputeNodeState(shape);
+  const { node, runtime } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
+
+  console.log('node', node.value, shape.text, shape);
 
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
@@ -51,7 +53,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   };
 
   return (
-    <Box shape={shape} name={title}>
+    <Box shape={shape} title={'Template'}>
       <TextBox ref={inputRef} onEnter={handleEnter} {...props} />
     </Box>
   );
@@ -68,10 +70,10 @@ export const createTemplate = (props: CreateTemplateProps) =>
 
 // TODO(burdon): Rename tempalte. Handlebars dynamic schema.
 export const templateShape: ShapeDef<TemplateShape> = {
-  type: 'text',
+  type: 'template',
   name: 'Template',
   icon: 'ph--article--regular',
-  component: (props) => <TextInputComponent {...props} placeholder={'Text'} />,
+  component: (props) => <TextInputComponent {...props} placeholder={'Prompt'} />,
   createShape: createTemplate,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
   resizable: true,

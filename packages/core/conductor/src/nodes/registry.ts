@@ -115,7 +115,7 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['template' as const]: defineComputeNode({
-    input: VoidInput,
+    input: S.Any, // TODO(burdon): Dynamic inputs.
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
 

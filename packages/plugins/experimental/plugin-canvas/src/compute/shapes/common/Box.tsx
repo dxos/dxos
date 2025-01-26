@@ -19,7 +19,7 @@ export type BoxActionHandler = (action: 'run' | 'open' | 'close') => void;
 export type BoxProps = PropsWithChildren<
   ThemedClassName<{
     shape: Shape;
-    name?: string;
+    title?: string;
     status?: string | ReactNode;
     open?: boolean;
     onAction?: BoxActionHandler;
@@ -27,7 +27,7 @@ export type BoxProps = PropsWithChildren<
 >;
 
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
-  ({ children, classNames, shape, name: _name, status, open, onAction }, forwardedRef) => {
+  ({ children, classNames, shape, title, status, open, onAction }, forwardedRef) => {
     invariant(shape.type);
     const { icon, name, openable } = useShapeDef(shape.type) ?? { icon: 'ph--placeholder--regular' };
     const { debug } = useEditorContext();
@@ -36,7 +36,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
       <div ref={forwardedRef} className='flex flex-col h-full w-full justify-between'>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-hoverSurface'>
           <Icon icon={icon} classNames='mx-2' />
-          <div className='grow text-sm truncate'>{debug ? shape.type : shape.text ?? _name ?? name}</div>
+          <div className='grow text-sm truncate'>{debug ? shape.type : name ?? shape.text ?? title}</div>
           <IconButton
             classNames='p-1 text-green-500'
             variant='ghost'

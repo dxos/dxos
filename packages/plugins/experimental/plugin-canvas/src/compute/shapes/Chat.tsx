@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
@@ -40,21 +40,20 @@ export type TextInputComponentProps = ShapeComponentProps<ChatShape> & TextBoxPr
 
 export const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps) => {
   const { runtime } = useComputeNodeState(shape);
-  const [reset, setReset] = useState({});
   const inputRef = useRef<TextBoxControl>(null);
 
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {
       runtime.setOutput(DEFAULT_OUTPUT, value);
-      setReset({});
+      inputRef.current?.setText('');
       inputRef.current?.focus();
     }
   };
 
   return (
-    <Box shape={shape} name={title}>
-      <TextBox ref={inputRef} reset={reset} onEnter={handleEnter} {...props} />
+    <Box shape={shape} title={title}>
+      <TextBox ref={inputRef} onEnter={handleEnter} {...props} />
     </Box>
   );
 };

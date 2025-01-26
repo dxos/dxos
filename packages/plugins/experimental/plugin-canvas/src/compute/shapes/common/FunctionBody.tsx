@@ -66,7 +66,7 @@ export const FunctionBody = ({
     <Box
       ref={rootRef}
       shape={shape}
-      name={name}
+      title={name}
       classNames='divide-y divide-separator'
       open={open}
       onAction={handleAction}

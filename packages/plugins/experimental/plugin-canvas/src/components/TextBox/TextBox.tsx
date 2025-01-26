@@ -18,13 +18,13 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 export interface TextBoxControl {
+  setText(text: string): void;
   focus(): void;
 }
 
 export type TextBoxProps = ThemedClassName<
   {
     value?: string;
-    reset?: object;
     centered?: boolean;
     onEnter?: (value: string) => void;
     onCancel?: () => void;
@@ -32,7 +32,7 @@ export type TextBoxProps = ThemedClassName<
 >;
 
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
-  ({ classNames, value = '', reset, centered, onEnter, onCancel, ...rest }, forwardedRef) => {
+  ({ classNames, value = '', centered, onEnter, onCancel, ...rest }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const [modified, setModified] = useState(false);
     const doc = useRef(value);
@@ -107,19 +107,15 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
     useImperativeHandle(
       forwardedRef,
       () => ({
+        setText: (text: string) => {
+          view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+        },
         focus: () => {
           view?.focus();
         },
       }),
       [view],
     );
-
-    // TODO(burdon): Better way to reset?
-    useEffect(() => {
-      if (reset) {
-        view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
-      }
-    }, [view, value, reset]);
 
     // Scroll to bottom.
     useEffect(() => {

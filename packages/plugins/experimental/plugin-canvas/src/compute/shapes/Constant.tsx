@@ -81,7 +81,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   );
 
   return (
-    <Box shape={shape} name={title} status={<TypeSelect value={type} onValueChange={setType} />}>
+    <Box shape={shape} title={title} status={<TypeSelect value={type} onValueChange={setType} />}>
       {(type === 'string' || type === 'number') && (
         <TextBox {...props} ref={inputRef} value={node.value} onEnter={handleEnter} />
       )}

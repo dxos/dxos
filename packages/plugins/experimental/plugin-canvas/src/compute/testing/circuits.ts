@@ -27,14 +27,14 @@ import {
   createIfElse,
   createJson,
   createJsonTransform,
-  createQueue,
   createNot,
   createOr,
+  createQueue,
   createRandom,
   createScope,
   createSwitch,
-  createTextToImage,
   createSurface,
+  createTextToImage,
   createText,
 } from '../shapes';
 
@@ -167,8 +167,9 @@ export const createGptCircuit = (options: {
     }
 
     if (options.artifact) {
-      // TODO(burdon): Change to template.
       const prompt = model.createNode(
+        // TODO(burdon): Change to template.
+        // createTemplate({ text: ARTIFACTS_SYSTEM_PROMPT }),
         createConstant({
           value: ARTIFACTS_SYSTEM_PROMPT,
           ...position({ x: -18, y: -11, width: 8, height: 10 }),
