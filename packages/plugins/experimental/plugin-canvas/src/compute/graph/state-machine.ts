@@ -216,7 +216,6 @@ export class StateMachine extends Resource {
   }
 
   async evalNode(nodeId: string) {
-    console.log('eval node', { nodeId });
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
@@ -347,7 +346,7 @@ export class StateMachine extends Resource {
   }
 
   private _handleEvent(event: ComputeEvent) {
-    log.info('handleEvent', { event });
+    log('handleEvent', { event });
     switch (event.type) {
       case 'compute-input': {
         this._onInputComputed(event.nodeId, event.property, { type: 'executed', value: event.value });

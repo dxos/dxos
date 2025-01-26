@@ -28,7 +28,7 @@ export type ThreadShape = S.Schema.Type<typeof ThreadShape>;
 export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 
 export const createThread = (props: CreateThreadProps) =>
-  createShape<ThreadShape>({ type: 'thread', size: { width: 384, height: 768 }, ...props });
+  createShape<ThreadShape>({ type: 'thread', size: { width: 384, height: 384 }, ...props });
 
 export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => {
   const items: any[] = [];

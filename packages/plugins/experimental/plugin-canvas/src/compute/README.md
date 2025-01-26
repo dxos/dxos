@@ -5,17 +5,15 @@
 
 ### Notes (burdon)
 
-- Text/markdown view (parse cot, etc.)
-- Surface view
-- Prompt with handlebar variables (dynamic schema)
-
-- Function node (call script)
-- Chess GPT tool
-- Chess surface storybook
-- Prompt to generate and process FEN?
-- Group nodes
-- Markdown node
-- Auto layout
+- [x] Text/markdown view (parse cot, etc.)
+- [x] Surface view
+- [ ] Prompt with handlebar variables (dynamic schema)
+- [ ] Artifact tool (find artifact defintions AND instances); conext (e.g., current game).
+  - [ ] Chess plugin defines artifact to generate and process FEN?
+- [ ] Function node (call script)
+- [ ] Group nodes (sub-graph)
+- [ ] Markdown surface node (parse COT)
+- [ ] Auto layout graphs
 
 ### Notes (dmaretskyi)
 

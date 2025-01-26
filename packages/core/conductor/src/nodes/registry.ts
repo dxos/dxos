@@ -218,7 +218,7 @@ export const registry: Record<NodeType, Executable> = {
         invariant(ObjectId.isValid(queueId), 'invalid queue id');
 
         const mappedItems = items.map((item) => ({ ...item, id: item.id ?? ObjectId.random() }));
-        log.info('insert', { subspaceTag, spaceId, queueId, items: mappedItems });
+        log('insert', { subspaceTag, spaceId, queueId, items: mappedItems });
 
         const edgeClientService = yield* EdgeClientService;
         const edgeClient = edgeClientService.getEdgeHttpClient();
