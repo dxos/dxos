@@ -73,9 +73,6 @@
       "path": "../../plugins/experimental/plugin-inbox"
     },
     {
-      "path": "../../plugins/experimental/plugin-ipfs"
-    },
-    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -83,6 +80,9 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-wnfs"
     },
     {
       "path": "../../sdk/client"

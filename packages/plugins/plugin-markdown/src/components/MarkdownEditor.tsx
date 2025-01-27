@@ -89,7 +89,7 @@ export const MarkdownEditor = ({
     [extensionProviders],
   );
 
-  // TODO(Zan): Move these into thread plugin as well?
+  // TODO(Zan): Factor out to thread plugin.
   const commentObserver = useCommentState(toolbarState);
   const onCommentClick = useCallback(async () => {
     await dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }));
@@ -97,6 +97,7 @@ export const MarkdownEditor = ({
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 
+  // TODO(wittjosiah): Factor out to file uploader plugin.
   // Drag files.
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
