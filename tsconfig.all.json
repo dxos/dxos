@@ -280,9 +280,6 @@
       "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-ipfs/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
     },
     {
@@ -302,9 +299,6 @@
     },
     {
       "path": "packages/plugins/experimental/plugin-template/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-wnfs/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
@@ -383,6 +377,9 @@
     },
     {
       "path": "packages/plugins/plugin-wildcard/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"

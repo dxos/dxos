@@ -8,7 +8,6 @@
 import { Filter, RefArray } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
-import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
@@ -143,25 +142,6 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             name: data.title,
             content: data.content,
             threads,
-          },
-        }));
-      }
-
-      //
-      // Files
-      //
-
-      const { objects: files } = await space.db.query(Filter.schema(LegacyTypes.FileType)).run();
-
-      for (const file of files) {
-        await builder.migrateObject(file.id, ({ data }) => ({
-          schema: FileType,
-          props: {
-            filename: data.filename,
-            type: data.type,
-            timestamp: data.timestamp,
-            name: data.title,
-            cid: data.cid,
           },
         }));
       }
