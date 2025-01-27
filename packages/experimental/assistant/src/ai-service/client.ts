@@ -165,12 +165,13 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
   private _createIterator(): AsyncIterator<ResultStreamEvent> {
     const self = this;
-    return (this._iterator ??= (async function* () {
+    return (this._iterator ??= async function* (this: GenerationStream) {
       for await (const event of self._getIterator()) {
         self._processEvent(event);
         yield event;
       }
-    })());
+      this._done.wake();
+    }.call(this));
   }
 
   private _processEvent(event: ResultStreamEvent) {
@@ -231,6 +232,5 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         break;
       }
     }
-    this._done.wake();
   }
 }
