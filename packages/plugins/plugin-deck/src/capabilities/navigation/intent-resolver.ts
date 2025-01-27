@@ -87,7 +87,7 @@ export default (context: PluginsContext) =>
       return {
         data: { open: ids },
         intents: [
-          createIntent(LayoutAction.ScrollIntoView, { id: toAttend }),
+          createIntent(LayoutAction.ScrollIntoView, { id: newlyOpen[0] ?? toAttend }),
           ...(toAttend ? [createIntent(NavigationAction.Expose, { id: toAttend })] : []),
           ...newlyOpen.map((id) => {
             const active = graph?.findNode(id)?.data;
