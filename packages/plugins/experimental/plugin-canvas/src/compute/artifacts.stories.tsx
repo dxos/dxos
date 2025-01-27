@@ -2,7 +2,7 @@ import '@dxos-theme';
 import type { Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { mx } from '@dxos/react-ui-theme';
-import { Input, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
 import { AIServiceClientImpl, Message } from '@dxos/assistant';
 import { createStatic, ECHO_ATTR_TYPE, getSchemaDXN, ObjectId } from '@dxos/echo-schema';
 import { TextBox, type TextBoxControl } from '../components';
@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { raise } from '@dxos/debug';
+import { InputRoot } from '../../../../../ui/primitives/react-input/src/Root';
 
 const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
@@ -54,7 +55,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
   });
 
   const refresh = useDynamicCallback(async () => {
-    const thisRefreshId = refreshId.current++;
+    const thisRefreshId = ++refreshId.current;
     try {
       const { objects } = await edgeHttpClient.queryQueue(subspaceTag, spaceId, { queueId });
       if (thisRefreshId !== refreshId.current) {
@@ -97,7 +98,7 @@ export const Default = () => {
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(EDGE_SERVICE_ENDPOINT));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT }));
   const [isGenerating, setIsGenerating] = useState(false);
-  const [queueDxn] = useState(() =>
+  const [queueDxn, setQueueDxn] = useState(() =>
     new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
   );
 
@@ -161,6 +162,17 @@ export const Default = () => {
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator'>
       <div className='p-4'>
+        <div className='flex gap-2 items-center'>
+          <Input.Root>
+            <Input.TextInput
+              classNames='w-full text-sm px-2 py-1 border rounded'
+              type='text'
+              value={queueDxn}
+              onChange={(e) => setQueueDxn(e.target.value)}
+            />
+            <Icon icon='ph--copy--regular' onClick={() => navigator.clipboard.writeText(queueDxn)} />
+          </Input.Root>
+        </div>
         <Thread
           items={[...historyQueue.objects, ...pendingMessages]}
           onSubmit={handleSubmit}
@@ -185,13 +197,7 @@ const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
       {items.map((item, i) => (
         <ThreadItem key={i} item={item} />
       ))}
-      {isGenerating && (
-        <div className='flex gap-2 items-center'>
-          <span className='text-2xl text-gray-400 animate-[blink_1.5s_ease-in-out_infinite]'>•</span>
-          <span className='text-2xl text-gray-400 animate-[blink_1.5s_ease-in-out_infinite] delay-500'>•</span>
-          <span className='text-2xl text-gray-400 animate-[blink_1.5s_ease-in-out_infinite] delay-1000'>•</span>
-        </div>
-      )}
+      {isGenerating && <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />}
       <div>
         <TextBox
           classNames='bg-blue-100 dark:bg-blue-800'
