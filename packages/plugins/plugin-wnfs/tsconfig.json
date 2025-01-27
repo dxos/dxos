@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "./dist/types",
+    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -23,13 +23,22 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/local-storage"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
@@ -44,25 +53,16 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-searchlist"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -74,7 +74,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
