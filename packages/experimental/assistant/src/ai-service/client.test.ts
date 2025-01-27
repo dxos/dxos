@@ -11,7 +11,8 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
-import { ObjectId, ToolTypes, type LLMTool } from './schema';
+import { ToolTypes, type LLMTool } from './schema';
+import { ObjectId } from '@dxos/echo-schema';
 
 const ENDPOINT = 'http://localhost:8787';
 

@@ -5,8 +5,9 @@
 import inquirer from 'inquirer';
 
 import { SpaceId } from '@dxos/keys';
+import { ObjectId } from '@dxos/echo-schema';
 
-import { AIServiceClientImpl, ObjectId, ToolTypes } from '../ai-service';
+import { AIServiceClientImpl, ToolTypes } from '../ai-service';
 import { runLLM, createUserMessage } from '../conversation';
 import {
   createLogger,

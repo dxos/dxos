@@ -3,24 +3,12 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { type Brand } from 'effect';
-import { ulid } from 'ulidx';
 
-import { JsonSchemaType } from '@dxos/echo-schema';
+import { JsonSchemaType, ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
-export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
-const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
-
-export type ObjectId = typeof ObjectIdSchema.Type;
-export const ObjectId: S.SchemaClass<string & Brand.Brand<typeof ObjectIdBrand>, string> & { random(): ObjectId } =
-  class extends ObjectIdSchema {
-    static random(): ObjectId {
-      return ulid() as ObjectId;
-    }
-  };
 
 // TODO(dmaretskyi): Dedup this schema with the one in dxos/edge.
 
