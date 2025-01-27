@@ -32,7 +32,7 @@ export const loadWnfs = async ({
     delete space.properties.wnfs_private_forest_cid;
   }
 
-  const cacheKey = space.properties.wnfs.privateForestCid;
+  const cacheKey = space.properties.wnfs?.privateForestCid;
   if (instances?.[cacheKey]) {
     return instances[cacheKey];
   }
