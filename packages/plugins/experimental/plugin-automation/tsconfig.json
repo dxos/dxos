@@ -116,10 +116,10 @@
       "path": "../../plugin-stack"
     },
     {
-      "path": "../plugin-inbox"
+      "path": "../../plugin-wnfs"
     },
     {
-      "path": "../plugin-ipfs"
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-script"

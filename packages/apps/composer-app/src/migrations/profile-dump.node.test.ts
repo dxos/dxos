@@ -15,7 +15,6 @@ import { createLevel, createStorageObjects, decodeProfileArchive, importProfileD
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
-import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { CollectionType, ThreadType, MessageType } from '@dxos/plugin-space/types';
@@ -225,18 +224,6 @@ describe('Run migrations on profile dump', () => {
               continue;
             }
             expect(getTypename(migratedObject)).to.equal(DiagramType.typename);
-            expect(data.title).to.equal(migratedObject.name);
-            break;
-
-          case LegacyTypes.FileType.typename:
-            if (getTypename(migratedObject) !== FileType.typename) {
-              log.info('failed file', { objectId, data, spaceId: space?.id, spaceName: space?.properties.name });
-              failed[LegacyTypes.FileType.typename] = (failed[LegacyTypes.FileType.typename] ?? 0) + 1;
-              continue;
-            }
-            expect(getTypename(migratedObject)).to.equal(FileType.typename);
-            expect(data.filename).to.equal(migratedObject.filename);
-            expect(data.type).to.equal(migratedObject.type);
             expect(data.title).to.equal(migratedObject.name);
             break;
 
