@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useId } from 'react';
 
 import { useForwardedRef, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -19,7 +19,6 @@ const defaultOffset: Point = { x: 0, y: 0 };
 const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${grid}`;
 
 export type GridProps = ThemedClassName<{
-  id: string;
   size?: number;
   scale?: number;
   offset?: Point;
@@ -28,10 +27,11 @@ export type GridProps = ThemedClassName<{
 
 export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
   (
-    { id: parentId, size: gridSize = defaultGridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames },
+    { size: gridSize = defaultGridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames },
     forwardedRef,
   ) => {
     const svgRef = useForwardedRef(forwardedRef);
+    const instanceId = useId();
     const grids = useMemo(
       () =>
         gridRatios
@@ -55,7 +55,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
         {/* NOTE: The pattern is offset so that the middle of the pattern aligns with the grid. */}
         <defs>
           {grids.map(({ id, size }) => (
-            <GridPattern key={id} id={createId(parentId, id)} offset={offset} size={size} />
+            <GridPattern key={id} id={createId(instanceId, id)} offset={offset} size={size} />
           ))}
         </defs>
         {showAxes && (
@@ -69,7 +69,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
             <rect
               key={id}
               opacity={0.1 + i * 0.05}
-              fill={`url(#${createId(parentId, id)})`}
+              fill={`url(#${createId(instanceId, id)})`}
               width='100%'
               height='100%'
             />
