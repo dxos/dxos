@@ -14,8 +14,7 @@ export default (context: PluginsContext) => {
     const { dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
 
     const program = Effect.gen(function* () {
-      // TODO(wittjosiah): Dispatch effect should just return data, the error is already built into the effect.
-      const { data: fileInfo } = yield* dispatch(createIntent(WnfsAction.Upload, { file, space }));
+      const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { file, space }));
       yield* dispatch(pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: space })));
       return fileInfo;
     });
