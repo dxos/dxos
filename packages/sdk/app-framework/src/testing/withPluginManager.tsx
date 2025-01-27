@@ -16,12 +16,14 @@ import { type AnyCapability, contributes, defineModule, definePlugin, PluginMana
  */
 export const withPluginManager = ({
   capabilities,
+  plugins = [],
+  core = plugins.map(({ meta }) => meta.id),
   ...options
 }: CreateAppOptions & { capabilities?: AnyCapability[] } = {}): Decorator => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
-    plugins: [StoryPlugin(), ...(options.plugins ?? [])],
-    core: [STORY_PLUGIN, ...(options.core ?? [])],
+    plugins: [StoryPlugin(), ...plugins],
+    core: [STORY_PLUGIN, ...core],
     ...options,
   });
 
