@@ -60,6 +60,6 @@ export const createEditorActionGroup = (
   id: string,
   props: Omit<ToolbarMenuActionGroupProperties, 'icon'>,
   icon?: string,
-) => createMenuItemGroup(id, { icon, ...props });
+) => createMenuItemGroup(id, { icon, iconOnly: true, ...props });
 
 export const editorToolbarSearch = createEditorAction({ type: 'search' }, 'ph--magnifying-glass--regular');
