@@ -10,7 +10,7 @@ import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
 import { checkIdNotPresentOnSchema } from './schema-validator';
-import { type HasId } from './types';
+import { type HasId, type HasType } from './types';
 import { type BaseObject } from '../types';
 
 type ToMutable<T> = T extends BaseObject
