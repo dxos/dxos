@@ -28,6 +28,7 @@ import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { useNode, useMainSize } from '../../hooks';
 import { DeckAction } from '../../types';
+import { useBreakpoints } from '../../util';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -51,7 +52,8 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
-  const Root = part === 'solo' ? 'article' : StackItem.Root;
+  const breakpoint = useBreakpoints();
+  const Root = part === 'solo' || breakpoint === 'mobile' ? 'article' : StackItem.Root;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);

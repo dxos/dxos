@@ -13,15 +13,7 @@ import {
   type Toast as ToastSchema,
 } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  AlertDialog,
-  Dialog as NaturalDialog,
-  Main,
-  Popover,
-  useOnTransition,
-  type MainProps,
-  useMediaQuery,
-} from '@dxos/react-ui';
+import { AlertDialog, Dialog as NaturalDialog, Main, Popover, useOnTransition, type MainProps } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
@@ -34,7 +26,7 @@ import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { type Overscroll } from '../../types';
-import { calculateOverscroll } from '../../util';
+import { calculateOverscroll, useBreakpoints } from '../../util';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -63,7 +55,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     popoverContent,
     popoverAnchorId,
   } = context;
-  const [isLg] = useMediaQuery('lg');
+  const breakpoint = useBreakpoints();
   const { plankSizing } = useDeckContext();
   const pluginManager = usePluginManager();
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
@@ -175,7 +167,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           {!isEmpty && (
             <Main.Content
               bounce
-              classNames='grid block-end-[--statusbar-size]'
+              classNames='grid lg:block-end-[--statusbar-size]'
               handlesFocus
               style={
                 {
@@ -229,7 +221,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           )}
 
           {/* Status bar. */}
-          {isLg && <StatusBar showHints={showHints} />}
+          {breakpoint === 'desktop' && <StatusBar showHints={showHints} />}
         </Main.Root>
       )}
 

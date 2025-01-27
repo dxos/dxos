@@ -14,12 +14,13 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
+import { Icon, Popover, toLocalizedString, useTranslation, IconButton } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
+import { useBreakpoints } from '../../util';
 import { useLayout } from '../LayoutContext';
 
 export type NodePlankHeadingProps = {
@@ -51,7 +52,7 @@ export const NodePlankHeading = memo(
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
-    const [isNotMobile] = useMediaQuery('md');
+    const isMobile = useBreakpoints();
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -67,15 +68,27 @@ export const NodePlankHeading = memo(
     const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
+        hoistSidebarButton: layoutPart === 'solo' || isMobile,
+        solo: (layoutPart === 'solo' || layoutPart === 'main') && !isMobile,
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [isMobile, layoutPart, canIncrementStart, canIncrementEnd],
     );
 
     return (
       <StackItem.Heading classNames='pie-1 border-be border-separator'>
+        {capabilities.hoistSidebarButton && (
+          <IconButton
+            variant='ghost'
+            iconOnly
+            icon='ph--sidebar--regular'
+            size={4}
+            label={t('open navigation sidebar label')}
+            onClick={() => (layoutContext.sidebarOpen = !layoutContext.sidebarOpen)}
+            classNames='!pli-2 mis-1 bs-[--rail-action]'
+          />
+        )}
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
