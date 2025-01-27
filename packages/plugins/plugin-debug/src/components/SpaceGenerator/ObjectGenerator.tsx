@@ -114,9 +114,9 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();
         model.builder
-          .createNode({ id: 'gpt-INPUT', data: { type: NODE_INPUT } })
-          .createNode({ id: 'gpt-GPT', data: { type: 'gpt' } })
-          .createNode({ id: 'gpt-OUTPUT', data: { type: NODE_OUTPUT } })
+          .createNode({ id: 'gpt-INPUT', type: NODE_INPUT })
+          .createNode({ id: 'gpt-GPT', type: 'gpt' })
+          .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
           .createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' })
           .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' });
 
