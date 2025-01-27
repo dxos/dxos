@@ -1,72 +1,171 @@
 import '@dxos-theme';
 import type { Meta } from '@storybook/react';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { mx } from '@dxos/react-ui-theme';
 import { Input, type ThemedClassName } from '@dxos/react-ui';
-import { AIServiceClientImpl, type Message } from '@dxos/assistant';
-import { ObjectId } from '@dxos/echo-schema';
+import { AIServiceClientImpl, Message } from '@dxos/assistant';
+import { createStatic, ECHO_ATTR_TYPE, getSchemaDXN, ObjectId } from '@dxos/echo-schema';
 import { TextBox, type TextBoxControl } from '../components';
 import { withTheme } from '@dxos/storybook-utils';
 import { log } from '@dxos/log';
+import { EdgeHttpClient } from '@dxos/edge-client';
+import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { raise } from '@dxos/debug';
 
+const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
+/**
+ * A custom hook that ensures a callback reference remains stable while allowing the callback
+ * implementation to be updated. This is useful for callbacks that need to access the latest
+ * state/props values while maintaining a stable reference to prevent unnecessary re-renders.
+ *
+ * @template F - The function type of the callback.
+ * @param callback - The callback function to memoize.
+ * @returns A stable callback reference that will always call the latest implementation.
+ */
+// TODO(dmaretskyi): Move to where it needs to be.
+const useDynamicCallback = <F extends (...args: any[]) => any>(callback: F): F => {
+  const ref = useRef<F>(callback);
+  ref.current = callback;
+  return ((...args) => ref.current(...args)) as F;
+};
+
+type UseQueueOptions = {
+  pollInterval?: number;
+};
+
+const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: UseQueueOptions = {}) => {
+  const { subspaceTag, spaceId, queueId } = queueDxn.asQueueDXN() ?? raise(new Error('Invalid queue DXN'));
+
+  const [objects, setObjects] = useState<T[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Only for initial load.
+  const [error, setError] = useState<Error | null>(null);
+  const refreshId = useRef<number>(0);
+
+  const append = useDynamicCallback(async (items: T[]) => {
+    try {
+      setObjects((prevItems) => [...prevItems, ...items]);
+
+      edgeHttpClient.insertIntoQueue(subspaceTag, spaceId, queueId, items);
+    } catch (err) {
+      setError(err as Error);
+    }
+  });
+
+  const refresh = useDynamicCallback(async () => {
+    const thisRefreshId = refreshId.current++;
+    try {
+      const { objects } = await edgeHttpClient.queryQueue(subspaceTag, spaceId, { queueId });
+      if (thisRefreshId !== refreshId.current) {
+        return;
+      }
+      setObjects(objects as T[]);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  });
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (options.pollInterval) {
+      const poll = () => {
+        refresh().finally(() => {
+          interval = setTimeout(poll, options.pollInterval);
+        });
+      };
+      poll();
+    }
+    return () => clearInterval(interval);
+  }, [options.pollInterval]);
+
+  useEffect(() => {
+    refresh();
+  }, [queueDxn.toString()]);
+
+  return {
+    objects,
+    append,
+    isLoading,
+    error,
+  };
+};
+
 export const Default = () => {
+  const [edgeHttpClient] = useState(() => new EdgeHttpClient(EDGE_SERVICE_ENDPOINT));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT }));
   const [isGenerating, setIsGenerating] = useState(false);
+  const [queueDxn] = useState(() =>
+    new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
+  );
 
-  const [history, setHistory] = useState<Message[]>(() => [
-    { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text: 'Hello' }] },
-    {
-      id: ObjectId.random(),
-      role: 'assistant',
-      content: [{ type: 'text', text: 'Hello, how can I help you today?' }],
-    },
-  ]);
+  const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn));
+
+  const isFirstLoad = useRef(true);
+  useEffect(() => {
+    if (!isFirstLoad.current) {
+      return;
+    }
+    isFirstLoad.current = false;
+    historyQueue.append([
+      createStatic(Message, { role: 'user', content: [{ type: 'text', text: 'Hello' }] }),
+      createStatic(Message, {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Hello, how can I help you today?' }],
+      }),
+    ]);
+  }, []);
+  const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
 
   log.info('items', { items: history });
 
-  const onSubmit = useCallback(
-    async (message: string) => {
-      if (isGenerating) {
-        return;
-      }
+  const handleSubmit = useDynamicCallback(async (message: string) => {
+    log.info('handleSubmit', { history });
+    if (isGenerating) {
+      return;
+    }
 
-      try {
-        setIsGenerating(true);
-        let historyState = [...history];
-        historyState.push({ id: ObjectId.random(), role: 'user', content: [{ type: 'text', text: message }] });
-        setHistory([...historyState]);
+    try {
+      setIsGenerating(true);
+      const userMessage = createStatic(Message, {
+        role: 'user',
+        content: [{ type: 'text', text: message }],
+      });
+      historyQueue.append([userMessage]);
 
-        const response = await aiServiceClient.generate({
-          model: '@anthropic/claude-3-5-sonnet-20241022',
-          history: historyState,
-          tools: [],
-        });
+      const response = await aiServiceClient.generate({
+        model: '@anthropic/claude-3-5-sonnet-20241022',
+        history: [...historyQueue.objects, userMessage],
+        tools: [],
+      });
 
-        // TODO(dmaretskyi): Have to drain the stream manually.
-        queueMicrotask(async () => {
-          for await (const event of response) {
-            log.info('event', { event });
-            setHistory([...historyState, ...response.accumulatedMessages]);
-          }
-        });
+      // TODO(dmaretskyi): Have to drain the stream manually.
+      queueMicrotask(async () => {
+        for await (const event of response) {
+          log.info('event', { event });
+          setPendingMessages([...response.accumulatedMessages.map((m) => createStatic(Message, m))]);
+        }
+      });
 
-        const assistantMessages = await response.complete();
-        log.info('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
-        historyState.push(...assistantMessages);
-        setHistory([...historyState]);
-      } finally {
-        setIsGenerating(false);
-      }
-    },
-    [aiServiceClient, history],
-  );
+      const assistantMessages = await response.complete();
+      log.info('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
+      historyQueue.append([...assistantMessages.map((m) => createStatic(Message, m))]);
+      setPendingMessages([]);
+    } finally {
+      setIsGenerating(false);
+    }
+  });
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator'>
       <div className='p-4'>
-        <Thread items={history} onSubmit={onSubmit} isGenerating={isGenerating} />
+        <Thread
+          items={[...historyQueue.objects, ...pendingMessages]}
+          onSubmit={handleSubmit}
+          isGenerating={isGenerating}
+        />
       </div>
       <div>Right panel</div>
     </div>
