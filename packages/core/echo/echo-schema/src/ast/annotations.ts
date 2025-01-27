@@ -8,10 +8,9 @@ import { type Simplify } from 'effect/Types';
 import { AST, S } from '@dxos/effect';
 import { type Primitive } from '@dxos/util';
 
-import { EntityKind } from './entity-kind';
-import { checkIdNotPresentOnSchema } from './schema-validator';
-import { type HasId, type HasType } from './types';
 import { type BaseObject } from '../types';
+import { EntityKind } from './entity-kind';
+import { type HasId } from './types';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -79,7 +78,8 @@ export const EchoObject = (typename: string, version: string) => {
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
-    checkIdNotPresentOnSchema(self);
+    // TODO(dmaretskyi): Allow id on schema.
+    // checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
