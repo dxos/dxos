@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 
 import { toJsonSchema } from '@dxos/echo-schema';
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { JsonSchemaType } from '@dxos/echo-schema';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -17,6 +17,13 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   threadId,
   role: 'user',
   content: [{ type: 'text', text }],
+});
+
+export const LLMToolDefinition = S.Struct({
+  name: S.String,
+  description: S.String,
+  parameters: JsonSchemaType,
+  execute: S.Any,
 });
 
 export type LLMToolDefinition = {

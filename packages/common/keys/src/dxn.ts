@@ -6,6 +6,7 @@ import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+import type { SpaceId } from './space-id';
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -29,8 +30,21 @@ export class DXN {
    * Kind constants.
    */
   static kind = Object.freeze({
+    /**
+     * dxn:type:<type name>[:<version>]
+     */
     TYPE: 'type',
+    /**
+     * dxn:echo:<space id>:<echo id>
+     * dxn:echo:@:<echo id>
+     */
     ECHO: 'echo',
+    /**
+     * dxn:queue:<subspace tag>:<space id>:<queue id>[:object id]
+     * dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
+     * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
+     */
+    QUEUE: 'queue',
   });
 
   static equals(a: DXN, b: DXN) {
@@ -43,17 +57,17 @@ export class DXN {
 
   static parse(dxn: string): DXN {
     if (typeof dxn !== 'string') {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(typeof kind === 'string' && kind.length > 0)) {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(parts.length > 0)) {
-      throw new Error('Invalid DXN');
+      throw new Error(`Invalid DXN: ${dxn}`);
     }
 
     return new DXN(kind, parts);
@@ -123,14 +137,44 @@ export class DXN {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
-  asTypeDXN() {
+  asTypeDXN(): DXN.TypeDXN | undefined {
     if (this.kind !== DXN.kind.TYPE) {
       return undefined;
     }
 
+    const [type, version] = this.#parts;
     return {
-      type: this.#parts[0],
-      version: this.#parts[1] as string | undefined,
+      type,
+      version: version as string | undefined,
+    };
+  }
+
+  asEchoDXN(): DXN.EchoDXN | undefined {
+    if (this.kind !== DXN.kind.ECHO) {
+      return undefined;
+    }
+
+    const [spaceId, echoId] = this.#parts;
+    return {
+      spaceId: spaceId as SpaceId | undefined,
+      echoId,
+    };
+  }
+
+  asQueueDXN(): DXN.QueueDXN | undefined {
+    if (this.kind !== DXN.kind.QUEUE) {
+      return undefined;
+    }
+
+    const [subspaceTag, spaceId, queueId, objectId] = this.#parts;
+    if (typeof queueId !== 'string') {
+      return undefined;
+    }
+    return {
+      subspaceTag,
+      spaceId: spaceId as SpaceId,
+      queueId,
+      objectId: objectId as string | undefined,
     };
   }
 
@@ -156,7 +200,31 @@ export class DXN {
   }
 }
 
+export declare namespace DXN {
+  export type TypeDXN = {
+    type: string;
+    version?: string;
+  };
+
+  export type EchoDXN = {
+    spaceId?: SpaceId;
+    echoId: string; // TODO(dmaretskyi): ObjectId.
+  };
+
+  export type QueueDXN = {
+    subspaceTag: string;
+    spaceId: SpaceId;
+    queueId: string; // TODO(dmaretskyi): ObjectId.
+    objectId?: string; // TODO(dmaretskyi): ObjectId.
+  };
+}
+
 /**
  * Tags for ECHO DXNs that should resolve the object ID in the local space.
  */
 export const LOCAL_SPACE_TAG = '@';
+
+export const QueueSubspaceTags = Object.freeze({
+  DATA: 'data',
+  TRACE: 'trace',
+});

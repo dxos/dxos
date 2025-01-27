@@ -2,75 +2,193 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-import { createLine, distance, findClosestIntersection, getNormals, getRect } from '../layout';
-import { type PolygonShape, type Shape } from '../types';
+import { type DragDropPayload } from './useDragMonitor';
+import { useEditorContext } from './useEditorContext';
+import { type ShapeRegistry, type Anchor, defaultAnchorSize } from '../components';
+import { createAnchorId, parseAnchorId } from '../compute';
+import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
+import { createPath } from '../shapes';
+import { type CanvasGraphModel, type Connection, isPolygon, type PathShape, type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
 };
 
 /**
- * Generate layout.
+ * Generate layout from graph (including linking).
  */
-// TODO(burdon): Graph hierarchy?
-export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: PolygonShape, debug?: boolean): Layout => {
-  const shapes: Shape[] = [];
+export const useLayout = (): Layout => {
+  const { dragMonitor, graph, registry } = useEditorContext();
 
-  graph.edges.forEach(({ id, source, target }) => {
-    const { center: p1, bounds: r1 } = getNodeBounds(dragging, graph.getNode(source)) ?? {};
-    const { center: p2, bounds: r2 } = getNodeBounds(dragging, graph.getNode(target)) ?? {};
-    if (!p1 || !p2) {
+  // TODO(burdon): Use to trigger state update.
+  const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'resize' || type === 'anchor').value;
+  const getShape = (shape: Polygon) =>
+    (dragging.type === 'frame' || dragging.type === 'resize') && dragging.shape.id === shape.id
+      ? dragging.shape
+      : shape;
+
+  const createPathForEdge = ({
+    id,
+    source: sourceId,
+    target: targetId,
+    output,
+    input,
+  }: Connection): PathShape | undefined => {
+    const sourceNode = graph.getNode(sourceId);
+    const targetNode = graph.getNode(targetId);
+    if (!sourceNode || !targetNode || !isPolygon(sourceNode) || !isPolygon(targetNode)) {
       return;
     }
 
-    invariant(r1 && r2);
-
-    let points: Point[] = [];
-    const d = distance(p1, p2);
-    if (d > 256) {
-      const [s1, s2] = getNormals(r1, r2, 32) ?? [];
-      if (s1 && s2) {
-        points = [s1[1], s1[0], s2[0], s2[1]];
+    const source = getShape(sourceNode);
+    const target = getShape(targetNode);
+    // TODO(burdon): Custom logic for function anchors. Generalize.
+    if (output && input) {
+      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', output));
+      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', input));
+      if (sourceAnchor && targetAnchor) {
+        return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
       }
     }
-    if (!points.length) {
-      const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
-      const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
-      points = [i1, i2];
-    }
 
-    // TODO(burdon): Move point to closest free anchor.
-    shapes.push(createLine({ id, points, start: 'circle', end: 'arrow-end' }));
+    const sourceBounds = getNodeBounds(source);
+    const targetBounds = getNodeBounds(target);
+    if (sourceBounds?.center && targetBounds?.center) {
+      const points = createCenterPoints(sourceBounds, targetBounds);
+      if (points) {
+        return createPath({ id, points, end: 'arrow-end' });
+      }
+    }
+  };
+
+  // TODO(burdon): Cache with useMemo? Can we determine what changed?
+  const shapes: Shape[] = [];
+
+  //
+  // Edges.
+  //
+  graph.edges.forEach((edge) => {
+    const path = createPathForEdge(edge);
+    if (path) {
+      shapes.push(path);
+    }
   });
 
-  graph.nodes.forEach(({ data: shape }) => {
+  //
+  // Linking.
+  //
+  if (dragging?.type === 'anchor' && dragging.pointer) {
+    let points: Point[] | undefined;
+    if (dragging.anchor) {
+      const [direction] = parseAnchorId(dragging.anchor.id);
+      if (direction) {
+        const sourceAnchor = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
+        if (sourceAnchor) {
+          let targetAnchor =
+            dragging.snapTarget?.type === 'anchor' &&
+            getAnchorPoint(registry, dragging.snapTarget.shape, dragging.snapTarget.anchor.id);
+          if (!targetAnchor) {
+            targetAnchor = dragging.pointer;
+          }
+
+          points = createCurve(sourceAnchor, targetAnchor);
+        }
+      }
+    }
+
+    if (!points) {
+      const rect = getRect(dragging.shape.center, dragging.shape.size);
+      const pos = findClosestIntersection([dragging.pointer, dragging.shape.center], rect) ?? dragging.shape.center;
+      points = [pos, dragging.pointer];
+    }
+
+    // Show anchor.
+    shapes.push(createPath({ id: 'link', points, end: 'circle' }));
+  }
+
+  //
+  // Nodes.
+  //
+  graph.nodes.forEach((shape) => {
     shapes.push(shape);
   });
 
   return { shapes };
 };
 
-const getNodeBounds = (
-  dragging: PolygonShape | undefined,
-  node: GraphNode<Shape> | undefined,
-): { center: Point; bounds: Rect } | undefined => {
-  if (!node) {
-    return undefined;
+// TODO(burdon): Generalize and move to geometry.
+
+type Bounds = {
+  center: Point;
+  bounds: Rect;
+};
+
+const getNodeBounds = (shape: Polygon): Bounds => ({
+  center: shape.center,
+  bounds: getRect(shape.center, shape.size),
+});
+
+const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] => {
+  let points: Point[] = [];
+
+  // Curve.
+  const d = getDistance(source.center, target.center);
+  if (d > 256) {
+    const [s1, s2] = createNormalsFromRectangles(source.bounds, target.bounds, len) ?? [];
+    if (s1 && s2) {
+      points = [s1[1], s1[0], s2[0], s2[1]];
+    }
   }
 
-  if (dragging?.id === node.id) {
-    return {
-      center: dragging.center,
-      bounds: getRect(dragging.center, dragging.size),
-    };
-  } else {
-    return {
-      center: node.data.center,
-      bounds: getRect(node.data.center, node.data.size),
-    };
+  // Direct path.
+  if (!points.length) {
+    const i1 = findClosestIntersection([target.center, source.center], source.bounds) ?? source.center;
+    const i2 = findClosestIntersection([source.center, target.center], target.bounds) ?? target.center;
+    points = [i1, i2];
   }
+
+  return points;
+};
+
+const createCurve = (source: Point, target: Point) => [
+  source,
+  // pointAdd(source, { x: defaultAnchorSize.width / 2, y: 0 }),
+  pointAdd(source, { x: defaultAnchorSize.width, y: 0 }),
+  pointAdd(target, { x: -defaultAnchorSize.width, y: 0 }),
+  // pointAdd(target, { x: -defaultAnchorSize.width, y: 0 }),
+  target,
+];
+
+const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: string): Point | undefined => {
+  invariant(shape.type);
+  const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
+  const anchor = anchors?.[anchorId];
+  return pointAdd(shape.center, anchor?.pos ?? { x: 0, y: 0 });
+};
+
+export const getClosestAnchor = (
+  graph: CanvasGraphModel<Polygon>,
+  registry: ShapeRegistry,
+  pos: Point,
+  test: (shape: Polygon, anchor: Anchor, d: number) => boolean,
+): Extract<DragDropPayload, { type: 'anchor' }> | undefined => {
+  let min = Infinity;
+  let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
+  graph.nodes.forEach((shape) => {
+    const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
+    if (anchors) {
+      for (const anchor of Object.values(anchors)) {
+        const d = getDistance(pos, pointAdd(shape.center, anchor.pos));
+        if (min > d && test(shape, anchor, d)) {
+          min = d;
+          closest = { type: 'anchor', shape, anchor };
+        }
+      }
+    }
+  });
+
+  return closest;
 };

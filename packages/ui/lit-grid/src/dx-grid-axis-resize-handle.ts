@@ -71,9 +71,11 @@ export class DxGridAxisResizeHandle extends LitElement {
           host.dragStartSize = host.size;
         },
         onDrag({ location }) {
+          console.log('onDrag', location);
           host.dispatchResize(location, 'dragging');
         },
         onDrop({ location }) {
+          console.log('onDrop', location);
           host.dispatchResize(location, 'dropped');
         },
       });

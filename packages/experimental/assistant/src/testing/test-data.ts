@@ -7,7 +7,7 @@ import { type Schema as S } from '@effect/schema';
 import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, ObjectId, toJsonSchema, type JsonSchemaType, type Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { makeRef } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 
 import {
   type DataSource,
@@ -17,6 +17,125 @@ import {
   formatNodeLabel,
 } from '../cypher';
 import { Contact, Org, Project, Task } from '../testing';
+import type { EchoDatabase } from '@dxos/echo-db';
+
+export const seedTestData = (db: EchoDatabase) => {
+  const contactRich = db.add(
+    create(Contact, {
+      name: 'Rich',
+    }),
+  );
+  const contactJosiah = db.add(
+    create(Contact, {
+      name: 'Josiah',
+    }),
+  );
+  const contactDima = db.add(
+    create(Contact, {
+      name: 'Dima',
+    }),
+  );
+  const contactFred = db.add(
+    create(Contact, {
+      name: 'Fred',
+    }),
+  );
+
+  const projectComposer = db.add(
+    create(Project, {
+      name: 'Composer',
+    }),
+  );
+  const projectEcho = db.add(
+    create(Project, {
+      name: 'ECHO',
+    }),
+  );
+  const projectDoodles = db.add(
+    create(Project, {
+      name: 'Doodles',
+    }),
+  );
+
+  const _taskComposer1 = db.add(
+    create(Task, {
+      name: 'Optimize startup performance',
+      project: makeRef(projectComposer),
+      assignee: makeRef(contactJosiah),
+    }),
+  );
+  const _taskComposer2 = db.add(
+    create(Task, {
+      name: 'Create form builder',
+      project: makeRef(projectComposer),
+      assignee: makeRef(contactRich),
+    }),
+  );
+  const _taskComposer3 = db.add(
+    create(Task, {
+      name: 'Add support for custom themes',
+      project: makeRef(projectComposer),
+      assignee: makeRef(contactJosiah),
+    }),
+  );
+  const _taskComposer5 = db.add(
+    create(Task, {
+      name: 'Implement community plugin',
+      project: makeRef(projectComposer),
+      assignee: makeRef(contactFred),
+    }),
+  );
+  const _taskComposer4 = db.add(
+    create(Task, {
+      name: 'Implement dark mode',
+      project: makeRef(projectComposer),
+      assignee: makeRef(contactRich),
+    }),
+  );
+  const _taskEcho1 = db.add(
+    create(Task, {
+      name: 'Implement cypher query engine',
+      project: makeRef(projectEcho),
+      assignee: makeRef(contactDima),
+    }),
+  );
+  const _taskEcho2 = db.add(
+    create(Task, {
+      name: 'Add schema editor',
+      project: makeRef(projectEcho),
+      assignee: makeRef(contactRich),
+    }),
+  );
+  const _taskDoodles1 = db.add(
+    create(Task, {
+      name: 'Add support for custom themes',
+      project: makeRef(projectDoodles),
+      assignee: makeRef(contactFred),
+    }),
+  );
+  const _taskDoodles2 = db.add(
+    create(Task, {
+      name: 'Implement dark mode',
+      project: makeRef(projectDoodles),
+      assignee: makeRef(contactJosiah),
+    }),
+  );
+
+  const _orgDxos = db.add(
+    create(Org, {
+      name: 'DXOS',
+      employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
+      projects: [makeRef(projectEcho)],
+    }),
+  );
+  const _orgBraneframe = db.add(
+    create(Org, {
+      name: 'Braneframe',
+      employees: [makeRef(contactJosiah), makeRef(contactRich)],
+      projects: [makeRef(projectComposer)],
+    }),
+  );
+};
 
 // TODO(burdon): Use schema/testing.
 export const createTestData = (): MockDataSource => {
