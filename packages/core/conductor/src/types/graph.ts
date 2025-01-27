@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
+import { JsonSchemaType, Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 /**
- * GraphNode payload.
+ * GraphNode.
  */
 export const ComputeNode = S.extend(
   BaseGraphNode,
@@ -14,12 +14,16 @@ export const ComputeNode = S.extend(
   /**
    * NOTE: We have a mixin of properties for different node types for simplicity,rather than a discriminated union.
    */
+  // TODO(burdon): Split out into different types.
   S.Struct({
-    /** For constant nodes. */
-    value: S.optional(S.Any),
+    /** For template nodes. */
+    inputSchema: S.optional(JsonSchemaType),
 
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
+
+    /** For constant nodes. */
+    value: S.optional(S.Any),
 
     /** For switch nodes. */
     enabled: S.optional(S.Boolean),
@@ -29,10 +33,11 @@ export const ComputeNode = S.extend(
 export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 
 /**
- * GraphEdge payload.
+ * GraphEdge.
  */
 export const ComputeEdge = S.extend(
   BaseGraphEdge,
+
   S.Struct({
     /** Output property from source. */
     output: S.String,

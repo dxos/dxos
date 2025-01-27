@@ -36,9 +36,10 @@ import {
   createSurface,
   createTextToImage,
   createText,
+  createTemplate,
 } from '../shapes';
 
-export const createMachine = (graph: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
+export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
   const computeGraph = createComputeGraph(graph);
   const machine = new StateMachine(computeGraph);
   machine.setServices(services ?? {});
@@ -168,10 +169,8 @@ export const createGptCircuit = (options: {
 
     if (options.artifact) {
       const prompt = model.createNode(
-        // TODO(burdon): Change to template.
-        // createTemplate({ text: ARTIFACTS_SYSTEM_PROMPT }),
-        createConstant({
-          value: ARTIFACTS_SYSTEM_PROMPT,
+        createTemplate({
+          text: ARTIFACTS_SYSTEM_PROMPT,
           ...position({ x: -18, y: -12, width: 8, height: 10 }),
         }),
       );

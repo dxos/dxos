@@ -224,6 +224,7 @@ export const Default: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
+    ...createMachine(),
   },
 };
 

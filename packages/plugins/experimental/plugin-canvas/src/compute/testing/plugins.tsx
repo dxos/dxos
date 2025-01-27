@@ -108,14 +108,18 @@ export const capabilities: AnyCapability[] = [
       id: 'plugin-map',
       role: 'canvas-node',
       filter: (data: any): data is any => {
-        const json = safeParseJson(data.value);
-        const coordinates = jp.query(json, '$..coordinates');
-        return !!coordinates.length;
+        try {
+          const json = safeParseJson(data.value);
+          const coordinates = jp.query(json, '$..coordinates');
+          return !!coordinates.length;
+        } catch (err) {
+          return false;
+        }
       },
       component: ({ role, data }) => {
         const json = safeParseJson(data.value);
         const [lng, lat] = jp.query(json, '$..coordinates')[0];
-        return <MapControl center={{ lat, lng }} />;
+        return <MapControl center={{ lat, lng }} zoom={14} />;
       },
     }),
   ),

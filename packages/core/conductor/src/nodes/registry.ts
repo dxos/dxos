@@ -56,6 +56,7 @@ export type NodeType =
   | 'beacon'
   | 'chat'
   | 'constant'
+  | 'counter'
   | 'database'
   | 'function'
   | 'gpt'
@@ -115,8 +116,9 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['template' as const]: defineComputeNode({
-    input: S.Any, // TODO(burdon): Dynamic inputs.
+    input: S.Record({ key: S.String, value: S.Any }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+    exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.value })),
   }),
 
   ['trigger' as const]: defineComputeNode({
@@ -137,6 +139,12 @@ export const registry: Record<NodeType, Executable> = {
   ['beacon' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
     output: VoidOutput,
+  }),
+
+  // TODO(burdon): Can this maintain state?
+  ['counter' as const]: defineComputeNode({
+    input: DefaultInput,
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.Number }),
   }),
 
   ['scope' as const]: defineComputeNode({

@@ -85,19 +85,21 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
   }, [model]);
 };
 
-export const createComputeGraph = (graph: CanvasGraphModel<ComputeShape>) => {
+export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
   const computeGraph = ComputeGraphModel.create();
 
-  for (const shape of graph.nodes) {
-    if (isValidComputeNode(shape.type)) {
-      const node = createComputeNode(shape);
-      computeGraph.addNode(node);
-      shape.node = node.id;
+  if (graph) {
+    for (const shape of graph.nodes) {
+      if (isValidComputeNode(shape.type)) {
+        const node = createComputeNode(shape);
+        computeGraph.addNode(node);
+        shape.node = node.id;
+      }
     }
-  }
 
-  for (const edge of graph.edges) {
-    computeGraph.addEdge(mapEdge(graph, edge));
+    for (const edge of graph.edges) {
+      computeGraph.addEdge(mapEdge(graph, edge));
+    }
   }
 
   return computeGraph;

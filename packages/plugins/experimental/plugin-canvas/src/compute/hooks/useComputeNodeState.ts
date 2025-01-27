@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { ComputeNode, ComputeMeta, ComputeEvent } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { useComputeContext } from './compute-context';
 import { type RuntimeValue } from '../graph';
@@ -28,18 +29,21 @@ export type ComputeNodeState = {
  */
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { stateMachine } = useComputeContext();
+  invariant(stateMachine, 'Node not specified');
 
   const [meta, setMeta] = useState<ComputeMeta>();
   useEffect(() => {
     let disposed = false;
     queueMicrotask(async () => {
-      const node = stateMachine.getComputeNode(shape.node!);
+      invariant(shape.node, 'Node not specified');
+      const node = stateMachine.getComputeNode(shape.node);
       const meta = await stateMachine.getMeta(node);
       if (disposed) {
         return;
       }
       setMeta(meta);
     });
+
     return () => {
       disposed = true;
     };
@@ -66,7 +70,6 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       input: S.Struct({}),
       output: S.Struct({}),
     },
-    // TODO(burdon): Rename proxy?
     runtime: {
       inputs: stateMachine.getInputs(shape.node!),
       outputs: stateMachine.getOutputs(shape.node!),

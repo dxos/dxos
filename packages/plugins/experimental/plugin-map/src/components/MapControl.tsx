@@ -10,8 +10,8 @@ export type MapControlProps = MapCanvasProps & { onToggle?: () => void };
 
 export const MapControl = ({ classNames, markers, center, zoom, onToggle, onChange }: MapControlProps) => {
   return (
-    <Map.Root classNames={classNames} center={center} zoom={zoom}>
-      <Map.Canvas markers={markers} onChange={onChange} />
+    <Map.Root classNames={classNames}>
+      <Map.Canvas markers={markers} center={center} zoom={zoom} onChange={onChange} />
       <Map.ActionControls onAction={onToggle} />
       <Map.ZoomControls />
     </Map.Root>

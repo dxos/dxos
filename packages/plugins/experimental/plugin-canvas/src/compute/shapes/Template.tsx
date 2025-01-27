@@ -4,7 +4,6 @@
 
 import React, { useRef } from 'react';
 
-import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
@@ -42,19 +41,18 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   const { node, runtime } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
 
-  console.log('node', node.value, shape.text, shape);
-
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {
-      runtime.setOutput(DEFAULT_OUTPUT, value);
+      node.value = value;
+      // runtime.setOutput(DEFAULT_OUTPUT, value);
       inputRef.current?.focus();
     }
   };
 
   return (
     <Box shape={shape} title={'Template'}>
-      <TextBox ref={inputRef} onEnter={handleEnter} {...props} />
+      <TextBox ref={inputRef} value={shape.text} onEnter={handleEnter} {...props} />
     </Box>
   );
 };
