@@ -21,8 +21,6 @@ import {
   ReducerInput,
   ReducerOutput,
   TextToImageOutput,
-  TriggerInput,
-  TriggerOutput,
 } from './types';
 import { GptService } from '../services';
 import { EdgeClientService } from '../services/edge-client-service';
@@ -71,7 +69,6 @@ export type NodeType =
   | 'switch'
   | 'text'
   | 'text-to-image'
-  | 'trigger'
   | 'thread'
   | 'view';
 
@@ -105,11 +102,6 @@ export const registry: Record<NodeType, Executable> = {
   ['text' as const]: defineComputeNode({
     input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-  }),
-
-  ['trigger' as const]: defineComputeNode({
-    input: TriggerInput,
-    output: TriggerOutput,
   }),
 
   ['rng' as const]: defineComputeNode({

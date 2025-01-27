@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { ComputeNode, ComputeMeta, ComputeEvent } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
-import type { GraphNode } from '@dxos/graph';
 
 import { useComputeContext } from './compute-context';
 import { type RuntimeValue } from '../graph';

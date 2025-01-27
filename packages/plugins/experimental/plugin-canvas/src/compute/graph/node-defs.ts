@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComputeNode, type Executable, type NodeType, registry } from '@dxos/conductor';
+import { type ComputeNode, type Executable, NODE_INPUT, type NodeType, registry } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
@@ -26,7 +26,7 @@ export const createComputeNode = (shape: GraphNode<ComputeShape>): ComputeNode =
   return factory(shape);
 };
 
-const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => ComputeNode> = {
+const nodeFactory: Record<NodeType | 'trigger', (shape: GraphNode<ComputeShape>) => ComputeNode> = {
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
   ['audio' as const]: () => createNode('audio'),
@@ -54,7 +54,7 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => ComputeN
   ['text' as const]: () => createNode('text'),
   ['text-to-image' as const]: () => createNode('text-to-image'),
   ['thread' as const]: () => createNode('thread'),
-  ['trigger' as const]: () => createNode('trigger'),
+  ['trigger' as const]: () => createNode(NODE_INPUT),
   ['view' as const]: () => createNode('view'),
 };
 

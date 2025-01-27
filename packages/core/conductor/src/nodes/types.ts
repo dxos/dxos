@@ -74,16 +74,28 @@ export type ReducerOutput = S.Schema.Type<typeof ReducerOutput>;
 //
 
 // TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
-export const TriggerInput = S.mutable(
+export const EmailTriggerOutput = S.mutable(
   S.Struct({
-    kind: S.Literal('timer', 'webhook', 'subscription'),
+    from: S.String,
+    to: S.String,
+    subject: S.String,
+    created: S.String,
+    body: S.String,
   }),
 );
 
-export type TriggerInput = S.Schema.Type<typeof TriggerInput>;
+export const WebhookTriggerOutput = S.mutable(
+  S.Struct({
+    url: S.String,
+    method: S.Literal('GET', 'POST'),
+    headers: S.Record({ key: S.String, value: S.String }),
+    bodyText: S.String,
+  }),
+);
 
-export const TriggerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
-export type TriggerOutput = S.Schema.Type<typeof TriggerOutput>;
+export const SubscriptionTriggerOutput = S.mutable(S.Struct({ type: S.String, changedObjectId: S.String }));
+
+export const TimerTriggerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
 
 //
 // GPT

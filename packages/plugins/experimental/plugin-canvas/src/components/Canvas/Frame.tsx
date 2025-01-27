@@ -12,7 +12,6 @@ import React, {
   type PropsWithChildren,
   forwardRef,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -145,10 +144,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   };
 
   // Custom anchors.
-  const anchors = useMemo(
-    () => registry.getShapeDef(shape.type)?.getAnchors?.(shape) ?? {},
-    [shape.center, shape.size],
-  );
+  const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape) ?? {};
 
   return (
     <>

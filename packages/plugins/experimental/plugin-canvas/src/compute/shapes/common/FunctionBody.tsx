@@ -61,6 +61,7 @@ export const FunctionBody = ({
   // TODO(burdon): Move labels to anchor?
   const inputs = getProperties(inputSchema.ast);
   const outputs = getProperties(outputSchema.ast);
+  const columnCount = inputs.length && outputs.length ? 2 : 1;
 
   return (
     <Box
@@ -72,25 +73,32 @@ export const FunctionBody = ({
       onAction={handleAction}
       {...props}
     >
-      <div className='grid grid-cols-2 items-center' style={{ paddingTop: bodyPadding, paddingBottom: bodyPadding }}>
-        <div className='flex flex-col'>
-          {inputs?.map(({ name }) => (
-            <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
-              {name}
-            </div>
-          ))}
-        </div>
-        <div className='flex flex-col'>
-          {outputs?.map(({ name }) => (
-            <div
-              key={name}
-              className='px-2 truncate text-sm font-mono items-center text-right'
-              style={{ height: rowHeight }}
-            >
-              {name}
-            </div>
-          ))}
-        </div>
+      <div
+        className={`grid grid-cols-${columnCount} items-center`}
+        style={{ paddingTop: bodyPadding, paddingBottom: bodyPadding }}
+      >
+        {(inputs?.length ?? 0) > 0 && (
+          <div className='flex flex-col'>
+            {inputs?.map(({ name }) => (
+              <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+                {name}
+              </div>
+            ))}
+          </div>
+        )}
+        {(outputs?.length ?? 0) > 0 && (
+          <div className='flex flex-col'>
+            {outputs?.map(({ name }) => (
+              <div
+                key={name}
+                className='px-2 truncate text-sm font-mono items-center text-right'
+                style={{ height: rowHeight }}
+              >
+                {name}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {open && <div className='flex flex-col grow overflow-hidden'>{content}</div>}
     </Box>
