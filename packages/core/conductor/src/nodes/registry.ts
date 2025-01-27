@@ -26,8 +26,6 @@ import {
   TemplateInput,
   TemplateOutput,
   TextToImageOutput,
-  TriggerInput,
-  TriggerOutput,
 } from './types';
 import { GptService, EdgeClientService } from '../services';
 import {
@@ -77,7 +75,6 @@ export type NodeType =
   | 'switch'
   | 'template'
   | 'text'
-  | 'trigger'
   | 'thread';
 
 export const isFalsy = (value: any) =>
@@ -137,11 +134,6 @@ export const registry: Record<NodeType, Executable> = {
 
       return Effect.succeed({ [DEFAULT_OUTPUT]: text });
     }),
-  }),
-
-  ['trigger' as const]: defineComputeNode({
-    input: TriggerInput,
-    output: TriggerOutput,
   }),
 
   ['rng' as const]: defineComputeNode({
