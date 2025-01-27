@@ -76,12 +76,7 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
           const edgeIds = subgraph.edges
             .map((shapeEdge) => {
               return graph.edges.find((computeEdge) => {
-                const computeConnection = computeEdge.data as Connection;
-                const canvasConnection = shapeEdge.data as Connection;
-                return (
-                  computeConnection.input === canvasConnection.input &&
-                  computeConnection.output === canvasConnection.output
-                );
+                return computeEdge.input === shapeEdge.data?.input && computeEdge.output === shapeEdge.data?.output;
               })?.id;
             })
             .filter(nonNullable);
