@@ -23,6 +23,8 @@ import {
   QueueOutput,
   ReducerInput,
   ReducerOutput,
+  TemplateInput,
+  TemplateOutput,
   TextToImageOutput,
   TriggerInput,
   TriggerOutput,
@@ -116,8 +118,8 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['template' as const]: defineComputeNode({
-    input: S.Record({ key: S.String, value: S.Any }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+    input: TemplateInput,
+    output: TemplateOutput,
     exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.value })),
   }),
 

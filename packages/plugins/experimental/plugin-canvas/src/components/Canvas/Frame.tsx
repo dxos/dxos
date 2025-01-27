@@ -55,7 +55,7 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
  */
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { shape } = baseProps;
-  const { dragMonitor, registry, editing, setEditing } = useEditorContext();
+  const { dragMonitor, registry, layout, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useCanvasContext();
 
   const dragging = dragMonitor.state(
@@ -146,9 +146,8 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
   // Custom anchors.
   const anchors = useMemo(() => {
-    // TODO(burdon):
     return registry.getShapeDef(shape.type!)?.getAnchors?.(shape) ?? {};
-  }, [shape.center, shape.size]);
+  }, [layout, shape.center, shape.size]);
 
   return (
     <>

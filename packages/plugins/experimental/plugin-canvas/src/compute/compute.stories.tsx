@@ -41,16 +41,7 @@ import {
   JsonFilter,
   ShapeRegistry,
 } from '../components';
-import { type GraphMonitor } from '../hooks';
 import { useSelection } from '../testing';
-
-type RenderProps = EditorRootProps &
-  PropsWithChildren<{
-    init?: boolean;
-    sidebar?: 'canvas' | 'compute' | 'controller' | 'selected';
-    computeGraph?: ComputeGraphModel;
-    controller?: ComputeGraphController;
-  }>;
 
 const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
@@ -64,6 +55,14 @@ const combine = (...cbs: UnsubscribeCallback[]) => {
     }
   };
 };
+
+type RenderProps = EditorRootProps<ComputeShape> &
+  PropsWithChildren<{
+    init?: boolean;
+    sidebar?: 'canvas' | 'compute' | 'controller' | 'selected';
+    computeGraph?: ComputeGraphModel;
+    controller?: ComputeGraphController;
+  }>;
 
 const Render = ({ id = 'test', children, graph, controller, init, sidebar: _sidebar, ...props }: RenderProps) => {
   const [, forceUpdate] = useState({});
@@ -137,6 +136,15 @@ const Render = ({ id = 'test', children, graph, controller, init, sidebar: _side
   // Sync monitor.
   const graphMonitor = useGraphMonitor(controller?.graph);
 
+  // Dynamic defs.
+  // const layoutHelper: LayoutHelper<ComputeShape> = {
+  // getAnchors: (shape) => {
+  //   const shapeDef = registry.getShapeDef(shape.type);
+  //   return shapeDef.getAnchors?.();
+  //   // return shape.node ? controller?.graph.findNode(shape.node) : undefined;
+  // },
+  // };
+
   if (!controller) {
     return <div />;
   }
@@ -145,11 +153,11 @@ const Render = ({ id = 'test', children, graph, controller, init, sidebar: _side
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-          <Editor.Root
+          <Editor.Root<ComputeShape>
             ref={editorRef}
             id={id}
             graph={graph}
-            graphMonitor={graphMonitor as GraphMonitor} // TODO(burdon): ???
+            graphMonitor={graphMonitor}
             selection={selection}
             autoZoom
             {...props}
@@ -193,7 +201,7 @@ const Render = ({ id = 'test', children, graph, controller, init, sidebar: _side
   );
 };
 
-const meta: Meta<EditorRootProps> = {
+const meta: Meta<RenderProps> = {
   title: 'plugins/plugin-canvas/compute',
   component: Editor.Root,
   render: Render,

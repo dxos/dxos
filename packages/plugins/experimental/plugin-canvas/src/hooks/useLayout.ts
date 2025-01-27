@@ -162,6 +162,8 @@ const createCurve = (source: Point, target: Point) => [
   target,
 ];
 
+// TODO(burdon): Create LayoutHelper.
+
 const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: string): Point | undefined => {
   invariant(shape.type);
   const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
@@ -170,10 +172,10 @@ const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: strin
 };
 
 export const getClosestAnchor = (
-  graph: CanvasGraphModel<Polygon>,
   registry: ShapeRegistry,
+  graph: CanvasGraphModel<Polygon>,
   pos: Point,
-  test: (shape: Polygon, anchor: Anchor, d: number) => boolean,
+  isValid: (shape: Polygon, anchor: Anchor, d: number) => boolean,
 ): Extract<DragDropPayload, { type: 'anchor' }> | undefined => {
   let min = Infinity;
   let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
@@ -182,7 +184,7 @@ export const getClosestAnchor = (
     if (anchors) {
       for (const anchor of Object.values(anchors)) {
         const d = getDistance(pos, pointAdd(shape.center, anchor.pos));
-        if (min > d && test(shape, anchor, d)) {
+        if (min > d && isValid(shape, anchor, d)) {
           min = d;
           closest = { type: 'anchor', shape, anchor };
         }

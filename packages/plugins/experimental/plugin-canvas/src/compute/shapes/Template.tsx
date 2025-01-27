@@ -4,10 +4,11 @@
 
 import React, { useRef } from 'react';
 
+import { TemplateOutput, VoidInput } from '@dxos/conductor';
 import { S, toJsonSchema } from '@dxos/echo-schema';
 
-import { Box } from './common';
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
+import { Box, createFunctionAnchors } from './common';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -15,7 +16,6 @@ import {
   type TextBoxControl,
   type TextBoxProps,
 } from '../../components';
-import { createAnchorMap } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
 //
@@ -73,8 +73,8 @@ export const templateShape: ShapeDef<TemplateShape> = {
   component: (props) => <TextInputComponent {...props} placeholder={'Prompt'} />,
   createShape: createTemplate,
   getAnchors: (shape) => {
-    console.log('getAnchors', shape.node);
-    return createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } });
+    // TODO(burdon): Get dynamic schema.
+    return createFunctionAnchors(shape, VoidInput, TemplateOutput);
   },
   resizable: true,
 };

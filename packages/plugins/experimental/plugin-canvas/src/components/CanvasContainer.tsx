@@ -14,26 +14,25 @@ import { type ComputeShape, computeShapes, createComputeGraphController, useGrap
 import { type CanvasBoardType } from '../types';
 import { CanvasGraphModel } from '../types';
 
-export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
-  const id = fullyQualifiedId(canvas);
-  const graph = useMemo(() => CanvasGraphModel.create<ComputeShape>(canvas.layout), []);
-  const { controller } = useMemo(() => createComputeGraphController(graph), []);
-  const editorRef = useRef<EditorController>(null);
+const useGraphController = (graph: CanvasGraphModel<ComputeShape>) => {
+  const { controller } = useMemo(() => createComputeGraphController(graph), [graph]);
   useEffect(() => {
-    if (!controller) {
-      return;
-    }
-
     void controller.open();
     return () => {
       void controller.close();
     };
   }, [controller]);
+  return controller;
+};
 
+export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
+  const id = fullyQualifiedId(canvas);
+  const graph = useMemo(() => CanvasGraphModel.create<ComputeShape>(canvas.layout), []);
+  const controller = useGraphController(graph);
   const graphMonitor = useGraphMonitor(controller.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
+  const editorRef = useRef<EditorController>(null);
 
-  // TODO(burdon): Allow configuration of UI/Toolbar.
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
       <KeyboardContainer id={id}>
