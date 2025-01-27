@@ -1,4 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import '@dxos-theme';
+import type { Meta } from '@storybook/react';
+import React, { useEffect, useRef, useState } from 'react';
+
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AIServiceClientImpl, Message } from '@dxos/assistant';
@@ -10,11 +17,10 @@ import { log } from '@dxos/log';
 import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import type { Meta } from '@storybook/react';
-import React, { useEffect, useRef, useState } from 'react';
-import { TextBox, type TextBoxControl } from '../components';
-import { capabilities, ChessSchema, MapSchema } from './testing';
+
+import { capabilities, ChessSchema } from './testing';
 import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
+import { TextBox, type TextBoxControl } from '../components';
 
 const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';

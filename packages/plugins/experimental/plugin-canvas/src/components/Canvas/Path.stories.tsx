@@ -21,7 +21,7 @@ const Render = () => {
 
   return (
     <Canvas ref={canvasRef}>
-      <Grid id={'test'} showAxes />
+      <Grid showAxes />
       <Rope />
     </Canvas>
   );

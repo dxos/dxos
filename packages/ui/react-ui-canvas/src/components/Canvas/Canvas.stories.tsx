@@ -100,16 +100,10 @@ export default meta;
 type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
-  args: {
-    id: 'test',
-    size: 16,
-  },
+  args: { size: 16 },
 };
 
 export const SideBySide: Story = {
-  args: {
-    id: 'test',
-    size: 16,
-  },
+  args: { size: 16 },
   render: TwoCanvases,
 };
