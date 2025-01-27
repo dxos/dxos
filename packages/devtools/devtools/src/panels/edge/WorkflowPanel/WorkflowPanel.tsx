@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { ComputeGraph, WorkflowLoader } from '@dxos/conductor';
+import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo-db';
 import { AST } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -176,15 +176,16 @@ const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
 };
 
 const toCompactGraph = (graph: ComputeGraph) => {
+  const model = new ComputeGraphModel(graph);
   const result: any = {};
-  for (const node of graph.graph.nodes) {
+  for (const node of model.nodes) {
     const incoming = [];
     const outgoing = [];
-    for (const edge of graph.graph.edges) {
+    for (const edge of model.edges) {
       if (node.id === edge.source) {
-        outgoing.push(`${edge.data.output} -> ${edge.target}.${edge.data.input}`);
+        outgoing.push(`${edge.output} -> ${edge.target}.${edge.input}`);
       } else if (node.id === edge.target) {
-        incoming.push(`${edge.source}.${edge.data.output} -> ${edge.data.input}`);
+        incoming.push(`${edge.source}.${edge.output} -> ${edge.input}`);
       }
     }
     result[node.id] = { in: incoming, out: outgoing };
