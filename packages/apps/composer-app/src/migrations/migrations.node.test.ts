@@ -8,7 +8,6 @@ import { Client, PublicKey } from '@dxos/client';
 import { create, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { MigrationBuilder } from '@dxos/migrations';
-import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
@@ -41,7 +40,6 @@ describe('Composer migrations', () => {
         ChannelType,
         CollectionType,
         DocumentType,
-        FileType,
         MessageType,
         DiagramType,
         TableType,
@@ -198,9 +196,6 @@ describe('Composer migrations', () => {
         data: makeRef(create(Expando, { content: { id: 'test string' } })),
       }),
     );
-    const file1 = space.db.add(
-      create(LegacyTypes.FileType, { filename: 'file1.jpeg', type: 'image/jpeg', title: 'My File' }),
-    );
     // TODO(wittjosiah): Include dynamic schema.
     const table1 = space.db.add(
       create(LegacyTypes.TableType, {
@@ -245,12 +240,6 @@ describe('Composer migrations', () => {
     // TODO(dmaretskyi): Broke with references API update.
     // expect(migratedSketch1?.canvas.target?.schema).to.equal(TLDRAW_SCHEMA);
     expect(migratedSketch1?.canvas.target?.content?.id).to.equal('test string');
-
-    const migratedFile1 = space.db.getObjectById<FileType>(file1.id);
-    expect(migratedFile1 instanceof FileType).to.be.true;
-    expect(migratedFile1?.filename).to.equal('file1.jpeg');
-    expect(migratedFile1?.type).to.equal('image/jpeg');
-    expect(migratedFile1?.name).to.equal('My File');
 
     const migratedTable1 = space.db.getObjectById<TableType>(table1.id);
     expect(migratedTable1 instanceof TableType).to.be.true;

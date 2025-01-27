@@ -489,11 +489,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-ipfs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },
@@ -525,11 +520,6 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -660,6 +650,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-wildcard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
         {
