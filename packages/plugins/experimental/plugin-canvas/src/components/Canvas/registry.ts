@@ -27,7 +27,7 @@ export type ShapeDef<S extends Polygon> = {
 export type ShapeDefSet = { title?: string; shapes: ShapeDef<any>[] };
 
 /**
- * Shape registry may be provided to the Editor.
+ * Shape registry provided to the Editor.
  */
 export class ShapeRegistry {
   private readonly _registry = new Map<string, ShapeDef<Polygon>>();
@@ -36,18 +36,18 @@ export class ShapeRegistry {
     this._defs.forEach(({ shapes }) => shapes.forEach((shape) => this.registerShapeDef(shape)));
   }
 
-  createShape<S extends Polygon>(type: string, props: Pick<Polygon, 'id' | 'center'>): S {
-    const def = this.getShapeDef(type);
-    invariant(def, `unregistered type: ${type}`);
-    return def.createShape(props) as S;
-  }
-
   get defs(): ShapeDefSet[] {
     return this._defs;
   }
 
   get shapes(): ShapeDef<any>[] {
     return Array.from(this._registry.values());
+  }
+
+  createShape<S extends Polygon>(type: string, props: Pick<Polygon, 'id' | 'center'>): S {
+    const def = this.getShapeDef(type);
+    invariant(def, `unregistered type: ${type}`);
+    return def.createShape(props) as S;
   }
 
   getShapeDef(type: string) {

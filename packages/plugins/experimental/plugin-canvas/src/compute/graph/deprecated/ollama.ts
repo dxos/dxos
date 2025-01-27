@@ -8,7 +8,7 @@ import type { MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import type { GptInput, GptOutput } from '../types';
-import type { GptExecutor } from '../state-machine';
+import type { GptExecutor } from '../controller';
 
 // TODO(burdon): Move to conductor.
 

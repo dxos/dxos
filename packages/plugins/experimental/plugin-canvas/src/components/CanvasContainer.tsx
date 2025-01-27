@@ -10,43 +10,27 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { ShapeRegistry } from './Canvas';
 import { Editor, type EditorController } from './Editor';
 import { KeyboardContainer } from './KeyboardContainer';
-import { type ComputeShape, computeShapes, createMachine, useGraphMonitor } from '../compute';
+import { type ComputeShape, computeShapes, createComputeGraphController, useGraphMonitor } from '../compute';
 import { type CanvasBoardType } from '../types';
 import { CanvasGraphModel } from '../types';
 
 export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
   const id = fullyQualifiedId(canvas);
-
-  // TODO(burdon): Use canvas.graph.
-  // const space = getSpace(canvas);
-
   const graph = useMemo(() => CanvasGraphModel.create<ComputeShape>(canvas.layout), []);
-  const { machine } = useMemo(() => createMachine(graph), []);
+  const { controller } = useMemo(() => createComputeGraphController(graph), []);
   const editorRef = useRef<EditorController>(null);
   useEffect(() => {
-    if (!machine) {
+    if (!controller) {
       return;
     }
 
-    // TODO(burdon): Better abstraction for context?
-    // machine.setContext({
-    //   space,
-    //   model: '@anthropic/claude-3-5-sonnet-20241022',
-    //   gpt: new EdgeGptExecutor(
-    //     new AIServiceClientImpl({
-    //       endpoint: 'https://ai-service.dxos.workers.dev',
-    //     }),
-    //   ),
-    // });
-
-    void machine.open();
-
+    void controller.open();
     return () => {
-      void machine.close();
+      void controller.close();
     };
-  }, [machine]);
+  }, [controller]);
 
-  const graphMonitor = useGraphMonitor(machine.graph);
+  const graphMonitor = useGraphMonitor(controller.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
 
   // TODO(burdon): Allow configuration of UI/Toolbar.

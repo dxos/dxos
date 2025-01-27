@@ -10,7 +10,7 @@ import { ARTIFACTS_SYSTEM_PROMPT } from './prompts';
 import { pointMultiply, pointsToRect, rectToPoints } from '../../layout';
 import { createNote } from '../../shapes';
 import { CanvasGraphModel } from '../../types';
-import { StateMachine, type Services } from '../graph';
+import { ComputeGraphController, type Services } from '../graph';
 import { createComputeGraph } from '../hooks';
 import {
   type ComputeShape,
@@ -39,11 +39,11 @@ import {
   createTemplate,
 } from '../shapes';
 
-export const createMachine = (graph?: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
+export const createComputeGraphController = (graph?: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
   const computeGraph = createComputeGraph(graph);
-  const machine = new StateMachine(computeGraph);
-  machine.setServices(services ?? {});
-  return { machine, graph };
+  const controller = new ComputeGraphController(computeGraph);
+  controller.setServices(services ?? {});
+  return { controller, graph };
 };
 
 //
@@ -129,6 +129,23 @@ export const createControlCircuit = () => {
       .createEdge({ source: if1.id, target: b1.id, output: 'true' })
       .createEdge({ source: if1.id, target: b2.id, output: 'false' })
       .createEdge({ source: if2.id, target: j.id });
+  });
+
+  return model;
+};
+
+export const createTemplateCircuit = () => {
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call((builder) => {
+    const chat = model.createNode(createChat(position({ x: -12, y: 4 })));
+    const template = model.createNode(createTemplate(position({ x: -12, y: -4 })));
+    const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
+    const text = model.createNode(createText(position({ x: 14, y: 0 })));
+
+    builder
+      .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
+      .createEdge({ source: gpt.id, target: text.id, output: 'text' })
+      .createEdge({ source: template.id, target: gpt.id, input: 'systemPrompt' });
   });
 
   return model;
