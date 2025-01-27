@@ -11,15 +11,27 @@ import { isImage } from '@dxos/conductor';
 import { Chessboard } from '@dxos/plugin-chess';
 import { MapControl } from '@dxos/plugin-map';
 import { safeParseJson } from '@dxos/util';
+import { Schema as S } from '@effect/schema';
 
 import { JsonFilter } from '../../components';
+import { EchoObject, GeoPoint, isInstanceOf } from '@dxos/echo-schema';
 
 export type Artifact = {
   id: string;
   prompt: string;
+  schema: S.Schema.AnyNoContext;
 };
 
 export const createArtifact = (artifact: Artifact): Artifact => artifact;
+
+export const ChessSchema = S.Struct({
+  value: S.String.annotations({ description: 'FEN string' }),
+}).pipe(EchoObject('example.com/type/Chess', '0.1.0'));
+
+export const MapSchema = S.Struct({
+  coordinates: GeoPoint,
+}).pipe(EchoObject('example.com/type/Map', '0.1.0'));
+export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
 // TODO(burdon): Define artifact providers.
 export const artifacts: Record<string, Artifact> = [
@@ -32,13 +44,15 @@ export const artifacts: Record<string, Artifact> = [
     - Image tags are always self-closing and must contain an id attribute.
     (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
     `,
+    schema: S.Struct({}),
   }),
   createArtifact({
     id: 'plugin-chess',
     prompt: `
     Chess:
-    - If the user's message relates to a chess game, you must return the chess game as a valid FEN string with no additional text.
+    - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
     `,
+    schema: ChessSchema,
   }),
   createArtifact({
     id: 'plugin-map',
@@ -46,6 +60,7 @@ export const artifacts: Record<string, Artifact> = [
     Maps:
     - If the user's message relates to a map, you must return the map as a valid GeoJSON Point with valid coordinates.
     `,
+    schema: MapSchema,
   }),
 ].reduce(
   (acc, artifact) => {
@@ -84,17 +99,7 @@ export const capabilities: AnyCapability[] = [
     createSurface({
       id: 'plugin-chess',
       role: 'canvas-node',
-      filter: (data: any): data is any => {
-        if (typeof data.value !== 'string') {
-          return false;
-        }
-        try {
-          new Chess(data.value).fen();
-          return true;
-        } catch (err) {
-          return false;
-        }
-      },
+      filter: (data) => isInstanceOf(ChessSchema, data),
       component: ({ role, data }) => <Chessboard model={{ chess: new Chess(data.value) }} />,
     }),
   ),
@@ -107,18 +112,9 @@ export const capabilities: AnyCapability[] = [
     createSurface({
       id: 'plugin-map',
       role: 'canvas-node',
-      filter: (data: any): data is any => {
-        try {
-          const json = safeParseJson(data.value);
-          const coordinates = jp.query(json, '$..coordinates');
-          return !!coordinates.length;
-        } catch (err) {
-          return false;
-        }
-      },
+      filter: (data) => isInstanceOf(MapSchema, data),
       component: ({ role, data }) => {
-        const json = safeParseJson(data.value);
-        const [lng, lat] = jp.query(json, '$..coordinates')[0];
+        const [lng, lat] = data.coordinates;
         return <MapControl center={{ lat, lng }} zoom={14} />;
       },
     }),

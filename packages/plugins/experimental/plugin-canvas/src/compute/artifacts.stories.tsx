@@ -1,17 +1,20 @@
 import '@dxos-theme';
-import type { Meta } from '@storybook/react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { mx } from '@dxos/react-ui-theme';
-import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
+import { Surface } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { AIServiceClientImpl, Message } from '@dxos/assistant';
-import { createStatic, ECHO_ATTR_TYPE, getSchemaDXN, ObjectId } from '@dxos/echo-schema';
-import { TextBox, type TextBoxControl } from '../components';
-import { withTheme } from '@dxos/storybook-utils';
-import { log } from '@dxos/log';
+import { raise } from '@dxos/debug';
+import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
-import { raise } from '@dxos/debug';
-import { InputRoot } from '../../../../../ui/primitives/react-input/src/Root';
+import { log } from '@dxos/log';
+import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+import type { Meta } from '@storybook/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { TextBox, type TextBoxControl } from '../components';
+import { capabilities, ChessSchema, MapSchema } from './testing';
+import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
 
 const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
@@ -139,6 +142,7 @@ export const Default = () => {
       const response = await aiServiceClient.generate({
         model: '@anthropic/claude-3-5-sonnet-20241022',
         history: [...historyQueue.objects, userMessage],
+        systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
         tools: [],
       });
 
@@ -179,7 +183,18 @@ export const Default = () => {
           isGenerating={isGenerating}
         />
       </div>
-      <div>Right panel</div>
+      <div className='p-4'>
+        <Surface
+          role='canvas-node'
+          limit={1}
+          data={createStatic(ChessSchema, {
+            value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+          })}
+          // data={createStatic(MapSchema, {
+          //   coordinates: [30.0, 10.0],
+          // })}
+        />
+      </div>
     </div>
   );
 };
@@ -252,5 +267,5 @@ const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
 export default {
   title: 'plugins/plugin-canvas/compute/artifacts',
   component: Default,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ fullscreen: true }), withPluginManager({ capabilities })],
 } satisfies Meta<typeof Default>;

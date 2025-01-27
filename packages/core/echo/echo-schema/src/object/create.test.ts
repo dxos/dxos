@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { Contact } from '../testing/schema';
 import { createStatic } from './create';
 import { getTypename } from './typename';
-import { getSchemaDXN } from '../types';
+import { getSchemaDXN, isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('create static object', () => {
@@ -16,6 +16,7 @@ describe('create (static version)', () => {
     expect(contact.email).toBe('john@example.com');
     expect(getTypename(contact)).toBe(getSchemaDXN(Contact)!.toString());
     expect((contact as any)['@type']).toBeUndefined();
+    expect(isInstanceOf(Contact, contact)).toBe(true);
   });
 
   test('json encoding', () => {
