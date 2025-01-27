@@ -6,8 +6,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
+import { type AIServiceClient, AIServiceClientImpl, type Message } from '@dxos/assistant';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
+import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { useClient, useConfig } from '@dxos/react-client';
 import { ContextMenu, type ThemedClassName } from '@dxos/react-ui';

@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { Chess } from 'chess.js';
-import jp from 'jsonpath';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { isImage } from '@dxos/conductor';
+import { EchoObject, GeoPoint, isInstanceOf } from '@dxos/echo-schema';
 import { Chessboard } from '@dxos/plugin-chess';
 import { MapControl } from '@dxos/plugin-map';
-import { safeParseJson } from '@dxos/util';
-import { Schema as S } from '@effect/schema';
 
 import { JsonFilter } from '../../components';
-import { EchoObject, GeoPoint, isInstanceOf } from '@dxos/echo-schema';
 
 export type Artifact = {
   id: string;
@@ -114,7 +112,7 @@ export const capabilities: AnyCapability[] = [
       role: 'canvas-node',
       filter: (data) => isInstanceOf(MapSchema, data),
       component: ({ role, data }) => {
-        const [lng, lat] = data.coordinates;
+        const [lng = 0, lat = 0] = data.coordinates;
         return <MapControl center={{ lat, lng }} zoom={14} />;
       },
     }),
