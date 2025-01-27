@@ -40,15 +40,6 @@
       "@dxos/plugin-inbox/types": [
         "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
       ],
-      "@dxos/plugin-ipfs": [
-        "packages/plugins/experimental/plugin-ipfs/src/index.ts"
-      ],
-      "@dxos/plugin-ipfs/meta": [
-        "packages/plugins/experimental/plugin-ipfs/src/meta.ts"
-      ],
-      "@dxos/plugin-ipfs/types": [
-        "packages/plugins/experimental/plugin-ipfs/src/types/index.ts"
-      ],
       "@dxos/plugin-kanban": [
         "packages/plugins/experimental/plugin-kanban/src/index.ts"
       ],
@@ -84,12 +75,6 @@
       ],
       "@dxos/plugin-template/types": [
         "packages/plugins/experimental/plugin-template/src/types.ts"
-      ],
-      "@dxos/plugin-wnfs": [
-        "packages/plugins/experimental/plugin-wnfs/src/index.ts"
-      ],
-      "@dxos/plugin-wnfs/types": [
-        "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
       ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
@@ -213,6 +198,12 @@
       ],
       "@dxos/plugin-wildcard": [
         "packages/plugins/plugin-wildcard/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/plugin-wnfs/src/types/index.ts"
       ],
       "@dxos/app-framework": [
         "packages/sdk/app-framework/src/index.ts"

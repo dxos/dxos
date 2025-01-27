@@ -3,6 +3,7 @@
 //
 
 import { Effect, Ref } from 'effect';
+import { type Simplify } from 'effect/Types';
 
 import { type MaybePromise, pick, byDisposition, type Disposition } from '@dxos/util';
 
@@ -112,7 +113,7 @@ export const createResolver = <Tag extends string, Fields extends IntentParams>(
  */
 export type PromiseIntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
-) => Promise<IntentDispatcherResult<Fields>>;
+) => Promise<Simplify<IntentDispatcherResult<Fields>>>;
 
 /**
  * Creates an effect for intents.
@@ -120,7 +121,7 @@ export type PromiseIntentDispatcher = <Fields extends IntentParams>(
 export type IntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
   depth?: number,
-) => Effect.Effect<IntentDispatcherResult<Fields>, Error>;
+) => Effect.Effect<Simplify<IntentDispatcherResult<Fields>>, Error>;
 
 type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<Fields> & {
   _intent: Intent<Tag, Fields>;
