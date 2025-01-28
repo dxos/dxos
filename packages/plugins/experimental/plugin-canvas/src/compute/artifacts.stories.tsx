@@ -166,9 +166,13 @@ const Render = () => {
         />
       </div>
       <div className='p-4 overflow-hidden flex flex-col gap-4'>
-        {items.length > 0 && <Surface role='canvas-node' limit={1} data={artifactsContext.items[0]} />}
+        {items.length > 0 && (
+          <div className='flex grow overflow-hidden'>
+            <Surface role='canvas-node' limit={1} data={items[0]} />
+          </div>
+        )}
         {items.length > 1 && (
-          <div className='flex gap-4 overflow-x-scroll min-h-[200px]'>
+          <div className='flex shrink-0gap-4 overflow-x-scroll min-h-[200px]'>
             {items.slice(1).map((item, idx) => (
               <Surface key={idx} role='canvas-node' limit={1} data={item} />
             ))}
