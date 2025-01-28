@@ -125,18 +125,7 @@ export const capabilities: AnyCapability[] = [
     createSurface({
       id: 'plugin-chess',
       role: 'canvas-node',
-      filter: (data): data is any => {
-        return false;
-      },
-      // filter: (data) => isInstanceOf(ChessSchema, data),
-      // filter: (data): data is any => {
-      //   try {
-      //     const game = new Chess(data.value as string);
-      //     return !!game;
-      //   } catch (err) {
-      //     return false;
-      //   }
-      // },
+      filter: (data): data is any => isInstanceOf(ChessSchema, data),
       component: ({ role, data }) => <Chessboard model={{ chess: new Chess(data.value) }} />,
     }),
   ),
