@@ -18,7 +18,7 @@ import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { capabilities, ChessSchema } from './testing';
+import { artifacts, capabilities, ChessSchema } from './testing';
 import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
 import { TextBox, type TextBoxControl } from '../components';
 
@@ -149,7 +149,7 @@ export const Default = () => {
         model: '@anthropic/claude-3-5-sonnet-20241022',
         history: [...historyQueue.objects, userMessage],
         systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
-        tools: [],
+        tools: [...artifacts['plugin-chess'].tools],
       });
 
       // TODO(dmaretskyi): Have to drain the stream manually.
