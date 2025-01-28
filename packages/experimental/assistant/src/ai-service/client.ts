@@ -231,7 +231,8 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         invariant(this._accumulatedMessage);
         const lastBlock = this._accumulatedMessage.content.at(-1);
         if (lastBlock?.type === 'tool_use') {
-          lastBlock.input = JSON.parse(lastBlock.inputJson ?? '');
+          lastBlock.input =
+            lastBlock.inputJson == null || lastBlock.inputJson === '' ? {} : JSON.parse(lastBlock.inputJson ?? '');
         }
         break;
       }

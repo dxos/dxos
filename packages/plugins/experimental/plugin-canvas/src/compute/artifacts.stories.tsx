@@ -34,9 +34,7 @@ const Render = () => {
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
   const [isGenerating, setIsGenerating] = useState(false);
-  const [queueDxn, setQueueDxn] = useState(() =>
-    new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
-  );
+  const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
   const [artifactsContext] = useState(() =>
     create<ArtifactsContext>({
       items: [
@@ -148,6 +146,14 @@ const Render = () => {
               icon='ph--copy--regular'
               onClick={() => navigator.clipboard.writeText(queueDxn)}
             />
+            <IconButton
+              iconOnly
+              label='Clear'
+              icon='ph--trash--regular'
+              onClick={() => {
+                setQueueDxn(randomQueueDxn());
+              }}
+            />
           </Input.Root>
         </div>
 
@@ -165,6 +171,9 @@ const Render = () => {
     </div>
   );
 };
+
+const randomQueueDxn = () =>
+  new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
 
 const meta: Meta<typeof Render> = {
   title: 'plugins/plugin-canvas/artifacts',
