@@ -40,7 +40,7 @@ export type ChessSchema = S.Schema.Type<typeof ChessSchema>;
 
 export const MapSchema = S.Struct({
   coordinates: GeoPoint,
-}).pipe(EchoObject('example.com/type/Map', '0.1.0'));
+}).pipe(EchoObject('example.com/type/Map', '0.1.0')) as any as S.Schema<{ id: ObjectId; coordinates: GeoPoint }>; // TODO(dmaretskyi): Fix the tuples/mutable issues.
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
 export type ArtifactsContext = {
@@ -96,7 +96,9 @@ export const artifacts: Record<string, Artifact> = [
         description: 'Query all active chess games.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
-          const artifacts = extensions.artifacts.getArtifacts();
+          const artifacts = extensions.artifacts
+            .getArtifacts()
+            .filter((artifact) => isInstanceOf(ChessSchema, artifact));
           invariant(artifacts.length > 0, 'No chess games found');
           return LLMToolResult.Success(artifacts);
         },
@@ -143,7 +145,31 @@ export const artifacts: Record<string, Artifact> = [
     - If the user's message relates to a map, you must return the map as a valid GeoJSON Point with valid coordinates.
     `,
     schema: MapSchema,
-    tools: [],
+    tools: [
+      defineTool({
+        name: 'map_query',
+        description: 'Query all active maps.',
+        schema: S.Struct({}),
+        execute: async (_, { extensions }) => {
+          const artifacts = extensions.artifacts.getArtifacts().filter((artifact) => isInstanceOf(MapSchema, artifact));
+          invariant(artifacts.length > 0, 'No maps found');
+          return LLMToolResult.Success(artifacts);
+        },
+      }),
+      defineTool({
+        name: 'map_new',
+        description: 'Create a new map.',
+        schema: S.Struct({
+          longitude: S.Number.annotations({ description: 'The longitude of the map.' }),
+          latitude: S.Number.annotations({ description: 'The latitude of the map.' }),
+        }),
+        execute: async ({ longitude, latitude }, { extensions }) => {
+          const artifact = createStatic(MapSchema, { coordinates: [longitude, latitude] });
+          extensions.artifacts.addArtifact(artifact);
+          return LLMToolResult.Success(formatArtifact(artifact.id));
+        },
+      }),
+    ],
   }),
 ].reduce<Record<string, Artifact>>((acc, artifact) => {
   acc[artifact.id] = artifact;

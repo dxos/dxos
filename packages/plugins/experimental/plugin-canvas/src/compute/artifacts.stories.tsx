@@ -58,7 +58,7 @@ const Render = () => {
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   log.info('items', { items: history });
 
-  const tools = [...artifacts['plugin-chess'].tools];
+  const tools = [...artifacts['plugin-chess'].tools, ...artifacts['plugin-map'].tools];
 
   const handleSubmit = useDynamicCallback(async (message: string) => {
     log.info('handleSubmit', { history });
@@ -158,7 +158,7 @@ const Render = () => {
         />
       </div>
       <div className='p-4 overflow-y-auto flex flex-col gap-4'>
-        {artifactsContext.items.reverse().map((item, idx) => (
+        {artifactsContext.items.toReversed().map((item, idx) => (
           <Surface key={idx} role='canvas-node' limit={1} data={item} />
         ))}
       </div>
