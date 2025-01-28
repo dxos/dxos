@@ -49,10 +49,14 @@
 
   .ch-main-sidebar {
     transition-property: inset-inline-start, inset-inline-end;
-    @apply fixed block-start-0 block-end-0 is-[100vw] z-[7] overscroll-contain overflow-x-hidden overflow-y-auto;
+    @apply fixed block-start-2 block-end-2 is-[calc(100dvw-3rem)] z-[7] overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
-    @apply border-is border-ie border-separator;
+    @apply border border-separator rounded-lg;
     @apply base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg;
+
+    @media (min-width: theme('screens.lg')) {
+      @apply block-start-0 block-end-0 rounded-none border-lb-0;
+    }
 
     &[data-resizing="false"] {
       @apply duration-200;
@@ -61,20 +65,35 @@
     &[data-side="is"] {
       @apply z-[8] -inline-start-[100vw] border-ie border-separator;
 
+      @media (min-width: theme('screens.lg')) {
+        @apply border-is-0;
+      }
+
       &[data-state="open"] {
-        @apply inline-start-0;
+        @apply inline-start-2;
+        @media (min-width: theme('screens.lg')) {
+          @apply inline-start-0;
+        }
       }
 
       @media (min-width: theme('screens.sm')) {
         @apply is-[--nav-sidebar-size] -inline-start-[--nav-sidebar-size];
       }
+
     }
 
     &[data-side="ie"] {
       @apply -inline-end-[100vw] border-is border-separator;
 
+      @media (min-width: theme('screens.lg')) {
+        @apply border-ie-0;
+      }
+
       &[data-state="open"] {
-        @apply inline-end-0;
+        @apply inline-end-2;
+        @media (min-width: theme('screens.lg')) {
+          @apply inline-end-0;
+        }
       }
 
       @media (min-width: theme('screens.sm')) {
