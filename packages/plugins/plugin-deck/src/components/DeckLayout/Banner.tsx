@@ -23,7 +23,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       <span className='self-center grow mis-1'>Composer</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
-          <div role='none' className='grid bs-full p-1 max-is-md mli-auto pointer-events-auto'>
+          <div role='none' className='grid bs-full pointer-fine:p-1 max-is-md mli-auto pointer-events-auto'>
             <Surface role='search-input' limit={1} />
           </div>
         </div>
