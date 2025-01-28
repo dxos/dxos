@@ -10,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { getObjectMeta } from './object';
 import { createProxy, isValidProxyTarget, objectData, ReactiveArray, type ReactiveHandler } from './proxy';
 import { TypedReactiveHandler } from './typed-handler';
-import { inspect } from 'util';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -87,7 +86,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isValidProxyTarget(value)) {
       const isTyped = getTypename(value) !== undefined;
       if (isTyped) {
-        console.log(inspect(value, { showHidden: true, colors: true }));
         return createProxy(value, TypedReactiveHandler.instance);
       } else {
         // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
