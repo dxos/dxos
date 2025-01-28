@@ -26,15 +26,15 @@
 
     @media (min-width: theme('screens.lg')) {
       &[data-sidebar-inline-start-state="open"] {
-        @apply is-[calc(100dvw-var(--nav-sidebar-size))];
+        inline-size: calc(100dvw - var(--nav-sidebar-size));
       }
 
       &[data-sidebar-inline-end-state="open"] {
-        @apply is-[calc(100dvw-var(--complementary-sidebar-size))];
+        inline-size: calc(100dvw - var(--complementary-sidebar-size));
       }
 
       &[data-sidebar-inline-start-state="open"][data-sidebar-inline-end-state="open"] {
-        @apply is-[calc(100dvw-var(--nav-sidebar-size)-var(--complementary-sidebar-size))];
+        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size));
       }
     }
   }
@@ -48,11 +48,16 @@
 @layer components {
 
   .ch-main-sidebar {
-    transition-property: inset-inline-start, inset-inline-end;
-    @apply fixed block-start-2 block-end-2 is-[calc(100dvw-3rem)] z-[7] overscroll-contain overflow-x-hidden overflow-y-auto;
+    @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
     @apply border border-separator rounded-lg;
     @apply base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg;
+
+    transition-property: inset-inline-start, inset-inline-end;
+    inset-block-start: max(.5rem, env(safe-area-inset-top));
+    inset-block-end: max(.5rem, env(safe-area-inset-bottom));
+    inline-size: calc(100dvw - 3rem);
+    z-index: 7;
 
     @media (min-width: theme('screens.lg')) {
       @apply block-start-0 block-end-0 rounded-none border-lb-0;
@@ -63,14 +68,15 @@
     }
 
     &[data-side="is"] {
-      @apply z-[8] -inline-start-[100vw] border-ie border-separator;
+      @apply -inline-start-[100vw] border-ie border-separator;
+      z-index: 8;
 
       @media (min-width: theme('screens.lg')) {
         @apply border-is-0;
       }
 
       &[data-state="open"] {
-        @apply inline-start-2;
+        inset-inline-start: max(.5rem, env(safe-area-inset-left));
         @media (min-width: theme('screens.lg')) {
           @apply inline-start-0;
         }
@@ -90,7 +96,7 @@
       }
 
       &[data-state="open"] {
-        @apply inline-end-2;
+        inset-inline-end: max(.5rem, env(safe-area-inset-right));
         @media (min-width: theme('screens.lg')) {
           @apply inline-end-0;
         }
@@ -103,9 +109,10 @@
   }
 
   .ch-main-overlay {
-    @apply fixed inset-0 z-[6] bg-scrim;
+    @apply fixed inset-0 bg-scrim;
     @apply transition-opacity duration-200 ease-in-out-symmetric;
     @apply opacity-0 hidden;
+    z-index: 6;
 
     &[data-state="open"] {
       @apply opacity-100 block;
