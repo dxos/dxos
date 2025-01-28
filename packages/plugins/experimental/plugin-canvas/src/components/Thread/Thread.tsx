@@ -82,7 +82,7 @@ export const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
               return <div key={idx}>{item.text}</div>;
             default:
               return (
-                <SyntaxHighlighter key={idx} language='json' classNames='overflow-hidden'>
+                <SyntaxHighlighter key={idx} language='json' classNames='whitespace-pre-wrap overflow-hidden'>
                   {JSON.stringify(item, null, 2)}
                 </SyntaxHighlighter>
               );

@@ -16,6 +16,7 @@ import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create } from '@dxos/react-client/echo';
 import { IconButton, Input } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useDynamicCallback, useQueue } from './hooks';
@@ -25,6 +26,7 @@ import {
   localServiceEndpoints,
   artifacts,
   type ArtifactsContext,
+  genericTools,
 } from './testing';
 import { Thread } from '../components';
 
@@ -56,7 +58,12 @@ const Render = () => {
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   log.info('items', { items: history });
 
-  const tools = [...artifacts['plugin-chess'].tools, ...artifacts['plugin-map'].tools];
+  const tools = [
+    //
+    ...genericTools,
+    ...artifacts['plugin-chess'].tools,
+    ...artifacts['plugin-map'].tools,
+  ];
 
   const handleSubmit = useDynamicCallback(async (message: string) => {
     log.info('handleSubmit', { history });
@@ -165,15 +172,15 @@ const Render = () => {
           onSubmit={handleSubmit}
         />
       </div>
-      <div className='p-4 overflow-hidden flex flex-col gap-4'>
+      <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
         {items.length > 0 && (
-          <div className='flex grow overflow-hidden'>
+          <div className={mx('flex grow overflow-hidden', items.length === 1 && 'row-span-2')}>
             <Surface role='canvas-node' limit={1} data={items[0]} />
           </div>
         )}
         {items.length > 1 && (
-          <div className='flex shrink-0gap-4 overflow-x-scroll min-h-[200px]'>
-            {items.slice(1).map((item, idx) => (
+          <div className='flex shrink-0 overflow-x-scroll min-h-[200px] divide-x divide-separator'>
+            {items.slice(1, 3).map((item, idx) => (
               <Surface key={idx} role='canvas-node' limit={1} data={item} />
             ))}
           </div>
