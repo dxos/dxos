@@ -78,17 +78,6 @@ export const NodePlankHeading = memo(
 
     return (
       <StackItem.Heading classNames='pie-1 border-be border-separator'>
-        {capabilities.hoistSidebarButton && (
-          <IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--sidebar--regular'
-            size={4}
-            label={t('open navigation sidebar label')}
-            onClick={() => (layoutContext.sidebarOpen = !layoutContext.sidebarOpen)}
-            classNames='!pli-2 mis-1 bs-[--rail-action]'
-          />
-        )}
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
@@ -110,6 +99,17 @@ export const NodePlankHeading = memo(
             </StackItem.SigilButton>
           )}
         </ActionRoot>
+        {capabilities.hoistSidebarButton && (
+          <IconButton
+            variant='ghost'
+            iconOnly
+            icon='ph--sidebar--regular'
+            size={4}
+            label={t('open navigation sidebar label')}
+            onClick={() => (layoutContext.sidebarOpen = !layoutContext.sidebarOpen)}
+            classNames='!pli-2 mis-1 bs-[--rail-action] order-first'
+          />
+        )}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}
