@@ -57,8 +57,8 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
         }
 
         const computeNode = createComputeNode(node);
-        if (node.data.type === 'trigger') {
-          linkTriggerToCompute(model, computeNode, node.data as TriggerShape);
+        if (node.type === 'trigger') {
+          linkTriggerToCompute(model, computeNode, node as TriggerShape);
         }
         model.addNode(computeNode);
         node.node = computeNode.id;
@@ -126,8 +126,8 @@ const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGr
     return;
   }
   for (const node of deleted.nodes) {
-    if (node.data.type === 'trigger') {
-      const trigger = node.data as TriggerShape;
+    if (node.type === 'trigger') {
+      const trigger = node as TriggerShape;
       space.db.remove(trigger.functionTrigger!.target!);
     }
   }
