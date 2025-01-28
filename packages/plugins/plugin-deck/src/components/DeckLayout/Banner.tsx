@@ -14,10 +14,8 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
   return (
     <header
       className={mx(
-        'flex items-stretch relative',
-        variant === 'topbar'
-          ? 'fixed inset-inline-0 block-start-0 p-1 bs-[--rail-size] border-be border-separator'
-          : 'pbs-1 pli-2',
+        'flex items-stretch relative plb-1 pis-1 pie-2',
+        variant === 'topbar' && 'fixed inset-inline-0 block-start-0 bs-[--rail-size] border-be border-separator',
         classNames,
       )}
     >
@@ -25,7 +23,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       <span className='self-center grow mis-1'>Composer</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
-          <div role='none' className='grid bs-full p-2 max-is-md mli-auto pointer-events-auto'>
+          <div role='none' className='grid bs-full p-1 max-is-md mli-auto pointer-events-auto'>
             <Surface role='search-input' limit={1} />
           </div>
         </div>
