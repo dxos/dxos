@@ -140,7 +140,7 @@ const Render = () => {
         />
       </div>
       <div className='p-4 overflow-y-auto flex flex-col gap-4'>
-        {artifactsList.map((item, idx) => (
+        {artifactsList.reverse().map((item, idx) => (
           <Surface key={idx} role='canvas-node' limit={1} data={item} />
         ))}
       </div>
