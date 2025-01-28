@@ -7,7 +7,8 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type LLMToolDefinition } from './types';
-import { ObjectId, type LLMTool } from '../ai-service';
+import { type LLMTool } from '../ai-service';
+import { ObjectId } from '@dxos/echo-schema';
 import { type AIServiceClient, type Message, type ResultStreamEvent, type LLMModel } from '../ai-service';
 
 export type CreateLLMConversationParams = {

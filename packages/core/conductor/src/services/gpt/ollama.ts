@@ -6,7 +6,8 @@ import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 import { type Ollama } from 'ollama';
 
-import { ObjectId, type MessageImageContentBlock } from '@dxos/assistant';
+import { ObjectId } from '@dxos/echo-schema';
+import { type MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import { type GptInput, type GptOutput } from '../../nodes';

@@ -12,9 +12,10 @@ import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
-import { AIServiceClientImpl, ObjectId } from '../ai-service';
+import { AIServiceClientImpl } from '../ai-service';
 import { runLLM, createUserMessage } from '../conversation';
 import { EchoDataSource } from '../cypher/echo-data-source';
+import { ObjectId } from '@dxos/echo-schema';
 
 const ENDPOINT = 'http://localhost:8787';
 

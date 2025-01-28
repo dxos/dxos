@@ -37,7 +37,7 @@ export const Canvas = ({ children }: PropsWithChildren) => {
 };
 
 export const CanvasContent = ({ children }: PropsWithChildren) => {
-  const { id, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useCanvasContext();
   const shapesRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +92,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   return (
     <>
       {/* Grid. */}
-      {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
+      {showGrid && <Grid size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Layout. */}
       {<Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />}

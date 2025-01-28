@@ -8,8 +8,9 @@ import { toJsonSchema } from '@dxos/echo-schema';
 import { JsonSchemaType } from '@dxos/echo-schema';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ObjectId } from '@dxos/echo-schema';
 
-import { ObjectId, type Message } from '../ai-service';
+import { type Message } from '../ai-service';
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),

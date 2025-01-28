@@ -10,14 +10,8 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 
-import {
-  Message,
-  type GenerateRequest,
-  type ObjectId,
-  type ResultStreamEvent,
-  type Space,
-  type Thread,
-} from './schema';
+import { Message, type GenerateRequest, type ResultStreamEvent, type Space, type Thread } from './schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { iterSSEMessages } from './sse';
 
 export type AIServiceClientParams = {
@@ -171,12 +165,13 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
   private _createIterator(): AsyncIterator<ResultStreamEvent> {
     const self = this;
-    return (this._iterator ??= (async function* () {
+    return (this._iterator ??= async function* (this: GenerationStream) {
       for await (const event of self._getIterator()) {
         self._processEvent(event);
         yield event;
       }
-    })());
+      this._done.wake();
+    }.call(this));
   }
 
   private _processEvent(event: ResultStreamEvent) {
@@ -237,6 +232,5 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         break;
       }
     }
-    this._done.wake();
   }
 }

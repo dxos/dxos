@@ -5,13 +5,8 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import {
-  ObjectId,
-  type AIServiceClient,
-  type LLMTool,
-  type Message,
-  type MessageImageContentBlock,
-} from '@dxos/assistant';
+import { ObjectId } from '@dxos/echo-schema';
+import { type AIServiceClient, type LLMTool, type Message, type MessageImageContentBlock } from '@dxos/assistant';
 import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -74,7 +69,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
               type: 'custom',
               nodeId: logger.nodeId!,
               event,
-            });;
+            });
             return Effect.void;
           }),
           Stream.runDrain,

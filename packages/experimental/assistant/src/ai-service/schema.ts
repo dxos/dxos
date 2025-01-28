@@ -3,24 +3,19 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { type Brand } from 'effect';
-import { ulid } from 'ulidx';
 
-import { JsonSchemaType } from '@dxos/echo-schema';
+import {
+  EchoObject,
+  EntityKind,
+  JsonSchemaType,
+  ObjectAnnotationId,
+  ObjectId,
+  type ObjectAnnotation,
+} from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
-export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
-const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
-
-export type ObjectId = typeof ObjectIdSchema.Type;
-export const ObjectId: S.SchemaClass<string & Brand.Brand<typeof ObjectIdBrand>, string> & { random(): ObjectId } =
-  class extends ObjectIdSchema {
-    static random(): ObjectId {
-      return ulid() as ObjectId;
-    }
-  };
 
 // TODO(dmaretskyi): Dedup this schema with the one in dxos/edge.
 
@@ -101,7 +96,7 @@ export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 //
 //
 
-export const Message = S.Struct({
+const MessageSchema = S.Struct({
   id: ObjectId,
   threadId: S.optional(ObjectId),
   spaceId: S.optional(SpaceIdSchema),
@@ -121,14 +116,16 @@ export const Message = S.Struct({
   // updated: S.optional(S.DateFromString),
 });
 
+export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
+
 export interface Message extends S.Schema.Type<typeof Message> {}
 
 /**
  * Message transformed from the database row.
  */
 export const MessageFromDb = S.Struct({
-  ...Message.fields,
-  content: S.propertySignature(Message.fields.content.pipe((schema) => S.parseJson(schema))).pipe(
+  ...MessageSchema.fields,
+  content: S.propertySignature(MessageSchema.fields.content.pipe((schema) => S.parseJson(schema))).pipe(
     S.fromKey('contentJson'),
   ),
 });

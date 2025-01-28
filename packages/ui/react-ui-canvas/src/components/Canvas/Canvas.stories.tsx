@@ -31,6 +31,25 @@ const Render = (props: GridProps) => {
   );
 };
 
+const TwoCanvases = (props: GridProps) => {
+  return (
+    <div className='grid grid-cols-2 gap-2 w-full h-full'>
+      <div className='h-full relative'>
+        <Canvas>
+          <Grid {...props} />
+          <Content />
+        </Canvas>
+      </div>
+      <div className='h-full relative'>
+        <Canvas>
+          <Grid {...props} />
+          <Content />
+        </Canvas>
+      </div>
+    </div>
+  );
+};
+
 const Content = () => {
   useWheel();
   return (
@@ -81,8 +100,10 @@ export default meta;
 type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
-  args: {
-    id: 'test',
-    size: 16,
-  },
+  args: { size: 16 },
+};
+
+export const SideBySide: Story = {
+  args: { size: 16 },
+  render: TwoCanvases,
 };
