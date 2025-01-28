@@ -170,7 +170,7 @@ export class DragMonitor {
 // TODO(burdon): Handle cancellation.
 // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
 export const useDragMonitor = () => {
-  const { graph, selection, dragMonitor, registry, actionHandler } = useEditorContext();
+  const { graph, selection, dragMonitor, layout, actionHandler } = useEditorContext();
   const { root, projection } = useCanvasContext();
   const snapPoint = useSnap();
 
@@ -243,7 +243,7 @@ export const useDragMonitor = () => {
 
           case 'anchor': {
             // Snap to closest anchor.
-            const target = getClosestAnchor(registry, graph as CanvasGraphModel<Polygon>, pos, (shape, anchor, d) => {
+            const target = getClosestAnchor(layout, graph as CanvasGraphModel<Polygon>, pos, (shape, anchor, d) => {
               return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
             });
             dragMonitor.update({

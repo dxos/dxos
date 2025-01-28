@@ -84,7 +84,7 @@ export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEf
  */
 export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   input: ValueBag<I>,
-  node?: ComputeNode,
+  node?: ComputeNode, // TODO(burdon): Why could node be undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
 export type ComputeRequirements = EventLogger | EdgeClientService | GptService | SpaceService | Scope.Scope;
@@ -97,13 +97,16 @@ export type ComputeEffect<T> = Effect.Effect<T, Error | NotExecuted, ComputeRequ
 /**
  * Lifts a compute function that takes all inputs together and returns all outputs together.
  */
+// TODO(burdon): Why could node be undefined?
 // TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
 export const synchronizedComputeFunction =
-  <I extends ValueRecord, O extends ValueRecord>(fn: (input: I) => ComputeEffect<O>): ComputeFunction<I, O> =>
-  (inputBag) =>
+  <I extends ValueRecord, O extends ValueRecord>(
+    fn: (input: I, node?: ComputeNode) => ComputeEffect<O>,
+  ): ComputeFunction<I, O> =>
+  (inputBag, node) =>
     Effect.gen(function* () {
       const input = yield* unwrapValueBag(inputBag);
-      const output = yield* fn(input);
+      const output = yield* fn(input, node);
       return makeValueBag<O>(output);
     });
 

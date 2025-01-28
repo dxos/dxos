@@ -47,7 +47,6 @@ export const TextInputComponent = ({ shape, title, ...props }: TextInputComponen
     if (value.length) {
       runtime.setOutput(DEFAULT_OUTPUT, value);
       inputRef.current?.setText('');
-      inputRef.current?.focus();
     }
   };
 

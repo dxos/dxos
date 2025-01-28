@@ -44,17 +44,30 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {
+      const properties = findHandlebarVariables(value);
+      const schema = S.Struct(
+        properties.reduce((acc, property) => {
+          acc[property] = S.Any;
+          return acc;
+        }, {} as any),
+      );
+
       node.value = value;
-      node.inputSchema = toJsonSchema(S.Struct({ foo: S.String }));
-      inputRef.current?.focus();
+      node.inputSchema = toJsonSchema(schema);
     }
   };
 
   return (
     <Box shape={shape} title={'Template'}>
-      <TextBox ref={inputRef} value={shape.text} onEnter={handleEnter} {...props} />
+      <TextBox ref={inputRef} value={shape.text} onBlur={handleEnter} onEnter={handleEnter} {...props} />
     </Box>
   );
+};
+
+const findHandlebarVariables = (text: string): string[] => {
+  const regex = /\{\{([^}]+)\}\}/g; // Matches anything between {{ }}
+  const matches = [...text.matchAll(regex)];
+  return matches.map((match) => match[1].trim());
 };
 
 //
@@ -72,9 +85,6 @@ export const templateShape: ShapeDef<TemplateShape> = {
   icon: 'ph--article--regular',
   component: (props) => <TextInputComponent {...props} placeholder={'Prompt'} />,
   createShape: createTemplate,
-  getAnchors: (shape) => {
-    // TODO(burdon): Get dynamic schema.
-    return createFunctionAnchors(shape, VoidInput, TemplateOutput);
-  },
+  getAnchors: (shape) => createFunctionAnchors(shape, VoidInput, TemplateOutput),
   resizable: true,
 };

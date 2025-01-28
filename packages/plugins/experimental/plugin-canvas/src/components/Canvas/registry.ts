@@ -13,7 +13,7 @@ import { type Anchor } from '../anchors';
 /**
  * Shape definition.
  */
-export type ShapeDef<S extends Shape = Polygon> = {
+export type ShapeDef<S extends Shape = any> = {
   type: string;
   name: string;
   icon: string;
@@ -32,7 +32,7 @@ export type ShapeDefSet<S extends Shape = any> = { title?: string; shapes: Shape
 export class ShapeRegistry {
   private readonly _registry = new Map<string, ShapeDef>();
 
-  constructor(private readonly _defs: ShapeDefSet<Polygon>[] = []) {
+  constructor(private readonly _defs: ShapeDefSet[] = []) {
     this._defs.forEach(({ shapes }) => shapes.forEach((shape) => this.registerShapeDef(shape)));
   }
 
@@ -59,11 +59,14 @@ export class ShapeRegistry {
   }
 }
 
+/**
+ * Layout helper.
+ */
 export class ShapeLayout {
-  constructor(private readonly _registry: ShapeRegistry) {}
+  constructor(protected readonly _registry: ShapeRegistry) {}
 
-  // getAnchors(shape: Shape): Record<string, Anchor> {
-  //   const shapeDef = this._registry.getShapeDef(shape.id);
-  //   return shapeDef?.getAnchors?.(shape) ?? {};
-  // }
+  getAnchors(shape: Shape): Record<string, Anchor> {
+    const shapeDef = this._registry.getShapeDef(shape.type);
+    return shapeDef?.getAnchors?.(shape) ?? {};
+  }
 }

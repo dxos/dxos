@@ -4,7 +4,7 @@
 
 import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -26,18 +26,19 @@ export type TextBoxProps = ThemedClassName<
   {
     value?: string;
     centered?: boolean;
+    onBlur?: (value: string) => void;
     onEnter?: (value: string) => void;
     onCancel?: () => void;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
-  ({ classNames, value = '', centered, onEnter, onCancel, ...rest }, forwardedRef) => {
+  ({ classNames, value = '', centered, onBlur, onEnter, onCancel, ...rest }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const [modified, setModified] = useState(false);
+    const modified = useRef(false);
     const doc = useRef(value);
     useEffect(() => {
-      setModified(false);
+      modified.current = false;
       doc.current = value;
     }, [value]);
 
@@ -59,12 +60,12 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
           // Detect changes.
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
-              setModified(doc.current !== update.state.doc.toString());
+              modified.current = doc.current !== update.state.doc.toString();
             }
           }),
           // TODO(burdon): Only fire if modified.
           EditorView.focusChangeEffect.of((state, focusing) => {
-            if (!focusing && modified) {
+            if (!focusing && modified.current) {
               onEnter?.(state.doc.toString());
             }
 
@@ -77,7 +78,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
                 preventDefault: true,
                 run: (view) => {
                   onEnter?.(view.state.doc.toString());
-                  setModified(false);
+                  modified.current = false;
                   return true;
                 },
               },
@@ -85,7 +86,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
                 key: 'Shift-Enter',
                 run: (view) => {
                   view.dispatch(view.state.replaceSelection('\n'));
-                  setModified(false);
+                  modified.current = false;
                   return true;
                 },
               },
@@ -93,7 +94,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
                 key: 'Escape',
                 run: () => {
                   onCancel?.();
-                  setModified(false);
+                  modified.current = false;
                   return true;
                 },
               },

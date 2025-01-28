@@ -3,7 +3,7 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { type PropsWithChildren, useEffect, useRef, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useCanvasContext } from '@dxos/react-ui-canvas';

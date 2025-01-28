@@ -9,8 +9,8 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
+import { type ComputeGraphModel, ComputeNode, DefaultInput, DefaultOutput } from '@dxos/conductor';
+import { S, toEffectSchema } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -19,7 +19,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { type ComputeGraphController } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
-import { type ComputeShape } from './shapes';
+import { createFunctionAnchors, type ComputeShape } from './shapes';
 import {
   capabilities,
   createEdgeServices,
@@ -34,11 +34,13 @@ import {
   createTemplateCircuit,
 } from './testing';
 import {
+  type Anchor,
   Container,
   Editor,
   type EditorController,
   type EditorRootProps,
   JsonFilter,
+  ShapeLayout,
   ShapeRegistry,
 } from '../components';
 import { useSelection } from '../testing';
@@ -56,6 +58,33 @@ const combine = (...cbs: UnsubscribeCallback[]) => {
   };
 };
 
+// TODO(burdon): Customize layout. Specialize ComputeShapeDef and registry.
+export class ComputeShapeLayout extends ShapeLayout {
+  constructor(
+    private _controller: ComputeGraphController,
+    registry: ShapeRegistry,
+  ) {
+    super(registry);
+  }
+
+  // TODO(burdon): Doesn't update.
+  override getAnchors(shape: ComputeShape): Record<string, Anchor> {
+    const shapeDef = this._registry.getShapeDef(shape.type);
+    let anchors = shapeDef?.getAnchors?.(shape) ?? {};
+    if (shape.node) {
+      const node = this._controller.graph.getNode(shape.node);
+      if (node.inputSchema || node.outputSchema) {
+        // TODO(burdon): Requires that component defined input and output types.
+        const inputSchema = node.inputSchema ? toEffectSchema(node.inputSchema) : DefaultInput;
+        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : DefaultOutput;
+        anchors = createFunctionAnchors(shape, inputSchema, outputSchema);
+      }
+    }
+
+    return anchors;
+  }
+}
+
 type RenderProps = EditorRootProps<ComputeShape> &
   PropsWithChildren<{
     init?: boolean;
@@ -64,7 +93,16 @@ type RenderProps = EditorRootProps<ComputeShape> &
     controller?: ComputeGraphController;
   }>;
 
-const Render = ({ id = 'test', children, graph, controller, init, sidebar: _sidebar, ...props }: RenderProps) => {
+const Render = ({
+  id = 'test',
+  children,
+  graph,
+  controller,
+  init,
+  sidebar: _sidebar,
+  registry,
+  ...props
+}: RenderProps) => {
   const [, forceUpdate] = useState({});
 
   const editorRef = useRef<EditorController>(null);
@@ -136,14 +174,11 @@ const Render = ({ id = 'test', children, graph, controller, init, sidebar: _side
   // Sync monitor.
   const graphMonitor = useGraphMonitor(controller?.graph);
 
-  // Dynamic defs.
-  // const layoutHelper: LayoutHelper<ComputeShape> = {
-  // getAnchors: (shape) => {
-  //   const shapeDef = registry.getShapeDef(shape.type);
-  //   return shapeDef.getAnchors?.();
-  //   // return shape.node ? controller?.graph.findNode(shape.node) : undefined;
-  // },
-  // };
+  // Layout.
+  const layout = useMemo(
+    () => (controller && registry ? new ComputeShapeLayout(controller, registry) : undefined),
+    [controller, registry],
+  );
 
   if (!controller) {
     return <div />;
@@ -158,6 +193,8 @@ const Render = ({ id = 'test', children, graph, controller, init, sidebar: _side
             id={id}
             graph={graph}
             graphMonitor={graphMonitor}
+            layout={layout}
+            registry={registry}
             selection={selection}
             autoZoom
             {...props}
@@ -287,7 +324,7 @@ export const Template: Story = {
   args: {
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'controller',
+    // sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createTemplateCircuit(), createEdgeServices()),
   },
