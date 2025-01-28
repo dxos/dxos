@@ -25,6 +25,7 @@ import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
+import { Topbar } from './Topbar';
 import { type Overscroll } from '../../types';
 import { calculateOverscroll, useBreakpoints } from '../../util';
 import { useDeckContext } from '../DeckContext';
@@ -167,7 +168,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           {!isEmpty && (
             <Main.Content
               bounce
-              classNames='grid lg:block-end-[--statusbar-size]'
+              classNames='grid lg:block-end-[--statusbar-size] lg:block-start-[--rail-size]'
               handlesFocus
               style={
                 {
@@ -221,7 +222,12 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           )}
 
           {/* Status bar. */}
-          {breakpoint === 'desktop' && <StatusBar showHints={showHints} />}
+          {breakpoint === 'desktop' && (
+            <>
+              <Topbar />
+              <StatusBar showHints={showHints} />
+            </>
+          )}
         </Main.Root>
       )}
 

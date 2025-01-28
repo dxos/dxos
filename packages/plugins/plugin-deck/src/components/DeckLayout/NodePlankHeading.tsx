@@ -14,14 +14,14 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useTranslation, IconButton } from '@dxos/react-ui';
+import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
+import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
 import { useBreakpoints } from '../../util';
-import { useLayout } from '../LayoutContext';
 
 export type NodePlankHeadingProps = {
   coordinate: LayoutCoordinate;
@@ -43,7 +43,6 @@ export const NodePlankHeading = memo(
     pending,
     actions = [],
   }: NodePlankHeadingProps) => {
-    const layoutContext = useLayout();
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -68,7 +67,6 @@ export const NodePlankHeading = memo(
     const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        hoistSidebarButton: layoutPart === 'solo' || breakpoint === 'mobile',
         solo: (layoutPart === 'solo' || layoutPart === 'main') && breakpoint !== 'mobile',
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
@@ -99,17 +97,7 @@ export const NodePlankHeading = memo(
             </StackItem.SigilButton>
           )}
         </ActionRoot>
-        {capabilities.hoistSidebarButton && (
-          <IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--sidebar--regular'
-            size={4}
-            label={t('open navigation sidebar label')}
-            onClick={() => (layoutContext.sidebarOpen = !layoutContext.sidebarOpen)}
-            classNames='!pli-2 mis-1 bs-[--rail-action] order-first'
-          />
-        )}
+        {layoutPart === 'solo' && breakpoint !== 'desktop' && <ToggleSidebarButton />}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}
@@ -155,18 +143,7 @@ export const NodePlankHeading = memo(
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
         >
-          {/* TODO(wittjosiah): This doesn't behave exactly the same as the rest of the button group. */}
-          {layoutPart !== 'complementary' && (
-            <IconButton
-              iconOnly
-              onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
-              variant='ghost'
-              label={t('open complementary sidebar label')}
-              classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
-              icon='ph--sidebar-simple--regular'
-              size={4}
-            />
-          )}
+          <ToggleComplementarySidebarButton />
         </PlankControls>
       </StackItem.Heading>
     );
