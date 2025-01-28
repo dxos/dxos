@@ -21,6 +21,12 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
       <span className='self-center grow mis-1'>Composer</span>
+      {variant === 'topbar' && (
+        <div role='none' className='grow grid'>
+          <Surface role='search-input' limit={1} />
+        </div>
+      )}
+      <span role='none' className='grow' />
       <Surface role='header-end' limit={1} />
       <Surface role='notch-start' limit={1} />
     </header>

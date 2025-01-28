@@ -75,7 +75,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <StackItem.Heading classNames='pie-1 border-be border-separator'>
+      <StackItem.Heading classNames='p-1 border-be border-separator items-stretch gap-1'>
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
@@ -115,7 +115,6 @@ export const NodePlankHeading = memo(
         <PlankControls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
-          classNames='mx-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;

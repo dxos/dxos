@@ -51,7 +51,7 @@
     transition-property: inset-inline-start, inset-inline-end;
     @apply fixed block-start-0 block-end-0 is-[100vw] z-[7] overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
-    @apply border-is border-ie lg:border-none border-separator;
+    @apply border-is border-ie border-separator;
     @apply base-surface md:fixed-surface backdrop-blur-md dark:backdrop-blur-lg;
 
     &[data-resizing="false"] {

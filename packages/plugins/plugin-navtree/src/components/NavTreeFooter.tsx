@@ -58,7 +58,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
     <div
       role='none'
       className={mx(
-        'flex bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content justify-end',
+        'flex pbe-[env(safe-area-inset-bottom)] box-content justify-end',
         layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >
@@ -76,7 +76,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
           >
             <Message.Root valence='warning' className='rounded-be-none p-5'>
               <Message.Title>
-                <Icon icon='ph--warning--duotone' classNames='inline mie-2 is-6 bs-6' />
+                <Icon icon='ph--warning--duotone' size={6} classNames='inline mie-2' />
                 <span>{t('warning title')}</span>
               </Message.Title>
               <Message.Body>
