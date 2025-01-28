@@ -111,6 +111,25 @@ export const artifacts: Record<string, Artifact> = [
           return LLMToolResult.Success(artifact.value);
         },
       }),
+      defineTool({
+        name: 'chess_move',
+        description: 'Make a move in the chess game.',
+        schema: S.Struct({
+          id: ObjectId,
+          move: S.String.annotations({
+            description: 'The move to make in the chess game.',
+            examples: ['e4', 'Bf3'],
+          }),
+        }),
+        execute: async ({ id, move }, { extensions }) => {
+          const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
+          invariant(isInstanceOf(ChessSchema, artifact));
+          const board = new Chess(artifact.value);
+          board.move(move);
+          artifact.value = board.fen();
+          return LLMToolResult.Success(artifact.value);
+        },
+      }),
     ],
   }),
   defineArtifact({
