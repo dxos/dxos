@@ -3,6 +3,7 @@ import { Contact } from '../testing/schema';
 import { createStatic } from './create';
 import { getTypename } from './typename';
 import { getSchemaDXN, isInstanceOf } from '../types';
+import { getSchema } from '../ast';
 
 describe('create (static version)', () => {
   test('create static object', () => {
@@ -32,5 +33,14 @@ describe('create (static version)', () => {
       name: 'John',
       email: 'john@example.com',
     });
+  });
+
+  test('getSchema', () => {
+    const contact = createStatic(Contact, {
+      name: 'John',
+      email: 'john@example.com',
+    });
+
+    expect(getSchema(contact)).toBe(Contact);
   });
 });

@@ -4,11 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { getSchema, TypedObject } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 import { create } from './object';
-import { getSchema } from './proxy';
 
 class Org extends TypedObject({
   typename: 'example.com/type/Org',
