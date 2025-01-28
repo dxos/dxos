@@ -10,7 +10,7 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ObjectId } from '@dxos/echo-schema';
 
-import { type Message } from '../ai-service';
+import { type Message, type MessageContentBlock } from '../ai-service';
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),
@@ -34,10 +34,34 @@ export type LLMToolDefinition = {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<LLMToolResult>;
 };
 
-export type ToolExecutionContext = {};
+declare global {
+  /**
+   * Extensions to the tool execution context.
+   *
+   * Different modules can extend this definition to add their own properties.
+   *
+   * @example
+   * ```ts
+   * declare global {
+   *   interface LLMToolContextExtensions {
+   *     chess: {
+   *       board: string;
+   *     };
+   *   }
+   * }
+   * ```
+   *
+   * @see https://www.typescriptlang.org/docs/handbook/declaration-merging.html#global-augmentation
+   */
+  interface LLMToolContextExtensions {}
+}
+
+export type ToolExecutionContext = {
+  extensions: LLMToolContextExtensions;
+};
 
 export type LLMToolResult =
-  | { kind: 'success'; result: unknown }
+  | { kind: 'success'; result: unknown; extractContentBlocks?: MessageContentBlock[] }
   | { kind: 'error'; message: string }
   | { kind: 'break'; result: unknown };
 
@@ -46,7 +70,11 @@ export const LLMToolResult = Object.freeze({
    * The tool execution was successful.
    * Gives the result back to the LLM.
    */
-  Success: (result: unknown): LLMToolResult => ({ kind: 'success', result }),
+  Success: (result: unknown, extractContentBlocks?: MessageContentBlock[]): LLMToolResult => ({
+    kind: 'success',
+    result,
+    extractContentBlocks,
+  }),
 
   Error: (message: string): LLMToolResult => ({ kind: 'error', message }),
   /**
