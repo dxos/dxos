@@ -14,7 +14,7 @@ import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -70,6 +70,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
       if (thisRefreshId !== refreshId.current) {
         return;
       }
+
       setObjects(objects as T[]);
     } catch (err) {
       setError(err as Error);
@@ -145,7 +146,7 @@ const Render = () => {
         role: 'user',
         content: [{ type: 'text', text: message }],
       });
-      historyQueue.append([userMessage]); // TODO(burdon): Async.
+      void historyQueue.append([userMessage]);
 
       const response = await aiServiceClient.generate({
         model: '@anthropic/claude-3-5-sonnet-20241022',
@@ -164,7 +165,7 @@ const Render = () => {
 
       const assistantMessages = await response.complete();
       log.info('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
-      historyQueue.append([...assistantMessages.map((m) => createStatic(Message, m))]);
+      void historyQueue.append([...assistantMessages.map((m) => createStatic(Message, m))]);
       setPendingMessages([]);
     } finally {
       setIsGenerating(false);
@@ -172,9 +173,9 @@ const Render = () => {
   });
 
   return (
-    <div className='grid grid-cols-2 w-full h-full divide-x divide-separator'>
-      <div className='p-4'>
-        <div className='flex gap-2 items-center'>
+    <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
+      <div className='flex flex-col gap-4 overflow-hidden'>
+        <div className='flex gap-2 items-center p-4'>
           <Input.Root>
             <Input.TextInput
               classNames='w-full text-sm px-2 py-1 border rounded'
@@ -182,15 +183,22 @@ const Render = () => {
               value={queueDxn}
               onChange={(e) => setQueueDxn(e.target.value)}
             />
-            <Icon icon='ph--copy--regular' onClick={() => navigator.clipboard.writeText(queueDxn)} />
+            <IconButton
+              iconOnly
+              label='Copy'
+              icon='ph--copy--regular'
+              onClick={() => navigator.clipboard.writeText(queueDxn)}
+            />
           </Input.Root>
         </div>
+
         <Thread
           items={[...historyQueue.objects, ...pendingMessages]}
           onSubmit={handleSubmit}
           isGenerating={isGenerating}
         />
       </div>
+
       <div className='p-4'>
         <Surface
           role='canvas-node'
@@ -214,21 +222,38 @@ type ThreadProps = {
 };
 
 const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const inputBox = useRef<TextBoxControl>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [items]);
+
   return (
-    <div>
-      {items.map((item, i) => (
-        <ThreadItem key={i} item={item} />
-      ))}
-      {isGenerating && <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />}
-      <div>
+    <div className='flex flex-col grow overflow-hidden'>
+      <div className='flex flex-col w-full gap-4 overflow-x-hidden overflow-y-scroll scrollbar-none' ref={scrollRef}>
+        {items.map((item, i) => (
+          <ThreadItem key={i} classNames='px-4' item={item} />
+        ))}
+      </div>
+
+      <div className='flex p-4 gap-2 items-center'>
         <TextBox
-          classNames='bg-blue-100 dark:bg-blue-800'
           ref={inputBox}
+          placeholder='Ask a question'
+          classNames='bg-base'
           onEnter={(value) => {
             onSubmit(value);
             inputBox.current?.setText('');
+            scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
           }}
+        />
+        <IconButton
+          variant='ghost'
+          icon={isGenerating ? 'ph--spinner-gap--regular' : 'ph--robot--regular'}
+          classNames={[isGenerating && 'animate-spin']}
+          label='Generate'
+          size={5}
+          iconOnly
         />
       </div>
     </div>
@@ -244,15 +269,14 @@ const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
     return <div className={mx(classNames)}>{item}</div>;
   }
 
-  // TODO(burdon): Hack; introspect type.
   // TODO(burdon): Markdown parser.
   const { role, content } = item;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 px-2 text-sm',
-          role === 'user' ? 'bg-blue-100 dark:bg-blue-800' : 'whitespace-pre-wrap bg-neutral-50 dark:bg-neutral-800',
+          'block rounded-md p-1 px-2 bg-base',
+          role === 'user' ? 'bg-neutral-50 dark:bg-blue-800' : 'whitespace-pre-wrap',
         )}
       >
         {content.map((item, idx) => {
@@ -278,7 +302,7 @@ const meta: Meta<typeof Render> = {
   decorators: [
     //
     withTheme,
-    withLayout({ fullscreen: true }),
+    withLayout({ fullscreen: true, tooltips: true }),
     withPluginManager({ capabilities }),
   ],
 };
