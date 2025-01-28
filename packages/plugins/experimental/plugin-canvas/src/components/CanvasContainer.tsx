@@ -10,7 +10,13 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { ShapeRegistry } from './Canvas';
 import { Editor, type EditorController } from './Editor';
 import { KeyboardContainer } from './KeyboardContainer';
-import { type ComputeShape, computeShapes, createComputeGraphController, useGraphMonitor } from '../compute';
+import {
+  ComputeContext,
+  type ComputeShape,
+  computeShapes,
+  createComputeGraphController,
+  useGraphMonitor,
+} from '../compute';
 import { type CanvasBoardType } from '../types';
 import { CanvasGraphModel } from '../types';
 
@@ -34,14 +40,16 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
   const editorRef = useRef<EditorController>(null);
 
   return (
-    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
-      <KeyboardContainer id={id}>
-        <Editor.Root id={id} ref={editorRef} registry={registry} graph={graph} graphMonitor={graphMonitor as any}>
-          <Editor.Canvas />
-          <Editor.UI />
-        </Editor.Root>
-      </KeyboardContainer>
-    </StackItem.Content>
+    <ComputeContext.Provider value={{ controller }}>
+      <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
+        <KeyboardContainer id={id}>
+          <Editor.Root id={id} ref={editorRef} registry={registry} graph={graph} graphMonitor={graphMonitor as any}>
+            <Editor.Canvas />
+            <Editor.UI />
+          </Editor.Root>
+        </KeyboardContainer>
+      </StackItem.Content>
+    </ComputeContext.Provider>
   );
 };
 
