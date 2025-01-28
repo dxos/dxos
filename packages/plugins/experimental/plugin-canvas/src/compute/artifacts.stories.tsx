@@ -58,7 +58,7 @@ const Render = () => {
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   log.info('items', { items: history });
 
-  const tools = [...artifacts['plugin-chess'].tools];
+  const tools = [...artifacts['plugin-chess'].tools, ...artifacts['plugin-map'].tools];
 
   const handleSubmit = useDynamicCallback(async (message: string) => {
     log.info('handleSubmit', { history });
@@ -130,6 +130,8 @@ const Render = () => {
     }
   });
 
+  const items = artifactsContext.items.toReversed();
+
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
       <div className='flex flex-col gap-4 overflow-hidden'>
@@ -157,11 +159,11 @@ const Render = () => {
           onSubmit={handleSubmit}
         />
       </div>
-      <div className='p-4 overflow-y-auto flex flex-col gap-4'>
-        {artifactsContext.items.length > 0 && <Surface role='canvas-node' limit={1} data={artifactsContext.items[0]} />}
-        {artifactsContext.items.length > 1 && (
-          <div className='flex gap-4 overflow-x-scroll'>
-            {artifactsContext.items.slice(1).map((item, idx) => (
+      <div className='p-4 overflow-hidden flex flex-col gap-4'>
+        {items.length > 0 && <Surface role='canvas-node' limit={1} data={artifactsContext.items[0]} />}
+        {items.length > 1 && (
+          <div className='flex gap-4 overflow-x-scroll min-h-[200px]'>
+            {items.slice(1).map((item, idx) => (
               <Surface key={idx} role='canvas-node' limit={1} data={item} />
             ))}
           </div>
