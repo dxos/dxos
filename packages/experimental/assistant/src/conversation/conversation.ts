@@ -19,10 +19,12 @@ export type CreateLLMConversationParams = {
    */
   system?: string;
 
-  spaceId: SpaceId;
-  threadId: ObjectId;
+  spaceId?: SpaceId;
+  threadId?: ObjectId;
 
   tools: LLMTool[];
+
+  history?: Message[];
 
   client: AIServiceClient;
 
@@ -38,6 +40,7 @@ export type ConversationEvent =
 
 export const runLLM = async (params: CreateLLMConversationParams) => {
   let conversationResult: any = null;
+  const history = params.history ?? [];
 
   const generate = async () => {
     log('llm generate', { tools: params.tools });
@@ -46,6 +49,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       model: params.model,
       spaceId: params.spaceId,
       threadId: params.threadId,
+      history,
       systemPrompt: params.system,
       tools: params.tools as any,
     });
@@ -59,8 +63,8 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     log('llm result', { time: Date.now() - beginTs, message });
     invariant(message);
     params.logger?.({ type: 'message', message });
-    await params.client.insertMessages(
-      messages.map((msg) => ({ ...msg, content: msg.content.filter((c) => c.type !== 'image') })),
+    history.push(
+      ...messages.map((msg): Message => ({ ...msg, content: msg.content.filter((c) => c.type !== 'image') })),
     );
 
     const isToolUse = message.content.at(-1)?.type === 'tool_use';
@@ -92,7 +96,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
             ],
           };
           params.logger?.({ type: 'message', message: resultMessage });
-          await params.client.insertMessages([resultMessage]);
+          history.push(resultMessage);
 
           return true;
         }
@@ -112,7 +116,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
             ],
           };
           params.logger?.({ type: 'message', message: resultMessage });
-          await params.client.insertMessages([resultMessage]);
+          history.push(resultMessage);
 
           return true;
         }
@@ -131,5 +135,6 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
 
   return {
     result: conversationResult,
+    history,
   };
 };
