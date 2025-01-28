@@ -158,9 +158,14 @@ const Render = () => {
         />
       </div>
       <div className='p-4 overflow-y-auto flex flex-col gap-4'>
-        {artifactsContext.items.reverse().map((item, idx) => (
-          <Surface key={idx} role='canvas-node' limit={1} data={item} />
-        ))}
+        {artifactsContext.items.length > 0 && <Surface role='canvas-node' limit={1} data={artifactsContext.items[0]} />}
+        {artifactsContext.items.length > 1 && (
+          <div className='flex gap-4 overflow-x-scroll'>
+            {artifactsContext.items.slice(1).map((item, idx) => (
+              <Surface key={idx} role='canvas-node' limit={1} data={item} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ export type ThreadProps = {
 export const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputBox = useRef<TextBoxControl>(null);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [items]);
@@ -35,8 +36,8 @@ export const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
       <div className='flex p-4 gap-2 items-center'>
         <TextBox
           ref={inputBox}
-          placeholder='Ask a question'
           classNames='bg-base'
+          placeholder='Ask a question'
           onEnter={(value) => {
             onSubmit(value);
             inputBox.current?.setText('');
