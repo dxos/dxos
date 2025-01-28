@@ -10,15 +10,22 @@ import React, { useState } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AIServiceClientImpl, Message, isToolUse, runTools } from '@dxos/assistant';
-import { createStatic, type HasTypename, ObjectId } from '@dxos/echo-schema';
+import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { create } from '@dxos/react-client/echo';
 import { IconButton, Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useDynamicCallback, useQueue } from './hooks';
-import { ARTIFACTS_SYSTEM_PROMPT, capabilities, localServiceEndpoints, artifacts } from './testing';
+import {
+  ARTIFACTS_SYSTEM_PROMPT,
+  capabilities,
+  localServiceEndpoints,
+  artifacts,
+  type ArtifactsContext,
+} from './testing';
 import { Thread } from '../components';
 
 const endpoints = localServiceEndpoints;
@@ -30,7 +37,21 @@ const Render = () => {
   const [queueDxn, setQueueDxn] = useState(() =>
     new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
   );
-  const [artifactsList, setArtifactsList] = useState<HasTypename[]>(() => []);
+  const [artifactsContext] = useState(() =>
+    create<ArtifactsContext>({
+      items: [
+        // createStatic(ChessSchema, {
+        //   value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        // }),
+      ],
+      getArtifacts() {
+        return this.items;
+      },
+      addArtifact(artifact) {
+        this.items.push(artifact);
+      },
+    }),
+  );
 
   const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
 
@@ -87,10 +108,7 @@ const Render = () => {
             tools,
             message: assistantMessages.at(-1)!,
             context: {
-              artifacts: {
-                getArtifacts: () => artifactsList,
-                addArtifact: (artifact) => setArtifactsList((artifactsList) => [...artifactsList, artifact]),
-              },
+              artifacts: artifactsContext,
             },
           });
 
@@ -140,7 +158,7 @@ const Render = () => {
         />
       </div>
       <div className='p-4 overflow-y-auto flex flex-col gap-4'>
-        {artifactsList.reverse().map((item, idx) => (
+        {artifactsContext.items.reverse().map((item, idx) => (
           <Surface key={idx} role='canvas-node' limit={1} data={item} />
         ))}
       </div>

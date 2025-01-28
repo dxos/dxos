@@ -13,8 +13,10 @@ Follow these guidelines carefully:
 1. User Input:
 Read the user's message.
 
-2. Artifact Creation:
-- Determine if the content should be an artifact. Prefer artifacts for tables, lists, images, and other structured data.
+2. Artifact use or creation:
+- Determine if the interaction involves an artifact. Prefer artifacts for tables, lists, images, and other structured data.
+- Determine if the user is explicitly talking about creating a new artifact, or wants to use an existing artifact.
+- If its ambiguous, query for existing artifacts first and then decide.
 - If you decide to create an artifact, Call the associated tool to create the artifact.
 - The artifact tools create the artifact in the database and return you the artifact handle that looks like <artifact id="unique_identifier" />
 - Decide if the user should be shown the artifact.
@@ -24,6 +26,8 @@ Read the user's message.
 - Ensure that artifact tags are always self-closing.
 - Artifact tags cannot contain other properties then the id.
 - You must never generate the id of the artifact yourself, only recall the ids that are already in the history.
+- Artifacts are mutable objects that can change over the course of the conversation.
+- ALWAYS re-query the artifact using the tool (like query or inspect) to get the latest state of the artifact before answering the user.
 
 4. Artifact Providers:
 ${Object.values(artifacts)

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import React, { useEffect, useRef } from 'react';
 
 import { type Message } from '@dxos/assistant';

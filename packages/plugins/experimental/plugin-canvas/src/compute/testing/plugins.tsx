@@ -8,12 +8,21 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { isImage } from '@dxos/conductor';
-import { createStatic, EchoObject, GeoPoint, isInstanceOf, type HasTypename, type ObjectId } from '@dxos/echo-schema';
+import {
+  createStatic,
+  EchoObject,
+  GeoPoint,
+  isInstanceOf,
+  ObjectId,
+  type HasId,
+  type HasTypename,
+} from '@dxos/echo-schema';
 import { Chessboard } from '@dxos/plugin-chess';
 import { MapControl } from '@dxos/plugin-map';
 
 import { JsonFilter } from '../../components';
 import { defineTool, LLMToolResult, type LLMTool } from '@dxos/assistant';
+import { invariant } from '@dxos/invariant';
 
 export type Artifact = {
   id: string;
@@ -35,8 +44,9 @@ export const MapSchema = S.Struct({
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
 export type ArtifactsContext = {
-  getArtifacts: () => HasTypename[];
-  addArtifact: (artifact: HasTypename) => void;
+  items: (HasTypename & HasId)[];
+  getArtifacts: () => (HasTypename & HasId)[];
+  addArtifact: (artifact: HasTypename & HasId) => void;
 };
 
 declare global {
@@ -79,6 +89,49 @@ export const artifacts: Record<string, Artifact> = [
           const artifact = createStatic(ChessSchema, { value: fen });
           extensions.artifacts.addArtifact(artifact);
           return LLMToolResult.Success(formatArtifact(artifact.id));
+        },
+      }),
+      defineTool({
+        name: 'chess_query',
+        description: 'Query all active chess games.',
+        schema: S.Struct({}),
+        execute: async (_, { extensions }) => {
+          const artifacts = extensions.artifacts.getArtifacts();
+          invariant(artifacts.length > 0, 'No chess games found');
+          return LLMToolResult.Success(artifacts);
+        },
+      }),
+      defineTool({
+        name: 'chess_inspect',
+        description: 'Get the current state of the chess game.',
+        schema: S.Struct({ id: ObjectId }),
+        execute: async ({ id }, { extensions }) => {
+          const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
+          invariant(isInstanceOf(ChessSchema, artifact));
+          return LLMToolResult.Success(artifact.value);
+        },
+      }),
+      defineTool({
+        name: 'chess_move',
+        description: 'Make a move in the chess game.',
+        schema: S.Struct({
+          id: ObjectId,
+          move: S.String.annotations({
+            description: 'The move to make in the chess game.',
+            examples: ['e4', 'Bf3'],
+          }),
+        }),
+        execute: async ({ id, move }, { extensions }) => {
+          const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
+          invariant(isInstanceOf(ChessSchema, artifact));
+          const board = new Chess(artifact.value);
+          try {
+            board.move(move);
+          } catch (error: any) {
+            return LLMToolResult.Error(error.message);
+          }
+          artifact.value = board.fen();
+          return LLMToolResult.Success(artifact.value);
         },
       }),
     ],
@@ -126,7 +179,17 @@ export const capabilities: AnyCapability[] = [
       id: 'plugin-chess',
       role: 'canvas-node',
       filter: (data): data is any => isInstanceOf(ChessSchema, data),
-      component: ({ role, data }) => <Chessboard model={{ chess: new Chess(data.value) }} />,
+      component: ({ role, data }) => (
+        <Chessboard
+          model={{ chess: new Chess(data.value) }}
+          onUpdate={(move) => {
+            console.log('move', move);
+            const board = new Chess(data.value);
+            board.move(move);
+            data.value = board.fen();
+          }}
+        />
+      ),
     }),
   ),
 
