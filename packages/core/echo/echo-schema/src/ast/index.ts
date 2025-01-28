@@ -8,3 +8,4 @@ export * from './schema-validator';
 export * from './types';
 export * from './json-schema-type';
 export * from './entity-kind';
+export * from './schema';

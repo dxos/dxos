@@ -5,6 +5,7 @@ import { getSchemaDXN } from '../types';
 import { setTypename, TYPENAME_SYMBOL } from './typename';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { failedInvariant } from '@dxos/invariant';
+import { setSchema } from '../ast/schema';
 
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
 
@@ -53,6 +54,7 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
     ...data,
   };
   setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Failed to get schema DXN'));
+  setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
 
   return obj;

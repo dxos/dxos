@@ -6,10 +6,9 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getSchemaTypename } from './annotations';
+import { symbolSchema } from './schema';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
-
-export const symbolSchema = Symbol.for('@dxos/schema/Schema');
 
 export class SchemaValidator {
   /**
