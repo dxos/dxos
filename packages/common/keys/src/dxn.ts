@@ -6,6 +6,7 @@ import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+
 import type { SpaceId } from './space-id';
 
 /**
@@ -55,18 +56,32 @@ export class DXN {
     return dxn.startsWith('dxn:');
   }
 
-  static parse(dxn: string): DXN {
+  static parse(dxn: string): DXN;
+  static parse(dxn: string, noThrow: boolean): DXN | undefined;
+  static parse(dxn: string, noThrow?: boolean): DXN | undefined {
     if (typeof dxn !== 'string') {
+      if (noThrow) {
+        return undefined;
+      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
+      if (noThrow) {
+        return undefined;
+      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(typeof kind === 'string' && kind.length > 0)) {
+      if (noThrow) {
+        return undefined;
+      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(parts.length > 0)) {
+      if (noThrow) {
+        return undefined;
+      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
 

@@ -13,6 +13,7 @@ export * from './Container';
 export * from './Editor';
 export * from './JsonFilter';
 export * from './TextBox';
+export * from './Thread';
 export * from './Toolbar';
 export * from './UI';
 

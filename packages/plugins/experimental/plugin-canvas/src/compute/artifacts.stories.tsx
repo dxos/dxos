@@ -3,117 +3,35 @@
 //
 
 import '@dxos-theme';
+
 import type { Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AIServiceClientImpl, Message } from '@dxos/assistant';
-import { raise } from '@dxos/debug';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { IconButton, Input, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { IconButton, Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { capabilities, ChessSchema } from './testing';
-import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
-import { TextBox, type TextBoxControl } from '../components';
+import { useDynamicCallback, useQueue } from './hooks';
+import { capabilities, ChessSchema, ARTIFACTS_SYSTEM_PROMPT, localServiceEndpoints } from './testing';
+import { Thread } from '../components';
 
-// TODO(burdon): Use testing/services.
-const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
-const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
-
-/**
- * A custom hook that ensures a callback reference remains stable while allowing the callback
- * implementation to be updated. This is useful for callbacks that need to access the latest
- * state/props values while maintaining a stable reference to prevent unnecessary re-renders.
- *
- * @template F - The function type of the callback.
- * @param callback - The callback function to memoize.
- * @returns A stable callback reference that will always call the latest implementation.
- */
-// TODO(dmaretskyi): Move to where it needs to be.
-const useDynamicCallback = <F extends (...args: any[]) => any>(callback: F): F => {
-  const ref = useRef<F>(callback);
-  ref.current = callback;
-  return ((...args) => ref.current(...args)) as F;
-};
-
-type UseQueueOptions = {
-  pollInterval?: number;
-};
-
-const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: UseQueueOptions = {}) => {
-  const { subspaceTag, spaceId, queueId } = queueDxn.asQueueDXN() ?? raise(new Error('Invalid queue DXN'));
-
-  const [objects, setObjects] = useState<T[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Only for initial load.
-  const [error, setError] = useState<Error | null>(null);
-  const refreshId = useRef<number>(0);
-
-  const append = useDynamicCallback(async (items: T[]) => {
-    try {
-      setObjects((prevItems) => [...prevItems, ...items]);
-      void edgeHttpClient.insertIntoQueue(subspaceTag, spaceId, queueId, items);
-    } catch (err) {
-      setError(err as Error);
-    }
-  });
-
-  const refresh = useDynamicCallback(async () => {
-    const thisRefreshId = ++refreshId.current;
-    try {
-      const { objects } = await edgeHttpClient.queryQueue(subspaceTag, spaceId, { queueId });
-      if (thisRefreshId !== refreshId.current) {
-        return;
-      }
-
-      setObjects(objects as T[]);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  });
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (options.pollInterval) {
-      const poll = () => {
-        void refresh().finally(() => {
-          interval = setTimeout(poll, options.pollInterval);
-        });
-      };
-      poll();
-    }
-
-    return () => clearInterval(interval);
-  }, [options.pollInterval]);
-
-  useEffect(() => {
-    void refresh();
-  }, [queueDxn.toString()]);
-
-  return {
-    objects,
-    append,
-    isLoading,
-    error,
-  };
-};
+const endpoints = localServiceEndpoints;
 
 const Render = () => {
-  const [edgeHttpClient] = useState(() => new EdgeHttpClient(EDGE_SERVICE_ENDPOINT));
-  const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT }));
+  const [edgeHttpClient] = useState(() => new EdgeHttpClient(endpoints.edge));
+  const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
   const [isGenerating, setIsGenerating] = useState(false);
   const [queueDxn, setQueueDxn] = useState(() =>
     new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
   );
 
-  const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn));
+  const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
 
   const isFirstLoad = useRef(true);
   useEffect(() => {
@@ -180,8 +98,9 @@ const Render = () => {
             <Input.TextInput
               classNames='w-full text-sm px-2 py-1 border rounded'
               type='text'
+              spellCheck={false}
               value={queueDxn}
-              onChange={(e) => setQueueDxn(e.target.value)}
+              onChange={(ev) => setQueueDxn(ev.target.value)}
             />
             <IconButton
               iconOnly
@@ -194,8 +113,8 @@ const Render = () => {
 
         <Thread
           items={[...historyQueue.objects, ...pendingMessages]}
-          onSubmit={handleSubmit}
           isGenerating={isGenerating}
+          onSubmit={handleSubmit}
         />
       </div>
 
@@ -206,91 +125,7 @@ const Render = () => {
           data={createStatic(ChessSchema, {
             value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
           })}
-          // data={createStatic(MapSchema, {
-          //   coordinates: [30.0, 10.0],
-          // })}
         />
-      </div>
-    </div>
-  );
-};
-
-type ThreadProps = {
-  items: Message[];
-  onSubmit: (message: string) => void;
-  isGenerating?: boolean;
-};
-
-const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputBox = useRef<TextBoxControl>(null);
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [items]);
-
-  return (
-    <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col w-full gap-4 overflow-x-hidden overflow-y-scroll scrollbar-none' ref={scrollRef}>
-        {items.map((item, i) => (
-          <ThreadItem key={i} classNames='px-4' item={item} />
-        ))}
-      </div>
-
-      <div className='flex p-4 gap-2 items-center'>
-        <TextBox
-          ref={inputBox}
-          placeholder='Ask a question'
-          classNames='bg-base'
-          onEnter={(value) => {
-            onSubmit(value);
-            inputBox.current?.setText('');
-            scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-          }}
-        />
-        <IconButton
-          variant='ghost'
-          icon={isGenerating ? 'ph--spinner-gap--regular' : 'ph--robot--regular'}
-          classNames={[isGenerating && 'animate-spin']}
-          label='Generate'
-          size={5}
-          iconOnly
-        />
-      </div>
-    </div>
-  );
-};
-
-type ThreadItemProps = ThemedClassName & {
-  item: Message;
-};
-
-const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
-  if (typeof item !== 'object') {
-    return <div className={mx(classNames)}>{item}</div>;
-  }
-
-  // TODO(burdon): Markdown parser.
-  const { role, content } = item;
-  return (
-    <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
-      <div
-        className={mx(
-          'block rounded-md p-1 px-2 bg-base',
-          role === 'user' ? 'bg-neutral-50 dark:bg-blue-800' : 'whitespace-pre-wrap',
-        )}
-      >
-        {content.map((item, idx) => {
-          switch (item.type) {
-            case 'text':
-              return <div key={idx}>{item.text}</div>;
-            default:
-              return (
-                <div key={idx} className='text-xs text-gray-500 text-pre'>
-                  {JSON.stringify(item, null, 2)}
-                </div>
-              );
-          }
-        })}
       </div>
     </div>
   );
