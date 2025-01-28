@@ -23,8 +23,9 @@ export type Artifact = {
 export const createArtifact = (artifact: Artifact): Artifact => artifact;
 
 export const ChessSchema = S.Struct({
-  value: S.String.annotations({ description: 'FEN string' }),
+  value: S.String.annotations({ description: 'FEN notation' }),
 }).pipe(EchoObject('example.com/type/Chess', '0.1.0'));
+export type ChessSchema = S.Schema.Type<typeof ChessSchema>;
 
 export const MapSchema = S.Struct({
   coordinates: GeoPoint,
@@ -60,15 +61,11 @@ export const artifacts: Record<string, Artifact> = [
     `,
     schema: MapSchema,
   }),
-].reduce(
-  (acc, artifact) => {
-    acc[artifact.id] = artifact;
-    return acc;
-  },
-  {} as Record<string, Artifact>,
-);
+].reduce<Record<string, Artifact>>((acc, artifact) => {
+  acc[artifact.id] = artifact;
+  return acc;
+}, {});
 
-// TODO(burdon): Rename Capability.Any.
 export const capabilities: AnyCapability[] = [
   //
   // Image
@@ -97,7 +94,18 @@ export const capabilities: AnyCapability[] = [
     createSurface({
       id: 'plugin-chess',
       role: 'canvas-node',
-      filter: (data) => isInstanceOf(ChessSchema, data),
+      filter: (data): data is any => {
+        return false;
+      },
+      // filter: (data) => isInstanceOf(ChessSchema, data),
+      // filter: (data): data is any => {
+      //   try {
+      //     const game = new Chess(data.value as string);
+      //     return !!game;
+      //   } catch (err) {
+      //     return false;
+      //   }
+      // },
       component: ({ role, data }) => <Chessboard model={{ chess: new Chess(data.value) }} />,
     }),
   ),

@@ -32,6 +32,7 @@ import {
   createAudioCircuit,
   createTransformCircuit,
   createTemplateCircuit,
+  createArtifactCircuit,
 } from './testing';
 import {
   type Anchor,
@@ -342,7 +343,7 @@ export const GPT: Story = {
   },
 };
 
-export const GPTImage: Story = {
+export const Plugins: Story = {
   args: {
     // debug: true,
     showGrid: false,
@@ -356,7 +357,18 @@ export const GPTImage: Story = {
   },
 };
 
-export const GPTAudio: Story = {
+export const Artifact: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraphController(createArtifactCircuit(), createEdgeServices()),
+  },
+};
+
+export const Audio: Story = {
   args: {
     // debug: true,
     showGrid: false,
@@ -367,7 +379,7 @@ export const GPTAudio: Story = {
   },
 };
 
-export const GPTRealtime: Story = {
+export const Voice: Story = {
   args: {
     showGrid: false,
     snapToGrid: false,

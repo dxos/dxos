@@ -22,6 +22,7 @@ import { capabilities, ChessSchema } from './testing';
 import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
 import { TextBox, type TextBoxControl } from '../components';
 
+// TODO(burdon): Use testing/services.
 const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
@@ -56,8 +57,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
   const append = useDynamicCallback(async (items: T[]) => {
     try {
       setObjects((prevItems) => [...prevItems, ...items]);
-
-      edgeHttpClient.insertIntoQueue(subspaceTag, spaceId, queueId, items);
+      void edgeHttpClient.insertIntoQueue(subspaceTag, spaceId, queueId, items);
     } catch (err) {
       setError(err as Error);
     }
@@ -82,17 +82,18 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
     let interval: NodeJS.Timeout;
     if (options.pollInterval) {
       const poll = () => {
-        refresh().finally(() => {
+        void refresh().finally(() => {
           interval = setTimeout(poll, options.pollInterval);
         });
       };
       poll();
     }
+
     return () => clearInterval(interval);
   }, [options.pollInterval]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [queueDxn.toString()]);
 
   return {
@@ -103,7 +104,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
   };
 };
 
-export const Default = () => {
+const Render = () => {
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(EDGE_SERVICE_ENDPOINT));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT }));
   const [isGenerating, setIsGenerating] = useState(false);
@@ -118,8 +119,9 @@ export const Default = () => {
     if (!isFirstLoad.current) {
       return;
     }
+
     isFirstLoad.current = false;
-    historyQueue.append([
+    void historyQueue.append([
       createStatic(Message, { role: 'user', content: [{ type: 'text', text: 'Hello' }] }),
       createStatic(Message, {
         role: 'assistant',
@@ -127,8 +129,8 @@ export const Default = () => {
       }),
     ]);
   }, []);
-  const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
 
+  const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   log.info('items', { items: history });
 
   const handleSubmit = useDynamicCallback(async (message: string) => {
@@ -143,7 +145,7 @@ export const Default = () => {
         role: 'user',
         content: [{ type: 'text', text: message }],
       });
-      historyQueue.append([userMessage]);
+      historyQueue.append([userMessage]); // TODO(burdon): Async.
 
       const response = await aiServiceClient.generate({
         model: '@anthropic/claude-3-5-sonnet-20241022',
@@ -270,8 +272,17 @@ const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
   );
 };
 
-export default {
-  title: 'plugins/plugin-canvas/compute/artifacts',
-  component: Default,
-  decorators: [withTheme, withLayout({ fullscreen: true }), withPluginManager({ capabilities })],
-} satisfies Meta<typeof Default>;
+const meta: Meta<typeof Render> = {
+  title: 'plugins/plugin-canvas/artifacts',
+  render: Render,
+  decorators: [
+    //
+    withTheme,
+    withLayout({ fullscreen: true }),
+    withPluginManager({ capabilities }),
+  ],
+};
+
+export default meta;
+
+export const Default = {};

@@ -10,8 +10,7 @@ import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
-import type { ObjectMeta } from './object/meta';
-import { getTypename } from './object';
+import { type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
@@ -175,7 +174,10 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
     return schemaDXN.toString() === objectTypename;
   } else {
     const typeDXN = schemaDXN.asTypeDXN();
-    if (!typeDXN) return false;
+    if (!typeDXN) {
+      return false;
+    }
+
     return typeDXN.type === objectTypename;
   }
 };

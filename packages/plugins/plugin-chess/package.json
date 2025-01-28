@@ -47,6 +47,7 @@
     "@preact/signals-core": "^1.6.0",
     "chess.js": "^1.0.0",
     "react-chessboard": "^4.7.2",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

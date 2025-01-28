@@ -151,6 +151,29 @@ export const createTemplateCircuit = () => {
   return model;
 };
 
+export const createArtifactCircuit = () => {
+  const model = CanvasGraphModel.create<ComputeShape>();
+  model.builder.call((builder) => {
+    const prompt = model.createNode(
+      createTemplate({
+        text: ARTIFACTS_SYSTEM_PROMPT,
+        ...position({ x: -10, y: -5, width: 8, height: 18 }),
+      }),
+    );
+    const chat = model.createNode(createChat(position({ x: -10, y: 8, width: 8, height: 6 })));
+    const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
+    const text = model.createNode(createText(position({ x: 16, y: 8, width: 16, height: 6 })));
+    const surface = model.createNode(createSurface(position({ x: 16, y: -5, width: 16, height: 18 })));
+    builder
+      .createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' })
+      .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
+      .createEdge({ source: gpt.id, target: text.id, output: 'text' })
+      .createEdge({ source: gpt.id, target: surface.id, output: 'artifact' });
+  });
+
+  return model;
+};
+
 export const createGptCircuit = (options: {
   db?: boolean;
   cot?: boolean;
