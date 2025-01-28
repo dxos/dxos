@@ -18,6 +18,7 @@ export const ComputeNode = S.extend(
   S.Struct({
     /** For template nodes. */
     inputSchema: S.optional(JsonSchemaType),
+    outputSchema: S.optional(JsonSchemaType),
 
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),

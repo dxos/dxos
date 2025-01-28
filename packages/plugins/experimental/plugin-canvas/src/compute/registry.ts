@@ -38,7 +38,7 @@ import { noteShape } from '../shapes';
 /**
  * Order used by toolbar.
  */
-export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
+export const computeShapes: { title: string; shapes: ShapeDef[] }[] = [
   {
     title: 'Inputs',
     shapes: [

@@ -9,10 +9,10 @@ import { type Dimension } from '@dxos/react-ui-canvas';
 import { type SelectionModel } from './selection';
 import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
-import { type ShapeRegistry } from '../components';
-import type { CanvasGraphModel, Connection, Polygon, Shape } from '../types';
+import { type ShapeLayout, type ShapeRegistry } from '../components';
+import type { CanvasGraphModel, Connection, Shape } from '../types';
 
-export type EditingState<S extends Polygon> = {
+export type EditingState<S extends Shape> = {
   shape: S;
 };
 
@@ -36,6 +36,7 @@ export type EditorContextType<S extends Shape = Shape> = {
   id: string;
   options: EditorOptions;
   registry: ShapeRegistry;
+  layout: ShapeLayout;
 
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
@@ -56,8 +57,8 @@ export type EditorContextType<S extends Shape = Shape> = {
 
   ready: boolean;
   dragMonitor: DragMonitor;
-  editing?: EditingState<any>;
-  setEditing: Dispatch<SetStateAction<EditingState<any> | undefined>>;
+  editing?: EditingState<S>;
+  setEditing: Dispatch<SetStateAction<EditingState<S> | undefined>>;
 
   actionHandler: ActionHandler | undefined;
   setActionHandler: (cb: ActionHandler | undefined) => void;

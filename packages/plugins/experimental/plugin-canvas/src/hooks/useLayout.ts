@@ -7,7 +7,7 @@ import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
 import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
-import { type ShapeRegistry, type Anchor, defaultAnchorSize } from '../components';
+import { type Anchor, defaultAnchorSize, type ShapeLayout } from '../components';
 import { createAnchorId, parseAnchorId } from '../compute';
 import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
 import { createPath } from '../shapes';
@@ -21,7 +21,7 @@ export type Layout = {
  * Generate layout from graph (including linking).
  */
 export const useLayout = (): Layout => {
-  const { dragMonitor, graph, registry } = useEditorContext();
+  const { dragMonitor, graph, registry, layout } = useEditorContext();
 
   // TODO(burdon): Use to trigger state update.
   const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'resize' || type === 'anchor').value;
@@ -47,8 +47,8 @@ export const useLayout = (): Layout => {
     const target = getShape(targetNode);
     // TODO(burdon): Custom logic for function anchors. Generalize.
     if (output && input) {
-      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', output));
-      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', input));
+      const sourceAnchor = getAnchorPoint(layout, source, createAnchorId('output', output));
+      const targetAnchor = getAnchorPoint(layout, target, createAnchorId('input', input));
       if (sourceAnchor && targetAnchor) {
         return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
       }
@@ -85,11 +85,11 @@ export const useLayout = (): Layout => {
     if (dragging.anchor) {
       const [direction] = parseAnchorId(dragging.anchor.id);
       if (direction) {
-        const sourceAnchor = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
+        const sourceAnchor = getAnchorPoint(layout, dragging.shape, dragging.anchor.id);
         if (sourceAnchor) {
           let targetAnchor =
             dragging.snapTarget?.type === 'anchor' &&
-            getAnchorPoint(registry, dragging.snapTarget.shape, dragging.snapTarget.anchor.id);
+            getAnchorPoint(layout, dragging.snapTarget.shape, dragging.snapTarget.anchor.id);
           if (!targetAnchor) {
             targetAnchor = dragging.pointer;
           }
@@ -162,27 +162,27 @@ const createCurve = (source: Point, target: Point) => [
   target,
 ];
 
-const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: string): Point | undefined => {
+const getAnchorPoint = (layout: ShapeLayout, shape: Polygon, anchorId: string): Point | undefined => {
   invariant(shape.type);
-  const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
+  const anchors = layout.getAnchors(shape);
   const anchor = anchors?.[anchorId];
   return pointAdd(shape.center, anchor?.pos ?? { x: 0, y: 0 });
 };
 
 export const getClosestAnchor = (
+  layout: ShapeLayout,
   graph: CanvasGraphModel<Polygon>,
-  registry: ShapeRegistry,
   pos: Point,
-  test: (shape: Polygon, anchor: Anchor, d: number) => boolean,
+  isValid: (shape: Polygon, anchor: Anchor, d: number) => boolean,
 ): Extract<DragDropPayload, { type: 'anchor' }> | undefined => {
   let min = Infinity;
   let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
   graph.nodes.forEach((shape) => {
-    const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
+    const anchors = layout.getAnchors(shape);
     if (anchors) {
       for (const anchor of Object.values(anchors)) {
         const d = getDistance(pos, pointAdd(shape.center, anchor.pos));
-        if (min > d && test(shape, anchor, d)) {
+        if (min > d && isValid(shape, anchor, d)) {
           min = d;
           closest = { type: 'anchor', shape, anchor };
         }

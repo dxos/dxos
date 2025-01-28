@@ -23,6 +23,8 @@ import {
   QueueOutput,
   ReducerInput,
   ReducerOutput,
+  TemplateInput,
+  TemplateOutput,
   TextToImageOutput,
   TriggerInput,
   TriggerOutput,
@@ -116,9 +118,25 @@ export const registry: Record<NodeType, Executable> = {
   }),
 
   ['template' as const]: defineComputeNode({
-    input: S.Record({ key: S.String, value: S.Any }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-    exec: (_, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.value })),
+    input: TemplateInput,
+    output: TemplateOutput,
+    exec: synchronizedComputeFunction((props = {}, node) => {
+      const unresolved: string[] = [];
+      const text = node?.value?.replace(/\{\{([^}]+)\}\}/g, (match: string, p1: string) => {
+        if (props[p1]) {
+          return props[p1];
+        } else {
+          unresolved.push(p1);
+          return match;
+        }
+      });
+
+      if (unresolved.length > 0) {
+        return Effect.fail(new Error(`Unresolved properties: [${unresolved.join(', ')}]`));
+      }
+
+      return Effect.succeed({ [DEFAULT_OUTPUT]: text });
+    }),
   }),
 
   ['trigger' as const]: defineComputeNode({

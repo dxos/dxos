@@ -59,11 +59,13 @@ export const ShapeComponent = (props: ShapeComponentProps<any>) => {
   const { registry } = useEditorContext();
   const { shape } = props;
   invariant(shape.type);
+
   if (isPolygon(shape)) {
     const { component, resizable } =
       registry.getShapeDef(shape.type) ?? raise(new Error(`ShapeDef not found for ${shape.type}`));
     return <Frame {...props} resizable={resizable} Component={component} />;
   }
+
   if (isPath(shape)) {
     return <PathComponent {...props} />;
   }

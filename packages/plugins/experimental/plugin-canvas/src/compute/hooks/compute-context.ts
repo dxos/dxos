@@ -6,10 +6,10 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import type { StateMachine } from '../graph';
+import type { ComputeGraphController } from '../graph';
 
 export type ComputeContextType = {
-  stateMachine: StateMachine;
+  controller: ComputeGraphController;
 };
 
 export const ComputeContext = createContext<ComputeContextType | null>(null);

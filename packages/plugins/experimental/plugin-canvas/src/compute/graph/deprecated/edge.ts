@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import type { GptInput, GptOutput } from '../types';
-import { type GptExecutor } from '../state-machine';
+import { type GptExecutor } from '../controller';
 
 // TODO(burdon): Move to conductor.
 

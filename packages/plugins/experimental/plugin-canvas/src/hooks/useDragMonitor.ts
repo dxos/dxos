@@ -18,7 +18,7 @@ import { parseAnchorId } from '../compute';
 import { getInputPoint, pointAdd, pointSubtract } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { isPolygon, type Polygon } from '../types';
+import { type CanvasGraphModel, isPolygon, type Polygon } from '../types';
 
 export const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -170,7 +170,7 @@ export class DragMonitor {
 // TODO(burdon): Handle cancellation.
 // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
 export const useDragMonitor = () => {
-  const { graph, selection, dragMonitor, registry, actionHandler } = useEditorContext();
+  const { graph, selection, dragMonitor, layout, actionHandler } = useEditorContext();
   const { root, projection } = useCanvasContext();
   const snapPoint = useSnap();
 
@@ -243,8 +243,7 @@ export const useDragMonitor = () => {
 
           case 'anchor': {
             // Snap to closest anchor.
-            // TODO(burdon): Cast ???
-            const target = getClosestAnchor(graph as any, registry, pos, (shape, anchor, d) => {
+            const target = getClosestAnchor(layout, graph as CanvasGraphModel<Polygon>, pos, (shape, anchor, d) => {
               return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
             });
             dragMonitor.update({

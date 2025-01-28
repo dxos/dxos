@@ -4,9 +4,8 @@
 
 import { Effect, Exit, type Context, Layer, Scope, Either } from 'effect';
 
-import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
+import { type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
 import {
   type ComputeEdge,
   type ComputeEvent,
@@ -17,12 +16,12 @@ import {
   EventLogger,
   GptService,
   GraphExecutor,
-  makeValueBag,
-  SpaceService,
   type GptInput,
   type GptOutput,
+  SpaceService,
   type ValueBag,
   isNotExecuted,
+  makeValueBag,
 } from '@dxos/conductor';
 import { MockGpt, EdgeClientService } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
@@ -40,7 +39,7 @@ export const InvalidStateError = Error;
 export type FunctionCallback<INPUT, OUTPUT> = (input: INPUT) => Promise<OUTPUT>;
 
 /**
- * Callback to notify the state machine of a scheduled update.
+ * Callback to notify the controller of a scheduled update.
  */
 export type AsyncUpdate<T> = (value: T) => void;
 
@@ -50,14 +49,6 @@ export interface GptExecutor {
   // TODO(dmaretskyi): A hack to get image artifacts working. Rework into querying images from the ai-service store.
   imageCache: Map<string, MessageImageContentBlock>;
 }
-
-export type StateMachineContext = {
-  space?: Space;
-
-  // TODO(burdon): Remove.
-  gpt?: GptExecutor;
-  model?: LLMModel;
-};
 
 export type RuntimeValue =
   | {
@@ -92,19 +83,17 @@ type ComputeOutputEvent = {
  */
 const AUTO_TRIGGER_NODES = ['chat', 'switch', 'constant'];
 
-export const createMachine = (graph: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
+export const createComputeGraphController = (graph: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
   const computeGraph = createComputeGraph(graph);
-  const machine = new StateMachine(computeGraph);
-  machine.setServices(services ?? {});
-  return { machine, graph };
+  const controller = new ComputeGraphController(computeGraph);
+  controller.setServices(services ?? {});
+  return { controller, graph };
 };
 
 /**
- * Client proxy to the state machine.
+ * Controller that manages compute graph state, execution, and service coordination.
  */
-// TODO(burdon): Rename ComputeProxy?
-export class StateMachine extends Resource {
-  // TODO(burdon): Proxy?
+export class ComputeGraphController extends Resource {
   private readonly _executor = new GraphExecutor({
     computeNodeResolver: (node) => resolveComputeNode(node),
   });
@@ -141,11 +130,11 @@ export class StateMachine extends Resource {
   toJSON() {
     return {
       graph: this._graph,
-      forcedOutputs: this._forcedOutputs,
       state: {
         inputs: this._runtimeStateInputs,
         outputs: this._runtimeStateOutputs,
       },
+      forcedOutputs: this._forcedOutputs,
     };
   }
 
@@ -172,7 +161,7 @@ export class StateMachine extends Resource {
   /**
    * Inputs and outputs for all nodes.
    */
-  get nodeStates() {
+  get state() {
     const ids = [...new Set([...Object.keys(this._runtimeStateInputs), ...Object.keys(this._runtimeStateOutputs)])];
     return Object.fromEntries(
       ids.map((id) => [
@@ -311,6 +300,7 @@ export class StateMachine extends Resource {
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
             Effect.map((values) => {
+              // TODO(burdon): Return value expected.
               for (const [key, value] of Object.entries(values)) {
                 if (computingOutputs) {
                   this._onOutputComputed(node, key, value);

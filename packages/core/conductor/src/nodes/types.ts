@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DescriptionAnnotationId } from 'effect/SchemaAST';
+
 import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 
@@ -31,9 +33,15 @@ export const QueueOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Message) });
 
 export const FunctionInput = S.Struct({
   [DEFAULT_INPUT]: S.Any,
-  function: S.String, // TODO(burdon): DXN.
+  function: S.String.annotations({ [DescriptionAnnotationId]: 'Function DXN' }),
 });
 export type FunctionInput = S.Schema.Type<typeof FunctionInput>;
+
+export const TemplateInput = S.Record({ key: S.String, value: S.Any });
+export type TemplateInput = S.Schema.Type<typeof TemplateInput>;
+
+export const TemplateOutput = S.Struct({ [DEFAULT_OUTPUT]: S.String });
+export type TemplateOutput = S.Schema.Type<typeof TemplateOutput>;
 
 //
 // Data

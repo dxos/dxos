@@ -14,7 +14,7 @@ import { createStatic, HasTypename, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
@@ -23,6 +23,7 @@ import { TextBox, type TextBoxControl } from '../components';
 import { artifacts, capabilities, type ArtifactsContext } from './testing';
 import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
 
+// TODO(burdon): Use testing/services.
 const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
@@ -57,8 +58,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
   const append = useDynamicCallback(async (items: T[]) => {
     try {
       setObjects((prevItems) => [...prevItems, ...items]);
-
-      edgeHttpClient.insertIntoQueue(subspaceTag, spaceId, queueId, items);
+      void edgeHttpClient.insertIntoQueue(subspaceTag, spaceId, queueId, items);
     } catch (err) {
       setError(err as Error);
     }
@@ -71,6 +71,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
       if (thisRefreshId !== refreshId.current) {
         return;
       }
+
       setObjects(objects as T[]);
     } catch (err) {
       setError(err as Error);
@@ -83,17 +84,18 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
     let interval: NodeJS.Timeout;
     if (options.pollInterval) {
       const poll = () => {
-        refresh().finally(() => {
+        void refresh().finally(() => {
           interval = setTimeout(poll, options.pollInterval);
         });
       };
       poll();
     }
+
     return () => clearInterval(interval);
   }, [options.pollInterval]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [queueDxn.toString()]);
 
   return {
@@ -104,7 +106,7 @@ const useQueue = <T,>(edgeHttpClient: EdgeHttpClient, queueDxn: DXN, options: Us
   };
 };
 
-export const Default = () => {
+const Render = () => {
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(EDGE_SERVICE_ENDPOINT));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT }));
   const [isGenerating, setIsGenerating] = useState(false);
@@ -115,22 +117,7 @@ export const Default = () => {
 
   const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn));
 
-  // const isFirstLoad = useRef(true);
-  // useEffect(() => {
-  //   if (!isFirstLoad.current) {
-  //     return;
-  //   }
-  //   isFirstLoad.current = false;
-  //   historyQueue.append([
-  //     createStatic(Message, { role: 'user', content: [{ type: 'text', text: 'Hello' }] }),
-  //     createStatic(Message, {
-  //       role: 'assistant',
-  //       content: [{ type: 'text', text: 'Hello, how can I help you today?' }],
-  //     }),
-  //   ]);
-  // }, []);
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
-
   log.info('items', { items: history });
 
   const handleSubmit = useDynamicCallback(async (message: string) => {
@@ -205,9 +192,9 @@ export const Default = () => {
   });
 
   return (
-    <div className='grid grid-cols-2 w-full h-full divide-x divide-separator'>
-      <div className='p-4 overflow-y-auto'>
-        <div className='flex gap-2 items-center'>
+    <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
+      <div className='flex flex-col gap-4 overflow-hidden'>
+        <div className='flex gap-2 items-center p-4'>
           <Input.Root>
             <Input.TextInput
               classNames='w-full text-sm px-2 py-1 border rounded'
@@ -215,9 +202,15 @@ export const Default = () => {
               value={queueDxn}
               onChange={(e) => setQueueDxn(e.target.value)}
             />
-            <Icon icon='ph--copy--regular' onClick={() => navigator.clipboard.writeText(queueDxn)} />
+            <IconButton
+              iconOnly
+              label='Copy'
+              icon='ph--copy--regular'
+              onClick={() => navigator.clipboard.writeText(queueDxn)}
+            />
           </Input.Root>
         </div>
+
         <Thread
           items={[...historyQueue.objects, ...pendingMessages]}
           onSubmit={handleSubmit}
@@ -240,21 +233,38 @@ type ThreadProps = {
 };
 
 const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const inputBox = useRef<TextBoxControl>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [items]);
+
   return (
-    <div className='overflow-y-auto'>
-      {items.map((item, i) => (
-        <ThreadItem key={i} item={item} />
-      ))}
-      {isGenerating && <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />}
-      <div>
+    <div className='flex flex-col grow overflow-hidden'>
+      <div className='flex flex-col w-full gap-4 overflow-x-hidden overflow-y-scroll scrollbar-none' ref={scrollRef}>
+        {items.map((item, i) => (
+          <ThreadItem key={i} classNames='px-4' item={item} />
+        ))}
+      </div>
+
+      <div className='flex p-4 gap-2 items-center'>
         <TextBox
-          classNames='bg-blue-100 dark:bg-blue-800'
           ref={inputBox}
+          placeholder='Ask a question'
+          classNames='bg-base'
           onEnter={(value) => {
             onSubmit(value);
             inputBox.current?.setText('');
+            scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
           }}
+        />
+        <IconButton
+          variant='ghost'
+          icon={isGenerating ? 'ph--spinner-gap--regular' : 'ph--robot--regular'}
+          classNames={[isGenerating && 'animate-spin']}
+          label='Generate'
+          size={5}
+          iconOnly
         />
       </div>
     </div>
@@ -270,15 +280,14 @@ const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
     return <div className={mx(classNames)}>{item}</div>;
   }
 
-  // TODO(burdon): Hack; introspect type.
   // TODO(burdon): Markdown parser.
   const { role, content } = item;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 px-2 text-sm',
-          role === 'user' ? 'bg-blue-100 dark:bg-blue-800' : 'whitespace-pre-wrap bg-neutral-50 dark:bg-neutral-800',
+          'block rounded-md p-1 px-2 bg-base',
+          role === 'user' ? 'bg-neutral-50 dark:bg-blue-800' : 'whitespace-pre-wrap',
         )}
       >
         {content.map((item, idx) => {
@@ -298,8 +307,17 @@ const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
   );
 };
 
-export default {
-  title: 'plugins/plugin-canvas/compute/artifacts',
-  component: Default,
-  decorators: [withTheme, withSignals, withLayout({ fullscreen: true }), withPluginManager({ capabilities })],
-} satisfies Meta<typeof Default>;
+const meta: Meta<typeof Render> = {
+  title: 'plugins/plugin-canvas/artifacts',
+  render: Render,
+  decorators: [
+    //
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+    withPluginManager({ capabilities }),
+  ],
+};
+
+export default meta;
+
+export const Default = {};

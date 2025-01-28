@@ -4,8 +4,9 @@
 
 import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { Chess, type Color } from 'chess.js';
-import React, { type FC } from 'react';
-import { Chessboard as ReactChessboard } from 'react-chessboard';
+import React, { useRef, type FC } from 'react';
+import { ChessboardDnDProvider, Chessboard as ReactChessboard } from 'react-chessboard';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -79,6 +80,7 @@ export const Chessboard = ({
   pieces = ChessPieces.STANDARD,
   onUpdate,
 }: ChessboardProps) => {
+  const chessRoot = useRef<HTMLDivElement>(null);
   const { ref, width, height } = useResizeDetector();
   const style = boardStyles[boardStyle];
 
@@ -105,16 +107,23 @@ export const Chessboard = ({
         className='flex w-full justify-center'
         style={{ width: width && height ? Math.min(width, height) : undefined }}
       >
-        <ReactChessboard
-          position={chess.fen()}
-          boardWidth={width && height ? Math.min(width, height) : undefined}
-          boardOrientation={orientation === 'w' ? 'white' : 'black'}
-          arePiecesDraggable={!readonly}
-          customPieces={chessPieces[pieces]}
-          onPieceDrop={handleDrop}
-          {...style}
-          {...props}
-        />
+        <div ref={chessRoot} className='w-full relative' style={{ transform: 'translate3d(0, 0, 0)' }}>
+          {/* TODO(burdon): Prevents interference with external DND, but drag position is broken. Fix for touch also. */}
+          <ChessboardDnDProvider debugMode={true} backend={HTML5Backend} options={{ rootElement: chessRoot.current }}>
+            <ReactChessboard
+              boardWidth={width && height ? Math.min(width, height) : undefined}
+              boardOrientation={orientation === 'w' ? 'white' : 'black'}
+              allowDragOutsideBoard={false}
+              arePiecesDraggable={true}
+              // arePiecesDraggable={!readonly}
+              customPieces={chessPieces[pieces]}
+              position={chess.fen()}
+              onPieceDrop={handleDrop}
+              {...style}
+              {...props}
+            />
+          </ChessboardDnDProvider>
+        </div>
       </div>
     </div>
   );

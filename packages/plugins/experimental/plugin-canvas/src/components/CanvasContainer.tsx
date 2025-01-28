@@ -10,46 +10,29 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { ShapeRegistry } from './Canvas';
 import { Editor, type EditorController } from './Editor';
 import { KeyboardContainer } from './KeyboardContainer';
-import { type ComputeShape, computeShapes, createMachine, useGraphMonitor } from '../compute';
+import { type ComputeShape, computeShapes, createComputeGraphController, useGraphMonitor } from '../compute';
 import { type CanvasBoardType } from '../types';
 import { CanvasGraphModel } from '../types';
 
+const useGraphController = (graph: CanvasGraphModel<ComputeShape>) => {
+  const { controller } = useMemo(() => createComputeGraphController(graph), [graph]);
+  useEffect(() => {
+    void controller.open();
+    return () => {
+      void controller.close();
+    };
+  }, [controller]);
+  return controller;
+};
+
 export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
   const id = fullyQualifiedId(canvas);
-
-  // TODO(burdon): Use canvas.graph.
-  // const space = getSpace(canvas);
-
   const graph = useMemo(() => CanvasGraphModel.create<ComputeShape>(canvas.layout), []);
-  const { machine } = useMemo(() => createMachine(graph), []);
-  const editorRef = useRef<EditorController>(null);
-  useEffect(() => {
-    if (!machine) {
-      return;
-    }
-
-    // TODO(burdon): Better abstraction for context?
-    // machine.setContext({
-    //   space,
-    //   model: '@anthropic/claude-3-5-sonnet-20241022',
-    //   gpt: new EdgeGptExecutor(
-    //     new AIServiceClientImpl({
-    //       endpoint: 'https://ai-service.dxos.workers.dev',
-    //     }),
-    //   ),
-    // });
-
-    void machine.open();
-
-    return () => {
-      void machine.close();
-    };
-  }, [machine]);
-
-  const graphMonitor = useGraphMonitor(machine.graph);
+  const controller = useGraphController(graph);
+  const graphMonitor = useGraphMonitor(controller.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
+  const editorRef = useRef<EditorController>(null);
 
-  // TODO(burdon): Allow configuration of UI/Toolbar.
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
       <KeyboardContainer id={id}>

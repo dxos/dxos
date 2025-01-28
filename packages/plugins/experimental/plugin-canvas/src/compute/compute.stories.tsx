@@ -9,53 +9,46 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode } from '@dxos/conductor';
-import { S } from '@dxos/echo-schema';
+import { type ComputeGraphModel, ComputeNode, DefaultInput, DefaultOutput } from '@dxos/conductor';
+import { S, toEffectSchema } from '@dxos/echo-schema';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type StateMachine, type StateMachineContext } from './graph';
+import { type ComputeGraphController } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
-import { type ComputeShape } from './shapes';
+import { createFunctionAnchors, type ComputeShape } from './shapes';
 import {
   capabilities,
   createEdgeServices,
   createControlCircuit,
   createGPTRealtimeCircuit,
   createLogicCircuit,
-  createMachine,
+  createComputeGraphController,
   createBasicCircuit,
   createGptCircuit,
   createAudioCircuit,
   createTransformCircuit,
+  createTemplateCircuit,
+  createArtifactCircuit,
 } from './testing';
 import {
+  type Anchor,
   Container,
   Editor,
   type EditorController,
   type EditorRootProps,
   JsonFilter,
+  ShapeLayout,
   ShapeRegistry,
 } from '../components';
-import { type GraphMonitor } from '../hooks';
 import { useSelection } from '../testing';
-
-type RenderProps = EditorRootProps &
-  PropsWithChildren<{
-    init?: boolean;
-    sidebar?: 'canvas' | 'compute' | 'state-machine' | 'selected';
-    computeGraph?: ComputeGraphModel;
-    machine?: StateMachine;
-    model?: StateMachineContext['model'];
-    gpt?: StateMachineContext['gpt'];
-  }>;
 
 const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
-const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'state-machine', 'selected'] as const;
+const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
 
 // TODO(burdon): Move to async/context?
 const combine = (...cbs: UnsubscribeCallback[]) => {
@@ -66,15 +59,49 @@ const combine = (...cbs: UnsubscribeCallback[]) => {
   };
 };
 
+// TODO(burdon): Customize layout. Specialize ComputeShapeDef and registry.
+export class ComputeShapeLayout extends ShapeLayout {
+  constructor(
+    private _controller: ComputeGraphController,
+    registry: ShapeRegistry,
+  ) {
+    super(registry);
+  }
+
+  // TODO(burdon): Doesn't update.
+  override getAnchors(shape: ComputeShape): Record<string, Anchor> {
+    const shapeDef = this._registry.getShapeDef(shape.type);
+    let anchors = shapeDef?.getAnchors?.(shape) ?? {};
+    if (shape.node) {
+      const node = this._controller.graph.getNode(shape.node);
+      if (node.inputSchema || node.outputSchema) {
+        // TODO(burdon): Requires that component defined input and output types.
+        const inputSchema = node.inputSchema ? toEffectSchema(node.inputSchema) : DefaultInput;
+        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : DefaultOutput;
+        anchors = createFunctionAnchors(shape, inputSchema, outputSchema);
+      }
+    }
+
+    return anchors;
+  }
+}
+
+type RenderProps = EditorRootProps<ComputeShape> &
+  PropsWithChildren<{
+    init?: boolean;
+    sidebar?: 'canvas' | 'compute' | 'controller' | 'selected';
+    computeGraph?: ComputeGraphModel;
+    controller?: ComputeGraphController;
+  }>;
+
 const Render = ({
   id = 'test',
   children,
   graph,
-  machine,
-  model,
-  gpt,
+  controller,
   init,
   sidebar: _sidebar,
+  registry,
   ...props
 }: RenderProps) => {
   const [, forceUpdate] = useState({});
@@ -88,7 +115,7 @@ const Render = ({
     if (id) {
       const node = graph?.getNode(id) as ComputeShape;
       if (node?.node) {
-        return machine?.graph.getNode(node.node);
+        return controller?.graph.getNode(node.node);
       }
     }
   };
@@ -100,29 +127,29 @@ const Render = ({
       case 'canvas':
         return { graph };
       case 'compute':
-        return { machine, model, gpt };
-      case 'state-machine':
-        return machine?.nodeStates;
+        return { graph: controller?.graph };
+      case 'controller':
+        return { state: controller?.state };
       case 'selected':
         return { shape: selected, compute: getComputeNode(selected?.id) };
     }
-  }, [graph, machine, sidebar, selected]);
+  }, [graph, controller, sidebar, selected]);
 
-  // State machine.
+  // Controller.
   useEffect(() => {
-    if (!machine || !graph) {
+    if (!controller || !graph) {
       return;
     }
 
-    void machine.open();
+    void controller.open();
     const off = combine(
-      machine.update.on(() => {
+      controller.update.on(() => {
         void editorRef.current?.update();
         forceUpdate({});
       }),
 
       // TODO(burdon): Every node is called on every update.
-      machine.output.on(({ nodeId, property, value }) => {
+      controller.output.on(({ nodeId, property, value }) => {
         if (value.type === 'not-executed') {
           // If the node didn't execute, don't trigger.
           return;
@@ -140,23 +167,35 @@ const Render = ({
     );
 
     return () => {
-      void machine.close();
+      void controller.close();
       off();
     };
-  }, [graph, machine]);
+  }, [graph, controller]);
 
   // Sync monitor.
-  const graphMonitor = useGraphMonitor(machine?.graph);
+  const graphMonitor = useGraphMonitor(controller?.graph);
+
+  // Layout.
+  const layout = useMemo(
+    () => (controller && registry ? new ComputeShapeLayout(controller, registry) : undefined),
+    [controller, registry],
+  );
+
+  if (!controller) {
+    return <div />;
+  }
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
-      <ComputeContext.Provider value={{ stateMachine: machine! }}>
+      <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-          <Editor.Root
+          <Editor.Root<ComputeShape>
             ref={editorRef}
             id={id}
             graph={graph}
-            graphMonitor={graphMonitor as GraphMonitor} // TODO(burdon): ???
+            graphMonitor={graphMonitor}
+            layout={layout}
+            registry={registry}
             selection={selection}
             autoZoom
             {...props}
@@ -200,7 +239,7 @@ const Render = ({
   );
 };
 
-const meta: Meta<EditorRootProps> = {
+const meta: Meta<RenderProps> = {
   title: 'plugins/plugin-canvas/compute',
   component: Editor.Root,
   render: Render,
@@ -224,7 +263,7 @@ export const Default: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(),
+    ...createComputeGraphController(),
   },
 };
 
@@ -235,7 +274,7 @@ export const Beacon: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createBasicCircuit()),
+    ...createComputeGraphController(createBasicCircuit()),
   },
 };
 
@@ -246,7 +285,7 @@ export const Transform: Story = {
     snapToGrid: false,
     sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTransformCircuit()),
+    ...createComputeGraphController(createTransformCircuit()),
   },
 };
 
@@ -257,7 +296,7 @@ export const Logic: Story = {
     snapToGrid: false,
     sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createLogicCircuit()),
+    ...createComputeGraphController(createLogicCircuit()),
   },
 };
 
@@ -268,7 +307,7 @@ export const Control: Story = {
     snapToGrid: false,
     sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createControlCircuit()),
+    ...createComputeGraphController(createControlCircuit()),
   },
 };
 
@@ -277,12 +316,20 @@ export const Control: Story = {
 //     // debug: true,
 //     showGrid: false,
 //     snapToGrid: false,
-//     sidebar: 'state-machine',
 //     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest3()),
-//     // gpt: new OllamaGpt(ollamaClient),
+//     ...createComputeGraphController(createTest3(), createEdgeServices()),
 //   },
 // };
+
+export const Template: Story = {
+  args: {
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'controller',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraphController(createTemplateCircuit(), createEdgeServices()),
+  },
+};
 
 export const GPT: Story = {
   args: {
@@ -290,59 +337,54 @@ export const GPT: Story = {
     showGrid: false,
     snapToGrid: false,
     // sidebar: 'json',
-    sidebar: 'state-machine',
+    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGptCircuit({ history: true }), createEdgeServices()),
+    ...createComputeGraphController(createGptCircuit({ history: true }), createEdgeServices()),
   },
 };
 
-export const GPTImage: Story = {
+export const Plugins: Story = {
   args: {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
     // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGptCircuit({ history: true, image: true, artifact: true }), createEdgeServices()),
+    ...createComputeGraphController(
+      createGptCircuit({ history: true, image: true, artifact: true }),
+      createEdgeServices(),
+    ),
   },
 };
 
-export const GPTAudio: Story = {
+export const Artifact: Story = {
   args: {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'state-machine',
+    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createAudioCircuit(), createEdgeServices()),
+    ...createComputeGraphController(createArtifactCircuit(), createEdgeServices()),
   },
 };
 
-// export const GPTArtifact: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'selected',
-//     // sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
-//     model: '@anthropic/claude-3-5-sonnet-20241022',
-//     gpt: new EdgeGptExecutor(
-//       new AIServiceClientImpl({
-//         // endpoint: 'https://ai-service.dxos.workers.dev',
-//         endpoint: 'http://localhost:8787',
-//       }),
-//     ),
-//   },
-// };
+export const Audio: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'controller',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraphController(createAudioCircuit(), createEdgeServices()),
+  },
+};
 
-export const GPTRealtime: Story = {
+export const Voice: Story = {
   args: {
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'state-machine',
+    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createGPTRealtimeCircuit(), createEdgeServices()),
+    ...createComputeGraphController(createGPTRealtimeCircuit(), createEdgeServices()),
   },
 };

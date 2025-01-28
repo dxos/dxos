@@ -28,16 +28,16 @@ export type ComputeNodeState = {
  * Runtime state of a compute node.
  */
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
-  const { stateMachine } = useComputeContext();
-  invariant(stateMachine, 'Node not specified');
+  const { controller } = useComputeContext();
+  invariant(controller);
 
   const [meta, setMeta] = useState<ComputeMeta>();
   useEffect(() => {
     let disposed = false;
     queueMicrotask(async () => {
       invariant(shape.node, 'Node not specified');
-      const node = stateMachine.getComputeNode(shape.node);
-      const meta = await stateMachine.getMeta(node);
+      const node = controller.getComputeNode(shape.node);
+      const meta = await controller.getMeta(node);
       if (disposed) {
         return;
       }
@@ -50,12 +50,12 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   }, [shape.node]);
 
   const evalNode = useCallback(() => {
-    return stateMachine.evalNode(shape.node!);
+    return controller.evalNode(shape.node!);
   }, [shape.node]);
 
   const subscribeToEventLog = useCallback(
     (cb: (event: ComputeEvent) => void) => {
-      return stateMachine.events.on((ev) => {
+      return controller.events.on((ev) => {
         if (ev.nodeId === shape.node) {
           cb(ev);
         }
@@ -65,16 +65,16 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   );
 
   return {
-    node: stateMachine.getComputeNode(shape.node!),
+    node: controller.getComputeNode(shape.node!),
     meta: meta ?? {
       input: S.Struct({}),
       output: S.Struct({}),
     },
     runtime: {
-      inputs: stateMachine.getInputs(shape.node!),
-      outputs: stateMachine.getOutputs(shape.node!),
+      inputs: controller.getInputs(shape.node!),
+      outputs: controller.getOutputs(shape.node!),
       setOutput: (property: string, value: any) => {
-        stateMachine.setOutput(shape.node!, property, value);
+        controller.setOutput(shape.node!, property, value);
       },
       evalNode,
       subscribeToEventLog,
