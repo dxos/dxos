@@ -179,3 +179,10 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
     return typeDXN.type === objectTypename;
   }
 };
+
+/**
+ * Object that has an associated typename.
+ * The typename is retrievable using {@link getTypename}.
+ * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
+ */
+export type HasTypename = {};
