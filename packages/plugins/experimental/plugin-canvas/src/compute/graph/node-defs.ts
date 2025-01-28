@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComputeNode, type Executable, type NodeType, registry } from '@dxos/conductor';
+import { type ComputeNode, type Executable, NODE_INPUT, type NodeType, registry } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +25,7 @@ export const createComputeNode = (shape: ComputeShape): ComputeNode => {
   return factory(shape);
 };
 
-const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
+const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => ComputeNode> = {
   ['text-to-image' as const]: () => createNode('text-to-image'), // TODO(burdon): Rename ai-impage-tool
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
@@ -56,7 +56,7 @@ const nodeFactory: Record<NodeType, (shape: ComputeShape) => ComputeNode> = {
   ['template' as const]: () => createNode('template'),
   ['text' as const]: () => createNode('text'),
   ['thread' as const]: () => createNode('thread'),
-  ['trigger' as const]: () => createNode('trigger'),
+  ['trigger' as const]: () => createNode(NODE_INPUT),
 };
 
 const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({

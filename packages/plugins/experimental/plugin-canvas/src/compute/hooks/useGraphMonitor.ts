@@ -4,15 +4,17 @@
 
 import { useMemo } from 'react';
 
-import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeEdge } from '@dxos/conductor';
+import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import { getSpace } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { type GraphMonitor } from '../../hooks';
 import { type CanvasGraphModel, type Connection } from '../../types';
 import { createComputeNode, isValidComputeNode } from '../graph';
-import { type ComputeShape } from '../shapes';
+import { type ComputeShape, type TriggerShape } from '../shapes';
 
 /**
  * Map canvas edge to compute edge.
@@ -55,6 +57,9 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
         }
 
         const computeNode = createComputeNode(node);
+        if (node.type === 'trigger') {
+          linkTriggerToCompute(model, computeNode, node as TriggerShape);
+        }
         model.addNode(computeNode);
         node.node = computeNode.id;
       },
@@ -79,6 +84,8 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
 
           model.removeNodes(nodeIds);
           model.removeEdges(edgeIds);
+
+          deleteTriggerObjects(model, subgraph);
         }
       },
     };
@@ -103,4 +110,25 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
   }
 
   return computeGraph;
+};
+
+const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
+  const functionTrigger = triggerData.functionTrigger?.target;
+  invariant(functionTrigger);
+  functionTrigger.function = DXN.fromLocalObjectId(graph.root.id).toString();
+  functionTrigger.meta ??= {};
+  functionTrigger.meta.computeNodeId = computeNode.id;
+};
+
+const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGraphModel) => {
+  const space = getSpace(computeGraph.root);
+  if (!space) {
+    return;
+  }
+  for (const node of deleted.nodes) {
+    if (node.type === 'trigger') {
+      const trigger = node as TriggerShape;
+      space.db.remove(trigger.functionTrigger!.target!);
+    }
+  }
 };

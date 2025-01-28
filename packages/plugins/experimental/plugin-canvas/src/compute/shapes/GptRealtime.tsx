@@ -165,4 +165,4 @@ export const gptRealtimeShape: ShapeDef<GptRealtimeShape> = {
   resizable: true,
 };
 
-const AI_SERVICE_URL = 'http://localhost:8787';
+const AI_SERVICE_URL = 'http://localhost:8788';
