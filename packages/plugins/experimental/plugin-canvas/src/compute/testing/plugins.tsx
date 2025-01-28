@@ -125,7 +125,11 @@ export const artifacts: Record<string, Artifact> = [
           const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
           invariant(isInstanceOf(ChessSchema, artifact));
           const board = new Chess(artifact.value);
-          board.move(move);
+          try {
+            board.move(move);
+          } catch (error: any) {
+            return LLMToolResult.Error(error.message);
+          }
           artifact.value = board.fen();
           return LLMToolResult.Success(artifact.value);
         },
