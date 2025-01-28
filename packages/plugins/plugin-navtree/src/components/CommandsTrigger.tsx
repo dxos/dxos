@@ -17,7 +17,7 @@ export const CommandsTrigger = () => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Button
-      classNames='w-full h-full !rounded-none'
+      classNames='m-1 !pli-1 lg:!pli-2'
       onClick={() =>
         dispatch(
           createIntent(LayoutAction.SetLayout, {

@@ -8,8 +8,14 @@ import { createSurface, Capabilities, contributes, useCapability } from '@dxos/a
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';
-import { CommandsDialogContent, CommandsTrigger, NavTreeDocumentTitle, NotchStart } from '../components';
-import { NavTreeContainer } from '../components/NavTreeContainer';
+import {
+  CommandsDialogContent,
+  CommandsTrigger,
+  NavTreeDocumentTitle,
+  NotchStart,
+  NavTreeContainer,
+} from '../components';
+import { NavTreeFooter } from '../components/NavTreeFooter';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import { expandChildrenAndActions } from '../util';
@@ -61,6 +67,11 @@ export default () =>
       id: `${NAVTREE_PLUGIN}/notch-start`,
       role: 'notch-start',
       component: () => <NotchStart />,
+    }),
+    createSurface({
+      id: `${NAVTREE_PLUGIN}/header-end`,
+      role: 'header-end',
+      component: () => <NavTreeFooter />,
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/search-input`,

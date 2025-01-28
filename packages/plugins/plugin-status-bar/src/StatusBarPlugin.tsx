@@ -21,13 +21,17 @@ export const StatusBarPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.Startup,
       activate: () =>
-        contributes(
-          Capabilities.ReactSurface,
+        contributes(Capabilities.ReactSurface, [
           createSurface({
             id: meta.id,
             role: 'status-bar',
             component: () => <StatusBarPanel />,
           }),
-        ),
+          createSurface({
+            id: meta.id,
+            role: 'status-bar--sidebar-footer',
+            component: () => <StatusBarPanel />,
+          }),
+        ]),
     }),
   ]);

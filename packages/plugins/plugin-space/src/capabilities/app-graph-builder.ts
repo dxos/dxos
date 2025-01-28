@@ -106,7 +106,6 @@ export default (context: PluginsContext) => {
             icon: 'ph--sign-in--regular',
             testId: 'spacePlugin.joinSpace',
             disposition: 'item',
-            className: 'border-b border-separator',
           },
         },
       ],

@@ -42,7 +42,7 @@ export const StackItemSigilButton = forwardRef<HTMLButtonElement, StackItemSigil
       <Button
         {...props}
         variant={variant}
-        classNames={['m-1 shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative', classNames]}
+        classNames={['shrink-0 pli-0 min-bs-0 is-[--rail-action] bs-[--rail-action] relative', classNames]}
         ref={forwardedRef}
       >
         <MenuSignifierHorizontal />
