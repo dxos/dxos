@@ -6,10 +6,10 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type LLMToolDefinition } from './types';
+import { type LLMToolDefinition, type ToolExecutionContext } from './types';
 import { type LLMTool } from '../ai-service';
-import { ObjectId } from '@dxos/echo-schema';
-import { type AIServiceClient, type Message, type ResultStreamEvent, type LLMModel } from '../ai-service';
+import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { Message, type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
@@ -137,4 +137,66 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     result: conversationResult,
     history,
   };
+};
+
+export const isToolUse = (message: Message) => message.content.at(-1)?.type === 'tool_use';
+
+type RunToolsOptions = {
+  tools: LLMTool[];
+  message: Message;
+  context: LLMToolContextExtensions;
+};
+
+export type RunToolsResult = { type: 'continue'; message: Message } | { type: 'break'; result: unknown };
+
+export const runTools = async ({ tools, message, context }: RunToolsOptions): Promise<RunToolsResult> => {
+  const toolCalls = message.content.filter((c) => c.type === 'tool_use');
+  invariant(toolCalls.length === 1);
+  const toolCall = toolCalls[0];
+  const tool = tools.find((t) => t.name === toolCall.name);
+  if (!tool) {
+    throw new Error(`Tool not found: ${toolCall.name}`);
+  }
+
+  const toolResult = await tool.execute(toolCall.input, { extensions: context });
+  switch (toolResult.kind) {
+    case 'error': {
+      log('tool error', { message: toolResult.message });
+      const resultMessage = createStatic(Message, {
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            toolUseId: toolCall.id,
+            content: toolResult.message,
+            isError: true,
+          },
+        ],
+      });
+
+      return { type: 'continue', message: resultMessage };
+    }
+    case 'success': {
+      log('tool success', { result: toolResult.result });
+      const resultMessage = createStatic(Message, {
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            toolUseId: toolCall.id,
+            content: typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result),
+          },
+        ],
+      });
+
+      return { type: 'continue', message: resultMessage };
+    }
+    case 'break': {
+      log('tool break', { result: toolResult.result });
+      return { type: 'break', result: toolResult.result };
+    }
+    default: {
+      throw new Error(`Unknown tool result kind: ${toolResult.kind}`);
+    }
+  }
 };

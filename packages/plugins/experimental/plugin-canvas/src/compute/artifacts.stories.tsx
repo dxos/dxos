@@ -8,19 +8,20 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AIServiceClientImpl, Message } from '@dxos/assistant';
+import { AIServiceClientImpl, isToolUse, Message, runTools } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { createStatic, HasTypename, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
-import { artifacts, capabilities, ChessSchema } from './testing';
-import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
+import { create } from '@dxos/live-object';
 import { TextBox, type TextBoxControl } from '../components';
+import { artifacts, capabilities, type ArtifactsContext } from './testing';
+import { ARTIFACTS_SYSTEM_PROMPT } from './testing/prompts';
 
 const EDGE_SERVICE_ENDPOINT = 'http://localhost:8787';
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
@@ -110,23 +111,24 @@ export const Default = () => {
   const [queueDxn, setQueueDxn] = useState(() =>
     new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
   );
+  const [artifactsList, setArtifactsList] = useState<HasTypename[]>(() => []);
 
   const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn));
 
-  const isFirstLoad = useRef(true);
-  useEffect(() => {
-    if (!isFirstLoad.current) {
-      return;
-    }
-    isFirstLoad.current = false;
-    historyQueue.append([
-      createStatic(Message, { role: 'user', content: [{ type: 'text', text: 'Hello' }] }),
-      createStatic(Message, {
-        role: 'assistant',
-        content: [{ type: 'text', text: 'Hello, how can I help you today?' }],
-      }),
-    ]);
-  }, []);
+  // const isFirstLoad = useRef(true);
+  // useEffect(() => {
+  //   if (!isFirstLoad.current) {
+  //     return;
+  //   }
+  //   isFirstLoad.current = false;
+  //   historyQueue.append([
+  //     createStatic(Message, { role: 'user', content: [{ type: 'text', text: 'Hello' }] }),
+  //     createStatic(Message, {
+  //       role: 'assistant',
+  //       content: [{ type: 'text', text: 'Hello, how can I help you today?' }],
+  //     }),
+  //   ]);
+  // }, []);
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
 
   log.info('items', { items: history });
@@ -139,31 +141,64 @@ export const Default = () => {
 
     try {
       setIsGenerating(true);
+
+      const history = [...historyQueue.objects];
+      const append = (msgs: Message[]) => {
+        historyQueue.append(msgs);
+        history.push(...msgs);
+      };
+
       const userMessage = createStatic(Message, {
         role: 'user',
         content: [{ type: 'text', text: message }],
       });
-      historyQueue.append([userMessage]);
+      append([userMessage]);
 
-      const response = await aiServiceClient.generate({
-        model: '@anthropic/claude-3-5-sonnet-20241022',
-        history: [...historyQueue.objects, userMessage],
-        systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
-        tools: [...artifacts['plugin-chess'].tools],
-      });
+      generate: while (true) {
+        const response = await aiServiceClient.generate({
+          model: '@anthropic/claude-3-5-sonnet-20241022',
+          history,
+          systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
+          tools: [...artifacts['plugin-chess'].tools],
+        });
 
-      // TODO(dmaretskyi): Have to drain the stream manually.
-      queueMicrotask(async () => {
-        for await (const event of response) {
-          log.info('event', { event });
-          setPendingMessages([...response.accumulatedMessages.map((m) => createStatic(Message, m))]);
+        // TODO(dmaretskyi): Have to drain the stream manually.
+        queueMicrotask(async () => {
+          for await (const event of response) {
+            log.info('event', { event });
+            setPendingMessages([...response.accumulatedMessages.map((m) => createStatic(Message, m))]);
+          }
+        });
+
+        const assistantMessages = await response.complete();
+        log.info('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
+        append([...assistantMessages.map((m) => createStatic(Message, m))]);
+        setPendingMessages([]);
+
+        if (isToolUse(assistantMessages.at(-1)!)) {
+          const reply = await runTools({
+            tools: artifacts['plugin-chess'].tools,
+            message: assistantMessages.at(-1)!,
+            context: {
+              artifacts: {
+                getArtifacts: () => artifactsList,
+                addArtifact: (artifact) => setArtifactsList((artifactsList) => [...artifactsList, artifact]),
+              },
+            },
+          });
+          switch (reply.type) {
+            case 'continue': {
+              append([reply.message]);
+              break;
+            }
+            case 'break': {
+              break generate;
+            }
+          }
+        } else {
+          break;
         }
-      });
-
-      const assistantMessages = await response.complete();
-      log.info('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
-      historyQueue.append([...assistantMessages.map((m) => createStatic(Message, m))]);
-      setPendingMessages([]);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -171,7 +206,7 @@ export const Default = () => {
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator'>
-      <div className='p-4'>
+      <div className='p-4 overflow-y-auto'>
         <div className='flex gap-2 items-center'>
           <Input.Root>
             <Input.TextInput
@@ -189,17 +224,10 @@ export const Default = () => {
           isGenerating={isGenerating}
         />
       </div>
-      <div className='p-4'>
-        <Surface
-          role='canvas-node'
-          limit={1}
-          data={createStatic(ChessSchema, {
-            value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-          })}
-          // data={createStatic(MapSchema, {
-          //   coordinates: [30.0, 10.0],
-          // })}
-        />
+      <div className='p-4 overflow-y-auto flex flex-col gap-4'>
+        {artifactsList.map((item, idx) => (
+          <Surface key={idx} role='canvas-node' limit={1} data={item} />
+        ))}
       </div>
     </div>
   );
@@ -214,7 +242,7 @@ type ThreadProps = {
 const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
   const inputBox = useRef<TextBoxControl>(null);
   return (
-    <div>
+    <div className='overflow-y-auto'>
       {items.map((item, i) => (
         <ThreadItem key={i} item={item} />
       ))}
@@ -273,5 +301,5 @@ const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
 export default {
   title: 'plugins/plugin-canvas/compute/artifacts',
   component: Default,
-  decorators: [withTheme, withLayout({ fullscreen: true }), withPluginManager({ capabilities })],
+  decorators: [withTheme, withSignals, withLayout({ fullscreen: true }), withPluginManager({ capabilities })],
 } satisfies Meta<typeof Default>;

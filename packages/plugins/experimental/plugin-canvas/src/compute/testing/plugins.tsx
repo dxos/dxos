@@ -33,11 +33,14 @@ export const MapSchema = S.Struct({
 }).pipe(EchoObject('example.com/type/Map', '0.1.0'));
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
+export type ArtifactsContext = {
+  getArtifacts: () => HasTypename[];
+  addArtifact: (artifact: HasTypename) => void;
+};
+
 declare global {
   interface LLMToolContextExtensions {
-    artifacts: {
-      items: HasTypename[];
-    };
+    artifacts: ArtifactsContext;
   }
 }
 
@@ -73,7 +76,7 @@ export const artifacts: Record<string, Artifact> = [
         }),
         execute: async ({ fen }, { extensions }) => {
           const artifact = createStatic(ChessSchema, { value: fen });
-          extensions.artifacts.items.push(artifact);
+          extensions.artifacts.addArtifact(artifact);
           return LLMToolResult.Success(formatArtifact(artifact.id));
         },
       }),
