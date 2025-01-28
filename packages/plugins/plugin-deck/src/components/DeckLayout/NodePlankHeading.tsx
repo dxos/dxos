@@ -52,7 +52,7 @@ export const NodePlankHeading = memo(
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
-    const isMobile = useBreakpoints();
+    const breakpoint = useBreakpoints();
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -68,12 +68,12 @@ export const NodePlankHeading = memo(
     const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        hoistSidebarButton: layoutPart === 'solo' || isMobile,
-        solo: (layoutPart === 'solo' || layoutPart === 'main') && !isMobile,
+        hoistSidebarButton: layoutPart === 'solo' || breakpoint === 'mobile',
+        solo: (layoutPart === 'solo' || layoutPart === 'main') && breakpoint !== 'mobile',
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [isMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [breakpoint, layoutPart, canIncrementStart, canIncrementEnd],
     );
 
     return (
