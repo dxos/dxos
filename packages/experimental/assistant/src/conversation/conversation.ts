@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type LLMToolDefinition, type ToolExecutionContext } from './types';
+import { LLMToolResult, type LLMToolDefinition, type ToolExecutionContext } from './types';
 import { type LLMTool } from '../ai-service';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { Message, type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
@@ -158,7 +158,13 @@ export const runTools = async ({ tools, message, context }: RunToolsOptions): Pr
     throw new Error(`Tool not found: ${toolCall.name}`);
   }
 
-  const toolResult = await tool.execute(toolCall.input, { extensions: context });
+  let toolResult: LLMToolResult;
+  try {
+    toolResult = await tool.execute(toolCall.input, { extensions: context });
+  } catch (error: any) {
+    log('tool error', { error });
+    toolResult = LLMToolResult.Error(error.message);
+  }
   switch (toolResult.kind) {
     case 'error': {
       log('tool error', { message: toolResult.message });
@@ -194,9 +200,6 @@ export const runTools = async ({ tools, message, context }: RunToolsOptions): Pr
     case 'break': {
       log('tool break', { result: toolResult.result });
       return { type: 'break', result: toolResult.result };
-    }
-    default: {
-      throw new Error(`Unknown tool result kind: ${toolResult.kind}`);
     }
   }
 };
