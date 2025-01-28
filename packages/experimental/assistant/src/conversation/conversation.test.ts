@@ -13,9 +13,9 @@ import { createUserMessage, defineTool, LLMToolResult } from './types';
 import { AIServiceClientImpl } from '../ai-service';
 import { ObjectId } from '@dxos/echo-schema';
 
-const ENDPOINT = 'http://localhost:8787';
+const ENDPOINT = 'http://localhost:8788';
 
-describe.skip('Conversation tests', () => {
+describe('Conversation tests', () => {
   const client = new AIServiceClientImpl({
     endpoint: ENDPOINT,
   });
@@ -24,11 +24,9 @@ describe.skip('Conversation tests', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([createUserMessage(spaceId, threadId, 'Hello, how are you?')]);
     const result = await runLLM({
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      spaceId,
-      threadId,
+      history: [createUserMessage(spaceId, threadId, 'Hello, how are you?')],
       tools: [],
       client,
       logger: messageLogger,
@@ -36,7 +34,7 @@ describe.skip('Conversation tests', () => {
     log.info('result', { result });
   });
 
-  test('tool call', async ({ expect }) => {
+  test.only('tool call', async ({ expect }) => {
     const custodian = defineTool({
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
@@ -55,11 +53,9 @@ describe.skip('Conversation tests', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')]);
     const result = await runLLM({
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      spaceId,
-      threadId,
+      history: [createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')],
       tools: [custodian],
       client,
       logger: messageLogger,

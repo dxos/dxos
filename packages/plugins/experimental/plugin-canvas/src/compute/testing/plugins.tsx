@@ -8,19 +8,21 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
 import { isImage } from '@dxos/conductor';
-import { EchoObject, GeoPoint, isInstanceOf } from '@dxos/echo-schema';
+import { createStatic, EchoObject, GeoPoint, isInstanceOf, type HasTypename, type ObjectId } from '@dxos/echo-schema';
 import { Chessboard } from '@dxos/plugin-chess';
 import { MapControl } from '@dxos/plugin-map';
 
 import { JsonFilter } from '../../components';
+import { defineTool, LLMToolResult, type LLMTool } from '@dxos/assistant';
 
 export type Artifact = {
   id: string;
   prompt: string;
   schema: S.Schema.AnyNoContext;
+  tools: LLMTool[];
 };
 
-export const createArtifact = (artifact: Artifact): Artifact => artifact;
+export const defineArtifact = (artifact: Artifact): Artifact => artifact;
 
 export const ChessSchema = S.Struct({
   value: S.String.annotations({ description: 'FEN notation' }),
@@ -32,9 +34,22 @@ export const MapSchema = S.Struct({
 }).pipe(EchoObject('example.com/type/Map', '0.1.0'));
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
+export type ArtifactsContext = {
+  getArtifacts: () => HasTypename[];
+  addArtifact: (artifact: HasTypename) => void;
+};
+
+declare global {
+  interface LLMToolContextExtensions {
+    artifacts: ArtifactsContext;
+  }
+}
+
+const formatArtifact = (id: ObjectId) => `<artifact id=${id} />`;
+
 // TODO(burdon): Define artifact providers.
 export const artifacts: Record<string, Artifact> = [
-  createArtifact({
+  defineArtifact({
     id: 'plugin-image',
     prompt: `
     Images:
@@ -44,22 +59,38 @@ export const artifacts: Record<string, Artifact> = [
     (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
     `,
     schema: S.Struct({}),
+    tools: [],
   }),
-  createArtifact({
+  defineArtifact({
     id: 'plugin-chess',
     prompt: `
     Chess:
     - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
     `,
     schema: ChessSchema,
+    tools: [
+      defineTool({
+        name: 'chess_new',
+        description: 'Create a new chess game. Returns the artifact definition for the game',
+        schema: S.Struct({
+          fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
+        }),
+        execute: async ({ fen }, { extensions }) => {
+          const artifact = createStatic(ChessSchema, { value: fen });
+          extensions.artifacts.addArtifact(artifact);
+          return LLMToolResult.Success(formatArtifact(artifact.id));
+        },
+      }),
+    ],
   }),
-  createArtifact({
+  defineArtifact({
     id: 'plugin-map',
     prompt: `
     Maps:
     - If the user's message relates to a map, you must return the map as a valid GeoJSON Point with valid coordinates.
     `,
     schema: MapSchema,
+    tools: [],
   }),
 ].reduce<Record<string, Artifact>>((acc, artifact) => {
   acc[artifact.id] = artifact;
@@ -94,18 +125,7 @@ export const capabilities: AnyCapability[] = [
     createSurface({
       id: 'plugin-chess',
       role: 'canvas-node',
-      filter: (data): data is any => {
-        return false;
-      },
-      // filter: (data) => isInstanceOf(ChessSchema, data),
-      // filter: (data): data is any => {
-      //   try {
-      //     const game = new Chess(data.value as string);
-      //     return !!game;
-      //   } catch (err) {
-      //     return false;
-      //   }
-      // },
+      filter: (data): data is any => isInstanceOf(ChessSchema, data),
       component: ({ role, data }) => <Chessboard model={{ chess: new Chess(data.value) }} />,
     }),
   ),

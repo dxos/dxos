@@ -15,15 +15,19 @@ Read the user's message.
 
 2. Artifact Creation:
 - Determine if the content should be an artifact. Prefer artifacts for tables, lists, images, and other structured data.
-- If you decide to create an artifact, use <artifact> tags to enclose the content.
-- Artifacts must be presented in their entirety without separating content blocks or calling external tools.
+- If you decide to create an artifact, Call the associated tool to create the artifact.
+- The artifact tools create the artifact in the database and return you the artifact handle that looks like <artifact id="unique_identifier" />
+- Decide if the user should be shown the artifact.
+- If you wish to show the artifact to the user, return the artifact handle in the response exactly as it is returned by the tool, e.g. <artifact id="unique_identifier" />
 
 3. Artifact Rules:
-- Ensure that artifact tags are always balanced (i.e., each opening tag has a corresponding closing tag).
-- Artifacts cannot be nested within other artifacts.
+- Ensure that artifact tags are always self-closing.
+- Artifact tags cannot contain other properties then the id.
+- You must never generate the id of the artifact yourself, only recall the ids that are already in the history.
 
 4. Artifact Providers:
 ${Object.values(artifacts)
+  .filter((artifact) => artifact.id === 'plugin-chess')
   .map((artifact) => artifact.prompt)
   .join('\n')}
 
