@@ -65,7 +65,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
   }, []);
 
   const handleRequest = async (input: string) => {
-    if (input === '') {
+    if (!aiClient.current || input === '') {
       return;
     }
 
@@ -79,10 +79,10 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       role: 'user',
       content: [{ type: 'text', text: input }],
     };
-    await aiClient.current!.appendMessages([userMessage]);
+    await aiClient.current.appendMessages([userMessage]);
     setHistory([...history, userMessage]);
 
-    const generationStream = await aiClient.current!.generate({
+    const generationStream = await aiClient.current.generate({
       model: '@anthropic/claude-3-5-sonnet-20241022',
       spaceId: contextSpaceId!,
       threadId: threadId!,

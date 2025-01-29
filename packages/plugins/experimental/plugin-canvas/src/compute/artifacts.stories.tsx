@@ -54,8 +54,8 @@ const Render = ({ items: _items }: RenderProps) => {
     }),
   );
 
+  const items = artifactsContext.items.toReversed();
   const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
-
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   log.info('items', { items: history });
 
@@ -72,26 +72,27 @@ const Render = ({ items: _items }: RenderProps) => {
       return;
     }
 
+    // TODO(burdon): Factor out.
     try {
       setIsGenerating(true);
-
       const history = [...historyQueue.objects];
-      const append = (msgs: Message[]) => {
-        void historyQueue.append(msgs);
-        history.push(...msgs);
+      const append = (messages: Message[]) => {
+        void historyQueue.append(messages);
+        history.push(...messages);
       };
 
-      const userMessage = createStatic(Message, {
-        role: 'user',
-        content: [{ type: 'text', text: message }],
-      });
-      append([userMessage]);
+      append([
+        createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: message }],
+        }),
+      ]);
 
       generate: while (true) {
         const response = await aiServiceClient.generate({
           model: '@anthropic/claude-3-5-sonnet-20241022',
-          history,
           systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
+          history,
           tools,
         });
 
@@ -99,7 +100,7 @@ const Render = ({ items: _items }: RenderProps) => {
         queueMicrotask(async () => {
           for await (const event of response) {
             log.info('event', { event });
-            setPendingMessages([...response.accumulatedMessages.map((m) => createStatic(Message, m))]);
+            setPendingMessages([...response.accumulatedMessages.map((message) => createStatic(Message, message))]);
           }
         });
 
@@ -136,8 +137,6 @@ const Render = ({ items: _items }: RenderProps) => {
     }
   });
 
-  const items = artifactsContext.items.toReversed();
-
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
       {/* Thread */}
@@ -168,6 +167,7 @@ const Render = ({ items: _items }: RenderProps) => {
           </Input.Root>
         </Toolbar.Root>
 
+        {/* TODO(burdon): Generates new array on each render. */}
         <Thread
           items={[...historyQueue.objects, ...pendingMessages]}
           isGenerating={isGenerating}

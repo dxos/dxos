@@ -20,6 +20,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
   constructor(private readonly _client: AIServiceClient) {}
 
+  // TODO(burdon): Not used?
   getAiServiceClient = () => this._client;
 
   public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
@@ -80,7 +81,6 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       const artifact = Effect.gen(this, function* () {
         const output = yield* outputMessagesEffect;
-
         for (const msg of output) {
           for (const content of msg.content) {
             if (content.type === 'image') {
