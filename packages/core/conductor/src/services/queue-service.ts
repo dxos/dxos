@@ -5,24 +5,23 @@
 import { Context, Layer } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { type EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
-import { ObjectId } from '@dxos/echo-schema';
 import type { HasId, HasTypename } from '@dxos/echo-schema';
-import { DXN, SpaceId } from '@dxos/keys';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { QueryResult } from '@dxos/protocols';
 
 const raiseNotAvailable = () => raise(new Error('Edge client not available'));
 
-export class EdgeClientService extends Context.Tag('EdgeClientService')<
-  EdgeClientService,
+export class QueueService extends Context.Tag('QueueService')<
+  QueueService,
   {
     queryQueue(queue: DXN): Promise<QueryResult>;
     insertIntoQueue(queue: DXN, objects: (HasTypename & HasId)[]): Promise<void>;
   }
 >() {
-  static fromClient(client: EdgeClient, httpClient: EdgeHttpClient) {
-    return Layer.succeed(EdgeClientService, {
+  static fromClient(httpClient: EdgeHttpClient) {
+    return Layer.succeed(QueueService, {
       queryQueue: async (queue) => {
         const { subspaceTag, spaceId, queueId, objectId } = queue.asQueueDXN() ?? failedInvariant('Invalid queue DXN');
         invariant(objectId == null);
@@ -36,7 +35,7 @@ export class EdgeClientService extends Context.Tag('EdgeClientService')<
     });
   }
 
-  static notAvailable = Layer.succeed(EdgeClientService, {
+  static notAvailable = Layer.succeed(QueueService, {
     queryQueue: raiseNotAvailable,
     insertIntoQueue: raiseNotAvailable,
   });
