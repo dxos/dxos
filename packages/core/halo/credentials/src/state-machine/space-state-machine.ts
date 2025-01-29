@@ -143,10 +143,8 @@ export class SpaceStateMachine implements SpaceState {
    * @synchronized
    */
   async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
-    if (credential.id) {
-      if (this._processedCredentials.has(credential.id)) {
-        return true;
-      }
+    if (credential.id && this._processedCredentials.has(credential.id)) {
+      return true;
     }
 
     if (!skipVerification) {
