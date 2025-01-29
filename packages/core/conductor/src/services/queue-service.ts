@@ -8,8 +8,8 @@ import { raise } from '@dxos/debug';
 import type { HasId, HasTypename } from '@dxos/echo-schema';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { QueryResult } from '@dxos/protocols';
+import { type DXN } from '@dxos/keys';
+import { type QueryResult } from '@dxos/protocols';
 
 const raiseNotAvailable = () => raise(new Error('Edge client not available'));
 

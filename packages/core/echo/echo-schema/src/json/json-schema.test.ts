@@ -20,8 +20,8 @@ import {
 import { createSchemaReference, getSchemaReference, Ref } from '../ast';
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
-import { Contact } from '../testing';
 import { StoredSchema } from '../schema';
+import { Contact } from '../testing';
 
 const EXAMPLE_NAMESPACE = '@example';
 

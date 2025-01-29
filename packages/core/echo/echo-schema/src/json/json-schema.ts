@@ -5,9 +5,9 @@
 import { Option, type Types } from 'effect';
 
 import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { getDebugName, orderKeys } from '@dxos/util';
+import { orderKeys } from '@dxos/util';
 
 import {
   EchoIdentifierAnnotationId,
@@ -29,7 +29,6 @@ import {
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
-import { log } from '@dxos/log';
 
 /**
  * @internal

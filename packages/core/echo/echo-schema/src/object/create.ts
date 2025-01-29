@@ -1,11 +1,17 @@
-import { Schema as S } from '@effect/schema';
-import { getObjectAnnotation } from '../ast/annotations';
-import { ObjectId } from './object-id';
-import { getSchemaDXN } from '../types';
-import { setTypename, TYPENAME_SYMBOL } from './typename';
-import { attachTypedJsonSerializer } from './json-serializer';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Schema as S } from '@effect/schema';
+
 import { failedInvariant } from '@dxos/invariant';
+
+import { attachTypedJsonSerializer } from './json-serializer';
+import { ObjectId } from './object-id';
+import { setTypename } from './typename';
+import { getObjectAnnotation } from '../ast/annotations';
 import { setSchema } from '../ast/schema';
+import { getSchemaDXN } from '../types';
 
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
 

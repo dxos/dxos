@@ -5,16 +5,14 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { ObjectId } from '@dxos/echo-schema';
 import { type AIServiceClient, type LLMTool, type Message, type MessageImageContentBlock } from '@dxos/assistant';
-import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
-import { SpaceId } from '@dxos/keys';
+import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from './gpt';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
-import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from './gpt';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

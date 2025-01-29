@@ -4,9 +4,10 @@
 
 import { test } from 'vitest';
 
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 
 import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
@@ -15,7 +16,6 @@ import { Contact, Org, Project, Task } from './test-schema';
 import { AIServiceClientImpl } from '../ai-service';
 import { runLLM, createUserMessage } from '../conversation';
 import { EchoDataSource } from '../cypher/echo-data-source';
-import { ObjectId } from '@dxos/echo-schema';
 
 const ENDPOINT = 'http://localhost:8787';
 

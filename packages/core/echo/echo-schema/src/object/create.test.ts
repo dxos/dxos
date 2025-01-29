@@ -1,9 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
-import { Contact } from '../testing/schema';
+
 import { createStatic } from './create';
 import { getTypename } from './typename';
-import { getSchemaDXN, isInstanceOf } from '../types';
 import { getSchema } from '../ast';
+import { Contact } from '../testing/schema';
+import { getSchemaDXN, isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('create static object', () => {

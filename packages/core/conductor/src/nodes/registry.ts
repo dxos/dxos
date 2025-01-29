@@ -7,9 +7,7 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN, SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { DXN } from '@dxos/keys';
 import { safeParseJson } from '@dxos/util';
 
 import {

@@ -4,14 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import {
-  EchoObject,
-  EntityKind,
-  JsonSchemaType,
-  ObjectAnnotationId,
-  ObjectId,
-  type ObjectAnnotation,
-} from '@dxos/echo-schema';
+import { EchoObject, JsonSchemaType, ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract IDs to protocols.

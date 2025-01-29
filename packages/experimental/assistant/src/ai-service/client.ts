@@ -7,11 +7,11 @@
 import { Schema as S } from '@effect/schema';
 
 import { Trigger } from '@dxos/async';
+import { type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 
 import { Message, type GenerateRequest, type ResultStreamEvent, type Space, type Thread } from './schema';
-import { ObjectId } from '@dxos/echo-schema';
 import { iterSSEMessages } from './sse';
 
 export type AIServiceClientParams = {

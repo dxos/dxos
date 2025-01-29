@@ -21,7 +21,6 @@ import type {
   StringLiteral,
   WhereClause,
 } from './ast';
-
 import { Parjser, parjs, parjsCombinators } from './parjs';
 
 // Helper parsers

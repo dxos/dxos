@@ -8,8 +8,8 @@ import { type S } from '@dxos/echo-schema';
 import { mapValues } from '@dxos/util';
 
 // TODO(burdon): Move to types to untangle circular deps.
-import type { EventLogger, GptService, QueueService, SpaceService } from '../services';
 import type { ComputeNode } from './graph';
+import type { EventLogger, GptService, QueueService, SpaceService } from '../services';
 
 //
 // Errors
