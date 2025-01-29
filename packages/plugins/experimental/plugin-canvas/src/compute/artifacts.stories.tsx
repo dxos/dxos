@@ -10,11 +10,11 @@ import React, { useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AIServiceClientImpl, Message, isToolUse, runTools } from '@dxos/assistant';
+import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { create } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -64,7 +64,7 @@ const Render = ({ items: _items }: RenderProps) => {
     }),
   );
 
-  const artifactObjects = artifactsContext.items.toReversed();
+  const artifactItems = artifactsContext.items.toReversed();
   const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   const messages = useMemo(
@@ -174,18 +174,18 @@ const Render = ({ items: _items }: RenderProps) => {
         <Thread messages={messages} isGenerating={isGenerating} onSubmit={handleSubmit} />
       </div>
 
-      {/* ArtifactsDeck */}
+      {/* Artifacts Deck/Mosaic */}
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
-        {artifactObjects.length > 0 && (
-          <div className={mx('flex grow overflow-hidden', artifactObjects.length === 1 && 'row-span-2')}>
-            <Surface role='canvas-node' limit={1} data={artifactObjects[0]} />
+        {artifactItems.length > 0 && (
+          <div className={mx('flex grow overflow-hidden', artifactItems.length === 1 && 'row-span-2')}>
+            <Surface role='canvas-node' limit={1} data={artifactItems[0]} />
           </div>
         )}
 
-        {artifactObjects.length > 1 && (
+        {artifactItems.length > 1 && (
           <div className='flex shrink-0 overflow-hidden divide-x divide-separator'>
             <div className='flex flex-1 h-full'>
-              {artifactObjects.slice(1, 3).map((item, idx) => (
+              {artifactItems.slice(1, 3).map((item, idx) => (
                 <Surface key={idx} role='canvas-node' limit={1} data={item} />
               ))}
             </div>
