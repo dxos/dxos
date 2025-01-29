@@ -27,9 +27,12 @@ export const Thread = ({ messages, isGenerating, onSubmit }: ThreadProps) => {
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <div className='flex flex-col w-full gap-4 overflow-x-hidden overflow-y-scroll scrollbar-thin' ref={scrollRef}>
+      <div
+        ref={scrollRef}
+        className='flex flex-col w-full overflow-x-hidden overflow-y-scroll scrollbar-thin divide-y divide-separator'
+      >
         {messages.map((message, i) => (
-          <ThreadMessage key={i} classNames='px-4' message={message} />
+          <ThreadMessage key={i} classNames='px-4 py-2' message={message} />
         ))}
       </div>
 
@@ -66,20 +69,20 @@ export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
     return <div className={mx(classNames)}>{message}</div>;
   }
 
-  // TODO(burdon): Markdown parser.
   const { role, content } = message;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
           'block rounded-md p-1 px-2 bg-base',
-          role === 'user' ? 'bg-neutral-50 dark:bg-blue-800' : 'whitespace-pre-wrap',
+          role === 'user' ? 'dark:bg-blue-800' : 'whitespace-pre-wrap',
         )}
       >
         {content.map((item, idx) => {
           switch (item.type) {
             case 'text':
-              return <div key={idx}>{item.text}</div>;
+              // TODO(burdon): Markdown parser/codemirror?
+              return <div key={idx}>{item.text.trim()}</div>;
             default:
               return (
                 <SyntaxHighlighter key={idx} language='json' classNames='whitespace-pre-wrap overflow-hidden'>

@@ -97,6 +97,8 @@ const MessageSchema = S.Struct({
   // updated: S.optional(S.DateFromString),
 
   role: MessageRole,
+
+  // TODO(burdon): Rename blocks?
   content: S.Array(MessageContentBlock).pipe(S.mutable),
 });
 
