@@ -3,8 +3,9 @@
 //
 
 import { addressToA1Notation } from '@dxos/compute';
-import { ComputeGraph, ComputeGraphModel, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
+import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { DXN, SpaceId } from '@dxos/keys';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
@@ -116,9 +117,18 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         model.builder
           .createNode({ id: 'gpt-INPUT', type: NODE_INPUT })
           .createNode({ id: 'gpt-GPT', type: 'gpt' })
+          .createNode({
+            id: 'gpt-QUEUE_ID',
+            type: 'constant',
+            value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+          })
+          .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
           .createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' })
-          .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' });
+          .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' })
+          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-APPEND', property: 'id' })
+          .createEdge({ node: 'gpt-GPT', property: 'messages' }, { node: 'gpt-APPEND', property: 'items' })
+          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-OUTPUT', property: 'queue' });
 
         return space.db.add(model.root);
       });
