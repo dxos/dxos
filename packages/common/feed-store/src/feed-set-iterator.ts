@@ -89,7 +89,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     }));
   }
 
-  reiterateWhenFinished(block: FeedBlock<T>) {
+  reiterateBlock(block: FeedBlock<T>) {
     this._reiterateBlocks.push(block);
     this._trigger.wake();
   }

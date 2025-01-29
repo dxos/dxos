@@ -199,7 +199,7 @@ export class ControlPipeline {
       timer.end();
       if (!result) {
         log.warn('processing failed', { msg });
-        this._noteFailedMessage(msg);
+        this._retryMessage(msg);
       } else {
         await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
       }
@@ -213,7 +213,7 @@ export class ControlPipeline {
    * If it first failure, it will be retried once the pipeline is processed fully.
    * If it fails again, it will be ignored.
    */
-  private _noteFailedMessage(message: FeedMessageBlock) {
+  private _retryMessage(message: FeedMessageBlock) {
     if (this._failedMessages.has({ feedKey: message.feedKey, seq: message.seq })) {
       log.warn('message processing failed twice', { message });
       return;
