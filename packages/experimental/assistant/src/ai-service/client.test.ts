@@ -25,7 +25,7 @@ describe('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -69,7 +69,7 @@ describe('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -91,11 +91,11 @@ describe('AI Service Client', () => {
     }
     const [message] = await stream.complete();
     log('full message', { message });
-    await client.insertMessages([message]);
+    await client.appendMessages([message]);
 
     const toolUse = message.content.find(({ type }) => type === 'tool_use')!;
     invariant(toolUse.type === 'tool_use');
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -127,7 +127,7 @@ describe('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,

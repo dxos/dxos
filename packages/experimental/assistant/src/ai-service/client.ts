@@ -2,30 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-/* eslint-disable no-console */
-
 import { Schema as S } from '@effect/schema';
 
-import { Trigger } from '@dxos/async';
-import { type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import type { SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 
-import { iterSSEMessages } from './sse';
-import { Message, type GenerateRequest, type ResultStreamEvent, type Space, type Thread } from './types';
-
-export type AIServiceClientParams = {
-  endpoint: string;
-};
+import { GenerationStream } from './stream';
+import { Message, type GenerateRequest, type Space, type Thread } from './types';
 
 export interface AIServiceClient {
   getSpace(spaceId: SpaceId): Promise<Space>;
   getThread(spaceId: SpaceId, threadId: string): Promise<Thread>;
-  getMessagesInThread(spaceId: SpaceId, threadId: string): Promise<Message[]>;
-  insertMessages(messages: Message[]): Promise<void>;
+  getMessages(spaceId: SpaceId, threadId: string): Promise<Message[]>;
+  appendMessages(messages: Message[]): Promise<void>;
   updateMessage(spaceId: SpaceId, threadId: string, messageId: string, message: Message): Promise<void>;
   generate(request: GenerateRequest): Promise<GenerationStream>;
 }
+
+export type AIServiceClientParams = {
+  endpoint: string;
+};
 
 export class AIServiceClientImpl implements AIServiceClient {
   private readonly _endpoint: string;
@@ -41,12 +37,12 @@ export class AIServiceClientImpl implements AIServiceClient {
     throw new Error('Not implemented');
   }
 
-  async getMessagesInThread(spaceId: SpaceId, threadId: string): Promise<Message[]> {
+  async getMessages(spaceId: SpaceId, threadId: string): Promise<Message[]> {
     const res = await fetch(`${this._endpoint}/space/${spaceId}/thread/${threadId}/message`);
     return S.decodePromise(S.Array(Message).pipe(S.mutable))((await res.json()).data.results);
   }
 
-  async insertMessages(messages: Message[]): Promise<void> {
+  async appendMessages(messages: Message[]): Promise<void> {
     const url = `${this._endpoint}/message`;
     const res = await fetch(url, {
       method: 'POST',
@@ -72,8 +68,8 @@ export class AIServiceClientImpl implements AIServiceClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     });
-    invariant(response.body instanceof ReadableStream);
 
+    invariant(response.body instanceof ReadableStream);
     return GenerationStream.fromSSEResponse(
       {
         spaceId: request.spaceId,
@@ -81,170 +77,5 @@ export class AIServiceClientImpl implements AIServiceClient {
       },
       response,
     );
-  }
-}
-
-type GenerationParams = {
-  spaceId?: SpaceId;
-  threadId?: ObjectId;
-};
-
-export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
-  static fromSSEResponse(params: GenerationParams, response: Response) {
-    const controller = new AbortController();
-    const iterator = async function* () {
-      for await (const sse of iterSSEMessages(response, controller)) {
-        if (sse.event === 'completion') {
-          try {
-            yield JSON.parse(sse.data);
-          } catch (err) {
-            console.error('Could not parse message into JSON:', sse.data);
-            console.error('From chunk:', sse.raw);
-            throw err;
-          }
-        }
-
-        if (
-          sse.event === 'message_start' ||
-          sse.event === 'message_delta' ||
-          sse.event === 'message_stop' ||
-          sse.event === 'content_block_start' ||
-          sse.event === 'content_block_delta' ||
-          sse.event === 'content_block_stop'
-        ) {
-          try {
-            yield JSON.parse(sse.data);
-          } catch (err) {
-            console.error('Could not parse message into JSON:', sse.data);
-            console.error('From chunk:', sse.raw);
-            throw err;
-          }
-        }
-
-        if (sse.event === 'ping') {
-          continue;
-        }
-
-        if (sse.event === 'error') {
-          throw new Error(`Message generation error: ${sse.data}`);
-        }
-      }
-    };
-    return new GenerationStream(params, iterator);
-  }
-
-  private _previousMessages: Message[] = [];
-  private _accumulatedMessage?: Message = undefined;
-  private readonly _done = new Trigger();
-  private _iterator?: AsyncIterator<ResultStreamEvent> = undefined;
-
-  constructor(
-    private readonly _params: GenerationParams,
-    private readonly _getIterator: () => AsyncIterableIterator<ResultStreamEvent>,
-  ) {}
-
-  [Symbol.asyncIterator](): AsyncIterator<ResultStreamEvent> {
-    return this._createIterator();
-  }
-
-  cancel() {
-    throw new Error('Not implemented');
-  }
-
-  get accumulatedMessages(): Message[] {
-    // TODO(dmaretskyi): Support multiple accumulated messages.
-    return [...this._previousMessages, ...(this._accumulatedMessage == null ? [] : [this._accumulatedMessage])];
-  }
-
-  /**
-   * Returns the complete message list generated by the AI service.
-   */
-  async complete(): Promise<Message[]> {
-    await this._done.wait();
-    return this.accumulatedMessages;
-  }
-
-  private _createIterator(): AsyncIterator<ResultStreamEvent> {
-    const self = this;
-    return (this._iterator ??= (() => {
-      const generator = async function* (this: GenerationStream) {
-        try {
-          for await (const event of self._getIterator()) {
-            self._processEvent(event);
-            yield event;
-          }
-          this._done.wake();
-        } catch (err: any) {
-          this._done.throw(err);
-        }
-      };
-      return generator.call(this);
-    })());
-  }
-
-  private _processEvent(event: ResultStreamEvent) {
-    // TODO(dmaretskyi): Support multiple message, e.g., for service-defined tools.
-    switch (event.type) {
-      case 'message_start': {
-        if (this._accumulatedMessage) {
-          this._previousMessages.push(this._accumulatedMessage);
-          this._accumulatedMessage = undefined;
-        }
-        this._accumulatedMessage = {
-          ...event.message,
-          threadId: this._params.threadId,
-          spaceId: this._params.spaceId,
-        };
-        break;
-      }
-
-      case 'message_delta': {
-        if (this._accumulatedMessage === undefined) {
-          throw new Error('Received message delta without a message start');
-        }
-        break;
-      }
-
-      case 'message_stop': {
-        if (this._accumulatedMessage === undefined) {
-          throw new Error('Received message stop without a message start');
-        }
-
-        break;
-      }
-
-      case 'content_block_start': {
-        invariant(this._accumulatedMessage);
-        this._accumulatedMessage.content.push(event.content);
-        break;
-      }
-
-      case 'content_block_delta': {
-        invariant(this._accumulatedMessage);
-        const snapshotContent = this._accumulatedMessage.content.at(event.index);
-        if (snapshotContent?.type === 'text' && event.delta.type === 'text_delta') {
-          snapshotContent.text += event.delta.text;
-        } else if (snapshotContent?.type === 'tool_use' && event.delta.type === 'input_json_delta') {
-          snapshotContent.inputJson ??= '';
-          snapshotContent.inputJson += event.delta.partial_json;
-
-          // TODO(dmaretskyi): Partial parsing.
-          // if (jsonBuf) {
-          //   snapshotContent.input = partialParse(jsonBuf);
-          // }
-        }
-        break;
-      }
-
-      case 'content_block_stop': {
-        invariant(this._accumulatedMessage);
-        const lastBlock = this._accumulatedMessage.content.at(-1);
-        if (lastBlock?.type === 'tool_use') {
-          lastBlock.input =
-            lastBlock.inputJson == null || lastBlock.inputJson === '' ? {} : JSON.parse(lastBlock.inputJson ?? '');
-        }
-        break;
-      }
-    }
   }
 }

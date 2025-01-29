@@ -43,7 +43,7 @@ while (true) {
       message: 'Enter a message:',
     },
   ]);
-  await client.insertMessages([createUserMessage(spaceId, threadId, prompt.message)]);
+  await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',

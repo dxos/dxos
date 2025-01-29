@@ -86,10 +86,6 @@ const MessageSchema = S.Struct({
   threadId: S.optional(ObjectId),
   spaceId: S.optional(SpaceIdSchema),
 
-  role: MessageRole,
-
-  content: S.Array(MessageContentBlock).pipe(S.mutable),
-
   /**
    * ID of the message from the foreign provider.
    */
@@ -99,19 +95,23 @@ const MessageSchema = S.Struct({
   // TODO(dmaretskyi): Figure out how to deal with those.
   // created: S.optional(S.DateFromString),
   // updated: S.optional(S.DateFromString),
+
+  role: MessageRole,
+  content: S.Array(MessageContentBlock).pipe(S.mutable),
 });
 
 // TODO(burdon): Reconcile with Chat/Message types.
 export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
 
-export interface Message extends S.Schema.Type<typeof Message> {}
+export type Message = S.Schema.Type<typeof Message>;
 
 /**
  * Message transformed from the database row.
  */
-export const MessageFromDb = S.Struct({
-  ...MessageSchema.fields,
-  content: S.propertySignature(MessageSchema.fields.content.pipe((schema) => S.parseJson(schema))).pipe(
-    S.fromKey('contentJson'),
-  ),
-});
+// TODO(burdon): Remove?
+// export const MessageFromDb = S.Struct({
+//   ...MessageSchema.fields,
+//   content: S.propertySignature(MessageSchema.fields.content.pipe((schema) => S.parseJson(schema))).pipe(
+//     S.fromKey('contentJson'),
+//   ),
+// });

@@ -31,7 +31,7 @@ test.skip('cypher query', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.insertMessages([
+  await client.appendMessages([
     createUserMessage(
       spaceId,
       threadId,
@@ -68,7 +68,7 @@ test.skip('query ECHO', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.insertMessages([
+  await client.appendMessages([
     createUserMessage(
       spaceId,
       threadId,
