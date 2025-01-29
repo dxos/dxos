@@ -279,6 +279,11 @@ export class Pipeline implements PipelineAccessor {
     );
   }
 
+  retryMessage(message: FeedMessageBlock) {
+    invariant(this._feedSetIterator, 'Iterator not initialized.');
+    this._feedSetIterator.reiterateBlock(message);
+  }
+
   @synchronized
   async start() {
     invariant(!this._isStarted, 'Pipeline is already started.');
@@ -423,7 +428,10 @@ export class Pipeline implements PipelineAccessor {
     });
 
     this._feedSetIterator.stalled.on((iterator) => {
-      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
+      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`, {
+        currentTimeframe: this._timeframeClock.timeframe,
+        targetTimeframe: this._state.targetTimeframe,
+      });
       this._state.stalled.emit();
     });
 

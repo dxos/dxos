@@ -40,7 +40,7 @@ export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
   const setContext = useDevtoolsDispatch();
   const { space, feedKey } = useDevtoolsState();
-  const feedMessages = useFeedMessages({ feedKey }).reverse();
+  const feedMessages = useFeedMessages({ feedKey, maxBlocks: 1000 }).reverse();
   const contacts = useContacts();
   const client = useClient();
 
