@@ -13,16 +13,14 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/types/index.ts"
-        ],
-        "injectGlobals": true
+          "{projectRoot}/src/types.ts"
+        ]
       }
     },
     "lint": {},
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

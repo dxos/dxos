@@ -769,6 +769,16 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-canvas-compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-canvas-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
           "jsonpath": "$.version"
         },

@@ -41,7 +41,6 @@
     "@effect/schema": "^0.75.5",
     "@radix-ui/react-context": "^1.0.0",
     "date-fns": "^3.3.1",
-    "effect": "^3.12.1",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
@@ -55,6 +54,7 @@
     "@types/jsonpath": "^0.2.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
+    "effect": "^3.12.3",
     "fast-check": "^3.19.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
@@ -65,7 +65,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@phosphor-icons/react": "^2.1.5",
-    "effect": "^3.9.2",
+    "effect": "^3.12.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

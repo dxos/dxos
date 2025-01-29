@@ -7,6 +7,8 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "outDir": "./dist/types",
     "types": [
       "node"
@@ -65,6 +67,9 @@
       "path": "../../../core/functions"
     },
     {
+      "path": "../../../core/mesh/edge-client"
+    },
+    {
       "path": "../../../experimental/assistant"
     },
     {
@@ -78,6 +83,12 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../../ui/react-ui-canvas-editor"
     },
     {
       "path": "../../../ui/react-ui-editor"

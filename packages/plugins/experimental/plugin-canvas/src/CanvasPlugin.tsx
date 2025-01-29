@@ -12,12 +12,14 @@ import {
   oneOf,
 } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { CANVAS_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { CanvasAction, CanvasBoardType } from './types';
+import { CanvasAction } from './types';
 
+// TODO(wittjosiah): Rename ConductorPlugin.
 export const CanvasPlugin = () =>
   definePlugin(meta, [
     defineModule({

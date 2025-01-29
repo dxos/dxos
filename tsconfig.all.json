@@ -448,6 +448,12 @@
       "path": "packages/ui/react-ui-canvas/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-card/tsconfig.json"
     },
     {

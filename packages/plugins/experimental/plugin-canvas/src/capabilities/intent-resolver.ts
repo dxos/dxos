@@ -4,8 +4,9 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
+import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
-import { CanvasBoardType, CanvasAction } from '../types';
+import { CanvasAction } from '../types';
 
 export default () =>
   contributes(

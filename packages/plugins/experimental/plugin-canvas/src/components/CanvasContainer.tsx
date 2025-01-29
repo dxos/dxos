@@ -5,20 +5,22 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
-
-import { ShapeRegistry } from './Canvas';
-import { Editor, type EditorController } from './Editor';
-import { KeyboardContainer } from './KeyboardContainer';
 import {
   ComputeContext,
-  type ComputeShape,
   computeShapes,
   createComputeGraphController,
   useGraphMonitor,
-} from '../compute';
-import { type CanvasBoardType } from '../types';
-import { CanvasGraphModel } from '../types';
+  type ComputeShape,
+} from '@dxos/react-ui-canvas-compute';
+import {
+  type CanvasBoardType,
+  CanvasGraphModel,
+  Editor,
+  type EditorController,
+  KeyboardContainer,
+  ShapeRegistry,
+} from '@dxos/react-ui-canvas-editor';
+import { StackItem } from '@dxos/react-ui-stack';
 
 const useGraphController = (graph: CanvasGraphModel<ComputeShape>) => {
   const { controller } = useMemo(() => createComputeGraphController(graph), [graph]);

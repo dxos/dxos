@@ -20,7 +20,7 @@
         "packages/plugins/experimental/plugin-canvas/src/index.ts"
       ],
       "@dxos/plugin-canvas/types": [
-        "packages/plugins/experimental/plugin-canvas/src/types/index.ts"
+        "packages/plugins/experimental/plugin-canvas/src/types.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"

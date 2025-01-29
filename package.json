@@ -102,7 +102,7 @@
     "@vuepress/client": "2.0.0-rc.0",
     "chalk": "^4.1.0",
     "depcheck": "^1.4.7",
-    "effect": "^3.12.1",
+    "effect": "^3.12.3",
     "esbuild": "^0.23.1",
     "esbuild-plugin-glsl": "^1.2.2",
     "esbuild-plugin-raw": "^0.1.8",
