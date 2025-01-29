@@ -12,7 +12,9 @@ export type QueueQuery = {
   objectIds?: ObjectId[];
 };
 
+// TODO(dmaretskyi): Rename QueueQueryResult.
 export type QueryResult = {
+  // TODO(dmaretskyi): HasId & HasTypename.
   objects: unknown[];
   // /**
   //  * Cursor at the end of the range.

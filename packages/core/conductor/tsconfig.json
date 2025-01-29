@@ -39,6 +39,9 @@
     },
     {
       "path": "../mesh/edge-client"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

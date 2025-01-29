@@ -208,15 +208,8 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const { subspaceTag, spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
-        invariant(SpaceId.isValid(spaceId), 'Invalid space id');
-        invariant(ObjectId.isValid(queueId), 'Invalid queue id');
-
         const edgeClientService = yield* EdgeClientService;
-        const edgeClient = edgeClientService.getEdgeHttpClient();
-        const { objects: messages } = yield* Effect.promise(() =>
-          edgeClient.queryQueue(subspaceTag, spaceId, { queueId }),
-        );
+        const { objects: messages } = yield* Effect.promise(() => edgeClientService.queryQueue(DXN.parse(id)));
 
         const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
         return {
@@ -231,18 +224,11 @@ export const registry: Record<NodeType, Executable> = {
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
-        const { subspaceTag, spaceId, queueId } = DXN.parse(id).asQueueDXN() ?? failedInvariant('Invalid queue DXN');
-        invariant(SpaceId.isValid(spaceId), 'invalid space id');
-        invariant(ObjectId.isValid(queueId), 'invalid queue id');
-
         const mappedItems = items.map((item) => ({ ...item, id: item.id ?? ObjectId.random() }));
-        log('insert', { subspaceTag, spaceId, queueId, items: mappedItems });
 
         const edgeClientService = yield* EdgeClientService;
-        const edgeClient = edgeClientService.getEdgeHttpClient();
-        yield* Effect.promise(() =>
-          edgeClient.insertIntoQueue(subspaceTag, spaceId, queueId, mappedItems as unknown[]),
-        );
+        yield* Effect.promise(() => edgeClientService.insertIntoQueue(DXN.parse(id), mappedItems));
+
         return {};
       }),
     ),
