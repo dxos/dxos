@@ -17,7 +17,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, type NavTreeProps } from './NavTree';
-import { NavTreeFooter } from './NavTreeFooter';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
@@ -202,31 +201,20 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
     });
   }, [graph]);
 
+  // TODO(thure): What gives this an inline `overflow: initial`?
   return (
-    <div role='none' className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'>
-      {/* TODO(wittjosiah): Factor out surfaces to layout? */}
-      <div role='none' className='border-be border-separator'>
-        <Surface role='search-input' limit={1} />
-      </div>
-
-      {/* TODO(thure): What gives this an inline `overflow: initial`? */}
-      <div role='none' className='border-be border-separator !overflow-y-auto'>
-        <NavTree
-          id={graph.root.id}
-          getActions={getActions}
-          getItems={getItems}
-          getProps={getProps}
-          isCurrent={isCurrent}
-          loadDescendents={loadDescendents}
-          renderItemEnd={renderItemEnd}
-          popoverAnchorId={popoverAnchorId}
-          canDrop={canDrop}
-          onSelect={handleSelect}
-          {...props}
-        />
-      </div>
-
-      <NavTreeFooter />
-    </div>
+    <NavTree
+      id={graph.root.id}
+      getActions={getActions}
+      getItems={getItems}
+      getProps={getProps}
+      isCurrent={isCurrent}
+      loadDescendents={loadDescendents}
+      renderItemEnd={renderItemEnd}
+      popoverAnchorId={popoverAnchorId}
+      canDrop={canDrop}
+      onSelect={handleSelect}
+      {...props}
+    />
   );
 });

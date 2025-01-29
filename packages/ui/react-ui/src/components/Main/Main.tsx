@@ -3,7 +3,6 @@
 //
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -333,47 +332,12 @@ const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, 
   );
 });
 
-type MainNotchProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>>;
-
-const MainNotch = forwardRef<HTMLDivElement, MainNotchProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  // Notch is concerned with the nav sidebar, whichever side it might be on.
-  const { navigationSidebarOpen } = useMainContext(MAIN_NAME);
-  const notchElement = useRef<HTMLDivElement | null>(null);
-  const ref = useComposedRefs(forwardedRef, notchElement);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      switch (event.key) {
-        case 'Escape':
-          props?.onKeyDown?.(event);
-          notchElement.current?.focus();
-      }
-    },
-    [props?.onKeyDown],
-  );
-
-  const mover = useLandmarkMover(handleKeyDown, '3');
-
-  return (
-    <div
-      role='toolbar'
-      {...mover}
-      {...props}
-      data-nav-sidebar-state={navigationSidebarOpen ? 'open' : 'closed'}
-      className={tx('main.notch', 'main__notch', {}, classNames)}
-      ref={ref}
-    />
-  );
-});
-
 export const Main = {
   Root: MainRoot,
   Content: MainContent,
   Overlay: MainOverlay,
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
-  Notch: MainNotch,
 };
 
 export { useMainContext, useSidebars };
