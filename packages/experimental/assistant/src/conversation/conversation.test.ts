@@ -5,19 +5,18 @@
 import { Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
+import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
 import { createUserMessage, defineTool, LLMToolResult } from './types';
 import { AIServiceClientImpl } from '../ai-service';
-import { ObjectId } from '@dxos/echo-schema';
+import { AI_SERVICE_ENDPOINT } from '../testing';
 
-const ENDPOINT = 'http://localhost:8788';
-
-describe('Conversation tests', () => {
+describe.skip('Conversation tests', () => {
   const client = new AIServiceClientImpl({
-    endpoint: ENDPOINT,
+    endpoint: AI_SERVICE_ENDPOINT.LOCAL,
   });
 
   test('hello', async ({ expect }) => {
@@ -31,7 +30,7 @@ describe('Conversation tests', () => {
       client,
       logger: messageLogger,
     });
-    log.info('result', { result });
+    log('result', { result });
   });
 
   test.only('tool call', async ({ expect }) => {
@@ -60,12 +59,12 @@ describe('Conversation tests', () => {
       client,
       logger: messageLogger,
     });
-    log.info('result', { result });
+    log('result', { result });
   });
 
   const messageLogger = (event: ConversationEvent) => {
     if (event.type === 'message') {
-      log.info('message', { message: event.message });
+      log('message', { message: event.message });
     }
   };
 });

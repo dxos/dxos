@@ -7,12 +7,12 @@
 import { Schema as S } from '@effect/schema';
 
 import { Trigger } from '@dxos/async';
+import { type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 
-import { Message, type GenerateRequest, type ResultStreamEvent, type Space, type Thread } from './schema';
-import { ObjectId } from '@dxos/echo-schema';
 import { iterSSEMessages } from './sse';
+import { Message, type GenerateRequest, type ResultStreamEvent, type Space, type Thread } from './types';
 
 export type AIServiceClientParams = {
   endpoint: string;
@@ -47,7 +47,8 @@ export class AIServiceClientImpl implements AIServiceClient {
   }
 
   async insertMessages(messages: Message[]): Promise<void> {
-    const res = await fetch(`${this._endpoint}/message`, {
+    const url = `${this._endpoint}/message`;
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -56,7 +57,7 @@ export class AIServiceClientImpl implements AIServiceClient {
     });
 
     if (!res.ok) {
-      throw new Error(await res.text());
+      throw new Error(`${await res.text()} [${url}]`);
     }
   }
 
@@ -96,10 +97,10 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         if (sse.event === 'completion') {
           try {
             yield JSON.parse(sse.data);
-          } catch (e) {
+          } catch (err) {
             console.error('Could not parse message into JSON:', sse.data);
             console.error('From chunk:', sse.raw);
-            throw e;
+            throw err;
           }
         }
 
@@ -113,10 +114,10 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         ) {
           try {
             yield JSON.parse(sse.data);
-          } catch (e) {
+          } catch (err) {
             console.error('Could not parse message into JSON:', sse.data);
             console.error('From chunk:', sse.raw);
-            throw e;
+            throw err;
           }
         }
 
@@ -134,7 +135,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
   private _previousMessages: Message[] = [];
   private _accumulatedMessage?: Message = undefined;
-  private _done = new Trigger();
+  private readonly _done = new Trigger();
   private _iterator?: AsyncIterator<ResultStreamEvent> = undefined;
 
   constructor(
@@ -165,21 +166,24 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
   private _createIterator(): AsyncIterator<ResultStreamEvent> {
     const self = this;
-    return (this._iterator ??= async function* (this: GenerationStream) {
-      try {
-        for await (const event of self._getIterator()) {
-          self._processEvent(event);
-          yield event;
+    return (this._iterator ??= (() => {
+      const generator = async function* (this: GenerationStream) {
+        try {
+          for await (const event of self._getIterator()) {
+            self._processEvent(event);
+            yield event;
+          }
+          this._done.wake();
+        } catch (err: any) {
+          this._done.throw(err);
         }
-        this._done.wake();
-      } catch (e: any) {
-        this._done.throw(e);
-      }
-    }.call(this));
+      };
+      return generator.call(this);
+    })());
   }
 
   private _processEvent(event: ResultStreamEvent) {
-    // TODO(dmaretskyi): Support multiple message, e.g. for service-defined tools.
+    // TODO(dmaretskyi): Support multiple message, e.g., for service-defined tools.
     switch (event.type) {
       case 'message_start': {
         if (this._accumulatedMessage) {
@@ -193,12 +197,14 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         };
         break;
       }
+
       case 'message_delta': {
         if (this._accumulatedMessage === undefined) {
           throw new Error('Received message delta without a message start');
         }
         break;
       }
+
       case 'message_stop': {
         if (this._accumulatedMessage === undefined) {
           throw new Error('Received message stop without a message start');
@@ -206,11 +212,13 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
         break;
       }
+
       case 'content_block_start': {
         invariant(this._accumulatedMessage);
         this._accumulatedMessage.content.push(event.content);
         break;
       }
+
       case 'content_block_delta': {
         invariant(this._accumulatedMessage);
         const snapshotContent = this._accumulatedMessage.content.at(event.index);
@@ -227,6 +235,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         }
         break;
       }
+
       case 'content_block_stop': {
         invariant(this._accumulatedMessage);
         const lastBlock = this._accumulatedMessage.content.at(-1);

@@ -11,9 +11,9 @@ import { defineTool, LLMToolResult, type LLMTool } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import {
   createStatic,
+  isInstanceOf,
   EchoObject,
   GeoPoint,
-  isInstanceOf,
   ObjectId,
   type HasId,
   type HasTypename,

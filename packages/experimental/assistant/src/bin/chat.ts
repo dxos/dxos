@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { writeFileSync } from 'fs';
 import inquirer from 'inquirer';
 
-import { SpaceId } from '@dxos/keys';
 import { ObjectId } from '@dxos/echo-schema';
+import { SpaceId } from '@dxos/keys';
 
 import { AIServiceClientImpl, ToolTypes } from '../ai-service';
 import { runLLM, createUserMessage } from '../conversation';
@@ -18,16 +19,11 @@ import {
   Org,
   Project,
   Task,
+  AI_SERVICE_ENDPOINT,
 } from '../testing';
-import { readFileSync, writeFileSync } from 'fs';
-
-// TODO(burdon): Move out of src?
-
-const ENDPOINT = 'http://localhost:8787';
-// const ENDPOINT = 'https://ai-service.dxos.workers.dev';
 
 const client = new AIServiceClientImpl({
-  endpoint: ENDPOINT,
+  endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
 const dataSource = createTestData();
