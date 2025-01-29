@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import type { Meta } from '@storybook/react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -22,12 +22,12 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { useDynamicCallback, useQueue } from './hooks';
 import {
   ARTIFACTS_SYSTEM_PROMPT,
-  capabilities,
-  localServiceEndpoints,
-  artifacts,
   type ArtifactsContext,
-  genericTools,
   ChessSchema,
+  artifacts,
+  capabilities,
+  genericTools,
+  localServiceEndpoints,
 } from './testing';
 import { Thread } from '../components';
 
@@ -38,6 +38,16 @@ type RenderProps = {
 };
 
 const Render = ({ items: _items }: RenderProps) => {
+  const tools = useMemo(
+    () => [
+      //
+      ...genericTools,
+      ...artifacts['plugin-chess'].tools,
+      ...artifacts['plugin-map'].tools,
+    ],
+    [genericTools, artifacts],
+  );
+
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
   const [isGenerating, setIsGenerating] = useState(false);
@@ -54,25 +64,21 @@ const Render = ({ items: _items }: RenderProps) => {
     }),
   );
 
-  const items = artifactsContext.items.toReversed();
+  const artifactObjects = artifactsContext.items.toReversed();
   const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
   const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
-  log.info('items', { items: history });
+  const messages = useMemo(
+    () => [...historyQueue.objects, ...pendingMessages],
+    [historyQueue.objects, pendingMessages],
+  );
 
-  const tools = [
-    //
-    ...genericTools,
-    ...artifacts['plugin-chess'].tools,
-    ...artifacts['plugin-map'].tools,
-  ];
-
+  // TODO(burdon): Factor out.
   const handleSubmit = useDynamicCallback(async (message: string) => {
     log.info('handleSubmit', { history });
     if (isGenerating) {
       return;
     }
 
-    // TODO(burdon): Factor out.
     try {
       setIsGenerating(true);
       const history = [...historyQueue.objects];
@@ -167,24 +173,19 @@ const Render = ({ items: _items }: RenderProps) => {
           </Input.Root>
         </Toolbar.Root>
 
-        {/* TODO(burdon): Generates new array on each render. */}
-        <Thread
-          items={[...historyQueue.objects, ...pendingMessages]}
-          isGenerating={isGenerating}
-          onSubmit={handleSubmit}
-        />
+        <Thread messages={messages} isGenerating={isGenerating} onSubmit={handleSubmit} />
       </div>
 
       {/* Deck */}
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
-        {items.length > 0 && (
-          <div className={mx('flex grow overflow-hidden', items.length === 1 && 'row-span-2')}>
-            <Surface role='canvas-node' limit={1} data={items[0]} />
+        {artifactObjects.length > 0 && (
+          <div className={mx('flex grow overflow-hidden', artifactObjects.length === 1 && 'row-span-2')}>
+            <Surface role='canvas-node' limit={1} data={artifactObjects[0]} />
           </div>
         )}
-        {items.length > 1 && (
+        {artifactObjects.length > 1 && (
           <div className='flex shrink-0 overflow-x-scroll min-h-[200px] divide-x divide-separator'>
-            {items.slice(1, 3).map((item, idx) => (
+            {artifactObjects.slice(1, 3).map((item, idx) => (
               <Surface key={idx} role='canvas-node' limit={1} data={item} />
             ))}
           </div>

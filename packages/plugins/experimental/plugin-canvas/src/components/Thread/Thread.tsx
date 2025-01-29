@@ -12,24 +12,24 @@ import { mx } from '@dxos/react-ui-theme';
 import { TextBox, type TextBoxControl } from '../TextBox';
 
 export type ThreadProps = {
-  items: Message[];
+  messages: Message[];
   isGenerating?: boolean;
   onSubmit: (message: string) => void;
 };
 
-export const Thread = ({ items, isGenerating, onSubmit }: ThreadProps) => {
+export const Thread = ({ messages, isGenerating, onSubmit }: ThreadProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputBox = useRef<TextBoxControl>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [items]);
+  }, [messages]);
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex flex-col w-full gap-4 overflow-x-hidden overflow-y-scroll scrollbar-thin' ref={scrollRef}>
-        {items.map((item, i) => (
-          <ThreadItem key={i} classNames='px-4' item={item} />
+        {messages.map((message, i) => (
+          <ThreadMessage key={i} classNames='px-4' message={message} />
         ))}
       </div>
 
@@ -57,17 +57,17 @@ export const Thread = ({ items, isGenerating, onSubmit }: ThreadProps) => {
   );
 };
 
-export type ThreadItemProps = ThemedClassName<{
-  item: Message;
+export type ThreadMessageProps = ThemedClassName<{
+  message: Message;
 }>;
 
-export const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
-  if (typeof item !== 'object') {
-    return <div className={mx(classNames)}>{item}</div>;
+export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
+  if (typeof message !== 'object') {
+    return <div className={mx(classNames)}>{message}</div>;
   }
 
   // TODO(burdon): Markdown parser.
-  const { role, content } = item;
+  const { role, content } = message;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
