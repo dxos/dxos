@@ -196,7 +196,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
       if (stalled && this._reiterateBlocks.length) {
         return this._getNextBlockForReiteration();
       }
-
     }
   }
 }
