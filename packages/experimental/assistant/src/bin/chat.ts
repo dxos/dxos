@@ -19,15 +19,11 @@ import {
   Org,
   Project,
   Task,
+  AI_SERVICE_ENDPOINT,
 } from '../testing';
 
-// TODO(burdon): Move out of src?
-
-const ENDPOINT = 'http://localhost:8787';
-// const ENDPOINT = 'https://ai-service.dxos.workers.dev';
-
 const client = new AIServiceClientImpl({
-  endpoint: ENDPOINT,
+  endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
 const dataSource = createTestData();
@@ -47,7 +43,7 @@ while (true) {
       message: 'Enter a message:',
     },
   ]);
-  await client.insertMessages([createUserMessage(spaceId, threadId, prompt.message)]);
+  await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',

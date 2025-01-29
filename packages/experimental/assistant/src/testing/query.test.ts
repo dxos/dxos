@@ -9,18 +9,17 @@ import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { AI_SERVICE_ENDPOINT } from './defs';
 import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
 import { AIServiceClientImpl } from '../ai-service';
 import { runLLM, createUserMessage } from '../conversation';
-import { EchoDataSource } from '../cypher/echo-data-source';
-
-const ENDPOINT = 'http://localhost:8787';
+import { EchoDataSource } from '../cypher';
 
 const client = new AIServiceClientImpl({
-  endpoint: ENDPOINT,
+  endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
 test.skip('cypher query', async () => {
@@ -32,7 +31,7 @@ test.skip('cypher query', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.insertMessages([
+  await client.appendMessages([
     createUserMessage(
       spaceId,
       threadId,
@@ -53,7 +52,7 @@ test.skip('cypher query', async () => {
   log.info('DONE', { result: result.result });
 });
 
-test.only('query ECHO', async () => {
+test.skip('query ECHO', async () => {
   await using builder = await new EchoTestBuilder().open();
   const { db, graph } = await builder.createDatabase();
 
@@ -69,7 +68,7 @@ test.only('query ECHO', async () => {
   const spaceId = SpaceId.random();
   const threadId = ObjectId.random();
 
-  await client.insertMessages([
+  await client.appendMessages([
     createUserMessage(
       spaceId,
       threadId,

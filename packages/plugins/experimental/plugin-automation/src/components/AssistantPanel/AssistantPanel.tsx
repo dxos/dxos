@@ -59,7 +59,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       setContextSpaceId(contextSpaceId);
       setThreadId(threadId);
 
-      const messages = await aiClient.current!.getMessagesInThread(contextSpaceId, threadId);
+      const messages = await aiClient.current!.getMessages(contextSpaceId, threadId);
       setHistory(messages);
     });
   }, []);
@@ -79,7 +79,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       role: 'user',
       content: [{ type: 'text', text: input }],
     };
-    await aiClient.current!.insertMessages([userMessage]);
+    await aiClient.current!.appendMessages([userMessage]);
     setHistory([...history, userMessage]);
 
     const generationStream = await aiClient.current!.generate({
@@ -95,7 +95,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       setHistory([...historyBefore, ...generationStream.accumulatedMessages]);
     }
 
-    await aiClient.current!.insertMessages(await generationStream.complete());
+    await aiClient.current!.appendMessages(await generationStream.complete());
   };
 
   const getSystemPrompt = async () => {
@@ -115,7 +115,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     // setContextSpaceId(contextSpaceId);
     setThreadId(threadId);
 
-    const messages = await aiClient.current!.getMessagesInThread(contextSpaceId!, threadId);
+    const messages = await aiClient.current!.getMessages(contextSpaceId!, threadId);
     setHistory(messages);
   };
 

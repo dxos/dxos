@@ -9,8 +9,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { ObjectId } from './object-id';
 import { setTypename } from './typename';
-import { getObjectAnnotation } from '../ast/annotations';
-import { setSchema } from '../ast/schema';
+import { setSchema, getObjectAnnotation } from '../ast';
 import { getSchemaDXN } from '../types';
 
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
@@ -47,8 +46,8 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
 ) => {
-  const objectAnnotation = getObjectAnnotation(schema);
-  if (!objectAnnotation) {
+  const annotation = getObjectAnnotation(schema);
+  if (!annotation) {
     throw new Error('Schema is not an object schema');
   }
   if ('@type' in data) {
@@ -62,6 +61,5 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Failed to get schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
-
   return obj;
 };

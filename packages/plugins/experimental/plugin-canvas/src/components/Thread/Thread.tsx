@@ -13,11 +13,11 @@ import { TextBox, type TextBoxControl } from '../TextBox';
 
 export type ThreadProps = {
   items: Message[];
-  onSubmit: (message: string) => void;
   isGenerating?: boolean;
+  onSubmit: (message: string) => void;
 };
 
-export const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
+export const Thread = ({ items, isGenerating, onSubmit }: ThreadProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputBox = useRef<TextBoxControl>(null);
 
@@ -57,9 +57,9 @@ export const Thread = ({ items, onSubmit, isGenerating }: ThreadProps) => {
   );
 };
 
-export type ThreadItemProps = ThemedClassName & {
+export type ThreadItemProps = ThemedClassName<{
   item: Message;
-};
+}>;
 
 export const ThreadItem = ({ classNames, item }: ThreadItemProps) => {
   if (typeof item !== 'object') {

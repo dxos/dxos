@@ -15,7 +15,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { create } from '@dxos/react-client/echo';
-import { IconButton, Input } from '@dxos/react-ui';
+import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -27,23 +27,24 @@ import {
   artifacts,
   type ArtifactsContext,
   genericTools,
+  ChessSchema,
 } from './testing';
 import { Thread } from '../components';
 
 const endpoints = localServiceEndpoints;
 
-const Render = () => {
+type RenderProps = {
+  items?: ArtifactsContext['items']; // TODO(burdon): Typedef.
+};
+
+const Render = ({ items: _items }: RenderProps) => {
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
   const [isGenerating, setIsGenerating] = useState(false);
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
   const [artifactsContext] = useState(() =>
     create<ArtifactsContext>({
-      items: [
-        // createStatic(ChessSchema, {
-        //   value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-        // }),
-      ],
+      items: _items ?? [],
       getArtifacts() {
         return this.items;
       },
@@ -139,8 +140,9 @@ const Render = () => {
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
+      {/* Thread */}
       <div className='flex flex-col gap-4 overflow-hidden'>
-        <div className='flex gap-2 items-center p-4'>
+        <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
               classNames='w-full text-sm px-2 py-1 border rounded'
@@ -164,7 +166,7 @@ const Render = () => {
               }}
             />
           </Input.Root>
-        </div>
+        </Toolbar.Root>
 
         <Thread
           items={[...historyQueue.objects, ...pendingMessages]}
@@ -172,6 +174,8 @@ const Render = () => {
           onSubmit={handleSubmit}
         />
       </div>
+
+      {/* Deck */}
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
         {items.length > 0 && (
           <div className={mx('flex grow overflow-hidden', items.length === 1 && 'row-span-2')}>
@@ -207,3 +211,13 @@ const meta: Meta<typeof Render> = {
 export default meta;
 
 export const Default = {};
+
+export const WithInitialItems = {
+  args: {
+    items: [
+      createStatic(ChessSchema, {
+        value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+      }),
+    ],
+  },
+};
