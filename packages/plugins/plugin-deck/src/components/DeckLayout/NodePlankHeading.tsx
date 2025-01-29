@@ -14,13 +14,14 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
+import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
+import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
-import { useLayout } from '../LayoutContext';
+import { useBreakpoints } from '../../util';
 
 export type NodePlankHeadingProps = {
   coordinate: LayoutCoordinate;
@@ -42,7 +43,6 @@ export const NodePlankHeading = memo(
     pending,
     actions = [],
   }: NodePlankHeadingProps) => {
-    const layoutContext = useLayout();
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -51,7 +51,7 @@ export const NodePlankHeading = memo(
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
-    const [isNotMobile] = useMediaQuery('md');
+    const breakpoint = useBreakpoints();
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -67,15 +67,22 @@ export const NodePlankHeading = memo(
     const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
+        solo: (layoutPart === 'solo' || layoutPart === 'main') && breakpoint !== 'mobile',
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [breakpoint, layoutPart, canIncrementStart, canIncrementEnd],
     );
 
     return (
-      <StackItem.Heading classNames='pie-1 border-be border-separator'>
+      <StackItem.Heading
+        classNames={[
+          'plb-1 border-be border-separator items-stretch gap-1',
+          layoutPart === 'solo'
+            ? 'pis-[calc(env(safe-area-inset-left)+.25rem)] pie-[calc(env(safe-area-inset-left)+.25rem)]'
+            : 'pli-1',
+        ]}
+      >
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
@@ -97,6 +104,7 @@ export const NodePlankHeading = memo(
             </StackItem.SigilButton>
           )}
         </ActionRoot>
+        {layoutPart === 'solo' && breakpoint !== 'desktop' && <ToggleSidebarButton />}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}
@@ -114,7 +122,6 @@ export const NodePlankHeading = memo(
         <PlankControls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
-          classNames='mx-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;
@@ -142,18 +149,7 @@ export const NodePlankHeading = memo(
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
         >
-          {/* TODO(wittjosiah): This doesn't behave exactly the same as the rest of the button group. */}
-          {layoutPart !== 'complementary' && (
-            <IconButton
-              iconOnly
-              onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
-              variant='ghost'
-              label={t('open complementary sidebar label')}
-              classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
-              icon='ph--sidebar-simple--regular'
-              size={4}
-            />
-          )}
+          <ToggleComplementarySidebarButton />
         </PlankControls>
       </StackItem.Heading>
     );
