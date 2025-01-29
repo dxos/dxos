@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { iterSSEMessages } from './lib';
 import { type Message, type ResultStreamEvent } from './types';
+import { iterSSEMessages } from './util';
 
 export type GenerationParams = {
   spaceId?: SpaceId;
