@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
-import { NODE_INPUT, NODE_OUTPUT, registry } from '../nodes';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { logCustomEvent } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import {
@@ -112,7 +112,7 @@ describe('Graph as a fiber runtime', () => {
 
   it.effect('if-else', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4()).registerNode('if', registry['if' as const]);
+      const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4());
 
       const result = yield* runtime
         .runGraph('dxn:test:g4', makeValueBag({ condition: true, value: 1 }))

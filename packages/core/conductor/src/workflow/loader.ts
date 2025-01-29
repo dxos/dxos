@@ -3,13 +3,11 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { nonNullable } from '@dxos/util';
+import { type DXN } from '@dxos/keys';
 
 import { Workflow } from './workflow';
-import { compile } from '../compiler';
-import { type GraphDiagnostic } from '../compiler';
-import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode, registry } from '../nodes';
+import { compileOrThrow, type ComputeResolver, GraphExecutor } from '../compiler';
+import { inputNode, NODE_INPUT, NODE_OUTPUT, type NodeType, outputNode, registry } from '../nodes';
 import { type ComputeGraph, ComputeGraphModel, type Executable } from '../types';
 
 type WorkflowLoaderParams = {
@@ -30,28 +28,62 @@ export class WorkflowLoader {
   }
 
   public async load(graphDxn: DXN): Promise<Workflow> {
-    const graphMap = await this._loadRecursive(graphDxn);
-    const compiledGraphMap = await this._compileAll(graphMap);
-    const result = compiledGraphMap.get(graphDxn.toString());
-    invariant(result, 'The main workflow was not compiled.');
-    return result;
+    const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
+
+    this._validateWorkflowInOut(graph);
+
+    const { resolver, resolvedNodes } = this._createComputeResolver();
+    const executor = new GraphExecutor({ computeNodeResolver: resolver });
+    await executor.load(graph);
+    return new Workflow(graphDxn, graph, executor, resolvedNodes);
   }
 
-  private async _compileAll(graphMap: Map<string, ComputeGraphModel>): Promise<Map<string, Workflow>> {
-    const compiledWorkflows = new Map<string, Workflow>();
-    for (const [graphDxn, graph] of graphMap.entries()) {
-      await this._compileGraph(graphDxn, graph, graphMap, compiledWorkflows);
-    }
-    return compiledWorkflows;
+  private _createComputeResolver(
+    compiledGraphMap: Map<string, Executable> = new Map(),
+    compilationInProgress: Set<string> = new Set(),
+  ): { resolver: ComputeResolver; resolvedNodes: Map<string, Executable> } {
+    const resolvedNodes = new Map();
+    const resolver: ComputeResolver = async (node) => {
+      invariant(node.type, 'Node must have a type.');
+      const resolved = resolvedNodes.get(node.id);
+      if (resolved) {
+        return resolved;
+      }
+
+      let executable: Executable;
+      switch (node.type) {
+        case NODE_INPUT:
+          executable = inputNode;
+          break;
+        case NODE_OUTPUT:
+          executable = outputNode;
+          break;
+        default: {
+          if (node.subgraph) {
+            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn));
+            executable = await this._compileGraph(node.type, graph, compiledGraphMap, compilationInProgress);
+          } else if (registry[node.type as NodeType]) {
+            executable = registry[node.type as NodeType];
+          } else {
+            executable = await this._nodeResolver(node.type);
+          }
+          break;
+        }
+      }
+
+      resolvedNodes.set(node.id, executable);
+
+      return executable;
+    };
+    return { resolver, resolvedNodes };
   }
 
   private async _compileGraph(
     graphDxnStr: string,
     graph: ComputeGraphModel,
-    graphMap: Map<string, ComputeGraphModel>,
-    compiledGraphMap: Map<string, Workflow>,
+    compiledGraphMap: Map<string, Executable>,
     compilationInProgress: Set<string> = new Set(),
-  ): Promise<Workflow> {
+  ): Promise<Executable> {
     const compiled = compiledGraphMap.get(graphDxnStr);
     if (compiled) {
       return compiled;
@@ -62,94 +94,31 @@ export class WorkflowLoader {
     }
     compilationInProgress.add(graphDxnStr);
 
-    const graphDxn = DXN.parse(graphDxnStr);
-    const resolvedNodes = new Map<string, Executable>();
-    const { inputNodeId, outputNodeId } = this._resolveInOut(graph);
-    const compilationResult = await compile({
+    const { inputNodeId, outputNodeId } = this._resolveSubgraphInOut(graph);
+    const { resolver: computeResolver } = this._createComputeResolver(compiledGraphMap, compilationInProgress);
+    const executable = await compileOrThrow({
       graph,
       inputNodeId,
       outputNodeId,
-      computeResolver: async (node) => {
-        invariant(node.type, 'Node must have a type.');
-
-        let executable: Executable;
-        switch (node.type) {
-          case NODE_INPUT:
-            executable = inputNode;
-            break;
-          case NODE_OUTPUT:
-            executable = outputNode;
-            break;
-          // TODO(burdon): Handle from default.
-          case 'gpt':
-            executable = registry.gpt;
-            break;
-          default: {
-            const graphModel = graphMap.get(node.type);
-            if (graphModel) {
-              const subgraph = await this._compileGraph(
-                node.type,
-                graphModel,
-                graphMap,
-                compiledGraphMap,
-                compilationInProgress,
-              );
-              executable = subgraph.asExecutable();
-            } else {
-              executable = await this._nodeResolver(node.type);
-            }
-            break;
-          }
-        }
-
-        resolvedNodes.set(node.type, executable);
-        return executable;
-      },
+      computeResolver,
     });
 
-    if (compilationResult.diagnostics.length) {
-      throw new Error(`Graph compilation failed:\n${formatDiagnostics(compilationResult.diagnostics)}`);
-    }
-
-    const workflow = new Workflow(graphDxn, compilationResult.executable, graph, resolvedNodes);
-    compiledGraphMap.set(graphDxnStr, workflow);
-    return workflow;
+    compiledGraphMap.set(graphDxnStr, executable);
+    return executable;
   }
 
-  private async _loadRecursive(
-    graphDxn: DXN,
-    outputMap: Map<string, ComputeGraphModel> = new Map(),
-  ): Promise<Map<string, ComputeGraphModel>> {
-    const dxnString = graphDxn.toString();
-    if (outputMap.has(dxnString)) {
-      return outputMap;
-    }
-
-    const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
-    outputMap.set(dxnString, graph);
-    for (const node of graph.nodes) {
-      if (node.subgraph) {
-        await this._loadRecursive(node.subgraph.dxn, outputMap);
-      }
-    }
-
-    return outputMap;
-  }
-
-  private _resolveInOut(graph: ComputeGraphModel): { inputNodeId: string; outputNodeId: string } {
+  private _validateWorkflowInOut(graph: ComputeGraphModel) {
     const inputNodes = graph.nodes.filter((node) => node.type === NODE_INPUT);
-    invariant(inputNodes.length === 1, 'Graph must have a single input.');
+    invariant(inputNodes.length > 0, 'Workflow must have at least one input node.');
     const outputNodes = graph.nodes.filter((node) => node.type === NODE_OUTPUT);
-    invariant(outputNodes.length === 1, 'Graph must have a single output.');
+    invariant(outputNodes.length <= 1, 'Workflow must have at most one output node.');
+  }
+
+  private _resolveSubgraphInOut(graph: ComputeGraphModel): { inputNodeId: string; outputNodeId: string } {
+    const inputNodes = graph.nodes.filter((node) => node.type === NODE_INPUT);
+    invariant(inputNodes.length === 1, 'Subgraph must have a single input.');
+    const outputNodes = graph.nodes.filter((node) => node.type === NODE_OUTPUT);
+    invariant(outputNodes.length === 1, 'Subgraph must have a single output.');
     return { inputNodeId: inputNodes[0].id, outputNodeId: outputNodes[0].id };
   }
 }
-
-const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
-  return diagnostic
-    .map((d) => {
-      const objects = [d.nodeId && `Node(${d.nodeId})`, d.edgeId && `Edge(${d.edgeId})`].filter(nonNullable).join(' ,');
-      return `${d.severity}: ${d.message}${objects ? `. ${objects}.` : ''} `;
-    })
-    .join('\n');
-};

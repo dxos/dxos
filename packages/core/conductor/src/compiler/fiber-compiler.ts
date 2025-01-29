@@ -7,6 +7,7 @@ import { Effect, Layer, Scope } from 'effect';
 import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { nonNullable } from '@dxos/util';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 import { EventLogger, GptService } from '../services';
@@ -61,6 +62,8 @@ export const validate = async ({
   };
 };
 
+export type ComputeResolver = (node: ComputeNode) => Promise<Executable>;
+
 export type CompileParams = {
   graph: ComputeGraphModel;
 
@@ -77,7 +80,7 @@ export type CompileParams = {
   /**
    *
    */
-  computeResolver: (node: ComputeNode) => Promise<Executable>;
+  computeResolver: ComputeResolver;
 };
 
 export type CompileResult = {
@@ -114,7 +117,7 @@ export const compile = async ({
 
           // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
           logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: Object.keys(input.values) });
-          instance.setOutputs(inputNodeId, input);
+          instance.setOutputs(inputNodeId, Effect.succeed(input));
           const outputs = yield* instance.computeInputs(outputNodeId);
 
           // Log the output node inputs.
@@ -126,6 +129,23 @@ export const compile = async ({
 
     diagnostics: executor.getDiagnostics(),
   };
+};
+
+const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
+  return diagnostic
+    .map((d) => {
+      const objects = [d.nodeId && `Node(${d.nodeId})`, d.edgeId && `Edge(${d.edgeId})`].filter(nonNullable).join(' ,');
+      return `${d.severity}: ${d.message}${objects ? `. ${objects}.` : ''} `;
+    })
+    .join('\n');
+};
+
+export const compileOrThrow = async (params: CompileParams): Promise<Executable> => {
+  const result = await compile(params);
+  if (result.diagnostics.length) {
+    throw new Error(`Graph compilation failed:\n${formatDiagnostics(result.diagnostics)}`);
+  }
+  return result.executable;
 };
 
 type GraphExecutorParams = {
@@ -148,7 +168,7 @@ export class GraphExecutor {
   private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
   private readonly _computeNodeResolver: (node: ComputeNode) => Promise<Executable>;
   private _topology?: Topology = undefined;
-  private _computeCache = new Map<string, Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements>>();
+  private _computeCache = new Map<string, ComputeEffect<ValueBag<any>>>();
 
   constructor({ computeMetaResolver, computeNodeResolver }: GraphExecutorParams) {
     this._computeNodeResolver = computeNodeResolver ?? (() => raise(new Error('Compute node resolver not provided')));
@@ -219,14 +239,12 @@ export class GraphExecutor {
    * Set outputs for a node.
    * When values are polled, this node will not be computed.
    */
-  setOutputs(nodeId: string, outputs: ValueBag<any>) {
-    invariant(isValueBag(outputs), 'Outputs must be a value bag');
-    this._computeCache.set(nodeId, Effect.succeed(outputs));
+  setOutputs(nodeId: string, outputs: ComputeEffect<ValueBag<any>>) {
+    this._computeCache.set(nodeId, outputs);
   }
 
-  setInputs(nodeId: string, inputs: ValueBag<any>) {
-    invariant(isValueBag(inputs), 'Inputs must be a value bag');
-    this._computeCache.set(nodeId, Effect.succeed(inputs));
+  setInputs(nodeId: string, inputs: ComputeEffect<ValueBag<any>>) {
+    this._computeCache.set(nodeId, inputs);
   }
 
   /**
@@ -299,7 +317,7 @@ export class GraphExecutor {
   /**
    * Compute outputs for a node using a pull-based computation.
    */
-  computeOutputs(nodeId: string): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
+  computeOutputs(nodeId: string): ComputeEffect<ValueBag<any>> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {

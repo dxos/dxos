@@ -9,15 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
-import {
-  type ComputeGraphModel,
-  type ComputeEffect,
-  type Executable,
-  type ComputeRequirements,
-  type NotExecuted,
-  type ValueBag,
-  type ComputeNode,
-} from '../types';
+import { type ComputeGraphModel, type ComputeEffect, type Executable, type ValueBag, type ComputeNode } from '../types';
 import { WorkflowLoader } from '../workflow';
 
 export class TestRuntime {
@@ -56,10 +48,7 @@ export class TestRuntime {
     return this;
   }
 
-  runGraph(
-    graphDxn: string,
-    input: ValueBag<any>,
-  ): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
+  runGraph(graphDxn: string, input: ValueBag<any>): ComputeEffect<ValueBag<any>> {
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
       return yield* program.run(input);
@@ -75,13 +64,13 @@ export class TestRuntime {
   ): Promise<Record<string, ComputeEffect<ValueBag<any>>>> {
     const workflow = await this._workflowLoader.load(DXN.parse(graphDxn));
     const executor = new GraphExecutor({
-      computeNodeResolver: async (node: ComputeNode) => workflow.getStep(node.type!)!,
+      computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
     });
 
     const graph = this._graphs.get(graphDxn) ?? raise(new Error(`Graph not found: ${graphDxn}`));
     await executor.load(graph);
 
-    executor.setOutputs(inputNodeId, input);
+    executor.setOutputs(inputNodeId, Effect.succeed(input));
     const dependantNodes = executor.getAllDependantNodes(inputNodeId);
     const result: Record<string, ComputeEffect<ValueBag<any>>> = {};
     for (const nodeId of dependantNodes) {
