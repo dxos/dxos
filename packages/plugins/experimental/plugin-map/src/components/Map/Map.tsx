@@ -84,6 +84,7 @@ const MapCanvas = ({ markers, center, zoom, onChange }: MapCanvasProps) => {
     const handler = debounce(() => {
       onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
     }, 100);
+
     map.on('move', handler);
     map.on('zoom', handler);
     return () => {
@@ -98,7 +99,7 @@ const MapCanvas = ({ markers, center, zoom, onChange }: MapCanvasProps) => {
       const bounds = latLngBounds(markers.map((marker) => marker.location));
       map.fitBounds(bounds);
     } else {
-      map.setView(defaults.center, defaults.zoom);
+      map.setView(center ?? defaults.center, defaults.zoom);
     }
   }, [markers]);
 
