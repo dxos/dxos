@@ -71,9 +71,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-ipfs"
-    },
-    {
       "path": "../plugin-client"
     },
     {

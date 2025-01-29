@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { getSpace } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor, Form } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
+import { ViewType } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
@@ -23,6 +24,22 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     space && kanban?.cardView?.target?.query?.type
       ? space.db.schemaRegistry.getSchema(kanban.cardView.target.query.type)
       : undefined,
+  );
+
+  const views = useQuery(space, Filter.schema(ViewType));
+  const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
+  const updateViewTypename = useCallback(
+    (newTypename: string) => {
+      if (!schema) {
+        return;
+      }
+      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      for (const view of matchingViews) {
+        view.query.type = newTypename;
+      }
+      schema.updateTypename(newTypename);
+    },
+    [views, schema],
   );
 
   useEffect(() => {
@@ -63,6 +80,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         registry={space.db.schemaRegistry}
         schema={schema}
         view={kanban.cardView.target}
+        onTypenameChanged={updateViewTypename}
         onDelete={handleDelete}
       />
     </>
