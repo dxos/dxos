@@ -124,6 +124,7 @@ export default defineConfig((env) => ({
     isTrue(process.env.DX_INSPECT) && Inspect(),
     WasmPlugin(),
     ReactPlugin({
+      tsDecorators: true,
       plugins: [
         [
           '@dxos/swc-log-plugin',

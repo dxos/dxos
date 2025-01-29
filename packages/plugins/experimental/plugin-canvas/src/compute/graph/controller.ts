@@ -196,7 +196,6 @@ export class ComputeGraphController extends Resource {
     return this._runtimeStateOutputs[nodeId] ?? {};
   }
 
-  @log.method()
   setOutput(nodeId: string, property: string, value: any) {
     this._forcedOutputs[nodeId] ??= {};
     this._forcedOutputs[nodeId][property] = value;
