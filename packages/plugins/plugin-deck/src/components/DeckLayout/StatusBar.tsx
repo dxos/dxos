@@ -16,7 +16,7 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
       role='contentinfo'
       {...sizeAttrs}
       className={mx(
-        'fixed block-end-0 inset-inline-0 flex justify-between items-center border-bs border-separator z-[2]',
+        'fixed block-end-0 inset-inline-0 flex justify-between items-center border-bs border-separator z-[2] pbe-[env(safe-area-inset-bottom)]',
         mainPadding,
         mainPaddingTransitions,
       )}

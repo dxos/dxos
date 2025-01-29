@@ -28,6 +28,7 @@ import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { type Overscroll } from '../../types';
 import { calculateOverscroll, useBreakpoints } from '../../util';
+import { useSafeAreaBottom } from '../../util/useSafeAreaBottom';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -57,6 +58,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     popoverAnchorId,
   } = context;
   const breakpoint = useBreakpoints();
+  const safeAreaBottom = useSafeAreaBottom();
   const { plankSizing } = useDeckContext();
   const pluginManager = usePluginManager();
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
@@ -168,7 +170,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           {!isEmpty && (
             <Main.Content
               bounce
-              classNames='grid lg:block-end-[--statusbar-size] lg:block-start-[--rail-size]'
+              classNames='grid block-start-[env(safe-area-inset-top)] lg:block-end-[--statusbar-size] lg:block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]'
               handlesFocus
               style={
                 {
@@ -222,12 +224,8 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           )}
 
           {/* Status bar. */}
-          {breakpoint === 'desktop' && (
-            <>
-              <Topbar />
-              <StatusBar showHints={showHints} />
-            </>
-          )}
+          {breakpoint === 'desktop' && <Topbar />}
+          {breakpoint === 'desktop' && safeAreaBottom === 0 && <StatusBar showHints={showHints} />}
         </Main.Root>
       )}
 

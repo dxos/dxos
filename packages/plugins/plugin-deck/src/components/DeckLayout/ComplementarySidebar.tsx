@@ -63,7 +63,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             attendableId={attended[0]}
             classNames='contents'
           >
-            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch pbs-[env(safe-area-inset-top)]'>
+            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch pbs-[env(safe-area-inset-top)] lg:pbs-0'>
               <ScrollArea.Root classNames='flex-1 min-is-0'>
                 <ScrollArea.Viewport>
                   <Tabs.Tablist classNames='bs-[--rail-content] is-min items-stretch pis-[max(.5rem,env(safe-area-inset-left))] sm:pis-2'>

@@ -32,6 +32,7 @@
   --rail-item: calc(var(--rail-content) - 1rem);
   --nav-sidebar-size: 16.875rem;
   --complementary-sidebar-size: 22.5rem;
+  --safe-area-bottom: env(safe-area-inset-bottom);
 }
 
 @media (pointer: coarse) {
