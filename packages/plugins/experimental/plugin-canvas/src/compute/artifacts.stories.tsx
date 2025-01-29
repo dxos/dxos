@@ -74,7 +74,7 @@ const Render = ({ items: _items }: RenderProps) => {
 
   // TODO(burdon): Factor out.
   const handleSubmit = useDynamicCallback(async (message: string) => {
-    log.info('handleSubmit', { history });
+    log('handleSubmit', { history });
     if (isGenerating) {
       return;
     }
@@ -105,13 +105,13 @@ const Render = ({ items: _items }: RenderProps) => {
         // TODO(dmaretskyi): Have to drain the stream manually.
         queueMicrotask(async () => {
           for await (const event of response) {
-            log.info('event', { event });
+            log('event', { event });
             setPendingMessages([...response.accumulatedMessages.map((message) => createStatic(Message, message))]);
           }
         });
 
         const assistantMessages = await response.complete();
-        log.info('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
+        log('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
         append([...assistantMessages.map((m) => createStatic(Message, m))]);
         setPendingMessages([]);
 

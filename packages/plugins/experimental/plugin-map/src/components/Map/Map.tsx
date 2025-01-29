@@ -54,8 +54,8 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
 
 type MapCanvasProps = ThemedClassName<{
   markers?: MapMarker[];
-  zoom?: number;
   center?: LatLngLiteral;
+  zoom?: number;
   onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
 }>;
 
@@ -99,7 +99,7 @@ const MapCanvas = ({ markers, center, zoom, onChange }: MapCanvasProps) => {
       const bounds = latLngBounds(markers.map((marker) => marker.location));
       map.fitBounds(bounds);
     } else {
-      map.setView(center ?? defaults.center, defaults.zoom);
+      map.setView(center ?? defaults.center, zoom ?? defaults.zoom);
     }
   }, [markers]);
 
