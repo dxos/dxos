@@ -23,6 +23,9 @@ export type AIServiceClientParams = {
   endpoint: string;
 };
 
+/**
+ * Edge GPT client.
+ */
 export class AIServiceClientImpl implements AIServiceClient {
   private readonly _endpoint: string;
   constructor({ endpoint }: AIServiceClientParams) {
@@ -62,6 +65,9 @@ export class AIServiceClientImpl implements AIServiceClient {
     throw new Error('Not implemented');
   }
 
+  /**
+   * Open message stream.
+   */
   async generate(request: GenerateRequest): Promise<GenerationStream> {
     const response = await fetch(`${this._endpoint}/generate`, {
       method: 'POST',

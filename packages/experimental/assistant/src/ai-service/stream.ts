@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { iterSSEMessages } from './sse';
+import { iterSSEMessages } from './lib';
 import { type Message, type ResultStreamEvent } from './types';
 
 export type GenerationParams = {
@@ -55,6 +55,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         }
       }
     };
+
     return new GenerationStream(params, iterator);
   }
 
@@ -72,13 +73,14 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
     return this._createIterator();
   }
 
-  cancel() {
-    throw new Error('Not implemented');
-  }
-
   get accumulatedMessages(): Message[] {
     // TODO(dmaretskyi): Support multiple accumulated messages.
     return [...this._previousMessages, ...(this._accumulatedMessage == null ? [] : [this._accumulatedMessage])];
+  }
+
+  cancel() {
+    // TODO(burdon): Call abort on the controller.
+    throw new Error('Not implemented');
   }
 
   /**
@@ -134,7 +136,6 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         if (this._accumulatedMessage === undefined) {
           throw new Error('Received message stop without a message start');
         }
-
         break;
       }
 
