@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Exit, type Context, Layer, Scope, Either } from 'effect';
+import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
 
 import { type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
@@ -13,17 +13,18 @@ import {
   type ComputeMeta,
   type ComputeNode,
   type ComputeRequirements,
+  EdgeClientService,
   EventLogger,
-  GptService,
-  GraphExecutor,
   type GptInput,
   type GptOutput,
-  SpaceService,
-  type ValueBag,
+  GptService,
+  GraphExecutor,
   isNotExecuted,
   makeValueBag,
+  MockGpt,
+  SpaceService,
+  type ValueBag,
 } from '@dxos/conductor';
-import { MockGpt, EdgeClientService } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
@@ -219,7 +220,7 @@ export class ComputeGraphController extends Resource {
     await executor.load(this._graph);
 
     for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
-      executor.setOutputs(nodeId, makeValueBag(outputs));
+      executor.setOutputs(nodeId, Effect.succeed(makeValueBag(outputs)));
     }
 
     const services = this._createServiceLayer();
@@ -238,7 +239,7 @@ export class ComputeGraphController extends Resource {
 
           Effect.flatMap(computeValueBag),
           Effect.withSpan('test'),
-          Effect.map((values) => {
+          Effect.tap((values) => {
             for (const [key, value] of Object.entries(values)) {
               if (computingOutputs) {
                 this._onOutputComputed(nodeId, key, value);
@@ -270,7 +271,7 @@ export class ComputeGraphController extends Resource {
     await executor.load(this._graph);
 
     for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
-      executor.setOutputs(nodeId, makeValueBag(outputs));
+      executor.setOutputs(nodeId, Effect.succeed(makeValueBag(outputs)));
     }
 
     // TODO(dmaretskyi): Stop hardcoding.
@@ -299,8 +300,7 @@ export class ComputeGraphController extends Resource {
             Scope.extend(scope),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
-            Effect.map((values) => {
-              // TODO(burdon): Return value expected.
+            Effect.tap((values) => {
               for (const [key, value] of Object.entries(values)) {
                 if (computingOutputs) {
                   this._onOutputComputed(node, key, value);

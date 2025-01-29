@@ -162,7 +162,7 @@ const toPresentation = async (loader: WorkflowLoader, graph: ComputeGraph, mode:
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
   try {
     const loaded = await loader.load(DXN.fromLocalObjectId(graph.id));
-    const meta = loaded.asExecutable().meta;
+    const meta = (await loaded.asExecutable()).meta;
     const mapProps = (ast: AST.AST) =>
       Object.fromEntries(AST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
     return {

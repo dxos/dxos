@@ -64,8 +64,9 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     setInputTemplate('');
     props.loader
       .load(DXN.fromLocalObjectId(props.graph.id))
+      .then((workflow) => workflow.asExecutable())
       .then((compiled) => {
-        const inputTemplate = inputTemplateFromAst(compiled.asExecutable().meta.input.ast);
+        const inputTemplate = inputTemplateFromAst(compiled.meta.input.ast);
         setInputTemplate(inputTemplate);
         if (!input.length) {
           setInput(inputTemplate);
