@@ -22,6 +22,7 @@ import { PlankControls } from './PlankControls';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
 import { useBreakpoints } from '../../util';
+import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
   coordinate: LayoutCoordinate;
@@ -67,7 +68,7 @@ export const NodePlankHeading = memo(
     const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        solo: (layoutPart === 'solo' || layoutPart === 'main') && breakpoint !== 'mobile',
+        solo: layoutPart === 'solo' || layoutPart === 'main',
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
@@ -78,9 +79,7 @@ export const NodePlankHeading = memo(
       <StackItem.Heading
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1',
-          layoutPart === 'solo'
-            ? 'pis-[calc(env(safe-area-inset-left)+.25rem)] pie-[calc(env(safe-area-inset-left)+.25rem)]'
-            : 'pli-1',
+          layoutPart === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
         <ActionRoot>
@@ -104,7 +103,7 @@ export const NodePlankHeading = memo(
             </StackItem.SigilButton>
           )}
         </ActionRoot>
-        {layoutPart === 'solo' && breakpoint !== 'desktop' && <ToggleSidebarButton />}
+        {breakpoint !== 'desktop' && <ToggleSidebarButton />}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}

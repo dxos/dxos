@@ -160,7 +160,10 @@ export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedPro
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
   return (
-    <NaturalToolbar.Root {...props} classNames={['p-1 attention-surface', !hasAttention && 'opacity-20', classNames]}>
+    <NaturalToolbar.Root
+      {...props}
+      classNames={['p-0 pointer-fine:p-1 attention-surface', !hasAttention && 'opacity-20', classNames]}
+    >
       {items?.map((item: MenuItem, i: number) =>
         isSeparator(item) ? (
           <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
