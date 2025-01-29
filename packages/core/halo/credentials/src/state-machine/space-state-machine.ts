@@ -140,13 +140,13 @@ export class SpaceStateMachine implements SpaceState {
   /**
    * @param credential Message to process.
    * @param fromFeed Key of the feed where this credential is recorded.
+   * @synchronized
    */
   async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
     if (credential.id) {
       if (this._processedCredentials.has(credential.id)) {
         return true;
       }
-      this._processedCredentials.add(credential.id);
     }
 
     if (!skipVerification) {
@@ -215,8 +215,6 @@ export class SpaceStateMachine implements SpaceState {
             sourceFeed: sourceFeed.toHex(),
             feed: credential.subject.id.toHex(),
           });
-          // Note: Delete from processed credentials to retry.
-          credential.id && this._processedCredentials.delete(credential.id);
           return false;
         }
 
@@ -250,6 +248,10 @@ export class SpaceStateMachine implements SpaceState {
     }
 
     await this.onCredentialProcessed.callIfSet(credential);
+    // Mark as processed only after all processors have processed the credential.
+    if (credential.id) {
+      this._processedCredentials.add(credential.id);
+    }
     return true;
   }
 
