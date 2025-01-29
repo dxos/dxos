@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId } from 'effect/SchemaAST';
+import { AST } from '@effect/schema';
 
 import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
@@ -33,7 +33,7 @@ export const QueueOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Message) });
 
 export const FunctionInput = S.Struct({
   [DEFAULT_INPUT]: S.Any,
-  function: S.String.annotations({ [DescriptionAnnotationId]: 'Function DXN' }),
+  function: S.String.annotations({ [AST.DescriptionAnnotationId]: 'Function DXN' }),
 });
 export type FunctionInput = S.Schema.Type<typeof FunctionInput>;
 

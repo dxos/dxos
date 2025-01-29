@@ -1,11 +1,16 @@
-import { Schema as S } from '@effect/schema';
-import { getObjectAnnotation } from '../ast/annotations';
-import { ObjectId } from './object-id';
-import { getSchemaDXN } from '../types';
-import { setTypename, TYPENAME_SYMBOL } from './typename';
-import { attachTypedJsonSerializer } from './json-serializer';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Schema as S } from '@effect/schema';
+
 import { failedInvariant } from '@dxos/invariant';
-import { setSchema } from '../ast/schema';
+
+import { attachTypedJsonSerializer } from './json-serializer';
+import { ObjectId } from './object-id';
+import { setTypename } from './typename';
+import { setSchema, getObjectAnnotation } from '../ast';
+import { getSchemaDXN } from '../types';
 
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } : T;
 
@@ -41,8 +46,8 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
 ) => {
-  const objectAnnotation = getObjectAnnotation(schema);
-  if (!objectAnnotation) {
+  const annotation = getObjectAnnotation(schema);
+  if (!annotation) {
     throw new Error('Schema is not an object schema');
   }
   if ('@type' in data) {
@@ -56,6 +61,5 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Failed to get schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);
-
   return obj;
 };

@@ -5,27 +5,27 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
-import { toJsonSchema } from '@dxos/echo-schema';
+import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
-import { ToolTypes, type LLMTool } from './schema';
-import { ObjectId } from '@dxos/echo-schema';
+import { ToolTypes, type LLMTool } from './types';
+import { AI_SERVICE_ENDPOINT } from '../testing';
 
-const ENDPOINT = 'http://localhost:8787';
+// log.config({ filter: 'debug' });
 
 describe('AI Service Client', () => {
   test('client generation', async () => {
     const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -43,17 +43,17 @@ describe('AI Service Client', () => {
       tools: [],
     });
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
 
-    log.info('full message', {
+    log('full message', {
       message: await stream.complete(),
     });
   });
 
   test('tool calls', async () => {
     const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
     const custodian: LLMTool = {
@@ -69,7 +69,7 @@ describe('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -87,17 +87,15 @@ describe('AI Service Client', () => {
       tools: [custodian],
     });
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
     const [message] = await stream.complete();
-    log.info('full message', {
-      message,
-    });
-    await client.insertMessages([message]);
+    log('full message', { message });
+    await client.appendMessages([message]);
 
     const toolUse = message.content.find(({ type }) => type === 'tool_use')!;
     invariant(toolUse.type === 'tool_use');
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -115,23 +113,21 @@ describe('AI Service Client', () => {
       tools: [custodian],
     });
     for await (const event of stream2) {
-      log.info('event', event);
+      log('event', event);
     }
     const [message2] = await stream2.complete();
-    log.info('full message', {
-      message: message2,
-    });
+    log('full message', { message: message2 });
   });
 
-  test.only('image generation', async () => {
+  test.skip('image generation', async () => {
     const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -157,11 +153,9 @@ describe('AI Service Client', () => {
     });
 
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
 
-    log.info('full message', {
-      message: await stream.complete(),
-    });
+    log('full message', { message: await stream.complete() });
   });
 });

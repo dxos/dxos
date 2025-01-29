@@ -4,7 +4,6 @@
 
 import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaType } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
 
 import { trim } from '../util';
 

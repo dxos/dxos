@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './edge-client-service';
+export * from './queue-service';
 export * from './event-logger';
 export * from './gpt';
 export * from './space-service';

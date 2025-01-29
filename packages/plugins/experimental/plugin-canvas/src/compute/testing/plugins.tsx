@@ -7,22 +7,22 @@ import { Chess } from 'chess.js';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
+import { defineTool, LLMToolResult, type LLMTool } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import {
   createStatic,
+  isInstanceOf,
   EchoObject,
   GeoPoint,
-  isInstanceOf,
   ObjectId,
   type HasId,
   type HasTypename,
 } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Chessboard } from '@dxos/plugin-chess';
 import { MapControl } from '@dxos/plugin-map';
 
 import { JsonFilter } from '../../components';
-import { defineTool, LLMToolResult, type LLMTool } from '@dxos/assistant';
-import { invariant } from '@dxos/invariant';
 
 export type Artifact = {
   id: string;
@@ -176,6 +176,25 @@ export const artifacts: Record<string, Artifact> = [
   return acc;
 }, {});
 
+export const genericTools = [
+  defineTool({
+    name: 'focus',
+    description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
+    schema: S.Struct({ id: ObjectId }),
+    execute: async ({ id }, { extensions }) => {
+      const artifactIndex = extensions.artifacts.items.findIndex((artifact) => artifact.id === id);
+      if (artifactIndex !== -1) {
+        extensions.artifacts.items = [
+          ...extensions.artifacts.items.filter((artifact) => artifact.id !== id),
+          extensions.artifacts.items[artifactIndex],
+        ];
+      }
+
+      return LLMToolResult.Success(formatArtifact(id));
+    },
+  }),
+];
+
 export const capabilities: AnyCapability[] = [
   //
   // Image
@@ -209,7 +228,6 @@ export const capabilities: AnyCapability[] = [
         <Chessboard
           model={{ chess: new Chess(data.value) }}
           onUpdate={(move) => {
-            console.log('move', move);
             const board = new Chess(data.value);
             board.move(move);
             data.value = board.fen();

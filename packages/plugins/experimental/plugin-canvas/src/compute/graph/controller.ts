@@ -13,7 +13,6 @@ import {
   type ComputeMeta,
   type ComputeNode,
   type ComputeRequirements,
-  EdgeClientService,
   EventLogger,
   type GptInput,
   type GptOutput,
@@ -22,6 +21,7 @@ import {
   isNotExecuted,
   makeValueBag,
   MockGpt,
+  QueueService,
   SpaceService,
   type ValueBag,
 } from '@dxos/conductor';
@@ -327,13 +327,11 @@ export class ComputeGraphController extends Resource {
     const services = { ...DEFAULT_SERVICES, ...this._services };
     const logLayer = Layer.succeed(EventLogger, this._createLogger());
     const gptLayer = Layer.succeed(GptService, services.gpt!);
-    const edgeClientLayer =
-      services.edgeClient != null && services.edgeHttpClient != null
-        ? EdgeClientService.fromClient(services.edgeClient, services.edgeHttpClient)
-        : EdgeClientService.notAvailable;
+    const queueLayer =
+      services.edgeHttpClient != null ? QueueService.fromClient(services.edgeHttpClient) : QueueService.notAvailable;
 
     const spaceLayer = SpaceService.empty;
-    return Layer.mergeAll(logLayer, gptLayer, edgeClientLayer, spaceLayer);
+    return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer);
   }
 
   private _createLogger(): Context.Tag.Service<EventLogger> {

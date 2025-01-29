@@ -5,12 +5,12 @@
 import { describe, expect, test } from 'vitest';
 
 import { Ref, TypedObject, createStatic, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
+import { Contact } from '@dxos/echo-schema/testing';
 import { S } from '@dxos/effect';
 
 import { getMeta } from './accessors';
 import { create } from './object';
 import { makeRef } from './ref';
-import { Contact } from '@dxos/echo-schema/testing';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {

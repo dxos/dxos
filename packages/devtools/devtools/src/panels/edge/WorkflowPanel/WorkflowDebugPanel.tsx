@@ -17,7 +17,7 @@ import {
   createDxosEventLogger,
   makeValueBag,
   unwrapValueBag,
-  EdgeClientService,
+  QueueService,
 } from '@dxos/conductor';
 import { AST } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -235,8 +235,8 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeR
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
   const gptLayer = Layer.succeed(GptService, new OllamaGpt(new Ollama()));
   const spaceService = SpaceService.fromSpace(space);
-  const edgeClientService = EdgeClientService.notAvailable;
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, edgeClientService);
+  const queueService = QueueService.notAvailable;
+  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService);
 };
 
 const inputTemplateFromAst = (ast: AST.AST): string => {

@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { LLMToolResult, type LLMToolDefinition, type ToolExecutionContext } from './types';
-import { type LLMTool } from '../ai-service';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
-import { Message, type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
+import { LLMToolResult } from './types';
+import { type LLMTool, Message, type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;

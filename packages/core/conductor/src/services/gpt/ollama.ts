@@ -6,13 +6,13 @@ import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 import { type Ollama } from 'ollama';
 
-import { ObjectId } from '@dxos/echo-schema';
 import { type MessageImageContentBlock } from '@dxos/assistant';
+import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { type GptService } from './gpt';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
-import { type GptService } from './gpt';
 
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
