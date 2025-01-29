@@ -20,7 +20,7 @@ import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/me
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
-import { type AsyncCallback, Callback, tracer } from '@dxos/util';
+import { type AsyncCallback, Callback, ComplexSet, tracer } from '@dxos/util';
 
 import { type MetadataStore } from '../metadata';
 import { Pipeline, type PipelineAccessor } from '../pipeline';
@@ -47,6 +47,13 @@ export class ControlPipeline {
   private readonly _ctx = new Context();
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
+
+  /**
+   * Map to keep track of failed messages.
+   */
+  private readonly _failedMessages = new ComplexSet<{ feedKey: PublicKey; seq: number }>(
+    (message) => `${message.feedKey.toHex()}:${message.seq}`,
+  );
 
   private readonly _spaceKey: PublicKey;
   private readonly _metadata: MetadataStore;
@@ -182,7 +189,6 @@ export class ControlPipeline {
 
   @trace.span()
   private async _processMessage(ctx: Context, msg: FeedMessageBlock) {
-    // log('processing', { msg });
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');
@@ -193,12 +199,29 @@ export class ControlPipeline {
       timer.end();
       if (!result) {
         log.warn('processing failed', { msg });
+        this._noteFailedMessage(msg);
       } else {
         await this._noteTargetStateIfNeeded(this._pipeline.state.pendingTimeframe);
       }
 
       this._snapshotTask.schedule();
+      return result;
     }
+  }
+
+  /**
+   * If it first failure, it will be retried once the pipeline is processed fully.
+   * If it fails again, it will be ignored.
+   */
+  private _noteFailedMessage(message: FeedMessageBlock) {
+    if (this._failedMessages.has({ feedKey: message.feedKey, seq: message.seq })) {
+      log.warn('message already failed before', { message });
+      return;
+    }
+
+    log.warn('message will be retried', { feedKey: message.feedKey.toHex(), seq: message.seq });
+    this._failedMessages.add({ feedKey: message.feedKey, seq: message.seq });
+    this._pipeline.retryMessage(message);
   }
 
   private async _noteTargetStateIfNeeded(timeframe: Timeframe) {

@@ -211,7 +211,12 @@ export class SpaceStateMachine implements SpaceState {
           return false;
         }
         if (!this._canAdmitFeeds(credential.issuer)) {
-          log.warn(`Space member is not authorized to admit feeds: ${credential.issuer}`);
+          log.warn(`Space member is not authorized to admit feeds: ${credential.issuer}`, {
+            sourceFeed: sourceFeed.toHex(),
+            feed: credential.subject.id.toHex(),
+          });
+          // Note: Delete from processed credentials to retry.
+          credential.id && this._processedCredentials.delete(credential.id);
           return false;
         }
 
