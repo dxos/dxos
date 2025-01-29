@@ -150,25 +150,23 @@ const Render = ({ items: _items }: RenderProps) => {
         <Toolbar.Root classNames='p-2'>
           <Input.Root>
             <Input.TextInput
-              classNames='w-full text-sm px-2 py-1 border rounded'
-              type='text'
               spellCheck={false}
+              placeholder='Queue DXN'
               value={queueDxn}
+              onClick={() => setQueueDxn('')}
               onChange={(ev) => setQueueDxn(ev.target.value)}
             />
             <IconButton
               iconOnly
-              label='Copy'
+              label='Copy DXN'
               icon='ph--copy--regular'
               onClick={() => navigator.clipboard.writeText(queueDxn)}
             />
             <IconButton
               iconOnly
-              label='Clear'
+              label='Clear history'
               icon='ph--trash--regular'
-              onClick={() => {
-                setQueueDxn(randomQueueDxn());
-              }}
+              onClick={() => setQueueDxn(randomQueueDxn())}
             />
           </Input.Root>
         </Toolbar.Root>
@@ -176,13 +174,14 @@ const Render = ({ items: _items }: RenderProps) => {
         <Thread messages={messages} isGenerating={isGenerating} onSubmit={handleSubmit} />
       </div>
 
-      {/* Deck */}
+      {/* ArtifactsDeck */}
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
         {artifactObjects.length > 0 && (
           <div className={mx('flex grow overflow-hidden', artifactObjects.length === 1 && 'row-span-2')}>
             <Surface role='canvas-node' limit={1} data={artifactObjects[0]} />
           </div>
         )}
+
         {artifactObjects.length > 1 && (
           <div className='flex shrink-0 overflow-x-scroll min-h-[200px] divide-x divide-separator'>
             {artifactObjects.slice(1, 3).map((item, idx) => (
