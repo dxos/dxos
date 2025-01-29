@@ -4,3 +4,4 @@
 
 export * from './layout-parts';
 export * from './overscroll';
+export * from './useBreakpoints';

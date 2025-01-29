@@ -4,16 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  createIntent,
-  LayoutAction,
-  NavigationAction,
-  SLUG_PATH_SEPARATOR,
-  Surface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { createIntent, NavigationAction, SLUG_PATH_SEPARATOR, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
-import { Main, ScrollArea, useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
+import { Main, ScrollArea, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { railGridHorizontal, StackContext, StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -21,6 +14,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
+import { CloseComplementarySidebarButton } from './SidebarButton';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { type Panel } from '../../types';
@@ -59,7 +53,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
 
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
-    <Main.ComplementarySidebar>
+    <Main.ComplementarySidebar classNames='lg:block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]'>
       <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
         <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
           <Tabs.Root
@@ -69,7 +63,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             attendableId={attended[0]}
             classNames='contents'
           >
-            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch pbs-[env(safe-area-inset-top)]'>
+            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch'>
               <ScrollArea.Root classNames='flex-1 min-is-0'>
                 <ScrollArea.Viewport>
                   <Tabs.Tablist classNames='bs-[--rail-content] is-min items-stretch pis-[max(.5rem,env(safe-area-inset-left))] sm:pis-2'>
@@ -84,17 +78,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                   </ScrollArea.Scrollbar>
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-              <IconButton
-                iconOnly
-                variant='ghost'
-                size={4}
-                icon='ph--caret-line-right--regular'
-                label={t('close complementary sidebar label')}
-                classNames='!rounded-none border-is border-separator ch-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-right))]'
-                onClick={() =>
-                  dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: false }))
-                }
-              />
+              <CloseComplementarySidebarButton />
             </StackItem.Heading>
             <ScrollArea.Root>
               <ScrollArea.Viewport>
