@@ -183,10 +183,12 @@ const Render = ({ items: _items }: RenderProps) => {
         )}
 
         {artifactObjects.length > 1 && (
-          <div className='flex shrink-0 overflow-x-scroll min-h-[200px] divide-x divide-separator'>
-            {artifactObjects.slice(1, 3).map((item, idx) => (
-              <Surface key={idx} role='canvas-node' limit={1} data={item} />
-            ))}
+          <div className='flex shrink-0 overflow-hidden divide-x divide-separator'>
+            <div className='flex flex-1 h-full'>
+              {artifactObjects.slice(1, 3).map((item, idx) => (
+                <Surface key={idx} role='canvas-node' limit={1} data={item} />
+              ))}
+            </div>
           </div>
         )}
       </div>
