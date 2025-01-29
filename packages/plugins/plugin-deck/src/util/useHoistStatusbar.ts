@@ -4,12 +4,12 @@
 
 import { useLayoutEffect, useState } from 'react';
 
-export const useSafeAreaBottom = () => {
-  const [safeAreaBottom, setSafeAreaBottom] = useState(0);
+export const useHoistStatusbar = (breakpoint: string) => {
+  const [safeAreaBottom, setSafeAreaBottom] = useState(Infinity);
   useLayoutEffect(
     () =>
       setSafeAreaBottom(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-bottom'))),
     [],
   );
-  return safeAreaBottom;
+  return Number.isFinite(safeAreaBottom) && safeAreaBottom < 1 && breakpoint === 'desktop';
 };

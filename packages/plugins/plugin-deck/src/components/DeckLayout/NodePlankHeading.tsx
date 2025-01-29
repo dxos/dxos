@@ -75,7 +75,14 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <StackItem.Heading classNames='p-1 border-be border-separator items-stretch gap-1'>
+      <StackItem.Heading
+        classNames={[
+          'plb-1 border-be border-separator items-stretch gap-1',
+          layoutPart === 'solo'
+            ? 'pis-[calc(env(safe-area-inset-left)+.25rem)] pie-[calc(env(safe-area-inset-left)+.25rem)]'
+            : 'pli-1',
+        ]}
+      >
         <ActionRoot>
           {node ? (
             <StackItem.Sigil

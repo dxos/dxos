@@ -53,7 +53,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
 
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
-    <Main.ComplementarySidebar classNames='lg:block-start-[--rail-size]'>
+    <Main.ComplementarySidebar classNames='lg:block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]'>
       <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
         <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
           <Tabs.Root
@@ -63,7 +63,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             attendableId={attended[0]}
             classNames='contents'
           >
-            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch pbs-[env(safe-area-inset-top)] lg:pbs-0'>
+            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch'>
               <ScrollArea.Root classNames='flex-1 min-is-0'>
                 <ScrollArea.Viewport>
                   <Tabs.Tablist classNames='bs-[--rail-content] is-min items-stretch pis-[max(.5rem,env(safe-area-inset-left))] sm:pis-2'>

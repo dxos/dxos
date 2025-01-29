@@ -15,9 +15,8 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
     <header
       className={mx(
         'flex items-stretch relative plb-1 pis-1 pie-2',
-        variant === 'topbar'
-          ? 'fixed inset-inline-0 block-start-[env(safe-area-inset-top)] bs-[--rail-size] border-be border-separator'
-          : 'pbs-[env(safe-area-inset-top)] lg:pbs-0',
+        variant === 'topbar' &&
+          'fixed inset-inline-0 block-start-[env(safe-area-inset-top)] bs-[--rail-size] border-be border-separator',
         classNames,
       )}
     >
