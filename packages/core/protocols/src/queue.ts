@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { ObjectId } from './types.js';
 
 export type QueueCursor = string & { __QueueCursor: never };
@@ -12,7 +16,9 @@ export type QueueQuery = {
   objectIds?: ObjectId[];
 };
 
+// TODO(dmaretskyi): Rename QueueQueryResult.
 export type QueryResult = {
+  // TODO(dmaretskyi): HasId & HasTypename.
   objects: unknown[];
   // /**
   //  * Cursor at the end of the range.

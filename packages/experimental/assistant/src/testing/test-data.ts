@@ -5,6 +5,7 @@
 import { type Schema as S } from '@effect/schema';
 
 import { raise } from '@dxos/debug';
+import type { EchoDatabase } from '@dxos/echo-db';
 import { JSON_SCHEMA_ECHO_REF_ID, ObjectId, toJsonSchema, type JsonSchemaType, type Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef } from '@dxos/live-object';
@@ -17,7 +18,6 @@ import {
   formatNodeLabel,
 } from '../cypher';
 import { Contact, Org, Project, Task } from '../testing';
-import type { EchoDatabase } from '@dxos/echo-db';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(

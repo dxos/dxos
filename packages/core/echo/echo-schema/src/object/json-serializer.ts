@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
 
 export const attachTypedJsonSerializer = (obj: any) => {
