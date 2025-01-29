@@ -215,11 +215,11 @@ export class ControlPipeline {
    */
   private _noteFailedMessage(message: FeedMessageBlock) {
     if (this._failedMessages.has({ feedKey: message.feedKey, seq: message.seq })) {
-      log.warn('message already failed before', { message });
+      log.warn('message processing failed twice', { message });
       return;
     }
 
-    log.warn('message will be retried', { feedKey: message.feedKey.toHex(), seq: message.seq });
+    log('message will be retried', { feedKey: message.feedKey.toHex(), seq: message.seq });
     this._failedMessages.add({ feedKey: message.feedKey, seq: message.seq });
     this._pipeline.retryMessage(message);
   }

@@ -137,7 +137,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   private _getNextBlockForReiteration() {
     const block = this._reiterateBlocks.shift();
     invariant(block);
-    log.warn('reiterate', { key: block?.feedKey.toHex(), seq: block?.seq });
+    log('reiterate', { key: block?.feedKey.toHex(), seq: block?.seq });
     return block;
   }
 
