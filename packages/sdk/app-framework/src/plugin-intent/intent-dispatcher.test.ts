@@ -55,7 +55,7 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
       const b = yield* dispatch(createIntent(Compute, { value: 2 }));
-      return b.data!.value - a.data!.value;
+      return b.value - a.value;
     });
 
     expect(await Effect.runPromise(program)).toBe(2);
@@ -67,7 +67,7 @@ describe('Intent dispatcher', () => {
       const fiberA = yield* Effect.fork(dispatch(createIntent(Compute, { value: 5 })));
       const fiberB = yield* Effect.fork(dispatch(createIntent(Compute, { value: 2 })));
       const [a, b] = yield* Fiber.join(Fiber.zip(fiberA, fiberB));
-      return b.data!.value - a.data!.value;
+      return b.value - a.value;
     });
 
     expect(await Effect.runPromise(program)).toBe(-6);
@@ -77,8 +77,8 @@ describe('Intent dispatcher', () => {
     const { dispatch, dispatchPromise } = createDispatcher(() => [toStringResolver, computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
-      const b = yield* dispatch(createIntent(ToString, { value: a.data!.value }));
-      return b.data?.string;
+      const b = yield* dispatch(createIntent(ToString, { value: a.value }));
+      return b.string;
     });
 
     expect(await Effect.runPromise(program)).toBe('4');
@@ -94,11 +94,11 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
 
-      expect(a.data?.value).toBe(4);
+      expect(a.value).toBe(4);
 
       const b = yield* undo();
 
-      expect(b?.data?.value).toBe(2);
+      expect(b.value).toBe(2);
     });
 
     await Effect.runPromise(program);
@@ -113,8 +113,8 @@ describe('Intent dispatcher', () => {
     expect(intent.all.length).toBe(3);
 
     const program = Effect.gen(function* () {
-      const { data } = yield* dispatch(intent);
-      return data?.string;
+      const data = yield* dispatch(intent);
+      return data.string;
     });
 
     expect(await Effect.runPromise(program)).toBe('2!');
@@ -126,11 +126,11 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(intent);
 
-      expect(a.data?.value).toBe(8);
+      expect(a.value).toBe(8);
 
       const b = yield* undo();
 
-      expect(b?.data?.value).toBe(1);
+      expect(b.value).toBe(1);
     });
 
     await Effect.runPromise(program);
@@ -142,11 +142,11 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
-      expect(a.data?.value).toBe(3);
+      expect(a.value).toBe(3);
 
       const b = yield* dispatch(createIntent(Compute, { value: 1 }, { module: 'test' }));
 
-      expect(b.data?.value).toBe(2);
+      expect(b.value).toBe(2);
     });
 
     await Effect.runPromise(program);
@@ -160,11 +160,11 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
-      expect(a.data?.value).toBe(2);
+      expect(a.value).toBe(2);
 
       const b = yield* dispatch(createIntent(Compute, { value: 2 }));
 
-      expect(b.data?.value).toBe(6);
+      expect(b.value).toBe(6);
     });
 
     await Effect.runPromise(program);
@@ -190,11 +190,11 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
-      expect(a.data?.value).toBe(2);
+      expect(a.value).toBe(2);
 
       const b = yield* dispatch(createIntent(Compute, { value: 2 }));
 
-      expect(b.data?.value).toBe(6);
+      expect(b.value).toBe(6);
     });
 
     await Effect.runPromise(program);
