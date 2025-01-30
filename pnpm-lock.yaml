@@ -9268,7 +9268,7 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       effect:
-        specifier: ^3.12.1
+        specifier: ^3.12.3
         version: 3.12.7
       idb-keyval:
         specifier: ^6.2.1
