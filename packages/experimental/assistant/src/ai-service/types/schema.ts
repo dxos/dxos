@@ -79,10 +79,10 @@ export const GenerateRequest = S.Struct({
   /**
    * Tools available for the LLM.
    */
-  tools: S.Array(LLMTool).pipe(S.mutable),
+  tools: S.optional(S.Array(LLMTool).pipe(S.mutable)),
 });
 
-export interface GenerateRequest extends S.Schema.Type<typeof GenerateRequest> {}
+export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
 
 export type LLMStopReason = 'tool_use' | 'end_turn';
 
