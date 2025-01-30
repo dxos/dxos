@@ -5873,9 +5873,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../../core/conductor
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../../core/functions
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object

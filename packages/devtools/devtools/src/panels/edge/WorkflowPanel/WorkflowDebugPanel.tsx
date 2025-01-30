@@ -64,12 +64,13 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     setInputTemplate('');
     props.loader
       .load(DXN.fromLocalObjectId(props.graph.id))
-      .then((workflow) => workflow.asExecutable())
-      .then((compiled) => {
-        const inputTemplate = inputTemplateFromAst(compiled.meta.input.ast);
-        setInputTemplate(inputTemplate);
-        if (!input.length) {
-          setInput(inputTemplate);
+      .then((workflow) => {
+        if (workflow.meta.inputs.length) {
+          const inputTemplate = inputTemplateFromAst(workflow.meta.inputs[0].schema.ast);
+          setInputTemplate(inputTemplate);
+          if (!input.length) {
+            setInput(inputTemplate);
+          }
         }
       })
       .catch(log.catch);

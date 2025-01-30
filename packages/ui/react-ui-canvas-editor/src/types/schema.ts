@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { ComputeGraph } from '@dxos/conductor';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -49,6 +50,8 @@ export class CanvasBoardType extends TypedObject({
   version: '0.1.0',
 })({
   name: S.optional(S.String),
+
+  computeGraph: S.optional(Ref(ComputeGraph)),
 
   /**
    * Graph of shapes positioned on the canvas.

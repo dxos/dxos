@@ -30,10 +30,16 @@
       "path": "../../../common/storybook-utils"
     },
     {
+      "path": "../../../core/conductor"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/live-object"
+    },
+    {
+      "path": "../../../core/functions"
     },
     {
       "path": "../../../sdk/app-framework"
