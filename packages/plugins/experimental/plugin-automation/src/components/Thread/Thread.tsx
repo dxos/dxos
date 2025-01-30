@@ -13,11 +13,11 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type ThreadProps = {
   messages: Message[];
-  isGenerating?: boolean;
+  streaming?: boolean;
   onSubmit: (message: string) => void;
 };
 
-export const Thread = ({ messages, isGenerating, onSubmit }: ThreadProps) => {
+export const Thread = ({ messages, streaming, onSubmit }: ThreadProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputBox = useRef<TextBoxControl>(null);
 
@@ -49,8 +49,8 @@ export const Thread = ({ messages, isGenerating, onSubmit }: ThreadProps) => {
         />
         <IconButton
           variant='ghost'
-          icon={isGenerating ? 'ph--spinner-gap--regular' : 'ph--robot--regular'}
-          classNames={[isGenerating && 'animate-spin']}
+          icon={streaming ? 'ph--spinner-gap--regular' : 'ph--robot--regular'}
+          classNames={[streaming && 'animate-spin']}
           label='Generate'
           size={5}
           iconOnly

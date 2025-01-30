@@ -142,17 +142,25 @@ export const isToolUse = (message: Message) => message.content.at(-1)?.type === 
 
 type RunToolsOptions = {
   tools: LLMTool[];
-  message: Message;
   context: LLMToolContextExtensions;
+  message: Message;
 };
 
-export type RunToolsResult = { type: 'continue'; message: Message } | { type: 'break'; result: unknown };
+export type RunToolsResult =
+  | {
+      type: 'continue';
+      message: Message;
+    }
+  | {
+      type: 'break';
+      result: unknown;
+    };
 
-export const runTools = async ({ tools, message, context }: RunToolsOptions): Promise<RunToolsResult> => {
-  const toolCalls = message.content.filter((c) => c.type === 'tool_use');
+export const runTools = async ({ tools, context, message }: RunToolsOptions): Promise<RunToolsResult> => {
+  const toolCalls = message.content.filter((block) => block.type === 'tool_use');
   invariant(toolCalls.length === 1);
   const toolCall = toolCalls[0];
-  const tool = tools.find((t) => t.name === toolCall.name);
+  const tool = tools.find((tool) => tool.name === toolCall.name);
   if (!tool) {
     throw new Error(`Tool not found: ${toolCall.name}`);
   }
@@ -164,6 +172,7 @@ export const runTools = async ({ tools, message, context }: RunToolsOptions): Pr
     log('tool error', { error });
     toolResult = LLMToolResult.Error(error.message);
   }
+
   switch (toolResult.kind) {
     case 'error': {
       log('tool error', { message: toolResult.message });
@@ -179,8 +188,10 @@ export const runTools = async ({ tools, message, context }: RunToolsOptions): Pr
         ],
       });
 
+      // TODO(burdon): Retry count?
       return { type: 'continue', message: resultMessage };
     }
+
     case 'success': {
       log('tool success', { result: toolResult.result });
       const resultMessage = createStatic(Message, {
@@ -196,6 +207,7 @@ export const runTools = async ({ tools, message, context }: RunToolsOptions): Pr
 
       return { type: 'continue', message: resultMessage };
     }
+
     case 'break': {
       log('tool break', { result: toolResult.result });
       return { type: 'break', result: toolResult.result };
