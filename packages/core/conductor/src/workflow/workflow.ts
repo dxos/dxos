@@ -4,7 +4,7 @@
 
 import { Effect } from 'effect';
 
-import type { S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import { compileOrThrow, type GraphExecutor } from '../compiler';
@@ -12,11 +12,13 @@ import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
+  type ComputeNode,
   type Executable,
   makeValueBag,
   NotExecuted,
   type ValueBag,
 } from '../types';
+import { pickProperty } from '../util';
 
 export class Workflow {
   constructor(
@@ -74,12 +76,31 @@ export class Workflow {
     return this._resolvedNodeById.get(nodeId);
   }
 
-  get meta(): WorkflowMeta {
+  /**
+   * Returns information about expected input and output node types.
+   * NODE_INPUT and NODE_OUTPUT have generic Record<string, any> schema, so we follow edges to
+   * resolve expected input and output schema field types.
+   */
+  resolveMeta(): WorkflowMeta {
     const inputs = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
+    const resolveOutputsSchema = (sourceNode: ComputeNode): S.Struct<any> => {
+      const properties = this._graph.edges
+        .filter((e) => e.source === sourceNode.id)
+        .map((edge) => [edge.output, pickProperty(this._requireResolved(edge.target).meta.input, edge.input)]);
+      return S.Struct(Object.fromEntries(properties));
+    };
+
     const outputs = this._graph.nodes.filter((node) => node.type === NODE_OUTPUT);
+    const resolveInputsSchema = (targetNode: ComputeNode): S.Struct<any> => {
+      const properties = this._graph.edges
+        .filter((e) => e.target === targetNode.id)
+        .map((edge) => [edge.input, pickProperty(this._requireResolved(edge.source).meta.output, edge.output)]);
+      return S.Struct(Object.fromEntries(properties));
+    };
+
     return {
-      inputs: inputs.map((node) => ({ nodeId: node.id, schema: this._requireResolved(node.id).meta.output })),
-      outputs: outputs.map((node) => ({ nodeId: node.id, schema: this._requireResolved(node.id).meta.input })),
+      inputs: inputs.map((node) => ({ nodeId: node.id, schema: resolveOutputsSchema(node) })),
+      outputs: outputs.map((node) => ({ nodeId: node.id, schema: resolveInputsSchema(node) })),
     };
   }
 
@@ -119,7 +140,7 @@ export class Workflow {
 
 type NodeSchema = {
   nodeId: string;
-  schema: S.Schema.AnyNoContext;
+  schema: S.Struct<any>;
 };
 
 export type WorkflowMeta = {

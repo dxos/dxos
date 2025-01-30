@@ -65,8 +65,9 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     props.loader
       .load(DXN.fromLocalObjectId(props.graph.id))
       .then((workflow) => {
-        if (workflow.meta.inputs.length) {
-          const inputTemplate = inputTemplateFromAst(workflow.meta.inputs[0].schema.ast);
+        const workflowMeta = workflow.resolveMeta();
+        if (workflowMeta.inputs.length) {
+          const inputTemplate = inputTemplateFromAst(workflowMeta.inputs[0].schema.ast);
           setInputTemplate(inputTemplate);
           if (!input.length) {
             setInput(inputTemplate);
