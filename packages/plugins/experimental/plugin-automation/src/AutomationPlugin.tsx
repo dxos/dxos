@@ -2,17 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphBuilder, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { ChainPromptType, ChainType } from './types';
+import { AutomationAction, ChainPromptType, ChainType, GptChatType } from './types';
 
+// TODO(wittjosiah): Rename to AssistantPlugin?
 export const AutomationPlugin = () =>
   definePlugin(meta, [
     defineModule({
@@ -23,7 +32,7 @@ export const AutomationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/metadata`,
       activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      activate: () =>
+      activate: () => [
         contributes(Capabilities.Metadata, {
           id: ChainType.typename,
           metadata: {
@@ -33,11 +42,23 @@ export const AutomationPlugin = () =>
             loadReferences: async (chain: ChainType) => await RefArray.loadAll(chain.prompts ?? []),
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: GptChatType.typename,
+          metadata: {
+            createObject: (props: { name?: string }) => createIntent(AutomationAction.Create, props),
+            label: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
+            icon: 'ph--atom--regular',
+          },
+        }),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupClient,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger]),
+      activate: () => [
+        contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger]),
+        contributes(ClientCapabilities.Schema, [GptChatType]),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
@@ -64,5 +85,10 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
     }),
   ]);
