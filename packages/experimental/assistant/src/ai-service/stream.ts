@@ -17,8 +17,10 @@ export type GenerationParams = {
 };
 
 export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
-  static fromSSEResponse(params: GenerationParams, response: Response) {
-    const controller = new AbortController();
+  /**
+   * Creates a stream from an SSE response.
+   */
+  static fromSSEResponse(params: GenerationParams, response: Response, controller = new AbortController()) {
     const iterator = async function* () {
       for await (const sse of iterSSEMessages(response, controller)) {
         if (sse.event === 'completion') {
@@ -56,17 +58,18 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
       }
     };
 
-    return new GenerationStream(params, iterator);
+    return new GenerationStream(controller, iterator, params);
   }
 
+  private readonly _done = new Trigger();
   private _previousMessages: Message[] = [];
   private _accumulatedMessage?: Message = undefined;
-  private readonly _done = new Trigger();
   private _iterator?: AsyncIterator<ResultStreamEvent> = undefined;
 
   constructor(
-    private readonly _params: GenerationParams,
+    private readonly _controller: AbortController,
     private readonly _getIterator: () => AsyncIterableIterator<ResultStreamEvent>,
+    private readonly _params: GenerationParams,
   ) {}
 
   [Symbol.asyncIterator](): AsyncIterator<ResultStreamEvent> {
@@ -78,9 +81,11 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
     return [...this._previousMessages, ...(this._accumulatedMessage == null ? [] : [this._accumulatedMessage])];
   }
 
-  cancel() {
-    // TODO(burdon): Call abort on the controller.
-    throw new Error('Not implemented');
+  /**
+   * Aborts the stream.
+   */
+  abort() {
+    this._controller.abort();
   }
 
   /**

@@ -19,6 +19,8 @@ export interface AIServiceClient {
   generate(request: GenerateRequest): Promise<GenerationStream>;
 }
 
+// TODO(burdon): Create mock.
+
 export type AIServiceClientParams = {
   endpoint: string;
 };
@@ -28,6 +30,7 @@ export type AIServiceClientParams = {
  */
 export class AIServiceClientImpl implements AIServiceClient {
   private readonly _endpoint: string;
+
   constructor({ endpoint }: AIServiceClientParams) {
     this._endpoint = endpoint;
   }
@@ -69,10 +72,14 @@ export class AIServiceClientImpl implements AIServiceClient {
    * Open message stream.
    */
   async generate(request: GenerateRequest): Promise<GenerationStream> {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const response = await fetch(`${this._endpoint}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
+      signal,
     });
 
     invariant(response.body instanceof ReadableStream);
@@ -82,6 +89,7 @@ export class AIServiceClientImpl implements AIServiceClient {
         threadId: request.threadId,
       },
       response,
+      controller,
     );
   }
 }

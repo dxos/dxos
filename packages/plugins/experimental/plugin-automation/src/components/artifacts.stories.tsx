@@ -9,17 +9,15 @@ import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AIServiceClientImpl, Message, isToolUse, runTools } from '@dxos/assistant';
+import { AIServiceClientImpl, type Message } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 // TODO(wittjosiah): Factor these out from canvas compute because this plugin shouldn't depend on it.
-import { useDynamicCallback, useQueue } from '@dxos/react-ui-canvas-compute';
+import { useQueue } from '@dxos/react-ui-canvas-compute';
 import {
-  ARTIFACTS_SYSTEM_PROMPT,
   artifacts,
   type ArtifactsContext,
   capabilities,
@@ -28,9 +26,10 @@ import {
   localServiceEndpoints,
 } from '@dxos/react-ui-canvas-compute/testing';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './Thread';
+import { ChatProcessor, type Tool } from '../hooks';
 
 const endpoints = localServiceEndpoints;
 
@@ -39,7 +38,8 @@ type RenderProps = {
 };
 
 const Render = ({ items: _items }: RenderProps) => {
-  const tools = useMemo(
+  // Configuration.
+  const tools = useMemo<Tool[]>(
     () => [
       //
       ...genericTools,
@@ -49,10 +49,16 @@ const Render = ({ items: _items }: RenderProps) => {
     [genericTools, artifacts],
   );
 
-  const [edgeHttpClient] = useState(() => new EdgeHttpClient(endpoints.edge));
-  const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
-  const [isGenerating, setIsGenerating] = useState(false);
+  // TODO(burdon): Common naming/packaging.
+  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
+  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
+
+  // Queue.
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
+  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
+
+  // Artifacts.
+  // TODO(burdon): Factor out class.
   const [artifactsContext] = useState(() =>
     create<ArtifactsContext>({
       items: _items ?? [],
@@ -65,84 +71,23 @@ const Render = ({ items: _items }: RenderProps) => {
     }),
   );
 
+  // TODO(burdon): Create hook.
+  const [processor] = useState(() => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }));
+
+  // State.
   const artifactItems = artifactsContext.items.toReversed();
-  const historyQueue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
-  const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
-  const messages = useMemo(
-    () => [...historyQueue.objects, ...pendingMessages],
-    [historyQueue.objects, pendingMessages],
-  );
+  const messages = [...queue.items, ...processor.messages.value];
 
-  // TODO(burdon): Factor out.
-  const handleSubmit = useDynamicCallback(async (message: string) => {
-    log('handleSubmit', { history });
-    if (isGenerating) {
-      return;
+  const handleSubmit = async (message: string) => {
+    // TODO(burdon): Button to cancel. Otherwise queue request.
+    if (processor.isStreaming) {
+      await processor.cancel();
     }
 
-    try {
-      setIsGenerating(true);
-      const history = [...historyQueue.objects];
-      const append = (messages: Message[]) => {
-        void historyQueue.append(messages);
-        history.push(...messages);
-      };
-
-      append([
-        createStatic(Message, {
-          role: 'user',
-          content: [{ type: 'text', text: message }],
-        }),
-      ]);
-
-      generate: while (true) {
-        const response = await aiServiceClient.generate({
-          model: '@anthropic/claude-3-5-sonnet-20241022',
-          systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
-          history,
-          tools,
-        });
-
-        // TODO(dmaretskyi): Have to drain the stream manually.
-        queueMicrotask(async () => {
-          for await (const event of response) {
-            log('event', { event });
-            setPendingMessages([...response.accumulatedMessages.map((message) => createStatic(Message, message))]);
-          }
-        });
-
-        const assistantMessages = await response.complete();
-        log('assistantMessages', { assistantMessages: structuredClone(assistantMessages) });
-        append([...assistantMessages.map((m) => createStatic(Message, m))]);
-        setPendingMessages([]);
-
-        // Resolve tool use locally.
-        if (isToolUse(assistantMessages.at(-1)!)) {
-          const reply = await runTools({
-            tools,
-            message: assistantMessages.at(-1)!,
-            context: {
-              artifacts: artifactsContext,
-            },
-          });
-
-          switch (reply.type) {
-            case 'continue': {
-              append([reply.message]);
-              break;
-            }
-            case 'break': {
-              break generate;
-            }
-          }
-        } else {
-          break;
-        }
-      }
-    } finally {
-      setIsGenerating(false);
-    }
-  });
+    const messages = await processor.request(message, queue.items);
+    // TODO(burdon): Append on success only? If approved by user? Clinet/server.
+    queue.append(messages);
+  };
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -169,10 +114,11 @@ const Render = ({ items: _items }: RenderProps) => {
               icon='ph--trash--regular'
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
+            <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor.cancel()} />
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={messages} isGenerating={isGenerating} onSubmit={handleSubmit} />
+        <Thread messages={messages} streaming={processor.isStreaming.value} onSubmit={handleSubmit} />
       </div>
 
       {/* Artifacts Deck/Mosaic */}
@@ -201,10 +147,11 @@ const randomQueueDxn = () =>
   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
 
 const meta: Meta<typeof Render> = {
-  title: 'plugins/plugin-canvas/artifacts',
+  title: 'plugins/plugin-automation/artifacts',
   render: Render,
   decorators: [
     //
+    withSignals,
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
     withPluginManager({ capabilities }),
