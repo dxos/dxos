@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Parser } from 'htmlparser2';
 import { describe, it } from 'vitest';
 
+import { ObjectId } from '@dxos/echo-schema';
+
 import { GenerationStream } from './stream';
+import { type MessageContentBlock, type Message } from './types';
 
 type Part = { event: string; data: any };
 
@@ -82,7 +86,75 @@ describe('GenerationStream', () => {
     await stream.complete();
   });
 
-  // TODO(burdon): Stream parser, tags, JSON, etc.
-  // https://astexplorer.net
-  it('should parse the stream', async ({ expect }) => {});
+  /**
+   * https://astexplorer.net
+   */
+  it('should parse the stream', async ({ expect }) => {
+    const input = [
+      ['<cot>1. Prepare the ship.', '2. Arm the torpedoes.', '3. Fire lasers.', '</cot>'].join('\n'),
+      'Hello world!',
+    ];
+
+    const output: Message = { id: ObjectId.random(), role: 'assistant', content: [] };
+    let block: MessageContentBlock | undefined;
+    let text: string[] = [];
+    const parser = new Parser({
+      onopentag: () => {
+        text = [];
+      },
+
+      onclosetag: (name) => {
+        switch (name) {
+          case 'cot': {
+            block = { type: 'cot', text: text.join(' ') };
+            break;
+          }
+        }
+        if (block) {
+          output.content.push(block);
+          block = undefined;
+        }
+        text = [];
+      },
+
+      ontext: (str) => {
+        if (!block) {
+          block = { type: 'text', text: '' };
+        }
+        if (str.trim()) {
+          text.push(str.trim());
+        }
+      },
+
+      onend: () => {
+        if (block) {
+          if (block.type === 'text') {
+            block.text = text.join(' ');
+          }
+          output.content.push(block);
+        }
+      },
+    });
+
+    const stream = GenerationStream.fromSSEResponse({}, new Response(createTestStream(input)));
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta') {
+        parser.write((event.delta as any).text);
+      }
+    }
+    parser.end();
+
+    expect(output.content).to.deep.equal([
+      {
+        type: 'cot',
+        text: '1. Prepare the ship.\n2. Arm the torpedoes.\n3. Fire lasers.',
+      },
+      {
+        type: 'text',
+        text: 'Hello world!',
+      },
+    ]);
+
+    await stream.complete();
+  });
 });

@@ -5,7 +5,7 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { type AIServiceClient, type LLMTool, type Message, type MessageImageContentBlock } from '@dxos/assistant';
+import { type AIServiceClient, type LLMTool, type Message, type ImageContentBlock } from '@dxos/assistant';
 import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -16,7 +16,7 @@ import { EventLogger } from '../event-logger';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
-  public readonly imageCache = new Map<string, MessageImageContentBlock>();
+  public readonly imageCache = new Map<string, ImageContentBlock>();
 
   constructor(private readonly _client: AIServiceClient) {}
 

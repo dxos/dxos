@@ -6,7 +6,7 @@ import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 import { type Ollama } from 'ollama';
 
-import { type MessageImageContentBlock } from '@dxos/assistant';
+import { type ImageContentBlock } from '@dxos/assistant';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -16,7 +16,7 @@ import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from 
 
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
-  public readonly imageCache = new Map<string, MessageImageContentBlock>();
+  public readonly imageCache = new Map<string, ImageContentBlock>();
 
   constructor(private readonly _ollama: Ollama) {}
 
