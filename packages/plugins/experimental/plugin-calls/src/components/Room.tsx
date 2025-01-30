@@ -4,7 +4,7 @@
 
 import { PhoneX } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
 import { useNavigate } from 'react-router-dom';
 import { useMeasure, useMount } from 'react-use';
@@ -25,6 +25,26 @@ export const Room = () => {
   return <JoinedRoom />;
 };
 
+export const useDebugEnabled = () => {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'd' && e.ctrlKey) {
+        e.preventDefault();
+        setEnabled(!enabled);
+      }
+    };
+    document.addEventListener('keypress', handler);
+
+    return () => {
+      document.removeEventListener('keypress', handler);
+    };
+  }, [enabled]);
+
+  return enabled;
+};
+
 const JoinedRoom = () => {
   const {
     userMedia,
@@ -36,6 +56,7 @@ const JoinedRoom = () => {
 
   const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
   const [firstFlexChildRef, { width: firstFlexChildWidth }] = useMeasure<HTMLDivElement>();
+  const debugEnabled = useDebugEnabled();
 
   const totalUsers = 1 + otherUsers.length;
 
@@ -95,6 +116,7 @@ const JoinedRoom = () => {
                 audioTrack={userMedia.audioStreamTrack}
                 pinnedId={pinnedId}
                 setPinnedId={setPinnedId}
+                showDebugInfo={debugEnabled}
               />
             )}
 
@@ -111,6 +133,7 @@ const JoinedRoom = () => {
                           audioTrack={audioTrack}
                           pinnedId={pinnedId}
                           setPinnedId={setPinnedId}
+                          showDebugInfo={debugEnabled}
                         ></Participant>
                       )}
                     </PullVideoTrack>
@@ -124,6 +147,7 @@ const JoinedRoom = () => {
                             isScreenShare
                             pinnedId={pinnedId}
                             setPinnedId={setPinnedId}
+                            showDebugInfo={debugEnabled}
                           />
                         )}
                       </PullVideoTrack>
