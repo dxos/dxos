@@ -44,7 +44,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   const generate = async () => {
     log('llm generate', { tools: params.tools });
     const beginTs = Date.now();
-    const result = await params.client.generate({
+    const stream = await params.client.generate({
       model: params.model,
       spaceId: params.spaceId,
       threadId: params.threadId,
@@ -53,17 +53,19 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       tools: params.tools as any,
     });
 
-    for await (const event of result) {
+    for await (const event of stream) {
       params.logger?.(event);
     }
-    const messages = await result.complete();
+    const messages = await stream.complete();
     const message = messages.at(-1);
 
     log('llm result', { time: Date.now() - beginTs, message });
     invariant(message);
     params.logger?.({ type: 'message', message });
     history.push(
-      ...messages.map((msg): Message => ({ ...msg, content: msg.content.filter((c) => c.type !== 'image') })),
+      ...messages.map(
+        (message): Message => ({ ...message, content: message.content.filter((block) => block.type !== 'image') }),
+      ),
     );
 
     const isToolUse = message.content.at(-1)?.type === 'tool_use';
@@ -71,7 +73,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       const toolCalls = message.content.filter((c) => c.type === 'tool_use');
       invariant(toolCalls.length === 1);
       const toolCall = toolCalls[0];
-      const tool = params.tools.find((t) => t.name === toolCall.name);
+      const tool = params.tools.find((tool) => tool.name === toolCall.name);
       if (!tool) {
         throw new Error(`Tool not found: ${toolCall.name}`);
       }
@@ -79,7 +81,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       const toolResult = await tool.execute(toolCall.input, {});
       switch (toolResult.kind) {
         case 'error': {
-          log('tool error', { message: toolResult.message });
+          log.warn('tool error', { message: toolResult.message });
           const resultMessage: Message = {
             id: ObjectId.random(),
             spaceId: params.spaceId,
@@ -99,6 +101,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
 
           return true;
         }
+
         case 'success': {
           log('tool success', { result: toolResult.result });
           const resultMessage: Message = {
@@ -119,6 +122,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
 
           return true;
         }
+
         case 'break': {
           log('tool break', { result: toolResult.result });
           conversationResult = toolResult.result;
@@ -141,9 +145,9 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
 export const isToolUse = (message: Message) => message.content.at(-1)?.type === 'tool_use';
 
 type RunToolsOptions = {
-  tools: LLMTool[];
-  context: LLMToolContextExtensions;
   message: Message;
+  tools: LLMTool[];
+  extensions?: LLMToolContextExtensions;
 };
 
 export type RunToolsResult =
@@ -156,7 +160,7 @@ export type RunToolsResult =
       result: unknown;
     };
 
-export const runTools = async ({ tools, context, message }: RunToolsOptions): Promise<RunToolsResult> => {
+export const runTools = async ({ message, tools, extensions }: RunToolsOptions): Promise<RunToolsResult> => {
   const toolCalls = message.content.filter((block) => block.type === 'tool_use');
   invariant(toolCalls.length === 1);
   const toolCall = toolCalls[0];
@@ -167,7 +171,7 @@ export const runTools = async ({ tools, context, message }: RunToolsOptions): Pr
 
   let toolResult: LLMToolResult;
   try {
-    toolResult = await tool.execute(toolCall.input, { extensions: context });
+    toolResult = await tool.execute(toolCall.input, { extensions });
   } catch (error: any) {
     log('tool error', { error });
     toolResult = LLMToolResult.Error(error.message);
@@ -189,7 +193,10 @@ export const runTools = async ({ tools, context, message }: RunToolsOptions): Pr
       });
 
       // TODO(burdon): Retry count?
-      return { type: 'continue', message: resultMessage };
+      return {
+        type: 'continue',
+        message: resultMessage,
+      };
     }
 
     case 'success': {
@@ -205,12 +212,18 @@ export const runTools = async ({ tools, context, message }: RunToolsOptions): Pr
         ],
       });
 
-      return { type: 'continue', message: resultMessage };
+      return {
+        type: 'continue',
+        message: resultMessage,
+      };
     }
 
     case 'break': {
       log('tool break', { result: toolResult.result });
-      return { type: 'break', result: toolResult.result };
+      return {
+        type: 'break',
+        result: toolResult.result,
+      };
     }
   }
 };

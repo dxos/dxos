@@ -5,9 +5,16 @@
 import React, { useEffect, useRef } from 'react';
 
 import { type Message } from '@dxos/assistant';
-import { IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 // TODO(wittjosiah): This should defer to plugin-thread instead of depending on canvas editor.
 import { TextBox, type TextBoxControl } from '@dxos/react-ui-canvas-editor';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -74,24 +81,51 @@ export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 px-2 bg-base',
+          'block rounded-md p-1 px-2 bg-base overflow-hidden',
           role === 'user' ? 'dark:bg-blue-800' : 'whitespace-pre-wrap',
         )}
       >
+        {/* TODO(burdon): Use message ID for stable rendering. */}
         {content.map((item, idx) => {
           switch (item.type) {
             case 'text':
-              // TODO(burdon): Markdown parser/codemirror?
-              return <div key={idx}>{item.text.trim()}</div>;
+              return <Markdown key={idx} text={item.text.trim()} />;
             default:
-              return (
-                <SyntaxHighlighter key={idx} language='json' classNames='whitespace-pre-wrap overflow-hidden'>
-                  {JSON.stringify(item, null, 2)}
-                </SyntaxHighlighter>
-              );
+              return <Json key={idx} data={item} />;
           }
         })}
       </div>
     </div>
+  );
+};
+
+const Markdown = ({ text, classNames }: ThemedClassName<{ text: string }>) => {
+  const { themeMode } = useThemeContext();
+  const { parentRef, view } = useTextEditor(() => ({
+    initialValue: text,
+    extensions: [
+      // TOOD(burdon): Optional line wrapping.
+      createBasicExtensions({ lineWrapping: true, readonly: true }),
+      createMarkdownExtensions(),
+      createThemeExtensions({ themeMode }),
+      decorateMarkdown(),
+    ],
+  }));
+
+  useEffect(() => {
+    view?.dispatch({
+      // TODO(burdon): Append?
+      changes: { from: 0, to: view.state.doc.length, insert: text },
+    });
+  }, [text]);
+
+  return <div ref={parentRef} className={mx('w-full overflow-hidden', classNames)} />;
+};
+
+const Json = ({ data, classNames }: ThemedClassName<{ data: any }>) => {
+  return (
+    <SyntaxHighlighter language='json' classNames='w-full overflow-hidden text-sm'>
+      {JSON.stringify(data, null, 2)}
+    </SyntaxHighlighter>
   );
 };

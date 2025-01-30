@@ -49,7 +49,6 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
         extensions: [
           createBasicExtensions({ lineWrapping: !centered, ...rest }),
           createMarkdownExtensions(),
-          decorateMarkdown(),
           createThemeExtensions({
             themeMode,
             slots: {
@@ -57,6 +56,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
               content: { className: mx(centered && 'text-center') },
             },
           }),
+          decorateMarkdown(),
           // Detect changes.
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {

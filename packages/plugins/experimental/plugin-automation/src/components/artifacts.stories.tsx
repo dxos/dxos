@@ -19,17 +19,17 @@ import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { useQueue } from '@dxos/react-ui-canvas-compute';
 import {
   artifacts,
+  type ArtifactsContext,
   capabilities,
+  ChessSchema,
   genericTools,
   localServiceEndpoints,
-  type ArtifactsContext,
-  ChessSchema,
 } from '@dxos/react-ui-canvas-compute/testing';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './Thread';
-import { ChatProcessor, type Tool } from './processor';
+import { ChatProcessor, type Tool } from '../hooks';
 
 const endpoints = localServiceEndpoints;
 
@@ -50,12 +50,12 @@ const Render = ({ items: _items }: RenderProps) => {
   );
 
   // TODO(burdon): Common naming/packaging.
-  const [edgeHttpClient] = useState(() => new EdgeHttpClient(endpoints.edge));
-  const [aiServiceClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
+  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
+  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
-  const queue = useQueue<Message>(edgeHttpClient, DXN.parse(queueDxn, true));
+  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
 
   // Artifacts.
   // TODO(burdon): Factor out class.
@@ -71,22 +71,22 @@ const Render = ({ items: _items }: RenderProps) => {
     }),
   );
 
-  // TODO(burdon): Replace above.
-  const processor = useMemo(
-    () => new ChatProcessor(aiServiceClient, queue, tools, { artifacts: artifactsContext }),
-    [aiServiceClient, queue, tools, artifactsContext],
-  );
+  // TODO(burdon): Create hook.
+  const [processor] = useState(() => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }));
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
+  const messages = [...queue.items, ...processor.messages.value];
 
   const handleSubmit = async (message: string) => {
     // TODO(burdon): Button to cancel. Otherwise queue request.
-    if (processor.streaming) {
-      processor.cancel();
+    if (processor.isStreaming) {
+      await processor.cancel();
     }
 
-    await processor.request(message);
+    const messages = await processor.request(message, queue.items);
+    // TODO(burdon): Append on success only? If approved by user? Clinet/server.
+    queue.append(messages);
   };
 
   return (
@@ -114,10 +114,11 @@ const Render = ({ items: _items }: RenderProps) => {
               icon='ph--trash--regular'
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
+            <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor.cancel()} />
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={processor.messages} streaming={processor.streaming} onSubmit={handleSubmit} />
+        <Thread messages={messages} streaming={processor.isStreaming.value} onSubmit={handleSubmit} />
       </div>
 
       {/* Artifacts Deck/Mosaic */}
@@ -150,6 +151,7 @@ const meta: Meta<typeof Render> = {
   render: Render,
   decorators: [
     //
+    withSignals,
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
     withPluginManager({ capabilities }),
