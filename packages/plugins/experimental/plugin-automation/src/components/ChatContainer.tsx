@@ -7,9 +7,9 @@ import React, { useMemo, useState } from 'react';
 import { AIServiceClientImpl, type Message } from '@dxos/assistant';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { useConfig } from '@dxos/react-client';
-import { create } from '@dxos/react-client/echo';
+import { create, getSpace } from '@dxos/react-client/echo';
 import { useDynamicCallback, useQueue } from '@dxos/react-ui-canvas-compute';
 import { type ArtifactsContext } from '@dxos/react-ui-canvas-compute/testing';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -46,8 +46,14 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
 
   // TODO(burdon): Create hook.
   // TODO(wittjosiah): Should these be created in the component?
+  // TODO(zan): Combine with ai service client?
   const [processor] = useState(() => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }));
-  const queue = useQueue<Message>(edgeHttpClient, DXN.parse(chat.queue, true));
+  // TODO(wittjosiah): Remove transformation.
+  const queueDxn = useMemo(
+    () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, getSpace(chat)!.id, chat.queue.dxn.parts.at(-1)!]),
+    [chat.queue.dxn],
+  );
+  const queue = useQueue<Message>(edgeHttpClient, queueDxn);
   const messages = useMemo(
     () => [...queue.items, ...processor.messages.value],
     [queue.items, processor.messages.value],
@@ -62,7 +68,6 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
     const messages = await processor.request(message, queue.items);
     // TODO(burdon): Append on success only? If approved by user? Clinet/server.
     await queue.append(messages);
-    console.log(messages.length, queue.items.length);
   });
 
   return (

@@ -46,7 +46,7 @@ export const AutomationPlugin = () =>
           id: GptChatType.typename,
           metadata: {
             createObject: (props: { name?: string }) => createIntent(AutomationAction.Create, props),
-            label: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
+            placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },
         }),

@@ -4,9 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { create } from '@dxos/live-object';
-import { SpaceId } from '@dxos/react-client/echo';
+import { create, makeRef } from '@dxos/live-object';
 
 import { AutomationAction, GptChatType } from '../types';
 
@@ -17,7 +15,7 @@ export default () =>
       data: {
         object: create(GptChatType, {
           name,
-          queue: new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
+          queue: makeRef({ id: ObjectId.random() }), // new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
         }),
       },
     })),
