@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Change to S.Literal (and discriminated union).
 export enum ChainInputType {
@@ -41,5 +41,5 @@ export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', ve
 export class GptChatType extends TypedObject({ typename: 'dxos.org/type/GptChat', version: '0.1.0' })({
   name: S.optional(S.String),
   // TODO(wittjosiah): Should be a ref to a Queue.
-  queue: S.String, // Ref(Expando),
+  queue: Ref(Expando),
 }) {}
