@@ -37,6 +37,7 @@ import React, {
 import { RemoveScroll } from 'react-remove-scroll';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
+import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
 
 /* -------------------------------------------------------------------------------------------------
@@ -428,6 +429,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
       onPointerDownOutside,
       onFocusOutside,
       onInteractOutside,
+      collisionPadding = 8,
       classNames,
       ...contentProps
     } = props;
@@ -435,6 +437,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
     const popperScope = usePopperScope(__scopePopover);
     const { tx } = useThemeContext();
     const elevation = useElevationContext();
+    const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
 
     // Make sure the whole tree has focus guards as our `Popover` may be
     // the last element in the DOM (because of the `Portal`)
@@ -463,6 +466,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
             id={context.contentId}
             {...popperScope}
             {...contentProps}
+            collisionPadding={safeCollisionPadding}
             className={tx('popover.content', 'popover', { elevation }, classNames)}
             ref={forwardedRef}
             style={{
