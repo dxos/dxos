@@ -5,21 +5,14 @@
 import { S } from '@dxos/echo-schema';
 import { type Specialize } from '@dxos/util';
 
-export const BaseGraphNode = S.Struct(
-  {
-    id: S.String,
-    type: S.optional(S.String),
-    data: S.optional(S.Any),
-  },
-  // {
-  //   key: S.String,
-  //   value: S.Any,
-  // },
-);
+export const BaseGraphNode = S.Struct({
+  id: S.String,
+  type: S.optional(S.String),
+  data: S.optional(S.Any),
+});
 
 /** Raw base type. */
 export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
-
 /** Typed node data. */
 export type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
   BaseGraphNode,
@@ -52,11 +45,16 @@ export declare namespace GraphEdge {
 }
 
 /**
+ * Allows any additional properties on graph nodes.
+ */
+const ExtendableBaseGraphNode = S.extend(BaseGraphNode, S.Struct({}, { key: S.String, value: S.Any }));
+
+/**
  * Generic graph.
  */
 export const Graph = S.Struct({
   id: S.optional(S.String),
-  nodes: S.mutable(S.Array(BaseGraphNode)),
+  nodes: S.mutable(S.Array(ExtendableBaseGraphNode)),
   edges: S.mutable(S.Array(BaseGraphEdge)),
 });
 
