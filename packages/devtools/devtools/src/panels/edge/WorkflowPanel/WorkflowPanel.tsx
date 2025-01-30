@@ -164,10 +164,11 @@ const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
     const loaded = await loader.load(DXN.fromLocalObjectId(graph.id));
     const mapProps = (ast: AST.AST) =>
       Object.fromEntries(AST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
+    const workflowMeta = loaded.resolveMeta();
     return {
       compiled: true,
-      inputs: loaded.meta.inputs.map((input) => [input.nodeId, mapProps(input.schema.ast)]),
-      outputs: loaded.meta.outputs.map((output) => [output.nodeId, mapProps(output.schema.ast)]),
+      inputs: workflowMeta.inputs.map((input) => [input.nodeId, mapProps(input.schema.ast)]),
+      outputs: workflowMeta.outputs.map((output) => [output.nodeId, mapProps(output.schema.ast)]),
     };
   } catch (err: any) {
     return { message: err.message, stack: err.stack };
