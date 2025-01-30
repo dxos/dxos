@@ -100,6 +100,9 @@
       "path": "../../../ui/react-ui-list"
     },
     {
+      "path": "../../../ui/react-ui-stack"
+    },
+    {
       "path": "../../../ui/react-ui-syntax-highlighter"
     },
     {

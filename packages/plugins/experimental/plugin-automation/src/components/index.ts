@@ -10,3 +10,4 @@ export * from './TriggerEditor';
 
 export const AssistantPanel = lazy(() => import('./AssistantPanel'));
 export const AutomationPanel = lazy(() => import('./AutomationPanel'));
+export const ChatContainer = lazy(() => import('./ChatContainer'));
