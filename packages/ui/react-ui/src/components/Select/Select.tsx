@@ -7,6 +7,7 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
+import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Buttons';
 import { Icon } from '../Icon';
@@ -53,12 +54,14 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
 type SelectContentProps = ThemedClassName<SelectPrimitive.SelectContentProps>;
 
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, collisionPadding = 8, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const elevation = useElevationContext();
+    const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
     return (
       <SelectPrimitive.Content
         {...props}
+        collisionPadding={safeCollisionPadding}
         className={tx('select.content', 'select__content', { elevation }, classNames)}
         position='popper'
         ref={forwardedRef}
