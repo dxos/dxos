@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import type { Meta } from '@storybook/react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -16,7 +16,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 // TODO(wittjosiah): Factor these out from canvas compute because this plugin shouldn't depend on it.
-import { useDynamicCallback, useQueue } from '@dxos/react-ui-canvas-compute';
+import { useQueue } from '@dxos/react-ui-canvas-compute';
 import {
   artifacts,
   type ArtifactsContext,
@@ -76,19 +76,19 @@ const Render = ({ items: _items }: RenderProps) => {
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
-  const messages = [...queue.items, ...processor.messages.value];
+  const [messages, setMessages] = useState(() => [...queue.items]);
+  useEffect(() => {
+    setMessages([...queue.items, ...processor.messages.value]);
+  }, [queue.items, processor.messages.value]);
 
-  const handleSubmit = useDynamicCallback(async (message: string) => {
-    // TODO(burdon): Button to cancel. Otherwise queue request.
-    if (processor.isStreaming) {
-      await processor.cancel();
-    }
-
-    const messages = await processor.request(message, queue.items);
-    // TODO(burdon): Append on success only? If approved by user? Clinet/server.
-    queue.append(messages);
-    console.log(messages.length, queue.items.length);
-  });
+  const handleSubmit = useCallback(
+    async (message: string) => {
+      const messages = await processor.request(message, queue.items);
+      void queue.append(messages);
+      setMessages([...queue.items, ...messages]);
+    },
+    [queue],
+  );
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
