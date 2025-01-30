@@ -11,6 +11,8 @@ import {
   Events,
   oneOf,
 } from '@dxos/app-framework';
+import { ComputeGraph } from '@dxos/conductor';
+import { FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
@@ -43,7 +45,7 @@ export const CanvasPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupClient,
-      activate: () => contributes(ClientCapabilities.Schema, [CanvasBoardType]),
+      activate: () => contributes(ClientCapabilities.Schema, [CanvasBoardType, ComputeGraph, FunctionTrigger]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

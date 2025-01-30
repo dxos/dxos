@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DEFAULT_OUTPUT, DEFAULT_INPUT } from '@dxos/conductor';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
-import { AbstractGraphModel, AbstractGraphBuilder, Graph } from '@dxos/graph';
-import { create } from '@dxos/live-object';
+import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
+import { create, isReactiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from '.';
@@ -17,6 +17,9 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
   CanvasGraphBuilder<S>
 > {
   static create<S extends Shape>(graph?: Partial<Graph>) {
+    if (isReactiveObject(graph) as any) {
+      return new CanvasGraphModel<S>(graph as Graph);
+    }
     return new CanvasGraphModel<S>(
       create(Graph, {
         nodes: graph?.nodes ?? [],
