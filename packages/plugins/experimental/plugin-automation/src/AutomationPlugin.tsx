@@ -16,7 +16,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { AutomationAction, ChainPromptType, ChainType, GptChatType } from './types';
@@ -24,6 +24,11 @@ import { AutomationAction, ChainPromptType, ChainType, GptChatType } from './typ
 // TODO(wittjosiah): Rename to AssistantPlugin?
 export const AutomationPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/ai-client`,
+      activatesOn: ClientEvents.ClientReady,
+      activate: AiClient,
+    }),
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,

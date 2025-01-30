@@ -4,7 +4,8 @@ import React, { useMemo, useState } from 'react';
 // Copyright 2025 DXOS.org
 //
 
-import { AIServiceClientImpl, type Message } from '@dxos/assistant';
+import { useCapability } from '@dxos/app-framework';
+import { type Message } from '@dxos/assistant';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
@@ -15,6 +16,7 @@ import { type ArtifactsContext } from '@dxos/react-ui-canvas-compute/testing';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Thread } from './Thread';
+import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { type GptChatType } from '../types';
 
@@ -22,11 +24,9 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   const config = useConfig();
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'EDGE services not configured.');
-  // TODO(wittjosiah): These should not be defined here.
-  //   EdgeHttpClient should be available via the client.
-  //   AIServiceClientImpl should be available via a capability.
+  // TODO(wittjosiah): EdgeHttpClient should be available via the client.
   const [edgeHttpClient] = useState(() => new EdgeHttpClient(edgeUrl));
-  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: 'http://localhost:8788' }));
+  const aiClient = useCapability(AutomationCapabilities.AiClient);
 
   // TODO(wittjosiah): Get tools from system.
   const tools = useMemo(() => [], []);
