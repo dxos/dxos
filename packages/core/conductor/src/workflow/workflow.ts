@@ -4,6 +4,7 @@
 
 import { Effect } from 'effect';
 
+import type { S } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 
 import { compileOrThrow, type GraphExecutor } from '../compiler';
@@ -55,10 +56,7 @@ export class Workflow {
 
     return Effect.gen(this, function* () {
       const tasks: ComputeEffect<ValueBag<any>>[] = allAffectedNodes.map((nodeId) => {
-        const executable = this._resolvedNodeById.get(nodeId)!;
-        if (!executable) {
-          throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);
-        }
+        const executable = this._requireResolved(nodeId);
         const computingOutputs = executable.exec != null;
         const effect = computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId);
         return effect.pipe(Effect.withSpan('workflowNode', { attributes: { workflowDxn: this._dxn, nodeId } }));
@@ -76,6 +74,15 @@ export class Workflow {
     return this._resolvedNodeById.get(nodeId);
   }
 
+  get meta(): WorkflowMeta {
+    const inputs = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
+    const outputs = this._graph.nodes.filter((node) => node.type === NODE_OUTPUT);
+    return {
+      inputs: inputs.map((node) => ({ nodeId: node.id, schema: this._requireResolved(node.id).meta.output })),
+      outputs: outputs.map((node) => ({ nodeId: node.id, schema: this._requireResolved(node.id).meta.input })),
+    };
+  }
+
   async asExecutable(): Promise<Executable> {
     const inputNodes = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
     if (inputNodes.length !== 1) {
@@ -83,7 +90,7 @@ export class Workflow {
     }
 
     const outputNodes = this._graph.nodes.filter((node) => node.type === NODE_OUTPUT);
-    if (inputNodes.length !== 1) {
+    if (outputNodes.length !== 1) {
       throw new Error(`Workflow(${this._dxn.toString()}) can't be an executable: no unique output node.`);
     }
 
@@ -100,4 +107,22 @@ export class Workflow {
   asGraph() {
     return this._graph;
   }
+
+  private _requireResolved(nodeId: string) {
+    const resolved = this._resolvedNodeById.get(nodeId);
+    if (!resolved) {
+      throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);
+    }
+    return resolved;
+  }
 }
+
+type NodeSchema = {
+  nodeId: string;
+  schema: S.Schema.AnyNoContext;
+};
+
+export type WorkflowMeta = {
+  inputs: NodeSchema[];
+  outputs: NodeSchema[];
+};
