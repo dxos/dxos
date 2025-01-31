@@ -2,67 +2,52 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
 import React from 'react';
 
-import { AST, type BaseObject, S, type PropertyKey, type FormatEnum } from '@dxos/echo-schema';
+import { AST } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties } from '@dxos/schema';
+import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 
-import { FormContent } from './FormContent';
+import { type ComponentLookup } from './Form';
+import { FormField } from './FormContent';
 import { type FormInputProps } from './FormContext';
 import { InputHeader, type InputComponent } from './Input';
-import { getInputComponent } from './factory';
 import { translationKey } from '../../translations';
 
 const padding = 'px-2';
 
-// TODO(ZaymonFC): This should also take the component lookup as a prop.
-type ArrayFieldProps<T extends BaseObject> = {
-  name: PropertyKey<T>;
-  type: SimpleType;
-  array: true;
-  label: string;
-  ast: AST.AST;
-  values: Record<string, any>;
-  format?: FormatEnum;
+type ArrayFieldProps = {
+  property: SchemaProperty<any>;
+  values: any[];
   readonly?: boolean;
-  placeholder?: string;
   inputProps: FormInputProps;
+  path?: string[];
   Custom?: Partial<Record<string, InputComponent>>;
+  lookupComponent?: ComponentLookup;
 };
 
-export const ArrayField = <T extends BaseObject>({
-  name,
-  type,
-  label,
-  ast,
+export const ArrayField = ({
+  property,
   values,
-  format,
   readonly,
-  placeholder,
+  path,
   inputProps,
   Custom,
-}: ArrayFieldProps<T>) => {
+  lookupComponent,
+}: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const arrayValues = (values[name] ?? []) as any[];
-  const key = [name];
+  const { ast, name, type, title } = property;
 
-  // TODO(ZaymonFC): Should this unwrapping happen at a lower level?
+  // TODO(ZaymonFC): Restore the hierarchy of the path.
+  //   Also. JSONPath.
+  const label = title ?? pipe(name, capitalize);
+
   const tupleType = findNode(ast, AST.isTupleType);
   const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
-
-  const handleAdd = () => {
-    const newValue =
-      type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
-    inputProps.onValueChange(type, [...arrayValues, newValue]);
-  };
-
-  const handleRemove = (index: number) => {
-    const newValues = arrayValues.filter((_, i) => i !== index);
-    inputProps.onValueChange(type, newValues);
-  };
 
   const getDefaultObjectValue = (typeNode: AST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
@@ -75,69 +60,39 @@ export const ArrayField = <T extends BaseObject>({
     return Object.fromEntries(getSchemaProperties(typeLiteral, {}).map((prop) => [prop.name, prop.defaultValue]));
   };
 
-  if (type === 'object' && elementType) {
-    const baseNode = findNode(elementType, isDiscriminatedUnion);
-    const typeLiteral = baseNode
-      ? getDiscriminatedType(baseNode, values[name] as any)
-      : findNode(elementType, AST.isTypeLiteral);
+  const handleAdd = () => {
+    const newValue =
+      type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
+    inputProps.onValueChange(type, [...values, newValue]);
+  };
 
-    if (typeLiteral) {
-      return (
-        <div key={name} role='none' className={mx(padding)}>
-          <InputHeader>{label}</InputHeader>
-          <div role='none' className='flex flex-col gap-1'>
-            {arrayValues.map((value, index) => (
-              <div key={index} role='none' className='flex items-center gap-1'>
-                <div role='none' className='flex-1'>
-                  <FormContent
-                    schema={S.make(typeLiteral)}
-                    path={[...key, index.toString()]}
-                    readonly={readonly}
-                    Custom={Custom}
-                  />
-                </div>
-                <IconButton
-                  icon='ph--trash--regular'
-                  iconOnly
-                  label={t('button remove')}
-                  onClick={() => handleRemove(index)}
-                />
-              </div>
-            ))}
-          </div>
-          <div role='none' className='flex justify-between items-center plb-1'>
-            <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={handleAdd} />
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div key={name} role='none'>
-        Nested form not supported in arrays, yet.
-      </div>
-    );
-  }
+  const handleRemove = (index: number) => {
+    const newValues = values.filter((_, i) => i !== index);
+    inputProps.onValueChange(type, newValues);
+  };
 
-  const InputComponent = getInputComponent(type, format);
-  if (!InputComponent) {
-    return null;
+  if (!elementType) {
+    return <div>Missing element type</div>;
   }
 
   return (
-    <div role='none' key='meta-input' className={mx(padding)}>
+    <div role='none' className={mx(padding)}>
       <InputHeader>{label}</InputHeader>
       <div role='none' className='flex flex-col gap-1'>
-        {arrayValues.map((_, index) => (
-          <div key={index} role='none' className='flex items-start gap-1'>
+        {values.map((value, index) => (
+          <div key={index} role='none' className='flex items-center gap-1'>
             <div role='none' className='flex-1'>
-              <InputComponent
-                type={type}
-                format={format}
-                label={label}
-                inputOnly
-                disabled={readonly}
-                placeholder={placeholder}
-                {...inputProps}
+              <FormField
+                property={{
+                  ...property,
+                  array: false, // NOTE(ZaymonFC) This breaks arrays of arrays but ¯\_(ツ)_/¯. Ping me if you need that.
+                  ast: elementType,
+                }}
+                path={[...(path ?? []), index.toString()]}
+                readonly={readonly}
+                inline
+                Custom={Custom}
+                lookupComponent={lookupComponent}
               />
             </div>
             <IconButton

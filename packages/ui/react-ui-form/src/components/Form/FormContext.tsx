@@ -21,6 +21,7 @@ export const useFormContext = <T extends BaseObject>() => {
   return context as FormContextValue<T>;
 };
 
+// TODO(ZaymonFC): Rename FormDataProps? InputStateProps?
 export type FormInputProps = {
   getStatus: () => { status?: 'error'; error?: string };
   getValue: <V>() => V | undefined;
