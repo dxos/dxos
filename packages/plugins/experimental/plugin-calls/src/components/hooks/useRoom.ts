@@ -5,14 +5,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type UserState, type RoomState } from '@dxos/protocols/proto/dxos/edge/calls';
-import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type buf } from '@dxos/protocols/buf';
+import { type UserState, type RoomStateSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
+import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type PublicKey, useClient } from '@dxos/react-client';
 
-import { codec } from '../types';
+import { codec } from '../../types';
 
 export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: string }) => {
-  const [roomState, setRoomState] = useState<RoomState>({ users: [], meetingId: roomId.toHex() });
+  const [roomState, setRoomState] = useState<buf.MessageInitShape<typeof RoomStateSchema>>({
+    users: [],
+    meetingId: roomId.toHex(),
+  });
 
   const userLeftFunctionRef = useRef(() => {});
 
@@ -22,6 +26,7 @@ export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: str
 
   const client = useClient();
   const peerInfo: Peer = {
+    $typeName: 'dxos.edge.messenger.Peer',
     identityKey: client.halo.identity.get()!.identityKey.toHex(),
     peerKey: client.halo.device!.deviceKey.toHex(),
     state: codec.encode({
