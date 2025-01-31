@@ -15,13 +15,13 @@ export const LLMModel = S.Literal(
   '@ollama/llama-3-2-3b',
   '@ollama/llama-3-1-nemotron-70b-instruct',
   '@ollama/llama-3-1-nemotron-mini-4b-instruct',
+  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
 );
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
 export const ToolTypes = Object.freeze({
   // TODO(dmaretskyi): Not implemented yet.
   // DatabaseQuery: 'database_query',
-
   TextToImage: 'text_to_image',
 });
 

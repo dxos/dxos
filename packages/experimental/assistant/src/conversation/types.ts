@@ -18,6 +18,9 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   content: [{ type: 'text', text }],
 });
 
+/**
+ * @deprecated Use {@link LLMTool} instead.
+ */
 export const LLMToolDefinition = S.Struct({
   name: S.String,
   description: S.String,
@@ -25,6 +28,9 @@ export const LLMToolDefinition = S.Struct({
   execute: S.Any,
 });
 
+/**
+ * @deprecated Use {@link LLMTool} instead.
+ */
 export type LLMToolDefinition = {
   name: string;
   description: string;
@@ -75,6 +81,7 @@ export const LLMToolResult = Object.freeze({
   }),
 
   Error: (message: string): LLMToolResult => ({ kind: 'error', message }),
+
   /**
    * Stop the conversation and return the result.
    */
@@ -105,6 +112,9 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
   };
 };
 
+/**
+ * Adapts schems to be able to pass to AI providers.
+ */
 const toFunctionParameterSchema = (schema: S.Schema.All) => {
   const jsonSchema = toJsonSchema(schema);
   log('tool schema', { jsonSchema });

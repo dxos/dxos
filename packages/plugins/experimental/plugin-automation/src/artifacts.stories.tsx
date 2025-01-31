@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AIServiceClientImpl, type Message } from '@dxos/assistant';
+import { AIServiceClientImpl, type LLMTool, type Message } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -29,7 +29,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './components';
-import { ChatProcessor, type Tool } from './hooks';
+import { ChatProcessor } from './hooks';
 
 const endpoints = localServiceEndpoints;
 
@@ -39,7 +39,7 @@ type RenderProps = {
 
 const Render = ({ items: _items }: RenderProps) => {
   // Configuration.
-  const tools = useMemo<Tool[]>(
+  const tools = useMemo<LLMTool[]>(
     () => [
       //
       ...genericTools,
@@ -72,7 +72,17 @@ const Render = ({ items: _items }: RenderProps) => {
   );
 
   // TODO(burdon): Create hook.
-  const [processor] = useState(() => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }));
+  const [processor] = useState(
+    () =>
+      new ChatProcessor(
+        aiClient,
+        tools,
+        {
+          artifacts: artifactsContext,
+        },
+        // { model: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b' },
+      ),
+  );
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();

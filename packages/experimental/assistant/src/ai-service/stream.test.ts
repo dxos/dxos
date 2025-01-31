@@ -109,9 +109,12 @@ describe('GenerationStream', () => {
       `,
 
       // Artifact
+      // <?xml version="1.0" encoding="UTF-8"?>
       `
-      <?xml version="1.0" encoding="UTF-8"?>
       <artifact id="123" />
+      <choice id="123">
+        <artifact id="123" />
+      </choice>
       `,
 
       // JSON
