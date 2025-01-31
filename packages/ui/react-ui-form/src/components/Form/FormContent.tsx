@@ -7,7 +7,7 @@ import { capitalize } from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
-import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -15,13 +15,13 @@ import { isNotFalsy } from '@dxos/util';
 import { ArrayField } from './ArrayField';
 import { SelectInput } from './Defaults';
 import { type ComponentLookup } from './Form';
-import { useScopedForm } from './FormContext';
+import { useInputProps, useFormValues } from './FormContext';
 import { type InputComponent } from './Input';
 import { getInputComponent } from './factory';
 
 export type FormContentProps = {
   schema: S.Schema.All;
-  path?: string[];
+  path?: (string | number)[];
   filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
   sort?: string[];
   readonly?: boolean;
@@ -31,7 +31,7 @@ export type FormContentProps = {
 
 type FormFieldProps = {
   property: SchemaProperty<any>;
-  path?: string[];
+  path?: (string | number)[];
   readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
@@ -39,29 +39,20 @@ type FormFieldProps = {
   Custom?: Partial<Record<string, InputComponent>>;
 };
 
-export const FormField = ({ property, path = [], readonly, inline, lookupComponent, Custom }: FormFieldProps) => {
-  const { getInputProps } = useScopedForm(path);
+export const FormField = ({ property, path, readonly, inline, lookupComponent, Custom }: FormFieldProps) => {
+  const inputProps = useInputProps(path);
   const { ast, name, type, format, title, description, options, examples, array } = property;
 
-  // TODO(ZaymonFC): Build JSONPath.
-  const currentPath = [...path, name];
-
-  const scopedPath = currentPath.join('.');
-  const label = title ?? pipe(name, capitalize);
-  const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
-  const inputProps = getInputProps(name);
+  // TODO(ZaymonFC): We shouldn't worry about JSON Path in the components. Just build and pass the array.
+  const scopedPath = useMemo(() => createJsonPath(path ?? []), [path]);
+  const label = useMemo(() => title ?? pipe(name, capitalize), [title, name]);
+  const placeholder = useMemo(
+    () => (examples?.length ? `Example: "${examples[0]}"` : description),
+    [examples, description],
+  );
 
   if (array) {
-    return (
-      <ArrayField
-        property={property}
-        path={currentPath}
-        values={inputProps.getValue() as any}
-        inputProps={inputProps}
-        readonly={readonly}
-        Custom={Custom}
-      />
-    );
+    return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
   }
 
   const FoundComponent = lookupComponent?.({
@@ -81,6 +72,7 @@ export const FormField = ({ property, path = [], readonly, inline, lookupCompone
     return <div>{FoundComponent}</div>;
   }
 
+  // TODO(ZaymonFC): Eval scoped path and Custom in general.
   const InputComponent = Custom?.[scopedPath] || getInputComponent(type, format);
   if (InputComponent) {
     return (
@@ -125,7 +117,7 @@ export const FormField = ({ property, path = [], readonly, inline, lookupCompone
       return (
         <div>
           {!inline && <div>{label}</div>}
-          <FormContent schema={S.make(typeLiteral)} path={currentPath} readonly={readonly} Custom={Custom} />
+          <FormFields schema={S.make(typeLiteral)} path={path} readonly={readonly} Custom={Custom} />
         </div>
       );
     }
@@ -134,8 +126,8 @@ export const FormField = ({ property, path = [], readonly, inline, lookupCompone
   return null;
 };
 
-export const FormContent = ({ schema, path, filter, sort, readonly, lookupComponent, Custom }: FormContentProps) => {
-  const { values } = useScopedForm(path);
+export const FormFields = ({ schema, path, filter, sort, readonly, lookupComponent, Custom }: FormContentProps) => {
+  const values = useFormValues(path);
 
   const properties = useMemo(() => {
     const props = getSchemaProperties(schema.ast, values);
@@ -147,17 +139,18 @@ export const FormContent = ({ schema, path, filter, sort, readonly, lookupCompon
   return (
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2')}>
       {properties
-        .map((property) => (
-          <FormField
-            key={property.name}
-            property={property}
-            // TODO(ZaymonFC): Build JSONPath.
-            path={path}
-            readonly={readonly}
-            lookupComponent={lookupComponent}
-            Custom={Custom}
-          />
-        ))
+        .map((property) => {
+          return (
+            <FormField
+              key={property.name}
+              property={property}
+              path={[...(path ?? []), property.name]}
+              readonly={readonly}
+              lookupComponent={lookupComponent}
+              Custom={Custom}
+            />
+          );
+        })
         .filter(isNotFalsy)}
     </div>
   );

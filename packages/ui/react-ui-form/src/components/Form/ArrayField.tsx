@@ -8,13 +8,14 @@ import React from 'react';
 
 import { AST } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 
 import { type ComponentLookup } from './Form';
 import { FormField } from './FormContent';
-import { type FormInputProps } from './FormContext';
+import { useFormValues, type FormInputProps } from './FormContext';
 import { InputHeader, type InputComponent } from './Input';
 import { translationKey } from '../../translations';
 
@@ -22,32 +23,24 @@ const padding = 'px-2';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
-  values: any[];
   readonly?: boolean;
   inputProps: FormInputProps;
-  path?: string[];
+  path?: (string | number)[];
   Custom?: Partial<Record<string, InputComponent>>;
   lookupComponent?: ComponentLookup;
 };
 
-export const ArrayField = ({
-  property,
-  values,
-  readonly,
-  path,
-  inputProps,
-  Custom,
-  lookupComponent,
-}: ArrayFieldProps) => {
+export const ArrayField = ({ property, readonly, path, inputProps, Custom, lookupComponent }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
-
-  // TODO(ZaymonFC): Restore the hierarchy of the path.
-  //   Also. JSONPath.
+  const values = useFormValues(path ?? []) as any[];
+  invariant(Array.isArray(values), 'Expected array values');
   const label = title ?? pipe(name, capitalize);
 
   const tupleType = findNode(ast, AST.isTupleType);
   const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
+
+  // Consider getting values here istead of it being passed in.
 
   const getDefaultObjectValue = (typeNode: AST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
@@ -79,16 +72,16 @@ export const ArrayField = ({
     <div role='none' className={mx(padding)}>
       <InputHeader>{label}</InputHeader>
       <div role='none' className='flex flex-col gap-1'>
-        {values.map((value, index) => (
+        {values.map((_value, index) => (
           <div key={index} role='none' className='flex items-center gap-1'>
             <div role='none' className='flex-1'>
               <FormField
                 property={{
                   ...property,
-                  array: false, // NOTE(ZaymonFC) This breaks arrays of arrays but ¯\_(ツ)_/¯. Ping me if you need that.
+                  array: false, // NOTE(ZaymonFC): This breaks arrays of arrays but ¯\_(ツ)_/¯. Ping me if you need that.
                   ast: elementType,
                 }}
-                path={[...(path ?? []), index.toString()]}
+                path={[...(path ?? []), index]}
                 readonly={readonly}
                 inline
                 Custom={Custom}

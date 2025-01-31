@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type SchemaProperty } from '@dxos/schema';
 
 import { FormActions } from './FormActions';
-import { FormContent } from './FormContent';
+import { FormFields } from './FormContent';
 import { FormProvider } from './FormContext';
 import { type InputProps, type InputComponent } from './Input';
 import { type FormOptions } from '../../hooks';
@@ -78,7 +78,7 @@ export const Form = <T extends BaseObject>({
       onSave={onSave}
     >
       <div role='none' className={mx('p-2', classNames)} data-testid={testId}>
-        <FormContent
+        <FormFields
           schema={schema}
           path={path}
           readonly={readonly}

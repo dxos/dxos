@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext } from 'react';
 
-import { type JsonPath, type BaseObject, getValue } from '@dxos/echo-schema';
+import { type BaseObject, getValue } from '@dxos/echo-schema';
 import { createJsonPath, type SimpleType } from '@dxos/effect';
+
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 
 type FormContextValue<T extends BaseObject> = FormHandler<T>;
@@ -27,28 +28,22 @@ export type FormInputProps = {
   onValueChange: (type: SimpleType, value: any) => void;
 } & Pick<FormHandler<any>, 'onBlur'>;
 
-export const useFormValues = (path: (string | number)[] = []) => {
-  const { values: formValues, getValue: getFormValue } = useFormContext();
+export const useFormValues = (path: (string | number)[] = []): any => {
+  const { values: formValues } = useFormContext();
   const jsonPath = createJsonPath(path);
   return getValue(formValues, jsonPath) as BaseObject;
 };
 
-export const useInputProps = (path: (string | number)[] = []) => {
+export const useInputProps = (path: (string | number)[] = []): FormInputProps => {
   const { getStatus, getValue: getFormValue, onValueChange, onBlur } = useFormContext();
+  const fullPath = createJsonPath(path);
 
-  return useCallback(
-    (property: string | number): FormInputProps => {
-      const pathArray = [...path, property];
-      const fullPath = createJsonPath(pathArray);
-      return {
-        getStatus: () => getStatus(fullPath),
-        getValue: () => getFormValue(fullPath),
-        onValueChange: (type: SimpleType, value: any) => onValueChange(fullPath, type, value),
-        onBlur,
-      };
-    },
-    [path, getStatus, getFormValue, onValueChange, onBlur],
-  );
+  return {
+    getStatus: () => getStatus(fullPath),
+    getValue: () => getFormValue(fullPath),
+    onValueChange: (type: SimpleType, value: any) => onValueChange(fullPath, type, value),
+    onBlur,
+  };
 };
 
 export const FormProvider = ({ children, ...formOptions }: FormOptions<any> & { children: React.ReactNode }) => {
