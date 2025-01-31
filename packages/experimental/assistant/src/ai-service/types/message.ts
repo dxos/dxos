@@ -32,14 +32,15 @@ export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || r
 export type MessageRole = S.Schema.Type<typeof MessageRole>;
 
 /**
- * Chain of thought.
+ * Tagged block.
  */
-export const COTContentBlock = S.Struct({
-  type: S.Literal('cot'),
-  text: S.String, // TODO(burdon): Array?
+export const TagContentBlock = S.Struct({
+  type: S.Literal('tag'),
+  tag: S.String,
+  text: S.String,
 }).pipe(S.mutable);
 
-export type COTContentBlock = S.Schema.Type<typeof COTContentBlock>;
+export type TagContentBlock = S.Schema.Type<typeof TagContentBlock>;
 
 /**
  * Text.
@@ -107,7 +108,7 @@ export const ToolResultContentBlock = S.Struct({
  * Content union.
  */
 export const MessageContentBlock = S.Union(
-  COTContentBlock,
+  TagContentBlock,
   TextContentBlock,
   ImageContentBlock,
   ToolUseContentBlock,

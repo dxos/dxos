@@ -4904,12 +4904,12 @@ importers:
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.7)
-      htmlparser2:
-        specifier: ^10.0.0
-        version: 10.0.0
       parjs:
         specifier: ^1.3.9
         version: 1.3.9
+      saxes:
+        specifier: ^6.0.0
+        version: 6.0.0
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -21157,8 +21157,8 @@ packages:
   '@types/sass@1.43.1':
     resolution: {integrity: sha512-BPdoIt1lfJ6B7rw35ncdwBZrAssjcwzI5LByIrYs+tpXlj/CAkuVdRsgZDdP4lq5EjyWzwxZCqAoFyHKFwp32g==}
 
-  '@types/sax@1.2.4':
-    resolution: {integrity: sha512-pSAff4IAxJjfAXUG6tFkO7dsSbTmf8CtUpfhhZ5VhkRpC4628tJhh3+V6H1E+/Gs9piSzYKT5yzHO5M4GG9jkw==}
+  '@types/sax@1.2.7':
+    resolution: {integrity: sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A==}
 
   '@types/seedrandom@2.4.30':
     resolution: {integrity: sha512-AnxLHewubLVzoF/A4qdxBGHCKifw8cY32iro3DQX9TPcetE95zBeVt3jnsvtvAUf1vwzMfwzp4t/L2yqPlnjkQ==}
@@ -24341,9 +24341,6 @@ packages:
   domutils@3.0.1:
     resolution: {integrity: sha512-z08c1l761iKhDFtfXO04C7kTdPBLi41zwOZl00WS8b5eiaebNpY00HKbztwBq+e3vyqWNwWF3mP9YLUeqIrF+Q==}
 
-  domutils@3.2.2:
-    resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
@@ -24497,10 +24494,6 @@ packages:
 
   entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
-    engines: {node: '>=0.12'}
-
-  entities@6.0.0:
-    resolution: {integrity: sha512-aKstq2TDOndCn4diEyp9Uq/Flu2i1GlLkc6XIDQSDMuaFE3OPW5OphLCyQ5SpSJZTb4reN+kTcYru5yIfXoRPw==}
     engines: {node: '>=0.12'}
 
   env-paths@3.0.0:
@@ -26103,9 +26096,6 @@ packages:
 
   html-void-elements@2.0.1:
     resolution: {integrity: sha512-0quDb7s97CfemeJAnW9wC0hw78MtW7NU3hqtCD75g2vFlDLt36llsYD7uB7SUzojLMP24N5IatXf7ylGXiGG9A==}
-
-  htmlparser2@10.0.0:
-    resolution: {integrity: sha512-TwAZM+zE5Tq3lrEHvOlvwgj1XLWQCtaaibSN11Q+gGBAS7Y1uZSWwXXRe4iF6OXnaq1riyQAPFOBtYc77Mxq0g==}
 
   htmlparser2@3.10.1:
     resolution: {integrity: sha512-IgieNijUMbkDovyoKObU1DUhm1iwNYE/fuifEoEHfd1oZKZDaONBSkal7Y01shxsM49R4XaMdGez3WnF9UfiCQ==}
@@ -31075,6 +31065,9 @@ packages:
 
   sax@1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
+
+  sax@1.4.1:
+    resolution: {integrity: sha512-+aWOz7yVScEGoKNd4PA10LZ8sk0A/z5+nXQG5giUO5rprX9jgYsTdov9qCchZiPIZezbZH+jRut8nPodFAX4Jg==}
 
   saxes@5.0.1:
     resolution: {integrity: sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==}
@@ -45417,7 +45410,7 @@ snapshots:
     dependencies:
       '@types/node': 22.10.2
 
-  '@types/sax@1.2.4':
+  '@types/sax@1.2.7':
     dependencies:
       '@types/node': 22.10.2
 
@@ -49365,12 +49358,6 @@ snapshots:
       domelementtype: 2.3.0
       domhandler: 5.0.3
 
-  domutils@3.2.2:
-    dependencies:
-      dom-serializer: 2.0.0
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
-
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
@@ -49515,8 +49502,6 @@ snapshots:
   entities@3.0.1: {}
 
   entities@4.5.0: {}
-
-  entities@6.0.0: {}
 
   env-paths@3.0.0: {}
 
@@ -51685,13 +51670,6 @@ snapshots:
       selderee: 0.11.0
 
   html-void-elements@2.0.1: {}
-
-  htmlparser2@10.0.0:
-    dependencies:
-      domelementtype: 2.3.0
-      domhandler: 5.0.3
-      domutils: 3.2.2
-      entities: 6.0.0
 
   htmlparser2@3.10.1:
     dependencies:
@@ -54859,7 +54837,7 @@ snapshots:
   needle@3.3.1:
     dependencies:
       iconv-lite: 0.6.3
-      sax: 1.2.4
+      sax: 1.4.1
     optional: true
 
   negotiator@0.6.3: {}
@@ -57694,6 +57672,8 @@ snapshots:
 
   sax@1.2.4: {}
 
+  sax@1.4.1: {}
+
   saxes@5.0.1:
     dependencies:
       xmlchars: 2.2.0
@@ -58090,9 +58070,9 @@ snapshots:
   sitemap@7.1.1:
     dependencies:
       '@types/node': 22.10.2
-      '@types/sax': 1.2.4
+      '@types/sax': 1.2.7
       arg: 5.0.2
-      sax: 1.2.4
+      sax: 1.4.1
 
   slash@3.0.0: {}
 
@@ -61257,7 +61237,7 @@ snapshots:
 
   xml-js@1.6.11:
     dependencies:
-      sax: 1.2.4
+      sax: 1.4.1
 
   xml-name-validator@3.0.0: {}
 
@@ -61265,7 +61245,7 @@ snapshots:
 
   xml2js@0.4.19:
     dependencies:
-      sax: 1.2.4
+      sax: 1.4.1
       xmlbuilder: 9.0.7
 
   xmlbuilder@9.0.7: {}
