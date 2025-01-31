@@ -36,7 +36,7 @@ type TestType = S.Schema.Type<typeof TestSchema>;
 
 type StoryProps<T extends BaseObject> = { schema: S.Schema<T> } & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject>({ schema, values: initialValues }: StoryProps<T>) => {
+const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
@@ -45,7 +45,7 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues }: S
   return (
     <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
       <TestPanel>
-        <Form<T> schema={schema} values={values} onSave={handleSave} />
+        <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
       </TestPanel>
     </TestLayout>
   );
@@ -78,7 +78,6 @@ export const Default: Story<TestType> = {
   },
 };
 
-// TODO(burdon): Should accept partial values.
 export const Org: Story<Testing.OrgSchemaType> = {
   args: {
     schema: Testing.OrgSchema,
@@ -86,6 +85,17 @@ export const Org: Story<Testing.OrgSchemaType> = {
       name: 'DXOS',
       // website: 'https://dxos.org',
     },
+  },
+};
+
+export const OrgAutoSave: Story<Testing.OrgSchemaType> = {
+  args: {
+    schema: Testing.OrgSchema,
+    values: {
+      name: 'DXOS',
+      // website: 'https://dxos.org',
+    },
+    autoSave: true,
   },
 };
 
