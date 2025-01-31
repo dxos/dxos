@@ -30,9 +30,9 @@ export type FormHandler<T extends BaseObject> = {
   // Form input component helpers.
   //
 
-  getStatus: (property: JsonPath) => { status?: 'error'; error?: string };
-  getValue: <V>(property: JsonPath) => V | undefined;
-  onValueChange: <V>(property: JsonPath, type: SimpleType, value: V) => void;
+  getStatus: (path: (string | number)[]) => { status?: 'error'; error?: string };
+  getValue: <V>(path: (string | number)[]) => V | undefined;
+  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
@@ -156,18 +156,26 @@ export const useForm = <T extends BaseObject>({
   //
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
-    (property: JsonPath) => ({
-      status: errors[property] ? 'error' : undefined,
-      error: errors[property] ? errors[property] : undefined,
-    }),
-    [touched, errors],
+    (path: (string | number)[]) => {
+      const jsonPath = createJsonPath(path);
+      const matchingError = Object.entries(errors).find(([errorPath]) => 
+        errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`)
+      );
+
+      return {
+        status: matchingError ? 'error' : undefined,
+        error: matchingError ? matchingError[1] : undefined,
+      };
+    },
+    [errors]
   );
 
-  const getFormValue = <V>(property: JsonPath): V | undefined => {
-    return getValue(values, property);
+  const getFormValue = <V>(path: (string | number)[]): V | undefined => {
+    return getValue(values, createJsonPath(path));
   };
 
-  const onValueChange = (property: JsonPath, type: SimpleType, value: any) => {
+  const onValueChange = (path: (string | number)[], type: SimpleType, value: any) => {
+    const jsonPath = createJsonPath(path);
     let parsedValue = value;
     try {
       if (type === 'number') {
@@ -178,9 +186,9 @@ export const useForm = <T extends BaseObject>({
       parsedValue = undefined;
     }
 
-    const newValues = { ...setValue(values, property as any as JsonPath, parsedValue) };
+    const newValues = { ...setValue(values, jsonPath, parsedValue) };
     setValues(newValues);
-    setChanged((prev) => ({ ...prev, [property]: true }));
+    setChanged((prev) => ({ ...prev, [jsonPath]: true }));
     onValuesChanged?.(newValues);
 
     const isValid = validate(newValues);
