@@ -36,12 +36,11 @@ export const useFormValues = (path: (string | number)[] = []): any => {
 
 export const useInputProps = (path: (string | number)[] = []): FormInputProps => {
   const { getStatus, getValue: getFormValue, onValueChange, onBlur } = useFormContext();
-  const fullPath = createJsonPath(path);
 
   return {
-    getStatus: () => getStatus(fullPath),
-    getValue: () => getFormValue(fullPath),
-    onValueChange: (type: SimpleType, value: any) => onValueChange(fullPath, type, value),
+    getStatus: () => getStatus(path),
+    getValue: () => getFormValue(path),
+    onValueChange: (type: SimpleType, value: any) => onValueChange(path, type, value),
     onBlur,
   };
 };
