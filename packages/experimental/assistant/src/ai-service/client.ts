@@ -4,11 +4,12 @@
 
 import { Schema as S } from '@effect/schema';
 
+import { Message, type Space, type Thread } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
+import { type GenerateRequest } from './defs';
 import { GenerationStream } from './stream';
-import { Message, type GenerateRequest, type Space, type Thread } from './types';
 
 export interface AIServiceClient {
   getSpace(spaceId: SpaceId): Promise<Space>;

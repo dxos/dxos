@@ -4,7 +4,7 @@
 
 import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
 
-import { type ImageContentBlock } from '@dxos/assistant';
+import { type ImageContentBlock } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
 import {
   isNotExecuted,

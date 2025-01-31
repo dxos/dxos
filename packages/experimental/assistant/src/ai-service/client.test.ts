@@ -5,13 +5,14 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
+import { type LLMTool } from '@dxos/artifact';
 import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
-import { ToolTypes, type LLMTool } from './types';
+import { ToolTypes } from './defs';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });

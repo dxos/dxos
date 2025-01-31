@@ -3,7 +3,6 @@
 //
 
 export * from './artifact';
-export * from './defs';
 export * from './message';
 export * from './schema';
 export * from './util';

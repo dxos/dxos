@@ -7,7 +7,8 @@ import { Chess } from 'chess.js';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { type Artifact, createArtifactElement, defineArtifact, defineTool, LLMToolResult } from '@dxos/assistant'; // TODO(burdon): Move.
+import { type Artifact, defineArtifact, defineTool, LLMToolResult } from '@dxos/artifact';
+import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import {
   createStatic,

@@ -4,10 +4,8 @@
 
 import { Schema as S } from '@effect/schema';
 
+import { LLMTool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
-
-import { Message, type MessageContentBlock, SpaceIdSchema } from './message';
-import { LLMTool } from './schema';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 

@@ -6,7 +6,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type AIServiceClient, AIServiceClientImpl, type Message } from '@dxos/assistant';
+import { type Message } from '@dxos/artifact';
+import { type AIServiceClient, AIServiceClientImpl } from '@dxos/assistant';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';

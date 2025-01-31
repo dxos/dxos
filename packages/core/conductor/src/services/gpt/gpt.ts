@@ -4,7 +4,8 @@
 
 import { Context } from 'effect';
 
-import { ImageSource, type AIServiceClient } from '@dxos/assistant';
+import { ImageSource } from '@dxos/artifact';
+import { type AIServiceClient } from '@dxos/assistant';
 import { ECHO_ATTR_TYPE, S } from '@dxos/echo-schema';
 
 import { type GptInput, type GptOutput } from '../../nodes';

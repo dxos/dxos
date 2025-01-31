@@ -85,6 +85,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/artifact"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {

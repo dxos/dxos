@@ -4,10 +4,10 @@
 
 import { Schema as S } from '@effect/schema';
 
+import { defineTool, LLMToolResult } from '@dxos/artifact';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { defineTool, LLMToolResult } from '../ai-service';
 import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
 import { trim } from '../util';
 

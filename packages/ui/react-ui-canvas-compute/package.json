@@ -34,6 +34,7 @@
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/conductor": "workspace:*",

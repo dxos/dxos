@@ -1,12 +1,11 @@
 {
-  "name": "@dxos/conductor",
+  "name": "@dxos/artifact",
   "version": "0.7.4",
-  "description": "Compute graph implementation",
+  "description": "Artifacts and related utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
-  "author": "info@dxos.org",
-  "sideEffects": true,
+  "author": "DXOS.org",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -32,29 +31,18 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/artifact": "workspace:*",
-    "@dxos/assistant": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
-    "@dxos/graph": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
-    "effect": "^3.12.3",
-    "jsonpath-plus": "10.2.0",
-    "ollama": "^0.5.11"
+    "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
-    "@effect/vitest": "^0.16.1"
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.12.3"
+  },
+  "peerDependencies": {
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.12.3"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "beast": {}
+  }
 }

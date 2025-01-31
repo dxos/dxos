@@ -4,6 +4,7 @@
 
 import { test } from 'vitest';
 
+import { createUserMessage } from '@dxos/artifact';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
@@ -14,7 +15,7 @@ import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
-import { createUserMessage, AIServiceClientImpl } from '../ai-service';
+import { AIServiceClientImpl } from '../ai-service';
 import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
 

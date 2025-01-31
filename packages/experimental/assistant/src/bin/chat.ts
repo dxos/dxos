@@ -5,10 +5,11 @@
 import { writeFileSync } from 'fs';
 import inquirer from 'inquirer';
 
+import { createUserMessage } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
-import { createUserMessage, AIServiceClientImpl, ToolTypes } from '../ai-service';
+import { AIServiceClientImpl, ToolTypes } from '../ai-service';
 import { runLLM } from '../conversation';
 import {
   AI_SERVICE_ENDPOINT,

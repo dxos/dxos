@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { type Message } from '@dxos/assistant';
+import { type Message } from '@dxos/artifact';
 import { IconButton, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 // TODO(wittjosiah): This should defer to plugin-thread instead of depending on canvas editor.
 import { TextBox, type TextBoxControl } from '@dxos/react-ui-canvas-editor';

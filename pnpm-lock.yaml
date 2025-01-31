@@ -2433,6 +2433,9 @@ importers:
 
   packages/core/conductor:
     dependencies:
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../sdk/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../experimental/assistant
@@ -4871,6 +4874,9 @@ importers:
 
   packages/experimental/assistant:
     dependencies:
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../sdk/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5648,6 +5654,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../../sdk/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../../experimental/assistant
@@ -9530,6 +9539,22 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
+  packages/sdk/artifact:
+    dependencies:
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+    devDependencies:
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.12.7)
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
+
   packages/sdk/client:
     dependencies:
       '@dxos/async':
@@ -10860,6 +10885,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../sdk/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../experimental/assistant

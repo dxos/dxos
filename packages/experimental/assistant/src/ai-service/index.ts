@@ -3,5 +3,5 @@
 //
 
 export * from './client';
+export * from './defs';
 export * from './stream';
-export * from './types';

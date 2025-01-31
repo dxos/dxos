@@ -12,15 +12,19 @@ import { SpaceId } from '@dxos/keys';
 
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
 
+/** @deprecated */
 export const Space = S.Struct({
   id: SpaceIdSchema,
 });
+/** @deprecated */
 export interface Space extends S.Schema.Type<typeof Space> {}
 
+/** @deprecated */
 export const Thread = S.Struct({
   id: ObjectId,
   spaceId: SpaceIdSchema,
 });
+/** @deprecated */
 export interface Thread extends S.Schema.Type<typeof Thread> {}
 
 export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
@@ -118,6 +122,9 @@ const MessageSchema = S.Struct({
   content: S.Array(MessageContentBlock).pipe(S.mutable),
 });
 
+/**
+ * @deprecated
+ */
 // TODO(burdon): Reconcile with Chat/Message types.
 export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
 

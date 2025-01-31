@@ -9,7 +9,8 @@ import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AIServiceClientImpl, type LLMTool, type Message } from '@dxos/assistant';
+import { type LLMTool, type Message } from '@dxos/artifact';
+import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';

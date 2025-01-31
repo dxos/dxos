@@ -2,19 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type LLMTool, LLMToolResult, Message } from '@dxos/artifact';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import {
-  LLMToolResult,
-  type LLMTool,
-  Message,
-  type AIServiceClient,
-  type ResultStreamEvent,
-  type LLMModel,
-} from '../ai-service';
+import { type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;

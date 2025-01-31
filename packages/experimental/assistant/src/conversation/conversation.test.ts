@@ -5,12 +5,13 @@
 import { Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
+import { createUserMessage, defineTool, LLMToolResult } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { createUserMessage, defineTool, LLMToolResult, AIServiceClientImpl } from '../ai-service';
+import { AIServiceClientImpl } from '../ai-service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 describe.skip('Conversation tests', () => {

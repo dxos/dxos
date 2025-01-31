@@ -4,7 +4,8 @@
 
 import { AST } from '@effect/schema';
 
-import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
+import { LLMTool, Message } from '@dxos/artifact';
+import { type ResultStreamEvent } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';

@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Message } from '@dxos/artifact';
 import { Trigger } from '@dxos/async';
 import { type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type Message, type ResultStreamEvent } from './types';
+import { type ResultStreamEvent } from './defs';
 import { iterSSEMessages } from './util';
 
 export type GenerationParams = {

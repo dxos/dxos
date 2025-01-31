@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { JsonSchemaType } from '@dxos/echo-schema';
+import { JsonSchemaType, S } from '@dxos/echo-schema';
 
 import { type MessageContentBlock } from './message';
 

@@ -4,11 +4,10 @@
 
 import { Schema as S } from '@effect/schema';
 
+import { type Message, type MessageContentBlock } from '@dxos/artifact';
 import { toJsonSchema, JsonSchemaType, ObjectId } from '@dxos/echo-schema';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-
-import { type Message, type MessageContentBlock } from '../ai-service';
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),

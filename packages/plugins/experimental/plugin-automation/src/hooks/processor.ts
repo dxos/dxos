@@ -4,13 +4,11 @@
 
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
+import { type DefineToolParams, type LLMTool, Message } from '@dxos/artifact';
 import {
   type AIServiceClientImpl,
-  type DefineToolParams,
   type GenerateRequest,
   type GenerationStream,
-  type LLMTool,
-  Message,
   isToolUse,
   runTools,
 } from '@dxos/assistant';

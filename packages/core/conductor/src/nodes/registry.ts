@@ -5,7 +5,8 @@
 import { Effect } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
+import { type LLMTool, Message } from '@dxos/artifact';
+import { ToolTypes } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { safeParseJson } from '@dxos/util';

@@ -43,6 +43,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/artifact"
     }
   ]
 }
