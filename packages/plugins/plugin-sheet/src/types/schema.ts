@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Ref, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { S, TypedObject } from '@dxos/echo-schema';
 
 export const CellValue = S.Struct({
   // TODO(burdon): How to store dates (datetime, date, time), percentages, etc.
@@ -50,7 +49,4 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', ve
 
   // Cell formatting referenced by indexed range.
   ranges: S.mutable(S.Array(Range)),
-
-  // Threads associated with the sheet
-  threads: S.optional(S.mutable(S.Array(Ref(ThreadType)))),
 }) {}

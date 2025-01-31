@@ -191,7 +191,7 @@
         "packages/plugins/plugin-thread/src/index.ts"
       ],
       "@dxos/plugin-thread/types": [
-        "packages/plugins/plugin-thread/src/types.ts"
+        "packages/plugins/plugin-thread/src/types/index.ts"
       ],
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"

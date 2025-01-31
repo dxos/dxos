@@ -6199,6 +6199,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
+      '@dxos/schema-common':
+        specifier: workspace:*
+        version: link:../../../sdk/schema-common
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -7607,9 +7610,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
-      '@dxos/schema':
+      '@dxos/schema-common':
         specifier: workspace:*
-        version: link:../../sdk/schema
+        version: link:../../sdk/schema-common
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9041,6 +9044,9 @@ importers:
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
+      '@dxos/schema-common':
+        specifier: workspace:*
+        version: link:../../sdk/schema-common
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10185,6 +10191,12 @@ importers:
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+
+  packages/sdk/schema-common:
+    dependencies:
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
 
   packages/sdk/shell:
     dependencies:

@@ -3,18 +3,16 @@
 //
 
 import { Ref, ObjectId, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = S.Struct({
-  id: ObjectId, // TODO(burdon): Where should this be?
+  id: ObjectId,
   name: S.optional(S.String),
+  // TODO(wittjosiah): Why is this optional?
   view: S.optional(Ref(ViewType)),
-  // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
-  threads: S.optional(S.Array(Ref(ThreadType))),
 });
 
-// type TableType = S.Schema.Type<typeof TableSchema>;
+export type TableProps = S.Schema.Type<typeof TableSchema>;
 
 export class TableType extends TypedObject({
   typename: 'dxos.org/type/Table',
