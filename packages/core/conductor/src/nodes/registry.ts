@@ -42,8 +42,8 @@ import {
   unwrapValueBag,
 } from '../types';
 import { failedInvariant, invariant } from '@dxos/invariant';
-// import { TableType } from '@dxos/react-ui-table/types';
-// import { create } from '@dxos/live-object';
+import { TableType } from '@dxos/react-ui-table/types';
+import { create } from '@dxos/live-object';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -236,33 +236,34 @@ export const registry: Record<NodeType, Executable> = {
             return {};
           }
           case DXN.kind.ECHO: {
-            // const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
-            // const spaceService = yield* SpaceService;
-            // if (spaceId != null) {
-            //   invariant(spaceService.spaceId === spaceId, 'Space mismatch');
-            // }
+            const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
+            const spaceService = yield* SpaceService;
+            if (spaceId != null) {
+              invariant(spaceService.spaceId === spaceId, 'Space mismatch');
+            }
 
-            // const {
-            //   objects: [container],
-            // } = yield* Effect.promise(() => spaceService.db.query({ id: echoId }).run());
-            // if (isInstanceOf(TableType, container)) {
-            //   const schema = yield* Effect.promise(async () =>
-            //     spaceService.db.schemaRegistry
-            //       .query({
-            //         typename: (await container.view?.load())?.query.type,
-            //       })
-            //       .first(),
-            //   );
+            const {
+              objects: [container],
+            } = yield* Effect.promise(() => spaceService.db.query({ id: echoId }).run());
+            if (isInstanceOf(TableType, container)) {
+              const schema = yield* Effect.promise(async () =>
+                spaceService.db.schemaRegistry
+                  .query({
+                    typename: (await container.view?.load())?.query.type,
+                  })
+                  .first(),
+              );
 
-            //   for (const item of items) {
-            //     spaceService.db.add(create(schema, item));
-            //   }
-            //   yield* Effect.promise(() => spaceService.db.flush());
-            // } else {
-            //   throw new Error('Unsupported ECHO container type');
-            // }
+              for (const item of items) {
+                const { id: _id, '@type': _type, ...rest } = item as any;
+                // TODO(dmaretskyi): Forbid type on create.
+                spaceService.db.add(create(schema, rest));
+              }
+              yield* Effect.promise(() => spaceService.db.flush());
+            } else {
+              throw new Error('Unsupported ECHO container type');
+            }
 
-            throw new Error('Not implemented');
             return {};
           }
           default: {
