@@ -19,9 +19,8 @@ import {
   isOption,
   isSimpleType,
   visit,
-  JsonPath,
-  type JsonProp,
 } from './ast';
+import { JsonPath, type JsonProp } from './jsonPath';
 
 const ZipCode = S.String.pipe(
   S.pattern(/^\d{5}$/, {

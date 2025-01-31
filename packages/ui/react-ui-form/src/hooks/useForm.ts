@@ -20,6 +20,7 @@ export type FormHandler<T extends BaseObject> = {
   //
 
   values: Partial<T>;
+  // TODO(ZaymonFC): Switch all PropertyKey<T> to JsonPath.
   errors: Record<PropertyKey<T>, string>;
   touched: Record<PropertyKey<T>, boolean>;
   changed: Record<PropertyKey<T>, boolean>;
@@ -30,6 +31,7 @@ export type FormHandler<T extends BaseObject> = {
   // Form input component helpers.
   //
 
+  // TODO(ZaymonFC): These should all switch to JsonPath.
   getStatus: (property: PropertyKey<T>) => { status?: 'error'; error?: string };
   getValue: <V>(property: PropertyKey<T>) => V | undefined;
   onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;

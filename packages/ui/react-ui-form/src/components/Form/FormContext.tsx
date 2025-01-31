@@ -5,7 +5,7 @@
 import React, { createContext, useContext, useCallback } from 'react';
 
 import { type JsonPath, type BaseObject, getValue } from '@dxos/echo-schema';
-import { type SimpleType } from '@dxos/effect';
+import { createJsonPath, type SimpleType } from '@dxos/effect';
 
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 
@@ -47,9 +47,7 @@ export const useScopedForm = (path: string[] = []) => {
 
   const getPropertyValue = useCallback(
     (property: string) => {
-      // TODO(Zaymon): Check if this is handling arrays index.
-      // Do we have a JsonPath builder somewhere?
-      const fullPath = [...path, property].join('.');
+      const fullPath = createJsonPath([...path, property]);
 
       // TODO(ZaymonFC): Check that this works for nested paths.
       return getFormValue(fullPath as JsonPath);
@@ -59,9 +57,7 @@ export const useScopedForm = (path: string[] = []) => {
 
   const setValue = useCallback(
     (property: string, value: any) => {
-      // TODO(Zaymon): Check if this is handling arrays index.
-      // Do we have a JsonPath builder somewhere?
-      const fullPath = [...path, property].join('.');
+      const fullPath = createJsonPath([...path, property]);
       onValueChange(fullPath as any, 'any' as any, value);
     },
     [onValueChange, path],

@@ -8,6 +8,8 @@ import { Option, pipe } from 'effect';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
+import { type JsonPath, type JsonProp } from './jsonPath';
+
 //
 // Refs
 // https://effect.website/docs/schema/introduction
@@ -75,18 +77,6 @@ export namespace SimpleType {
 //
 // Branded types
 //
-
-export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
-export type JsonPath = string & { __JsonPath: true };
-
-const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\])*$/;
-const PROP_REGEX = /\w+/;
-
-/**
- * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
- */
-export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
-export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 export enum VisitResult {
   CONTINUE = 0,
