@@ -10,8 +10,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { createUserMessage, defineTool, LLMToolResult } from './types';
-import { AIServiceClientImpl } from '../ai-service';
+import { createUserMessage, defineTool, LLMToolResult, AIServiceClientImpl } from '../ai-service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 describe.skip('Conversation tests', () => {

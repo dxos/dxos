@@ -3,4 +3,4 @@
 //
 
 export * from './conversation';
-export * from './types';
+export * from '../ai-service/types/util';

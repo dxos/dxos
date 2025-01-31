@@ -6,10 +6,18 @@ import { Effect } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
+<<<<<<< Updated upstream
 import { ObjectId, S } from '@dxos/echo-schema';
+=======
+import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { failedInvariant, invariant } from '@dxos/invariant';
+>>>>>>> Stashed changes
 import { DXN } from '@dxos/keys';
+import { create } from '@dxos/live-object';
+import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
+import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from './system';
 import {
   AppendInput,
   ConstantOutput,

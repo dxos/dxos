@@ -26,6 +26,10 @@ export const createComputeNode = (shape: ComputeShape): ComputeNode => {
 };
 
 const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => ComputeNode> = {
+  [NODE_INPUT]: () => createNode(NODE_INPUT),
+  [NODE_OUTPUT]: () => createNode(NODE_OUTPUT),
+
+  // Extensions.
   ['text-to-image' as const]: () => createNode('text-to-image'), // TODO(burdon): Rename ai-impage-tool
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),

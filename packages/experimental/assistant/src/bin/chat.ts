@@ -8,9 +8,10 @@ import inquirer from 'inquirer';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
-import { AIServiceClientImpl, ToolTypes } from '../ai-service';
-import { runLLM, createUserMessage } from '../conversation';
+import { createUserMessage, AIServiceClientImpl, ToolTypes } from '../ai-service';
+import { runLLM } from '../conversation';
 import {
+  AI_SERVICE_ENDPOINT,
   createLogger,
   createCypherTool,
   createSystemPrompt,
@@ -19,7 +20,6 @@ import {
   Org,
   Project,
   Task,
-  AI_SERVICE_ENDPOINT,
 } from '../testing';
 
 const client = new AIServiceClientImpl({

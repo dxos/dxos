@@ -7,8 +7,14 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { LLMToolResult } from './types';
-import { type LLMTool, Message, type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
+import {
+  LLMToolResult,
+  type LLMTool,
+  Message,
+  type AIServiceClient,
+  type ResultStreamEvent,
+  type LLMModel,
+} from '../ai-service';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
@@ -78,7 +84,8 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
         throw new Error(`Tool not found: ${toolCall.name}`);
       }
 
-      const toolResult = await tool.execute(toolCall.input, {});
+      invariant(tool.execute);
+      const toolResult = await tool.execute(toolCall.input);
       switch (toolResult.kind) {
         case 'error': {
           log.warn('tool error', { message: toolResult.message });
@@ -144,7 +151,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
 
 export const isToolUse = (message: Message) => message.content.at(-1)?.type === 'tool_use';
 
-type RunToolsOptions = {
+export type RunToolsOptions = {
   message: Message;
   tools: LLMTool[];
   extensions?: LLMToolContextExtensions;
@@ -171,6 +178,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
 
   let toolResult: LLMToolResult;
   try {
+    invariant(tool.execute);
     toolResult = await tool.execute(toolCall.input, { extensions });
   } catch (error: any) {
     log('tool error', { error });

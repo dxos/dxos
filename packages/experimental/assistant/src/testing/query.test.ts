@@ -14,8 +14,8 @@ import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
-import { AIServiceClientImpl } from '../ai-service';
-import { runLLM, createUserMessage } from '../conversation';
+import { createUserMessage, AIServiceClientImpl } from '../ai-service';
+import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
 
 const client = new AIServiceClientImpl({

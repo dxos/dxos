@@ -7,6 +7,10 @@ import { Schema as S } from '@effect/schema';
 import { EchoObject, ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
+<<<<<<< Updated upstream
+=======
+// TODO(dmaretskyi): Extract IDs to protocols.
+>>>>>>> Stashed changes
 // TODO(dmaretskyi): Dedupe package with dxos/edge.
 
 // TODO(dmaretskyi): Extract IDs to protocols.
@@ -26,8 +30,16 @@ export interface Thread extends S.Schema.Type<typeof Thread> {}
 export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
 export type MessageRole = S.Schema.Type<typeof MessageRole>;
 
+<<<<<<< Updated upstream
 export const MessageTextContentBlock = S.Struct({
+=======
+/**
+ * Text.
+ */
+export const TextContentBlock = S.Struct({
+>>>>>>> Stashed changes
   type: S.Literal('text'),
+  disposition: S.optional(S.String), // (e.g., "cot").
   text: S.String,
 }).pipe(S.mutable);
 export type MessageTextContentBlock = S.Schema.Type<typeof MessageTextContentBlock>;
@@ -58,6 +70,11 @@ export const MessageToolUseContentBlock = S.Struct({
    * Tool name.
    */
   name: S.String,
+<<<<<<< Updated upstream
+=======
+
+  // TODO(burdon): Different from S.Any?
+>>>>>>> Stashed changes
   input: S.Unknown,
 
   /**
@@ -73,18 +90,32 @@ export const MessageToolResultContentBlock = S.Struct({
   isError: S.optional(S.Boolean),
 });
 
+<<<<<<< Updated upstream
 export const MessageContentBlock = S.Union(
   MessageTextContentBlock,
   MessageImageContentBlock,
   MessageToolUseContentBlock,
   MessageToolResultContentBlock,
+=======
+/**
+ * Content union.
+ */
+// TODO(burdon): Add JSON, Object, Reference?
+export const MessageContentBlock = S.Union(
+  TextContentBlock,
+  ImageContentBlock,
+  ToolUseContentBlock,
+  ToolResultContentBlock,
+>>>>>>> Stashed changes
 );
 export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
 const MessageSchema = S.Struct({
   id: ObjectId,
-  threadId: S.optional(ObjectId),
+
+  // TODO(burdon): Remove?
   spaceId: S.optional(SpaceIdSchema),
+  threadId: S.optional(ObjectId),
 
   /**
    * ID of the message from the foreign provider.
@@ -107,6 +138,7 @@ export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0
 
 export type Message = S.Schema.Type<typeof Message>;
 
+<<<<<<< Updated upstream
 /**
  * Message transformed from the database row.
  */
@@ -117,3 +149,12 @@ export type Message = S.Schema.Type<typeof Message>;
 //     S.fromKey('contentJson'),
 //   ),
 // });
+=======
+export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
+  id: ObjectId.random(),
+  spaceId,
+  threadId,
+  role: 'user',
+  content: [{ type: 'text', text }],
+});
+>>>>>>> Stashed changes

@@ -7,7 +7,7 @@ import { Chess } from 'chess.js';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { defineTool, LLMToolResult, type LLMTool } from '@dxos/assistant';
+import { type Artifact, createArtifactElement, defineArtifact, defineTool, LLMToolResult } from '@dxos/assistant'; // TODO(burdon): Move.
 import { isImage } from '@dxos/conductor';
 import {
   createStatic,
@@ -23,23 +23,16 @@ import { Chessboard } from '@dxos/plugin-chess';
 import { MapControl } from '@dxos/plugin-map';
 import { JsonFilter } from '@dxos/react-ui-canvas-editor';
 
-export type Artifact = {
-  id: string;
-  prompt: string;
-  schema: S.Schema.AnyNoContext;
-  tools: LLMTool[];
-};
-
-export const defineArtifact = (artifact: Artifact): Artifact => artifact;
-
 export const ChessSchema = S.Struct({
   value: S.String.annotations({ description: 'FEN notation' }),
 }).pipe(EchoObject('example.com/type/Chess', '0.1.0'));
+
 export type ChessSchema = S.Schema.Type<typeof ChessSchema>;
 
 export const MapSchema = S.Struct({
   coordinates: GeoPoint,
 }).pipe(EchoObject('example.com/type/Map', '0.1.0')) as any as S.Schema<{ id: ObjectId; coordinates: GeoPoint }>; // TODO(dmaretskyi): Fix the tuples/mutable issues.
+
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
 export type ArtifactsContext = {
@@ -50,14 +43,14 @@ export type ArtifactsContext = {
 
 declare global {
   interface LLMToolContextExtensions {
-    artifacts: ArtifactsContext;
+    artifacts?: ArtifactsContext;
   }
 }
 
-const formatArtifact = (id: ObjectId) => `<artifact id=${id} />`;
-
-// TODO(burdon): Define artifact providers.
 export const artifacts: Record<string, Artifact> = [
+  //
+  // Image
+  //
   defineArtifact({
     id: 'plugin-image',
     prompt: `
@@ -67,9 +60,13 @@ export const artifacts: Record<string, Artifact> = [
     - Image tags are always self-closing and must contain an id attribute.
     (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
     `,
-    schema: S.Struct({}),
+    schema: S.Struct({}), // TODO(burdon): Add schema.
     tools: [],
   }),
+
+  //
+  // Chess
+  //
   defineArtifact({
     id: 'plugin-chess',
     prompt: `
@@ -85,9 +82,10 @@ export const artifacts: Record<string, Artifact> = [
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
         }),
         execute: async ({ fen }, { extensions }) => {
+          invariant(extensions?.artifacts, 'No artifacts context');
           const artifact = createStatic(ChessSchema, { value: fen });
           extensions.artifacts.addArtifact(artifact);
-          return LLMToolResult.Success(formatArtifact(artifact.id));
+          return LLMToolResult.Success(createArtifactElement(artifact.id));
         },
       }),
       defineTool({
@@ -95,6 +93,7 @@ export const artifacts: Record<string, Artifact> = [
         description: 'Query all active chess games.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
+          invariant(extensions?.artifacts, 'No artifacts context');
           const artifacts = extensions.artifacts
             .getArtifacts()
             .filter((artifact) => isInstanceOf(ChessSchema, artifact));
@@ -107,7 +106,8 @@ export const artifacts: Record<string, Artifact> = [
         description: 'Get the current state of the chess game.',
         schema: S.Struct({ id: ObjectId }),
         execute: async ({ id }, { extensions }) => {
-          const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
+          invariant(extensions?.artifacts, 'No artifacts context');
+          const artifact = extensions!.artifacts.getArtifacts().find((artifact) => artifact.id === id);
           invariant(isInstanceOf(ChessSchema, artifact));
           return LLMToolResult.Success(artifact.value);
         },
@@ -123,6 +123,7 @@ export const artifacts: Record<string, Artifact> = [
           }),
         }),
         execute: async ({ id, move }, { extensions }) => {
+          invariant(extensions?.artifacts, 'No artifacts context');
           const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
           invariant(isInstanceOf(ChessSchema, artifact));
           const board = new Chess(artifact.value);
@@ -137,6 +138,10 @@ export const artifacts: Record<string, Artifact> = [
       }),
     ],
   }),
+
+  //
+  // Map
+  //
   defineArtifact({
     id: 'plugin-map',
     prompt: `
@@ -150,6 +155,7 @@ export const artifacts: Record<string, Artifact> = [
         description: 'Query all active maps.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
+          invariant(extensions?.artifacts, 'No artifacts context');
           const artifacts = extensions.artifacts.getArtifacts().filter((artifact) => isInstanceOf(MapSchema, artifact));
           invariant(artifacts.length > 0, 'No maps found');
           return LLMToolResult.Success(artifacts);
@@ -163,9 +169,10 @@ export const artifacts: Record<string, Artifact> = [
           latitude: S.Number.annotations({ description: 'The latitude of the map.' }),
         }),
         execute: async ({ longitude, latitude }, { extensions }) => {
+          invariant(extensions?.artifacts, 'No artifacts context');
           const artifact = createStatic(MapSchema, { coordinates: [longitude, latitude] });
           extensions.artifacts.addArtifact(artifact);
-          return LLMToolResult.Success(formatArtifact(artifact.id));
+          return LLMToolResult.Success(createArtifactElement(artifact.id));
         },
       }),
     ],
@@ -181,6 +188,7 @@ export const genericTools = [
     description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
     schema: S.Struct({ id: ObjectId }),
     execute: async ({ id }, { extensions }) => {
+      invariant(extensions?.artifacts, 'No artifacts context');
       const artifactIndex = extensions.artifacts.items.findIndex((artifact) => artifact.id === id);
       if (artifactIndex !== -1) {
         extensions.artifacts.items = [
@@ -189,7 +197,7 @@ export const genericTools = [
         ];
       }
 
-      return LLMToolResult.Success(formatArtifact(id));
+      return LLMToolResult.Success(createArtifactElement(id));
     },
   }),
 ];

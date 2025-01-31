@@ -19,11 +19,11 @@ import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { useQueue } from '@dxos/react-ui-canvas-compute';
 import {
   artifacts,
-  type ArtifactsContext,
   capabilities,
-  ChessSchema,
   genericTools,
   localServiceEndpoints,
+  type ArtifactsContext,
+  ChessSchema,
 } from '@dxos/react-ui-canvas-compute/testing';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';

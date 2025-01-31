@@ -7,7 +7,7 @@ import { AST, S, toJsonSchema } from '@dxos/echo-schema';
 export const functions = [
   {
     name: 'example.com/function/chess',
-    version: '0.0.1',
+    version: '0.1.0',
     inputSchema: toJsonSchema(
       S.Struct({
         level: S.Number.annotations({
@@ -18,7 +18,7 @@ export const functions = [
   },
   {
     name: 'example.com/function/forex',
-    version: '0.0.1',
+    version: '0.1.0',
     binding: 'FOREX',
     inputSchema: toJsonSchema(
       S.Struct({
