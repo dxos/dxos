@@ -6,7 +6,6 @@ import React, { createContext, useContext, useCallback } from 'react';
 
 import { type JsonPath, type BaseObject, getValue } from '@dxos/echo-schema';
 import { createJsonPath, type SimpleType } from '@dxos/effect';
-
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 
 type FormContextValue<T extends BaseObject> = FormHandler<T>;
@@ -30,7 +29,7 @@ export type FormInputProps = {
 
 // TODO(ZaymonFC): This should move into the useForm hook itself and be called something like
 //   useSubform or useScopedForm.
-export const useScopedForm = (path: string[] = []) => {
+export const useScopedForm = (path: (string | number)[] = []) => {
   const {
     values: formValues,
     errors,
@@ -41,9 +40,8 @@ export const useScopedForm = (path: string[] = []) => {
     getStatus,
   } = useFormContext();
 
-  // TODO(Zaymon): Check if this is handling arrays index.
-  // Do we have a JsonPath builder somewhere?
-  const values = getValue(formValues, path.join('.') as JsonPath) as BaseObject;
+  const jsonPath = createJsonPath(path);
+  const values = getValue(formValues, jsonPath) as BaseObject; // TODO(ZaymonFC): This cast does nothing useful anymore.
 
   const getPropertyValue = useCallback(
     (property: string) => {
@@ -64,8 +62,9 @@ export const useScopedForm = (path: string[] = []) => {
   );
 
   const getInputProps = useCallback(
-    (name: string): FormInputProps => {
-      const fullPath = [...path, name].join('.');
+    (property: string | number): FormInputProps => {
+      const pathArray = [...path, property];
+      const fullPath = createJsonPath(pathArray);
       return {
         getStatus: () => getStatus(fullPath),
         getValue: () => getFormValue(fullPath),
