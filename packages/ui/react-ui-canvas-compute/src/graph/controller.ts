@@ -4,9 +4,11 @@
 
 import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
 
-import { type MessageImageContentBlock } from '@dxos/assistant';
+import { type ImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
 import {
+  isNotExecuted,
+  makeValueBag,
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,
@@ -18,8 +20,6 @@ import {
   type GptOutput,
   GptService,
   GraphExecutor,
-  isNotExecuted,
-  makeValueBag,
   MockGpt,
   QueueService,
   SpaceService,
@@ -48,7 +48,7 @@ export interface GptExecutor {
   invoke: FunctionCallback<GptInput, GptOutput>;
 
   // TODO(dmaretskyi): A hack to get image artifacts working. Rework into querying images from the ai-service store.
-  imageCache: Map<string, MessageImageContentBlock>;
+  imageCache: Map<string, ImageContentBlock>;
 }
 
 export type RuntimeValue =

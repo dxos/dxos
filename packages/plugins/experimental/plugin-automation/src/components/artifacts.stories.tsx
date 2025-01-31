@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AIServiceClientImpl, type Message } from '@dxos/assistant';
+import { AIServiceClientImpl, type LLMTool, type Message } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -20,16 +20,16 @@ import { useQueue } from '@dxos/react-ui-canvas-compute';
 import {
   artifacts,
   capabilities,
+  ChessSchema,
   genericTools,
   localServiceEndpoints,
   type ArtifactsContext,
-  ChessSchema,
 } from '@dxos/react-ui-canvas-compute/testing';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './Thread';
-import { ChatProcessor, type Tool } from '../hooks';
+import { ChatProcessor } from '../hooks';
 
 const endpoints = localServiceEndpoints;
 
@@ -39,7 +39,7 @@ type RenderProps = {
 
 const Render = ({ items: _items }: RenderProps) => {
   // Configuration.
-  const tools = useMemo<Tool[]>(
+  const tools = useMemo<LLMTool[]>(
     () => [
       //
       ...genericTools,

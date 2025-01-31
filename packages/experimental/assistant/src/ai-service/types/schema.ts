@@ -8,23 +8,6 @@ import { JsonSchemaType } from '@dxos/echo-schema';
 
 import { type MessageContentBlock } from './message';
 
-<<<<<<< Updated upstream
-export const LLMModel = S.Literal(
-  '@hf/nousresearch/hermes-2-pro-mistral-7b',
-  '@anthropic/claude-3-5-sonnet-20241022',
-  '@anthropic/claude-3-5-haiku-20241022',
-  '@ollama/llama-3-2-3b',
-  '@ollama/llama-3-1-nemotron-70b-instruct',
-  '@ollama/llama-3-1-nemotron-mini-4b-instruct',
-);
-export type LLMModel = S.Schema.Type<typeof LLMModel>;
-
-export const ToolTypes = Object.freeze({
-  // TODO(dmaretskyi): Not implemented yet.
-  // DatabaseQuery: 'database_query',
-
-  TextToImage: 'text_to_image',
-=======
 declare global {
   /**
    * Extensions to the tool execution context.
@@ -72,7 +55,6 @@ export const LLMToolResult = Object.freeze({
    * Stop the conversation and return the result.
    */
   Break: (result: unknown): LLMToolResult => ({ kind: 'break', result }),
->>>>>>> Stashed changes
 });
 
 /**

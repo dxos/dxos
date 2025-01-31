@@ -6,15 +6,8 @@ import { Effect } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
-<<<<<<< Updated upstream
 import { ObjectId, S } from '@dxos/echo-schema';
-=======
-import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
->>>>>>> Stashed changes
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
-import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
 import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from './system';
@@ -55,6 +48,8 @@ import {
  */
 // TODO(burdon): Convert to DXNs.
 export type NodeType =
+  | typeof NODE_INPUT
+  | typeof NODE_OUTPUT
   | 'text-to-image' // TODO(burdon): Rename 'ai-image-tool'.
   | 'and'
   | 'append'
@@ -95,6 +90,14 @@ export const isFalsy = (value: any) =>
 export const isTruthy = (value: any) => !isFalsy(value);
 
 export const registry: Record<NodeType, Executable> = {
+  //
+  // System
+  //
+
+  [NODE_INPUT]: inputNode,
+
+  [NODE_OUTPUT]: outputNode,
+
   //
   // Inputs
   //

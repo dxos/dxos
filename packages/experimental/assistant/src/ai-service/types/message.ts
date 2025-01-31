@@ -7,13 +7,9 @@ import { Schema as S } from '@effect/schema';
 import { EchoObject, ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
-<<<<<<< Updated upstream
-=======
 // TODO(dmaretskyi): Extract IDs to protocols.
->>>>>>> Stashed changes
 // TODO(dmaretskyi): Dedupe package with dxos/edge.
 
-// TODO(dmaretskyi): Extract IDs to protocols.
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
 
 export const Space = S.Struct({
@@ -30,19 +26,18 @@ export interface Thread extends S.Schema.Type<typeof Thread> {}
 export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
 export type MessageRole = S.Schema.Type<typeof MessageRole>;
 
-<<<<<<< Updated upstream
-export const MessageTextContentBlock = S.Struct({
-=======
-/**
- * Text.
- */
 export const TextContentBlock = S.Struct({
->>>>>>> Stashed changes
   type: S.Literal('text'),
   disposition: S.optional(S.String), // (e.g., "cot").
   text: S.String,
 }).pipe(S.mutable);
-export type MessageTextContentBlock = S.Schema.Type<typeof MessageTextContentBlock>;
+export type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
+
+export const JsonContentBlock = S.Struct({
+  type: S.Literal('json'),
+  json: S.String,
+}).pipe(S.mutable);
+export type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
 
 export const ImageSource = S.Struct({
   type: S.Literal('base64'),
@@ -51,14 +46,14 @@ export const ImageSource = S.Struct({
 }).pipe(S.mutable);
 export type ImageSource = S.Schema.Type<typeof ImageSource>;
 
-export const MessageImageContentBlock = S.Struct({
+export const ImageContentBlock = S.Struct({
   type: S.Literal('image'),
   id: S.optional(S.String),
   source: S.optional(ImageSource),
 }).pipe(S.mutable);
-export type MessageImageContentBlock = S.Schema.Type<typeof MessageImageContentBlock>;
+export type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
 
-export const MessageToolUseContentBlock = S.Struct({
+export const ToolUseContentBlock = S.Struct({
   type: S.Literal('tool_use'),
 
   /**
@@ -70,11 +65,8 @@ export const MessageToolUseContentBlock = S.Struct({
    * Tool name.
    */
   name: S.String,
-<<<<<<< Updated upstream
-=======
 
   // TODO(burdon): Different from S.Any?
->>>>>>> Stashed changes
   input: S.Unknown,
 
   /**
@@ -83,30 +75,23 @@ export const MessageToolUseContentBlock = S.Struct({
   inputJson: S.optional(S.String),
 }).pipe(S.mutable);
 
-export const MessageToolResultContentBlock = S.Struct({
+export const ToolResultContentBlock = S.Struct({
   type: S.Literal('tool_result'),
   toolUseId: S.String,
   content: S.String,
   isError: S.optional(S.Boolean),
 });
 
-<<<<<<< Updated upstream
-export const MessageContentBlock = S.Union(
-  MessageTextContentBlock,
-  MessageImageContentBlock,
-  MessageToolUseContentBlock,
-  MessageToolResultContentBlock,
-=======
 /**
  * Content union.
  */
 // TODO(burdon): Add JSON, Object, Reference?
 export const MessageContentBlock = S.Union(
   TextContentBlock,
+  JsonContentBlock,
   ImageContentBlock,
   ToolUseContentBlock,
   ToolResultContentBlock,
->>>>>>> Stashed changes
 );
 export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
@@ -138,7 +123,6 @@ export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0
 
 export type Message = S.Schema.Type<typeof Message>;
 
-<<<<<<< Updated upstream
 /**
  * Message transformed from the database row.
  */
@@ -149,7 +133,6 @@ export type Message = S.Schema.Type<typeof Message>;
 //     S.fromKey('contentJson'),
 //   ),
 // });
-=======
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),
   spaceId,
@@ -157,4 +140,3 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   role: 'user',
   content: [{ type: 'text', text }],
 });
->>>>>>> Stashed changes

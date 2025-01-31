@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComputeNode, type Executable, NODE_INPUT, type NodeType, registry } from '@dxos/conductor';
+import { NODE_INPUT, NODE_OUTPUT, type ComputeNode, type Executable, type NodeType, registry } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

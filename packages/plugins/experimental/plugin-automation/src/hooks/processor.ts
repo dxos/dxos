@@ -45,7 +45,7 @@ export class ChatProcessor {
 
   constructor(
     private readonly _client: AIServiceClientImpl,
-    private readonly _tools?: Tool[],
+    private readonly _tools?: LLMTool[],
     private readonly _extensions?: LLMToolContextExtensions,
     private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
       model: '@anthropic/claude-3-5-sonnet-20241022',
