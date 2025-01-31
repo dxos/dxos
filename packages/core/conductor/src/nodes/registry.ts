@@ -44,12 +44,15 @@ import {
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { TableType } from '@dxos/react-ui-table/types';
 import { create } from '@dxos/live-object';
+import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from './system';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
  */
 // TODO(burdon): Convert to DXNs.
 export type NodeType =
+  | typeof NODE_INPUT
+  | typeof NODE_OUTPUT
   | 'text-to-image' // TODO(burdon): Rename 'ai-image-tool'.
   | 'and'
   | 'append'
@@ -90,6 +93,13 @@ export const isFalsy = (value: any) =>
 export const isTruthy = (value: any) => !isFalsy(value);
 
 export const registry: Record<NodeType, Executable> = {
+  //
+  // System
+  //
+
+  [NODE_INPUT]: inputNode,
+  [NODE_OUTPUT]: outputNode,
+
   //
   // Inputs
   //
