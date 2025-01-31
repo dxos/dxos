@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComputeNode, type Executable, NODE_INPUT, type NodeType, registry } from '@dxos/conductor';
+import { type ComputeNode, type Executable, NODE_INPUT, NODE_OUTPUT, type NodeType, registry } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -57,6 +57,8 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   ['text' as const]: () => createNode('text'),
   ['thread' as const]: () => createNode('thread'),
   ['trigger' as const]: () => createNode(NODE_INPUT),
+  [NODE_INPUT]: () => createNode(NODE_INPUT),
+  [NODE_OUTPUT]: () => createNode(NODE_OUTPUT),
 };
 
 const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({
