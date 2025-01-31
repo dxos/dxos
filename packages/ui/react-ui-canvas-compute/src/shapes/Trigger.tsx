@@ -37,12 +37,14 @@ export const TriggerShape = S.extend(
 );
 export type TriggerShape = S.Schema.Type<typeof TriggerShape>;
 
-export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>>;
+export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
+  triggerKind?: TriggerKind;
+};
 
 export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
   const functionTrigger = create(FunctionTrigger, {
     enabled: true,
-    spec: createTriggerSpec(TriggerKind.Email),
+    spec: createTriggerSpec(props.triggerKind ?? TriggerKind.Email),
   });
   return createShape<TriggerShape>({
     type: 'trigger',

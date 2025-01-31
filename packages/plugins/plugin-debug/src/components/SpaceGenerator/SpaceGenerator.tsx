@@ -12,6 +12,7 @@ import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
@@ -26,7 +27,7 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
-  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
+  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph, CanvasBoardType]; // TODO(burdon): Make extensible.
   const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});

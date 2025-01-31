@@ -70,6 +70,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -100,6 +103,12 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -110,6 +119,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../experimental/plugin-canvas"
     },
     {
       "path": "../plugin-client"
