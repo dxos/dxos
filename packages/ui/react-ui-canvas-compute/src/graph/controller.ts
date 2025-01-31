@@ -71,6 +71,7 @@ export type Services = {
   gpt: Context.Tag.Service<GptService>;
   edgeClient?: EdgeClient;
   edgeHttpClient?: EdgeHttpClient;
+  spaceService?: Context.Tag.Service<SpaceService>;
 };
 
 type ComputeOutputEvent = {
@@ -329,7 +330,8 @@ export class ComputeGraphController extends Resource {
     const queueLayer =
       services.edgeHttpClient != null ? QueueService.fromClient(services.edgeHttpClient) : QueueService.notAvailable;
 
-    const spaceLayer = SpaceService.empty;
+    const spaceLayer =
+      services.spaceService != null ? Layer.succeed(SpaceService, services.spaceService) : SpaceService.empty;
     return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer);
   }
 

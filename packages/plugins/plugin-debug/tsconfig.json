@@ -121,9 +121,6 @@
       "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../experimental/plugin-canvas"
-    },
-    {
       "path": "../plugin-client"
     },
     {

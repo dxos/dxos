@@ -29,7 +29,10 @@
       "path": "../../experimental/assistant"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../echo/echo-db"
     },
     {
       "path": "../echo/echo-schema"

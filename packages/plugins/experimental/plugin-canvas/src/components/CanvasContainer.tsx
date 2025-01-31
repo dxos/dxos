@@ -4,13 +4,17 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { ComputeGraphModel } from '@dxos/conductor';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { AIServiceClientImpl } from '@dxos/assistant';
+import type { Config } from '@dxos/client';
+import { ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
+import { createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
 import {
   ComputeContext,
   ComputeGraphController,
   type ComputeShape,
   computeShapes,
+  type Services,
   useGraphMonitor,
 } from '@dxos/react-ui-canvas-compute';
 import {
@@ -22,15 +26,44 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
+import { useConfig } from '@dxos/react-client';
+
+const createServices = (config: Config, space?: Space): Partial<Services> => {
+  return {
+    spaceService:
+      space == null
+        ? undefined
+        : {
+            spaceId: space.id,
+            db: space.db,
+          },
+    gpt:
+      config.values.runtime?.services?.ai?.server == null
+        ? undefined
+        : new EdgeGpt(new AIServiceClientImpl({ endpoint: config.values.runtime?.services?.ai?.server })),
+    edgeClient:
+      config.values.runtime?.services?.edge?.url == null
+        ? undefined
+        : new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: config.values.runtime?.services?.edge?.url }),
+    edgeHttpClient:
+      config.values.runtime?.services?.edge?.url == null
+        ? undefined
+        : new EdgeHttpClient(config.values.runtime?.services?.edge?.url),
+  };
+};
 
 const useGraphController = (canvas: CanvasBoardType) => {
+  const config = useConfig();
+  const space = getSpace(canvas);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target) {
       return null;
     }
     const model = new ComputeGraphModel(canvas.computeGraph?.target);
-    return new ComputeGraphController(model);
-  }, [canvas.computeGraph?.target]);
+    const controller = new ComputeGraphController(model);
+    controller.setServices(createServices(config, space));
+    return controller;
+  }, [canvas.computeGraph?.target, space]);
 
   useEffect(() => {
     if (!controller) {

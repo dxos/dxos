@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { type LLMTool, Message, ToolTypes } from '@dxos/assistant';
-import { ObjectId, S } from '@dxos/echo-schema';
+import { getTypename, isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { safeParseJson } from '@dxos/util';
 
@@ -25,7 +25,7 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { GptService, QueueService } from '../services';
+import { GptService, QueueService, SpaceService } from '../services';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -41,6 +41,9 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
+import { failedInvariant, invariant } from '@dxos/invariant';
+import { TableType } from '@dxos/react-ui-table/types';
+import { create } from '@dxos/live-object';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -222,12 +225,51 @@ export const registry: Record<NodeType, Executable> = {
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
-        const mappedItems = items.map((item) => ({ ...item, id: item.id ?? ObjectId.random() }));
+        const dxn = DXN.parse(id);
+        switch (dxn.kind) {
+          case DXN.kind.QUEUE: {
+            const mappedItems = items.map((item) => ({ ...item, id: item.id ?? ObjectId.random() }));
 
-        const edgeClientService = yield* QueueService;
-        yield* Effect.promise(() => edgeClientService.insertIntoQueue(DXN.parse(id), mappedItems));
+            const edgeClientService = yield* QueueService;
+            yield* Effect.promise(() => edgeClientService.insertIntoQueue(DXN.parse(id), mappedItems));
 
-        return {};
+            return {};
+          }
+          case DXN.kind.ECHO: {
+            const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
+            const spaceService = yield* SpaceService;
+            if (spaceId != null) {
+              invariant(spaceService.spaceId === spaceId, 'Space mismatch');
+            }
+
+            const {
+              objects: [container],
+            } = yield* Effect.promise(() => spaceService.db.query({ id: echoId }).run());
+            if (isInstanceOf(TableType, container)) {
+              const schema = yield* Effect.promise(async () =>
+                spaceService.db.schemaRegistry
+                  .query({
+                    typename: (await container.view?.load())?.query.type,
+                  })
+                  .first(),
+              );
+
+              for (const item of items) {
+                const { id: _id, '@type': _type, ...rest } = item as any;
+                // TODO(dmaretskyi): Forbid type on create.
+                spaceService.db.add(create(schema, rest));
+              }
+              yield* Effect.promise(() => spaceService.db.flush());
+            } else {
+              throw new Error('Unsupported ECHO container type');
+            }
+
+            return {};
+          }
+          default: {
+            throw new Error('Unsupported DXN');
+          }
+        }
       }),
     ),
   }),

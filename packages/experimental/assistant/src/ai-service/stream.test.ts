@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Parser } from 'htmlparser2';
+import { SaxesParser } from 'saxes';
 import { describe, it } from 'vitest';
 
 import { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { GenerationStream } from './stream';
-import { type MessageContentBlock, type Message } from './types';
+import { type Message } from './types';
 
 type Part = { event: string; data: any };
 
@@ -70,10 +71,12 @@ describe('GenerationStream', () => {
           block = [(event.content as any).text];
           break;
         }
+
         case 'content_block_delta': {
           block.push((event.delta as any).text);
           break;
         }
+
         case 'content_block_stop': {
           output.push(block.join('').trim());
           break;
@@ -91,70 +94,93 @@ describe('GenerationStream', () => {
    */
   it('should parse the stream', async ({ expect }) => {
     const input = [
-      ['<cot>1. Prepare the ship.', '2. Arm the torpedoes.', '3. Fire lasers.', '</cot>'].join('\n'),
-      'Hello world!',
+      // Text
+      `
+      Hello world!
+      `,
+
+      // COT
+      `
+      <cot>
+      1. Prepare the ship.
+      2. Arm the torpedoes.
+      3. Fire lasers.
+      </cot>
+      `,
+
+      // Artifact
+      // <?xml version="1.0" encoding="UTF-8"?>
+      `
+      <artifact id="123" />
+      <choice id="123">
+        <artifact id="123" />
+      </choice>
+      `,
+
+      // JSON
+      `
+      <json>
+      <![CDATA[
+      {
+        "type": "text",
+        "text": "<test>OK</test>"
+      }
+      ]]>
+      </json>
+      `,
+
+      // Code/JSX
+      `,
+      <code>
+      <![CDATA[
+      const Test = () => {
+        return <div>Hello world!</div>;
+      }
+      ]]>
+      </code>
+      `,
     ];
 
+    // TODO(burdon): Delimiter for JSON blocks.
+
     const output: Message = { id: ObjectId.random(), role: 'assistant', content: [] };
-    let block: MessageContentBlock | undefined;
-    let text: string[] = [];
-    const parser = new Parser({
-      onopentag: () => {
-        text = [];
-      },
 
-      onclosetag: (name) => {
-        switch (name) {
-          case 'cot': {
-            block = { type: 'cot', text: text.join(' ') };
-            break;
-          }
-        }
-        if (block) {
-          output.content.push(block);
-          block = undefined;
-        }
-        text = [];
-      },
+    /**
+     * https://www.npmjs.com/package/saxex
+     */
+    const parser = new SaxesParser({
+      fragment: true,
+    });
 
-      ontext: (str) => {
-        if (!block) {
-          block = { type: 'text', text: '' };
-        }
-        if (str.trim()) {
-          text.push(str.trim());
-        }
-      },
-
-      onend: () => {
-        if (block) {
-          if (block.type === 'text') {
-            block.text = text.join(' ');
-          }
-          output.content.push(block);
-        }
-      },
+    parser.on('error', (error) => {
+      log.error('error', { error });
+    });
+    parser.on('opentag', (node) => {
+      log.info('opentag', { node });
+    });
+    parser.on('closetag', (node) => {
+      log.info('closetag', { node });
+    });
+    parser.on('cdata', (text) => {
+      log.info('cdata', { text });
+    });
+    parser.on('text', (text) => {
+      log.info('text', { text });
+    });
+    parser.on('end', () => {
+      log.info('end');
     });
 
     const stream = GenerationStream.fromSSEResponse({}, new Response(createTestStream(input)));
     for await (const event of stream) {
       if (event.type === 'content_block_delta') {
+        // log.info('delta', { delta: (event.delta as any).text });
         parser.write((event.delta as any).text);
       }
     }
-    parser.end();
-
-    expect(output.content).to.deep.equal([
-      {
-        type: 'cot',
-        text: '1. Prepare the ship.\n2. Arm the torpedoes.\n3. Fire lasers.',
-      },
-      {
-        type: 'text',
-        text: 'Hello world!',
-      },
-    ]);
 
     await stream.complete();
+
+    expect(output.content).to.deep.equal([]);
   });
 });

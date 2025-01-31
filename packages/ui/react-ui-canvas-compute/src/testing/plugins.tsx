@@ -42,6 +42,7 @@ export const MapSchema = S.Struct({
 }).pipe(EchoObject('example.com/type/Map', '0.1.0')) as any as S.Schema<{ id: ObjectId; coordinates: GeoPoint }>; // TODO(dmaretskyi): Fix the tuples/mutable issues.
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
+// TODO(burdon): Move ot ECHO def.
 export type ArtifactsContext = {
   items: (HasTypename & HasId)[];
   getArtifacts: () => (HasTypename & HasId)[];
