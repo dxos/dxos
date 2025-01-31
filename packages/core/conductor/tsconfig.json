@@ -29,6 +29,9 @@
       "path": "../../experimental/assistant"
     },
     {
+      "path": "../../ui/react-ui-table"
+    },
+    {
       "path": "../echo/echo-db"
     },
     {

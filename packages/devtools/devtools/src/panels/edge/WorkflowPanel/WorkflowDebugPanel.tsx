@@ -236,7 +236,10 @@ const RobotAvatar = () => (
 const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
   const gptLayer = Layer.succeed(GptService, new OllamaGpt(new Ollama()));
-  const spaceService = SpaceService.fromSpace(space);
+  const spaceService = Layer.succeed(SpaceService, {
+    spaceId: space.id,
+    db: space.db,
+  });
   const queueService = QueueService.notAvailable;
   return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService);
 };

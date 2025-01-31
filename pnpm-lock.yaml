@@ -2463,6 +2463,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5876,12 +5879,18 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../../experimental/assistant
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../../core/conductor
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../../core/mesh/edge-client
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../../core/functions
