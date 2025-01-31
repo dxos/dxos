@@ -31,6 +31,8 @@ elif [ "$DX_ENVIRONMENT" = "staging" ]; then
   pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=next
 elif [ "$DX_ENVIRONMENT" = "main" ]; then
   pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=main
+else
+  pnpm --filter-prod="./packages/**" publish --no-git-checks
 fi
 
 if [[ $? -eq 0 ]]; then
