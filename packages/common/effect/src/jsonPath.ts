@@ -7,16 +7,18 @@
 import { Schema as S } from '@effect/schema';
 import { isSome } from 'effect/Option';
 
+import { invariant } from '@dxos/invariant';
+
 export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
 
-const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\])*$/;
+const PATH_REGEX = /^($|[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\[\d+\](?:\.)?)*$)/;
 const PROP_REGEX = /\w+/;
 
 /**
  * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
  */
-export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
+export const JsonPath = S.String.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
 export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 export const isJsonPath = (value: unknown): value is JsonPath => {
@@ -42,20 +44,19 @@ export const isJsonPath = (value: unknown): value is JsonPath => {
  * @param path Array of string or number segments
  * @returns Valid JsonPath or undefined if invalid
  */
-export const createJsonPath = (path: (string | number)[]): JsonPath | undefined => {
+export const createJsonPath = (path: (string | number)[]): JsonPath => {
   const candidatePath = path
-    .map((p) => {
+    .map((p, i) => {
       if (typeof p === 'number') {
         return `[${p}]`;
       } else {
-        return path.indexOf(p) === 0 ? p : `.${p}`;
+        return i === 0 ? p : `.${p}`;
       }
     })
     .join('');
 
-  if (isJsonPath(candidatePath)) {
-    return candidatePath;
-  }
+  invariant(isJsonPath(candidatePath), `Invalid JsonPath: ${candidatePath}`);
+  return candidatePath;
 };
 
 /**

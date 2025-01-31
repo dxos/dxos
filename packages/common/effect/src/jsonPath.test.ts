@@ -11,6 +11,9 @@ describe('createJsonPath', () => {
     // Simple property access.
     expect(createJsonPath(['foo'])).toBe('foo');
     expect(createJsonPath(['foo', 'bar'])).toBe('foo.bar');
+    expect(createJsonPath(['names', 1, 'bar'])).toBe('names[1].bar');
+    expect(createJsonPath(['names', 1])).toBe('names[1]');
+    expect(createJsonPath(['names', 1, 'names'])).toBe('names[1].names');
 
     // Array indexing.
     expect(createJsonPath(['foo', 0, 'bar'])).toBe('foo[0].bar');
@@ -18,11 +21,13 @@ describe('createJsonPath', () => {
 
     // $ is valid in identifiers.
     expect(createJsonPath(['$foo', '$bar'])).toBe('$foo.$bar');
+    expect(createJsonPath([])).toBe('');
   });
 
   test('invalid paths', () => {
-    expect(createJsonPath([])).toBeUndefined(); // Empty path.
-    expect(createJsonPath(['123foo'])).toBeUndefined(); // Can't start with number.
+    expect(() => createJsonPath(['123foo'])).toThrow(); // Can't start with number.
+    expect(() => createJsonPath(['foo', -1, 'bar'])).toThrow(); // No negative indices.
+    expect(() => createJsonPath(['foo', 1.5, 'bar'])).toThrow(); // No float indices.
   });
 
   test('path splitting', () => {
@@ -47,8 +52,6 @@ describe('createJsonPath', () => {
       ['$_foo.bar_baz', ['$_foo', 'bar_baz']],
       // Deep nesting.
       ['very.deep.nested[0].property.path[5]', ['very', 'deep', 'nested', '0', 'property', 'path', '5']],
-      // Array index followed immediately by property.
-      ['items[0]name', []],
       // Single character properties.
       ['a[0].b.c', ['a', '0', 'b', 'c']],
       // Properties containing numbers.
@@ -70,29 +73,24 @@ describe('createJsonPath', () => {
   });
 
   test('isJsonPath validation', () => {
-    const validPaths = [
-      'foo',
-      'foo.bar',
-      'foo[0].bar',
-      'items[1]',
-      '$foo.$bar',
-      'matrix[0][1][2]',
-      'deep.nested[0].path',
-    ] as const;
+    // Valid paths.
+    expect(isJsonPath('')).toBe(true);
+    expect(isJsonPath('foo')).toBe(true);
+    expect(isJsonPath('foo.bar')).toBe(true);
+    expect(isJsonPath('foo[0].bar')).toBe(true);
+    expect(isJsonPath('items[1]')).toBe(true);
+    expect(isJsonPath('$foo.$bar')).toBe(true);
+    expect(isJsonPath('matrix[0][1][2]')).toBe(true);
+    expect(isJsonPath('deep.nested[0].path')).toBe(true);
 
-    const invalidPaths = [
-      '',
-      'items[0]name', // Missing dot
-      '123foo', // Starts with number
-      'foo[].bar', // Empty brackets
-      'foo[-1]', // Negative index
-      'foo[a]', // Non-numeric index
-      '.foo', // Starts with dot
-      'foo.', // Ends with dot
-      '[0]foo', // Starts with bracket
-    ] as const;
-
-    validPaths.forEach((path) => expect(isJsonPath(path)).toBe(true));
-    invalidPaths.forEach((path) => expect(isJsonPath(path)).toBe(false));
+    // Invalid paths.
+    expect(isJsonPath('items[0]name')).toBe(false); // Missing dot
+    expect(isJsonPath('123foo')).toBe(false); // Starts with number
+    expect(isJsonPath('foo[].bar')).toBe(false); // Empty brackets
+    expect(isJsonPath('foo[-1]')).toBe(false); // Negative index
+    expect(isJsonPath('foo[a]')).toBe(false); // Non-numeric index
+    expect(isJsonPath('.foo')).toBe(false); // Starts with dot
+    expect(isJsonPath('foo.')).toBe(false); // Ends with dot
+    expect(isJsonPath('[0]foo')).toBe(false); // Starts with bracket
   });
 });
