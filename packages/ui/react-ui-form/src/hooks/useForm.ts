@@ -193,6 +193,7 @@ export const useForm = <T extends BaseObject>({
   // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
   const onBlur = useCallback(
     (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      // TODO(Zaymon): The name provided should be a JsonPath.
       const { name } = event.target;
       setTouched((touched) => ({ ...touched, [name]: true }));
 

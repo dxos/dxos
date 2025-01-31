@@ -114,7 +114,7 @@ const ShapeSchema = S.Struct({
       }),
       S.Struct({
         type: S.Literal('square').annotations({ [AST.TitleAnnotationId]: 'Type' }),
-        size: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Size' })),
+        size: S.optional(S.Number.pipe(S.nonNegative()).annotations({ [AST.TitleAnnotationId]: 'Size' })),
       }),
     ).annotations({ [AST.TitleAnnotationId]: 'Shape' }),
   ),
@@ -139,7 +139,7 @@ const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionSt
           onSave={handleSave}
           Custom={{
             ['shape.type' as const]: (props) => (
-              <SelectInput<ShapeType>
+              <SelectInput
                 {...props}
                 options={['circle', 'square'].map((value) => ({
                   value,
