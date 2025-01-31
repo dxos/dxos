@@ -29,7 +29,7 @@
       "path": "../../experimental/assistant"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../echo/echo-db"
     },
     {
       "path": "../echo/echo-schema"
