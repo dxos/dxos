@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type LLMTool, LLMToolResult, Message } from '@dxos/artifact';
+import { type Tool, ToolResult, Message } from '@dxos/artifact';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -21,7 +21,7 @@ export type CreateLLMConversationParams = {
   spaceId?: SpaceId;
   threadId?: ObjectId;
 
-  tools: LLMTool[];
+  tools: Tool[];
 
   history?: Message[];
 
@@ -147,8 +147,8 @@ export const isToolUse = (message: Message) => message.content.at(-1)?.type === 
 
 export type RunToolsOptions = {
   message: Message;
-  tools: LLMTool[];
-  extensions?: LLMToolContextExtensions;
+  tools: Tool[];
+  extensions?: ToolContextExtensions;
 };
 
 export type RunToolsResult =
@@ -170,13 +170,13 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
     throw new Error(`Tool not found: ${toolCall.name}`);
   }
 
-  let toolResult: LLMToolResult;
+  let toolResult: ToolResult;
   try {
     invariant(tool.execute);
     toolResult = await tool.execute(toolCall.input, { extensions });
   } catch (error: any) {
     log('tool error', { error });
-    toolResult = LLMToolResult.Error(error.message);
+    toolResult = ToolResult.Error(error.message);
   }
 
   switch (toolResult.kind) {

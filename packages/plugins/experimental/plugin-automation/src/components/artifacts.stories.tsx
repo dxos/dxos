@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type LLMTool, type Message } from '@dxos/artifact';
+import { type Tool, type Message } from '@dxos/artifact';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
@@ -40,7 +40,7 @@ type RenderProps = {
 
 const Render = ({ items: _items }: RenderProps) => {
   // Configuration.
-  const tools = useMemo<LLMTool[]>(
+  const tools = useMemo<Tool[]>(
     () => [
       //
       ...genericTools,

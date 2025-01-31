@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { LLMTool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
+import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
@@ -49,7 +49,7 @@ export const GenerateRequest = S.Struct({
   /**
    * Tools available for the LLM.
    */
-  tools: S.optional(S.Array(LLMTool).pipe(S.mutable)),
+  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
 });
 
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;

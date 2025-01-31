@@ -14,7 +14,7 @@ declare global {
    * @example
    * ```ts
    * declare global {
-   *   interface LLMToolContextExtensions {
+   *   interface ToolContextExtensions {
    *     chess: {
    *       board: string;
    *     };
@@ -24,35 +24,35 @@ declare global {
    *
    * @see https://www.typescriptlang.org/docs/handbook/declaration-merging.html#global-augmentation
    */
-  interface LLMToolContextExtensions {}
+  interface ToolContextExtensions {}
 }
 
 export type ToolExecutionContext = {
-  extensions?: LLMToolContextExtensions;
+  extensions?: ToolContextExtensions;
 };
 
-export type LLMToolResult =
+export type ToolResult =
   | { kind: 'success'; result: unknown; extractContentBlocks?: MessageContentBlock[] }
   | { kind: 'error'; message: string }
   | { kind: 'break'; result: unknown };
 
-export const LLMToolResult = Object.freeze({
+export const ToolResult = Object.freeze({
   /**
    * The tool execution was successful.
    * Gives the result back to the LLM.
    */
-  Success: (result: unknown, extractContentBlocks?: MessageContentBlock[]): LLMToolResult => ({
+  Success: (result: unknown, extractContentBlocks?: MessageContentBlock[]): ToolResult => ({
     kind: 'success',
     result,
     extractContentBlocks,
   }),
 
-  Error: (message: string): LLMToolResult => ({ kind: 'error', message }),
+  Error: (message: string): ToolResult => ({ kind: 'error', message }),
 
   /**
    * Stop the conversation and return the result.
    */
-  Break: (result: unknown): LLMToolResult => ({ kind: 'break', result }),
+  Break: (result: unknown): ToolResult => ({ kind: 'break', result }),
 });
 
 /**
@@ -61,8 +61,7 @@ export const LLMToolResult = Object.freeze({
  * https://platform.openai.com/docs/guides/function-calling
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
-// TODO(burdon): Rename Tool? FunctionCall? RPC?
-export const LLMTool = S.Struct({
+export const Tool = S.Struct({
   /**
    * Unique name.
    */
@@ -94,9 +93,9 @@ export const LLMTool = S.Struct({
   options: S.optional(S.Any),
 });
 
-export interface LLMTool extends S.Schema.Type<typeof LLMTool> {
+export interface Tool extends S.Schema.Type<typeof Tool> {
   /**
    * Javascript function to execute the tool.
    */
-  execute?: (params: unknown, context?: ToolExecutionContext) => Promise<LLMToolResult>;
+  execute?: (params: unknown, context?: ToolExecutionContext) => Promise<ToolResult>;
 }

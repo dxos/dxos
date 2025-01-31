@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
-import { type LLMTool } from '@dxos/artifact';
+import { type Tool } from '@dxos/artifact';
 import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -57,7 +57,7 @@ describe('AI Service Client', () => {
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const custodian: LLMTool = {
+    const custodian: Tool = {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(

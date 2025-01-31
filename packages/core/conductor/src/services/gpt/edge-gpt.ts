@@ -5,7 +5,7 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { type LLMTool, type Message, type ImageContentBlock } from '@dxos/artifact';
+import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact';
 import { type AIServiceClient } from '@dxos/assistant';
 import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -43,7 +43,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
           model: '@anthropic/claude-3-5-sonnet-20241022',
           history: messages,
           systemPrompt,
-          tools: tools as LLMTool[],
+          tools: tools as Tool[],
         }),
       );
 

@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { defineTool, LLMToolResult } from '@dxos/artifact';
+import { defineTool, ToolResult } from '@dxos/artifact';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -47,10 +47,10 @@ export const createCypherTool = (dataSource: DataSource, schemaTypes: S.Schema.A
         log('cypher query', { query });
         const results = await executeQuery(dataSource, query);
         log('query complete', { results });
-        return LLMToolResult.Success(results);
+        return ToolResult.Success(results);
       } catch (e: any) {
         log.catch(e);
-        return LLMToolResult.Error(e.message);
+        return ToolResult.Error(e.message);
       }
     },
   });

@@ -5,7 +5,7 @@
 import { Effect } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { type LLMTool, Message } from '@dxos/artifact';
+import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -351,7 +351,7 @@ export const registry: Record<NodeType, Executable> = {
   }),
 };
 
-const textToImageTool: LLMTool = {
+const textToImageTool: Tool = {
   name: 'textToImage',
   type: ToolTypes.TextToImage,
   options: {

@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
-import { createUserMessage, defineTool, LLMToolResult } from '@dxos/artifact';
+import { createUserMessage, defineTool, ToolResult } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -42,9 +42,9 @@ describe.skip('Conversation tests', () => {
       }),
       execute: async ({ magicWord }) => {
         if (magicWord === 'pretty please') {
-          return LLMToolResult.Success('The password is: "The sky is gray"');
+          return ToolResult.Success('The password is: "The sky is gray"');
         } else {
-          return LLMToolResult.Error('Wrong magic word');
+          return ToolResult.Error('Wrong magic word');
         }
       },
     });

@@ -4,15 +4,29 @@
 
 import { type S, type ObjectId } from '@dxos/echo-schema';
 
-import { type LLMTool } from './schema';
-
-// TODO(burdon): Rename LLM => AI?
+import { type Tool } from './schema';
 
 export type Artifact = {
+  // TODO(wittjosiah): Is this actually an ObjectId or should it be a uri?
   id: ObjectId;
+
+  /**
+   *
+   */
+  // TODO(wittjosiah): Rename to `instructions`?
   prompt: string;
+
+  /**
+   * Schema that describes the shape of data which matches the artifact.
+   */
   schema: S.Schema.AnyNoContext;
-  tools: LLMTool[];
+
+  /**
+   * Tools that can be used to act on data which matches the artifact.
+   */
+  tools: Tool[];
+
+  // TODO(wittjosiah): Add `component` field for rendering data which matches the artifact?
 };
 
 export const defineArtifact = (artifact: Artifact): Artifact => artifact;

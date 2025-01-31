@@ -7,7 +7,7 @@ import { Chess } from 'chess.js';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { type Artifact, defineArtifact, defineTool, LLMToolResult } from '@dxos/artifact';
+import { type Artifact, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { isImage } from '@dxos/conductor';
 import {
@@ -43,7 +43,7 @@ export type ArtifactsContext = {
 };
 
 declare global {
-  interface LLMToolContextExtensions {
+  interface ToolContextExtensions {
     artifacts?: ArtifactsContext;
   }
 }
@@ -86,7 +86,7 @@ export const artifacts: Record<string, Artifact> = [
           invariant(extensions?.artifacts, 'No artifacts context');
           const artifact = createStatic(ChessSchema, { value: fen });
           extensions.artifacts.addArtifact(artifact);
-          return LLMToolResult.Success(createArtifactElement(artifact.id));
+          return ToolResult.Success(createArtifactElement(artifact.id));
         },
       }),
       defineTool({
@@ -99,7 +99,7 @@ export const artifacts: Record<string, Artifact> = [
             .getArtifacts()
             .filter((artifact) => isInstanceOf(ChessSchema, artifact));
           invariant(artifacts.length > 0, 'No chess games found');
-          return LLMToolResult.Success(artifacts);
+          return ToolResult.Success(artifacts);
         },
       }),
       defineTool({
@@ -110,7 +110,7 @@ export const artifacts: Record<string, Artifact> = [
           invariant(extensions?.artifacts, 'No artifacts context');
           const artifact = extensions!.artifacts.getArtifacts().find((artifact) => artifact.id === id);
           invariant(isInstanceOf(ChessSchema, artifact));
-          return LLMToolResult.Success(artifact.value);
+          return ToolResult.Success(artifact.value);
         },
       }),
       defineTool({
@@ -131,10 +131,10 @@ export const artifacts: Record<string, Artifact> = [
           try {
             board.move(move);
           } catch (error: any) {
-            return LLMToolResult.Error(error.message);
+            return ToolResult.Error(error.message);
           }
           artifact.value = board.fen();
-          return LLMToolResult.Success(artifact.value);
+          return ToolResult.Success(artifact.value);
         },
       }),
     ],
@@ -159,7 +159,7 @@ export const artifacts: Record<string, Artifact> = [
           invariant(extensions?.artifacts, 'No artifacts context');
           const artifacts = extensions.artifacts.getArtifacts().filter((artifact) => isInstanceOf(MapSchema, artifact));
           invariant(artifacts.length > 0, 'No maps found');
-          return LLMToolResult.Success(artifacts);
+          return ToolResult.Success(artifacts);
         },
       }),
       defineTool({
@@ -173,7 +173,7 @@ export const artifacts: Record<string, Artifact> = [
           invariant(extensions?.artifacts, 'No artifacts context');
           const artifact = createStatic(MapSchema, { coordinates: [longitude, latitude] });
           extensions.artifacts.addArtifact(artifact);
-          return LLMToolResult.Success(createArtifactElement(artifact.id));
+          return ToolResult.Success(createArtifactElement(artifact.id));
         },
       }),
     ],
@@ -198,7 +198,7 @@ export const genericTools = [
         ];
       }
 
-      return LLMToolResult.Success(createArtifactElement(id));
+      return ToolResult.Success(createArtifactElement(id));
     },
   }),
 ];

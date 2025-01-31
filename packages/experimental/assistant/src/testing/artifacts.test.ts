@@ -11,15 +11,15 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, LLMTool } from '../ai-service';
-import { defineTool, LLMToolResult } from '../conversation';
+import { AIServiceClientImpl, Tool } from '../ai-service';
+import { defineTool, ToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.
 const ArtifactDef = S.Struct({
   typename: S.String,
   description: S.String,
   schema: S.Any,
-  actions: S.Array(LLMTool),
+  actions: S.Array(Tool),
 }).pipe(S.mutable);
 
 type ArtifactDef = S.Schema.Type<typeof ArtifactDef>;
@@ -46,7 +46,7 @@ const list: ArtifactDef = {
       description: 'Query all lists',
       schema: S.Struct({}),
       execute: async ({}, context) => {
-        return LLMToolResult.Success(LISTS[id]);
+        return ToolResult.Success(LISTS[id]);
       },
     }),
     defineTool({
@@ -56,7 +56,7 @@ const list: ArtifactDef = {
         id: ObjectId.annotations({ description: 'The list to inspect' }),
       }),
       execute: async ({ id }, context) => {
-        return LLMToolResult.Success(LISTS[id]);
+        return ToolResult.Success(LISTS[id]);
       },
     }),
     defineTool({
@@ -68,7 +68,7 @@ const list: ArtifactDef = {
       }),
       execute: async ({ id, items }, context) => {
         LISTS[id].items.push(...items);
-        return LLMToolResult.Success(LISTS[id]);
+        return ToolResult.Success(LISTS[id]);
       },
     }),
   ],
@@ -83,7 +83,7 @@ const getArtifactDefinitions = defineTool({
   description: 'Queries the definitions and metadata of artifacts defined in the system',
   schema: S.Any,
   execute: async (_, context) => {
-    return LLMToolResult.Success(
+    return ToolResult.Success(
       artifacts.map((artifact) => ({
         typename: artifact.typename,
         description: artifact.description,
@@ -112,7 +112,7 @@ describe('Artifacts', () => {
       endpoint: ENDPOINT,
     });
 
-    const custodian: LLMTool = {
+    const custodian: Tool = {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(

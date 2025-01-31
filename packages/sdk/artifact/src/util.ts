@@ -6,13 +6,13 @@ import { Schema as S } from '@effect/schema';
 
 import { toJsonSchema } from '@dxos/echo-schema';
 
-import { type ToolExecutionContext, type LLMTool, type LLMToolResult } from './schema';
+import { type ToolExecutionContext, type Tool, type ToolResult } from './schema';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   name: string;
   description: string;
   schema: Params;
-  execute: (params: S.Schema.Type<Params>, context: ToolExecutionContext) => Promise<LLMToolResult>;
+  execute: (params: S.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
 };
 
 export const defineTool = <Params extends S.Schema.AnyNoContext>({
@@ -20,7 +20,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
   description,
   schema,
   execute,
-}: DefineToolParams<Params>): LLMTool => {
+}: DefineToolParams<Params>): Tool => {
   return {
     name,
     description,

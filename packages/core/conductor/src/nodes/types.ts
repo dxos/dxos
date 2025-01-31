@@ -4,7 +4,7 @@
 
 import { AST } from '@effect/schema';
 
-import { LLMTool, Message } from '@dxos/artifact';
+import { Tool, Message } from '@dxos/artifact';
 import { type ResultStreamEvent } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 
@@ -54,8 +54,7 @@ export type JsonTransformInput = S.Schema.Type<typeof JsonTransformInput>;
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 export type AppendInput = S.Schema.Type<typeof AppendInput>;
 
-// TODO(burdon): Generalize LLMTool?
-export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
+export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Tool) });
 export type DatabaseOutput = S.Schema.Type<typeof DatabaseOutput>;
 
 //
@@ -129,7 +128,7 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   model: S.optional(S.String),
-  tools: S.optional(S.Array(LLMTool)),
+  tools: S.optional(S.Array(Tool)),
   history: S.optional(S.Array(Message)),
 });
 
@@ -150,4 +149,4 @@ export type GptOutput = S.Schema.Type<typeof GptOutput>;
 // GPT Tools
 //
 
-export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
+export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Tool) });
