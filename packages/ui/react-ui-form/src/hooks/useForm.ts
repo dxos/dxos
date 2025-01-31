@@ -20,10 +20,9 @@ export type FormHandler<T extends BaseObject> = {
   //
 
   values: Partial<T>;
-  // TODO(ZaymonFC): Switch all PropertyKey<T> to JsonPath.
-  errors: Record<PropertyKey<T>, string>;
-  touched: Record<PropertyKey<T>, boolean>;
-  changed: Record<PropertyKey<T>, boolean>;
+  errors: Record<JsonPath, string>;
+  touched: Record<JsonPath, boolean>;
+  changed: Record<JsonPath, boolean>;
   canSave: boolean;
   handleSave: () => void;
 
@@ -31,10 +30,9 @@ export type FormHandler<T extends BaseObject> = {
   // Form input component helpers.
   //
 
-  // TODO(ZaymonFC): These should all switch to JsonPath.
-  getStatus: (property: PropertyKey<T>) => { status?: 'error'; error?: string };
-  getValue: <V>(property: PropertyKey<T>) => V | undefined;
-  onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;
+  getStatus: (property: JsonPath) => { status?: 'error'; error?: string };
+  getValue: <V>(property: JsonPath) => V | undefined;
+  onValueChange: <V>(property: JsonPath, type: SimpleType, value: V) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
@@ -96,9 +94,9 @@ export const useForm = <T extends BaseObject>({
     setValues(initialValues);
   }, [initialValues]);
 
-  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
+  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
+  const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
 
   //
@@ -158,19 +156,18 @@ export const useForm = <T extends BaseObject>({
   //
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
-    (property: PropertyKey<T>) => ({
+    (property: JsonPath) => ({
       status: errors[property] ? 'error' : undefined,
       error: errors[property] ? errors[property] : undefined,
     }),
     [touched, errors],
   );
 
-  // TODO(burdon): Use path to extract hierarchical value.
-  const getFormValue = <V>(property: PropertyKey<T>): V | undefined => {
-    return getValue(values, property as any as JsonPath);
+  const getFormValue = <V>(property: JsonPath): V | undefined => {
+    return getValue(values, property);
   };
 
-  const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
+  const onValueChange = (property: JsonPath, type: SimpleType, value: any) => {
     let parsedValue = value;
     try {
       if (type === 'number') {
@@ -228,19 +225,19 @@ export const useForm = <T extends BaseObject>({
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<JsonPath, V> => {
   invariant(obj);
-  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
+  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<JsonPath, V>);
 };
 
-const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
+const flatMap = (errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {
-        result[path as PropertyKey<T>] = message;
+        result[path] = message;
       }
       return result;
     },
-    {} as Record<PropertyKey<T>, string>,
+    {} as Record<JsonPath, string>,
   );
 };
