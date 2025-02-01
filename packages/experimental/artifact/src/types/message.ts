@@ -27,9 +27,6 @@ export const Thread = S.Struct({
 /** @deprecated */
 export interface Thread extends S.Schema.Type<typeof Thread> {}
 
-export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
-export type MessageRole = S.Schema.Type<typeof MessageRole>;
-
 /**
  * Text
  */
@@ -118,6 +115,9 @@ export const MessageContentBlock = S.Union(
 
 export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
+export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
+export type MessageRole = S.Schema.Type<typeof MessageRole>;
+
 /**
  * Message.
  */
@@ -152,7 +152,6 @@ const MessageSchema = S.Struct({
  */
 // TODO(burdon): Reconcile with Chat/Message types?
 export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
-
 export type Message = S.Schema.Type<typeof Message>;
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({

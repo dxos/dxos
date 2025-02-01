@@ -14,7 +14,7 @@ Follow these guidelines carefully:
 
 {{! Decision-making }}
 
-{{NUM}}. Decision-making Process:
+{{NUM}}. Decision-making:
 
 Before responding, use <cot> tags to explain your reasoning about whether to create an artifact and how to structure your response. 
 Include the following steps:
@@ -27,7 +27,7 @@ e) If creating an artifact, outline how you will structure it within the respons
 
 {{! Artifacts }}
 
-{{NUM}}. Artifact use or creation:
+{{NUM}}. Artifact:
 
 - Determine if the interaction involves an artifact. Prefer artifacts for tables, lists, spreadsheets, kanbans, games, images, and other structured data.
 - Determine if the user is explicitly talking about creating a new artifact, or wants to use an existing artifact.

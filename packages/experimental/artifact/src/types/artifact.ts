@@ -4,7 +4,7 @@
 
 import { type S, type ObjectId } from '@dxos/echo-schema';
 
-import { type Tool } from './schema';
+import { type Tool } from './tools';
 
 /**
  *

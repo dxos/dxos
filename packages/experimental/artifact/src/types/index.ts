@@ -4,5 +4,5 @@
 
 export * from './artifact';
 export * from './message';
-export * from './schema';
+export * from './tools';
 export * from './util';

@@ -6,7 +6,7 @@ import { Schema as S } from '@effect/schema';
 
 import { toJsonSchema } from '@dxos/echo-schema';
 
-import { type ToolExecutionContext, type Tool, type ToolResult } from './schema';
+import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   name: string;
