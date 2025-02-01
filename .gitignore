@@ -164,4 +164,6 @@ dump.rdb
 
 # lychee link checker
 /.lychee.report.md
+
+# aider assistant temp files
 .aider*
