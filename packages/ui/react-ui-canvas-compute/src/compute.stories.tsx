@@ -7,7 +7,7 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
+import { capabilities } from '@dxos/artifact/testing';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type ComputeGraphModel, ComputeNode, DefaultInput, DefaultOutput } from '@dxos/conductor';
 import { S, toEffectSchema } from '@dxos/echo-schema';
@@ -31,7 +31,6 @@ import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { createFunctionAnchors, type ComputeShape } from './shapes';
 import {
-  capabilities,
   createEdgeServices,
   createControlCircuit,
   createGPTRealtimeCircuit,

@@ -229,6 +229,9 @@
       "path": "packages/experimental/artifact/tsconfig.json"
     },
     {
+      "path": "packages/experimental/artifact-testing/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/assistant/tsconfig.json"
     },
     {

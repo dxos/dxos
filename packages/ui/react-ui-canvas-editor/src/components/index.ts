@@ -4,7 +4,6 @@
 
 export * from './Canvas';
 export * from './Editor';
-export * from './JsonFilter';
 export * from './KeyboardContainer';
 export * from './TextBox';
 export * from './Toolbar';

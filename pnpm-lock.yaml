@@ -4891,6 +4891,46 @@ importers:
         specifier: ^3.12.3
         version: 3.12.7
 
+  packages/experimental/artifact-testing:
+    dependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../core/conductor
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-chess
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../../plugins/experimental/plugin-map
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      chess.js:
+        specifier: ^1.0.0
+        version: 1.0.0
+    devDependencies:
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.12.7)
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
+
   packages/experimental/assistant:
     dependencies:
       '@dxos/artifact':
@@ -5718,9 +5758,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/plugin-chess':
-        specifier: workspace:*
-        version: link:../../plugin-chess
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -5791,6 +5828,12 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../../plugin-chess
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -10887,12 +10930,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@dxos/plugin-chess':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-chess
-      '@dxos/plugin-map':
-        specifier: workspace:*
-        version: link:../../plugins/experimental/plugin-map
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -11065,9 +11102,6 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
-      jsonpath:
-        specifier: ^1.1.1
-        version: 1.1.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -11099,9 +11133,6 @@ importers:
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
-      '@types/jsonpath':
-        specifier: ^0.2.4
-        version: 0.2.4
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -12009,6 +12040,9 @@ importers:
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
+      jsonpath:
+        specifier: ^1.1.1
+        version: 1.1.1
       react-syntax-highlighter:
         specifier: ^15.5.0
         version: 15.5.0(react@18.2.0)
@@ -12022,6 +12056,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@types/jsonpath':
+        specifier: ^0.2.4
+        version: 0.2.4
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79

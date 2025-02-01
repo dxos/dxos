@@ -53,7 +53,6 @@
     "@radix-ui/react-context": "^1.0.0",
     "bind-event-listener": "^3.0.0",
     "d3": "^7.9.0",
-    "jsonpath": "^1.1.1",
     "lodash.defaultsdeep": "^4.6.1",
     "react-hotkeys-hook": "^4.6.1"
   },
@@ -66,7 +65,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
-    "@types/jsonpath": "^0.2.4",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",

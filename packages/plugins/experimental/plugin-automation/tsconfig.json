@@ -142,6 +142,9 @@
       "path": "../plugin-inbox"
     },
     {
+      "path": "../plugin-map"
+    },
+    {
       "path": "../plugin-script"
     }
   ]

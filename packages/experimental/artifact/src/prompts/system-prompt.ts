@@ -8,19 +8,19 @@ import { type Artifact } from '../types';
 
 export type SystemPromptOptions = {
   template?: string[];
-  artifacts: Record<string, Artifact>;
+  artifacts?: Record<string, Artifact>;
 };
 
 /**
  * Create the prompt from a template.
  */
 // TODO(burdon): Use template system.
-export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts }: SystemPromptOptions): string => {
+export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts }: SystemPromptOptions = {}): string => {
   let count = 1;
   const values: Record<string, () => string> = {
     N: () => String(count++),
     ARTIFACT_PROVIDERS: () =>
-      Object.values(artifacts)
+      Object.values(artifacts ?? {})
         .filter((artifact) => artifact.id === 'plugin-chess')
         .map((artifact) => artifact.prompt)
         .join('\n'),
