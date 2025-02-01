@@ -5,5 +5,4 @@
 // TODO(wittjosiah): Exporting these from here causes things like plugin-chess to not dev deps.
 export * from './circuits';
 export * from './plugins';
-export * from './prompts';
 export * from './services';

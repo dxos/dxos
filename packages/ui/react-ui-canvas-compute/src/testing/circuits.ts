@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { createSystemPrompt } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { pointMultiply, pointsToRect, rectToPoints, createNote, CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 
-import { ARTIFACTS_SYSTEM_PROMPT } from './prompts';
+import { artifacts } from './plugins';
 import { ComputeGraphController, type Services } from '../graph';
 import { createComputeGraph } from '../hooks';
 import {
@@ -154,7 +155,7 @@ export const createArtifactCircuit = () => {
   model.builder.call((builder) => {
     const prompt = model.createNode(
       createTemplate({
-        text: ARTIFACTS_SYSTEM_PROMPT,
+        text: createSystemPrompt({ artifacts }),
         ...position({ x: -10, y: -5, width: 8, height: 18 }),
       }),
     );
@@ -208,7 +209,7 @@ export const createGptCircuit = (options: {
     if (options.artifact) {
       const prompt = model.createNode(
         createTemplate({
-          text: ARTIFACTS_SYSTEM_PROMPT,
+          text: createSystemPrompt({ artifacts }),
           ...position({ x: -18, y: -12, width: 8, height: 10 }),
         }),
       );

@@ -11,6 +11,7 @@ import { type SpaceId } from '@dxos/keys';
 import { type GenerateRequest } from './defs';
 import { GenerationStream } from './stream';
 
+// TODO(burdon): Rename.
 export interface AIServiceClient {
   getSpace(spaceId: SpaceId): Promise<Space>;
   getThread(spaceId: SpaceId, threadId: string): Promise<Thread>;
@@ -20,8 +21,6 @@ export interface AIServiceClient {
   generate(request: GenerateRequest): Promise<GenerationStream>;
 }
 
-// TODO(burdon): Create mock.
-
 export type AIServiceClientParams = {
   endpoint: string;
 };
@@ -29,10 +28,12 @@ export type AIServiceClientParams = {
 /**
  * Edge GPT client.
  */
+// TODO(burdon): Create mock.
 export class AIServiceClientImpl implements AIServiceClient {
   private readonly _endpoint: string;
 
   constructor({ endpoint }: AIServiceClientParams) {
+    invariant(endpoint, 'endpoint is required');
     this._endpoint = endpoint;
   }
 

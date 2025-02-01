@@ -70,13 +70,13 @@
       "path": "../../../core/mesh/edge-client"
     },
     {
+      "path": "../../../experimental/artifact"
+    },
+    {
       "path": "../../../experimental/assistant"
     },
     {
       "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../../sdk/artifact"
     },
     {
       "path": "../../../sdk/react-client"

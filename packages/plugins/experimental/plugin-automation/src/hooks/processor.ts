@@ -4,7 +4,7 @@
 
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
-import { type Tool, Message } from '@dxos/artifact';
+import { createSystemPrompt, type Tool, Message } from '@dxos/artifact';
 import {
   type AIServiceClientImpl,
   type GenerateRequest,
@@ -16,7 +16,7 @@ import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // TODO(wittjosiah): Factor these out from canvas compute because this plugin shouldn't depend on it.
-import { ARTIFACTS_SYSTEM_PROMPT } from '@dxos/react-ui-canvas-compute/testing';
+import { artifacts } from '@dxos/react-ui-canvas-compute/testing';
 
 /**
  * Handles interactions with an AI service.
@@ -44,7 +44,7 @@ export class ChatProcessor {
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      systemPrompt: ARTIFACTS_SYSTEM_PROMPT,
+      systemPrompt: createSystemPrompt({ artifacts }),
     },
   ) {}
 

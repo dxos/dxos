@@ -26,10 +26,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../experimental/assistant"
+      "path": "../../experimental/artifact"
     },
     {
-      "path": "../../sdk/artifact"
+      "path": "../../experimental/assistant"
     },
     {
       "path": "../../ui/react-ui-table"

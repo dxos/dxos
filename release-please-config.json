@@ -394,6 +394,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/artifact/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/assistant/package.json",
           "jsonpath": "$.version"
         },
@@ -670,11 +675,6 @@
         {
           "type": "json",
           "path": "packages/sdk/app-graph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/sdk/artifact/package.json",
           "jsonpath": "$.version"
         },
         {
