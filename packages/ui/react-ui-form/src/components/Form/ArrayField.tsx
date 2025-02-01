@@ -40,8 +40,6 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   const tupleType = findNode(ast, AST.isTupleType);
   const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
 
-  // Consider getting values here istead of it being passed in.
-
   const getDefaultObjectValue = (typeNode: AST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
     const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, AST.isTypeLiteral);
