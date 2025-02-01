@@ -504,11 +504,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-kanban/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-map/package.json",
           "jsonpath": "$.version"
         },
@@ -575,6 +570,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-help/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -724,6 +724,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/react-edge-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/schema/package.json",
           "jsonpath": "$.version"
         },
@@ -785,11 +790,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-edge-client/package.json",
           "jsonpath": "$.version"
         },
         {

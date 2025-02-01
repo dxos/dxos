@@ -1,7 +1,8 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-ui-edge-client",
+  "name": "react-edge-client",
   "tags": [
+    "scope:sdk",
     "scope:ui"
   ],
   "sourceRoot": "{projectRoot}/src",

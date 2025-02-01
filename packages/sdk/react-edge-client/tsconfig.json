@@ -34,7 +34,7 @@
       "path": "../../core/mesh/edge-client"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../react-client"
     }
   ]
 }

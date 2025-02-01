@@ -289,9 +289,6 @@
       "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-map/tsconfig.json"
     },
     {
@@ -332,6 +329,9 @@
     },
     {
       "path": "packages/plugins/plugin-help/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
@@ -421,6 +421,9 @@
       "path": "packages/sdk/react-client/tsconfig.json"
     },
     {
+      "path": "packages/sdk/react-edge-client/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/schema/tsconfig.json"
     },
     {
@@ -458,9 +461,6 @@
     },
     {
       "path": "packages/ui/react-ui-card/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-edge-client/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-editor/tsconfig.json"

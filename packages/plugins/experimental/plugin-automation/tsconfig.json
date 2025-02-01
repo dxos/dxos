@@ -85,6 +85,9 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../sdk/react-edge-client"
+    },
+    {
       "path": "../../../sdk/schema"
     },
     {
@@ -95,9 +98,6 @@
     },
     {
       "path": "../../../ui/react-ui-canvas-editor"
-    },
-    {
-      "path": "../../../ui/react-ui-edge-client"
     },
     {
       "path": "../../../ui/react-ui-editor"

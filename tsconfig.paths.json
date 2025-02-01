@@ -40,12 +40,6 @@
       "@dxos/plugin-inbox/types": [
         "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
       ],
-      "@dxos/plugin-kanban": [
-        "packages/plugins/experimental/plugin-kanban/src/index.ts"
-      ],
-      "@dxos/plugin-kanban/types": [
-        "packages/plugins/experimental/plugin-kanban/src/types.ts"
-      ],
       "@dxos/plugin-map": [
         "packages/plugins/experimental/plugin-map/src/index.ts"
       ],
@@ -114,6 +108,12 @@
       ],
       "@dxos/plugin-help/types": [
         "packages/plugins/plugin-help/src/types.ts"
+      ],
+      "@dxos/plugin-kanban": [
+        "packages/plugins/plugin-kanban/src/index.ts"
+      ],
+      "@dxos/plugin-kanban/types": [
+        "packages/plugins/plugin-kanban/src/types.ts"
       ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"

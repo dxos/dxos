@@ -9,7 +9,7 @@ import { type Message } from '@dxos/artifact';
 import { type ArtifactsContext } from '@dxos/artifact-testing';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { create, getSpace } from '@dxos/react-client/echo';
-import { useEdgeClient, useQueue } from '@dxos/react-ui-edge-client';
+import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Thread } from './Thread';

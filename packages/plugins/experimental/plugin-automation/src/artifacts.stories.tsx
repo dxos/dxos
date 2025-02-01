@@ -24,7 +24,7 @@ import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
-import { useQueue } from '@dxos/react-ui-edge-client';
+import { useQueue } from '@dxos/react-edge-client';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
