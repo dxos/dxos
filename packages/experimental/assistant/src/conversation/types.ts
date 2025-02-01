@@ -17,6 +17,9 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   content: [{ type: 'text', text }],
 });
 
+/**
+ * @deprecated Use {@link LLMTool} instead.
+ */
 export const ToolDefinition = S.Struct({
   name: S.String,
   description: S.String,
@@ -24,6 +27,9 @@ export const ToolDefinition = S.Struct({
   execute: S.Any,
 });
 
+/**
+ * @deprecated Use {@link LLMTool} instead.
+ */
 export type ToolDefinition = {
   name: string;
   description: string;
@@ -104,6 +110,9 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
   };
 };
 
+/**
+ * Adapts schems to be able to pass to AI providers.
+ */
 const toFunctionParameterSchema = (schema: S.Schema.All) => {
   const jsonSchema = toJsonSchema(schema);
   log('tool schema', { jsonSchema });

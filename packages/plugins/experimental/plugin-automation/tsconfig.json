@@ -103,6 +103,9 @@
       "path": "../../../ui/react-ui-list"
     },
     {
+      "path": "../../../ui/react-ui-stack"
+    },
+    {
       "path": "../../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -133,10 +136,10 @@
       "path": "../../plugin-stack"
     },
     {
-      "path": "../plugin-inbox"
+      "path": "../../plugin-wnfs"
     },
     {
-      "path": "../plugin-ipfs"
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-script"

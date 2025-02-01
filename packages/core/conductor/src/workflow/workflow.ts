@@ -68,7 +68,7 @@ export class Workflow {
 
       const outputNodeId = this._graph.nodes.find((node) => node.type === NODE_OUTPUT)?.id;
       const outputNodeIndex = allAffectedNodes.findIndex((nodeId) => nodeId === outputNodeId);
-      return outputNodeIndex ? results[outputNodeIndex] : makeValueBag({});
+      return outputNodeIndex >= 0 ? results[outputNodeIndex] : makeValueBag({});
     }).pipe(Effect.withSpan('workflow', { attributes: { workflowDxn: this._dxn } }));
   }
 

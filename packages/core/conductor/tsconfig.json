@@ -32,7 +32,10 @@
       "path": "../../sdk/artifact"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../echo/echo-db"
     },
     {
       "path": "../echo/echo-schema"

@@ -40,7 +40,6 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-help": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
-    "@dxos/plugin-ipfs": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

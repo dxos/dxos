@@ -77,6 +77,16 @@ const StorybookKanban = () => {
     [space],
   );
 
+  const onTypenameChanged = useCallback(
+    (typename: string) => {
+      if (kanban?.cardView?.target) {
+        cardSchema?.updateTypename(typename);
+        kanban.cardView.target.query.type = typename;
+      }
+    },
+    [kanban?.cardView?.target, cardSchema],
+  );
+
   const handleRemoveEmptyColumn = useCallback(
     (columnValue: string) => {
       model?.removeColumnFromArrangement(columnValue);
@@ -107,8 +117,9 @@ const StorybookKanban = () => {
             registry={space?.db.schemaRegistry}
             schema={cardSchema}
             view={kanban.cardView.target!}
-            onDelete={(...args) => {
-              console.log('[ViewEditor]', 'onDelete', args);
+            onTypenameChanged={onTypenameChanged}
+            onDelete={(fieldId: string) => {
+              console.log('[ViewEditor]', 'onDelete', fieldId);
             }}
           />
         )}

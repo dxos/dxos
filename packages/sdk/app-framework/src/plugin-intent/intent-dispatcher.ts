@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Ref } from 'effect';
+import { Effect, Option, pipe, Ref } from 'effect';
+import { type Simplify } from 'effect/Types';
 
-import { type MaybePromise, pick, byDisposition, type Disposition } from '@dxos/util';
+import { type MaybePromise, byDisposition, type Disposition } from '@dxos/util';
 
 import { IntentAction } from './actions';
+import { CycleDetectedError, NoResolversError } from './errors';
 import {
   createIntent,
   type AnyIntent,
@@ -53,6 +55,8 @@ export type IntentEffectResult<Fields extends IntentParams> = {
    * An error that occurred while performing the action.
    *
    * If the intent is apart of a chain of intents and an error occurs, the chain will be aborted.
+   *
+   * Return caught error instead of throwing to trigger other intent to be triggered prior to returning the error.
    */
   error?: Error;
 
@@ -112,7 +116,7 @@ export const createResolver = <Tag extends string, Fields extends IntentParams>(
  */
 export type PromiseIntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
-) => Promise<IntentDispatcherResult<Fields>>;
+) => Promise<Simplify<IntentDispatcherResult<Fields>>>;
 
 /**
  * Creates an effect for intents.
@@ -120,23 +124,23 @@ export type PromiseIntentDispatcher = <Fields extends IntentParams>(
 export type IntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
   depth?: number,
-) => Effect.Effect<IntentDispatcherResult<Fields>, Error>;
+) => Effect.Effect<Simplify<Required<IntentDispatcherResult<Fields>>['data']>, Error>;
 
 type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<Fields> & {
   _intent: Intent<Tag, Fields>;
 };
 
-type AnyIntentResult = IntentResult<any, any>;
+export type AnyIntentResult = IntentResult<any, any>;
 
 /**
  * Invokes the most recent undoable intent with undo flags.
  */
-export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any> | undefined>;
+export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any>>;
 
 /**
  * Creates an effect which undoes the last intent.
  */
-export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any> | undefined, Error>;
+export type IntentUndo = () => Effect.Effect<any, Error>;
 
 /**
  * Check if a chain of results is undoable.
@@ -173,22 +177,20 @@ export const createDispatcher = (
       if (candidates.length === 0) {
         return {
           _intent: intent,
-          error: new Error(`No resolver found for action: ${intent.action}`),
-        } satisfies AnyIntentResult;
+          error: new NoResolversError(intent.action),
+        } as AnyIntentResult;
       }
 
       const effect = candidates[0].effect(intent.data, intent.undo ?? false);
       const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(async () => effect);
-      return { _intent: intent, ...result } satisfies AnyIntentResult;
+      return { _intent: intent, ...result } as AnyIntentResult;
     });
   };
 
   const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
     return Effect.gen(function* () {
       if (depth > executionLimit) {
-        yield* Effect.fail(
-          new Error('Intent execution limit exceeded. This is likely due to an infinite loop within intent resolvers.'),
-        );
+        yield* Effect.fail(new CycleDetectedError());
       }
 
       const resultsRef = yield* Ref.make<AnyIntentResult[]>([]);
@@ -205,36 +207,38 @@ export const createDispatcher = (
           }
         }
         if (result.error) {
-          break;
+          yield* Effect.fail(result.error);
         }
       }
 
       const results = yield* resultsRef.get;
       const result = results[0];
-      if (result) {
-        yield* Ref.update(historyRef, (history) => {
-          const next = [...history, results];
-          if (next.length > historyLimit) {
-            next.splice(0, next.length - historyLimit);
-          }
-          return next;
-        });
-
-        if (result.undoable && isUndoable(results)) {
-          // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
-          yield* dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message }));
+      yield* Ref.update(historyRef, (history) => {
+        const next = [...history, results];
+        if (next.length > historyLimit) {
+          next.splice(0, next.length - historyLimit);
         }
+        return next;
+      });
 
-        return pick(result, ['data', 'error']);
-      } else {
-        return { data: {}, error: new Error('No results') };
+      if (result.undoable && isUndoable(results)) {
+        // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
+        yield* pipe(
+          dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message })),
+          Effect.catchSome((err) =>
+            err instanceof NoResolversError ? Option.some(Effect.succeed(undefined)) : Option.none(),
+          ),
+        );
       }
+
+      return result.data;
     });
   };
 
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
-    const program = dispatch(intentChain);
-    return Effect.runPromise(program);
+    return Effect.runPromise(dispatch(intentChain))
+      .then((data) => ({ data }))
+      .catch((error) => ({ error }));
   };
 
   const undo: IntentUndo = () => {
@@ -256,8 +260,9 @@ export const createDispatcher = (
   };
 
   const undoPromise: PromiseIntentUndo = () => {
-    const program = undo();
-    return Effect.runPromise(program);
+    return Effect.runPromise(undo())
+      .then((data) => ({ data }))
+      .catch((error) => ({ error }));
   };
 
   return { dispatch, dispatchPromise, undo, undoPromise };

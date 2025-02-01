@@ -26,6 +26,7 @@ export const createComputeNode = (shape: ComputeShape): ComputeNode => {
 };
 
 const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => ComputeNode> = {
+  // System.
   [NODE_INPUT]: () => createNode(NODE_INPUT),
   [NODE_OUTPUT]: () => createNode(NODE_OUTPUT),
 

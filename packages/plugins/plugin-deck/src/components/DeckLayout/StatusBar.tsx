@@ -13,10 +13,10 @@ export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
   const sizeAttrs = useMainSize();
   return (
     <div
-      role='none'
+      role='contentinfo'
       {...sizeAttrs}
       className={mx(
-        'fixed flex justify-between block-end-0 inset-inline-0 items-center border-bs border-separator z-[2]',
+        'fixed block-end-0 inset-inline-0 flex justify-between items-center border-bs border-separator z-[2] pbe-[env(safe-area-inset-bottom)]',
         mainPadding,
         mainPaddingTransitions,
       )}

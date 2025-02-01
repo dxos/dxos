@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { getSpace } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
+import { ViewType } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
@@ -40,6 +41,23 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
     }
   }, [space, table?.view?.target?.query?.type]);
 
+  const views = useQuery(space, Filter.schema(ViewType));
+  const currentTypename = useMemo(() => table?.view?.target?.query?.type, [table?.view?.target?.query?.type]);
+  const updateViewTypename = useCallback(
+    (newTypename: string) => {
+      if (!schema) {
+        return;
+      }
+
+      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      for (const view of matchingViews) {
+        view.query.type = newTypename;
+      }
+      schema.updateTypename(newTypename);
+    },
+    [views, schema],
+  );
+
   const handleDelete = useCallback(
     (fieldId: string) => {
       void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
@@ -52,7 +70,13 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   }
 
   return (
-    <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={table.view.target!} onDelete={handleDelete} />
+    <ViewEditor
+      registry={space.db.schemaRegistry}
+      schema={schema}
+      view={table.view.target!}
+      onTypenameChanged={updateViewTypename}
+      onDelete={handleDelete}
+    />
   );
 };
 

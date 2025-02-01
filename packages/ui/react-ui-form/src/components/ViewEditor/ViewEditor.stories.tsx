@@ -5,13 +5,13 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Format, type EchoSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
-import { useSpace } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { type ViewType, ViewProjection, createView } from '@dxos/schema';
+import { ViewProjection, ViewType, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor } from './ViewEditor';
@@ -41,6 +41,21 @@ const DefaultStory = () => {
     }
   }, [space]);
 
+  const views = useQuery(space, Filter.schema(ViewType));
+  const currentTypename = useMemo(() => view?.query?.type, [view]);
+  const updateViewTypename = useCallback(
+    (newTypename: string) => {
+      if (!schema) {
+        return;
+      }
+      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      for (const view of matchingViews) {
+        view.query.type = newTypename;
+      }
+      schema.updateTypename(newTypename);
+    },
+    [views, schema],
+  );
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
 
   if (!schema || !view || !projection) {
@@ -50,7 +65,13 @@ const DefaultStory = () => {
   return (
     <TestLayout json={{ schema, view, projection }}>
       <TestPanel>
-        <ViewEditor schema={schema} view={view} registry={space?.db.schemaRegistry} onDelete={handleDelete} />
+        <ViewEditor
+          schema={schema}
+          view={view}
+          registry={space?.db.schemaRegistry}
+          onTypenameChanged={updateViewTypename}
+          onDelete={handleDelete}
+        />
       </TestPanel>
     </TestLayout>
   );

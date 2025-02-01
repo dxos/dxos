@@ -130,6 +130,16 @@ const DefaultStory = () => {
     [table, model],
   );
 
+  const onTypenameChanged = useCallback(
+    (typename: string) => {
+      if (table?.view?.target) {
+        schema?.updateTypename(typename);
+        table.view.target.query.type = typename;
+      }
+    },
+    [table?.view?.target, schema],
+  );
+
   if (!schema || !table) {
     return <div />;
   }
@@ -148,6 +158,7 @@ const DefaultStory = () => {
             registry={space?.db.schemaRegistry}
             schema={schema}
             view={table.view.target!}
+            onTypenameChanged={onTypenameChanged}
             onDelete={handleDeleteColumn}
           />
         )}

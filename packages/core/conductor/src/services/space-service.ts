@@ -4,13 +4,19 @@
 
 import { Context, Layer } from 'effect';
 
-import { type Space } from '@dxos/client/echo';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { SpaceId } from '@dxos/keys';
 
-// TODO(dmaretskyi): This makes conductor dependent on client.
 export class SpaceService extends Context.Tag('SpaceService')<
   SpaceService,
-  { readonly spaceId: string | undefined; readonly space: Space | undefined }
+  { readonly spaceId: SpaceId; readonly db: EchoDatabase }
 >() {
-  static empty = Layer.succeed(SpaceService, { spaceId: undefined, space: undefined });
-  static fromSpace = (space: Space) => Layer.succeed(SpaceService, { spaceId: space.id, space });
+  static empty = Layer.succeed(SpaceService, {
+    get spaceId(): SpaceId {
+      throw new Error('SpaceService not available');
+    },
+    get db(): EchoDatabase {
+      throw new Error('SpaceService not available');
+    },
+  });
 }

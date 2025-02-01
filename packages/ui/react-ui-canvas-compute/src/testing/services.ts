@@ -15,13 +15,11 @@ export type ServiceEndpoints = {
  * pnpm -w nx dev edge --port 8787
  * pnpm -w nx dev ai-service --port 8788
  */
-// eslint-disable-next-line unused-imports/no-unused-vars
 export const localServiceEndpoints = {
   edge: 'http://localhost:8787',
   ai: 'http://localhost:8788',
 };
 
-// eslint-disable-next-line unused-imports/no-unused-vars
 export const remoteServiceEndpoints = {
   edge: 'https://edge.dxos.workers.dev',
   ai: 'https://ai-service.dxos.workers.dev',

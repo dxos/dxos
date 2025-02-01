@@ -43,11 +43,15 @@ export const JsonContentBlock = S.Struct({
 }).pipe(S.mutable);
 export type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
 
+/**
+ * Image.
+ */
 export const ImageSource = S.Struct({
   type: S.Literal('base64'),
   media_type: S.Literal('image/jpeg', 'image/png', 'image/gif', 'image/webp'),
   data: S.String,
 }).pipe(S.mutable);
+
 export type ImageSource = S.Schema.Type<typeof ImageSource>;
 
 export const ImageContentBlock = S.Struct({
@@ -57,6 +61,9 @@ export const ImageContentBlock = S.Struct({
 }).pipe(S.mutable);
 export type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
 
+/**
+ * Tool use.
+ */
 export const ToolUseContentBlock = S.Struct({
   type: S.Literal('tool_use'),
 
@@ -65,6 +72,7 @@ export const ToolUseContentBlock = S.Struct({
    * Used to match the tool result block.
    */
   id: S.String,
+
   /**
    * Tool name.
    */
@@ -76,6 +84,7 @@ export const ToolUseContentBlock = S.Struct({
   /**
    * Used to accumulate the partial tool input JSON in streaming mode.
    */
+  // TODO(burdon): Remove?
   inputJson: S.optional(S.String),
 }).pipe(S.mutable);
 
@@ -97,8 +106,12 @@ export const MessageContentBlock = S.Union(
   ToolUseContentBlock,
   ToolResultContentBlock,
 );
+
 export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
+/**
+ * Message.
+ */
 const MessageSchema = S.Struct({
   id: ObjectId,
 
@@ -130,16 +143,6 @@ export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0
 
 export type Message = S.Schema.Type<typeof Message>;
 
-/**
- * Message transformed from the database row.
- */
-// TODO(burdon): Remove?
-// export const MessageFromDb = S.Struct({
-//   ...MessageSchema.fields,
-//   content: S.propertySignature(MessageSchema.fields.content.pipe((schema) => S.parseJson(schema))).pipe(
-//     S.fromKey('contentJson'),
-//   ),
-// });
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),
   spaceId,

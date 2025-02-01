@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowSquareOut, GearSix, Warning } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
@@ -24,13 +23,15 @@ import {
   useDefaultValue,
   useSidebars,
   useTranslation,
+  Icon,
+  IconButton,
 } from '@dxos/react-ui';
 import { LayoutControls } from '@dxos/react-ui-stack';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
 
-const buttonStyles = 'pli-1.5 text-xs font-normal';
+const buttonStyles = '!pli-1.5 text-xs font-normal';
 
 const repo = 'https://github.com/dxos/dxos';
 
@@ -57,7 +58,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
     <div
       role='none'
       className={mx(
-        'flex bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content justify-end',
+        'flex pbe-[env(safe-area-inset-bottom)] box-content justify-end',
         layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >
@@ -75,7 +76,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
           >
             <Message.Root valence='warning' className='rounded-be-none p-5'>
               <Message.Title>
-                <Warning weight='duotone' className='inline mie-2 is-6 bs-6' />
+                <Icon icon='ph--warning--duotone' size={6} classNames='inline mie-2' />
                 <span>{t('warning title')}</span>
               </Message.Title>
               <Message.Body>
@@ -83,7 +84,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                 <br />
                 <Link href={previewUrl} target='_blank' rel='noreferrer' variant='neutral'>
                   {t('learn more label')}
-                  <ArrowSquareOut className='inline mis-1' weight='bold' />
+                  <Icon icon='ph--arrow-square-out--bold' classNames='inline mis-1' />
                 </Link>
               </Message.Body>
             </Message.Root>
@@ -96,7 +97,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
                   <br />
                   <Link href={releaseUrl} target='_blank' rel='noreferrer' variant='neutral'>
                     {t('see release label')}
-                    <ArrowSquareOut className='inline mis-1' weight='bold' />
+                    <Icon icon='ph--arrow-square-out--bold' classNames='inline mis-1' />
                   </Link>
                 </p>
               )}
@@ -120,17 +121,19 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
           {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
-          <Button
+          <IconButton
+            icon='ph--gear-six--regular'
+            iconOnly
+            label={t('open settings label')}
+            size={4}
             variant='ghost'
             classNames={buttonStyles}
             data-testid='treeView.openSettings'
             data-joyride='welcome/settings'
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
+            iconClassNames='rotate-90'
             onClick={() => dispatch(createIntent(SettingsAction.Open))}
-          >
-            <span className='sr-only'>{t('open settings label')}</span>
-            <GearSix className={mx(getSize(5), 'rotate-90')} />
-          </Button>
+          />
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content classNames='z-[12]'>

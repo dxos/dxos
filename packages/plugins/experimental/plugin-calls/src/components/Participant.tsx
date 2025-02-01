@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useEffect } from 'react';
+import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
+import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
 import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
 import { VideoSrcObject } from './VideoSrcObject';
+import { useSubscribedState } from './hooks/rxjsHooks';
 import { useRoomContext } from './hooks/useRoomContext';
 import { cn } from './utils/style';
 
@@ -20,10 +22,41 @@ interface Props {
   isSelf?: boolean;
   pinnedId?: string;
   setPinnedId: (id?: string) => void;
+  showDebugInfo?: boolean;
 }
 
+const useMid = (track?: MediaStreamTrack) => {
+  const { peer } = useRoomContext();
+  const transceivers$ = useMemo(
+    () =>
+      combineLatest([
+        peer.peerConnection$,
+        peer.peerConnection$.pipe(switchMap((peerConnection) => fromEvent(peerConnection, 'track'))),
+      ]).pipe(map(([pc]) => pc.getTransceivers())),
+    [peer.peerConnection$],
+  );
+  const transceivers = useSubscribedState(transceivers$, []);
+  if (!track) {
+    return null;
+  }
+  return transceivers.find((t) => t.sender.track === track || t.receiver.track === track)?.mid;
+};
+
 export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div'] & Props>(
-  ({ videoTrack, isSelf = false, flipId, user, isScreenShare = false, pinnedId, setPinnedId }, ref) => {
+  (
+    {
+      videoTrack,
+      audioTrack,
+      isSelf = false,
+      flipId,
+      user,
+      isScreenShare = false,
+      pinnedId,
+      setPinnedId,
+      showDebugInfo = false,
+    },
+    ref,
+  ) => {
     const { dataSaverMode } = useRoomContext();
 
     const pinned = flipId === pinnedId;
@@ -33,6 +66,9 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
         setPinnedId(flipId);
       }
     }, [flipId, isScreenShare, setPinnedId]);
+
+    const audioMid = useMid(audioTrack);
+    const videoMid = useMid(videoTrack);
 
     return (
       <div className='grow shrink text-base basis-[calc(var(--flex-container-width)_-_var(--gap)_*_3)]' ref={ref}>
@@ -62,6 +98,16 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
               <div className='flex items-center gap-2 absolute m-2 text-shadow left-1 bottom-1 leading-none noopener noreferrer'>
                 {user.name}
               </div>
+            )}
+            {showDebugInfo && (
+              <span className='m-2 absolute text-black bg-white opacity-50'>
+                {[
+                  `video mid: ${videoMid}`,
+                  `audio mid: ${audioMid}`,
+                  `video settings: ${JSON.stringify(videoTrack?.getSettings(), null, 2)}`,
+                  `audio settings: ${JSON.stringify(audioTrack?.getSettings(), null, 2)}`,
+                ].join(' | ')}
+              </span>
             )}
             {(user.speaking || user.raisedHand) && (
               <div

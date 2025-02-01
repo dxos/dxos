@@ -7,9 +7,6 @@ import { useEffect, useRef, useState } from 'react';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type DXN } from '@dxos/keys';
 
-// TODO(burdon): Factor out?
-import { useDynamicCallback } from './useDynamicCallback';
-
 // TODO(burdon): Move to edge SDK?
 
 export type UseQueueOptions = {
@@ -37,7 +34,7 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
   const { subspaceTag, spaceId, queueId } = queueDxn?.asQueueDXN() ?? {};
 
   // TODO(burdon): Replace useDynamicCallback.
-  const append = useDynamicCallback(async (items: T[]) => {
+  const append = async (items: T[]) => {
     if (!subspaceTag || !spaceId || !queueId) {
       return;
     }
@@ -48,9 +45,9 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
     } catch (err) {
       setError(err as Error);
     }
-  });
+  };
 
-  const refresh = useDynamicCallback(async () => {
+  const refresh = async () => {
     if (!subspaceTag || !spaceId || !queueId) {
       return;
     }
@@ -68,7 +65,11 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
     } finally {
       setIsLoading(false);
     }
-  });
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, [queueDxn?.toString()]);
 
   useEffect(() => {
     void refresh();

@@ -171,7 +171,7 @@ export class DXN {
 
     const [spaceId, echoId] = this.#parts;
     return {
-      spaceId: spaceId as SpaceId | undefined,
+      spaceId: spaceId === LOCAL_SPACE_TAG ? undefined : (spaceId as SpaceId | undefined),
       echoId,
     };
   }

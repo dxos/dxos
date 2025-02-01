@@ -2,7 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { SaxesParser } from 'saxes';
 import { describe, it } from 'vitest';
+
+import { type Message } from '@dxos/artifact';
+import { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { GenerationStream } from './stream';
 
@@ -66,10 +71,12 @@ describe('GenerationStream', () => {
           block = [(event.content as any).text];
           break;
         }
+
         case 'content_block_delta': {
           block.push((event.delta as any).text);
           break;
         }
+
         case 'content_block_stop': {
           output.push(block.join('').trim());
           break;
@@ -82,7 +89,98 @@ describe('GenerationStream', () => {
     await stream.complete();
   });
 
-  // TODO(burdon): Stream parser, tags, JSON, etc.
-  // https://astexplorer.net
-  it('should parse the stream', async ({ expect }) => {});
+  /**
+   * https://astexplorer.net
+   */
+  it('should parse the stream', async ({ expect }) => {
+    const input = [
+      // Text
+      `
+      Hello world!
+      `,
+
+      // COT
+      `
+      <cot>
+      1. Prepare the ship.
+      2. Arm the torpedoes.
+      3. Fire lasers.
+      </cot>
+      `,
+
+      // Artifact
+      // <?xml version="1.0" encoding="UTF-8"?>
+      `
+      <artifact id="123" />
+      <choice id="123">
+        <artifact id="123" />
+      </choice>
+      `,
+
+      // JSON
+      `
+      <json>
+      <![CDATA[
+      {
+        "type": "text",
+        "text": "<test>OK</test>"
+      }
+      ]]>
+      </json>
+      `,
+
+      // Code/JSX
+      `,
+      <code>
+      <![CDATA[
+      const Test = () => {
+        return <div>Hello world!</div>;
+      }
+      ]]>
+      </code>
+      `,
+    ];
+
+    // TODO(burdon): Delimiter for JSON blocks.
+
+    const output: Message = { id: ObjectId.random(), role: 'assistant', content: [] };
+
+    /**
+     * https://www.npmjs.com/package/saxex
+     */
+    const parser = new SaxesParser({
+      fragment: true,
+    });
+
+    parser.on('error', (error) => {
+      log.error('error', { error });
+    });
+    parser.on('opentag', (node) => {
+      log.info('opentag', { node });
+    });
+    parser.on('closetag', (node) => {
+      log.info('closetag', { node });
+    });
+    parser.on('cdata', (text) => {
+      log.info('cdata', { text });
+    });
+    parser.on('text', (text) => {
+      log.info('text', { text });
+    });
+    parser.on('end', () => {
+      log.info('end');
+    });
+
+    const stream = GenerationStream.fromSSEResponse({}, new Response(createTestStream(input)));
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta') {
+        // log.info('delta', { delta: (event.delta as any).text });
+        parser.write((event.delta as any).text);
+      }
+    }
+
+    await stream.complete();
+
+    expect(output.content).to.deep.equal([]);
+  });
 });

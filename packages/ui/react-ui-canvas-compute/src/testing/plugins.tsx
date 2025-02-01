@@ -36,6 +36,7 @@ export const MapSchema = S.Struct({
 
 export type MapSchema = S.Schema.Type<typeof MapSchema>;
 
+// TODO(burdon): Move ot ECHO def.
 export type ArtifactsContext = {
   items: (HasTypename & HasId)[];
   getArtifacts: () => (HasTypename & HasId)[];
