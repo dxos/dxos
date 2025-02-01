@@ -7,12 +7,11 @@ import { useEffect, useRef, useState } from 'react';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type DXN } from '@dxos/keys';
 
-// TODO(burdon): Move to edge SDK?
-
 export type UseQueueOptions = {
   pollInterval?: number;
 };
 
+// TODO(burdon): Convert to class.
 export type Queue<T> = {
   items: T[];
   isLoading: boolean;
@@ -23,7 +22,6 @@ export type Queue<T> = {
 /**
  * Polls the given Edge queue.
  */
-// TODO(burdon): Convert to object.
 // TODO(burdon): Replace polling with socket?
 export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: UseQueueOptions = {}): Queue<T> => {
   const [items, setItems] = useState<T[]>([]);
@@ -33,7 +31,6 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
 
   const { subspaceTag, spaceId, queueId } = queueDxn?.asQueueDXN() ?? {};
 
-  // TODO(burdon): Replace useDynamicCallback.
   const append = async (items: T[]) => {
     if (!subspaceTag || !spaceId || !queueId) {
       return;

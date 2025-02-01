@@ -103,6 +103,9 @@
       "path": "../react-ui-canvas-editor"
     },
     {
+      "path": "../react-ui-edge-client"
+    },
+    {
       "path": "../react-ui-editor"
     },
     {

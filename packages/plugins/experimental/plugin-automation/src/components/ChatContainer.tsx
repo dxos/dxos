@@ -2,17 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
 import { type ArtifactsContext } from '@dxos/artifact-testing';
-import { EdgeHttpClient } from '@dxos/edge-client';
-import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { useConfig } from '@dxos/react-client';
 import { create, getSpace } from '@dxos/react-client/echo';
-import { useDynamicCallback, useQueue } from '@dxos/react-ui-canvas-compute';
+import { useEdgeClient, useQueue } from '@dxos/react-ui-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Thread } from './Thread';
@@ -20,12 +17,20 @@ import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { type GptChatType } from '../types';
 
+/**
+ * A custom hook that ensures a callback reference remains stable while allowing the callback
+ * implementation to be updated. This is useful for callbacks that need to access the latest
+ * state/props values while maintaining a stable reference to prevent unnecessary re-renders.
+ */
+// TODO(burdon): Remove.
+const useDynamicCallback = <F extends (...args: any[]) => any>(callback: F): F => {
+  const ref = useRef<F>(callback);
+  ref.current = callback;
+  return ((...args) => ref.current(...args)) as F;
+};
+
 export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
-  const config = useConfig();
-  const edgeUrl = config.values.runtime?.services?.edge?.url;
-  invariant(edgeUrl, 'EDGE services not configured.');
-  // TODO(wittjosiah): EdgeHttpClient should be available via the client.
-  const [edgeHttpClient] = useState(() => new EdgeHttpClient(edgeUrl));
+  const edgeClient = useEdgeClient();
   const aiClient = useCapability(AutomationCapabilities.AiClient);
 
   // TODO(wittjosiah): Get tools from system.
@@ -53,7 +58,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
     () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, getSpace(chat)!.id, chat.queue.dxn.parts.at(-1)!]),
     [chat.queue.dxn],
   );
-  const queue = useQueue<Message>(edgeHttpClient, queueDxn);
+  const queue = useQueue<Message>(edgeClient, queueDxn);
   const messages = useMemo(
     () => [...queue.items, ...processor.messages.value],
     [queue.items, processor.messages.value],

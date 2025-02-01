@@ -789,6 +789,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-edge-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },

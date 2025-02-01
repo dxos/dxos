@@ -97,6 +97,9 @@
       "path": "../../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../../ui/react-ui-edge-client"
+    },
+    {
       "path": "../../../ui/react-ui-editor"
     },
     {
