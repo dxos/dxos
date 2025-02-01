@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, type FocusEvent } from 'react';
 
 import { type BaseObject, getValue } from '@dxos/echo-schema';
 import { createJsonPath, type SimpleType } from '@dxos/effect';
@@ -21,21 +21,20 @@ export const useFormContext = <T extends BaseObject>() => {
   return context as FormContextValue<T>;
 };
 
-// TODO(ZaymonFC): Rename FormDataProps? InputStateProps?
-export type FormInputProps = {
-  getStatus: () => { status?: 'error'; error?: string };
-  getValue: <V>() => V | undefined;
-  onValueChange: (type: SimpleType, value: any) => void;
-  onBlur: (event: FocusEvent) => void;
-};
-
 export const useFormValues = (path: (string | number)[] = []): any => {
   const { values: formValues } = useFormContext();
   const jsonPath = createJsonPath(path);
   return getValue(formValues, jsonPath) as BaseObject;
 };
 
-export const useInputProps = (path: (string | number)[] = []): FormInputProps => {
+export type FormInputStateProps = {
+  getStatus: () => { status?: 'error'; error?: string };
+  getValue: <V>() => V | undefined;
+  onValueChange: (type: SimpleType, value: any) => void;
+  onBlur: (event: FocusEvent<HTMLElement>) => void;
+};
+
+export const useInputProps = (path: (string | number)[] = []): FormInputStateProps => {
   const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext();
 
   return {

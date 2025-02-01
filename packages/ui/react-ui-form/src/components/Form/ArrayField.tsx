@@ -15,7 +15,7 @@ import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 
 import { type ComponentLookup } from './Form';
 import { FormField } from './FormContent';
-import { useFormValues, type FormInputProps } from './FormContext';
+import { useFormValues, type FormInputStateProps } from './FormContext';
 import { InputHeader, type InputComponent } from './Input';
 import { translationKey } from '../../translations';
 
@@ -24,7 +24,7 @@ const padding = 'px-2';
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
   readonly?: boolean;
-  inputProps: FormInputProps;
+  inputProps: FormInputStateProps;
   path?: (string | number)[];
   Custom?: Partial<Record<string, InputComponent>>;
   lookupComponent?: ComponentLookup;

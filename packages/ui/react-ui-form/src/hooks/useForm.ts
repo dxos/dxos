@@ -30,7 +30,7 @@ export type FormHandler<T extends BaseObject> = {
   // Form input component helpers.
   //
 
-  getStatus: (path: (string | number)[]) => { status?: 'error'; error?: string };
+  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
   onTouched: (path: (string | number)[]) => void;
@@ -163,8 +163,8 @@ export const useForm = <T extends BaseObject>({
   //
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
-    (path: (string | number)[]) => {
-      const jsonPath = createJsonPath(path);
+    (path) => {
+      const jsonPath = Array.isArray(path) ? createJsonPath(path) : path;
       const matchingError = Object.entries(errors).find(
         ([errorPath]) =>
           errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),

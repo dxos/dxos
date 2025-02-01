@@ -9,7 +9,7 @@ import { type SimpleType } from '@dxos/effect';
 import { Icon, Tooltip } from '@dxos/react-ui';
 import { errorText } from '@dxos/react-ui-theme';
 
-import { type FormInputProps } from './FormContext';
+import { type FormInputStateProps } from './FormContext';
 
 /**
  * Props passed to input components.
@@ -21,7 +21,7 @@ export type InputProps = {
   disabled?: boolean;
   placeholder?: string;
   inputOnly?: boolean;
-} & FormInputProps;
+} & FormInputStateProps;
 
 /**
  * Form input component.
