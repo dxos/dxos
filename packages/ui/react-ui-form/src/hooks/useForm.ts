@@ -33,7 +33,7 @@ export type FormHandler<T extends BaseObject> = {
   getStatus: (path: (string | number)[]) => { status?: 'error'; error?: string };
   getValue: <V>(path: (string | number)[]) => V | undefined;
   onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
-  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onTouched: (path: (string | number)[]) => void;
 };
 
 /**
@@ -203,23 +203,13 @@ export const useForm = <T extends BaseObject>({
     }
   };
 
-  // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
-  const onBlur = useCallback(
-    (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      // TODO(Zaymon): The name provided should be a JsonPath.
-      const { name } = event.target;
-      setTouched((touched) => ({ ...touched, [name]: true }));
-
-      // TODO(Zan): This should be configurable behavior.
-      if (event.relatedTarget?.getAttribute('type') === 'submit') {
-        // NOTE: We do this here instead of onSave because the blur event is triggered before the submit event
-        //  and results in the submit button being disabled when the form is invalid.
-        setTouched(createKeySet(values, true));
-      }
-
+  const onTouched = useCallback(
+    (path: (string | number)[]) => {
+      const jsonPath = createJsonPath(path);
+      setTouched((touched) => ({ ...touched, [jsonPath]: true }));
       validate(values);
     },
-    [validate, values],
+    [validate, values]
   );
 
   return {
@@ -235,7 +225,7 @@ export const useForm = <T extends BaseObject>({
     getStatus,
     getValue: getFormValue,
     onValueChange,
-    onBlur,
+    onTouched,
   } satisfies FormHandler<T>;
 };
 

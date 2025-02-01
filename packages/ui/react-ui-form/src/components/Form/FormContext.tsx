@@ -26,7 +26,7 @@ export type FormInputProps = {
   getStatus: () => { status?: 'error'; error?: string };
   getValue: <V>() => V | undefined;
   onValueChange: (type: SimpleType, value: any) => void;
-} & Pick<FormHandler<any>, 'onBlur'>;
+  onBlur: () => void;
 
 export const useFormValues = (path: (string | number)[] = []): any => {
   const { values: formValues } = useFormContext();
@@ -35,13 +35,13 @@ export const useFormValues = (path: (string | number)[] = []): any => {
 };
 
 export const useInputProps = (path: (string | number)[] = []): FormInputProps => {
-  const { getStatus, getValue: getFormValue, onValueChange, onBlur } = useFormContext();
+  const { getStatus, getValue: getFormValue, onValueChange, onTouched } = useFormContext();
 
   return {
     getStatus: () => getStatus(path),
     getValue: () => getFormValue(path),
     onValueChange: (type: SimpleType, value: any) => onValueChange(path, type, value),
-    onBlur,
+    onBlur: () => onTouched(path),
   };
 };
 
