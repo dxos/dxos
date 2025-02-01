@@ -35,7 +35,7 @@ export const createLogger = ({
           if (content.id && content.source) {
             images[content.id] = content.source;
           }
-          process.stdout.write(`[Image id=${content.id} media_type=${content.source?.media_type}]`);
+          process.stdout.write(`[Image id=${content.id} mediaType=${content.source?.mediaType}]`);
           break;
         }
       }

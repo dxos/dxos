@@ -30,6 +30,9 @@ export interface Thread extends S.Schema.Type<typeof Thread> {}
 export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
 export type MessageRole = S.Schema.Type<typeof MessageRole>;
 
+/**
+ * Text
+ */
 export const TextContentBlock = S.Struct({
   type: S.Literal('text'),
   disposition: S.optional(S.String), // (e.g., "cot").
@@ -37,23 +40,27 @@ export const TextContentBlock = S.Struct({
 }).pipe(S.mutable);
 export type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
 
+/**
+ * JSON
+ */
 export const JsonContentBlock = S.Struct({
   type: S.Literal('json'),
+  disposition: S.optional(S.String), // (e.g., "tool_use", "tool_result").
   json: S.String,
 }).pipe(S.mutable);
 export type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
 
-/**
- * Image.
- */
 export const ImageSource = S.Struct({
   type: S.Literal('base64'),
-  media_type: S.Literal('image/jpeg', 'image/png', 'image/gif', 'image/webp'),
+  mediaType: S.Literal('image/jpeg', 'image/png', 'image/gif', 'image/webp'),
   data: S.String,
 }).pipe(S.mutable);
 
 export type ImageSource = S.Schema.Type<typeof ImageSource>;
 
+/**
+ * Image
+ */
 export const ImageContentBlock = S.Struct({
   type: S.Literal('image'),
   id: S.optional(S.String),
@@ -78,13 +85,14 @@ export const ToolUseContentBlock = S.Struct({
    */
   name: S.String,
 
-  // TODO(burdon): Different from S.Any?
+  /**
+   * Input parameters.
+   */
   input: S.Unknown,
 
   /**
    * Used to accumulate the partial tool input JSON in streaming mode.
    */
-  // TODO(burdon): Remove?
   inputJson: S.optional(S.String),
 }).pipe(S.mutable);
 
@@ -103,6 +111,7 @@ export const MessageContentBlock = S.Union(
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
+  // TODO(burdon): Replace with JsonContentBlock with disposition (to make MessageContentBlock reusable).
   ToolUseContentBlock,
   ToolResultContentBlock,
 );
@@ -131,6 +140,9 @@ const MessageSchema = S.Struct({
 
   role: MessageRole,
 
+  /**
+   * Content blocks.
+   */
   // TODO(burdon): Rename blocks?
   content: S.Array(MessageContentBlock).pipe(S.mutable),
 });
@@ -138,7 +150,7 @@ const MessageSchema = S.Struct({
 /**
  * @deprecated
  */
-// TODO(burdon): Reconcile with Chat/Message types.
+// TODO(burdon): Reconcile with Chat/Message types?
 export const Message = MessageSchema.pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
 
 export type Message = S.Schema.Type<typeof Message>;

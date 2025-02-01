@@ -86,7 +86,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         for (const msg of output) {
           for (const content of msg.content) {
             if (content.type === 'image') {
-              log.info('save image to cache', { id: content.id, mediaType: content.source?.media_type });
+              log.info('save image to cache', { id: content.id, mediaType: content.source?.mediaType });
               this.imageCache.set(content.id!, content);
             }
           }
