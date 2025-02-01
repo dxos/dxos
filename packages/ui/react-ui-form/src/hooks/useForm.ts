@@ -5,7 +5,7 @@
 import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, type PropertyKey, getValue, setValue } from '@dxos/echo-schema';
-import { type SimpleType, type S, type JsonPath } from '@dxos/effect';
+import { type SimpleType, type S, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
@@ -158,8 +158,9 @@ export const useForm = <T extends BaseObject>({
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
     (path: (string | number)[]) => {
       const jsonPath = createJsonPath(path);
-      const matchingError = Object.entries(errors).find(([errorPath]) => 
-        errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`)
+      const matchingError = Object.entries(errors).find(
+        ([errorPath]) =>
+          errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
       );
 
       return {
@@ -167,7 +168,7 @@ export const useForm = <T extends BaseObject>({
         error: matchingError ? matchingError[1] : undefined,
       };
     },
-    [errors]
+    [errors],
   );
 
   const getFormValue = <V>(path: (string | number)[]): V | undefined => {
@@ -241,8 +242,10 @@ const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<JsonPat
 const flatMap = (errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
-      if (!(path in result)) {
-        result[path] = message;
+      // Convert the validation error path format to our JsonPath format
+      const jsonPath = fromEffectValidationPath(path);
+      if (!(jsonPath in result)) {
+        result[jsonPath] = message;
       }
       return result;
     },
