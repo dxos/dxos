@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type BaseObject, type PropertyKey, getValue, setValue } from '@dxos/echo-schema';
+import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
 import { type SimpleType, type S, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -138,9 +138,11 @@ export const useForm = <T extends BaseObject>({
       !saving &&
       // Check if any error paths that are touched have errors
       !Object.entries(touched).some(
-        ([path, isTouched]) => isTouched && Object.keys(errors).some(errorPath => 
-          errorPath === path || errorPath.startsWith(`${path}.`) || errorPath.startsWith(`${path}[`)
-        )
+        ([path, isTouched]) =>
+          isTouched &&
+          Object.keys(errors).some(
+            (errorPath) => errorPath === path || errorPath.startsWith(`${path}.`) || errorPath.startsWith(`${path}[`),
+          ),
       ),
     [touched, errors, saving],
   );
@@ -209,7 +211,7 @@ export const useForm = <T extends BaseObject>({
       setTouched((touched) => ({ ...touched, [jsonPath]: true }));
       validate(values);
     },
-    [validate, values]
+    [validate, values],
   );
 
   return {

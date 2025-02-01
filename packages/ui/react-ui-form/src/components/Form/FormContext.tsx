@@ -26,7 +26,8 @@ export type FormInputProps = {
   getStatus: () => { status?: 'error'; error?: string };
   getValue: <V>() => V | undefined;
   onValueChange: (type: SimpleType, value: any) => void;
-  onBlur: () => void;
+  onBlur: (event: FocusEvent) => void;
+};
 
 export const useFormValues = (path: (string | number)[] = []): any => {
   const { values: formValues } = useFormContext();
