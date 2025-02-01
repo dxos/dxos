@@ -73,6 +73,9 @@
       "path": "../../../experimental/artifact"
     },
     {
+      "path": "../../../experimental/artifact-testing"
+    },
+    {
       "path": "../../../experimental/assistant"
     },
     {

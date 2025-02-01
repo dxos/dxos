@@ -7,7 +7,8 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { capabilities } from '@dxos/artifact/testing';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type ComputeGraphModel, ComputeNode, DefaultInput, DefaultOutput } from '@dxos/conductor';
 import { S, toEffectSchema } from '@dxos/echo-schema';
@@ -19,11 +20,11 @@ import {
   Editor,
   type EditorController,
   type EditorRootProps,
-  JsonFilter,
   ShapeLayout,
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type ComputeGraphController } from './graph';
@@ -31,7 +32,6 @@ import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { createFunctionAnchors, type ComputeShape } from './shapes';
 import {
-  createEdgeServices,
   createControlCircuit,
   createGPTRealtimeCircuit,
   createLogicCircuit,

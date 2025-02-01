@@ -10,27 +10,27 @@ import React, { useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Tool, type Message } from '@dxos/artifact';
+import {
+  type ArtifactsContext,
+  ChessSchema,
+  artifacts,
+  capabilities,
+  genericTools,
+  localServiceEndpoints,
+} from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
-// TODO(wittjosiah): Factor these out from canvas compute because this plugin shouldn't depend on it.
 import { useQueue } from '@dxos/react-ui-canvas-compute';
-import {
-  artifacts,
-  capabilities,
-  ChessSchema,
-  genericTools,
-  localServiceEndpoints,
-  type ArtifactsContext,
-} from '@dxos/react-ui-canvas-compute/testing';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './components';
 import { ChatProcessor } from './hooks';
+import { defaultProcessorOptions } from './testing/testing';
 
 const endpoints = localServiceEndpoints;
 
@@ -73,7 +73,9 @@ const Render = ({ items: _items }: RenderProps) => {
   );
 
   // TODO(burdon): Create hook.
-  const [processor] = useState(() => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }));
+  const [processor] = useState(
+    () => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }, defaultProcessorOptions),
+  );
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();

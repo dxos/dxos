@@ -76,6 +76,7 @@
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
+    "@dxos/artifact-testing": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-map": "workspace:*",

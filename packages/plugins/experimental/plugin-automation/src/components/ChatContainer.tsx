@@ -6,13 +6,13 @@ import React, { useMemo, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
+import { type ArtifactsContext } from '@dxos/artifact-testing';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { useConfig } from '@dxos/react-client';
 import { create, getSpace } from '@dxos/react-client/echo';
 import { useDynamicCallback, useQueue } from '@dxos/react-ui-canvas-compute';
-import { type ArtifactsContext } from '@dxos/react-ui-canvas-compute/testing';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Thread } from './Thread';

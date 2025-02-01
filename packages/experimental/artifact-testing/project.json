@@ -1,8 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-ui-canvas-compute",
+  "name": "artifact-testing",
   "tags": [
-    "scope:ui"
+    "scope:experimental",
+    "scope:sdk"
   ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
@@ -12,14 +13,13 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
-        ],
-        "injectGlobals": true
+        ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

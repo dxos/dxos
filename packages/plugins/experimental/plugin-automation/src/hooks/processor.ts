@@ -4,7 +4,7 @@
 
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
-import { createSystemPrompt, type Tool, Message } from '@dxos/artifact';
+import { type Tool, Message } from '@dxos/artifact';
 import {
   type AIServiceClientImpl,
   type GenerateRequest,
@@ -15,8 +15,11 @@ import {
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-// TODO(wittjosiah): Factor these out from canvas compute because this plugin shouldn't depend on it.
-import { artifacts } from '@dxos/react-ui-canvas-compute/testing';
+
+const defaultOptions: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
+  model: '@anthropic/claude-3-5-sonnet-20241022',
+  systemPrompt: '',
+};
 
 /**
  * Handles interactions with an AI service.
@@ -42,10 +45,7 @@ export class ChatProcessor {
     private readonly _client: AIServiceClientImpl,
     private readonly _tools?: Tool[],
     private readonly _extensions?: ToolContextExtensions,
-    private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
-      model: '@anthropic/claude-3-5-sonnet-20241022',
-      systemPrompt: createSystemPrompt({ artifacts }),
-    },
+    private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = defaultOptions,
   ) {}
 
   get isStreaming(): ReadonlySignal<boolean> {

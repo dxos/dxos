@@ -4893,6 +4893,12 @@ importers:
 
   packages/experimental/artifact-testing:
     dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
@@ -4902,6 +4908,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4930,6 +4939,12 @@ importers:
       effect:
         specifier: ^3.12.3
         version: 3.12.7
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
 
   packages/experimental/assistant:
     dependencies:
@@ -5828,6 +5843,9 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
+      '@dxos/artifact-testing':
+        specifier: workspace:*
+        version: link:../../../experimental/artifact-testing
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugin-chess
@@ -10951,6 +10969,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -10976,6 +10997,9 @@ importers:
         specifier: 0.165.0
         version: 0.165.0
     devDependencies:
+      '@dxos/artifact-testing':
+        specifier: workspace:*
+        version: link:../../experimental/artifact-testing
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute

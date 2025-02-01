@@ -7,7 +7,8 @@ import React from 'react';
 import { DEFAULT_INPUT, DefaultOutput, JsonTransformInput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { JsonFilter, createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 import { createFunctionAnchors, getHeight, Box } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
