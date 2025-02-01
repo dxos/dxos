@@ -43,8 +43,6 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   const inputProps = useInputProps(path);
   const { ast, name, type, format, title, description, options, examples, array } = property;
 
-  // TODO(ZaymonFC): We shouldn't worry about JSON Path in the components. Just build and pass the array.
-  const scopedPath = useMemo(() => createJsonPath(path ?? []), [path]);
   const label = useMemo(() => title ?? pipe(name, capitalize), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `Example: "${examples[0]}"` : description),
@@ -72,8 +70,8 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     return <div>{FoundComponent}</div>;
   }
 
-  // TODO(ZaymonFC): Eval scoped path and Custom in general.
-  const InputComponent = Custom?.[scopedPath] || getInputComponent(type, format);
+  const jsonPath = createJsonPath(path ?? []);
+  const InputComponent = Custom?.[jsonPath] || getInputComponent(type, format);
   if (InputComponent) {
     return (
       <div>
