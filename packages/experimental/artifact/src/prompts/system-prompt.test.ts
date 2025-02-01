@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { createSystemPrompt } from './system-prompt';
 
 describe('prompt', () => {
-  test('should be able to create a prompt', ({ expect }) => {
-    const prompt = createSystemPrompt({ artifacts: {} });
-    console.log(prompt);
-    expect(prompt).toBeDefined();
+  test('should be able to process a template', ({ expect }) => {
+    const prompt = createSystemPrompt({ artifacts: { test: { id: 'test', prompt: 'Create a test artifact.' } } });
+    expect(prompt).to.exist;
   });
 });
