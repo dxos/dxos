@@ -96,7 +96,7 @@ const RootAttentionProvider = ({
     }
   };
 
-  // NOTE(thure): Use the following to debug the macOS package issue #
+  // NOTE(thure): Use the following to debug the macOS package issue #8540
 
   // const [startEl, setStartEl] = useState<HTMLElement | null>(null);
   // const [endEl, setEndEl] = useState<HTMLElement | null>(null);
