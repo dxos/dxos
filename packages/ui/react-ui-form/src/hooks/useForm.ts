@@ -136,8 +136,13 @@ export const useForm = <T extends BaseObject>({
   const canSave = useMemo(
     () =>
       !saving &&
-      Object.keys(values).every((property) => touched[property as JsonPath] === false || !errors[property as JsonPath]),
-    [values, touched, errors, saving],
+      // Check if any error paths that are touched have errors
+      !Object.entries(touched).some(
+        ([path, isTouched]) => isTouched && Object.keys(errors).some(errorPath => 
+          errorPath === path || errorPath.startsWith(`${path}.`) || errorPath.startsWith(`${path}[`)
+        )
+      ),
+    [touched, errors, saving],
   );
 
   const handleSave = useCallback(async () => {
