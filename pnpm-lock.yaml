@@ -287,6 +287,15 @@ importers:
       globrex:
         specifier: ^0.1.2
         version: 0.1.2
+      glsl-curl-noise2:
+        specifier: ^0.0.4
+        version: 0.0.4
+      glsl-noise:
+        specifier: ^0.0.0
+        version: 0.0.0
+      glslify:
+        specifier: ^7.1.1
+        version: 7.1.1
       husky:
         specifier: ^8.0.0
         version: 8.0.1
@@ -368,9 +377,9 @@ importers:
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-      vite-plugin-glslify-inject:
-        specifier: ^1.1.2
-        version: 1.1.2(rollup@3.23.0)
+      vite-plugin-glslify:
+        specifier: ^2.2.0
+        version: 2.2.0(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       vite-plugin-inspect:
         specifier: ^0.8.1
         version: 0.8.3(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
@@ -5845,6 +5854,9 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      motion:
+        specifier: 12.0.6
+        version: 12.0.6(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/artifact-testing':
         specifier: workspace:*
@@ -11003,6 +11015,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
@@ -11015,24 +11030,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@react-three/drei':
-        specifier: ^9.99.0
-        version: 9.121.2(@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0))(@types/react@18.2.79)(@types/three@0.165.0)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0)(use-sync-external-store@1.2.2(react@18.2.0))
-      '@react-three/fiber':
-        specifier: ^8.15.0
-        version: 8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0)
       chess.js:
         specifier: ^1.0.0
         version: 1.0.0
-      d3:
-        specifier: ^7.9.0
-        version: 7.9.0
-      leva:
-        specifier: ^0.9.35
-        version: 0.9.35(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      three:
-        specifier: 0.165.0
-        version: 0.165.0
     devDependencies:
       '@dxos/artifact-testing':
         specifier: workspace:*
@@ -11061,9 +11061,6 @@ importers:
       '@effect/platform':
         specifier: ^0.72.1
         version: 0.72.2(effect@3.12.7)
-      '@types/d3':
-        specifier: ^7.4.3
-        version: 7.4.3
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -11073,18 +11070,12 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      '@types/three':
-        specifier: 0.165.0
-        version: 0.165.0
       effect:
         specifier: ^3.12.3
         version: 3.12.7
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      ollama:
-        specifier: ^0.5.11
-        version: 0.5.12
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -11992,6 +11983,91 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+
+  packages/ui/react-ui-sfx:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@react-three/drei':
+        specifier: ^9.99.0
+        version: 9.121.2(@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0))(@types/react@18.2.79)(@types/three@0.165.0)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0)(use-sync-external-store@1.2.2(react@18.2.0))
+      '@react-three/fiber':
+        specifier: ^8.15.0
+        version: 8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.165.0)
+      chess.js:
+        specifier: ^1.0.0
+        version: 1.0.0
+      d3:
+        specifier: ^7.9.0
+        version: 7.9.0
+      glsl-curl-noise2:
+        specifier: ^0.0.4
+        version: 0.0.4
+      glsl-noise:
+        specifier: ^0.0.0
+        version: 0.0.0
+      glslify:
+        specifier: ^7.1.1
+        version: 7.1.1
+      leva:
+        specifier: ^0.9.35
+        version: 0.9.35(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      motion:
+        specifier: ^12.0.6
+        version: 12.0.6(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      three:
+        specifier: 0.165.0
+        version: 0.165.0
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/d3':
+        specifier: ^7.4.3
+        version: 7.4.3
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      '@types/three':
+        specifier: 0.165.0
+        version: 0.165.0
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      ollama:
+        specifier: ^0.5.11
+        version: 0.5.12
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -22332,6 +22408,10 @@ packages:
     resolution: {integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==}
     engines: {node: '>=8'}
 
+  astring@1.9.0:
+    resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
+    hasBin: true
+
   async-array-reduce@0.2.1:
     resolution: {integrity: sha512-/ywTADOcaEnwiAnOEi0UB/rAcIq5bTFfCV9euv3jLYFUMmy6KvKccTQUnLlp8Ensmfj43wHSmbGiPqjsZ6RhNA==}
     engines: {node: '>=0.10.0'}
@@ -25528,6 +25608,20 @@ packages:
   fractional-indexing-jittered@0.9.1:
     resolution: {integrity: sha512-qyzDZ7JXWf/yZT2rQDpQwFBbIaZS2o+zb0s740vqreXQ6bFQPd8tAy4D1gGN0CUeIcnNHjuvb0EaLnqHhGV/PA==}
 
+  framer-motion@12.0.6:
+    resolution: {integrity: sha512-LmrXbXF6Vv5WCNmb+O/zn891VPZrH7XbsZgRLBROw6kFiP+iTK49gxTv2Ur3F0Tbw6+sy9BVtSqnWfMUpH+6nA==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ~18.2.0
+      react-dom: ~18.2.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   fresh@0.5.2:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
@@ -25874,6 +25968,9 @@ packages:
 
   globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
+
+  glsl-curl-noise2@0.0.4:
+    resolution: {integrity: sha512-J3LypqpyDaIKZdKIoSyKiCdAHWnDq9/dmtwj294euTOYsAiXX08W05fc1yddCx2WDC7GwAAN42A40KSYlTNNyg==}
 
   glsl-inject-defines@1.0.3:
     resolution: {integrity: sha512-W49jIhuDtF6w+7wCMcClk27a2hq8znvHtlGnrYkSWEr8tHe9eA2dcnohlcAmxLYBSpSSdzOkRdyPTrx9fw49+A==}
@@ -28651,6 +28748,26 @@ packages:
   module-error@1.0.2:
     resolution: {integrity: sha512-0yuvsqSCv8LbaOKhnsQ/T5JhyFlCYLPXK3U2sgV10zoKQwzs/MyfuQUOZQ1V/6OCOJsK/TRgNVrPuPDqtdMFtA==}
     engines: {node: '>=10'}
+
+  motion-dom@12.0.0:
+    resolution: {integrity: sha512-CvYd15OeIR6kHgMdonCc1ihsaUG4MYh/wrkz8gZ3hBX/uamyZCXN9S9qJoYF03GqfTt7thTV/dxnHYX4+55vDg==}
+
+  motion-utils@12.0.0:
+    resolution: {integrity: sha512-MNFiBKbbqnmvOjkPyOKgHUp3Q6oiokLkI1bEwm5QA28cxMZrv0CbbBGDNmhF6DIXsi1pCQBSs0dX8xjeER1tmA==}
+
+  motion@12.0.6:
+    resolution: {integrity: sha512-AzCEO0+//mPlcGiL9JaVwjddHY1cbbnvz5upHL0toqQwsPCs+hiKJ0XG5jfG0XwDtBbiSXdEqW/UTmGLwkVQ6A==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ~18.2.0
+      react-dom: ~18.2.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -33087,8 +33204,10 @@ packages:
     peerDependencies:
       vite: ^5.0.0
 
-  vite-plugin-glslify-inject@1.1.2:
-    resolution: {integrity: sha512-ZNIP7x/vYduNZ0me/M5BcXKuKailQSama+KbupWzybFQppATuZGQOy2/kOR4Yt/Zjcgmuuk7tM7xIc3mf/eWsg==}
+  vite-plugin-glslify@2.2.0:
+    resolution: {integrity: sha512-q1Bx7QMaHy8amnOYcZl3SMG0hTdmjEAv/MWvjh6RR39UVj2cbmMBf+psqYQhBtmePWVG/Rlryyl7vBbtwrbjMg==}
+    peerDependencies:
+      vite: '>=^5.2.9'
 
   vite-plugin-inspect@0.8.3:
     resolution: {integrity: sha512-SBVzOIdP/kwe6hjkt7LSW4D0+REqqe58AumcnCfRNw4Kt3mbS9pEBkch+nupu2PBxv2tQi69EQHQ1ZA1vgB/Og==}
@@ -43197,6 +43316,12 @@ snapshots:
       picomatch: 2.3.1
       rollup: 2.79.2
 
+  '@rollup/pluginutils@4.2.1(rollup@3.23.0)':
+    dependencies:
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+      rollup: 3.23.0
+
   '@rollup/pluginutils@5.1.0(rollup@3.23.0)':
     dependencies:
       '@types/estree': 1.0.6
@@ -46631,17 +46756,17 @@ snapshots:
       acorn: 7.4.1
       acorn-walk: 7.2.0
 
-  acorn-import-assertions@1.9.0(acorn@8.11.3):
+  acorn-import-assertions@1.9.0(acorn@8.13.0):
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.13.0
 
   acorn-import-assertions@1.9.0(acorn@8.8.2):
     dependencies:
       acorn: 8.8.2
 
-  acorn-import-attributes@1.9.5(acorn@8.11.3):
+  acorn-import-attributes@1.9.5(acorn@8.13.0):
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.13.0
 
   acorn-jsx@5.3.2(acorn@7.4.1):
     dependencies:
@@ -47009,6 +47134,8 @@ snapshots:
       tslib: 2.8.0
 
   astral-regex@2.0.0: {}
+
+  astring@1.9.0: {}
 
   async-array-reduce@0.2.1: {}
 
@@ -50866,6 +50993,16 @@ snapshots:
 
   fractional-indexing-jittered@0.9.1: {}
 
+  framer-motion@12.0.6(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+    dependencies:
+      motion-dom: 12.0.0
+      motion-utils: 12.0.0
+      tslib: 2.8.0
+    optionalDependencies:
+      '@emotion/is-prop-valid': 1.2.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+
   fresh@0.5.2: {}
 
   from2@2.3.0:
@@ -51307,6 +51444,10 @@ snapshots:
       unicorn-magic: 0.1.0
 
   globrex@0.1.2: {}
+
+  glsl-curl-noise2@0.0.4:
+    dependencies:
+      glsl-noise: 0.0.0
 
   glsl-inject-defines@1.0.3:
     dependencies:
@@ -52138,15 +52279,15 @@ snapshots:
 
   import-in-the-middle@1.7.1:
     dependencies:
-      acorn: 8.11.3
-      acorn-import-assertions: 1.9.0(acorn@8.11.3)
+      acorn: 8.13.0
+      acorn-import-assertions: 1.9.0(acorn@8.13.0)
       cjs-module-lexer: 1.3.1
       module-details-from-path: 1.0.3
 
   import-in-the-middle@1.9.1:
     dependencies:
-      acorn: 8.11.3
-      acorn-import-attributes: 1.9.5(acorn@8.11.3)
+      acorn: 8.13.0
+      acorn-import-attributes: 1.9.5(acorn@8.13.0)
       cjs-module-lexer: 1.3.1
       module-details-from-path: 1.0.3
 
@@ -52964,7 +53105,7 @@ snapshots:
   jsdom@16.7.0(canvas@2.11.2(encoding@0.1.13)):
     dependencies:
       abab: 2.0.6
-      acorn: 8.11.3
+      acorn: 8.13.0
       acorn-globals: 6.0.0
       cssom: 0.4.4
       cssstyle: 2.3.0
@@ -53069,7 +53210,7 @@ snapshots:
 
   jsonc-eslint-parser@2.3.0:
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.13.0
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       semver: 7.6.3
@@ -54640,7 +54781,7 @@ snapshots:
   miniflare@3.20240405.2:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
-      acorn: 8.11.3
+      acorn: 8.13.0
       acorn-walk: 8.3.2
       capnp-ts: 0.7.0
       exit-hook: 2.2.1
@@ -54830,6 +54971,21 @@ snapshots:
   module-details-from-path@1.0.3: {}
 
   module-error@1.0.2: {}
+
+  motion-dom@12.0.0:
+    dependencies:
+      motion-utils: 12.0.0
+
+  motion-utils@12.0.0: {}
+
+  motion@12.0.6(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+    dependencies:
+      framer-motion: 12.0.6(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      tslib: 2.8.0
+    optionalDependencies:
+      '@emotion/is-prop-valid': 1.2.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
 
   mri@1.2.0: {}
 
@@ -59052,7 +59208,7 @@ snapshots:
   terser@5.19.2:
     dependencies:
       '@jridgewell/source-map': 0.3.5
-      acorn: 8.11.3
+      acorn: 8.13.0
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -60089,10 +60245,14 @@ snapshots:
       fast-glob: 3.3.2
       vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
-  vite-plugin-glslify-inject@1.1.2(rollup@3.23.0):
+  vite-plugin-glslify@2.2.0(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)):
     dependencies:
-      '@rollup/pluginutils': 5.1.3(rollup@3.23.0)
+      '@rollup/pluginutils': 4.2.1(rollup@3.23.0)
+      astring: 1.9.0
+      estree-walker: 2.0.2
       glslify: 7.1.1
+      magic-string: 0.25.9
+      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
     transitivePeerDependencies:
       - rollup
 

@@ -112,6 +112,9 @@
       "path": "../react-ui-form"
     },
     {
+      "path": "../react-ui-sfx"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {

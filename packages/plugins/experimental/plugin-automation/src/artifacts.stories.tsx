@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
@@ -23,8 +23,8 @@ import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { useQueue } from '@dxos/react-edge-client';
+import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 

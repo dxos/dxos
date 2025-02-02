@@ -11,7 +11,6 @@ export * from './Audio';
 export * from './Beacon';
 export * from './Boolean';
 export * from './Chat';
-export * from './Counter';
 export * from './Constant';
 export * from './Database';
 export * from './Function';

@@ -44,16 +44,12 @@
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@react-three/drei": "^9.99.0",
-    "@react-three/fiber": "^8.15.0",
-    "chess.js": "^1.0.0",
-    "d3": "^7.9.0",
-    "leva": "^0.9.35",
-    "three": "0.165.0"
+    "chess.js": "^1.0.0"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -66,14 +62,11 @@
     "@dxos/storybook-utils": "workspace:*",
     "@effect/ai": "^0.5.1",
     "@effect/platform": "^0.72.1",
-    "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "@types/three": "0.165.0",
     "effect": "^3.12.3",
     "lodash.defaultsdeep": "^4.6.1",
-    "ollama": "^0.5.11",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"

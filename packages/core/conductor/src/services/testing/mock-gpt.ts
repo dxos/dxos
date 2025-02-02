@@ -12,7 +12,7 @@ import { getDebugName } from '@dxos/util';
 
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
-import type { GptService } from '../gpt/gpt';
+import { type GptService } from '../gpt';
 
 export type MockGPTConfig = {
   initDelay?: number;
@@ -126,7 +126,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
   }
 
   private *tokenize(text: string): Generator<string> {
-    // Simple word-based tokenization for demo
+    // Simple word-based tokenization for demo.
     const words = text.split(/(\s+|[.,!?])/g);
     for (const word of words) {
       if (word.trim()) {

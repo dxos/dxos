@@ -7,8 +7,8 @@ import React from 'react';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { useAudioStream, Chaos, shaderPresets } from '@dxos/react-ui-sfx';
 
-import { useAudioStream, Chaos, shaderPresets } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
 

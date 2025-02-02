@@ -314,8 +314,10 @@ export class ComputeGraphController extends Resource {
           tasks.push(effect);
         }
 
+        //
         yield* Effect.all(tasks);
 
+        //
         yield* Scope.close(scope, Exit.void);
       }),
     );
@@ -332,6 +334,7 @@ export class ComputeGraphController extends Resource {
 
     const spaceLayer =
       services.spaceService != null ? Layer.succeed(SpaceService, services.spaceService) : SpaceService.empty;
+
     return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer);
   }
 

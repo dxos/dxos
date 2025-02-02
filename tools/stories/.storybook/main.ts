@@ -7,7 +7,6 @@ import ReactPlugin from '@vitejs/plugin-react';
 import flatten from 'lodash.flatten';
 import { join, resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
-import glsl from 'vite-plugin-glslify-inject';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import TurbosnapPlugin from 'vite-plugin-turbosnap';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -86,7 +85,6 @@ export const config = (
             // Some packages depend on automerge-repo. We alias them to point to our pre-bundled version.
             // `resolve` assumes that CWD is at the repo root.
             '@automerge/automerge-repo': resolve('packages/core/echo/automerge/dist/lib/browser/automerge-repo.js'),
-            '@shaders': 'src/shaders/*',
           },
         },
         // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
@@ -122,16 +120,6 @@ export const config = (
           TopLevelAwaitPlugin(),
           TurbosnapPlugin({ rootDir: turbosnapRootDir ?? config.root ?? __dirname }),
           WasmPlugin(),
-          // https://github.com/geoffreytools/vite-plugin-glslify-inject
-          glsl({
-            include: '**/*.(vert|frag)',
-            exclude: '**/node_modules/**',
-          //   types: {
-          //     alias: '@shaders',
-          //     uniforms: false,
-              // library: 'threejs',
-            // }
-          }),
         ],
       } satisfies InlineConfig,
     );

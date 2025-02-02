@@ -61,7 +61,6 @@ export type NodeType =
   | 'beacon'
   | 'chat'
   | 'constant'
-  | 'counter'
   | 'database'
   | 'function'
   | 'gpt'
@@ -161,12 +160,6 @@ export const registry: Record<NodeType, Executable> = {
   ['beacon' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
     output: VoidOutput,
-  }),
-
-  // TODO(burdon): Can this maintain state?
-  ['counter' as const]: defineComputeNode({
-    input: DefaultInput,
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Number }),
   }),
 
   ['scope' as const]: defineComputeNode({

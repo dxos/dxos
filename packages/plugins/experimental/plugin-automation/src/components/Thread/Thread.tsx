@@ -44,14 +44,17 @@ export const Thread = ({ messages, streaming, onSubmit }: ThreadProps) => {
       </div>
 
       <div className='flex p-4 gap-2 items-center'>
+        {/* <Ball active={streaming} /> */}
         <TextBox
           ref={inputBox}
-          classNames='bg-base'
+          classNames='px-2 bg-base'
           placeholder='Ask a question'
           onEnter={(value) => {
-            onSubmit(value);
-            inputBox.current?.setText('');
-            scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+            if (value.trim().length > 0) {
+              onSubmit(value);
+              inputBox.current?.setText('');
+              scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+            }
           }}
         />
         <IconButton
@@ -81,7 +84,7 @@ export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 px-2 bg-base overflow-hidden',
+          'block rounded-md p-1 px-2 bg-base overflow-hidden divide-y divid-separator',
           role === 'user' ? 'dark:bg-blue-800' : 'whitespace-pre-wrap',
         )}
       >
@@ -90,6 +93,8 @@ export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
           switch (item.type) {
             case 'text':
               return <Markdown key={idx} text={item.text.trim()} />;
+            case 'json':
+              return <Json key={idx} data={item.json} />;
             default:
               return <Json key={idx} data={item} />;
           }
