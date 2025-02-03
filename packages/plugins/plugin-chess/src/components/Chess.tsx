@@ -13,14 +13,14 @@ import { Input, Select, useThemeContext } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { Chessboard, type ChessModel, type ChessMove } from './Chessboard';
-import { type GameType } from '../types';
+import { type ChessType } from '../types';
 
-const useChessModel = (game: GameType) => {
+const useChessModel = (game: ChessType) => {
   const [model, setModel] = useState<ChessModel>();
 
   useEffect(() => {
     if (!model || game.pgn !== model?.chess.pgn()) {
-      const chess = new ChessJs();
+      const chess = new ChessJs(game.pgn ? undefined : game.fen);
       if (game.pgn) {
         chess.loadPgn(game.pgn);
       }
@@ -32,7 +32,8 @@ const useChessModel = (game: GameType) => {
   const handleUpdate = (move: ChessMove) => {
     invariant(model);
     if (model.chess.move(move)) {
-      game!.pgn = model.chess.pgn();
+      game.pgn = model.chess.pgn();
+      game.fen = model.chess.fen();
       setModel({ ...model });
     }
   };
@@ -40,7 +41,7 @@ const useChessModel = (game: GameType) => {
   return { model, handleUpdate };
 };
 
-export const Chess = ({ space, game, playerSelector }: { space: Space; game: GameType; playerSelector?: boolean }) => {
+export const Chess = ({ space, game, playerSelector }: { space: Space; game: ChessType; playerSelector?: boolean }) => {
   const { model, handleUpdate } = useChessModel(game);
   if (!model) {
     return null;
@@ -59,7 +60,7 @@ export const Chess = ({ space, game, playerSelector }: { space: Space; game: Gam
   );
 };
 
-const PlayerSelector = ({ game, space }: { game: GameType; space: Space }) => {
+const PlayerSelector = ({ game, space }: { game: ChessType; space: Space }) => {
   const members = useMembers(space.key);
 
   return (

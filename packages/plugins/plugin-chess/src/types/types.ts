@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { isInstanceOf, S } from '@dxos/echo-schema';
 import { isReactiveObject } from '@dxos/live-object';
 
-import { GameType } from './schema';
+import { ChessType } from './schema';
 import { CHESS_PLUGIN } from '../meta';
 
 export namespace ChessAction {
@@ -16,11 +16,11 @@ export namespace ChessAction {
       name: S.optional(S.String),
     }),
     output: S.Struct({
-      object: GameType,
+      object: ChessType,
     }),
   }) {}
 }
 
-export const isObject = (object: unknown): object is GameType => {
-  return isReactiveObject(object) && object instanceof GameType;
+export const isObject = (object: unknown): object is typeof ChessType => {
+  return isReactiveObject(object) && isInstanceOf(ChessType, object);
 };

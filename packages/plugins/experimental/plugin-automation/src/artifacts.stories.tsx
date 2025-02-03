@@ -7,22 +7,18 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Tool, type Message } from '@dxos/artifact';
-import {
-  type ArtifactsContext,
-  ChessSchema,
-  artifacts,
-  capabilities,
-  genericTools,
-  localServiceEndpoints,
-} from '@dxos/artifact-testing';
+import { type ArtifactsContext, capabilities, genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { ChessPlugin } from '@dxos/plugin-chess';
+import { ChessType } from '@dxos/plugin-chess/types';
+import { MapPlugin } from '@dxos/plugin-map';
 import { useQueue } from '@dxos/react-edge-client';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -30,7 +26,7 @@ import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread } from './components';
 import { ChatProcessor } from './hooks';
-import { defaultProcessorOptions } from './testing/testing';
+import { createProcessorOptions } from './testing';
 
 const endpoints = localServiceEndpoints;
 
@@ -39,16 +35,19 @@ type RenderProps = {
 };
 
 const Render = ({ items: _items }: RenderProps) => {
+  const artifacts = useCapabilities(Capabilities.Artifact);
+
   // Configuration.
   const tools = useMemo<Tool[]>(
     () => [
-      //
+      // prettier-ignore
       ...genericTools,
-      ...artifacts['plugin-chess'].tools,
-      ...artifacts['plugin-map'].tools,
+      ...artifacts.flatMap((artifact) => artifact.tools),
     ],
     [genericTools, artifacts],
   );
+
+  console.log({ artifacts, tools });
 
   // TODO(burdon): Common naming/packaging.
   const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
@@ -73,8 +72,9 @@ const Render = ({ items: _items }: RenderProps) => {
   );
 
   // TODO(burdon): Create hook.
-  const [processor] = useState(
-    () => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }, defaultProcessorOptions),
+  const processor = useMemo(
+    () => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }, createProcessorOptions(artifacts)),
+    [aiClient, tools, artifactsContext, artifacts],
   );
 
   // State.
@@ -157,7 +157,7 @@ const meta: Meta<typeof Render> = {
     withSignals,
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
-    withPluginManager({ capabilities }),
+    withPluginManager({ plugins: [ChessPlugin(), MapPlugin()], capabilities }),
   ],
 };
 
@@ -168,8 +168,8 @@ export const Default = {};
 export const WithInitialItems = {
   args: {
     items: [
-      createStatic(ChessSchema, {
-        value: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+      createStatic(ChessType, {
+        fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       }),
     ],
   },

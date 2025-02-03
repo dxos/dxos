@@ -2,15 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createSystemPrompt } from '@dxos/artifact';
-import { artifacts } from '@dxos/artifact-testing';
+import { type Artifact, createSystemPrompt } from '@dxos/artifact';
 import { type GenerateRequest } from '@dxos/assistant';
 import { AST, S, toJsonSchema } from '@dxos/echo-schema';
 
-export const defaultProcessorOptions: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
+export const createProcessorOptions = (artifacts: Artifact[]): Pick<GenerateRequest, 'model' | 'systemPrompt'> => ({
   model: '@anthropic/claude-3-5-sonnet-20241022',
   systemPrompt: createSystemPrompt({ artifacts }),
-};
+});
 
 export const functions = [
   {
