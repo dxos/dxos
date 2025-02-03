@@ -29,7 +29,7 @@ export type FormContentProps = {
   Custom?: Partial<Record<string, InputComponent>>;
 };
 
-type FormFieldProps = {
+export type FormFieldProps = {
   property: SchemaProperty<any>;
   path?: (string | number)[];
   readonly?: boolean;

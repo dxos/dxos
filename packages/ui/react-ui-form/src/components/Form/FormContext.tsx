@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, type FocusEvent } from 'react';
+import React, { createContext, useContext, type FocusEvent, type PropsWithChildren } from 'react';
 
+import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
 import { createJsonPath, type SimpleType } from '@dxos/effect';
 
@@ -13,12 +14,8 @@ type FormContextValue<T extends BaseObject> = FormHandler<T>;
 
 const FormContext = createContext<FormContextValue<any> | undefined>(undefined);
 
-export const useFormContext = <T extends BaseObject>() => {
-  const context = useContext(FormContext);
-  if (!context) {
-    throw new Error('useFormContext must be used within a FormProvider');
-  }
-  return context as FormContextValue<T>;
+export const useFormContext = <T extends BaseObject>(): FormContextValue<T> => {
+  return useContext(FormContext) ?? raise(new Error('Missing FormContext'));
 };
 
 export const useFormValues = (path: (string | number)[] = []): any => {
@@ -45,7 +42,7 @@ export const useInputProps = (path: (string | number)[] = []): FormInputStatePro
   };
 };
 
-export const FormProvider = ({ children, ...formOptions }: FormOptions<any> & { children: React.ReactNode }) => {
+export const FormProvider = ({ children, ...formOptions }: PropsWithChildren<FormOptions<any>>) => {
   const formHandler = useForm(formOptions);
-  return <FormContext.Provider value={formHandler as any}>{children}</FormContext.Provider>;
+  return <FormContext.Provider value={formHandler}>{children}</FormContext.Provider>;
 };

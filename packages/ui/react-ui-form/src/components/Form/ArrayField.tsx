@@ -4,7 +4,7 @@
 
 import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { AST } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
@@ -34,7 +34,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
   const values = useFormValues(path ?? []) as any[];
-  invariant(Array.isArray(values), 'Expected array values');
+  invariant(Array.isArray(values));
   const label = title ?? pipe(name, capitalize);
 
   const tupleType = findNode(ast, AST.isTupleType);
@@ -43,7 +43,6 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   const getDefaultObjectValue = (typeNode: AST.AST): any => {
     const baseNode = findNode(typeNode, isDiscriminatedUnion);
     const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, AST.isTypeLiteral);
-
     if (!typeLiteral) {
       return {};
     }
@@ -51,19 +50,28 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
     return Object.fromEntries(getSchemaProperties(typeLiteral, {}).map((prop) => [prop.name, prop.defaultValue]));
   };
 
-  const handleAdd = () => {
-    const newValue =
-      type === 'object' && elementType ? getDefaultObjectValue(elementType) : SimpleType.getDefaultValue(type);
-    inputProps.onValueChange(type, [...values, newValue]);
-  };
+  const newValue = useMemo(() => {
+    if (type === 'object' && elementType) {
+      return getDefaultObjectValue(elementType);
+    } else {
+      return SimpleType.getDefaultValue(type);
+    }
+  }, [type, elementType]);
 
-  const handleRemove = (index: number) => {
-    const newValues = values.filter((_, i) => i !== index);
-    inputProps.onValueChange(type, newValues);
-  };
+  const handleAdd = useCallback(() => {
+    inputProps.onValueChange(type, [...values, newValue]);
+  }, [type, elementType, inputProps, newValue, values]);
+
+  const handleRemove = useCallback(
+    (index: number) => {
+      const newValues = values.filter((_, i) => i !== index);
+      inputProps.onValueChange(type, newValues);
+    },
+    [type, inputProps, values],
+  );
 
   if (!elementType) {
-    return <div>Missing element type</div>;
+    return null;
   }
 
   return (

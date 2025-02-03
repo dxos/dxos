@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(ZaymonFC): Talk with Rich/Josiah about where this module should live.
-
 import { Schema as S } from '@effect/schema';
 import { isSome } from 'effect/Option';
 
