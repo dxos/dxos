@@ -3,7 +3,7 @@
 //
 
 import { EventSubscriptions } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
