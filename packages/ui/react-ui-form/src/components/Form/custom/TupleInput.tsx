@@ -25,7 +25,6 @@ export const TupleInput = ({
   const { status, error } = getStatus();
 
   // TODO(burdon): Generalize number/float/string, etc.
-  // TODO(ZaymonFC: Fix this.
   const values: Record<string, number> = getValue<Record<string, number>>() ?? {};
 
   return (
