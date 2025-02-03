@@ -18,7 +18,6 @@
       "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "types": [
