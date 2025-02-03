@@ -5,6 +5,9 @@
 import { JsonSchemaType, Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
+export const ComputeValueType = S.Literal('string', 'number', 'boolean', 'object');
+export type ComputeValueType = S.Schema.Type<typeof ComputeValueType>;
+
 /**
  * GraphNode.
  */
@@ -23,6 +26,13 @@ export const ComputeNode = S.extend(
 
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
+
+    /**
+     * For template nodes determines the type of the value.
+     * We cannot rely on `typeof value` as for object nodes we want to store potentially broken JSON as text.
+     * For valueType === 'object' we store the JSON as text in `value`.
+     */
+    valueType: S.optional(ComputeValueType),
 
     /** For constant and template nodes. */
     value: S.optional(S.Any),

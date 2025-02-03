@@ -5,6 +5,7 @@ export const getTextTemplateInputSchema = (text: string): S.Schema.AnyNoContext 
   return S.Struct(Object.fromEntries(variables.map((property) => [property, S.Any])));
 };
 
+// TODO(dmaretskyi): Remove and use the json template with a single string as input.
 export const applyTextTemplate = (text: string, input: Record<string, any>): string => {
   const unresolved: string[] = [];
   const result = text.replace(/\{\{([^}]+)\}\}/g, (match: string, p1: string) => {
@@ -23,7 +24,8 @@ export const applyTextTemplate = (text: string, input: Record<string, any>): str
   return result;
 };
 
-const findHandlebarVariables = (text: string): string[] => {
+// TODO(dmaretskyi): Remove and use the json template with a single string as input.
+export const findHandlebarVariables = (text: string): string[] => {
   const regex = /\{\{([^}]+)\}\}/g; // Matches anything between {{ }}
   const matches = [...text.matchAll(regex)];
   return matches.map((match) => match[1].trim());

@@ -2,12 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { NODE_INPUT, NODE_OUTPUT, type ComputeNode, type Executable, type NodeType, registry } from '@dxos/conductor';
+import {
+  NODE_INPUT,
+  NODE_OUTPUT,
+  type ComputeNode,
+  type Executable,
+  type NodeType,
+  registry,
+  getTemplateInputSchema,
+} from '@dxos/conductor';
 import { raise } from '@dxos/debug';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type ComputeShape, type ConstantShape } from '../shapes';
+import { type ComputeShape, type ConstantShape, type TemplateShape } from '../shapes';
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
   const impl = registry[node.type as NodeType];
@@ -57,7 +65,11 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
   ['scope' as const]: () => createNode('scope'),
   ['surface' as const]: () => createNode('surface'),
   ['switch' as const]: () => createNode('switch'),
-  ['template' as const]: () => createNode('template'),
+  ['template' as const]: (shape) => {
+    const node = createNode('template', { valueType: (shape as TemplateShape).valueType, value: shape.text });
+    node.inputSchema = toJsonSchema(getTemplateInputSchema(node));
+    return node;
+  },
   ['text' as const]: () => createNode('text'),
   ['thread' as const]: () => createNode('thread'),
   ['trigger' as const]: () => createNode(NODE_INPUT),

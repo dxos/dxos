@@ -47,6 +47,7 @@ import {
   unwrapValueBag,
 } from '../types';
 import { applyTextTemplate } from './template';
+import { computeTemplate } from './template/generic';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -130,10 +131,9 @@ export const registry: Record<NodeType, Executable> = {
     input: TemplateInput,
     output: TemplateOutput,
     exec: synchronizedComputeFunction((props = {}, node) => {
-      const unresolved: string[] = [];
-      const text = applyTextTemplate(node?.value ?? '', props);
-
-      return Effect.succeed({ [DEFAULT_OUTPUT]: text });
+      invariant(node != null);
+      const result = computeTemplate(node, props);
+      return Effect.succeed({ [DEFAULT_OUTPUT]: result });
     }),
   }),
 

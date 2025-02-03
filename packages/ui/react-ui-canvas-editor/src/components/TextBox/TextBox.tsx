@@ -16,6 +16,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { json as jsonExtension } from '@codemirror/lang-json';
 
 export interface TextBoxControl {
   setText(text: string): void;
@@ -29,11 +30,12 @@ export type TextBoxProps = ThemedClassName<
     onBlur?: (value: string) => void;
     onEnter?: (value: string) => void;
     onCancel?: () => void;
+    json?: boolean;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
-  ({ classNames, value = '', centered, onBlur, onEnter, onCancel, ...rest }, forwardedRef) => {
+  ({ classNames, value = '', centered, onBlur, onEnter, onCancel, json, ...rest }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const modified = useRef(false);
     const doc = useRef(value);
@@ -48,7 +50,8 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
         initialValue: value,
         extensions: [
           createBasicExtensions({ lineWrapping: !centered, ...rest }),
-          createMarkdownExtensions(),
+          // TODO(burdon): JSON highlighting doesn't work.
+          ...(json ? [jsonExtension()] : [createMarkdownExtensions()]),
           createThemeExtensions({
             themeMode,
             slots: {
@@ -102,7 +105,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
           ),
         ],
       };
-    }, [value]);
+    }, [value, json]);
 
     // External control.
     useImperativeHandle(

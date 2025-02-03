@@ -16,9 +16,10 @@ import {
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 import { safeParseJson } from '@dxos/util';
 
-import { Box } from './common';
+import { Box, TypeSelect } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { ComputeValueType } from '@dxos/conductor';
 
 //
 // Data
@@ -55,7 +56,7 @@ const inferType = (value: any): string | undefined => {
 
 export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
   const { node } = useComputeNodeState(shape);
-  const [type, setType] = useState(inferType(node.value) ?? types[0]);
+  const [type, setType] = useState(inferType(node.value) ?? ComputeValueType.literals[0]);
   const inputRef = useRef<TextBoxControl>(null);
 
   const handleEnter = useCallback<NonNullable<TextBoxProps['onEnter']>>(
@@ -85,6 +86,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
       {(type === 'string' || type === 'number') && (
         <TextBox {...props} ref={inputRef} value={node.value} onEnter={handleEnter} />
       )}
+      {type === 'object' && <TextBox {...props} ref={inputRef} value={JSON.stringify(node.value, null, 2)} json />}
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
           <Input.Root>
@@ -98,31 +100,6 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
         </div>
       )}
     </Box>
-  );
-};
-
-const types = ['string', 'number', 'boolean', 'object'];
-
-// TODO(burdon): Factor out.
-const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
-  return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full !px-0' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.ScrollUpButton />
-          <Select.Viewport>
-            {types.map((type) => (
-              <Select.Option key={type} value={type}>
-                {type}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-          <Select.ScrollDownButton />
-          <Select.Arrow />
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
   );
 };
 

@@ -35,6 +35,7 @@
     "@antv/layout": "^1.2.13",
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+    "@codemirror/lang-json": "^6.0.1",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.1",
     "@dxos/conductor": "workspace:*",
