@@ -9,33 +9,40 @@ export type BallProps = {
   active?: boolean;
 };
 
+const n = 36;
+const a = 40;
+const rotate = Array.from({ length: n }).reduce<number[]>(
+  (acc, _, i) => {
+    acc.push((acc.at(-1) ?? 0) + a * (1 - Math.cos(i * ((Math.PI * 2) / n))));
+    return acc;
+  },
+  [0],
+);
+
 export const Ball = ({ active }: BallProps) => (
   <AnimatePresence>
     <motion.div
       className='flex shrink-0 w-full h-full bg-primary-500'
       transition={{ ease: 'linear', duration: 4, repeat: Infinity }}
       initial={{
-        opacity: 1,
         scale: 0.9,
         rotate: 0,
-        borderRadius: '50%',
+        borderRadius: '10%',
         // backgroundColor: '#ff0000',
       }}
       variants={{
-        active: {
-          // opacity: 0.75,
-          scale: [1],
-          rotate: [0, 10, 10, 10, 20, 20, 30, 40, 50, 70, 90, 135, 180, 225, 270, 315, 360],
-          borderRadius: ['50%', '10%'],
-        },
         inactive: {
-          rotate: [0, 10, 30, 60, 90, 120, 150, 180, 270, 360, 90, 180, 270, 360, 90, 180, 270, 360],
-          borderRadius: ['10%', '10%'],
+          scale: [0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9],
+          rotate: [0],
+          borderRadius: ['10%'],
+          // backgroundColor: '#5555ff',
         },
-        // inactive: {
-        //   scale: [0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9, 0.8, 0.9, 0.8, 0.9, 0.9, 0.9],
-        //   // backgroundColor: ['#ff0000', '#00ff00', '#0000ff', '#ff0000'],
-        // },
+        active: {
+          scale: [1, 0.5, 1],
+          rotate,
+          borderRadius: ['10%', '20%', '10%'],
+          // backgroundColor: ['#ff0000', '#00ff00', '#0000ff', '#ff0000'],
+        },
       }}
       animate={active ? 'active' : 'inactive'}
       exit={{ opacity: 0, scale: 0 }}
