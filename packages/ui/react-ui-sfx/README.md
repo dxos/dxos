@@ -1,4 +1,4 @@
 # @dxos/react-ui-sf
 
 ## NOTE
-- three @react-three/drei
+- We need specific versions of `three` and `@react-three/drei`.
