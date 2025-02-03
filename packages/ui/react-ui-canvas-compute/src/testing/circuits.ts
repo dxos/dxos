@@ -162,9 +162,7 @@ export const createTemplateCircuit = () => {
   // Json, starts at y=28
   model.builder.call((builder) => {
     const sender = model.createNode(createConstant({ value: 'Alice', ...position({ x: -12, y: 28 }) }));
-    const body = model.createNode(
-      createConstant({ value: 'Hello, nice to meet you!', ...position({ x: -12, y: 34 }) }),
-    );
+    const body = model.createNode(createConstant({ value: 'Hello', ...position({ x: -12, y: 34 }) }));
     const meta = model.createNode(
       createConstant({ value: { location: 'San Francisco' }, ...position({ x: -12, y: 40 }) }),
     );
@@ -176,7 +174,7 @@ export const createTemplateCircuit = () => {
             headers: {
               to: '{{recipient}}',
             },
-            body: '{{greeting}}, nice to meet you, {{recipient}}!',
+            body: '{{greeting}}, {{recipient}}!',
             meta: '{{meta}}',
           },
           null,

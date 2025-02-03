@@ -8,7 +8,7 @@ export const getTextTemplateInputSchema = (text: string): S.Schema.AnyNoContext 
 // TODO(dmaretskyi): Remove and use the json template with a single string as input.
 export const applyTextTemplate = (text: string, input: Record<string, any>): string => {
   const unresolved: string[] = [];
-  const result = text.replace(/\{\{([^}]+)\}\}/g, (match: string, p1: string) => {
+  const result = text.replaceAll(/\{\{([^}]+)\}\}/g, (match: string, p1: string) => {
     if (input[p1]) {
       return input[p1];
     } else {

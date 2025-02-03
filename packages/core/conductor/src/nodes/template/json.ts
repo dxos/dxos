@@ -44,7 +44,7 @@ export const applyObjectTemplate = (template: unknown, props: Record<string, unk
           return props[value.slice(2, -2)];
         }
       } else {
-        const result = value.replace(REGEX_TEMPLATE, (match: string, p1: string) => {
+        const result = value.replaceAll(REGEX_TEMPLATE, (match: string, p1: string) => {
           if (props[p1]) {
             return props[p1] as any;
           } else {
