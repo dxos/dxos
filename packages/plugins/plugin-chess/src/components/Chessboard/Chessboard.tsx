@@ -4,8 +4,9 @@
 
 import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { Chess, type Color } from 'chess.js';
-import React, { type FC } from 'react';
-import { Chessboard as ReactChessboard } from 'react-chessboard';
+import React, { useRef, type FC } from 'react';
+import { ChessboardDnDProvider, Chessboard as ReactChessboard } from 'react-chessboard';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -68,8 +69,8 @@ export type ChessboardProps = {
 };
 
 /**
- * https://www.npmjs.com/package/chess.js
- * https://www.npmjs.com/package/react-chessboard
+ * https://github.com/jhlywa/chess.js
+ * https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
  */
 export const Chessboard = ({
   model: { chess },
@@ -79,7 +80,8 @@ export const Chessboard = ({
   pieces = ChessPieces.STANDARD,
   onUpdate,
 }: ChessboardProps) => {
-  const { ref, width } = useResizeDetector();
+  const chessRoot = useRef<HTMLDivElement>(null);
+  const { ref, width, height } = useResizeDetector();
   const style = boardStyles[boardStyle];
 
   const handleDrop = (source: any, target: any, piece: any) => {
@@ -99,19 +101,30 @@ export const Chessboard = ({
     }
   };
 
-  // https://react-chessboard.com/?path=/story/example-chessboard--configurable-board
   return (
-    <div ref={ref} className='flex grow aspect-square overflow-hidden'>
-      <ReactChessboard
-        boardWidth={width}
-        position={chess.fen()}
-        boardOrientation={orientation === 'w' ? 'white' : 'black'}
-        arePiecesDraggable={!readonly}
-        onPieceDrop={handleDrop}
-        customPieces={chessPieces[pieces]}
-        {...style}
-        {...props}
-      />
+    <div ref={ref} className='flex w-full h-full justify-center items-center'>
+      <div
+        className='flex w-full justify-center'
+        style={{ width: width && height ? Math.min(width, height) : undefined }}
+      >
+        <div ref={chessRoot} className='w-full relative' style={{ transform: 'translate3d(0, 0, 0)' }}>
+          {/* TODO(burdon): Prevents interference with external DND, but drag position is broken. Fix for touch also. */}
+          <ChessboardDnDProvider debugMode={true} backend={HTML5Backend} options={{ rootElement: chessRoot.current }}>
+            <ReactChessboard
+              boardWidth={width && height ? Math.min(width, height) : undefined}
+              boardOrientation={orientation === 'w' ? 'white' : 'black'}
+              allowDragOutsideBoard={false}
+              arePiecesDraggable={true}
+              // arePiecesDraggable={!readonly}
+              customPieces={chessPieces[pieces]}
+              position={chess.fen()}
+              onPieceDrop={handleDrop}
+              {...style}
+              {...props}
+            />
+          </ChessboardDnDProvider>
+        </div>
+      </div>
     </div>
   );
 };

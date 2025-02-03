@@ -119,8 +119,12 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await exchangeMessages(swarm1, swarm2);
 
     const disconnectedKeys = new Set();
-    swarm1.protocol.disconnected.on((peerInfo) => disconnectedKeys.add(peerInfo.toHex()));
-    swarm2.protocol.disconnected.on((peerInfo) => disconnectedKeys.add(peerInfo.toHex()));
+    swarm1.protocol.disconnected.on((peerInfo) => {
+      disconnectedKeys.add(peerInfo.toHex());
+    });
+    swarm2.protocol.disconnected.on((peerInfo) => {
+      disconnectedKeys.add(peerInfo.toHex());
+    });
 
     void swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
     // Wait until both peers are disconnected.

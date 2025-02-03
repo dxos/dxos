@@ -10,9 +10,11 @@ export const ECHO_ATTR_TYPE = '@type';
 
 /**
  * Querying the typename of the object.
- * The typename is the raw string without version: `example.com/type/Contact`.
+ * The typename is either a DXN or a raw string without version.
+ * @example `dxn:example.com/type/Contact:1.0.0`
+ * @example `example.com/type/Contact`
  */
-// TODO(dmaretskyi): Convert to DXN.
+// TODO(dmaretskyi): Convert to be strictly a DXN.
 export const TYPENAME_SYMBOL = Symbol.for('@dxos/schema/Typename');
 
 /**
@@ -30,7 +32,14 @@ export const getTypename = (obj: BaseObject): string | undefined => {
     return undefined;
   }
   invariant(typeof typename === 'string');
-  invariant(!typename.startsWith('dxn:'));
-  invariant(!typename.includes('@'));
   return typename;
+};
+
+export const setTypename = (obj: any, typename: string) => {
+  Object.defineProperty(obj, TYPENAME_SYMBOL, {
+    value: typename,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
 };

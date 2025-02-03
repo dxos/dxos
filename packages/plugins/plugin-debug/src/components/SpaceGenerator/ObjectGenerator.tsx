@@ -3,7 +3,11 @@
 //
 
 import { addressToA1Notation } from '@dxos/compute';
-import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
+import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { type FunctionTrigger, TriggerKind } from '@dxos/functions/types';
+import { invariant } from '@dxos/invariant';
+import { DXN, SpaceId } from '@dxos/keys';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
@@ -11,6 +15,23 @@ import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
+import {
+  type ComputeShape,
+  createAppend,
+  createComputeGraph,
+  createConstant,
+  createGpt,
+  createQueue,
+  createText,
+  createTrigger,
+} from '@dxos/react-ui-canvas-compute';
+import {
+  pointMultiply,
+  pointsToRect,
+  rectToPoints,
+  CanvasBoardType,
+  CanvasGraphModel,
+} from '@dxos/react-ui-canvas-editor';
 import { TableType } from '@dxos/react-ui-table';
 import { createView, TextType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
@@ -37,15 +58,13 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     DocumentType.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(
+        return space.db.add(
           create(DocumentType, {
             name: faker.commerce.productName(),
             content: makeRef(create(TextType, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );
-
-        return obj;
       });
 
       cb?.(objects);
@@ -109,7 +128,96 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       return objects;
     },
   ],
+  [
+    ComputeGraph.typename,
+    async (space, n, cb) => {
+      const objects = range(n, () => {
+        const model = ComputeGraphModel.create();
+        model.builder
+          .createNode({ id: 'gpt-INPUT', type: NODE_INPUT })
+          .createNode({ id: 'gpt-GPT', type: 'gpt' })
+          .createNode({
+            id: 'gpt-QUEUE_ID',
+            type: 'constant',
+            value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+          })
+          .createNode({ id: 'gpt-APPEND', type: 'append' })
+          .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
+          .createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' })
+          .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' })
+          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-APPEND', property: 'id' })
+          .createEdge({ node: 'gpt-GPT', property: 'messages' }, { node: 'gpt-APPEND', property: 'items' })
+          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-OUTPUT', property: 'queue' });
+
+        return space.db.add(model.root);
+      });
+      cb?.(objects);
+      return objects;
+    },
+  ],
+  [
+    CanvasBoardType.typename,
+    async (space, n, cb) => {
+      const objects = range(n, () => {
+        const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+        let functionTrigger: FunctionTrigger | undefined;
+        canvasModel.builder.call((builder) => {
+          const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
+          const triggerShape = createTrigger({ triggerKind: TriggerKind.Webhook, ...position({ x: -18, y: -2 }) });
+          const trigger = canvasModel.createNode(triggerShape);
+          const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
+          const queueId = canvasModel.createNode(
+            createConstant({
+              value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+              ...position({ x: -18, y: 5, width: 8, height: 6 }),
+            }),
+          );
+          const queue = canvasModel.createNode(createQueue(position({ x: -3, y: 3, width: 14, height: 10 })));
+          const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
+
+          builder
+            .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'bodyText' })
+            .createEdge({ source: gpt.id, target: text.id, output: 'text' })
+            .createEdge({ source: queueId.id, target: queue.id })
+            .createEdge({ source: queueId.id, target: append.id, input: 'id' })
+            .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+
+          functionTrigger = triggerShape.functionTrigger!.target!;
+        });
+
+        const computeModel = createComputeGraph(canvasModel);
+        const computeGraph = computeModel.root;
+
+        invariant(functionTrigger);
+        functionTrigger.function = DXN.fromLocalObjectId(computeGraph.id).toString();
+        functionTrigger.meta ??= {};
+        const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
+        functionTrigger.meta.computeNodeId = inputNode.id;
+
+        return space.db.add(
+          create(CanvasBoardType, {
+            computeGraph: makeRef(computeGraph),
+            layout: canvasModel.graph,
+          }),
+        );
+      });
+      cb?.(objects);
+      return objects;
+    },
+  ],
 ]);
+
+const position = (rect: { x: number; y: number; width?: number; height?: number }) => {
+  const snap = 32;
+  const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
+  const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
+  if (width && height) {
+    return { center: { x, y }, size: width && height ? { width, height } : undefined };
+  } else {
+    return { center: { x, y } };
+  }
+};
 
 export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
   return async (

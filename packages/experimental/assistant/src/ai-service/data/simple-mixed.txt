@@ -1,0 +1,33 @@
+{
+  "test": 100
+}
+
+<cot>
+1. Planning step.
+2. Research step.
+3. Output step.
+</cot>
+
+This is some text.
+
+This is a tool call.
+
+{
+  "test": 100
+}
+
+<artifact id="100" />
+
+This is some code.
+
+```json
+{
+  "test": 100
+}
+```
+
+```ts
+const Test = () => {
+  return 100;
+}
+```

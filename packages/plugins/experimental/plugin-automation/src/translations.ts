@@ -3,10 +3,14 @@
 //
 
 import { AUTOMATION_PLUGIN } from './meta';
+import { GptChatType } from './types';
 
 export default [
   {
     'en-US': {
+      [GptChatType.typename]: {
+        'typename label': 'GPT Chat',
+      },
       [AUTOMATION_PLUGIN]: {
         'plugin name': 'Automation',
         'object placeholder': 'New prompt',

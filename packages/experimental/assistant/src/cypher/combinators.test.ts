@@ -58,13 +58,13 @@ describe('Cypher Combinators', () => {
     const parser = or(node)(relation);
     const input = '[a:b]';
     const result = parser.parse(input);
-    log.info('', { result });
+    log('result', { result });
   });
 
   test('properties', ({ expect }) => {
     const input = "{name: 'John'}";
     const result = properties.parse(input);
-    log.info('', { result });
+    log('result', { result });
     expect(result).toMatchObject({ isOk: true });
   });
 
@@ -92,7 +92,7 @@ describe('Cypher Combinators', () => {
     const cases = ['RETURN n, m'];
     for (const input of cases) {
       const result = returnClause.parse(input);
-      log.info('', { result });
+      log('result', { result });
       expect(result).toMatchObject({ isOk: true });
     }
   });

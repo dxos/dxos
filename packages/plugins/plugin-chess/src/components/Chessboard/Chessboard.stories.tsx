@@ -7,11 +7,12 @@ import '@dxos-theme';
 import { Chess } from 'chess.js';
 import React, { useState } from 'react';
 
+import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Chessboard, type ChessModel, type ChessMove, ChessPanel } from './Chessboard';
 
-const Story = () => {
+const Story = ({ size, panel = false }: { size?: 'large' | 'small'; panel: boolean }) => {
   const [model, setModel] = useState<ChessModel>({ chess: new Chess() });
   const handleUpdate = (move: ChessMove) => {
     if (model.chess.move(move)) {
@@ -21,12 +22,14 @@ const Story = () => {
 
   return (
     <div className='flex flex-row'>
-      <div className='w-[600px]'>
-        <Chessboard model={model} boardStyle='default' onUpdate={handleUpdate} />
+      <div className={mx(size === 'small' ? 'w-[320px]' : 'w-[640px]')}>
+        <Chessboard model={model} onUpdate={handleUpdate} />
       </div>
-      <div className='w-[160px] ml-8'>
-        <ChessPanel model={model} />
-      </div>
+      {panel && (
+        <div className='w-[160px] ml-8'>
+          <ChessPanel model={model} />
+        </div>
+      )}
     </div>
   );
 };
@@ -38,6 +41,16 @@ export default {
   decorators: [withTheme],
 };
 
-export const Default = {
-  component: Chessboard,
+export const Default = {};
+
+export const Panel = {
+  args: {
+    panel: true,
+  },
+};
+
+export const Micro = {
+  args: {
+    size: 'small',
+  },
 };

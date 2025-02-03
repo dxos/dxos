@@ -3,4 +3,5 @@
 //
 
 export * from './client';
-export * from './schema';
+export * from './defs';
+export * from './stream';

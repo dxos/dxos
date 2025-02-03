@@ -124,6 +124,9 @@
       "path": "packages/core/compute/tsconfig.json"
     },
     {
+      "path": "packages/core/conductor/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/automerge/tsconfig.json"
     },
     {
@@ -223,6 +226,12 @@
       "path": "packages/experimental/agent-functions/tsconfig.json"
     },
     {
+      "path": "packages/experimental/artifact/tsconfig.json"
+    },
+    {
+      "path": "packages/experimental/artifact-testing/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/assistant/tsconfig.json"
     },
     {
@@ -280,9 +289,6 @@
       "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-map/tsconfig.json"
     },
     {
@@ -323,6 +329,9 @@
     },
     {
       "path": "packages/plugins/plugin-help/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
@@ -412,6 +421,9 @@
       "path": "packages/sdk/react-client/tsconfig.json"
     },
     {
+      "path": "packages/sdk/react-edge-client/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/schema/tsconfig.json"
     },
     {
@@ -442,6 +454,12 @@
       "path": "packages/ui/react-ui-canvas/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-card/tsconfig.json"
     },
     {
@@ -467,6 +485,9 @@
     },
     {
       "path": "packages/ui/react-ui-searchlist/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-sfx/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-stack/tsconfig.json"
@@ -502,6 +523,9 @@
       "path": "tools/codemods/tsconfig.json"
     },
     {
+      "path": "tools/codemorph/tsconfig.json"
+    },
+    {
       "path": "tools/executors/esbuild/tsconfig.json"
     },
     {
@@ -512,6 +536,9 @@
     },
     {
       "path": "tools/lit-stories/tsconfig.json"
+    },
+    {
+      "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
       "path": "tools/log-hook/tsconfig.json"

@@ -7,24 +7,21 @@ import {
   type Matrix,
   applyToPoints,
   compose,
-  inverse,
-  translate as translateMatrix,
   identity,
+  inverse,
   scale as scaleMatrix,
+  translate as translateMatrix,
 } from 'transformation-matrix';
 
 import { type Point, type Dimension } from '../types';
 
-export const defaultOffset: Point = { x: 0, y: 0 };
+export const defaultOrigin: Point = { x: 0, y: 0 };
 
 // TODO(burdon): Rotation also?
 export type ProjectionState = {
   scale: number;
   offset: Point;
 };
-
-// TODO(burdon): Tradeoff between stable ProjectionMapping object that can be used with live values within a closure,
-//  vs. a reactive object that can trigger updates?
 
 /**
  * Maps between screen and model coordinates.
@@ -48,7 +45,7 @@ export interface Projection {
 export class ProjectionMapper implements Projection {
   private _bounds: Dimension = { width: 0, height: 0 };
   private _scale: number = 1;
-  private _offset: Point = defaultOffset;
+  private _offset: Point = defaultOrigin;
   private _toScreen: Matrix = identity();
   private _toModel: Matrix = identity();
 
@@ -62,7 +59,13 @@ export class ProjectionMapper implements Projection {
     this._bounds = bounds;
     this._scale = scale;
     this._offset = offset;
-    this._toScreen = compose(translateMatrix(this._offset.x, this._offset.y), scaleMatrix(this._scale));
+    this._toScreen = compose(
+      // NOTE: Order is important.
+      translateMatrix(this._offset.x, this._offset.y),
+      scaleMatrix(this._scale),
+      // TODO(burdon): Flip.
+      // flipX(),
+    );
     this._toModel = inverse(this._toScreen);
     return this;
   }
@@ -128,6 +131,8 @@ export const zoomInPlace = (
     });
 };
 
+const noop = () => {};
+
 /**
  * Zoom to new scale and position.
  */
@@ -137,6 +142,7 @@ export const zoomTo = (
   current: ProjectionState,
   next: ProjectionState,
   delay = 200,
+  cb = noop,
 ) => {
   const is = d3.interpolateObject({ scale: current.scale, ...current.offset }, { scale: next.scale, ...next.offset });
   d3.transition()
@@ -145,5 +151,6 @@ export const zoomTo = (
     .tween('zoom', () => (t) => {
       const { scale, x, y } = is(t);
       setTransform({ scale, offset: { x, y } });
-    });
+    })
+    .on('end', cb);
 };
