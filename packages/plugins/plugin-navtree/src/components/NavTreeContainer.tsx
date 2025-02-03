@@ -5,7 +5,7 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { untracked } from '@preact/signals-core';
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher, Surface } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
@@ -16,7 +16,9 @@ import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-u
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { NAV_TREE_ITEM, NavTree, type NavTreeProps } from './NavTree';
+import { NAV_TREE_ITEM, NavTree } from './NavTree';
+import { NavTreeContext } from './NavTreeContext';
+import { type NavTreeProps } from './types';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
@@ -201,20 +203,23 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
     });
   }, [graph]);
 
+  const navTreeContextValue = useMemo(
+    () => ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId }),
+    [getActions, loadDescendents, renderItemEnd, popoverAnchorId],
+  );
+
   // TODO(thure): What gives this an inline `overflow: initial`?
   return (
-    <NavTree
-      id={graph.root.id}
-      getActions={getActions}
-      getItems={getItems}
-      getProps={getProps}
-      isCurrent={isCurrent}
-      loadDescendents={loadDescendents}
-      renderItemEnd={renderItemEnd}
-      popoverAnchorId={popoverAnchorId}
-      canDrop={canDrop}
-      onSelect={handleSelect}
-      {...props}
-    />
+    <NavTreeContext.Provider value={navTreeContextValue}>
+      <NavTree
+        id={graph.root.id}
+        getItems={getItems}
+        getProps={getProps}
+        isCurrent={isCurrent}
+        canDrop={canDrop}
+        onSelect={handleSelect}
+        {...props}
+      />
+    </NavTreeContext.Provider>
   );
 });

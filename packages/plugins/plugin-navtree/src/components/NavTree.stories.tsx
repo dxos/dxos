@@ -17,6 +17,7 @@ import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { NavTree } from './NavTree';
+import { StorybookNavTree } from '../stories/StorybookNavTree';
 import { createTree, updateState } from '../testing';
 
 faker.seed(1234);
@@ -24,9 +25,9 @@ faker.seed(1234);
 const tree = create<NodeArg<any>>(createTree());
 const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
 
-const meta: Meta<typeof NavTree> = {
+const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/NavTree',
-  component: NavTree,
+  component: StorybookNavTree,
   decorators: [withTheme, withLayout({ tooltips: true })],
   render: (args) => {
     useEffect(() => {
