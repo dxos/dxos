@@ -29,9 +29,9 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { prop, schema }, ...props }) => {
-        const inputProps = props as unknown as InputProps<any>;
+        const inputProps = props as unknown as InputProps;
         const handleChange = useCallback(
-          (file: File) => inputProps.onValueChange?.(prop, 'object', file),
+          (file: File) => inputProps.onValueChange?.('object', file),
           [prop, inputProps.onValueChange],
         );
 

@@ -129,10 +129,10 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     onSave();
   }, [onSave]);
 
-  const Custom: Partial<Record<string, InputComponent<PropertyType>>> = useMemo(
+  const Custom: Partial<Record<string, InputComponent>> = useMemo(
     () => ({
       ['format' satisfies keyof PropertyType]: (props) => (
-        <SelectInput<PropertyType>
+        <SelectInput
           {...props}
           options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
             value,
@@ -141,7 +141,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         />
       ),
       ['referenceSchema' satisfies keyof PropertyType]: (props) => (
-        <SelectInput<PropertyType>
+        <SelectInput
           {...props}
           options={schemas.map((schema) => ({
             value: schema.typename,
@@ -149,7 +149,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         />
       ),
       ['referencePath' satisfies keyof PropertyType]: (props) => (
-        <SelectInput<PropertyType>
+        <SelectInput
           {...props}
           options={
             referenceSchema

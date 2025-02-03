@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type JsonPath } from '.';
-import { getValue, setValue, splitPath, type BaseObject } from './types';
+import { getValue, setValue, type BaseObject } from './types';
 
 describe('Types', () => {
   test('checks sanity', async ({ expect }) => {
@@ -15,20 +15,6 @@ describe('Types', () => {
 });
 
 describe('get/set deep', () => {
-  test('path splitting', ({ expect }) => {
-    const cases = [
-      ['foo.bar[0].baz', ['foo', 'bar', '[0]', 'baz']],
-      ['users[1].name', ['users', '[1]', 'name']],
-      ['data[0][1]', ['data', '[0]', '[1]']],
-      ['simple.path', ['simple', 'path']],
-      ['root', ['root']],
-    ] as const;
-
-    cases.forEach(([input, expected]) => {
-      expect(splitPath(input as JsonPath)).toEqual(expected);
-    });
-  });
-
   test('get/set operations', ({ expect }) => {
     const obj = {
       name: 'test',
