@@ -8,8 +8,8 @@ import { HashRouter, useRoutes as useRouterRoutes } from 'react-router-dom';
 
 import { type PublicKey } from '@dxos/react-client';
 
+import { JoinedRoom } from './JoinedRoom';
 import { Lobby } from './Lobby';
-import { Room } from './Room';
 import { RoomContextProvider } from './RoomContextProvider';
 
 const Routes = () => {
@@ -20,7 +20,7 @@ const Routes = () => {
     },
     {
       path: '/room',
-      element: <Room />,
+      element: <JoinedRoom />,
     },
   ]);
 };

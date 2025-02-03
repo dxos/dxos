@@ -21,10 +21,6 @@ import { useBroadcastStatus } from './hooks/useBroadcastStatus';
 import { useRoomContext } from './hooks/useRoomContext';
 import { calculateLayout } from './utils/calculateLayout';
 
-export const Room = () => {
-  return <JoinedRoom />;
-};
-
 export const useDebugEnabled = () => {
   const [enabled, setEnabled] = useState(false);
 
@@ -45,7 +41,7 @@ export const useDebugEnabled = () => {
   return enabled;
 };
 
-const JoinedRoom = () => {
+export const JoinedRoom = () => {
   const {
     userMedia,
     peer,
