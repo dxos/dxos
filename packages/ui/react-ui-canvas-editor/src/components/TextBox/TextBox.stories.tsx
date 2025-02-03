@@ -36,7 +36,6 @@ type Story = StoryObj<TextBoxProps>;
 export const Wrapping: Story = {
   args: {
     placeholder: 'Type something...',
-    // value: 'Test',
   },
 };
 
@@ -44,6 +43,19 @@ export const Centered: Story = {
   args: {
     centered: true,
     placeholder: 'Type something...',
-    // value: 'Test',
+  },
+};
+
+export const Markdown: Story = {
+  args: {
+    language: 'markdown',
+    value: ['# Markdown', '', 'Hello world.'].join('\n'),
+  },
+};
+
+export const Json: Story = {
+  args: {
+    language: 'json',
+    value: JSON.stringify({ test: 100 }, null, 2),
   },
 };

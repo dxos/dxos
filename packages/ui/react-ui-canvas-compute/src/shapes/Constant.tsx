@@ -4,8 +4,9 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
+import { ComputeValueType } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
-import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { Input } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -19,7 +20,6 @@ import { safeParseJson } from '@dxos/util';
 import { Box, TypeSelect } from './common';
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
-import { ComputeValueType } from '@dxos/conductor';
 
 //
 // Data
@@ -86,7 +86,9 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
       {(type === 'string' || type === 'number') && (
         <TextBox {...props} ref={inputRef} value={node.value} onEnter={handleEnter} />
       )}
-      {type === 'object' && <TextBox {...props} ref={inputRef} value={JSON.stringify(node.value, null, 2)} json />}
+      {type === 'object' && (
+        <TextBox {...props} ref={inputRef} value={JSON.stringify(node.value, null, 2)} language={'json'} />
+      )}
       {type === 'boolean' && (
         <div className='flex grow justify-center items-center'>
           <Input.Root>

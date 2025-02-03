@@ -137,7 +137,7 @@ export const createTemplateCircuit = () => {
 
   // Gpt
   model.builder.call((builder) => {
-    const chat = model.createNode(createChat(position({ x: -12, y: 4 })));
+    const chat = model.createNode(createChat(position({ x: -12, y: 6 })));
     const template = model.createNode(createTemplate(position({ x: -12, y: -4 })));
     const gpt = model.createNode(createGpt(position({ x: 0, y: 0 })));
     const text = model.createNode(createText(position({ x: 14, y: 0 })));
@@ -148,23 +148,29 @@ export const createTemplateCircuit = () => {
       .createEdge({ source: template.id, target: gpt.id, input: 'systemPrompt' });
   });
 
-  // Text, starts at y=14
+  // Text
   model.builder.call((builder) => {
-    const text = model.createNode(createConstant({ value: 'Brian', ...position({ x: -12, y: 14 }) }));
-    const template = model.createNode(
-      createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: 0, y: 14 }) }),
+    const text = model.createNode(
+      createConstant({ value: 'DXOS', ...position({ x: -12, y: 15, width: 8, height: 4 }) }),
     );
-    const view = model.createNode(createSurface(position({ x: 14, y: 14 })));
+    const template = model.createNode(
+      createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: 0, y: 15 }) }),
+    );
+    const view = model.createNode(createSurface(position({ x: 14, y: 15 })));
     builder.createEdge({ source: text.id, target: template.id, input: 'name' });
     builder.createEdge({ source: template.id, target: view.id });
   });
 
-  // Json, starts at y=28
+  // Json
   model.builder.call((builder) => {
-    const sender = model.createNode(createConstant({ value: 'Alice', ...position({ x: -12, y: 28 }) }));
-    const body = model.createNode(createConstant({ value: 'Hello', ...position({ x: -12, y: 34 }) }));
+    const sender = model.createNode(
+      createConstant({ value: 'alice@example.com', ...position({ x: -12, y: 24, width: 8, height: 4 }) }),
+    );
+    const body = model.createNode(
+      createConstant({ value: 'Hello', ...position({ x: -12, y: 29, width: 8, height: 4 }) }),
+    );
     const meta = model.createNode(
-      createConstant({ value: { location: 'San Francisco' }, ...position({ x: -12, y: 40 }) }),
+      createConstant({ value: { location: 'Tokyo' }, ...position({ x: -12, y: 35, width: 8, height: 6 }) }),
     );
     const template = model.createNode(
       createTemplate({
@@ -174,16 +180,16 @@ export const createTemplateCircuit = () => {
             headers: {
               to: '{{recipient}}',
             },
-            body: '{{greeting}}, {{recipient}}!',
+            body: '{{greeting}} {{recipient}}',
             meta: '{{meta}}',
           },
           null,
           2,
         ),
-        ...position({ x: 0, y: 28 }),
+        ...position({ x: 0, y: 30 }),
       }),
     );
-    const view = model.createNode(createSurface(position({ x: 14, y: 28 })));
+    const view = model.createNode(createSurface(position({ x: 14, y: 30 })));
     builder.createEdge({ source: sender.id, target: template.id, input: 'recipient' });
     builder.createEdge({ source: body.id, target: template.id, input: 'greeting' });
     builder.createEdge({ source: meta.id, target: template.id, input: 'meta' });

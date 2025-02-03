@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { json } from '@codemirror/lang-json';
 import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
@@ -16,7 +17,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { json as jsonExtension } from '@codemirror/lang-json';
 
 export interface TextBoxControl {
   setText(text: string): void;
@@ -30,12 +30,12 @@ export type TextBoxProps = ThemedClassName<
     onBlur?: (value: string) => void;
     onEnter?: (value: string) => void;
     onCancel?: () => void;
-    json?: boolean;
+    language?: 'json' | 'markdown';
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
-  ({ classNames, value = '', centered, onBlur, onEnter, onCancel, json, ...rest }, forwardedRef) => {
+  ({ classNames, value = '', centered, onBlur, onEnter, onCancel, language, ...rest }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const modified = useRef(false);
     const doc = useRef(value);
@@ -50,16 +50,19 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
         initialValue: value,
         extensions: [
           createBasicExtensions({ lineWrapping: !centered, ...rest }),
-          // TODO(burdon): JSON highlighting doesn't work.
-          ...(json ? [jsonExtension()] : [createMarkdownExtensions()]),
+          ...(language === 'json'
+            ? [json()]
+            : language === 'markdown'
+              ? [createMarkdownExtensions(), decorateMarkdown()]
+              : []),
           createThemeExtensions({
             themeMode,
+            syntaxHighlighting: !!language,
             slots: {
               editor: { className: 'w-full h-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),
-          decorateMarkdown(),
           // Detect changes.
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {

@@ -4,15 +4,9 @@
 
 import React, { useRef } from 'react';
 
-import {
-  ComputeValueType,
-  getObjectTemplateInputSchema,
-  getTemplateInputSchema,
-  getTextTemplateInputSchema,
-  TemplateOutput,
-  VoidInput,
-} from '@dxos/conductor';
+import { ComputeValueType, getTemplateInputSchema, TemplateOutput, VoidInput } from '@dxos/conductor';
 import { S, toJsonSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
   type ShapeDef,
@@ -21,10 +15,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
 import { Box, createFunctionAnchors, TypeSelect } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
-import { invariant } from '@dxos/invariant';
+import { useComputeNodeState } from '../hooks';
 
 //
 // Data
@@ -74,12 +67,12 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       status={<TypeSelect value={node.valueType ?? 'string'} onValueChange={handleTypeChange} />}
     >
       <TextBox
+        {...props}
         ref={inputRef}
         value={shape.text}
+        language={node.valueType === 'object' ? 'json' : undefined}
         onBlur={handleEnter}
         onEnter={handleEnter}
-        {...props}
-        json={node.valueType === 'object'}
       />
     </Box>
   );
