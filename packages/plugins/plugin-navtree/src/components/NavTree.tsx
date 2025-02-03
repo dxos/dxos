@@ -16,9 +16,15 @@ import { NAVTREE_PLUGIN } from '../meta';
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTree = (props: NavTreeProps) => {
+  const { getItems, getProps, isCurrent, canDrop, onSelect } = useNavTreeContext();
   return (
     <Tree
       {...props}
+      getItems={getItems}
+      getProps={getProps}
+      isCurrent={isCurrent}
+      canDrop={canDrop}
+      onSelect={onSelect}
       draggable
       gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
       renderColumns={NavTreeColumns}

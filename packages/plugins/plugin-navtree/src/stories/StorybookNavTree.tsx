@@ -13,11 +13,26 @@ export const StorybookNavTree = ({
   loadDescendents,
   renderItemEnd,
   popoverAnchorId,
+  getItems,
+  getProps,
+  isCurrent,
+  canDrop,
+  onSelect,
   ...props
 }: NavTreeProps & NavTreeContextValue) => {
   const contextValue = useMemo(
-    () => ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId }),
-    [getActions, loadDescendents, renderItemEnd, popoverAnchorId],
+    () => ({
+      getActions,
+      loadDescendents,
+      renderItemEnd,
+      popoverAnchorId,
+      getItems,
+      getProps,
+      isCurrent,
+      canDrop,
+      onSelect,
+    }),
+    [getActions, loadDescendents, renderItemEnd, popoverAnchorId, getItems, getProps, isCurrent, canDrop, onSelect],
   );
   return (
     <NavTreeContext.Provider value={contextValue}>

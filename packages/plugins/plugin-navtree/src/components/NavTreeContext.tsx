@@ -10,6 +10,9 @@ export const NavTreeContext = createContext<NavTreeContextValue>({
   getActions: () => ({ actions: [], groupedActions: {} }),
   loadDescendents: () => {},
   renderItemEnd: () => null,
+  getItems: () => [],
+  getProps: () => ({ id: 'never', label: 'never' }),
+  isCurrent: () => false,
 });
 
 export const useNavTreeContext = () => useContext(NavTreeContext);

@@ -16,9 +16,15 @@ export type NavTreeColumnsProps = {
   open: boolean;
 };
 
-export type NavTreeProps = Omit<TreeProps<NavTreeItemGraphNode>, 'draggable' | 'gridTemplateColumns' | 'renderColumns'>;
+export type NavTreeProps = Omit<
+  TreeProps<NavTreeItemGraphNode>,
+  'draggable' | 'gridTemplateColumns' | 'renderColumns' | 'getItems' | 'getProps' | 'isCurrent' | 'canDrop' | 'onSelect'
+>;
 
-export type NavTreeContextValue = {
+export type NavTreeContextValue = Pick<
+  TreeProps<NavTreeItemGraphNode>,
+  'getItems' | 'getProps' | 'isCurrent' | 'canDrop' | 'onSelect'
+> & {
   getActions: (node: Node) => FlattenedActions;
   loadDescendents?: (node: Node) => MaybePromise<void>;
   renderItemEnd?: FC<{ node: Node; open: boolean }>;

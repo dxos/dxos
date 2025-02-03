@@ -18,7 +18,7 @@ import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
-import { type NavTreeProps } from './types';
+import { type NavTreeContextValue, type NavTreeProps } from './types';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
@@ -39,7 +39,8 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
-} & Pick<NavTreeProps, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
+} & Pick<NavTreeProps, 'isOpen' | 'onOpenChange'> &
+  Pick<NavTreeContextValue, 'isCurrent'>;
 
 export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: NavTreeContainerProps) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
@@ -204,22 +205,24 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
   }, [graph]);
 
   const navTreeContextValue = useMemo(
-    () => ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId }),
-    [getActions, loadDescendents, renderItemEnd, popoverAnchorId],
+    () => ({
+      getActions,
+      loadDescendents,
+      renderItemEnd,
+      popoverAnchorId,
+      getItems,
+      getProps,
+      isCurrent,
+      canDrop,
+      onSelect: handleSelect,
+    }),
+    [getActions, loadDescendents, renderItemEnd, popoverAnchorId, getItems, getProps, isCurrent, canDrop, handleSelect],
   );
 
   // TODO(thure): What gives this an inline `overflow: initial`?
   return (
     <NavTreeContext.Provider value={navTreeContextValue}>
-      <NavTree
-        id={graph.root.id}
-        getItems={getItems}
-        getProps={getProps}
-        isCurrent={isCurrent}
-        canDrop={canDrop}
-        onSelect={handleSelect}
-        {...props}
-      />
+      <NavTree id={graph.root.id} {...props} />
     </NavTreeContext.Provider>
   );
 });
