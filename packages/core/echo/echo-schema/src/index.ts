@@ -7,7 +7,7 @@
  */
 export { AST, JSONSchema, Schema as S } from '@effect/schema';
 
-export { JsonPath, JsonProp } from '@dxos/effect';
+export { JsonPath, splitJsonPath, JsonProp } from '@dxos/effect';
 
 export * from './ast';
 // TODO(dmaretskyi): Omitting barrel export in the mutable directory due to circular deps.
