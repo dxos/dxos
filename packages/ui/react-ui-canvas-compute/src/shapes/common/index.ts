@@ -4,3 +4,4 @@
 
 export * from './Box';
 export * from './FunctionBody';
+export * from './TypeSelect';

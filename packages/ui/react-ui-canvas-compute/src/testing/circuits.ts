@@ -134,6 +134,8 @@ export const createControlCircuit = () => {
 
 export const createTemplateCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
+
+  // Gpt
   model.builder.call((builder) => {
     const chat = model.createNode(createChat(position({ x: -12, y: 4 })));
     const template = model.createNode(createTemplate(position({ x: -12, y: -4 })));
@@ -144,6 +146,48 @@ export const createTemplateCircuit = () => {
       .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
       .createEdge({ source: gpt.id, target: text.id, output: 'text' })
       .createEdge({ source: template.id, target: gpt.id, input: 'systemPrompt' });
+  });
+
+  // Text, starts at y=14
+  model.builder.call((builder) => {
+    const text = model.createNode(createConstant({ value: 'Brian', ...position({ x: -12, y: 14 }) }));
+    const template = model.createNode(
+      createTemplate({ valueType: 'string', text: 'Hello, {{name}}!', ...position({ x: 0, y: 14 }) }),
+    );
+    const view = model.createNode(createSurface(position({ x: 14, y: 14 })));
+    builder.createEdge({ source: text.id, target: template.id, input: 'name' });
+    builder.createEdge({ source: template.id, target: view.id });
+  });
+
+  // Json, starts at y=28
+  model.builder.call((builder) => {
+    const sender = model.createNode(createConstant({ value: 'Alice', ...position({ x: -12, y: 28 }) }));
+    const body = model.createNode(createConstant({ value: 'Hello', ...position({ x: -12, y: 34 }) }));
+    const meta = model.createNode(
+      createConstant({ value: { location: 'San Francisco' }, ...position({ x: -12, y: 40 }) }),
+    );
+    const template = model.createNode(
+      createTemplate({
+        valueType: 'object',
+        text: JSON.stringify(
+          {
+            headers: {
+              to: '{{recipient}}',
+            },
+            body: '{{greeting}}, {{recipient}}!',
+            meta: '{{meta}}',
+          },
+          null,
+          2,
+        ),
+        ...position({ x: 0, y: 28 }),
+      }),
+    );
+    const view = model.createNode(createSurface(position({ x: 14, y: 28 })));
+    builder.createEdge({ source: sender.id, target: template.id, input: 'recipient' });
+    builder.createEdge({ source: body.id, target: template.id, input: 'greeting' });
+    builder.createEdge({ source: meta.id, target: template.id, input: 'meta' });
+    builder.createEdge({ source: template.id, target: view.id });
   });
 
   return model;

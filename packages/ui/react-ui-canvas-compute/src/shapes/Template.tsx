@@ -4,7 +4,14 @@
 
 import React, { useRef } from 'react';
 
-import { TemplateOutput, VoidInput } from '@dxos/conductor';
+import {
+  ComputeValueType,
+  getObjectTemplateInputSchema,
+  getTemplateInputSchema,
+  getTextTemplateInputSchema,
+  TemplateOutput,
+  VoidInput,
+} from '@dxos/conductor';
 import { S, toJsonSchema } from '@dxos/echo-schema';
 import {
   type ShapeComponentProps,
@@ -14,9 +21,10 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { Box, createFunctionAnchors } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+import { Box, createFunctionAnchors, TypeSelect } from './common';
+import { ComputeShape, createShape, type CreateShapeProps } from './defs';
+import { invariant } from '@dxos/invariant';
 
 //
 // Data
@@ -26,6 +34,7 @@ export const TemplateShape = S.extend(
   ComputeShape,
   S.Struct({
     type: S.Literal('template'),
+    valueType: S.optional(ComputeValueType),
   }),
 );
 
@@ -44,30 +53,36 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {
-      const properties = findHandlebarVariables(value);
-      const schema = S.Struct(
-        properties.reduce((acc, property) => {
-          acc[property] = S.Any;
-          return acc;
-        }, {} as any),
-      );
+      const schema = getTemplateInputSchema(node);
 
       node.value = value;
       node.inputSchema = toJsonSchema(schema);
     }
   };
 
+  const handleTypeChange = (newType: string) => {
+    invariant(S.is(ComputeValueType)(newType), 'Invalid type');
+
+    node.valueType = newType;
+    node.inputSchema = toJsonSchema(getTemplateInputSchema(node));
+  };
+
   return (
-    <Box shape={shape} title={'Template'}>
-      <TextBox ref={inputRef} value={shape.text} onBlur={handleEnter} onEnter={handleEnter} {...props} />
+    <Box
+      shape={shape}
+      title={'Template'}
+      status={<TypeSelect value={node.valueType ?? 'string'} onValueChange={handleTypeChange} />}
+    >
+      <TextBox
+        ref={inputRef}
+        value={shape.text}
+        onBlur={handleEnter}
+        onEnter={handleEnter}
+        {...props}
+        json={node.valueType === 'object'}
+      />
     </Box>
   );
-};
-
-const findHandlebarVariables = (text: string): string[] => {
-  const regex = /\{\{([^}]+)\}\}/g; // Matches anything between {{ }}
-  const matches = [...text.matchAll(regex)];
-  return matches.map((match) => match[1].trim());
 };
 
 //
@@ -77,7 +92,7 @@ const findHandlebarVariables = (text: string): string[] => {
 export type CreateTemplateProps = CreateShapeProps<TemplateShape> & { text?: string };
 
 export const createTemplate = (props: CreateTemplateProps) =>
-  createShape<TemplateShape>({ type: 'template', size: { width: 256, height: 128 }, ...props });
+  createShape<TemplateShape>({ type: 'template', size: { width: 256, height: 384 }, ...props });
 
 export const templateShape: ShapeDef<TemplateShape> = {
   type: 'template',

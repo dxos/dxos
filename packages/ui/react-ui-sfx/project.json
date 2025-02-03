@@ -19,7 +19,8 @@
         "injectGlobals": true
       }
     },
-    "gen": {
+    "lint": {},
+    "prebuild": {
       "cache": true,
       "executor": "nx:run-script",
       "inputs": [
@@ -31,8 +32,7 @@
       "outputs": [
         "{projectRoot}/src/shaders/glsl/gen"
       ]
-    },
-    "lint": {}
+    }
   },
   "implicitDependencies": [
     "esbuild",

@@ -41,7 +41,7 @@ export type FunctionInput = S.Schema.Type<typeof FunctionInput>;
 export const TemplateInput = S.Record({ key: S.String, value: S.Any });
 export type TemplateInput = S.Schema.Type<typeof TemplateInput>;
 
-export const TemplateOutput = S.Struct({ [DEFAULT_OUTPUT]: S.String });
+export const TemplateOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
 export type TemplateOutput = S.Schema.Type<typeof TemplateOutput>;
 
 //
