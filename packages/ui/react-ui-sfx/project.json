@@ -9,12 +9,28 @@
   "targets": {
     "build": {},
     "compile": {
+      "dependsOn": [
+        "gen"
+      ],
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ],
         "injectGlobals": true
       }
+    },
+    "gen": {
+      "cache": true,
+      "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/src/shaders/glsl/*.*"
+      ],
+      "options": {
+        "script": "glsl"
+      },
+      "outputs": [
+        "{projectRoot}/src/shaders/glsl/gen"
+      ]
     },
     "lint": {}
   },

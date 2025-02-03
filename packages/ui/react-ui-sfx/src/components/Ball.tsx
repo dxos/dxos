@@ -12,8 +12,8 @@ export type BallProps = {
 export const Ball = ({ active }: BallProps) => (
   <AnimatePresence>
     <motion.div
-      className='w-5 h-5 bg-primary-500 rounded-full'
-      transition={{ ease: 'easeOut', duration: 1.5 }}
+      className='flex shrink-0 w-5 h-5 bg-primary-500 rounded-full'
+      transition={{ ease: 'easeOut', duration: 1.5, repeat: Infinity }}
       initial={{
         opacity: 0,
         scale: 0,
@@ -29,7 +29,7 @@ export const Ball = ({ active }: BallProps) => (
         },
         active: {
           opacity: 0.75,
-          scale: [1, 0.5, 0.7, 0.3],
+          scale: [1, 0.5, 0.7, 0.4],
           rotate: [0, 0, 90, 0],
           borderRadius: '50%',
         },
