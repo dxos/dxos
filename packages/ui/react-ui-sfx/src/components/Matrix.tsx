@@ -49,12 +49,14 @@ export const Matrix = ({ dim = 5, count = 20 }: MatrixProps) => {
   };
 
   return (
-    <div className='relative w-5 h-5'>
-      <AnimatePresence>
-        {Array.from({ length: count }).map((_, i) => (
-          <Dot key={i} variants={variants} variant={randomVariant()} />
-        ))}
-      </AnimatePresence>
+    <div className='flex shrink-0 w-6 h-6 items-center'>
+      <div className='flex w-full h-full relative'>
+        <AnimatePresence>
+          {Array.from({ length: count }).map((_, i) => (
+            <Dot key={i} variants={variants} variant={randomVariant()} />
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

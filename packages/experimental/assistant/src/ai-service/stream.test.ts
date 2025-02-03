@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SaxesParser } from 'saxes';
+import { Parser } from 'htmlparser2';
+import { micromark } from 'micromark';
+import { Readable, Transform } from 'stream';
 import { describe, it } from 'vitest';
 
-import { type Message } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
+/** @ts-ignore */
+import TEXT from './data/simple-mixed.txt?raw';
 import { GenerationStream } from './stream';
 
 type Part = { event: string; data: any };
@@ -89,98 +89,114 @@ describe('GenerationStream', () => {
     await stream.complete();
   });
 
-  /**
-   * https://astexplorer.net
-   */
-  it('should parse the stream', async ({ expect }) => {
-    const input = [
-      // Text
-      `
-      Hello world!
-      `,
+  type Block = {
+    type: 'xml' | 'text';
+    tag?: string;
+    attributes?: Record<string, string>;
+    content: string;
+  };
 
-      // COT
-      `
-      <cot>
-      1. Prepare the ship.
-      2. Arm the torpedoes.
-      3. Fire lasers.
-      </cot>
-      `,
+  it.only('should parse Markdown.', ({ expect }) => {
+    const stream = new MarkdownStream();
+    stream.on('data', (html) => {
+      console.log(html);
+    });
 
-      // Artifact
-      // <?xml version="1.0" encoding="UTF-8"?>
-      `
-      <artifact id="123" />
-      <choice id="123">
-        <artifact id="123" />
-      </choice>
-      `,
+    Readable.from(TEXT).pipe(stream);
+  });
 
-      // JSON
-      `
-      <json>
-      <![CDATA[
+  it.only('should parse XML and text.', ({ expect }) => {
+    const blocks: Block[] = [];
+    let current: Block | undefined;
+    const parser = new Parser(
       {
-        "type": "text",
-        "text": "<test>OK</test>"
-      }
-      ]]>
-      </json>
-      `,
+        onopentag: (tag, attributes) => {
+          if (current) {
+            blocks.push(current);
+          }
 
-      // Code/JSX
-      `,
-      <code>
-      <![CDATA[
-      const Test = () => {
-        return <div>Hello world!</div>;
-      }
-      ]]>
-      </code>
-      `,
-    ];
+          current = { type: 'xml', tag, attributes, content: '' };
+        },
+        ontext: (text) => {
+          if (!current) {
+            current = { type: 'text', content: text };
+          } else if (current?.type === 'text') {
+            current.content += text;
+          } else {
+            current.content = (current.content || '') + text.trim();
+          }
+        },
+        onclosetag: (tag) => {
+          if (current?.tag === tag) {
+            blocks.push(current as Block);
+            current = undefined;
+          }
+        },
+        onend: () => {
+          if (current) {
+            blocks.push(current);
+          }
+        },
+      },
+      {
+        xmlMode: true,
+        decodeEntities: true,
+        recognizeSelfClosing: true,
+      },
+    );
 
-    // TODO(burdon): Delimiter for JSON blocks.
-
-    const output: Message = { id: ObjectId.random(), role: 'assistant', content: [] };
-
-    /**
-     * https://www.npmjs.com/package/saxex
-     */
-    const parser = new SaxesParser({
-      fragment: true,
-    });
-
-    parser.on('error', (error) => {
-      log.error('error', { error });
-    });
-    parser.on('opentag', (node) => {
-      log.info('opentag', { node });
-    });
-    parser.on('closetag', (node) => {
-      log.info('closetag', { node });
-    });
-    parser.on('cdata', (text) => {
-      log.info('cdata', { text });
-    });
-    parser.on('text', (text) => {
-      log.info('text', { text });
-    });
-    parser.on('end', () => {
-      log.info('end');
-    });
-
-    const stream = GenerationStream.fromSSEResponse({}, new Response(createTestStream(input)));
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta') {
-        // log.info('delta', { delta: (event.delta as any).text });
-        parser.write((event.delta as any).text);
-      }
+    const words = TEXT.split(' ');
+    for (const word of words) {
+      parser.write(word + ' ');
     }
+    parser.end();
 
-    await stream.complete();
-
-    expect(output.content).to.deep.equal([]);
+    expect(blocks).to.have.length(5);
+    expect(blocks.map((block) => block.type)).to.deep.eq(['text', 'xml', 'text', 'xml', 'text']);
+    expect(blocks.map((block) => block.type === 'xml' && block.tag).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
   });
 });
+
+class MarkdownStream extends Transform {
+  private buffer = '';
+
+  constructor() {
+    super({ objectMode: true });
+  }
+
+  override _transform(chunk: Buffer, _: BufferEncoding, callback: Function) {
+    // Accumulate chunk
+    this.buffer += chunk.toString();
+
+    // Find complete blocks (double newlines)
+    const blocks = this.buffer.split('\n\n');
+
+    // Keep last potentially incomplete block
+    this.buffer = blocks.pop() || '';
+
+    // Process complete blocks
+    blocks.forEach((block) => {
+      if (block.trim()) {
+        try {
+          this.push(micromark(block));
+        } catch (e) {
+          // Fallback for malformed markdown
+          this.push(`<p>${block}</p>`);
+        }
+      }
+    });
+
+    callback();
+  }
+
+  override _flush(callback: Function) {
+    if (this.buffer.trim()) {
+      try {
+        this.push(micromark(this.buffer));
+      } catch (e) {
+        this.push(`<p>${this.buffer}</p>`);
+      }
+    }
+    callback();
+  }
+}
