@@ -17,16 +17,18 @@ export const ComputeNode = S.extend(
   // TODO(burdon): Split out into different types.
   S.Struct({
     /** For template nodes. */
+    // TODO(dmaretskyi): Compute at runtime -- don't persist.
     inputSchema: S.optional(JsonSchemaType),
     outputSchema: S.optional(JsonSchemaType),
 
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
 
-    /** For constant nodes. */
+    /** For constant and template nodes. */
     value: S.optional(S.Any),
 
     /** For switch nodes. */
+    // TODO(dmaretskyi): Reuse `value`.
     enabled: S.optional(S.Boolean),
   }),
 ).pipe(S.mutable);

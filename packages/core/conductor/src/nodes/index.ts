@@ -5,3 +5,4 @@
 export * from './registry';
 export * from './system';
 export * from './types';
+export * from './template';

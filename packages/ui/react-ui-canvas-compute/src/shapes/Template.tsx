@@ -4,7 +4,7 @@
 
 import React, { useRef } from 'react';
 
-import { TemplateOutput, VoidInput } from '@dxos/conductor';
+import { getTextTemplateInputSchema, TemplateOutput, VoidInput } from '@dxos/conductor';
 import { S, toJsonSchema } from '@dxos/echo-schema';
 import {
   type ShapeComponentProps,
@@ -14,9 +14,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
+import { useComputeNodeState } from '../hooks';
 import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, createShape, type CreateShapeProps } from './defs';
-import { useComputeNodeState } from '../hooks';
 
 //
 // Data
@@ -44,13 +44,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {
-      const properties = findHandlebarVariables(value);
-      const schema = S.Struct(
-        properties.reduce((acc, property) => {
-          acc[property] = S.Any;
-          return acc;
-        }, {} as any),
-      );
+      const schema = getTextTemplateInputSchema(value);
 
       node.value = value;
       node.inputSchema = toJsonSchema(schema);
@@ -62,12 +56,6 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       <TextBox ref={inputRef} value={shape.text} onBlur={handleEnter} onEnter={handleEnter} {...props} />
     </Box>
   );
-};
-
-const findHandlebarVariables = (text: string): string[] => {
-  const regex = /\{\{([^}]+)\}\}/g; // Matches anything between {{ }}
-  const matches = [...text.matchAll(regex)];
-  return matches.map((match) => match[1].trim());
 };
 
 //
