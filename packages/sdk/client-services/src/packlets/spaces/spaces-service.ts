@@ -3,7 +3,7 @@
 //
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { createAdmissionCredentials, type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';

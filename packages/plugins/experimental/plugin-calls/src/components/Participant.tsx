@@ -57,8 +57,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     },
     ref,
   ) => {
-    const { dataSaverMode } = useRoomContext();
-
     const pinned = flipId === pinnedId;
 
     useEffect(() => {
@@ -83,14 +81,8 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
           >
             <VideoSrcObject
               className={cn(
-                'absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity',
+                'absolute inset-0 h-full w-full object-contain',
                 isSelf && !isScreenShare && '-scale-x-100',
-                {
-                  'opacity-100': isScreenShare
-                    ? user.tracks.screenShareEnabled
-                    : user.tracks.videoEnabled && (!dataSaverMode || isSelf),
-                },
-                isSelf && isScreenShare && 'opacity-75',
               )}
               videoTrack={videoTrack}
             />

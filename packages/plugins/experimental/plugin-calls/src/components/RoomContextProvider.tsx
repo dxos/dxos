@@ -59,7 +59,7 @@ export const RoomContextProvider = ({
   }
 
   return (
-    <Room roomId={roomId!} {...roomData} username={username}>
+    <Room roomId={roomId!} {...roomData} username={username} maxWebcamQualityLevel={720} maxWebcamFramerate={30}>
       {children}
     </Room>
   );
