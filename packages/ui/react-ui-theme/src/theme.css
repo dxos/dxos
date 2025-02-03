@@ -12,6 +12,7 @@
 /* Base variables */
 
 :root {
+  touch-action: pan-x pan-y;
   font-synthesis: none;
   font-variation-settings: 'wght' 400,
   'slnt' 0;
@@ -37,6 +38,10 @@
   --safe-area-right: env(safe-area-inset-right);
   --safe-area-top: env(safe-area-inset-top);
   --safe-area-bottom: env(safe-area-inset-bottom);
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media (pointer: coarse) {
