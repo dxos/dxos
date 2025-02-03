@@ -9,9 +9,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "{projectRoot}",
-        "options": {
-          "command": "pnpm run glsl"
-        }
+        "command": "pnpm run glsl"
       }
     },
     "build": {},
