@@ -23,6 +23,7 @@ const CallsContainer = ({ space, role }: { space: Space; role?: string }) => {
     <StackItem.Content toolbar={false}>
       <Calls
         username={identity?.profile?.displayName ?? 'No Name'}
+        // TODO(mykola): Conflicts with the space swarm topic.
         roomId={space.key}
         iceServers={config.get('runtime.services.ice') ?? []}
       />

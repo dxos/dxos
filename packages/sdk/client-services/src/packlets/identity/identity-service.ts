@@ -3,7 +3,7 @@
 //
 
 import { Trigger, sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
