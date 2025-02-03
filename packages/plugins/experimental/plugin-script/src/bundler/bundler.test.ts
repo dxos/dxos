@@ -35,7 +35,8 @@ describe('Bundler', () => {
     expect(result.error).to.not.exist;
   });
 
-  test('HTTPS Import', async () => {
+  // TODO(dmaretskyi): Flaky on CI: https://cloud.nx.app/runs/Hjcifa8Ccq/task/plugin-script%3Atest
+  test.skip('HTTPS Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle(`
       import { Octokit } from 'https://esm.sh/octokit';
