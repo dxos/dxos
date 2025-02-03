@@ -6,12 +6,11 @@ import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
-import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
-
 import { VideoSrcObject } from './VideoSrcObject';
 import { useSubscribedState } from './hooks/rxjsHooks';
 import { useRoomContext } from './hooks/useRoomContext';
 import { cn } from './utils/style';
+import { type UserState } from '../types';
 
 interface Props {
   flipId: string;
@@ -87,8 +86,8 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
                 isSelf && !isScreenShare && '-scale-x-100',
                 {
                   'opacity-100': isScreenShare
-                    ? user.tracks.screenShareEnabled
-                    : user.tracks.videoEnabled && (!dataSaverMode || isSelf),
+                    ? user.tracks?.screenShareEnabled
+                    : user.tracks?.videoEnabled && (!dataSaverMode || isSelf),
                 },
                 isSelf && isScreenShare && 'opacity-75',
               )}

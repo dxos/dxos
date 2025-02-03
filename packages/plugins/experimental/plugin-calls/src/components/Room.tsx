@@ -90,7 +90,7 @@ const JoinedRoom = () => {
   const navigate = useNavigate();
 
   return (
-    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(nonNullable)}>
+    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks!.audio).filter(nonNullable)}>
       <div className='flex flex-col h-full bg-white dark:bg-zinc-800'>
         <Flipper flipKey={totalUsers} className='relative flex-grow overflow-hidden isolate'>
           <div
@@ -124,11 +124,11 @@ const JoinedRoom = () => {
               (user) =>
                 user.joined && (
                   <Fragment key={user.id}>
-                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
+                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks!.video} audio={user.tracks?.audio}>
                       {({ videoTrack, audioTrack }) => (
                         <Participant
                           user={user}
-                          flipId={user.id}
+                          flipId={user.id!}
                           videoTrack={videoTrack}
                           audioTrack={audioTrack}
                           pinnedId={pinnedId}
@@ -137,8 +137,8 @@ const JoinedRoom = () => {
                         ></Participant>
                       )}
                     </PullVideoTrack>
-                    {user.tracks.screenshare && user.tracks.screenShareEnabled && (
-                      <PullVideoTrack video={user.tracks.screenshare}>
+                    {user.tracks!.screenshare && user.tracks!.screenShareEnabled && (
+                      <PullVideoTrack video={user.tracks!.screenshare}>
                         {({ videoTrack }) => (
                           <Participant
                             user={user}

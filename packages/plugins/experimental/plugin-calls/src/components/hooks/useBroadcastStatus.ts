@@ -5,11 +5,13 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
-import { type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
+import { buf } from '@dxos/protocols/buf';
+import { TracksSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { useSubscribedState } from './rxjsHooks';
 import type { RoomContextType } from './useRoomContext';
 import type { UserMedia } from './useUserMedia';
+import { type UserState } from '../../types';
 import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
 
 interface Config {
@@ -38,14 +40,14 @@ export const useBroadcastStatus = ({ userMedia, identity, peer, pushedTracks, up
         raisedHand: false,
         speaking: false,
         transceiverSessionId: sessionId,
-        tracks: {
+        tracks: buf.create(TracksSchema, {
           audioEnabled,
           videoEnabled,
           screenShareEnabled,
           video,
           audio,
           screenshare,
-        },
+        }),
       };
 
       const sendUserUpdate = () => {
@@ -66,7 +68,7 @@ export const useBroadcastStatus = ({ userMedia, identity, peer, pushedTracks, up
         raisedHand: false,
         speaking: false,
         transceiverSessionId: sessionId,
-        tracks: {},
+        tracks: buf.create(TracksSchema, {}),
       });
     }
   });

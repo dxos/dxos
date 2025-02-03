@@ -21,7 +21,7 @@ export const Lobby: React.FC = () => {
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
 
-  const joinedUsers = new Set(room.otherUsers.filter((u) => u.tracks.audio).map((u) => u.name)).size;
+  const joinedUsers = new Set(room.otherUsers.filter((u) => u.tracks?.audio).map((u) => u.name)).size;
 
   return (
     <div className='flex flex-col items-center justify-center h-full p-4'>
