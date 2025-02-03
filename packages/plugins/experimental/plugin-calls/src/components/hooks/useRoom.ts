@@ -14,12 +14,6 @@ import { codec } from '../types';
 export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: string }) => {
   const [roomState, setRoomState] = useState<RoomState>({ users: [], meetingId: roomId.toHex() });
 
-  const userLeftFunctionRef = useRef(() => {});
-
-  useEffect(() => {
-    return () => userLeftFunctionRef.current();
-  }, []);
-
   const client = useClient();
   const peerInfo: Peer = {
     identityKey: client.halo.identity.get()!.identityKey.toHex(),
@@ -34,20 +28,30 @@ export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: str
     }),
   };
 
-  useMemo(() => {
+  const joined = useRef(false);
+
+  useEffect(() => {
     const stream = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
     stream.subscribe((event) => {
+      log.info('roomState', {
+        users: event.peers?.map((p) => codec.decode(p.state!)) ?? [],
+        meetingId: roomId.toHex(),
+      });
       setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
     });
 
-    client.services.services.NetworkService?.joinSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
-      log.catch(err),
-    );
-    log.verbose('joined room', { roomId, peerInfo });
+    if (!joined.current) {
+      client.services.services.NetworkService?.joinSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
+        log.catch(err),
+      );
+      joined.current = true;
+      log.info('joined room', { roomId, peerInfo });
+    }
   }, [roomId]);
 
   useEffect(() => {
     const onBeforeUnload = () => {
+      log.info('leaving room', { roomId, peerInfo });
       client.services.services.NetworkService?.leaveSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
         log.catch(err),
       );
@@ -67,7 +71,7 @@ export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: str
     () => roomState.users!.filter((u) => u.id !== peerInfo.identityKey!),
     [roomState.users, peerInfo.identityKey],
   );
-
+  log.info('otherUsers', { identity, otherUsers });
   return {
     identity,
     otherUsers,
@@ -76,7 +80,7 @@ export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: str
       client.services.services
         .NetworkService!.joinSwarm({
           topic: roomId,
-          peer: { ...peerInfo, state: codec.encode(user) },
+          peer: { identityKey: peerInfo.identityKey, peerKey: peerInfo.peerKey, state: codec.encode(user) },
         })
         .catch((err) => log.catch(err));
     },

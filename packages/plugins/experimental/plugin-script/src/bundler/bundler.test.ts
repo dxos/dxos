@@ -39,8 +39,8 @@ describe('Bundler', () => {
   test.skip('HTTPS Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle(`
-      import { Octokit } from 'https://esm.sh/octokit';
-      const octokit = new Octokit();
+      import { invariant } from 'https://esm.sh/@dxos/invariant';
+      invariant(true);
     `);
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;

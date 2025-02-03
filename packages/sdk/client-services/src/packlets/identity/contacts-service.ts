@@ -3,7 +3,7 @@
 //
 
 import { EventSubscriptions, scheduleTask, UpdateScheduler } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
