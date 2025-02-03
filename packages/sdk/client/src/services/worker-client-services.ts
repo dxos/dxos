@@ -4,7 +4,7 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { Stream } from '@dxos/codec-protobuf';
+import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type LogFilter, parseFilter, log, type CallMetadata } from '@dxos/log';
