@@ -114,8 +114,7 @@ export const Chessboard = ({
               boardWidth={width && height ? Math.min(width, height) : undefined}
               boardOrientation={orientation === 'w' ? 'white' : 'black'}
               allowDragOutsideBoard={false}
-              arePiecesDraggable={true}
-              // arePiecesDraggable={!readonly}
+              arePiecesDraggable={!readonly}
               customPieces={chessPieces[pieces]}
               position={chess.fen()}
               onPieceDrop={handleDrop}

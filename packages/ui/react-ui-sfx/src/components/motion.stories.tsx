@@ -21,7 +21,9 @@ const Render = ({ active: _active }: BallProps) => {
         <Button onClick={() => setActive((active) => !active)}>Toggle</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
-        <Ball active={active} />
+        <div className='flex w-16 h-16'>
+          <Ball active={active} />
+        </div>
       </div>
     </div>
   );
