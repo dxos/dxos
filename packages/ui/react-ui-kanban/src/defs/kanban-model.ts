@@ -49,6 +49,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return this._cardSchema;
   }
 
+  /**
+   * @reactive Gets the current arrangement of kanban items.
+   */
   get arrangement() {
     return this._arrangement.value;
   }
