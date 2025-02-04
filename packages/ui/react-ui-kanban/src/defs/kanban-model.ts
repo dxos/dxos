@@ -36,6 +36,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._arrangement.value = this._computeArrangement();
   }
 
+  get columnField() {
+    return this._kanban.columnField;
+  }
+
   /**
    * @reactive Gets the current items.
    */
