@@ -128,6 +128,8 @@ export class ChatProcessor {
         this._pending.value.push(...messages.map((message) => createStatic(Message, message)));
         this._streaming.value = [];
 
+        console.log(':::::::::', messages);
+
         // Resolve tool use locally.
         more = false;
         if (messages.length > 0 && isToolUse(messages.at(-1)!)) {
