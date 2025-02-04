@@ -66,12 +66,12 @@ export class MockGpt implements Context.Tag.Service<GptService> {
           {
             id: ObjectId.random(),
             role: 'user',
-            content: [{ type: 'text', text: prompt }],
+            blocks: [{ type: 'text', text: prompt }],
           },
           {
             id: ObjectId.random(),
             role: 'assistant',
-            content: [{ type: 'text', text: response }],
+            blocks: [{ type: 'text', text: response }],
           },
         ]),
         tokenStream: Effect.succeed(stream1),
@@ -96,7 +96,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
       message: {
         id: ObjectId.random(),
         role: 'assistant',
-        content: [],
+        blocks: [],
       },
     };
     yield {

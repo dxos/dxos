@@ -103,11 +103,10 @@ export const ToolResultContentBlock = S.Struct({
 /**
  * Content union.
  */
-// TODO(burdon): Add JSON, Object, Reference?
 export const MessageContentBlock = S.Union(
   TextContentBlock,
-  JsonContentBlock,
   ImageContentBlock,
+  JsonContentBlock,
   // TODO(burdon): Replace with JsonContentBlock with disposition (to make MessageContentBlock reusable).
   ToolUseContentBlock,
   ToolResultContentBlock,
@@ -143,8 +142,7 @@ const MessageSchema = S.Struct({
   /**
    * Content blocks.
    */
-  // TODO(burdon): Rename blocks?
-  content: S.Array(MessageContentBlock).pipe(S.mutable),
+  blocks: S.Array(MessageContentBlock).pipe(S.mutable),
 });
 
 /**
@@ -159,5 +157,5 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   spaceId,
   threadId,
   role: 'user',
-  content: [{ type: 'text', text }],
+  blocks: [{ type: 'text', text }],
 });

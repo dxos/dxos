@@ -65,7 +65,7 @@ export class ChatProcessor {
     this._pending.value = [
       createStatic(Message, {
         role: 'user',
-        content: [{ type: 'text', text: message }],
+        blocks: [{ type: 'text', text: message }],
       }),
     ];
     this._streaming.value = [];
@@ -114,16 +114,16 @@ export class ChatProcessor {
         });
 
         // Update pending messages.
-        const assistantMessages = await this._response.complete();
-        this._pending.value.push(...assistantMessages.map((message) => createStatic(Message, message)));
+        const messages = await this._response.complete();
+        this._pending.value.push(...messages.map((message) => createStatic(Message, message)));
         this._streaming.value = [];
 
         // Resolve tool use locally.
         more = false;
-        if (isToolUse(assistantMessages.at(-1)!)) {
+        if (messages.length > 0 && isToolUse(messages.at(-1)!)) {
           log.info('tool request...');
           const response = await runTools({
-            message: assistantMessages.at(-1)!,
+            message: messages.at(-1)!,
             tools: this._tools ?? [],
             extensions: this._extensions,
           });

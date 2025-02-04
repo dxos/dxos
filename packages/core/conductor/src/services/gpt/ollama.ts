@@ -26,7 +26,7 @@ export class OllamaGpt implements Context.Tag.Service<GptService> {
 
       const messages = [
         ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-        ...history.flatMap(({ role, content }) =>
+        ...history.flatMap(({ role, blocks: content }) =>
           content.flatMap((content) => (content.type === 'text' ? [{ role, content: content.text }] : [])),
         ),
         { role: 'user', content: prompt },
@@ -41,12 +41,12 @@ export class OllamaGpt implements Context.Tag.Service<GptService> {
           {
             id: ObjectId.random(),
             role: 'user',
-            content: [{ type: 'text', text: prompt }],
+            blocks: [{ type: 'text', text: prompt }],
           },
           {
             id: ObjectId.random(),
             role: message.role as any,
-            content: [{ type: 'text', text: message.content }],
+            blocks: [{ type: 'text', text: message.content }],
           },
         ],
         tokenCount: eval_count,

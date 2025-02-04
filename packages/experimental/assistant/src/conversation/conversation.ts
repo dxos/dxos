@@ -64,13 +64,13 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     params.logger?.({ type: 'message', message });
     history.push(
       ...messages.map(
-        (message): Message => ({ ...message, content: message.content.filter((block) => block.type !== 'image') }),
+        (message): Message => ({ ...message, blocks: message.blocks.filter((block) => block.type !== 'image') }),
       ),
     );
 
-    const isToolUse = message.content.at(-1)?.type === 'tool_use';
+    const isToolUse = message.blocks.at(-1)?.type === 'tool_use';
     if (isToolUse) {
-      const toolCalls = message.content.filter((c) => c.type === 'tool_use');
+      const toolCalls = message.blocks.filter((c) => c.type === 'tool_use');
       invariant(toolCalls.length === 1);
       const toolCall = toolCalls[0];
       const tool = params.tools.find((tool) => tool.name === toolCall.name);
@@ -88,7 +88,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
             spaceId: params.spaceId,
             threadId: params.threadId,
             role: 'user',
-            content: [
+            blocks: [
               {
                 type: 'tool_result',
                 toolUseId: toolCall.id,
@@ -110,7 +110,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
             spaceId: params.spaceId,
             threadId: params.threadId,
             role: 'user',
-            content: [
+            blocks: [
               {
                 type: 'tool_result',
                 toolUseId: toolCall.id,
@@ -143,7 +143,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   };
 };
 
-export const isToolUse = (message: Message) => message.content.at(-1)?.type === 'tool_use';
+export const isToolUse = (message: Message) => message.blocks.at(-1)?.type === 'tool_use';
 
 export type RunToolsOptions = {
   message: Message;
@@ -162,7 +162,7 @@ export type RunToolsResult =
     };
 
 export const runTools = async ({ message, tools, extensions }: RunToolsOptions): Promise<RunToolsResult> => {
-  const toolCalls = message.content.filter((block) => block.type === 'tool_use');
+  const toolCalls = message.blocks.filter((block) => block.type === 'tool_use');
   invariant(toolCalls.length === 1);
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
@@ -184,7 +184,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
       log('tool error', { message: toolResult.message });
       const resultMessage = createStatic(Message, {
         role: 'user',
-        content: [
+        blocks: [
           {
             type: 'tool_result',
             toolUseId: toolCall.id,
@@ -205,7 +205,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
       log('tool success', { result: toolResult.result });
       const resultMessage = createStatic(Message, {
         role: 'user',
-        content: [
+        blocks: [
           {
             type: 'tool_result',
             toolUseId: toolCall.id,

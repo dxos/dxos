@@ -92,7 +92,7 @@ export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
     return <div className={mx(classNames)}>{message}</div>;
   }
 
-  const { role, content } = message;
+  const { role, blocks: content } = message;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div

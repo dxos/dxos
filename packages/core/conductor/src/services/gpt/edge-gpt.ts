@@ -33,7 +33,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         {
           id: ObjectId.random(),
           role: 'user',
-          content: [{ type: 'text', text: prompt }],
+          blocks: [{ type: 'text', text: prompt }],
         },
       ];
 
@@ -78,13 +78,13 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
         const messages = yield* outputMessagesEffect;
         log.info('messages', { messages });
-        return messages.map((msg) => msg.content.flatMap((c) => (c.type === 'text' ? [c.text] : []))).join('');
+        return messages.map((msg) => msg.blocks.flatMap((c) => (c.type === 'text' ? [c.text] : []))).join('');
       });
 
       const artifact = Effect.gen(this, function* () {
         const output = yield* outputMessagesEffect;
         for (const msg of output) {
-          for (const content of msg.content) {
+          for (const content of msg.blocks) {
             if (content.type === 'image') {
               log.info('save image to cache', { id: content.id, mediaType: content.source?.mediaType });
               this.imageCache.set(content.id!, content);

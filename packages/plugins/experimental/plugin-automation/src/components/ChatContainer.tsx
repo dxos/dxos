@@ -52,7 +52,10 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   // TODO(burdon): Create hook.
   // TODO(wittjosiah): Should these be created in the component?
   // TODO(zan): Combine with ai service client?
-  const [processor] = useState(() => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }));
+  const processor = useMemo(
+    () => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }),
+    [aiClient, tools, artifactsContext],
+  );
   // TODO(wittjosiah): Remove transformation.
   const queueDxn = useMemo(
     () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, getSpace(chat)!.id, chat.queue.dxn.parts.at(-1)!]),

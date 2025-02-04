@@ -56,7 +56,7 @@ export const createLogger = ({
       switch (event.type) {
         case 'message_start': {
           process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
-          for (const content of event.message.content) {
+          for (const content of event.message.blocks) {
             printContentBlock(content);
           }
           break;
@@ -100,7 +100,7 @@ export const createLogger = ({
       case 'message': {
         if (!stream || event.message.role !== 'assistant') {
           process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
-          for (const block of event.message.content) {
+          for (const block of event.message.blocks) {
             switch (block.type) {
               case 'text':
                 process.stdout.write(block.text + '\n');
