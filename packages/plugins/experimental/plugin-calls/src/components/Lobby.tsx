@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Button } from '@dxos/react-ui';
 
@@ -15,7 +15,6 @@ import { useRoomContext } from './hooks/useRoomContext';
 
 export const Lobby: React.FC = () => {
   const { roomName } = useParams();
-  const navigate = useNavigate();
   const { setJoined, userMedia, room, peer } = useRoomContext()!;
   const { videoStreamTrack } = userMedia;
   const session = useSubscribedState(peer.session$);
@@ -43,17 +42,7 @@ export const Lobby: React.FC = () => {
         )}
 
         <div className='flex gap-4 text-sm'>
-          <Button
-            variant='primary'
-            onClick={() => {
-              setJoined(true);
-              // we navigate here with javascript instead of an a
-              // tag because we don't want it to be possible to join
-              // the room without the JS having loaded
-              navigate('room');
-            }}
-            disabled={!session?.sessionId}
-          >
+          <Button variant='primary' onClick={() => setJoined(true)} disabled={!session?.sessionId}>
             Join
           </Button>
           <MicButton />
