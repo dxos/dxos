@@ -6,15 +6,15 @@ import { type LatLngLiteral } from 'leaflet';
 import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 import { MapCapabilities } from './capabilities';
-import { MapContainer } from '../components';
+import { MapContainer, MapControl } from '../components';
 import { MAP_PLUGIN } from '../meta';
 import { MapType } from '../types';
 
 export default () =>
-  contributes(
-    Capabilities.ReactSurface,
+  contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
@@ -42,4 +42,13 @@ export default () =>
         );
       },
     }),
-  );
+    createSurface({
+      id: 'plugin-map',
+      role: 'canvas-node',
+      filter: (data) => isInstanceOf(MapType, data),
+      component: ({ data }) => {
+        const [lng = 0, lat = 0] = data.coordinates ?? [];
+        return <MapControl center={{ lat, lng }} zoom={14} />;
+      },
+    }),
+  ]);

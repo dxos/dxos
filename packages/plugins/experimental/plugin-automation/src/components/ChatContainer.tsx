@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework';
-import { type Message } from '@dxos/artifact';
+import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
+import { createSystemPrompt, type Message } from '@dxos/artifact';
 import { type ArtifactsContext } from '@dxos/artifact-testing';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { create, getSpace } from '@dxos/react-client/echo';
@@ -17,24 +17,12 @@ import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { type GptChatType } from '../types';
 
-/**
- * A custom hook that ensures a callback reference remains stable while allowing the callback
- * implementation to be updated. This is useful for callbacks that need to access the latest
- * state/props values while maintaining a stable reference to prevent unnecessary re-renders.
- */
-// TODO(burdon): Remove.
-const useDynamicCallback = <F extends (...args: any[]) => any>(callback: F): F => {
-  const ref = useRef<F>(callback);
-  ref.current = callback;
-  return ((...args) => ref.current(...args)) as F;
-};
-
 export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
   const edgeClient = useEdgeClient();
   const aiClient = useCapability(AutomationCapabilities.AiClient);
-
-  // TODO(wittjosiah): Get tools from system.
-  const tools = useMemo(() => [], []);
+  const artifacts = useCapabilities(Capabilities.Artifact);
+  const tools = useMemo(() => artifacts.flatMap((artifact) => artifact.tools), [artifacts]);
+  const systemPrompt = useMemo(() => createSystemPrompt({ artifacts }), [artifacts]);
 
   // TODO(wittjosiah): Get artifacts from system.
   const [artifactsContext] = useState(() =>
@@ -53,8 +41,14 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   // TODO(wittjosiah): Should these be created in the component?
   // TODO(zan): Combine with ai service client?
   const processor = useMemo(
-    () => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }),
-    [aiClient, tools, artifactsContext],
+    () =>
+      new ChatProcessor(
+        aiClient,
+        tools,
+        { artifacts: artifactsContext },
+        { model: '@anthropic/claude-3-5-sonnet-20241022', systemPrompt },
+      ),
+    [aiClient, tools, artifactsContext, artifacts, systemPrompt],
   );
   // TODO(wittjosiah): Remove transformation.
   const queueDxn = useMemo(
@@ -67,16 +61,19 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
     [queue.items, processor.messages.value],
   );
 
-  const handleSubmit = useDynamicCallback(async (message: string) => {
-    // TODO(burdon): Button to cancel. Otherwise queue request.
-    if (processor.isStreaming) {
-      await processor.cancel();
-    }
+  const handleSubmit = useCallback(
+    async (message: string) => {
+      // TODO(burdon): Button to cancel. Otherwise queue request.
+      if (processor.isStreaming) {
+        await processor.cancel();
+      }
 
-    const messages = await processor.request(message, queue.items);
-    // TODO(burdon): Append on success only? If approved by user? Clinet/server.
-    await queue.append(messages);
-  });
+      const messages = await processor.request(message, queue.items);
+      // TODO(burdon): Append on success only? If approved by user? Clinet/server.
+      await queue.append(messages);
+    },
+    [processor, queue],
+  );
 
   return (
     <StackItem.Content toolbar={false} role={role}>

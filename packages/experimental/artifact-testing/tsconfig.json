@@ -35,12 +35,6 @@
       "path": "../../core/mesh/edge-client"
     },
     {
-      "path": "../../plugins/experimental/plugin-map"
-    },
-    {
-      "path": "../../plugins/plugin-chess"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

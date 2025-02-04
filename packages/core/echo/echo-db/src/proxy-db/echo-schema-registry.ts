@@ -99,7 +99,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     const self = this;
 
     const filterOrderResults = (schemas: EchoSchema[]) => {
-      log.debug('Filtering schemas', { schemas, query });
+      log('Filtering schemas', { schemas, query });
       return (
         schemas
           .filter((schema) => validateStoredSchemaIntegrity(schema.storedSchema))

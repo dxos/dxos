@@ -4920,12 +4920,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-chess':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-chess
-      '@dxos/plugin-map':
-        specifier: workspace:*
-        version: link:../../plugins/experimental/plugin-map
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -6356,6 +6350,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../../experimental/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6365,6 +6365,9 @@ importers:
       '@dxos/gem-globe':
         specifier: workspace:*
         version: link:../../../experimental/gem-globe
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
@@ -6924,6 +6927,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../experimental/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -9438,6 +9447,9 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../app-graph
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../experimental/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

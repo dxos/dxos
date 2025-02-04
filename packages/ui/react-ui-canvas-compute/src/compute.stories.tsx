@@ -43,6 +43,7 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
+import { ComputeShapeLayout } from './compute-layout';
 
 const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
@@ -56,33 +57,6 @@ const combine = (...cbs: UnsubscribeCallback[]) => {
     }
   };
 };
-
-// TODO(burdon): Customize layout. Specialize ComputeShapeDef and registry.
-export class ComputeShapeLayout extends ShapeLayout {
-  constructor(
-    private _controller: ComputeGraphController,
-    registry: ShapeRegistry,
-  ) {
-    super(registry);
-  }
-
-  // TODO(burdon): Doesn't update.
-  override getAnchors(shape: ComputeShape): Record<string, Anchor> {
-    const shapeDef = this._registry.getShapeDef(shape.type);
-    let anchors = shapeDef?.getAnchors?.(shape) ?? {};
-    if (shape.node) {
-      const node = this._controller.graph.getNode(shape.node);
-      if (node.inputSchema || node.outputSchema) {
-        // TODO(burdon): Requires that component defined input and output types.
-        const inputSchema = node.inputSchema ? toEffectSchema(node.inputSchema) : DefaultInput;
-        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : DefaultOutput;
-        anchors = createFunctionAnchors(shape, inputSchema, outputSchema);
-      }
-    }
-
-    return anchors;
-  }
-}
 
 type RenderProps = EditorRootProps<ComputeShape> &
   PropsWithChildren<{

@@ -69,7 +69,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       <TextBox
         {...props}
         ref={inputRef}
-        value={shape.text}
+        value={node.value}
         language={node.valueType === 'object' ? 'json' : undefined}
         onBlur={handleEnter}
         onEnter={handleEnter}

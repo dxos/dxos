@@ -68,7 +68,7 @@ export class EdgeWsConnection extends Resource {
     };
     this._ws.onclose = (event) => {
       if (this.isOpen) {
-        log.info('disconnected while being open', { event });
+        log.warn('disconnected while being open', { code: event.code, reason: event.reason });
         this._callbacks.onRestartRequired();
       }
     };

@@ -135,8 +135,8 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: LoadObjectParams) {
-    const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
+  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {
+    const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
     }

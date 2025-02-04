@@ -28,8 +28,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-chess": "workspace:*",
-    "@dxos/plugin-map": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "chess.js": "^1.0.0"
   },

@@ -10,7 +10,7 @@ import { type Artifact } from '../types';
 
 export type SystemPromptOptions = {
   template?: string;
-  artifacts?: Record<string, Pick<Artifact, 'id' | 'prompt'>>;
+  artifacts?: Pick<Artifact, 'id' | 'prompt'>[];
 };
 
 /**
@@ -21,10 +21,7 @@ export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts }: Syst
   let count = 1;
   const values: Record<string, () => string> = {
     NUM: () => String(count++),
-    ARTIFACT_PROVIDERS: () =>
-      Object.values(artifacts ?? {})
-        .map((artifact) => artifact.prompt)
-        .join('\n'),
+    ARTIFACT_PROVIDERS: () => artifacts?.map((artifact) => artifact.prompt).join('\n') ?? '',
   };
 
   // Remove comments and trim.

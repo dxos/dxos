@@ -108,7 +108,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
           ),
         ],
       };
-    }, [value, json]);
+    }, [value, language]);
 
     // External control.
     useImperativeHandle(

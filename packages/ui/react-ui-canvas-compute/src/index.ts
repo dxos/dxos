@@ -6,3 +6,4 @@ export * from './graph';
 export * from './hooks';
 export * from './registry';
 export * from './shapes';
+export * from './compute-layout';

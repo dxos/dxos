@@ -33,9 +33,12 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-globe": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

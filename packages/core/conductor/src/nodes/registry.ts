@@ -219,10 +219,12 @@ export const registry: Record<NodeType, Executable> = {
     output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
+        items = Array.isArray(items) ? items : [items];
+
         const dxn = DXN.parse(id);
         switch (dxn.kind) {
           case DXN.kind.QUEUE: {
-            const mappedItems = items.map((item) => ({ ...item, id: item.id ?? ObjectId.random() }));
+            const mappedItems = items.map((item: any) => ({ ...item, id: item.id ?? ObjectId.random() }));
 
             const edgeClientService = yield* QueueService;
             yield* Effect.promise(() => edgeClientService.insertIntoQueue(DXN.parse(id), mappedItems));
