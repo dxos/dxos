@@ -10,6 +10,7 @@ import {
   type PromiseIntentDispatcher,
 } from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Factor out.
@@ -22,14 +23,28 @@ declare global {
 export default () =>
   contributes(Capabilities.Tools, [
     defineTool({
-      name: 'add_to_active',
-      description: 'Add an item to the active parts of the layout.',
-      schema: NavigationAction.AddToActive.fields.input,
-      execute: async (props, { extensions }) => {
+      name: 'show',
+      description: 'Show an item in the app. Use this tool to open an artifact.',
+      // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
+      schema: S.Struct({
+        id: S.String.annotations({ description: 'The ID of the item to show.' }),
+        pivotId: S.optional(
+          S.String.annotations({
+            description: 'The ID of the chat. If provided, the item will be added after the pivot item.',
+          }),
+        ),
+      }),
+      execute: async ({ id, pivotId }, { extensions }) => {
         invariant(extensions?.dispatch, 'No intent dispatcher');
-        const { data, error } = await extensions.dispatch(createIntent(NavigationAction.AddToActive, props));
-        if (!data || error) {
-          return ToolResult.Error(error?.message ?? 'Failed to add item to active layout');
+        const { data, error } = await extensions.dispatch(
+          createIntent(NavigationAction.AddToActive, {
+            id,
+            part: 'main',
+            pivotId,
+          }),
+        );
+        if (error) {
+          return ToolResult.Error(error.message);
         }
 
         return ToolResult.Success(data);
