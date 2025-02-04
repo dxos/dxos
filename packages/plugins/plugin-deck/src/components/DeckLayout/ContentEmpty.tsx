@@ -14,10 +14,10 @@ export const ContentEmpty = () => {
   return (
     <div
       role='none'
-      className='min-bs-screen is-dvw sm:is-full p-8 grid grid-rows-[var(--rail-size)_1fr]'
+      className='min-bs-screen is-dvw sm:is-full p-8 grid grid-rows-[var(--rail-size)_1fr] lg:grid-rows-1'
       data-testid='layoutPlugin.firstRunMessage'
     >
-      <div role='toolbar' className={mx(soloInlinePadding, 'flex items-stretch')}>
+      <div role='toolbar' className={mx(soloInlinePadding, 'bs-[--rail-action] flex items-stretch lg:hidden')}>
         <ToggleSidebarButton />
         <span role='none' className='grow' />
       </div>
