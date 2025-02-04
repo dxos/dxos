@@ -71,10 +71,10 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     return (
       <div className='flex aspect-video relative' ref={ref}>
         <Flipped flipId={flipId + pinned}>
-          <div className={mx('w-full h-full mx-auto overflow-hidden text-white animate-fadeIn')}>
+          <div className={mx('w-full h-full overflow-hidden animate-fadeIn')}>
             <VideoObject
               className={mx(
-                'absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity',
+                'absolute inset-0 object-cover opacity-0 transition-opacity',
                 isSelf && !isScreenShare && '-scale-x-100',
               )}
               videoTrack={videoTrack}
