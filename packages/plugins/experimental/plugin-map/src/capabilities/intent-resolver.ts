@@ -10,8 +10,8 @@ import { MapAction, MapType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
-    createResolver(MapAction.Create, ({ name }) => ({
-      data: { object: create(MapType, { name }) },
+    createResolver(MapAction.Create, ({ name, coordinates }) => ({
+      data: { object: create(MapType, { name, coordinates }) },
     })),
     createResolver(MapAction.Toggle, () => {
       const state = context.requestCapability(MapCapabilities.MutableState);

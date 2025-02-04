@@ -3,25 +3,23 @@
 //
 
 import { Chess } from 'chess.js';
+import { pipe } from 'effect';
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { createStatic, type HasId, type HasTypename, isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { Filter, type Space } from '@dxos/react-client/echo';
 
-import { ChessType } from '../types';
+import { ChessAction, ChessType } from '../types';
 
-// TODO(burdon): Move to ECHO def.
-export type ArtifactsContext = {
-  items: (HasTypename & HasId)[];
-  getArtifacts: () => (HasTypename & HasId)[];
-  addArtifact: (artifact: HasTypename & HasId) => void;
-};
-
+// TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
-    artifacts?: ArtifactsContext;
+    space?: Space;
+    dispatch?: PromiseIntentDispatcher;
   }
 }
 
@@ -41,10 +39,18 @@ export default () => {
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
         }),
         execute: async ({ fen }, { extensions }) => {
-          invariant(extensions?.artifacts, 'No artifacts context');
-          const artifact = createStatic(ChessType, { fen });
-          extensions.artifacts.addArtifact(artifact);
-          return ToolResult.Success(createArtifactElement(artifact.id));
+          invariant(extensions?.space, 'No space');
+          invariant(extensions?.dispatch, 'No intent dispatcher');
+          const intent = pipe(
+            createIntent(ChessAction.Create, { fen }),
+            chain(SpaceAction.AddObject, { target: extensions.space }),
+          );
+          const { data, error } = await extensions.dispatch(intent);
+          if (!data || error) {
+            return ToolResult.Error(error?.message ?? 'Failed to create chess game');
+          }
+
+          return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
       defineTool({
@@ -52,10 +58,10 @@ export default () => {
         description: 'Query all active chess games.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
-          invariant(extensions?.artifacts, 'No artifacts context');
-          const artifacts = extensions.artifacts.getArtifacts().filter((artifact) => isInstanceOf(ChessType, artifact));
-          invariant(artifacts.length > 0, 'No chess games found');
-          return ToolResult.Success(artifacts);
+          invariant(extensions?.space, 'No space');
+          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
+          invariant(games.length > 0, 'No chess games found');
+          return ToolResult.Success(games);
         },
       }),
       defineTool({
@@ -63,10 +69,11 @@ export default () => {
         description: 'Get the current state of the chess game.',
         schema: S.Struct({ id: ObjectId }),
         execute: async ({ id }, { extensions }) => {
-          invariant(extensions?.artifacts, 'No artifacts context');
-          const artifact = extensions!.artifacts.getArtifacts().find((artifact) => artifact.id === id);
-          invariant(isInstanceOf(ChessType, artifact));
-          return ToolResult.Success(artifact.fen);
+          invariant(extensions?.space, 'No space');
+          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
+          const game = games.find((game) => game.id === id);
+          invariant(isInstanceOf(ChessType, game));
+          return ToolResult.Success(game.fen);
         },
       }),
       defineTool({
@@ -80,17 +87,19 @@ export default () => {
           }),
         }),
         execute: async ({ id, move }, { extensions }) => {
-          invariant(extensions?.artifacts, 'No artifacts context');
-          const artifact = extensions.artifacts.getArtifacts().find((artifact) => artifact.id === id);
-          invariant(isInstanceOf(ChessType, artifact));
-          const board = new Chess(artifact.fen);
+          invariant(extensions?.space, 'No space');
+          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
+          const game = games.find((game) => game.id === id);
+          invariant(isInstanceOf(ChessType, game));
+          const board = new Chess(game.fen);
           try {
             board.move(move);
           } catch (error: any) {
             return ToolResult.Error(error.message);
           }
-          artifact.fen = board.fen();
-          return ToolResult.Success(artifact.fen);
+          game.pgn = board.pgn();
+          game.fen = board.fen();
+          return ToolResult.Success(game.fen);
         },
       }),
     ],

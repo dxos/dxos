@@ -2,30 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { pipe } from 'effect';
+
+import { Capabilities, chain, createIntent, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { createStatic, EchoObject, type HasId, type HasTypename, isInstanceOf, S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { Filter, type Space } from '@dxos/react-client/echo';
 
-import { MapType } from '../types';
+import { MapAction, MapType } from '../types';
 
-export const ChessSchema = S.Struct({
-  value: S.String.annotations({ description: 'FEN notation' }),
-}).pipe(EchoObject('example.com/type/Chess', '0.1.0'));
-
-export type ChessSchema = S.Schema.Type<typeof ChessSchema>;
-
-// TODO(burdon): Move to ECHO def.
-export type ArtifactsContext = {
-  items: (HasTypename & HasId)[];
-  getArtifacts: () => (HasTypename & HasId)[];
-  addArtifact: (artifact: HasTypename & HasId) => void;
-};
-
+// TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
-    artifacts?: ArtifactsContext;
+    space?: Space;
+    dispatch?: PromiseIntentDispatcher;
   }
 }
 
@@ -43,10 +36,10 @@ export default () => {
         description: 'Query all active maps.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
-          invariant(extensions?.artifacts, 'No artifacts context');
-          const artifacts = extensions.artifacts.getArtifacts().filter((artifact) => isInstanceOf(MapType, artifact));
-          invariant(artifacts.length > 0, 'No maps found');
-          return ToolResult.Success(artifacts);
+          invariant(extensions?.space, 'No space');
+          const { objects } = await extensions.space.db.query(Filter.schema(MapType)).run();
+          invariant(objects.length > 0, 'No maps found');
+          return ToolResult.Success(objects);
         },
       }),
       defineTool({
@@ -57,10 +50,17 @@ export default () => {
           latitude: S.Number.annotations({ description: 'The latitude of the map.' }),
         }),
         execute: async ({ longitude, latitude }, { extensions }) => {
-          invariant(extensions?.artifacts, 'No artifacts context');
-          const artifact = createStatic(MapType, { coordinates: [longitude, latitude] });
-          extensions.artifacts.addArtifact(artifact);
-          return ToolResult.Success(createArtifactElement(artifact.id));
+          invariant(extensions?.space, 'No space');
+          invariant(extensions?.dispatch, 'No intent dispatcher');
+          const intent = pipe(
+            createIntent(MapAction.Create, { coordinates: [longitude, latitude] }),
+            chain(SpaceAction.AddObject, { target: extensions.space }),
+          );
+          const { data, error } = await extensions.dispatch(intent);
+          if (!data || error) {
+            return ToolResult.Error(error?.message ?? 'Failed to create map');
+          }
+          return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
     ],

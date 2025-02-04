@@ -14,6 +14,7 @@ export namespace ChessAction {
   export class Create extends S.TaggedClass<Create>()(`${CHESS_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
+      fen: S.optional(S.String),
     }),
     output: S.Struct({
       object: ChessType,

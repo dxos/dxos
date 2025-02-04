@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Message } from '@dxos/artifact';
-import { type ArtifactsContext } from '@dxos/artifact-testing';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { create, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -19,23 +18,12 @@ import { type GptChatType } from '../types';
 
 export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
   const edgeClient = useEdgeClient();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const artifacts = useCapabilities(Capabilities.Artifact);
   const tools = useMemo(() => artifacts.flatMap((artifact) => artifact.tools), [artifacts]);
   const systemPrompt = useMemo(() => createSystemPrompt({ artifacts }), [artifacts]);
-
-  // TODO(wittjosiah): Get artifacts from system.
-  const [artifactsContext] = useState(() =>
-    create<ArtifactsContext>({
-      items: [],
-      getArtifacts() {
-        return this.items;
-      },
-      addArtifact(artifact) {
-        this.items.push(artifact);
-      },
-    }),
-  );
 
   // TODO(burdon): Create hook.
   // TODO(wittjosiah): Should these be created in the component?
@@ -45,14 +33,14 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
       new ChatProcessor(
         aiClient,
         tools,
-        { artifacts: artifactsContext },
+        { space, dispatch },
         { model: '@anthropic/claude-3-5-sonnet-20241022', systemPrompt },
       ),
-    [aiClient, tools, artifactsContext, artifacts, systemPrompt],
+    [aiClient, tools, space, artifacts, systemPrompt],
   );
   // TODO(wittjosiah): Remove transformation.
   const queueDxn = useMemo(
-    () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, getSpace(chat)!.id, chat.queue.dxn.parts.at(-1)!]),
+    () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space!.id, chat.queue.dxn.parts.at(-1)!]),
     [chat.queue.dxn],
   );
   const queue = useQueue<Message>(edgeClient, queueDxn);
