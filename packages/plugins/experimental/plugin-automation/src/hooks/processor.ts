@@ -125,10 +125,9 @@ export class ChatProcessor {
 
         // Update pending messages.
         const messages = await this._response.complete();
+        log.info('response', { messages: messages.length });
         this._pending.value.push(...messages.map((message) => createStatic(Message, message)));
         this._streaming.value = [];
-
-        console.log(':::::::::', messages);
 
         // Resolve tool use locally.
         more = false;
