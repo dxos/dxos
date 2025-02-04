@@ -6447,6 +6447,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7009,6 +7012,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
       react:
         specifier: ~18.2.0
         version: 18.2.0
