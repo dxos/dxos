@@ -31,8 +31,8 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
     if (!stream.current) {
       stream.current = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
       stream.current.subscribe((event) => {
-        log.info('roomState', {
-          users: event.peers?.map((p) => codec.decode(p.state!)) ?? [],
+        log('roomState', {
+          users: event.peers?.map((peer) => codec.decode(peer.state!)) ?? [],
           meetingId: roomId.toHex(),
         });
         setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
@@ -52,7 +52,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
             tracks: {},
           }),
         },
-      }).catch((err) => log.catch(err));
+      }).catch(log.catch);
     }
   }, [roomId]);
 
