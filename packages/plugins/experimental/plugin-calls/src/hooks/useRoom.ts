@@ -65,21 +65,22 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
       stream.current?.close().catch((err) => log.catch(err));
       stream.current = undefined;
     };
+
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
   }, [roomId]);
 
-  const identity: UserState = useMemo(
+  const identity = useMemo<UserState>(
     () => ({
-      ...roomState.users!.find((u) => u.id === peerKey),
+      ...roomState.users!.find((user) => user.id === peerKey),
       name: displayName,
     }),
     [roomState.users, peerKey, displayName],
   );
 
-  const otherUsers: UserState[] = useMemo(
+  const otherUsers = useMemo<UserState[]>(
     () => roomState.users!.filter((u) => u.id !== peerKey),
     [roomState.users, peerKey],
   );

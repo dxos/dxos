@@ -40,6 +40,9 @@ export const useDebugEnabled = () => {
 };
 
 export const JoinedRoom = ({ classNames }: ThemedClassName) => {
+  const [containerRef] = useMeasure<HTMLDivElement>();
+  const [firstFlexChildRef] = useMeasure<HTMLDivElement>();
+
   const {
     userMedia,
     peer,
@@ -49,8 +52,6 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
     room: { otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
-  const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
-  const [firstFlexChildRef, { width: firstFlexChildWidth }] = useMeasure<HTMLDivElement>();
   const debugEnabled = useDebugEnabled();
   const totalUsers = 1 + otherUsers.length;
 
@@ -60,7 +61,7 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
     }
   });
 
-  useBroadcastStatus({ userMedia, peer, updateUserState, pushedTracks });
+  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks });
   const [pinnedId, setPinnedId] = useState<string>();
 
   return (

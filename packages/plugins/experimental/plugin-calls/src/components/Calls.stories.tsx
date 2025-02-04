@@ -15,7 +15,11 @@ import { Calls, type CallsProps } from './Calls';
 
 const Story = (props: CallsProps) => {
   const config = useConfig();
-  return <Calls {...props} iceServers={config.get('runtime.services.ice') ?? []} />;
+  return (
+    <div className='flex h-full overflow-hidden w-96'>
+      <Calls {...props} iceServers={config.get('runtime.services.ice') ?? []} />
+    </div>
+  );
 };
 
 const meta: Meta<typeof Calls> = {

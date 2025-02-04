@@ -7,33 +7,35 @@ import { useUnmount } from 'react-use';
 
 import { buf } from '@dxos/protocols/buf';
 import { TracksSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
 import type { RoomContextType } from './useRoomContext';
 import type { UserMedia } from './useUserMedia';
 import { useSubscribedState } from './utils';
+import { type UserState } from '../types';
 import type { RxjsPeer } from '../utils';
 
 interface Config {
   userMedia: UserMedia;
   peer: RxjsPeer;
   identity?: UserState;
-  updateUserState: (user: UserState) => void;
   pushedTracks: RoomContextType['pushedTracks'];
   speaking?: boolean;
   raisedHand?: boolean;
+  updateUserState: (user: UserState) => void;
 }
 
 export const useBroadcastStatus = ({ userMedia, identity, peer, pushedTracks, updateUserState }: Config) => {
   const { audioEnabled, videoEnabled, screenShareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
   const { sessionId } = useSubscribedState(peer.session$) ?? {};
-  const id = identity!.id;
-  const name = identity!.name;
   useEffect(() => {
+    if (!identity) {
+      return;
+    }
+
     updateUserState({
-      id,
-      name,
+      id: identity.id,
+      name: identity.name,
       joined: true,
       raisedHand: false,
       speaking: false,
@@ -47,12 +49,16 @@ export const useBroadcastStatus = ({ userMedia, identity, peer, pushedTracks, up
         screenshare,
       }),
     });
-  }, [id, name, sessionId, audio, video, screenshare, audioEnabled, videoEnabled, screenShareEnabled]);
+  }, [identity, sessionId, audio, video, screenshare, audioEnabled, videoEnabled, screenShareEnabled]);
 
   useUnmount(() => {
+    if (!identity) {
+      return;
+    }
+
     updateUserState({
-      id,
-      name,
+      id: identity.id,
+      name: identity.name,
       joined: false,
       raisedHand: false,
       speaking: false,
