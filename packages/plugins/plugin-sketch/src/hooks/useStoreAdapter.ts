@@ -17,7 +17,7 @@ export const useStoreAdapter = (object?: ReactiveEchoObject<DiagramType>) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
   useEffect(() => {
-    if (!object) {
+    if (!object || !object.canvas?.target) {
       return;
     }
 
@@ -50,7 +50,7 @@ export const useStoreAdapter = (object?: ReactiveEchoObject<DiagramType>) => {
       clearTimeout(t);
       void adapter.close();
     };
-  }, [object]);
+  }, [object, object?.canvas.target]);
 
   return adapter;
 };
