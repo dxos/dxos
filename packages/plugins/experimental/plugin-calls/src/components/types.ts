@@ -2,10 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { schema } from '@dxos/protocols/proto';
-
-export const codec = schema.getCodecForType('dxos.edge.calls.UserState');
-
 export interface SessionDescription {
   type: 'offer' | 'answer';
   sdp: string;
