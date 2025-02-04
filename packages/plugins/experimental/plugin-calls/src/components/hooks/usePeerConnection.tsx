@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { useSubscribedState } from './rxjsHooks';
 import { useStablePojo } from './useStablePojo';
-import { RxjsPeer, type PeerConfig } from '../utils/rxjs/RxjsPeer.client';
+import { useSubscribedState } from './utils';
+import { RxjsPeer, type PeerConfig } from '../utils';
 
 export const usePeerConnection = (config: PeerConfig) => {
   const stableConfig = useStablePojo(config);

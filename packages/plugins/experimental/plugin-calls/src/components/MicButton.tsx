@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { useRoomContext } from './hooks/useRoomContext';
+import { useRoomContext } from './hooks';
 
 export const MicButton = () => {
   const {
@@ -16,16 +16,14 @@ export const MicButton = () => {
   } = useRoomContext();
 
   return (
-    <>
-      <Button
-        variant={audioEnabled ? 'default' : 'destructive'}
-        onClick={() => {
-          audioEnabled ? turnMicOff() : turnMicOn();
-        }}
-      >
-        <VisuallyHidden>{audioEnabled ? 'Turn mic off' : 'Turn mic on'}</VisuallyHidden>
-        {audioEnabled ? <Microphone /> : <MicrophoneSlash />}
-      </Button>
-    </>
+    <Button
+      variant={audioEnabled ? 'default' : 'destructive'}
+      onClick={() => {
+        audioEnabled ? turnMicOff() : turnMicOn();
+      }}
+    >
+      <VisuallyHidden>{audioEnabled ? 'Turn mic off' : 'Turn mic on'}</VisuallyHidden>
+      {audioEnabled ? <Microphone /> : <MicrophoneSlash />}
+    </Button>
   );
 };

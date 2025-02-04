@@ -24,6 +24,7 @@ const Routes = () => {
     },
   ]);
 };
+
 const queryClient = new QueryClient();
 
 export type CallsProps = {

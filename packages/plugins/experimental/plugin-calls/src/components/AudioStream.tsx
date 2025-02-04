@@ -5,8 +5,7 @@
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 import { of } from 'rxjs';
 
-import { useSubscribedState } from './hooks/rxjsHooks';
-import { useRoomContext } from './hooks/useRoomContext';
+import { useRoomContext, useSubscribedState } from './hooks';
 
 interface AudioStreamProps {
   tracksToPull: string[];
@@ -33,9 +32,9 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
     if (!audio || !mediaStream) {
       return;
     }
-    // need to set srcObject again in Chrome and call play() again for Safari
+    // Need to set srcObject again in Chrome and call play() again for Safari
     // https://www.youtube.com/live/Tkx3OGrwVk8?si=K--P_AzNnAGrjraV&t=2533
-    // calling play() this way to make Chrome happy otherwise it throws an error
+    // calling play() this way to make Chrome happy otherwise it throws an error.
     audio.addEventListener('canplay', () => audio.play(), { once: true });
     audio.srcObject = mediaStream;
   };

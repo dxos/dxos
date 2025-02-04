@@ -49,7 +49,7 @@ export const Matrix = ({ dim = 5, count = 20 }: MatrixProps) => {
   };
 
   return (
-    <div className='flex shrink-0 w-6 h-6 items-center'>
+    <div className='flex shrink-0 w-5 h-5 items-center'>
       <div className='flex w-full h-full relative'>
         <AnimatePresence>
           {Array.from({ length: count }).map((_, i) => (

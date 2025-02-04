@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 
 import type { useRoom } from './useRoom';
 import type { UserMedia } from './useUserMedia';
-import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
+import type { RxjsPeer } from '../utils';
 
 export type RoomContextType = {
   traceLink?: string;

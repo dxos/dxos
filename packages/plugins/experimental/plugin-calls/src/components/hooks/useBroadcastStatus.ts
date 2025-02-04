@@ -7,10 +7,10 @@ import { useUnmount } from 'react-use';
 
 import { type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
-import { useSubscribedState } from './rxjsHooks';
 import type { RoomContextType } from './useRoomContext';
 import type { UserMedia } from './useUserMedia';
-import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
+import { useSubscribedState } from './utils';
+import type { RxjsPeer } from '../utils';
 
 interface Config {
   userMedia: UserMedia;

@@ -17,9 +17,8 @@ import { MicButton } from './MicButton';
 import { Participant } from './Participant';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
-import { useBroadcastStatus } from './hooks/useBroadcastStatus';
-import { useRoomContext } from './hooks/useRoomContext';
-import { calculateLayout } from './utils/calculateLayout';
+import { useRoomContext, useBroadcastStatus } from './hooks';
+import { calculateLayout } from './utils';
 
 export const Room = () => {
   return <JoinedRoom />;
@@ -91,10 +90,10 @@ const JoinedRoom = () => {
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(nonNullable)}>
-      <div className='flex flex-col h-full bg-white dark:bg-zinc-800'>
+      <div className='flex flex-col h-full'>
         <Flipper flipKey={totalUsers} className='relative flex-grow overflow-hidden isolate'>
           <div
-            className='absolute inset-0 h-full w-full bg-black isolate flex flex-wrap justify-around gap-[--gap] p-[--gap]'
+            className='absolute inset-0 h-full w-full isolate flex flex-wrap justify-around'
             style={
               {
                 '--gap': '1rem',
@@ -108,10 +107,10 @@ const JoinedRoom = () => {
           >
             {identity && userMedia.audioStreamTrack && (
               <Participant
+                ref={firstFlexChildRef}
+                flipId={'identity user'}
                 user={identity}
                 isSelf
-                flipId={'identity user'}
-                ref={firstFlexChildRef}
                 videoTrack={userMedia.videoStreamTrack}
                 audioTrack={userMedia.audioStreamTrack}
                 pinnedId={pinnedId}

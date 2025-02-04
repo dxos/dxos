@@ -5,11 +5,10 @@
 import { useMemo, useState } from 'react';
 import { combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
 
-import { useStateObservable, useSubscribedState } from './rxjsHooks';
-import { blackCanvasStreamTrack } from '../utils/blackCanvasStreamTrack';
-import { getUserMediaTrack$ } from '../utils/rxjs/getUserMediaTrack$';
+import { useStateObservable, useSubscribedState } from './utils';
+import { getUserMediaTrack$, blackCanvasStreamTrack } from '../utils';
 
-const useUserMedia = () => {
+export const useUserMedia = () => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
@@ -92,12 +91,10 @@ const useUserMedia = () => {
     videoEnabled,
     videoTrack$,
     videoStreamTrack: videoTrack,
-
     startScreenShare,
     endScreenShare,
     screenShareEnabled,
   };
 };
 
-export default useUserMedia;
 export type UserMedia = ReturnType<typeof useUserMedia>;

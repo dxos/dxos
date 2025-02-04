@@ -7,12 +7,15 @@ import { of } from 'rxjs';
 
 import { type PublicKey } from '@dxos/react-client';
 
-import { useStateObservable, useSubscribedState } from './hooks/rxjsHooks';
-import { usePeerConnection } from './hooks/usePeerConnection';
-import { useRoom } from './hooks/useRoom';
-import { RoomContext, type RoomContextType } from './hooks/useRoomContext';
-import { useStablePojo } from './hooks/useStablePojo';
-import useUserMedia from './hooks/useUserMedia';
+import {
+  usePeerConnection,
+  useStablePojo,
+  useStateObservable,
+  useSubscribedState,
+  useRoom,
+  useUserMedia,
+} from './hooks';
+import { RoomContext, type RoomContextType } from './hooks';
 import { CALLS_URL } from '../types';
 
 // Types for loader function response
@@ -31,14 +34,14 @@ interface RoomProps extends RoomData {
 }
 
 export const RoomContextProvider = ({
+  iceServers,
   username,
   roomId,
-  iceServers,
   children,
 }: {
+  iceServers: RTCIceServer[];
   username: string;
   roomId: PublicKey;
-  iceServers: RTCIceServer[];
   children: ReactNode;
 }): JSX.Element => {
   const [roomData, setRoomData] = useState<RoomData | null>(null);
@@ -107,7 +110,6 @@ const Room = ({
   );
 
   const pushedVideoTrack = useSubscribedState(pushedVideoTrack$);
-
   const pushedAudioTrack$ = useMemo(
     () =>
       peer.pushTrack(

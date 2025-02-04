@@ -9,9 +9,8 @@ import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
 import { VideoSrcObject } from './VideoSrcObject';
-import { useSubscribedState } from './hooks/rxjsHooks';
-import { useRoomContext } from './hooks/useRoomContext';
-import { cn } from './utils/style';
+import { useRoomContext, useSubscribedState } from './hooks';
+import { cn } from './utils';
 
 interface Props {
   flipId: string;

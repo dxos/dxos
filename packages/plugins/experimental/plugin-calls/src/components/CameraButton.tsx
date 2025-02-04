@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { useRoomContext } from './hooks/useRoomContext';
+import { useRoomContext } from './hooks';
 
 export const CameraButton = () => {
   const {
