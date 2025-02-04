@@ -28,6 +28,6 @@ This is some code.
 
 ```ts
 const Test = () => {
-  return 100;
+  return <div>Hello</div>;
 }
 ```

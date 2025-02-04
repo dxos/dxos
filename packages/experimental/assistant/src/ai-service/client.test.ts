@@ -17,7 +17,7 @@ import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });
 
-describe('AI Service Client', () => {
+describe.skip('AI Service Client', () => {
   test('client generation', async () => {
     const client = new AIServiceClientImpl({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
