@@ -4,7 +4,7 @@
 
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
-import { CALLS_PLUGIN } from './meta';
+import { CALLS_PLUGIN } from '../meta';
 
 /**
  * Endpoint to the calls service.
