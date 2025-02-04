@@ -9,15 +9,14 @@ import { type Tool } from './tools';
 /**
  *
  */
-export type Artifact = {
+export type ArtifactDefinition = {
   // TODO(wittjosiah): Is this actually an ObjectId or should it be a uri?
   id: ObjectId;
 
   /**
-   *
+   * Instructions for how to use the artifact.
    */
-  // TODO(wittjosiah): Rename to `instructions`?
-  prompt: string;
+  instructions: string;
 
   /**
    * Schema that describes the shape of data which matches the artifact.
@@ -33,4 +32,4 @@ export type Artifact = {
   //  NOTE(burdon): I think that could just be provided separately by the plugin (since there might be multiple surface types).
 };
 
-export const defineArtifact = (artifact: Artifact): Artifact => artifact;
+export const defineArtifact = (definition: ArtifactDefinition): ArtifactDefinition => definition;

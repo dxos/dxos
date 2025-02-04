@@ -21,9 +21,12 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
-  const artifacts = useCapabilities(Capabilities.Artifact);
-  const tools = useMemo(() => artifacts.flatMap((artifact) => artifact.tools), [artifacts]);
-  const systemPrompt = useMemo(() => createSystemPrompt({ artifacts }), [artifacts]);
+  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+  const tools = useMemo(() => artifactDefinitions.flatMap((definition) => definition.tools), [artifactDefinitions]);
+  const systemPrompt = useMemo(
+    () => createSystemPrompt({ artifacts: artifactDefinitions.map((definition) => definition.instructions) }),
+    [artifactDefinitions],
+  );
 
   // TODO(burdon): Create hook.
   // TODO(wittjosiah): Should these be created in the component?
@@ -36,7 +39,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
         { space, dispatch },
         { model: '@anthropic/claude-3-5-sonnet-20241022', systemPrompt },
       ),
-    [aiClient, tools, space, artifacts, systemPrompt],
+    [aiClient, tools, space, systemPrompt],
   );
   // TODO(wittjosiah): Remove transformation.
   const queueDxn = useMemo(

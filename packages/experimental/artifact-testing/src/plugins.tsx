@@ -57,10 +57,10 @@ export const capabilities: AnyCapability[] = [
   // Image
   //
   contributes(
-    Capabilities.Artifact,
+    Capabilities.ArtifactDefinition,
     defineArtifact({
       id: 'plugin-image',
-      prompt: `
+      instructions: `
     Images:
     - When presenting an image, you must use an artifact.
     - Nest the <image> tag inside the <artifact> tag.

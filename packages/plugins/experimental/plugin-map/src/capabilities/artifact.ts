@@ -23,9 +23,9 @@ declare global {
 }
 
 export default () => {
-  const artifact = defineArtifact({
+  const definition = defineArtifact({
     id: 'plugin-map',
-    prompt: `
+    instructions: `
     Maps:
     - If the user's message relates to a map, you must return the map as a valid GeoJSON Point with valid coordinates.
     `,
@@ -66,5 +66,5 @@ export default () => {
     ],
   });
 
-  return contributes(Capabilities.Artifact, artifact);
+  return contributes(Capabilities.ArtifactDefinition, definition);
 };

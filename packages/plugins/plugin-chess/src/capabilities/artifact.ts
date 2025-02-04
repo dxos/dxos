@@ -24,9 +24,9 @@ declare global {
 }
 
 export default () => {
-  const artifact = defineArtifact({
+  const definition = defineArtifact({
     id: 'plugin-chess',
-    prompt: `
+    instructions: `
   Chess:
   - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
   `,
@@ -105,5 +105,5 @@ export default () => {
     ],
   });
 
-  return contributes(Capabilities.Artifact, artifact);
+  return contributes(Capabilities.ArtifactDefinition, definition);
 };
