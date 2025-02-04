@@ -5,9 +5,12 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
-export type BallProps = {
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+
+export type BallProps = ThemedClassName<{
   active?: boolean;
-};
+}>;
 
 const n = 36;
 const a = 40;
@@ -19,10 +22,10 @@ const rotate = Array.from({ length: n }).reduce<number[]>(
   [0],
 );
 
-export const Ball = ({ active }: BallProps) => (
+export const Ball = ({ active, classNames }: BallProps) => (
   <AnimatePresence>
     <motion.div
-      className='flex shrink-0 w-full h-full bg-primary-500'
+      className={mx('flex shrink-0 w-5 h-5 bg-primary-500', classNames)}
       transition={{ ease: 'linear', duration: 4, repeat: Infinity }}
       initial={{
         scale: 0.9,
