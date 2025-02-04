@@ -3,7 +3,7 @@
 //
 
 import { type LatLngLiteral } from 'leaflet';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
@@ -21,22 +21,22 @@ export default () =>
       filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
+        const [lng = 0, lat = 0] = data.subject.coordinates ?? [];
+        const [center, setCenter] = useState<LatLngLiteral>({ lat, lng });
+        const [zoom, setZoom] = useState(14);
 
-        const handleChange = useCallback(
-          ({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
-            state.center = center;
-            state.zoom = zoom;
-          },
-          [state],
-        );
+        const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
+          setCenter(center);
+          setZoom(zoom);
+        }, []);
 
         return (
           <MapContainer
             role={role}
             type={state.type}
             map={data.subject}
-            center={state.center}
-            zoom={state.zoom}
+            center={center}
+            zoom={zoom}
             onChange={handleChange}
           />
         );
