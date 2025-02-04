@@ -35,8 +35,10 @@ export const StorybookNavTree = ({
     [getActions, loadDescendents, renderItemEnd, popoverAnchorId, getItems, getProps, isCurrent, canDrop, onSelect],
   );
   return (
-    <NavTreeContext.Provider value={contextValue}>
-      <NavTree {...props} />
-    </NavTreeContext.Provider>
+    <div role='none' className='@container'>
+      <NavTreeContext.Provider value={contextValue}>
+        <NavTree {...props} />
+      </NavTreeContext.Provider>
+    </div>
   );
 };

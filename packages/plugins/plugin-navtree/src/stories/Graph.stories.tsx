@@ -19,7 +19,6 @@ import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { StorybookNavTree } from './StorybookNavTree';
-import { NavTree } from '../components';
 import { getActions, getChildren } from '../util';
 
 faker.seed(3);
@@ -79,9 +78,10 @@ const meta: Meta<typeof StorybookNavTree> = {
       });
     }, []);
 
-    return <NavTree {...args} />;
+    return <StorybookNavTree {...args} />;
   },
   args: {
+    root: graph.root,
     id: graph.root.id,
     getActions: (node: Node) => getActions(graph, node),
     getItems: (node?: Node) => graph.nodes(node ?? graph.root),

@@ -16,7 +16,6 @@ import { isTreeData, type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NavTree } from './NavTree';
 import { StorybookNavTree } from '../stories/StorybookNavTree';
 import { createTree, updateState } from '../testing';
 
@@ -53,7 +52,7 @@ const meta: Meta<typeof StorybookNavTree> = {
       });
     }, []);
 
-    return <NavTree {...args} />;
+    return <StorybookNavTree {...args} />;
   },
   args: {
     id: tree.id,

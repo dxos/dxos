@@ -222,7 +222,7 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
   // TODO(thure): What gives this an inline `overflow: initial`?
   return (
     <NavTreeContext.Provider value={navTreeContextValue}>
-      <NavTree id={graph.root.id} {...props} />
+      <NavTree root={graph.root} id={graph.root.id} {...props} />
     </NavTreeContext.Provider>
   );
 });
