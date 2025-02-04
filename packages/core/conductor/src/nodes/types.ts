@@ -51,7 +51,7 @@ export type TemplateOutput = S.Schema.Type<typeof TemplateOutput>;
 export const JsonTransformInput = S.Struct({ [DEFAULT_INPUT]: S.Any, expression: S.String });
 export type JsonTransformInput = S.Schema.Type<typeof JsonTransformInput>;
 
-export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+export const AppendInput = S.Struct({ id: ObjectId, items: S.Any });
 export type AppendInput = S.Schema.Type<typeof AppendInput>;
 
 export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(Tool) });
