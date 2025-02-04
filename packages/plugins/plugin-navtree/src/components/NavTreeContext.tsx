@@ -13,6 +13,8 @@ export const NavTreeContext = createContext<NavTreeContextValue>({
   getItems: () => [],
   getProps: () => ({ id: 'never', label: 'never' }),
   isCurrent: () => false,
+  isOpen: () => false,
+  onOpenChange: () => {},
 });
 
 export const useNavTreeContext = () => useContext(NavTreeContext);

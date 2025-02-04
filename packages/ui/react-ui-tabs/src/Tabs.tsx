@@ -20,6 +20,7 @@ type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
   attendableId?: string;
+  verticalVariant?: 'stateful' | 'stateless';
 } & Pick<TabsPrimitive.TabsProps, 'orientation' | 'value'>;
 
 const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
@@ -29,11 +30,10 @@ const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TA
 });
 
 type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
+  Partial<Pick<TabsContextValue, 'activePart' | 'verticalVariant' | 'attendableId'>> &
   Partial<{
-    activePart: TabsActivePart;
     onActivePartChange: (nextActivePart: TabsActivePart) => void;
     defaultActivePart: TabsActivePart;
-    attendableId?: string;
   }>;
 
 const TabsRoot = ({
@@ -47,6 +47,7 @@ const TabsRoot = ({
   defaultValue,
   orientation = 'vertical',
   activationMode = 'manual',
+  verticalVariant = 'stateful',
   attendableId,
   ...props
 }: TabsRootProps) => {
@@ -85,6 +86,7 @@ const TabsRoot = ({
       setActivePart={setActivePart}
       value={value}
       attendableId={attendableId}
+      verticalVariant={verticalVariant}
     >
       <TabsPrimitive.Root
         activationMode={activationMode}
@@ -96,6 +98,7 @@ const TabsRoot = ({
         className={mx(
           'overflow-hidden',
           orientation === 'vertical' &&
+            verticalVariant === 'stateful' &&
             '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
           classNames,
         )}
@@ -110,17 +113,18 @@ const TabsRoot = ({
 type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
-  const { orientation, activePart } = useTabsContext('TabsViewport');
+  const { orientation, activePart, verticalVariant } = useTabsContext('TabsViewport');
   return (
     <div
       role='none'
       {...props}
       data-active={activePart}
       className={mx(
-        orientation === 'vertical' && [
-          'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%]',
-          '@md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
-        ],
+        orientation === 'vertical' &&
+          verticalVariant === 'stateful' && [
+            'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%]',
+            '@md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+          ],
         classNames,
       )}
     >
@@ -219,10 +223,15 @@ const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => 
   );
 };
 
+type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
+
+const TabPrimitive = (props: TabsTabPrimitiveProps) => <TabsPrimitive.Trigger {...props} />;
+
 export const Tabs = {
   Root: TabsRoot,
   Tablist: TabsTablist,
   Tab: TabsTab,
+  TabPrimitive,
   TabGroupHeading: TabsTabGroupHeading,
   Tabpanel: TabsTabpanel,
   BackButton: TabsBackButton,
@@ -234,6 +243,7 @@ export type {
   TabsRootProps,
   TabsTablistProps,
   TabsTabProps,
+  TabsTabPrimitiveProps,
   TabsTabGroupHeadingProps,
   TabsTabpanelProps,
   TabsViewportProps,

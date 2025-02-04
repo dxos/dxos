@@ -10,6 +10,7 @@ import {
   ACTION_TYPE,
   ACTION_GROUP_TYPE,
   isAction,
+  isActionLike,
 } from '@dxos/app-graph';
 import { nonNullable } from '@dxos/util';
 
@@ -125,4 +126,16 @@ export const expandChildren = (graph: Graph, node: Node) => {
 
 export const expandActions = (graph: Graph, node: Node) => {
   return Promise.all([graph.expand(node, 'outbound', ACTION_TYPE), graph.expand(node, 'outbound', ACTION_GROUP_TYPE)]);
+};
+
+export const l0ItemType = (item: Node<any>) => {
+  if (item.properties.l0Disposition === 'collection') {
+    return 'collection';
+  } else if (isActionLike(item)) {
+    return 'action';
+  } else if (item.properties.l0Disposition === 'navigation') {
+    return 'link';
+  } else {
+    return 'tab';
+  }
 };

@@ -48,6 +48,7 @@ export default (context: PluginsContext) => {
       label: ['spaces label', { ns: SPACE_PLUGIN }],
       testId: 'spacePlugin.spaces',
       role: 'branch',
+      l0Disposition: 'collection',
       disabled: true,
       childrenPersistenceClass: 'echo',
       onRearrangeChildren: async (nextOrder: Space[]) => {

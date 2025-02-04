@@ -18,7 +18,7 @@ import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
-import { type NavTreeContextValue, type NavTreeProps } from './types';
+import { type NavTreeContextValue } from './types';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
@@ -39,190 +39,205 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
-} & Pick<NavTreeProps, 'isOpen' | 'onOpenChange'> &
-  Pick<NavTreeContextValue, 'isCurrent'>;
+} & Pick<NavTreeContextValue, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
 
-export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: NavTreeContainerProps) => {
-  const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
-  const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { graph } = useGraph();
+export const NavTreeContainer = memo(
+  ({ isCurrent, isOpen, onOpenChange, popoverAnchorId, ...props }: NavTreeContainerProps) => {
+    const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+    const [isLg] = useMediaQuery('lg', { ssr: false });
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { graph } = useGraph();
 
-  const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
+    const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
-  const getItems = useCallback(
-    (node?: Node) => {
-      return graph.nodes(node ?? graph.root, {
-        filter: (node): node is Node => {
-          return untracked(() => {
-            const action = isActionLike(node);
-            const disposition = node.properties.disposition;
-            return !action || (action && disposition === 'item');
-          });
-        },
-      });
-    },
-    [graph],
-  );
+    const getItems = useCallback(
+      (node?: Node) => {
+        return graph.nodes(node ?? graph.root, {
+          filter: (node): node is Node => {
+            return untracked(() => {
+              const action = isActionLike(node);
+              const disposition = node.properties.disposition;
+              return !action || (action && disposition === 'item');
+            });
+          },
+        });
+      },
+      [graph],
+    );
 
-  const getProps = useCallback(
-    (node: Node, path: string[]): PropsFromTreeItem => {
-      const children = getChildren(graph, node, undefined, path);
-      const parentOf =
-        children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-      return {
-        id: node.id,
-        label: node.properties.label ?? node.id,
-        parentOf,
-        icon: node.properties.icon,
-        disabled: node.properties.disabled,
-        className: mx(node.properties.modified && 'italic', node.properties.className),
-        headingClassName: node.properties.headingClassName,
-        testId: node.properties.testId,
-      };
-    },
-    [graph],
-  );
+    const getProps = useCallback(
+      (node: Node, path: string[]): PropsFromTreeItem => {
+        const children = getChildren(graph, node, undefined, path);
+        const parentOf =
+          children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
+        return {
+          id: node.id,
+          label: node.properties.label ?? node.id,
+          parentOf,
+          icon: node.properties.icon,
+          disabled: node.properties.disabled,
+          className: mx(node.properties.modified && 'italic', node.properties.className),
+          headingClassName: node.properties.headingClassName,
+          testId: node.properties.testId,
+        };
+      },
+      [graph],
+    );
 
-  const loadDescendents = useCallback(
-    (node: Node) => {
-      void expandActions(graph, node);
-      if (!isActionLike(node)) {
-        void expandChildren(graph, node).then(() =>
-          // Load one level deeper, which resolves some juddering observed on open/close.
-          Promise.all(
-            getChildren(graph, node).flatMap((child) => [expandActions(graph, child), expandChildren(graph, child)]),
-          ),
-        );
-      }
-    },
-    [graph],
-  );
-
-  const canDrop = useCallback((source: TreeData, target: TreeData) => {
-    const sourceNode = source.item as Node;
-    const targetNode = target.item as Node;
-    if (isSpace(targetNode.data)) {
-      // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
-      return isEchoObject(sourceNode.data) || isSpace(sourceNode.data);
-    } else if (isEchoObject(targetNode.data)) {
-      return isEchoObject(sourceNode.data);
-    } else {
-      return false;
-    }
-  }, []);
-
-  const handleSelect = useCallback(
-    ({ item: node, path, option }: { item: Node; path: string[]; option: boolean }) => {
-      if (!node.data) {
-        return;
-      }
-
-      if (isAction(node)) {
-        const [parent] = graph.nodes(node, { relation: 'inbound' });
-        void (parent && node.data({ node: parent, caller: NAV_TREE_ITEM }));
-        return;
-      }
-
-      const current = isCurrent(path, node);
-      if (!current) {
-        void dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [node.id] } }));
-      } else if (option) {
-        void dispatch(createIntent(NavigationAction.Close, { activeParts: { main: [node.id] } }));
-      } else {
-        void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: node.id }));
-      }
-
-      const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
-      if (isAction(defaultAction)) {
-        void (defaultAction.data as () => void)();
-      }
-
-      if (!isLg) {
-        closeNavigationSidebar();
-      }
-    },
-    [graph, dispatch, isCurrent, isLg, closeNavigationSidebar],
-  );
-
-  // TODO(wittjosiah): Factor out hook.
-  useEffect(() => {
-    return monitorForElements({
-      canMonitor: ({ source }) => isTreeData(source.data),
-      onDrop: ({ location, source }) => {
-        // Didn't drop on anything.
-        if (!location.current.dropTargets.length) {
-          return;
-        }
-        const target = location.current.dropTargets[0];
-        const instruction: Instruction | null = extractInstruction(target.data);
-        if (instruction !== null && instruction.type !== 'instruction-blocked') {
-          const sourceNode = source.data.item as NavTreeItemGraphNode;
-          const targetNode = target.data.item as NavTreeItemGraphNode;
-          const sourcePath = source.data.path as string[];
-          const targetPath = target.data.path as string[];
-          const operation =
-            sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
-              ? 'rearrange'
-              : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
-          const sourceParent = getParent(graph, sourceNode, sourcePath);
-          const targetParent = getParent(graph, targetNode, targetPath);
-          const sourceItems = getItems(sourceParent);
-          const targetItems = getItems(targetParent);
-          const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
-          const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
-          const migrationIndex =
-            instruction.type === 'make-child'
-              ? undefined
-              : instruction.type === 'reorder-below'
-                ? targetIndex + 1
-                : targetIndex;
-          switch (operation) {
-            case 'rearrange': {
-              const nextItems = sourceItems.map(({ data }) => data);
-              arrayMove(nextItems, sourceIndex, targetIndex);
-              void sourceParent?.properties.onRearrangeChildren?.(nextItems);
-              break;
-            }
-            case 'copy': {
-              const target = instruction.type === 'make-child' ? targetNode : targetParent;
-              void target?.properties.onCopy?.(sourceNode, migrationIndex);
-              break;
-            }
-            case 'transfer': {
-              const target = instruction.type === 'make-child' ? targetNode : targetParent;
-              if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
-                break;
-              }
-              void target?.properties.onTransferStart(sourceNode, migrationIndex);
-              void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
-              break;
-            }
-          }
+    const loadDescendents = useCallback(
+      (node: Node) => {
+        void expandActions(graph, node);
+        if (!isActionLike(node)) {
+          void expandChildren(graph, node).then(() =>
+            // Load one level deeper, which resolves some juddering observed on open/close.
+            Promise.all(
+              getChildren(graph, node).flatMap((child) => [expandActions(graph, child), expandChildren(graph, child)]),
+            ),
+          );
         }
       },
-    });
-  }, [graph]);
+      [graph],
+    );
 
-  const navTreeContextValue = useMemo(
-    () => ({
-      getActions,
-      loadDescendents,
-      renderItemEnd,
-      popoverAnchorId,
-      getItems,
-      getProps,
-      isCurrent,
-      canDrop,
-      onSelect: handleSelect,
-    }),
-    [getActions, loadDescendents, renderItemEnd, popoverAnchorId, getItems, getProps, isCurrent, canDrop, handleSelect],
-  );
+    const canDrop = useCallback((source: TreeData, target: TreeData) => {
+      const sourceNode = source.item as Node;
+      const targetNode = target.item as Node;
+      if (isSpace(targetNode.data)) {
+        // TODO(wittjosiah): Find a way to only allow space as source for rearranging.
+        return isEchoObject(sourceNode.data) || isSpace(sourceNode.data);
+      } else if (isEchoObject(targetNode.data)) {
+        return isEchoObject(sourceNode.data);
+      } else {
+        return false;
+      }
+    }, []);
 
-  // TODO(thure): What gives this an inline `overflow: initial`?
-  return (
-    <NavTreeContext.Provider value={navTreeContextValue}>
-      <NavTree root={graph.root} id={graph.root.id} {...props} />
-    </NavTreeContext.Provider>
-  );
-});
+    const handleSelect = useCallback(
+      ({ item: node, path, option }: { item: Node; path: string[]; option: boolean }) => {
+        if (!node.data) {
+          return;
+        }
+
+        if (isAction(node)) {
+          const [parent] = graph.nodes(node, { relation: 'inbound' });
+          void (parent && node.data({ node: parent, caller: NAV_TREE_ITEM }));
+          return;
+        }
+
+        const current = isCurrent(path, node);
+        if (!current) {
+          void dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [node.id] } }));
+        } else if (option) {
+          void dispatch(createIntent(NavigationAction.Close, { activeParts: { main: [node.id] } }));
+        } else {
+          void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: node.id }));
+        }
+
+        const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
+        if (isAction(defaultAction)) {
+          void (defaultAction.data as () => void)();
+        }
+
+        if (!isLg) {
+          closeNavigationSidebar();
+        }
+      },
+      [graph, dispatch, isCurrent, isLg, closeNavigationSidebar],
+    );
+
+    // TODO(wittjosiah): Factor out hook.
+    useEffect(() => {
+      return monitorForElements({
+        canMonitor: ({ source }) => isTreeData(source.data),
+        onDrop: ({ location, source }) => {
+          // Didn't drop on anything.
+          if (!location.current.dropTargets.length) {
+            return;
+          }
+          const target = location.current.dropTargets[0];
+          const instruction: Instruction | null = extractInstruction(target.data);
+          if (instruction !== null && instruction.type !== 'instruction-blocked') {
+            const sourceNode = source.data.item as NavTreeItemGraphNode;
+            const targetNode = target.data.item as NavTreeItemGraphNode;
+            const sourcePath = source.data.path as string[];
+            const targetPath = target.data.path as string[];
+            const operation =
+              sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
+                ? 'rearrange'
+                : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
+            const sourceParent = getParent(graph, sourceNode, sourcePath);
+            const targetParent = getParent(graph, targetNode, targetPath);
+            const sourceItems = getItems(sourceParent);
+            const targetItems = getItems(targetParent);
+            const sourceIndex = sourceItems.findIndex(({ id }) => id === sourceNode.id);
+            const targetIndex = targetItems.findIndex(({ id }) => id === targetNode.id);
+            const migrationIndex =
+              instruction.type === 'make-child'
+                ? undefined
+                : instruction.type === 'reorder-below'
+                  ? targetIndex + 1
+                  : targetIndex;
+            switch (operation) {
+              case 'rearrange': {
+                const nextItems = sourceItems.map(({ data }) => data);
+                arrayMove(nextItems, sourceIndex, targetIndex);
+                void sourceParent?.properties.onRearrangeChildren?.(nextItems);
+                break;
+              }
+              case 'copy': {
+                const target = instruction.type === 'make-child' ? targetNode : targetParent;
+                void target?.properties.onCopy?.(sourceNode, migrationIndex);
+                break;
+              }
+              case 'transfer': {
+                const target = instruction.type === 'make-child' ? targetNode : targetParent;
+                if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
+                  break;
+                }
+                void target?.properties.onTransferStart(sourceNode, migrationIndex);
+                void sourceParent?.properties.onTransferEnd?.(sourceNode, target);
+                break;
+              }
+            }
+          }
+        },
+      });
+    }, [graph]);
+
+    const navTreeContextValue = useMemo(
+      () => ({
+        getActions,
+        loadDescendents,
+        renderItemEnd,
+        popoverAnchorId,
+        getItems,
+        getProps,
+        isCurrent,
+        isOpen,
+        onOpenChange,
+        canDrop,
+        onSelect: handleSelect,
+      }),
+      [
+        getActions,
+        loadDescendents,
+        renderItemEnd,
+        popoverAnchorId,
+        getItems,
+        getProps,
+        isCurrent,
+        isOpen,
+        onOpenChange,
+        canDrop,
+        handleSelect,
+      ],
+    );
+
+    // TODO(thure): What gives this an inline `overflow: initial`?
+    return (
+      <NavTreeContext.Provider value={navTreeContextValue}>
+        <NavTree root={graph.root} id={graph.root.id} {...props} />
+      </NavTreeContext.Provider>
+    );
+  },
+);
