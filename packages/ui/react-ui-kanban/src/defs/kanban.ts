@@ -25,7 +25,9 @@ export const KanbanSchema = S.Struct({
    * finds regardless.
    */
   arrangement: S.optional(
-    S.Array(S.Struct({ columnValue: S.String, ids: S.Array(ObjectId), hidden: S.optional(S.Boolean) })),
+    S.Array(
+      S.Struct({ columnValue: S.String, ids: S.Array(ObjectId), hidden: S.optional(S.Boolean) }).pipe(S.mutable),
+    ).pipe(S.mutable),
   ),
   // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
   threads: S.optional(S.Array(Ref(ThreadType))),
