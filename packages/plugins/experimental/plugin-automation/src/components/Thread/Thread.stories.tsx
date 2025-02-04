@@ -25,7 +25,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
     const message: Message = {
       id: ObjectId.random(),
       role: 'assistant',
-      blocks: [
+      content: [
         {
           type: 'text',
           text: '',
@@ -34,7 +34,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
     };
 
     const i = setInterval(() => {
-      const block = message.blocks[0];
+      const block = message.content[0];
       invariant(block.type === 'text');
       block.text += ' ' + faker.lorem.word();
       setMessages([..._messages, message]);
@@ -70,7 +70,7 @@ export const Default: Story = {
       {
         id: ObjectId.random(),
         role: 'user',
-        blocks: [
+        content: [
           {
             type: 'text',
             text: 'hello',

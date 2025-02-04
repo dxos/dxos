@@ -78,7 +78,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       spaceId: contextSpaceId!,
       threadId: threadId!,
       role: 'user',
-      blocks: [{ type: 'text', text: input }],
+      content: [{ type: 'text', text: input }],
     };
     await aiClient.current.appendMessages([userMessage]);
     setHistory([...history, userMessage]);
@@ -168,7 +168,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
 };
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
-  const { id: _, role, blocks: content } = message;
+  const { id: _, role, content } = message;
   const styleContainer = 'flex flex-col overflow-x-hidden overflow-y-auto rounded-md gap-2 divide-y divide-separator';
 
   return (

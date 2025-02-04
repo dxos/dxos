@@ -32,7 +32,7 @@ describe.skip('AI Service Client', () => {
         spaceId,
         threadId,
         role: 'user',
-        blocks: [{ type: 'text', text: 'Hello' }],
+        content: [{ type: 'text', text: 'Hello' }],
       },
     ]);
 
@@ -76,7 +76,7 @@ describe.skip('AI Service Client', () => {
         spaceId,
         threadId,
         role: 'user',
-        blocks: [{ type: 'text', text: 'What is the password? Ask the custodian' }],
+        content: [{ type: 'text', text: 'What is the password? Ask the custodian' }],
       },
     ]);
 
@@ -94,7 +94,7 @@ describe.skip('AI Service Client', () => {
     log('full message', { message });
     await client.appendMessages([message]);
 
-    const toolUse = message.blocks.find(({ type }) => type === 'tool_use')!;
+    const toolUse = message.content.find(({ type }) => type === 'tool_use')!;
     invariant(toolUse.type === 'tool_use');
     await client.appendMessages([
       {
@@ -102,7 +102,7 @@ describe.skip('AI Service Client', () => {
         spaceId,
         threadId,
         role: 'user',
-        blocks: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is gray"' }],
+        content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is gray"' }],
       },
     ]);
 
@@ -134,7 +134,7 @@ describe.skip('AI Service Client', () => {
         spaceId,
         threadId,
         role: 'user',
-        blocks: [{ type: 'text', text: 'Generate an image of a cat' }],
+        content: [{ type: 'text', text: 'Generate an image of a cat' }],
       },
     ]);
 

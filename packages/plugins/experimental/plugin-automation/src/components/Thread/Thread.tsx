@@ -67,7 +67,7 @@ export const Thread = ({ messages, streaming, onSubmit }: ThreadProps) => {
           <Input.TextInput
             autoFocus
             classNames='px-2 bg-base rounded'
-            placeholder='Ask a question'
+            placeholder='Ask a question...'
             value={text}
             onChange={(ev) => setText(ev.target.value)}
             onKeyDown={handleKeyDown}
@@ -92,7 +92,7 @@ export const ThreadMessage = ({ classNames, message }: ThreadMessageProps) => {
     return <div className={mx(classNames)}>{message}</div>;
   }
 
-  const { role, blocks: content } = message;
+  const { role, content = [] } = message;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div

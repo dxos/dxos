@@ -147,13 +147,13 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
       case 'content_block_start': {
         invariant(this._accumulatedMessage);
-        this._accumulatedMessage.blocks.push(event.content);
+        this._accumulatedMessage.content.push(event.content);
         break;
       }
 
       case 'content_block_delta': {
         invariant(this._accumulatedMessage);
-        const snapshotContent = this._accumulatedMessage.blocks.at(event.index);
+        const snapshotContent = this._accumulatedMessage.content.at(event.index);
         if (snapshotContent?.type === 'text' && event.delta.type === 'text_delta') {
           snapshotContent.text += event.delta.text;
         } else if (snapshotContent?.type === 'tool_use' && event.delta.type === 'input_json_delta') {
@@ -170,7 +170,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
       case 'content_block_stop': {
         invariant(this._accumulatedMessage);
-        const lastBlock = this._accumulatedMessage.blocks.at(-1);
+        const lastBlock = this._accumulatedMessage.content.at(-1);
         if (lastBlock?.type === 'tool_use') {
           lastBlock.input =
             lastBlock.inputJson == null || lastBlock.inputJson === '' ? {} : JSON.parse(lastBlock.inputJson ?? '');

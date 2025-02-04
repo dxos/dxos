@@ -75,7 +75,7 @@ export class ChatProcessor {
     this._pending.value = [
       createStatic(Message, {
         role: 'user',
-        blocks: [{ type: 'text', text: message }],
+        content: [{ type: 'text', text: message }],
       }),
     ];
     this._streaming.value = [];

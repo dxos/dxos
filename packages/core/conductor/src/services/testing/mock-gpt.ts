@@ -39,7 +39,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
 
   public invoke(inputs: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
-      const { systemPrompt, prompt, history = [] } = yield* unwrapValueBag(inputs);
+      const { prompt } = yield* unwrapValueBag(inputs);
       const response = this.config.responses[prompt] || this.config.responses.default;
 
       let onDone!: () => void;
@@ -55,7 +55,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
         (err) => new Error(String(err)),
       );
 
-      const [stream1, stream2] = yield* Stream.broadcast(tokenStream, 2, { capacity: 'unbounded' });
+      const [stream1] = yield* Stream.broadcast(tokenStream, 2, { capacity: 'unbounded' });
 
       const text = Effect.promise(() => textResult);
       log.info('text in gpt', { text: getDebugName(text) });
@@ -66,12 +66,12 @@ export class MockGpt implements Context.Tag.Service<GptService> {
           {
             id: ObjectId.random(),
             role: 'user',
-            blocks: [{ type: 'text', text: prompt }],
+            content: [{ type: 'text', text: prompt }],
           },
           {
             id: ObjectId.random(),
             role: 'assistant',
-            blocks: [{ type: 'text', text: response }],
+            content: [{ type: 'text', text: response }],
           },
         ]),
         tokenStream: Effect.succeed(stream1),
@@ -96,7 +96,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
       message: {
         id: ObjectId.random(),
         role: 'assistant',
-        blocks: [],
+        content: [],
       },
     };
     yield {

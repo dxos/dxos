@@ -26,7 +26,7 @@ export const Ball = ({ active, classNames }: BallProps) => (
   <AnimatePresence>
     <motion.div
       className={mx('flex shrink-0 w-5 h-5 bg-primary-500', classNames)}
-      transition={{ ease: 'linear', duration: 4, repeat: Infinity }}
+      transition={{ ease: 'linear', duration: 3, repeat: Infinity }}
       initial={{
         scale: 0.9,
         rotate: 0,

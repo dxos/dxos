@@ -142,7 +142,8 @@ const MessageSchema = S.Struct({
   /**
    * Content blocks.
    */
-  blocks: S.Array(MessageContentBlock).pipe(S.mutable),
+  // TODO(burdon): Rename to blocks.
+  content: S.Array(MessageContentBlock).pipe(S.mutable),
 });
 
 /**
@@ -157,5 +158,5 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   spaceId,
   threadId,
   role: 'user',
-  blocks: [{ type: 'text', text }],
+  content: [{ type: 'text', text }],
 });

@@ -14,7 +14,7 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   spaceId,
   threadId,
   role: 'user',
-  blocks: [{ type: 'text', text }],
+  content: [{ type: 'text', text }],
 });
 
 /**
