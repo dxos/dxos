@@ -8,7 +8,7 @@ import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
 import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
-import { VideoSrcObject } from './VideoSrcObject';
+import { VideoObject } from './VideoObject';
 import { useRoomContext, useSubscribedState } from './hooks';
 import { cn } from './utils';
 
@@ -38,6 +38,7 @@ const useMid = (track?: MediaStreamTrack) => {
   if (!track) {
     return null;
   }
+
   return transceivers.find((t) => t.sender.track === track || t.receiver.track === track)?.mid;
 };
 
@@ -70,19 +71,12 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     const videoMid = useMid(videoTrack);
 
     return (
-      <div className='grow shrink text-base basis-[calc(var(--flex-container-width)_-_var(--gap)_*_3)]' ref={ref}>
+      <div className='flex aspect-video relative' ref={ref}>
         <Flipped flipId={flipId + pinned}>
-          <div
-            className={cn(
-              'h-full mx-auto overflow-hidden text-white animate-fadeIn',
-              pinned
-                ? 'absolute inset-0 h-full w-full z-10 rounded-none bg-black'
-                : 'relative max-w-[--participant-max-width] rounded-xl',
-            )}
-          >
-            <VideoSrcObject
+          <div className={cn('w-full h-full mx-auto overflow-hidden text-white animate-fadeIn')}>
+            <VideoObject
               className={cn(
-                'absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity',
+                'absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity',
                 isSelf && !isScreenShare && '-scale-x-100',
                 {
                   'opacity-100': isScreenShare
@@ -93,13 +87,15 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
               )}
               videoTrack={videoTrack}
             />
+
             {user.name && (
-              <div className='flex items-center gap-2 absolute m-2 text-shadow left-1 bottom-1 leading-none noopener noreferrer'>
+              <div className='absolute m-0.5 flex items-center bg-black text-white p-1 gap-2 text-shadow left-1 bottom-1 leading-none noopener noreferrer'>
                 {user.name}
               </div>
             )}
+
             {showDebugInfo && (
-              <span className='m-2 absolute text-black bg-white opacity-50'>
+              <span className='m-2 absolute opacity-50'>
                 {[
                   `video mid: ${videoMid}`,
                   `audio mid: ${audioMid}`,
@@ -108,12 +104,10 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
                 ].join(' | ')}
               </span>
             )}
+
             {(user.speaking || user.raisedHand) && (
               <div
-                className={cn(
-                  'pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400',
-                  !pinned && 'rounded-xl',
-                )}
+                className={cn('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}
               ></div>
             )}
           </div>

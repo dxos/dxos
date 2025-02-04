@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 
 import { useRoomContext } from './hooks';
 
@@ -17,13 +16,13 @@ export const CameraButton = () => {
 
   return (
     <Button
-      variant={videoEnabled ? 'default' : 'destructive'}
+      variant={videoEnabled ? 'default' : undefined}
       onClick={() => {
         videoEnabled ? turnCameraOff() : turnCameraOn();
       }}
     >
       <VisuallyHidden>{videoEnabled ? 'Turn camera off' : 'Turn camera on'}</VisuallyHidden>
-      {videoEnabled ? <VideoCamera /> : <VideoCameraSlash />}
+      <Icon icon={videoEnabled ? 'ph--video-camera--regular' : 'ph--video-camera-slash--regular'} />
     </Button>
   );
 };

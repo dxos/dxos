@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { PhoneX } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
 import { useNavigate } from 'react-router-dom';
 import { useMeasure, useMount } from 'react-use';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon, Toolbar, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { CameraButton } from './CameraButton';
@@ -18,11 +18,6 @@ import { Participant } from './Participant';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
 import { useRoomContext, useBroadcastStatus } from './hooks';
-import { calculateLayout } from './utils';
-
-export const Room = () => {
-  return <JoinedRoom />;
-};
 
 export const useDebugEnabled = () => {
   const [enabled, setEnabled] = useState(false);
@@ -44,7 +39,11 @@ export const useDebugEnabled = () => {
   return enabled;
 };
 
-const JoinedRoom = () => {
+export const Room = ({ classNames }: ThemedClassName) => {
+  return <JoinedRoom classNames={classNames} />;
+};
+
+const JoinedRoom = ({ classNames }: ThemedClassName) => {
   const {
     userMedia,
     peer,
@@ -75,90 +74,71 @@ const JoinedRoom = () => {
 
   const [pinnedId, setPinnedId] = useState<string>();
 
-  const flexContainerWidth = useMemo(
-    () =>
-      100 /
-        calculateLayout({
-          count: totalUsers,
-          height: containerHeight,
-          width: containerWidth,
-        }).cols +
-      '%',
-    [totalUsers, containerHeight, containerWidth],
-  );
   const navigate = useNavigate();
 
   return (
-    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(nonNullable)}>
-      <div className='flex flex-col h-full'>
-        <Flipper flipKey={totalUsers} className='relative flex-grow overflow-hidden isolate'>
-          <div
-            className='absolute inset-0 h-full w-full isolate flex flex-wrap justify-around'
-            style={
-              {
-                '--gap': '1rem',
-                // the flex basis that is needed to achieve row layout
-                '--flex-container-width': flexContainerWidth,
-                // the size of the first user's flex container
-                '--participant-max-width': firstFlexChildWidth + 'px',
-              } as any
-            }
-            ref={containerRef}
-          >
-            {identity && userMedia.audioStreamTrack && (
-              <Participant
-                ref={firstFlexChildRef}
-                flipId={'identity user'}
-                user={identity}
-                isSelf
-                videoTrack={userMedia.videoStreamTrack}
-                audioTrack={userMedia.audioStreamTrack}
-                pinnedId={pinnedId}
-                setPinnedId={setPinnedId}
-                showDebugInfo={debugEnabled}
-              />
-            )}
+    <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks.audio).filter(nonNullable)}>
+      <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+        <div className='flex flex-col h-full justify-center overflow-y-scroll'>
+          <Flipper flipKey={totalUsers} className='flex flex-col'>
+            <div
+              className='flex flex-col shrink-0 border-y border-separator divide-y divide-separator'
+              ref={containerRef}
+            >
+              {identity && userMedia.audioStreamTrack && (
+                <Participant
+                  ref={firstFlexChildRef}
+                  flipId={'identity user'}
+                  user={identity}
+                  isSelf
+                  videoTrack={userMedia.videoStreamTrack}
+                  audioTrack={userMedia.audioStreamTrack}
+                  pinnedId={pinnedId}
+                  setPinnedId={setPinnedId}
+                  showDebugInfo={debugEnabled}
+                />
+              )}
 
-            {otherUsers.map(
-              (user) =>
-                user.joined && (
-                  <Fragment key={user.id}>
-                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
-                      {({ videoTrack, audioTrack }) => (
-                        <Participant
-                          user={user}
-                          flipId={user.id}
-                          videoTrack={videoTrack}
-                          audioTrack={audioTrack}
-                          pinnedId={pinnedId}
-                          setPinnedId={setPinnedId}
-                          showDebugInfo={debugEnabled}
-                        ></Participant>
-                      )}
-                    </PullVideoTrack>
-                    {user.tracks.screenshare && user.tracks.screenShareEnabled && (
-                      <PullVideoTrack video={user.tracks.screenshare}>
-                        {({ videoTrack }) => (
+              {otherUsers.map(
+                (user) =>
+                  user.joined && (
+                    <Fragment key={user.id}>
+                      <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
+                        {({ videoTrack, audioTrack }) => (
                           <Participant
                             user={user}
+                            flipId={user.id}
                             videoTrack={videoTrack}
-                            flipId={user.id + 'screenshare'}
-                            isScreenShare
+                            audioTrack={audioTrack}
                             pinnedId={pinnedId}
                             setPinnedId={setPinnedId}
                             showDebugInfo={debugEnabled}
-                          />
+                          ></Participant>
                         )}
                       </PullVideoTrack>
-                    )}
-                  </Fragment>
-                ),
-            )}
-          </div>
-        </Flipper>
-        <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>
-          <MicButton />
-          <CameraButton />
+                      {user.tracks.screenshare && user.tracks.screenShareEnabled && (
+                        <PullVideoTrack video={user.tracks.screenshare}>
+                          {({ videoTrack }) => (
+                            <Participant
+                              user={user}
+                              videoTrack={videoTrack}
+                              flipId={user.id + 'screenshare'}
+                              isScreenShare
+                              pinnedId={pinnedId}
+                              setPinnedId={setPinnedId}
+                              showDebugInfo={debugEnabled}
+                            />
+                          )}
+                        </PullVideoTrack>
+                      )}
+                    </Fragment>
+                  ),
+              )}
+            </div>
+          </Flipper>
+        </div>
+
+        <Toolbar.Root>
           <Button
             variant='destructive'
             onClick={() => {
@@ -166,9 +146,12 @@ const JoinedRoom = () => {
             }}
           >
             <VisuallyHidden>Leave</VisuallyHidden>
-            <PhoneX />
+            <Icon icon={'ph--phone-x--regular'} />
           </Button>
-        </div>
+          <div className='grow'></div>
+          <MicButton />
+          <CameraButton />
+        </Toolbar.Root>
       </div>
     </PullAudioTracks>
   );

@@ -4,12 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
-import type { VideoSrcObjectProps } from './VideoSrcObject';
-import { VideoSrcObject } from './VideoSrcObject';
+import { VideoObject, type VideoObjectProps } from './VideoObject';
 import { cn } from './utils';
 
-export const SelfView = forwardRef<HTMLVideoElement, VideoSrcObjectProps>(({ className, ...rest }, ref) => (
-  <VideoSrcObject className={cn('-scale-x-100', className)} muted {...rest} ref={ref} />
+export const SelfView = forwardRef<HTMLVideoElement, VideoObjectProps>(({ className, ...rest }, ref) => (
+  <VideoObject className={cn('-scale-x-100', className)} muted {...rest} ref={ref} />
 ));
 
 SelfView.displayName = 'SelfView';

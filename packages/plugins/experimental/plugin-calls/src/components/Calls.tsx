@@ -16,11 +16,11 @@ const Routes = () => {
   return useRouterRoutes([
     {
       path: '/',
-      element: <Lobby />,
+      element: <Lobby classNames='w-96' />,
     },
     {
       path: '/room',
-      element: <Room />,
+      element: <Room classNames='w-96' />,
     },
   ]);
 };

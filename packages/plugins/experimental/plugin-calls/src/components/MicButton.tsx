@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Microphone, MicrophoneSlash } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 
 import { useRoomContext } from './hooks';
 
@@ -17,13 +16,13 @@ export const MicButton = () => {
 
   return (
     <Button
-      variant={audioEnabled ? 'default' : 'destructive'}
+      variant={audioEnabled ? 'default' : undefined}
       onClick={() => {
         audioEnabled ? turnMicOff() : turnMicOn();
       }}
     >
       <VisuallyHidden>{audioEnabled ? 'Turn mic off' : 'Turn mic on'}</VisuallyHidden>
-      {audioEnabled ? <Microphone /> : <MicrophoneSlash />}
+      <Icon icon={audioEnabled ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'} />
     </Button>
   );
 };
