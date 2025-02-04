@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BehaviorSubject, type Observable } from 'rxjs';
 
 /**
- * Return a stable reference to a POJO that might be created on every new render.
+ * Returns a stable reference to a POJO that might be created on every new render.
  */
 export const useStablePojo = <T>(value: T): T => {
   const jsonString = JSON.stringify(value);
@@ -26,6 +26,7 @@ export const useObservableEffect = <T>(observable: Observable<T>, fn: (value: T)
     const subscription = observable.subscribe((v) => {
       fnRef.current(v);
     });
+
     return () => {
       subscription.unsubscribe();
     };
@@ -33,8 +34,8 @@ export const useObservableEffect = <T>(observable: Observable<T>, fn: (value: T)
 };
 
 /**
- * Turns a value into a stable observable that will emit new
- * values when the value changes, and completes upon unmounting.
+ * Turns a value into a stable observable that will emit new values when the value changes,
+ * and completes upon unmounting.
  */
 export const useStateObservable = <T>(value: T) => {
   const ref = useRef<BehaviorSubject<T> | undefined>(new BehaviorSubject<T>(value));

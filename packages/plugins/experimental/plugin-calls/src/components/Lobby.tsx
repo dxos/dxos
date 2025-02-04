@@ -20,7 +20,7 @@ export const Lobby = ({ classNames }: ThemedClassName) => {
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
 
-  const joinedUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((u) => u.name)).size;
+  const joinedUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
     <div className={mx('flex flex-col h-full', classNames)}>
@@ -51,3 +51,5 @@ export const Lobby = ({ classNames }: ThemedClassName) => {
     </div>
   );
 };
+
+Lobby.displayName = 'Lobby';

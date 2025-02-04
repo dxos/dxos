@@ -47,7 +47,7 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
     dataSaverMode,
     pushedTracks,
     setJoined,
-    room: { otherUsers: otherUsers, updateUserState, identity },
+    room: { otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
   useMount(() => {
@@ -133,3 +133,5 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
     </PullAudioTracks>
   );
 };
+
+JoinedRoom.displayName = 'JoinedRoom';

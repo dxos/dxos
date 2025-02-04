@@ -12,18 +12,6 @@ import { VideoObject } from './VideoObject';
 import { useRoomContext, useSubscribedState } from '../hooks';
 import { type UserState } from '../types';
 
-interface Props {
-  flipId: string;
-  isScreenShare?: boolean;
-  user: UserState;
-  audioTrack?: MediaStreamTrack;
-  videoTrack?: MediaStreamTrack;
-  isSelf?: boolean;
-  pinnedId?: string;
-  setPinnedId: (id?: string) => void;
-  showDebugInfo?: boolean;
-}
-
 const useMid = (track?: MediaStreamTrack) => {
   const { peer } = useRoomContext();
   const transceivers$ = useMemo(
@@ -42,15 +30,27 @@ const useMid = (track?: MediaStreamTrack) => {
   return transceivers.find((t) => t.sender.track === track || t.receiver.track === track)?.mid;
 };
 
-export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div'] & Props>(
+export type ParticipantProps = {
+  flipId: string;
+  user: UserState;
+  audioTrack?: MediaStreamTrack;
+  videoTrack?: MediaStreamTrack;
+  isScreenShare?: boolean;
+  isSelf?: boolean;
+  pinnedId?: string;
+  setPinnedId: (id?: string) => void;
+  showDebugInfo?: boolean;
+};
+
+export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
   (
     {
       videoTrack,
       audioTrack,
-      isSelf = false,
       flipId,
       user,
       isScreenShare = false,
+      isSelf = false,
       pinnedId,
       setPinnedId,
       showDebugInfo = false,
@@ -58,7 +58,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     ref,
   ) => {
     const pinned = flipId === pinnedId;
-
     useEffect(() => {
       if (isScreenShare) {
         setPinnedId(flipId);
@@ -97,6 +96,7 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
               </span>
             )}
 
+            {/* TODO(burdon): How is this triggered? */}
             {(user.speaking || user.raisedHand) && (
               <div
                 className={mx('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}
@@ -109,4 +109,4 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
   },
 );
 
-Participant.displayName = 'CallGridChild';
+Participant.displayName = 'Participant';
