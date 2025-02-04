@@ -8976,6 +8976,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../experimental/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../experimental/assistant
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -9043,6 +9049,9 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
       react:
         specifier: ~18.2.0
         version: 18.2.0

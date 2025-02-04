@@ -17,7 +17,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { IntentResolver, ReactSurface, Artifact } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -68,5 +68,10 @@ export const TablePlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact`,
+      activatesOn: Events.Startup,
+      activate: Artifact,
     }),
   ]);
