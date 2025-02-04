@@ -15,10 +15,13 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const [cardSchema, setCardSchema] = useState<EchoSchema>();
   const space = getSpace(kanban);
   useEffect(() => {
-    if (kanban.cardView && space) {
-      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView.target!.query.type));
+    if (kanban.cardView?.target?.query?.type && space) {
+      const [schema] = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type }).runSync();
+      if (schema) {
+        setCardSchema(schema);
+      }
     }
-  }, [kanban.cardView, space]);
+  }, [kanban.cardView?.target?.query, space]);
 
   const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
