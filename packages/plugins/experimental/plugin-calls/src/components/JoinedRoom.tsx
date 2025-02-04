@@ -6,7 +6,6 @@ import { PhoneX } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
-import { useNavigate } from 'react-router-dom';
 import { useMeasure, useMount } from 'react-use';
 
 import { Button } from '@dxos/react-ui';
@@ -47,6 +46,7 @@ export const JoinedRoom = () => {
     peer,
     dataSaverMode,
     pushedTracks,
+    setJoined,
     room: { otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
@@ -83,10 +83,9 @@ export const JoinedRoom = () => {
       '%',
     [totalUsers, containerHeight, containerWidth],
   );
-  const navigate = useNavigate();
 
   return (
-    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(nonNullable)}>
+    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks?.audio).filter(nonNullable)}>
       <div className='flex flex-col h-full bg-white dark:bg-zinc-800'>
         <Flipper flipKey={totalUsers} className='relative flex-grow overflow-hidden isolate'>
           <div
@@ -120,11 +119,11 @@ export const JoinedRoom = () => {
               (user) =>
                 user.joined && (
                   <Fragment key={user.id}>
-                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
+                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks?.video} audio={user.tracks?.audio}>
                       {({ videoTrack, audioTrack }) => (
                         <Participant
                           user={user}
-                          flipId={user.id}
+                          flipId={user.id!}
                           videoTrack={videoTrack}
                           audioTrack={audioTrack}
                           pinnedId={pinnedId}
@@ -133,8 +132,8 @@ export const JoinedRoom = () => {
                         ></Participant>
                       )}
                     </PullVideoTrack>
-                    {user.tracks.screenshare && user.tracks.screenShareEnabled && (
-                      <PullVideoTrack video={user.tracks.screenshare}>
+                    {user.tracks?.screenshare && user.tracks?.screenShareEnabled && (
+                      <PullVideoTrack video={user.tracks?.screenshare}>
                         {({ videoTrack }) => (
                           <Participant
                             user={user}
@@ -156,12 +155,7 @@ export const JoinedRoom = () => {
         <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>
           <MicButton />
           <CameraButton />
-          <Button
-            variant='destructive'
-            onClick={() => {
-              navigate('/');
-            }}
-          >
+          <Button variant='destructive' onClick={() => setJoined(false)}>
             <VisuallyHidden>Leave</VisuallyHidden>
             <PhoneX />
           </Button>

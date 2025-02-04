@@ -16,6 +16,9 @@
       "@dxos/plugin-calls": [
         "packages/plugins/experimental/plugin-calls/src/index.ts"
       ],
+      "@dxos/plugin-calls/types": [
+        "packages/plugins/experimental/plugin-calls/src/types/index.ts"
+      ],
       "@dxos/plugin-canvas": [
         "packages/plugins/experimental/plugin-canvas/src/index.ts"
       ],
