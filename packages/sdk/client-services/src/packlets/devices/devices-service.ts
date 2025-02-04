@@ -3,7 +3,7 @@
 //
 
 import { EventSubscriptions } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import {

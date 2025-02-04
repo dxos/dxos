@@ -36,6 +36,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._arrangement.value = this._computeArrangement();
   }
 
+  /**
+   * @reactive Gets the current items.
+   */
   get items() {
     return this._items.value;
   }
@@ -49,23 +52,22 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return this._cardSchema;
   }
 
+  /**
+   * @reactive Gets the current arrangement of kanban items.
+   */
   get arrangement() {
     return this._arrangement.value;
   }
 
   public addEmptyColumn(columnValue: string) {
-    // TODO(thure): Fix readonly.
-    // @ts-ignore
     this._kanban.arrangement ??= [];
-    // @ts-ignore
     this._kanban.arrangement.push({ columnValue, ids: [] });
     this._arrangement.value = this._computeArrangement();
   }
 
   public removeColumnFromArrangement(columnValue: string) {
     const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
-    if (this._kanban.arrangement && Number.isFinite(columnIndex) && columnIndex! >= 0) {
-      // @ts-ignore
+    if (this._kanban.arrangement && columnIndex !== undefined && Number.isFinite(columnIndex) && columnIndex >= 0) {
       this._kanban.arrangement.splice(columnIndex, 1);
       this._arrangement.value = this._computeArrangement();
     }

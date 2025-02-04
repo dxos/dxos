@@ -96,9 +96,49 @@ const RootAttentionProvider = ({
     }
   };
 
+  // NOTE(thure): Use the following to debug the macOS package issue #8540
+
+  // const [startEl, setStartEl] = useState<HTMLElement | null>(null);
+  // const [endEl, setEndEl] = useState<HTMLElement | null>(null);
+  //
+  // const handleEventDebug = useCallback((event: any) => {
+  //   console.log(`[${event.type}]`, event.target, event.currentTarget, [event.clientX, event.clientY]);
+  // }, []);
+  //
+  // const handleStartDebug = useCallback(
+  //   (event: any) => {
+  //     setStartEl(event.target);
+  //     handleEventDebug(event);
+  //   },
+  //   [handleEventDebug],
+  // );
+  //
+  // const handleEndDebug = useCallback(
+  //   (event: any) => {
+  //     setEndEl(event.target);
+  //     handleEventDebug(event);
+  //   },
+  //   [handleEventDebug],
+  // );
+  //
+  // const handleClickDebug = useCallback(
+  //   (event: any) => {
+  //     console.log('[click compare]', startEl, endEl, startEl === endEl);
+  //     handleEventDebug(event);
+  //   },
+  //   [startEl, endEl, handleEventDebug],
+  // );
+
   return (
     <AttentionContextProvider attention={attention} path={[]}>
-      <div role='none' className='contents' onFocusCapture={handleFocus}>
+      <div
+        role='none'
+        className='contents'
+        onFocusCapture={handleFocus}
+        // onClick={handleClickDebug}
+        // onMouseDown={handleStartDebug}
+        // onMouseUp={handleEndDebug}
+      >
         {children}
       </div>
     </AttentionContextProvider>

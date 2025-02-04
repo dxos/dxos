@@ -7,7 +7,7 @@
  */
 export { AST, JSONSchema, Schema as S } from '@effect/schema';
 
-export { JsonPath, JsonProp } from '@dxos/effect';
+export { JsonPath, splitJsonPath, JsonProp } from '@dxos/effect';
 
 export * from './ast';
 export * from './formats';
