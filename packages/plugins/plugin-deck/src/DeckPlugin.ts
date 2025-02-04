@@ -21,6 +21,7 @@ import {
   DeckSettings,
   ReactSurface,
   UrlHandler,
+  NavigationTools,
 } from './capabilities';
 import { DeckEvents } from './events';
 import { meta } from './meta';
@@ -119,5 +120,10 @@ export const DeckPlugin = () =>
       id: `${meta.id}/module/navigation-intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: NavigationIntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/navigation-tools`,
+      activatesOn: Events.Startup,
+      activate: NavigationTools,
     }),
   ]);

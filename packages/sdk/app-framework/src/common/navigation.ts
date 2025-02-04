@@ -19,11 +19,11 @@ export type LayoutEntry = S.Schema.Type<typeof LayoutEntrySchema>;
 // TODO(Zan): Consider renaming the 'main' part to 'deck' part now that we are throwing out the old layout plugin.
 // TODO(Zan): Extend to all strings?
 const LayoutPartSchema = S.Union(
-  S.Literal('sidebar'),
-  S.Literal('main'),
-  S.Literal('solo'),
-  S.Literal('complementary'),
-  S.Literal('fullScreen'),
+  S.Literal('sidebar').annotations({ description: 'The primary sidebar.' }),
+  S.Literal('main').annotations({ description: 'The main content area.' }),
+  S.Literal('solo').annotations({ description: 'The solo content area.' }),
+  S.Literal('complementary').annotations({ description: 'The secondary sidebar.' }),
+  S.Literal('fullScreen').annotations({ description: 'Full screen content.' }),
 );
 export type LayoutPart = S.Schema.Type<typeof LayoutPartSchema>;
 
@@ -151,11 +151,16 @@ export namespace NavigationAction {
    */
   export class AddToActive extends S.TaggedClass<AddToActive>()(`${NAVIGATION_ACTION}/add-to-active`, {
     input: S.Struct({
-      id: S.String,
-      part: LayoutPartSchema,
-      scrollIntoView: S.optional(S.Boolean),
-      pivotId: S.optional(S.String),
-      positioning: S.optional(S.Literal('start', 'end')),
+      id: S.String.annotations({ description: 'The ID of the item to add.' }),
+      part: LayoutPartSchema.annotations({ description: 'The part to add the item to.' }),
+      scrollIntoView: S.optional(S.Boolean.annotations({ description: 'Scroll the item into view.' })),
+      pivotId: S.optional(S.String.annotations({ description: 'The ID of the item to place the new item next to.' })),
+      positioning: S.optional(
+        S.Union(
+          S.Literal('start').annotations({ description: 'Place the new item before the pivot item.' }),
+          S.Literal('end').annotations({ description: 'Place the new item after the pivot item.' }),
+        ).annotations({ description: 'The position to place the new item.' }),
+      ),
     }),
     output: S.Void,
   }) {}
