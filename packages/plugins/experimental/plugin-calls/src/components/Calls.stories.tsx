@@ -47,7 +47,6 @@ type Story = StoryObj<typeof Calls>;
 
 export const Default: Story = {
   args: {
-    username: 'User',
     roomId: PublicKey.fromHex(
       '04a1d1911703b8e929d0649021a965767483e9be254b488809946dfa1eb4a3b939a5d78a56495077b00f5c88e8cf8b8ec76ca9c77f19c138b5132c7b325c27e1a8',
     ),

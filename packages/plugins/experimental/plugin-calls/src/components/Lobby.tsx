@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { Button, Icon, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -11,17 +11,16 @@ import { mx } from '@dxos/react-ui-theme';
 import { CameraButton } from './CameraButton';
 import { MicButton } from './MicButton';
 import { SelfView } from './SelfView';
-import { useSubscribedState, useRoomContext } from './hooks';
+import { useSubscribedState, useRoomContext } from '../hooks';
 
 export const Lobby = ({ classNames }: ThemedClassName) => {
   const { roomName } = useParams();
-  const navigate = useNavigate();
   const { setJoined, userMedia, room, peer } = useRoomContext()!;
   const { videoStreamTrack } = userMedia;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
 
-  const joinedUsers = new Set(room.otherUsers.filter((user) => user.tracks.audio).map((u) => u.name)).size;
+  const joinedUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((u) => u.name)).size;
 
   return (
     <div className={mx('flex flex-col h-full', classNames)}>
@@ -41,16 +40,7 @@ export const Lobby = ({ classNames }: ThemedClassName) => {
       <div className='grow' />
       <div className='flex justify-between overflow-hidden'>
         <Toolbar.Root>
-          <Button
-            variant='primary'
-            onClick={() => {
-              setJoined(true);
-              // We navigate here with javascript instead of an a tag because we don't want it to be possible to join
-              // the room without the JS having loaded.
-              navigate('room');
-            }}
-            disabled={!session?.sessionId}
-          >
+          <Button variant='primary' onClick={() => setJoined(true)} disabled={!session?.sessionId}>
             <Icon icon={'ph--phone-incoming--regular'} />
           </Button>
           <div className='grow'></div>

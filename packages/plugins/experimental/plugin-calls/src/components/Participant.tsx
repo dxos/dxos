@@ -6,11 +6,11 @@ import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
-import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
+import { mx } from '@dxos/react-ui-theme';
 
 import { VideoObject } from './VideoObject';
-import { useRoomContext, useSubscribedState } from './hooks';
-import { cn } from './utils';
+import { useRoomContext, useSubscribedState } from '../hooks';
+import { type UserState } from '../types';
 
 interface Props {
   flipId: string;
@@ -57,8 +57,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     },
     ref,
   ) => {
-    const { dataSaverMode } = useRoomContext();
-
     const pinned = flipId === pinnedId;
 
     useEffect(() => {
@@ -73,17 +71,11 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     return (
       <div className='flex aspect-video relative' ref={ref}>
         <Flipped flipId={flipId + pinned}>
-          <div className={cn('w-full h-full mx-auto overflow-hidden text-white animate-fadeIn')}>
+          <div className={mx('w-full h-full mx-auto overflow-hidden text-white animate-fadeIn')}>
             <VideoObject
-              className={cn(
+              className={mx(
                 'absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity',
                 isSelf && !isScreenShare && '-scale-x-100',
-                {
-                  'opacity-100': isScreenShare
-                    ? user.tracks.screenShareEnabled
-                    : user.tracks.videoEnabled && (!dataSaverMode || isSelf),
-                },
-                isSelf && isScreenShare && 'opacity-75',
               )}
               videoTrack={videoTrack}
             />
@@ -107,7 +99,7 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
 
             {(user.speaking || user.raisedHand) && (
               <div
-                className={cn('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}
+                className={mx('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}
               ></div>
             )}
           </div>

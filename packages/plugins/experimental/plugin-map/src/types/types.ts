@@ -4,7 +4,7 @@
 
 import { type LatLngLiteral } from 'leaflet';
 
-import { S } from '@dxos/echo-schema';
+import { GeoPoint, S } from '@dxos/echo-schema';
 
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
@@ -15,6 +15,7 @@ export namespace MapAction {
   export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
+      coordinates: S.optional(GeoPoint),
     }),
     output: S.Struct({
       object: MapType,

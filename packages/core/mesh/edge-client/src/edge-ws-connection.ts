@@ -18,6 +18,11 @@ import { toUint8Array } from './protocol';
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
 
+/**
+ * 1MB websocket message limit: https://developers.cloudflare.com/durable-objects/platform/limits/
+ */
+const CLOUDFLARE_MESSAGE_LENGTH_LIMIT = 1024 * 1024;
+
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
   onMessage: (message: Message) => void;
@@ -48,7 +53,16 @@ export class EdgeWsConnection extends Resource {
   public send(message: Message) {
     invariant(this._ws);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
-    this._ws.send(buf.toBinary(MessageSchema, message));
+    const encoded = buf.toBinary(MessageSchema, message);
+    if (encoded.byteLength >= CLOUDFLARE_MESSAGE_LENGTH_LIMIT) {
+      log.error('edge message dropped due to websocket message limit', {
+        byteLength: encoded.byteLength,
+        serviceId: message.serviceId,
+        payload: protocol.getPayloadType(message),
+      });
+      return;
+    }
+    this._ws.send(encoded);
   }
 
   protected override async _open() {

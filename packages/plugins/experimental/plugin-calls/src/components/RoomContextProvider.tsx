@@ -8,14 +8,15 @@ import { of } from 'rxjs';
 import { type PublicKey } from '@dxos/react-client';
 
 import {
+  RoomContext,
+  type RoomContextType,
   usePeerConnection,
   useStablePojo,
   useStateObservable,
   useSubscribedState,
   useRoom,
   useUserMedia,
-} from './hooks';
-import { RoomContext, type RoomContextType } from './hooks';
+} from '../hooks';
 import { CALLS_URL } from '../types';
 
 // Types for loader function response
@@ -28,19 +29,16 @@ interface RoomData {
 }
 
 interface RoomProps extends RoomData {
-  username: string;
   roomId: PublicKey;
   children: ReactNode;
 }
 
 export const RoomContextProvider = ({
   iceServers,
-  username,
   roomId,
   children,
 }: {
   iceServers: RTCIceServer[];
-  username: string;
   roomId: PublicKey;
   children: ReactNode;
 }): JSX.Element => {
@@ -62,14 +60,13 @@ export const RoomContextProvider = ({
   }
 
   return (
-    <Room roomId={roomId!} {...roomData} username={username}>
+    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30}>
       {children}
     </Room>
   );
 };
 
 const Room = ({
-  username,
   roomId,
   iceServers,
   maxWebcamBitrate,
@@ -81,7 +78,7 @@ const Room = ({
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
   const userMedia = useUserMedia();
-  const room = useRoom({ roomId, username });
+  const room = useRoom({ roomId });
   const { peer, iceConnectionState } = usePeerConnection({
     // apiExtraParams,
     iceServers,

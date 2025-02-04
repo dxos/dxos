@@ -6,8 +6,8 @@ import { type ReactElement, useMemo } from 'react';
 import { of, switchMap } from 'rxjs';
 
 import { usePulledAudioTrack } from './PullAudioTracks';
-import { useRoomContext, useStateObservable, useSubscribedState } from './hooks';
-import { type TrackObject } from './types';
+import { useRoomContext, useStateObservable, useSubscribedState } from '../hooks';
+import { type TrackObject } from '../types';
 
 interface PullTracksProps {
   video?: string;

@@ -5,7 +5,6 @@
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
-import { useNavigate } from 'react-router-dom';
 import { useMeasure, useMount } from 'react-use';
 
 import { Button, Icon, Toolbar, type ThemedClassName } from '@dxos/react-ui';
@@ -17,8 +16,9 @@ import { MicButton } from './MicButton';
 import { Participant } from './Participant';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
-import { useRoomContext, useBroadcastStatus } from './hooks';
+import { useRoomContext, useBroadcastStatus } from '../hooks';
 
+// TODO(burdon): Factor out.
 export const useDebugEnabled = () => {
   const [enabled, setEnabled] = useState(false);
 
@@ -39,23 +39,19 @@ export const useDebugEnabled = () => {
   return enabled;
 };
 
-export const Room = ({ classNames }: ThemedClassName) => {
-  return <JoinedRoom classNames={classNames} />;
-};
-
-const JoinedRoom = ({ classNames }: ThemedClassName) => {
+export const JoinedRoom = ({ classNames }: ThemedClassName) => {
   const {
     userMedia,
     peer,
     dataSaverMode,
     pushedTracks,
+    setJoined,
     room: { otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
   const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
   const [firstFlexChildRef, { width: firstFlexChildWidth }] = useMeasure<HTMLDivElement>();
   const debugEnabled = useDebugEnabled();
-
   const totalUsers = 1 + otherUsers.length;
 
   useMount(() => {
@@ -64,20 +60,11 @@ const JoinedRoom = ({ classNames }: ThemedClassName) => {
     }
   });
 
-  useBroadcastStatus({
-    userMedia,
-    peer,
-    updateUserState,
-    identity,
-    pushedTracks,
-  });
-
+  useBroadcastStatus({ userMedia, peer, updateUserState, pushedTracks });
   const [pinnedId, setPinnedId] = useState<string>();
 
-  const navigate = useNavigate();
-
   return (
-    <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks.audio).filter(nonNullable)}>
+    <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
         <div className='flex flex-col h-full justify-center overflow-y-scroll'>
           <Flipper flipKey={totalUsers} className='flex flex-col'>
@@ -103,11 +90,11 @@ const JoinedRoom = ({ classNames }: ThemedClassName) => {
                 (user) =>
                   user.joined && (
                     <Fragment key={user.id}>
-                      <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
+                      <PullVideoTrack video={dataSaverMode ? undefined : user.tracks?.video} audio={user.tracks?.audio}>
                         {({ videoTrack, audioTrack }) => (
                           <Participant
                             user={user}
-                            flipId={user.id}
+                            flipId={user.id!}
                             videoTrack={videoTrack}
                             audioTrack={audioTrack}
                             pinnedId={pinnedId}
@@ -116,8 +103,8 @@ const JoinedRoom = ({ classNames }: ThemedClassName) => {
                           ></Participant>
                         )}
                       </PullVideoTrack>
-                      {user.tracks.screenshare && user.tracks.screenShareEnabled && (
-                        <PullVideoTrack video={user.tracks.screenshare}>
+                      {user.tracks?.screenshare && user.tracks?.screenShareEnabled && (
+                        <PullVideoTrack video={user.tracks?.screenshare}>
                           {({ videoTrack }) => (
                             <Participant
                               user={user}
@@ -139,12 +126,7 @@ const JoinedRoom = ({ classNames }: ThemedClassName) => {
         </div>
 
         <Toolbar.Root>
-          <Button
-            variant='destructive'
-            onClick={() => {
-              navigate('/');
-            }}
-          >
+          <Button variant='destructive' onClick={() => setJoined(false)}>
             <VisuallyHidden>Leave</VisuallyHidden>
             <Icon icon={'ph--phone-x--regular'} />
           </Button>

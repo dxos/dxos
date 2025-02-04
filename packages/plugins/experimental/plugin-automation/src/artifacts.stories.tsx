@@ -35,19 +35,17 @@ type RenderProps = {
 };
 
 const Render = ({ items: _items }: RenderProps) => {
-  const artifacts = useCapabilities(Capabilities.Artifact);
+  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Configuration.
   const tools = useMemo<Tool[]>(
     () => [
       // prettier-ignore
       ...genericTools,
-      ...artifacts.flatMap((artifact) => artifact.tools),
+      ...artifactDefinitions.flatMap((definition) => definition.tools),
     ],
-    [genericTools, artifacts],
+    [genericTools, artifactDefinitions],
   );
-
-  console.log({ artifacts, tools });
 
   // TODO(burdon): Common naming/packaging.
   const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
@@ -73,8 +71,14 @@ const Render = ({ items: _items }: RenderProps) => {
 
   // TODO(burdon): Create hook.
   const processor = useMemo(
-    () => new ChatProcessor(aiClient, tools, { artifacts: artifactsContext }, createProcessorOptions(artifacts)),
-    [aiClient, tools, artifactsContext, artifacts],
+    () =>
+      new ChatProcessor(
+        aiClient,
+        tools,
+        { artifacts: artifactsContext },
+        createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
+      ),
+    [aiClient, tools, artifactsContext, artifactDefinitions],
   );
 
   // State.

@@ -21,7 +21,6 @@ export const useUserMedia = () => {
   const endScreenShare = () => setScreenShareEnabled(false);
 
   const videoEnabled$ = useStateObservable(videoEnabled);
-
   const videoTrack$ = useMemo(
     () =>
       videoEnabled$.pipe(

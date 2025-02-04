@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
 
-import { useRoomContext } from './hooks';
+import { useRoomContext } from '../hooks';
 
 export const MicButton = () => {
   const {

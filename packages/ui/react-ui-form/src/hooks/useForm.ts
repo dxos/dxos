@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type BaseObject, type PropertyKey, getValue, setValue } from '@dxos/echo-schema';
-import { type SimpleType, type S, type JsonPath, AST } from '@dxos/effect';
+import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
+import { AST, type S, type SimpleType, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
@@ -20,9 +20,9 @@ export type FormHandler<T extends BaseObject> = {
   //
 
   values: Partial<T>;
-  errors: Record<PropertyKey<T>, string>;
-  touched: Record<PropertyKey<T>, boolean>;
-  changed: Record<PropertyKey<T>, boolean>;
+  errors: Record<JsonPath, string>;
+  touched: Record<JsonPath, boolean>;
+  changed: Record<JsonPath, boolean>;
   canSave: boolean;
   handleSave: () => void;
 
@@ -30,10 +30,10 @@ export type FormHandler<T extends BaseObject> = {
   // Form input component helpers.
   //
 
-  getStatus: (property: PropertyKey<T>) => { status?: 'error'; error?: string };
-  getValue: <V>(property: PropertyKey<T>) => V | undefined;
-  onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;
-  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  getStatus: (path: string | (string | number)[]) => { status?: 'error'; error?: string };
+  getValue: <V>(path: (string | number)[]) => V | undefined;
+  onValueChange: <V>(path: (string | number)[], type: SimpleType, value: V) => void;
+  onTouched: (path: (string | number)[]) => void;
 };
 
 /**
@@ -95,9 +95,9 @@ export const useForm = <T extends BaseObject>({
     setValues(initialValues);
   }, [initialValues]);
 
-  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
+  const [touched, setTouched] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
+  const [changed, setChanged] = useState<Record<JsonPath, boolean>>(createKeySet(initialValues, false));
+  const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
 
   //
@@ -137,8 +137,15 @@ export const useForm = <T extends BaseObject>({
   const canSave = useMemo(
     () =>
       !saving &&
-      Object.keys(values).every((property) => touched[property as JsonPath] === false || !errors[property as JsonPath]),
-    [values, touched, errors, saving],
+      // Check if any error paths that are touched have errors
+      !Object.entries(touched).some(
+        ([path, isTouched]) =>
+          isTouched &&
+          Object.keys(errors).some(
+            (errorPath) => errorPath === path || errorPath.startsWith(`${path}.`) || errorPath.startsWith(`${path}[`),
+          ),
+      ),
+    [touched, errors, saving],
   );
 
   const handleSave = useCallback(async () => {
@@ -157,19 +164,27 @@ export const useForm = <T extends BaseObject>({
   //
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
-    (property: PropertyKey<T>) => ({
-      status: errors[property] ? 'error' : undefined,
-      error: errors[property] ? errors[property] : undefined,
-    }),
-    [touched, errors],
+    (path) => {
+      const jsonPath = Array.isArray(path) ? createJsonPath(path) : path;
+      const matchingError = Object.entries(errors).find(
+        ([errorPath]) =>
+          errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
+      );
+
+      return {
+        status: matchingError ? 'error' : undefined,
+        error: matchingError ? matchingError[1] : undefined,
+      };
+    },
+    [errors],
   );
 
-  // TODO(burdon): Use path to extract hierarchical value.
-  const getFormValue = <V>(property: PropertyKey<T>): V | undefined => {
-    return getValue(values, property as any as JsonPath);
+  const getFormValue = <V>(path: (string | number)[]): V | undefined => {
+    return getValue(values, createJsonPath(path));
   };
 
-  const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
+  const onValueChange = (path: (string | number)[], type: SimpleType, value: any) => {
+    const jsonPath = createJsonPath(path);
     let parsedValue = value;
     try {
       if (type === 'number') {
@@ -180,9 +195,9 @@ export const useForm = <T extends BaseObject>({
       parsedValue = undefined;
     }
 
-    const newValues = { ...setValue(values, property as any as JsonPath, parsedValue) };
+    const newValues = { ...setValue(values, jsonPath, parsedValue) };
     setValues(newValues);
-    setChanged((prev) => ({ ...prev, [property]: true }));
+    setChanged((prev) => ({ ...prev, [jsonPath]: true }));
     onValuesChanged?.(newValues);
 
     const isValid = validate(newValues);
@@ -191,19 +206,10 @@ export const useForm = <T extends BaseObject>({
     }
   };
 
-  // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
-  const onBlur = useCallback(
-    (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name } = event.target;
-      setTouched((touched) => ({ ...touched, [name]: true }));
-
-      // TODO(Zan): This should be configurable behavior.
-      if (event.relatedTarget?.getAttribute('type') === 'submit') {
-        // NOTE: We do this here instead of onSave because the blur event is triggered before the submit event
-        //  and results in the submit button being disabled when the form is invalid.
-        setTouched(createKeySet(values, true));
-      }
-
+  const onTouched = useCallback(
+    (path: (string | number)[]) => {
+      const jsonPath = createJsonPath(path);
+      setTouched((touched) => ({ ...touched, [jsonPath]: true }));
       validate(values);
     },
     [validate, values],
@@ -222,23 +228,25 @@ export const useForm = <T extends BaseObject>({
     getStatus,
     getValue: getFormValue,
     onValueChange,
-    onBlur,
+    onTouched,
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<JsonPath, V> => {
   invariant(obj);
-  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
+  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<JsonPath, V>);
 };
 
-const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
+const flatMap = (errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
-      if (!(path in result)) {
-        result[path as PropertyKey<T>] = message;
+      // Convert the validation error path format to our JsonPath format
+      const jsonPath = fromEffectValidationPath(path);
+      if (!(jsonPath in result)) {
+        result[jsonPath] = message;
       }
       return result;
     },
-    {} as Record<PropertyKey<T>, string>,
+    {} as Record<JsonPath, string>,
   );
 };

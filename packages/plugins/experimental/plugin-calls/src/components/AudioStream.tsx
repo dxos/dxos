@@ -5,7 +5,7 @@
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 import { of } from 'rxjs';
 
-import { useRoomContext, useSubscribedState } from './hooks';
+import { useRoomContext, useSubscribedState } from '../hooks';
 
 interface AudioStreamProps {
   tracksToPull: string[];
@@ -92,7 +92,6 @@ const AudioTrack = ({
   }, [peer, trackObject]);
 
   const audioTrack = useSubscribedState(pulledTrack$);
-
   useEffect(() => {
     if (!audioTrack) {
       return;

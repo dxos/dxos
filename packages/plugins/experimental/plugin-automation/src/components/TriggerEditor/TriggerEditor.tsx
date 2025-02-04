@@ -45,13 +45,13 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
       onCancel={onCancel}
       Custom={{
         ['function' satisfies keyof FunctionTriggerType]: (props) => (
-          <SelectInput<FunctionTriggerType>
+          <SelectInput
             {...props}
             options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
           />
         ),
         ['spec.type' as const]: (props) => (
-          <SelectInput<FunctionTriggerType>
+          <SelectInput
             {...props}
             options={Object.values(TriggerKind).map((kind) => ({
               value: kind,
@@ -60,11 +60,11 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
           />
         ),
         ['meta' as const]: (props) => {
-          const meta = props.getValue('meta')!;
+          const meta = props.getValue()!;
 
           const [newMetaFieldName, setNewMetaFieldName] = useState('');
 
-          React.useEffect(() => props.onValueChange('meta', 'object', { ...meta }), []);
+          React.useEffect(() => props.onValueChange('object', { ...meta }), []);
 
           return (
             <>
@@ -74,7 +74,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                 return (
                   <div key={compositeKey} role='none' className='flex items-center mt-2 gap-1'>
                     <div role='none' className='flex-1'>
-                      <TextInput {...props} property={compositeKey} type={'string'} label={key} />
+                      <TextInput {...props} type={'string'} label={key} />
                     </div>
                     <IconButton
                       icon='ph--trash--regular'
@@ -82,9 +82,9 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                       classNames={'mt-6'}
                       label={t('trigger meta remove')}
                       onClick={() => {
-                        const newValues: any = { ...props.getValue('meta') };
+                        const newValues: any = { ...props.getValue() };
                         delete newValues[key];
-                        props.onValueChange('meta', 'object', newValues);
+                        props.onValueChange('object', newValues);
                       }}
                     />
                   </div>
@@ -106,10 +106,10 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                   label={t('trigger meta add')}
                   onClick={() => {
                     if (newMetaFieldName.length) {
-                      const meta = props.getValue('meta') ?? {};
+                      const meta = props.getValue() ?? {};
                       const metaWithNewProp = { ...meta, [newMetaFieldName]: '' };
                       setNewMetaFieldName('');
-                      props.onValueChange('meta', 'object', metaWithNewProp);
+                      props.onValueChange('object', metaWithNewProp);
                     }
                   }}
                 />

@@ -6,22 +6,24 @@ import { log } from '@dxos/log';
 
 // @ts-ignore
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
-import { type Artifact } from '../types';
 
 export type SystemPromptOptions = {
   template?: string;
-  artifacts?: Pick<Artifact, 'id' | 'prompt'>[];
+  /**
+   * Instructions for each artifact.
+   */
+  artifacts?: string[];
 };
 
 /**
  * Process Handlebars template.
  */
 // TODO(burdon): Generalize template mechanism.
-export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts }: SystemPromptOptions = {}): string => {
+export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts = [] }: SystemPromptOptions = {}): string => {
   let count = 1;
   const values: Record<string, () => string> = {
     NUM: () => String(count++),
-    ARTIFACT_PROVIDERS: () => artifacts?.map((artifact) => artifact.prompt).join('\n') ?? '',
+    ARTIFACT_PROVIDERS: () => artifacts.join('\n'),
   };
 
   // Remove comments and trim.

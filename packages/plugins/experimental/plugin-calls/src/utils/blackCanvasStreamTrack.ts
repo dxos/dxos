@@ -18,5 +18,6 @@ export const blackCanvasStreamTrack = (videoTrack?: MediaStreamTrack) => {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, 1000);
+
   return canvas.captureStream().getVideoTracks()[0];
 };
