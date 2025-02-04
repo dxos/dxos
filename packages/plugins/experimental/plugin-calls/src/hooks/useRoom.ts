@@ -13,10 +13,17 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 import { codec, type RoomState, type UserState } from '../types';
 
-export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
+export type UseRoomState = {
+  roomState: RoomState;
+  identity: UserState;
+  otherUsers: UserState[];
+  updateUserState: (user: UserState) => void;
+};
+
+export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
   const [roomState, setRoomState] = useState<RoomState>({
-    users: [],
     meetingId: roomId.toHex(),
+    users: [],
   });
 
   const haloIdentity = useIdentity();
@@ -24,7 +31,6 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
   const identityKey = haloIdentity!.identityKey.toHex();
   const displayName = haloIdentity?.profile?.displayName ?? generateName(haloIdentity!.identityKey.toHex());
   const peerKey = client.halo.device!.deviceKey.toHex();
-
   const stream = useRef<Stream<SwarmResponse>>();
 
   useEffect(() => {
@@ -60,9 +66,9 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
     const onBeforeUnload = () => {
       log.info('leaving room', { roomId });
       client.services.services.NetworkService?.leaveSwarm({ topic: roomId, peer: { identityKey, peerKey } }).catch(
-        (err) => log.catch(err),
+        log.catch,
       );
-      stream.current?.close().catch((err) => log.catch(err));
+      stream.current?.close().catch(log.catch);
       stream.current = undefined;
     };
 
@@ -81,7 +87,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
   );
 
   const otherUsers = useMemo<UserState[]>(
-    () => roomState.users!.filter((u) => u.id !== peerKey),
+    () => roomState.users!.filter((user) => user.id !== peerKey),
     [roomState.users, peerKey],
   );
 
@@ -89,7 +95,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
     identity,
     otherUsers,
     roomState,
-    updateUserState: (user: UserState) =>
+    updateUserState: (user: UserState) => {
       client.services.services.NetworkService?.joinSwarm({
         topic: roomId,
         peer: {
@@ -97,6 +103,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
           peerKey,
           state: codec.encode(user),
         },
-      }).catch((err) => log.catch(err)),
+      }).catch((err) => log.catch(err));
+    },
   };
 };

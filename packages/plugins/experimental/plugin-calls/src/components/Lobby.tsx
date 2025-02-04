@@ -25,7 +25,7 @@ export const Lobby = ({ classNames }: ThemedClassName) => {
   return (
     <div className={mx('flex flex-col h-full', classNames)}>
       <div className='flex justify-between px-1 gap-2 items-baseline'>
-        <h1 className='text-3xl truncate'>{roomName ?? 'Room'}</h1>
+        <h1 className='text-3xl truncate'>{roomName}</h1>
         <div className='shrink-0 text-sm text-subdued'>{`${joinedUsers} ${joinedUsers === 1 ? 'user' : 'users'}`}</div>
       </div>
 

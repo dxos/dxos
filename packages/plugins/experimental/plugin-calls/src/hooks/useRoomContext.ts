@@ -6,21 +6,19 @@ import { createContext, useContext, type Dispatch, type SetStateAction } from 'r
 
 import { invariant } from '@dxos/invariant';
 
-import type { useRoom } from './useRoom';
-import type { UserMedia } from './useUserMedia';
-import type { RxjsPeer } from '../utils';
+import { type UseRoomState } from './useRoom';
+import { type UserMedia } from './useUserMedia';
+import { type RxjsPeer } from '../utils';
 
 export type RoomContextType = {
-  traceLink?: string;
-  userDirectoryUrl?: string;
   joined: boolean;
   setJoined: Dispatch<SetStateAction<boolean>>;
   dataSaverMode: boolean;
   setDataSaverMode: Dispatch<SetStateAction<boolean>>;
   userMedia: UserMedia;
-  peer: RxjsPeer;
   iceConnectionState: RTCIceConnectionState;
-  room: ReturnType<typeof useRoom>;
+  peer: RxjsPeer;
+  room: UseRoomState;
   pushedTracks: {
     video?: string;
     audio?: string;

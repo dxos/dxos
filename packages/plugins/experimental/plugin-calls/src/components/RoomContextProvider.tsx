@@ -126,11 +126,9 @@ const Room = ({
     setJoined,
     dataSaverMode,
     setDataSaverMode,
-    // traceLink,
-    userMedia,
-    userDirectoryUrl: undefined,
-    peer,
     iceConnectionState,
+    userMedia,
+    peer,
     room,
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),

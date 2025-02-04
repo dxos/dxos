@@ -2,8 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BehaviorSubject, type Observable } from 'rxjs';
+
+/**
+ * Useful utility for getting a stable reference to a POJO that might be created on every new render.
+ */
+export const useStablePojo = <T>(value: T): T => {
+  const jsonString = JSON.stringify(value);
+  return useMemo(() => JSON.parse(jsonString), [jsonString]);
+};
 
 export const useSubscribedState = <T>(observable: Observable<T>, defaultValue?: T): T => {
   const [state, setState] = useState(defaultValue);

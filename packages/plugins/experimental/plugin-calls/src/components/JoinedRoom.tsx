@@ -5,7 +5,7 @@
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
-import { useMeasure, useMount } from 'react-use';
+import { useMount } from 'react-use';
 
 import { invariant } from '@dxos/invariant';
 import { Button, Icon, Toolbar, type ThemedClassName } from '@dxos/react-ui';
@@ -40,22 +40,18 @@ export const useDebugEnabled = () => {
 };
 
 export const JoinedRoom = ({ classNames }: ThemedClassName) => {
-  const [containerRef] = useMeasure<HTMLDivElement>();
-  const [firstFlexChildRef] = useMeasure<HTMLDivElement>();
-
+  const debugEnabled = useDebugEnabled();
   const {
     userMedia,
     peer,
     dataSaverMode,
     pushedTracks,
     setJoined,
-    room: { otherUsers, updateUserState, identity },
+    room: { otherUsers: otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
-  const debugEnabled = useDebugEnabled();
-  const totalUsers = 1 + otherUsers.length;
-
   useMount(() => {
+    // TODO(burdon): ???
     if (otherUsers.length > 5) {
       userMedia.turnMicOff();
     }
@@ -63,20 +59,19 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
 
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks });
   const [pinnedId, setPinnedId] = useState<string>();
+  const totalUsers = 1 + otherUsers.length;
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         {/* https://github.com/aholachek/react-flip-toolkit */}
         <Flipper flipKey={totalUsers} className='flex flex-col h-full overflow-y-scroll'>
-          <div className='flex flex-col gap-1' ref={containerRef}>
+          <div className='flex flex-col gap-1'>
             {identity && userMedia.audioStreamTrack && (
               <Participant
-                ref={firstFlexChildRef}
-                // TODO(burdon): ?
-                flipId={'identity user'}
-                user={identity}
                 isSelf
+                flipId={identity.id!}
+                user={identity}
                 videoTrack={userMedia.videoStreamTrack}
                 audioTrack={userMedia.audioStreamTrack}
                 pinnedId={pinnedId}
@@ -93,8 +88,8 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
                     <PullVideoTrack video={dataSaverMode ? undefined : user.tracks?.video} audio={user.tracks?.audio}>
                       {({ videoTrack, audioTrack }) => (
                         <Participant
-                          user={user}
                           flipId={user.id!}
+                          user={user}
                           videoTrack={videoTrack}
                           audioTrack={audioTrack}
                           pinnedId={pinnedId}
@@ -107,10 +102,10 @@ export const JoinedRoom = ({ classNames }: ThemedClassName) => {
                       <PullVideoTrack video={user.tracks?.screenshare}>
                         {({ videoTrack }) => (
                           <Participant
+                            isScreenShare
+                            flipId={user.id + 'screenshare'}
                             user={user}
                             videoTrack={videoTrack}
-                            flipId={user.id + 'screenshare'}
-                            isScreenShare
                             pinnedId={pinnedId}
                             setPinnedId={setPinnedId}
                             showDebugInfo={debugEnabled}

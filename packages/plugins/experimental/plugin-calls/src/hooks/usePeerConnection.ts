@@ -4,17 +4,19 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { useStablePojo } from './useStablePojo';
-import { useSubscribedState } from './utils';
+import { useStablePojo, useSubscribedState } from './utils';
 import { RxjsPeer, type PeerConfig } from '../utils';
 
-export const usePeerConnection = (config: PeerConfig) => {
+export type PeerConnectionState = {
+  peer: RxjsPeer;
+  iceConnectionState: RTCIceConnectionState;
+};
+
+export const usePeerConnection = (config: PeerConfig): PeerConnectionState => {
+  const [iceConnectionState, setIceConnectionState] = useState<RTCIceConnectionState>('new');
   const stableConfig = useStablePojo(config);
   const peer = useMemo(() => new RxjsPeer(stableConfig), [stableConfig]);
   const peerConnection = useSubscribedState(peer.peerConnection$);
-
-  const [iceConnectionState, setIceConnectionState] = useState<RTCIceConnectionState>('new');
-
   useEffect(() => {
     if (!peerConnection) {
       return;
