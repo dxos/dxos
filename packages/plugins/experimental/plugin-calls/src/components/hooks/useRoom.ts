@@ -74,15 +74,14 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
   const identity: UserState = useMemo(
     () => ({
       ...roomState.users!.find((u) => u.id === peerKey),
-      id: peerKey,
       name: displayName,
     }),
-    [roomState.users, haloIdentity!.identityKey],
+    [roomState.users, peerKey, displayName],
   );
 
   const otherUsers: UserState[] = useMemo(
     () => roomState.users!.filter((u) => u.id !== peerKey),
-    [roomState.users, haloIdentity!.identityKey],
+    [roomState.users, peerKey],
   );
   log.info('otherUsers', { identity, otherUsers });
   return {
