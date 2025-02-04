@@ -78,7 +78,7 @@ export namespace Capabilities {
   export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
 
-  export const Tool = defineCapability<Tool>('dxos.org/app-framework/capability/tool');
+  export const Tools = defineCapability<Tool[]>('dxos.org/app-framework/capability/tools');
   export const ArtifactDefinition = defineCapability<ArtifactDefinition>(
     'dxos.org/app-framework/capability/artifact-definition',
   );

@@ -22,7 +22,11 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  const tools = useMemo(() => artifactDefinitions.flatMap((definition) => definition.tools), [artifactDefinitions]);
+  const globalTools = useCapabilities(Capabilities.Tools);
+  const tools = useMemo(
+    () => [...globalTools.flat(), ...artifactDefinitions.flatMap((definition) => definition.tools)],
+    [globalTools, artifactDefinitions],
+  );
   const systemPrompt = useMemo(
     () => createSystemPrompt({ artifacts: artifactDefinitions.map((definition) => definition.instructions) }),
     [artifactDefinitions],
