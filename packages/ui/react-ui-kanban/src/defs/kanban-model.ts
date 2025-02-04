@@ -54,18 +54,14 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   public addEmptyColumn(columnValue: string) {
-    // TODO(thure): Fix readonly.
-    // @ts-ignore
     this._kanban.arrangement ??= [];
-    // @ts-ignore
     this._kanban.arrangement.push({ columnValue, ids: [] });
     this._arrangement.value = this._computeArrangement();
   }
 
   public removeColumnFromArrangement(columnValue: string) {
     const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
-    if (this._kanban.arrangement && Number.isFinite(columnIndex) && columnIndex! >= 0) {
-      // @ts-ignore
+    if (this._kanban.arrangement && columnIndex !== undefined && Number.isFinite(columnIndex) && columnIndex >= 0) {
       this._kanban.arrangement.splice(columnIndex, 1);
       this._arrangement.value = this._computeArrangement();
     }
