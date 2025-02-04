@@ -7,11 +7,11 @@ import { of } from 'rxjs';
 
 import { useRoomContext, useSubscribedState } from '../hooks';
 
-interface AudioStreamProps {
+type AudioStreamProps = {
   tracksToPull: string[];
   onTrackAdded: (id: string, track: MediaStreamTrack) => void;
   onTrackRemoved: (id: string, track: MediaStreamTrack) => void;
-}
+};
 
 export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, onTrackRemoved }) => {
   const mediaStreamRef = useRef(new MediaStream());
@@ -61,17 +61,12 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
   );
 };
 
-const AudioTrack = ({
-  mediaStream,
-  track,
-  onTrackAdded,
-  onTrackRemoved,
-}: {
-  mediaStream: MediaStream;
+type AudioTrackProps = {
   track: string;
-  onTrackAdded: (id: string, track: MediaStreamTrack) => void;
-  onTrackRemoved: (id: string, track: MediaStreamTrack) => void;
-}) => {
+  mediaStream: MediaStream;
+} & Pick<AudioStreamProps, 'onTrackAdded' | 'onTrackRemoved'>;
+
+const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioTrackProps) => {
   const onTrackAddedRef = useRef(onTrackAdded);
   onTrackAddedRef.current = onTrackAdded;
   const onTrackRemovedRef = useRef(onTrackRemoved);

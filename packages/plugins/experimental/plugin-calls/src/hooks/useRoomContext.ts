@@ -4,7 +4,7 @@
 
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 
-import { invariant } from '@dxos/invariant';
+import { raise } from '@dxos/debug';
 
 import { type UseRoomState } from './useRoom';
 import { type UserMedia } from './useUserMedia';
@@ -20,16 +20,14 @@ export type RoomContextType = {
   peer: RxjsPeer;
   room: UseRoomState;
   pushedTracks: {
+    screenshare?: string;
     video?: string;
     audio?: string;
-    screenshare?: string;
   };
 };
 
 export const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
 export const useRoomContext = () => {
-  const context = useContext(RoomContext);
-  invariant(context, 'useRoomContext must be used within a RoomContextProvider');
-  return context;
+  return useContext(RoomContext) ?? raise(new Error('Missing RoomContextProvider'));
 };

@@ -5888,6 +5888,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../../common/codec-protobuf
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../../common/display-name
