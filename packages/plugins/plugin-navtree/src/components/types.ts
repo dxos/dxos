@@ -10,7 +10,7 @@ import type { MaybePromise } from '@dxos/util';
 
 import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
 
-export type NavTreeColumnsProps = {
+export type NavTreeItemColumnsProps = {
   path: string[];
   item: Node;
   open: boolean;
