@@ -13,6 +13,7 @@ import {
   ComputeContext,
   ComputeGraphController,
   type ComputeShape,
+  ComputeShapeLayout,
   computeShapes,
   type Services,
   useGraphMonitor,
@@ -86,6 +87,12 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
   const editorRef = useRef<EditorController>(null);
 
+  // Layout.
+  const layout = useMemo(
+    () => (controller && registry ? new ComputeShapeLayout(controller, registry) : undefined),
+    [controller, registry],
+  );
+
   if (!controller) {
     return;
   }
@@ -94,7 +101,14 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
     <ComputeContext.Provider value={{ controller }}>
       <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
         <KeyboardContainer id={id}>
-          <Editor.Root id={id} ref={editorRef} registry={registry} graph={graph} graphMonitor={graphMonitor as any}>
+          <Editor.Root
+            id={id}
+            ref={editorRef}
+            registry={registry}
+            graph={graph}
+            graphMonitor={graphMonitor as any}
+            layout={layout}
+          >
             <Editor.Canvas />
             <Editor.UI />
           </Editor.Root>
