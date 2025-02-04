@@ -15,12 +15,10 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
-        ],
-        "injectGlobals": true
+        ]
       }
     },
-    "lint": {},
-    "prebuild": {
+    "gen": {
       "cache": true,
       "executor": "nx:run-script",
       "inputs": [
@@ -32,10 +30,10 @@
       "outputs": [
         "{projectRoot}/src/shaders/glsl/gen"
       ]
-    }
+    },
+    "lint": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }
