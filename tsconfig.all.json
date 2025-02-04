@@ -415,6 +415,9 @@
       "path": "packages/sdk/schema/tsconfig.json"
     },
     {
+      "path": "packages/sdk/schema-common/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/shell/tsconfig.json"
     },
     {
