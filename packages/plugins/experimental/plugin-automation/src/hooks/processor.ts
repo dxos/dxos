@@ -4,6 +4,7 @@
 
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
+import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type Tool, Message } from '@dxos/artifact';
 import {
   type AIServiceClientImpl,
@@ -15,11 +16,20 @@ import {
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Space } from '@dxos/react-client/echo';
 
 const defaultOptions: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
   model: '@anthropic/claude-3-5-sonnet-20241022',
   systemPrompt: '',
 };
+
+// TODO(burdon): Factor out.
+declare global {
+  interface ToolContextExtensions {
+    space?: Space;
+    dispatch?: PromiseIntentDispatcher;
+  }
+}
 
 /**
  * Handles interactions with an AI service.
