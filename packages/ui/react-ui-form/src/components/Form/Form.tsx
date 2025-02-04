@@ -39,11 +39,10 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     autoSave?: boolean;
     testId?: string;
     onCancel?: () => void;
-
     lookupComponent?: ComponentLookup;
     /**
      * Map of custom renderers for specific properties.
-     * @deprecated Use lookupComponent instead.
+     * Prefer lookupComponent for plugin specific input surfaces.
      */
     Custom?: Partial<Record<string, InputComponent>>;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
