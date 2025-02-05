@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-type Task<Value = unknown> = () => Promise<Value>;
-
 const DefaultBatchSizeLimit = 64;
+
+type Task<Value = unknown> = () => Promise<Value>;
 
 export class FIFOScheduler {
   #schedulerChain: Promise<void>;
+
   constructor() {
     this.#schedulerChain = Promise.resolve();
   }
@@ -29,6 +30,7 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
   #currentBatch: RequestEntryParams[];
   #currentBulkResponse: Promise<BulkResponse> | null;
   #batchSizeLimit: number;
+
   constructor(batchSizeLimit: number = DefaultBatchSizeLimit) {
     this.#currentBatch = [];
     this.#currentBulkResponse = null;
@@ -36,7 +38,7 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
   }
 
   // doBulkRequest will return a bulk response promise.
-  // At the event loop iteration end, the accumulated entries will be dispatched as a bulk request
+  // At the event loop iteration end, the accumulated entries will be dispatched as a bulk request.
   doBulkRequest(
     params: RequestEntryParams,
     bulkRequestFunc: (bulkCopy: RequestEntryParams[]) => Promise<BulkResponse>,
@@ -50,8 +52,9 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
     if (this.#currentBulkResponse != null) {
       return this.#currentBulkResponse;
     }
-    // save the current batch list reference in the function scope because this.#currentBatch could be reset if
-    // the batch limit is reached
+
+    // Save the current batch list reference in the function scope because this.#currentBatch could be reset
+    // if the batch limit is reached.
     const batch = this.#currentBatch;
     this.#currentBulkResponse = new Promise((resolve, reject) => {
       //   script
@@ -62,24 +65,25 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
       //     V
       // macrotasks (setTimeout)
       //
-      // macrotasks are ran in the event loop iteration end, so
-      // we use that moment to make the bulkRequestFunc call
+      // macrotasks are run in the event loop iteration end, so we use that moment to make the bulkRequestFunc call
       setTimeout(() => {
-        // When the bulk request happens, the batch list and
-        // the response is reset to start another batch. Coming
-        // callers will wait for a new response promise
+        // When the bulk request happens, the batch list and the response is reset to start another batch.
+        // Coming callers will wait for a new response promise.
         this.#currentBulkResponse = null;
-        // we cut here to make the bulk request
+
+        // We cut here to make the bulk request.
         const batchCopy = batch.splice(0, batch.length);
-        const p = bulkRequestFunc(batchCopy);
-        p.then((r) => {
-          resolve(r);
-        }).catch((err) => {
-          reject(err);
-        });
+        bulkRequestFunc(batchCopy)
+          .then((result) => {
+            resolve(result);
+          })
+          .catch((err) => {
+            reject(err);
+          });
       }, 0);
     });
-    // This bulk response needs to be processed to extract the the result for the entry
+
+    // This bulk response needs to be processed to extract the the result for the entry.
     return this.#currentBulkResponse;
   }
 }

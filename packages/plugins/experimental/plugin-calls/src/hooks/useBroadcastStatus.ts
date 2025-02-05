@@ -18,9 +18,9 @@ interface Config {
   userMedia: UserMedia;
   peer: RxjsPeer;
   identity?: UserState;
-  pushedTracks: RoomContextType['pushedTracks'];
   speaking?: boolean;
   raisedHand?: boolean;
+  pushedTracks: RoomContextType['pushedTracks'];
   updateUserState: (user: UserState) => void;
 }
 

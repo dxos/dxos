@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
 
@@ -25,7 +25,7 @@ export type CallsProps = {
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls = ({ roomId, iceServers }: CallsProps) => {
+export const Calls: FC<CallsProps> = ({ roomId, iceServers }) => {
   return (
     <CallsContextProvider roomId={roomId} iceServers={iceServers}>
       <Content />

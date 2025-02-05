@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
+import React, { useState, useMemo, type ReactNode, useEffect, type FC, type PropsWithChildren } from 'react';
 import { of } from 'rxjs';
 
 import { type PublicKey } from '@dxos/react-client';
@@ -34,10 +34,8 @@ type CallsContextProps = {
   children: ReactNode;
 };
 
-export const CallsContextProvider = ({ iceServers, roomId, children }: CallsContextProps) => {
+export const CallsContextProvider: FC<CallsContextProps> = ({ iceServers, roomId, children }) => {
   const [roomData, setRoomData] = useState<RoomData | null>(null);
-
-  // Simulate Remix loader behavior with useEffect.
   useEffect(() => {
     setRoomData({
       iceServers,
@@ -49,7 +47,7 @@ export const CallsContextProvider = ({ iceServers, roomId, children }: CallsCont
   }, []);
 
   if (!roomData) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   return (
@@ -59,29 +57,22 @@ export const CallsContextProvider = ({ iceServers, roomId, children }: CallsCont
   );
 };
 
-type RoomProps = RoomData & {
-  roomId: PublicKey;
-  children: ReactNode;
-};
+type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey }>;
 
-const Room = ({
+const Room: FC<RoomProps> = ({
   roomId,
   iceServers,
   maxWebcamBitrate,
   maxWebcamFramerate,
   maxWebcamQualityLevel,
   children,
-}: RoomProps): JSX.Element => {
+}) => {
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
-  const userMedia = useUserMedia();
   const room = useRoom({ roomId });
-  const { peer, iceConnectionState } = usePeerConnection({
-    // apiExtraParams,
-    iceServers,
-    apiBase: `${CALLS_URL}/api/calls`,
-  });
+  const userMedia = useUserMedia();
+  const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const scaleResolutionDownBy = useMemo(() => {
     const videoStreamTrack = userMedia.videoTrack;
@@ -141,6 +132,7 @@ const trackObjectToString = (trackObject?: any): string | undefined => {
   if (!trackObject) {
     return undefined;
   }
+
   return trackObject.sessionId + '/' + trackObject.trackName;
 };
 
@@ -148,6 +140,7 @@ const tryToGetDimensions = (videoStreamTrack?: MediaStreamTrack): { height: numb
   if (!videoStreamTrack || !videoStreamTrack.getCapabilities) {
     return { height: 0, width: 0 };
   }
+
   const height = videoStreamTrack.getCapabilities().height?.max ?? 0;
   const width = videoStreamTrack.getCapabilities().width?.max ?? 0;
   return { height, width };

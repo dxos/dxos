@@ -27,11 +27,11 @@ import { log } from '@dxos/log';
 import { type RenegotiationResponse, type TrackObject, type TracksResponse } from '../../types';
 import { BulkRequestDispatcher, FIFOScheduler } from '../Peer.utils';
 
-export interface PeerConfig {
+export type PeerConfig = {
   apiExtraParams?: string;
   iceServers?: RTCIceServer[];
   apiBase: string;
-}
+};
 
 export type ApiHistoryEntry =
   | {

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { Button, Icon, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { useSubscribedState, useRoomContext } from '../../hooks';
 import { CameraButton, MicButton, VideoObject } from '../Video';
 
-export const Lobby = ({ classNames }: ThemedClassName) => {
+export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const {
     setJoined,
     userMedia: { videoTrack },
@@ -19,8 +19,7 @@ export const Lobby = ({ classNames }: ThemedClassName) => {
   } = useRoomContext()!;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
-
-  const joinedUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
+  const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
@@ -33,7 +32,7 @@ export const Lobby = ({ classNames }: ThemedClassName) => {
             <Icon icon={'ph--phone-incoming--regular'} />
           </Button>
           <div className='grow text-sm text-subdued'>
-            {sessionError ?? `${joinedUsers} ${joinedUsers === 1 ? 'participant' : 'participants'}`}
+            {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
           </div>
           <MicButton />
           <CameraButton />

@@ -3,7 +3,7 @@
 //
 
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
 import { useMount } from 'react-use';
 
@@ -37,7 +37,7 @@ export const useDebugEnabled = () => {
   return enabled;
 };
 
-export const Call = ({ classNames }: ThemedClassName) => {
+export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const debugEnabled = useDebugEnabled();
   const {
     userMedia,

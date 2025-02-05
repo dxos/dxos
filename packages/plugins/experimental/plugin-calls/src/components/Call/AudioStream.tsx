@@ -91,6 +91,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
     if (!audioTrack) {
       return;
     }
+
     mediaStream.addTrack(audioTrack);
     onTrackAddedRef.current(track, audioTrack);
     return () => {

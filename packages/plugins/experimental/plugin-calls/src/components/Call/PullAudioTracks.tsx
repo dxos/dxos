@@ -2,16 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, type ReactNode, createContext, useContext, useState } from 'react';
+import React, { type FC, createContext, useContext, useState, type PropsWithChildren } from 'react';
 
 import { AudioStream } from './AudioStream';
 
-interface PullAudioTracksProps {
-  audioTracks: string[];
-  children?: ReactNode;
-}
-
 const AudioTrackContext = createContext<Record<string, MediaStreamTrack>>({});
+
+type PullAudioTracksProps = PropsWithChildren<{ audioTracks: string[] }>;
 
 export const PullAudioTracks: FC<PullAudioTracksProps> = ({ audioTracks, children }) => {
   const [audioTrackMap, setAudioTrackMap] = useState<Record<string, MediaStreamTrack>>({});

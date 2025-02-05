@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReactElement, useMemo } from 'react';
+import { type FC, type ReactElement, useMemo } from 'react';
 import { of, switchMap } from 'rxjs';
 
 import { usePulledAudioTrack } from './PullAudioTracks';
@@ -15,7 +15,7 @@ interface PullTracksProps {
   children: (props: { videoTrack?: MediaStreamTrack; audioTrack?: MediaStreamTrack }) => ReactElement;
 }
 
-export const PullVideoTrack = ({ video, audio, children }: PullTracksProps) => {
+export const PullVideoTrack: FC<PullTracksProps> = ({ video, audio, children }) => {
   const { peer } = useRoomContext()!;
   const audioTrack = usePulledAudioTrack(audio);
 
@@ -38,5 +38,6 @@ export const PullVideoTrack = ({ video, audio, children }: PullTracksProps) => {
     [peer, trackObject$],
   );
   const videoTrack = useSubscribedState(pulledTrack$);
+
   return children({ videoTrack, audioTrack });
 };
