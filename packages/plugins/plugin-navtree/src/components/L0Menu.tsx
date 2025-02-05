@@ -20,7 +20,7 @@ const useL0ItemClick = (item: Node<any>, path: string[], parent?: Node<any>, typ
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
-        case 'navigation':
+        case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {
           const {
