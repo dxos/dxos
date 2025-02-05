@@ -36,7 +36,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const typeMap = useMemo(() => {
     client.addTypes([...staticTypes, ...presets.schemas]);
     const mutableGenerators = new Map<string, ObjectGenerator<any>>(
-      mutableTypes.map((type) => [type.typename, createGenerator(type)]),
+      mutableTypes.map((type) => [type.typename, createGenerator(type as any)]),
     );
 
     return new Map([...staticGenerators, ...presets.items, ...mutableGenerators]);
