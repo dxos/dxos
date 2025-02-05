@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { combineLatest, map, type Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 
+import { invariant } from '@dxos/invariant';
+
 import { useStateObservable, useSubscribedState } from './utils';
-import { getUserMediaTrack$, blackCanvasStreamTrack } from '../utils';
+import { getUserMediaTrack$ } from '../utils';
 
 export type UserMedia = {
   audioDeviceId: string | undefined;
@@ -47,13 +49,7 @@ export const useUserMedia = (): UserMedia => {
   //
 
   const audioTrack$ = useMemo(
-    () =>
-      getUserMediaTrack$('audioinput').pipe(
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
-      ),
+    () => getUserMediaTrack$('audioinput').pipe(shareReplay({ refCount: true, bufferSize: 1 })),
     [],
   );
   const mutedAudioTrack$ = useMemo(() => {
@@ -63,10 +59,7 @@ export const useUserMedia = (): UserMedia => {
           track.enabled = false;
         },
       }),
-      shareReplay({
-        refCount: true,
-        bufferSize: 1,
-      }),
+      shareReplay({ refCount: true, bufferSize: 1 }),
     );
   }, []);
 
@@ -78,10 +71,7 @@ export const useUserMedia = (): UserMedia => {
     () =>
       combineLatest([audioEnabled$, audioTrack$, mutedAudioTrack$]).pipe(
         map(([enabled, alwaysOnTrack, mutedTrack]) => (enabled ? alwaysOnTrack : mutedTrack)),
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
+        shareReplay({ refCount: true, bufferSize: 1 }),
       ),
     [audioEnabled$, audioTrack$, mutedAudioTrack$],
   );
@@ -91,17 +81,15 @@ export const useUserMedia = (): UserMedia => {
   // Video
   //
 
+  const blackCanvasStreamTrack = useBlackCanvasStreamTrack();
   const videoEnabled$ = useStateObservable(videoEnabled);
   const videoTrack$ = useMemo(
     () =>
       videoEnabled$.pipe(
-        switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack()))),
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
+        switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack))),
+        shareReplay({ refCount: true, bufferSize: 1 }),
       ),
-    [videoEnabled$],
+    [videoEnabled$, blackCanvasStreamTrack],
   );
   const videoTrack = useSubscribedState(videoTrack$);
   const videoDeviceId = videoTrack?.getSettings().deviceId;
@@ -127,4 +115,30 @@ export const useUserMedia = (): UserMedia => {
     turnScreenShareOn,
     turnScreenShareOff,
   };
+};
+
+const useBlackCanvasStreamTrack = (videoTrack?: MediaStreamTrack) => {
+  const canvas = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = videoTrack?.getSettings().width ?? 1280;
+    canvas.height = videoTrack?.getSettings().height ?? 720;
+    return canvas;
+  }, [videoTrack]);
+
+  useEffect(() => {
+    const ctx = canvas.getContext('2d');
+    invariant(ctx);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // We need to draw to the canvas in order for video frames to be sent on the video track.
+    const i = setInterval(() => {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }, 1_000);
+
+    return () => clearInterval(i);
+  }, [canvas]);
+
+  return canvas.captureStream().getVideoTracks()[0];
 };
