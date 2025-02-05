@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
+import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -28,6 +29,7 @@ export const createGptRealtime = (props: CreateGptRealtimeProps) =>
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const config = useConfig();
 
   const start = async () => {
     setIsLive(true);
@@ -58,7 +60,11 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       await peerConnection.setLocalDescription(offer);
 
       // Send offer to backend and get answer
-      const response = await fetch(`${AI_SERVICE_URL}/rtc-connect`, {
+      const aiServiceUrl = new URL(
+        '/rtc-connect',
+        config.values.runtime?.services?.ai?.server ?? DEFAULT_AI_SERVICE_URL,
+      );
+      const response = await fetch(aiServiceUrl, {
         method: 'POST',
         body: offer.sdp,
         headers: {
@@ -165,4 +171,4 @@ export const gptRealtimeShape: ShapeDef<GptRealtimeShape> = {
   resizable: true,
 };
 
-const AI_SERVICE_URL = 'http://localhost:8788';
+const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';

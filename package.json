@@ -13,7 +13,7 @@
     "beast": "beast docs",
     "build": "nx run-many --target=build",
     "changed-packages": "scripts/changed",
-    "check-dependencies": "syncpack list-mismatches",
+    "check-dependencies": "syncpack list-mismatches --filter '!ink'",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "postinstall": "tsx tools/executors/toolbox/src/main.ts",
