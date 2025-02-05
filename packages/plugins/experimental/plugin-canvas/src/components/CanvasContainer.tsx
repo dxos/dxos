@@ -5,9 +5,10 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { AIServiceClientImpl } from '@dxos/assistant';
-import type { Config } from '@dxos/client';
+import { type Config } from '@dxos/client';
 import { ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { createStubEdgeIdentity, EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
+import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
 import {
   ComputeContext,
@@ -27,7 +28,6 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { useConfig } from '@dxos/react-client';
 
 const createServices = (config: Config, space?: Space): Partial<Services> => {
   return {

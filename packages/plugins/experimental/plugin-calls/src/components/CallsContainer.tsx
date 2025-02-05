@@ -11,11 +11,10 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Calls } from './Calls';
 
 const CallsContainer = ({ space, role }: { space: Space; role?: string }) => {
+  const config = useConfig();
   if (!space) {
     return null;
   }
-
-  const config = useConfig();
 
   return (
     <StackItem.Content toolbar={false}>

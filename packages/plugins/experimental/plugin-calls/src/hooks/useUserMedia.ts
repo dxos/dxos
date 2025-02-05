@@ -3,38 +3,49 @@
 //
 
 import { useMemo, useState } from 'react';
-import { combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { combineLatest, map, type Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 
 import { useStateObservable, useSubscribedState } from './utils';
 import { getUserMediaTrack$, blackCanvasStreamTrack } from '../utils';
 
-export const useUserMedia = () => {
+export type UserMedia = {
+  audioDeviceId: string | undefined;
+  audioEnabled: boolean;
+  audioTrack: MediaStreamTrack;
+  audioMonitorTrack: MediaStreamTrack;
+  audioTrack$: Observable<MediaStreamTrack>;
+  publicAudioTrack$: Observable<MediaStreamTrack>;
+
+  videoDeviceId: string | undefined;
+  videoEnabled: boolean;
+  videoTrack: MediaStreamTrack;
+  videoTrack$: Observable<MediaStreamTrack>;
+  screenShareEnabled: boolean;
+
+  turnMicOn: () => void;
+  turnMicOff: () => void;
+  turnCameraOn: () => void;
+  turnCameraOff: () => void;
+  turnScreenShareOn: () => void;
+  turnScreenShareOff: () => void;
+};
+
+export const useUserMedia = (): UserMedia => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
 
-  const turnMicOff = () => setAudioEnabled(false);
   const turnMicOn = () => setAudioEnabled(true);
+  const turnMicOff = () => setAudioEnabled(false);
   const turnCameraOn = () => setVideoEnabled(true);
   const turnCameraOff = () => setVideoEnabled(false);
-  const startScreenShare = () => setScreenShareEnabled(true);
-  const endScreenShare = () => setScreenShareEnabled(false);
+  const turnScreenShareOn = () => setScreenShareEnabled(true);
+  const turnScreenShareOff = () => setScreenShareEnabled(false);
 
-  const videoEnabled$ = useStateObservable(videoEnabled);
-  const videoTrack$ = useMemo(
-    () =>
-      videoEnabled$.pipe(
-        switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack()))),
-        shareReplay({
-          refCount: true,
-          bufferSize: 1,
-        }),
-      ),
-    [videoEnabled$],
-  );
+  //
+  // Audio
+  //
 
-  const videoTrack = useSubscribedState(videoTrack$);
-  const videoDeviceId = videoTrack?.getSettings().deviceId;
   const audioTrack$ = useMemo(
     () =>
       getUserMediaTrack$('audioinput').pipe(
@@ -59,8 +70,9 @@ export const useUserMedia = () => {
     );
   }, []);
 
-  const alwaysOnAudioStreamTrack = useSubscribedState(audioTrack$);
-  const audioDeviceId = alwaysOnAudioStreamTrack?.getSettings().deviceId;
+  const audioMonitorTrack = useSubscribedState(audioTrack$);
+  const audioDeviceId = audioMonitorTrack?.getSettings().deviceId;
+
   const audioEnabled$ = useStateObservable(audioEnabled);
   const publicAudioTrack$ = useMemo(
     () =>
@@ -73,27 +85,46 @@ export const useUserMedia = () => {
       ),
     [audioEnabled$, audioTrack$, mutedAudioTrack$],
   );
-  const audioStreamTrack = useSubscribedState(publicAudioTrack$);
+  const audioTrack = useSubscribedState(publicAudioTrack$);
+
+  //
+  // Video
+  //
+
+  const videoEnabled$ = useStateObservable(videoEnabled);
+  const videoTrack$ = useMemo(
+    () =>
+      videoEnabled$.pipe(
+        switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack()))),
+        shareReplay({
+          refCount: true,
+          bufferSize: 1,
+        }),
+      ),
+    [videoEnabled$],
+  );
+  const videoTrack = useSubscribedState(videoTrack$);
+  const videoDeviceId = videoTrack?.getSettings().deviceId;
 
   return {
+    audioDeviceId,
+    audioEnabled,
+    audioTrack,
+    audioTrack$,
+    publicAudioTrack$,
+    audioMonitorTrack,
+
+    videoDeviceId,
+    videoEnabled,
+    videoTrack,
+    videoTrack$,
+    screenShareEnabled,
+
     turnMicOn,
     turnMicOff,
-    audioStreamTrack,
-    audioMonitorStreamTrack: alwaysOnAudioStreamTrack,
-    audioEnabled,
-    publicAudioTrack$,
-    privateAudioTrack$: audioTrack$,
-    audioDeviceId,
-    videoDeviceId,
     turnCameraOn,
     turnCameraOff,
-    videoEnabled,
-    videoTrack$,
-    videoStreamTrack: videoTrack,
-    startScreenShare,
-    endScreenShare,
-    screenShareEnabled,
+    turnScreenShareOn,
+    turnScreenShareOff,
   };
 };
-
-export type UserMedia = ReturnType<typeof useUserMedia>;
