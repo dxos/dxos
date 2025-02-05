@@ -47,7 +47,7 @@ const L0Item = ({ item, parent, path, onCollectionItemClick }: L0ItemProps) => {
   const type = l0ItemType(item);
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   const Root =
-    type === 'collection' ? (onCollectionItemClick ? 'button' : 'div') : type === 'tab' ? Tabs.TabPrimitive : 'button';
+    type === 'collection' ? (onCollectionItemClick ? 'button' : 'h2') : type === 'tab' ? Tabs.TabPrimitive : 'button';
   const handleClick = useL0ItemClick({ item, path: itemPath, parent, onCollectionItemClick }, type);
   const rootProps = type === 'tab' ? { value: item.id, tabIndex: 0 } : { onClick: handleClick };
   return (
@@ -87,7 +87,7 @@ export const L0Menu = ({
   return (
     <Tabs.Tablist
       data-state={expanded ? 'expanded' : 'collapsed'}
-      classNames='bg-deck absolute inset-block-0 inline-start-0 !is-[--l0-size] data-[state=expanded]:!is-[calc(var(--nav-sidebar-size)-var(--l0-size))] transition-[inline-size] duration-200 ease-in-out'
+      classNames='bg-deck absolute inset-block-0 inline-start-0 !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] transition-[inline-size] duration-200 ease-in-out contain-layout overflow-hidden'
     >
       {topLevelItems.map((item) => {
         if (l0ItemType(item) === 'collection') {
