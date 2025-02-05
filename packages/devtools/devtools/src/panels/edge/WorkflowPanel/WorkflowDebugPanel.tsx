@@ -3,7 +3,7 @@
 //
 
 import { Effect, Layer, type Scope } from 'effect';
-import { Ollama } from 'ollama';
+// import { Ollama } from 'ollama';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -235,7 +235,8 @@ const RobotAvatar = () => (
 
 const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
-  const gptLayer = Layer.succeed(GptService, new OllamaGpt(new Ollama()));
+  // TODO(wittjosiah): Breaks bundle.
+  const gptLayer = Layer.succeed(GptService, new OllamaGpt(null as any /* new Ollama() */));
   const spaceService = Layer.succeed(SpaceService, {
     spaceId: space.id,
     db: space.db,
