@@ -15,6 +15,7 @@ import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
+import { computeTemplate } from './template/generic';
 import {
   AppendInput,
   ConstantOutput,
@@ -46,8 +47,6 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '../types';
-import { applyTextTemplate } from './template';
-import { computeTemplate } from './template/generic';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).

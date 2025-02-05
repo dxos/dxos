@@ -5,7 +5,7 @@
 import { Context, Layer } from 'effect';
 
 import { type EchoDatabase } from '@dxos/echo-db';
-import { SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 
 export class SpaceService extends Context.Tag('SpaceService')<
   SpaceService,

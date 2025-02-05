@@ -8,6 +8,7 @@ import inquirer from 'inquirer';
 import { createUserMessage } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { AIServiceClientImpl, ToolTypes } from '../ai-service';
 import { runLLM } from '../conversation';
@@ -67,7 +68,7 @@ while (true) {
       onImage: (img) => {
         const path = `/tmp/image-${img.id}.jpeg`;
         writeFileSync(path, Buffer.from(img.source.data, 'base64'));
-        console.log(`Saved image to ${path}`);
+        log.info('Saved image', { path });
         // Print image in iTerm using ANSI escape sequence
         const imageData = img.source.data;
         process.stdout.write('\x1b]1337;File=inline=1:' + imageData + '\x07');

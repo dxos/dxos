@@ -103,7 +103,7 @@ export const Default: Story = {
 export const Line = {
   render: () => {
     const [lines, setLines] = useState<string[]>([]);
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, _] = useState(false);
     return (
       <div className='flex grow justify-center overflow-center bg-white dark:bg-black'>
         <div className='flex flex-col w-[500px] bg-base'>

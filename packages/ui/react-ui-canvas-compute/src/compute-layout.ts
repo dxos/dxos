@@ -4,7 +4,7 @@
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { type Anchor, ShapeLayout, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
+import { type Anchor, ShapeLayout, type ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 
 import { type ComputeGraphController } from './graph';
 import { type ComputeShape, createFunctionAnchors } from './shapes';

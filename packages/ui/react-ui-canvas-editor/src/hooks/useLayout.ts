@@ -24,7 +24,7 @@ import {
  * Generate layout from graph (including linking).
  */
 export const useLayout = (): Layout => {
-  const { dragMonitor, graph, registry, layout } = useEditorContext();
+  const { dragMonitor, graph, layout } = useEditorContext();
 
   // TODO(burdon): Use to trigger state update.
   const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'resize' || type === 'anchor').value;

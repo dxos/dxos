@@ -10,27 +10,20 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, ComputeNode, DefaultInput, DefaultOutput } from '@dxos/conductor';
-import { S, toEffectSchema } from '@dxos/echo-schema';
+import { type ComputeGraphModel, type ComputeNode } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import {
-  type Anchor,
-  Editor,
-  type EditorController,
-  type EditorRootProps,
-  ShapeLayout,
-  ShapeRegistry,
-} from '@dxos/react-ui-canvas-editor';
+import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { ComputeShapeLayout } from './compute-layout';
 import { type ComputeGraphController } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
-import { createFunctionAnchors, type ComputeShape } from './shapes';
+import { type ComputeShape } from './shapes';
 import {
   createControlCircuit,
   createGPTRealtimeCircuit,
@@ -43,9 +36,8 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
-import { ComputeShapeLayout } from './compute-layout';
 
-const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+// const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
 

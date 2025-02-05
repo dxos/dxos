@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -83,7 +84,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       const dataChannel = peerConnection.createDataChannel('response');
 
       const configureData = () => {
-        console.log('Configuring data channel');
+        log.info('Configuring data channel');
         const event = {
           type: 'session.update',
           session: {
@@ -96,7 +97,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       };
 
       dataChannel.addEventListener('open', (ev) => {
-        console.log('Opening data channel', ev);
+        log.info('Opening data channel', { ev });
         configureData();
       });
 
@@ -136,7 +137,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
         }
       });
     } catch (error) {
-      console.error('Error in realtime session:', error);
+      log.error('Error in realtime session:', { error });
       throw error;
     }
   };

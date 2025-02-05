@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { getObjectTemplateInputSchema, applyObjectTemplate } from './json';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AST } from '@effect/schema';
+import { describe, it, expect } from 'vitest';
+
+import { getObjectTemplateInputSchema, applyObjectTemplate } from './json';
 
 describe('json template', () => {
   describe('getObjectTemplateInputSchema', () => {

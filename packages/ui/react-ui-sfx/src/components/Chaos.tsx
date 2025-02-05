@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { mx } from '@dxos/react-ui-theme';
 import { type Specialize } from '@dxos/util';
 
@@ -229,7 +230,7 @@ const Particles = ({
       sim.uniforms.uCurl.value = THREE.MathUtils.lerp(initial, target, t);
       if (t >= 1) {
         curl.current = undefined;
-        console.log('done', t);
+        log.info('done', { t });
       }
     } else {
       sim.uniforms.uCurl.value = options.curl;

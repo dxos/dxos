@@ -1,7 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import React from 'react';
 
-import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { ComputeValueType } from '@dxos/conductor';
+import { Select, type SelectRootProps } from '@dxos/react-ui';
 
 // TODO(burdon): Factor out.
 export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {

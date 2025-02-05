@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 //
 // Copyright 2024 DXOS.org
 //

@@ -1,8 +1,13 @@
-import { log } from '@dxos/log';
-import type { ComputeNode } from '../../types/graph';
-import { applyTextTemplate, getTextTemplateInputSchema } from './text';
-import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+
+import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
+import { applyTextTemplate, getTextTemplateInputSchema } from './text';
+import type { ComputeNode } from '../../types/graph';
 
 export const computeTemplate = (node: ComputeNode, props: Record<string, any>): unknown => {
   switch (node.valueType) {

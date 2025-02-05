@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
 
 export const getTextTemplateInputSchema = (text: string): S.Schema.AnyNoContext => {

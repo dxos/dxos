@@ -6,10 +6,10 @@ import { type StorybookConfig } from '@storybook/web-components-vite';
 import { resolve } from 'node:path';
 import { join } from 'path';
 import { mergeConfig } from 'vite';
+import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
-import Inspect from 'vite-plugin-inspect';
 
 export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');

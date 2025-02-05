@@ -118,7 +118,7 @@ export class EdgeHttpClient {
     query: QueueQuery,
     args?: EdgeHttpGetArgs,
   ): Promise<QueryResult> {
-    const { queueId, ...rest } = query;
+    const { queueId } = query;
     const queryParams = new URLSearchParams();
     if (query.after != null) {
       queryParams.set('after', query.after);

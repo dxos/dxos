@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
@@ -21,7 +22,6 @@ import { type ReactiveEchoObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult } from '../query';
-import { invariant } from '@dxos/invariant';
 
 export type LoadObjectParams = {
   spaceId: SpaceId;
