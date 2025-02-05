@@ -164,7 +164,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         let functionTrigger: FunctionTrigger | undefined;
         canvasModel.builder.call((builder) => {
           const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
-          const triggerShape = createTrigger({ triggerKind: TriggerKind.Webhook, ...position({ x: -18, y: -2 }) });
+          const triggerShape = createTrigger({ triggerKind: TriggerKind.Email, ...position({ x: -18, y: -2 }) });
           const trigger = canvasModel.createNode(triggerShape);
           const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
           const queueId = canvasModel.createNode(
@@ -177,7 +177,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
           builder
-            .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'bodyText' })
+            .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'body' })
             .createEdge({ source: gpt.id, target: text.id, output: 'text' })
             .createEdge({ source: queueId.id, target: queue.id })
             .createEdge({ source: queueId.id, target: append.id, input: 'id' })
