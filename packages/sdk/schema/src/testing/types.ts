@@ -120,6 +120,7 @@ export namespace Testing {
     subject: S.String,
     created: S.String,
     body: S.String,
+    category: S.String,
   }).annotations({
     [LabelAnnotationId]: 'subject',
   });
