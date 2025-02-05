@@ -52,10 +52,10 @@ export const NavTree = (props: NavTreeProps) => {
       onValueChange={setCurrentItemId}
       orientation='vertical'
       verticalVariant='stateless'
-      classNames='grid grid-cols-[74px_1fr]'
+      classNames='relative'
     >
-      <L0Menu topLevelItems={topLevelItems} path={path} parent={props.root} />
       <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={currentItemId} />
+      <L0Menu topLevelItems={topLevelItems} path={path} parent={props.root} />
     </Tabs.Root>
   );
 };

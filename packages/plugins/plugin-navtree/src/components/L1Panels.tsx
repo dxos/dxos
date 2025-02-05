@@ -19,7 +19,11 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
   const navTreeContext = useNavTreeContext();
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   return (
-    <Tabs.Tabpanel key={item.id} value={item.id}>
+    <Tabs.Tabpanel
+      key={item.id}
+      value={item.id}
+      classNames='absolute inset-block-0 inline-end-0 is-[calc(var(--nav-sidebar-size)-var(--l0-size))]'
+    >
       {item.id === currentItemId && (
         <Tree
           {...navTreeContext}
