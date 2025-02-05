@@ -56,19 +56,12 @@ export const presets = {
             const triggerShape = createTrigger({ triggerKind: TriggerKind.Webhook, ...position({ x: -18, y: -2 }) });
             const trigger = canvasModel.createNode(triggerShape);
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-            const queueId = canvasModel.createNode(
-              createConstant({
-                value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
-                ...position({ x: -18, y: 5, width: 8, height: 6 }),
-              }),
-            );
-            const queue = canvasModel.createNode(createQueue(position({ x: -3, y: 3, width: 14, height: 10 })));
+            const { queueId } = setupQueue(canvasModel);
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
               .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'body' })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({ source: queueId.id, target: queue.id })
               .createEdge({ source: queueId.id, target: append.id, input: 'id' })
               .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
 
@@ -79,7 +72,7 @@ export const presets = {
 
           attachTrigger(functionTrigger, computeModel);
 
-          return addToSpace(space, canvasModel, computeModel);
+          return addToSpace(PresetName.GPT_QUEUE, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
@@ -142,7 +135,7 @@ export const presets = {
 
           attachTrigger(functionTrigger, computeModel);
 
-          return addToSpace(space, canvasModel, computeModel);
+          return addToSpace(PresetName.EMAIL_TABLE, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
@@ -159,27 +152,20 @@ export const presets = {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const chat = canvasModel.createNode(createChat(position({ x: -18, y: -2 })));
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-            const queueId = canvasModel.createNode(
-              createConstant({
-                value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
-                ...position({ x: -18, y: 5, width: 8, height: 6 }),
-              }),
-            );
-            const queue = canvasModel.createNode(createQueue(position({ x: -3, y: 3, width: 14, height: 10 })));
+            const { queueId } = setupQueue(canvasModel);
 
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
               .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({ source: queueId.id, target: queue.id })
               .createEdge({ source: queueId.id, target: append.id, input: 'id' })
               .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
           });
 
           const computeModel = createComputeGraph(canvasModel);
 
-          return addToSpace(space, canvasModel, computeModel);
+          return addToSpace(PresetName.CHAT_GPT, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
@@ -199,32 +185,45 @@ export const presets = {
           const template = canvasModel.createNode(
             createTemplate({
               valueType: 'object',
-              ...rawPosition({ centerX: 416, centerY: -64, width: 320, height: 320 }),
+              ...rawPosition({ centerX: 192, centerY: -176, width: 320, height: 320 }),
             }),
           );
           const templateContent = ['{'];
 
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
-            const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
+            const gpt = canvasModel.createNode(
+              createGpt(rawPosition({ centerX: -400, centerY: -112, width: 256, height: 202 })),
+            );
             const systemPrompt = canvasModel.createNode(
               createConstant({
                 value: "use one word to describe content category. don't write anything else",
-                ...rawPosition({ centerX: -554, centerY: -432, width: 192, height: 128 }),
+                ...rawPosition({ centerX: -800, centerY: -160, width: 192, height: 128 }),
               }),
             );
-            const triggerShape = createTrigger({ triggerKind: TriggerKind.Email, ...position({ x: -18, y: -2 }) });
+            const triggerShape = createTrigger({
+              triggerKind: TriggerKind.Email,
+              ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
+            });
             const trigger = canvasModel.createNode(triggerShape);
+
+            const { queueId } = setupQueue(canvasModel, {
+              idPosition: { centerX: -720, centerY: 224, width: 192, height: 256 },
+              queuePosition: { centerX: -144, centerY: 416, width: 320, height: 448 },
+            });
+            const appendToQueue = canvasModel.createNode(
+              createAppend(rawPosition({ centerX: -80, centerY: 96, width: 122, height: 128 })),
+            );
 
             const tableId = canvasModel.createNode(
               createConstant({
                 value: DXN.fromLocalObjectId(emailTable.id).toString(),
-                ...position({ x: -18, y: 5, width: 8, height: 6 }),
+                ...rawPosition({ centerX: -112, centerY: -544, width: 192, height: 256 }),
               }),
             );
 
             const appendToTable = canvasModel.createNode(
-              createAppend(rawPosition({ centerX: 752, centerY: 240, width: 128, height: 122 })),
+              createAppend(rawPosition({ centerX: 560, centerY: -416, width: 128, height: 122 })),
             );
 
             templateContent.push('  "category": "{{text}}",');
@@ -240,6 +239,8 @@ export const presets = {
 
             builder
               .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
+              .createEdge({ source: queueId.id, target: appendToQueue.id, input: 'id' })
+              .createEdge({ source: gpt.id, target: appendToQueue.id, output: 'messages', input: 'items' })
               .createEdge({ source: systemPrompt.id, target: gpt.id, input: 'systemPrompt' })
               .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'body' })
               .createEdge({ source: template.id, target: appendToTable.id, input: 'items' });
@@ -257,7 +258,7 @@ export const presets = {
 
           attachTrigger(functionTrigger, computeModel);
 
-          return addToSpace(space, canvasModel, computeModel);
+          return addToSpace(PresetName.EMAIL_WITH_SUMMARY, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
@@ -266,13 +267,33 @@ export const presets = {
   ] as [PresetName, ObjectGenerator<any>][],
 };
 
-const addToSpace = (space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
+const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
   return space.db.add(
     create(CanvasBoardType, {
+      name,
       computeGraph: makeRef(compute.root),
       layout: canvas.graph,
     }),
   );
+};
+
+const setupQueue = (
+  canvasModel: CanvasGraphModel,
+  args?: { idPosition?: RawPositionInput; queuePosition?: RawPositionInput },
+) => {
+  const queueId = canvasModel.createNode(
+    createConstant({
+      value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+      ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
+    }),
+  );
+  const queue = canvasModel.createNode(
+    createQueue(
+      args?.queuePosition ? rawPosition(args.queuePosition) : position({ x: -3, y: 3, width: 14, height: 10 }),
+    ),
+  );
+  canvasModel.createEdge({ source: queueId.id, target: queue.id });
+  return { queue, queueId };
 };
 
 const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeModel: ComputeGraphModel) => {
@@ -283,7 +304,9 @@ const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeMode
   functionTrigger.meta.computeNodeId = inputNode.id;
 };
 
-const rawPosition = (args: { centerX: number; centerY: number; width: number; height: number }) => {
+type RawPositionInput = { centerX: number; centerY: number; width: number; height: number };
+
+const rawPosition = (args: RawPositionInput) => {
   return { center: { x: args.centerX, y: args.centerY }, size: { width: args.width, height: args.height } };
 };
 
