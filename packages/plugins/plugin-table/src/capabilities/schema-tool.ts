@@ -3,9 +3,8 @@
 //
 
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnums, S, FormatEnum, EchoObject, Format, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnums, S, FormatEnum, Format, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { formatToSchema } from '@dxos/schema';
 
 const availableFormats = FormatEnums;
 
@@ -16,12 +15,6 @@ const PropertyDefinitionSchema = S.Struct({
     description: 'The format of the property (call schema_formats for full list).',
   }),
 }).pipe(S.mutable);
-
-type PropertyDefinition = S.Schema.Type<typeof PropertyDefinitionSchema>;
-
-const buildSchemaFromProperties = (properties: PropertyDefinition[]): S.Struct.Fields => {
-  return fields;
-};
 
 // TODO(ZaymonFC): If this works well, move this to global tools.
 export const schemaTools = [
