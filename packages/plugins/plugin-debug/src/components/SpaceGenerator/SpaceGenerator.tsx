@@ -12,13 +12,13 @@ import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
+import { presets } from './presets';
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -27,19 +27,19 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
-  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph, CanvasBoardType]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
+  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
+  const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType, Testing.EmailType];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes(staticTypes);
+    client.addTypes([...staticTypes, ...presets.schemas]);
     const mutableGenerators = new Map<string, ObjectGenerator<any>>(
       mutableTypes.map((type) => [type.typename, createGenerator(type)]),
     );
 
-    return new Map([...staticGenerators, ...mutableGenerators]);
+    return new Map([...staticGenerators, ...presets.items, ...mutableGenerators]);
   }, [client, mutableTypes]);
 
   // Query space to get info.
@@ -106,6 +106,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
 
       <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
       <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
+      <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
 
       <SyntaxHighlighter classNames='flex text-xs' language='json'>
         {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
