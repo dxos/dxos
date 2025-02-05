@@ -207,7 +207,8 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
           {
             type: 'tool_result',
             toolUseId: toolCall.id,
-            content: typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result),
+            content:
+              typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },
         ],
       });
