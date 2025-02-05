@@ -77,7 +77,7 @@ export const L0Menu = ({
   return (
     <Tabs.Tablist classNames='bg-deck'>
       {topLevelItems.map((item) => {
-        if (item.properties.role === 'branch') {
+        if (l0ItemType(item) === 'collection') {
           return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
         } else {
           return <L0Item key={item.id} item={item} parent={parent} path={path} />;
