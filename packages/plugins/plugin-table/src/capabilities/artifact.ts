@@ -14,6 +14,7 @@ import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
 import { TableAction } from '../types';
+import { schemaTools } from './schema-tool';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -39,22 +40,47 @@ export default () => {
     `,
     schema: TableType,
     tools: [
+      ...schemaTools,
       defineTool({
         name: 'table_new',
-        description: 'Create a new table. Returns the artifact definition for the table',
-        schema: S.Struct({}),
-        execute: async (_input, { extensions }) => {
+        description:
+          'Create a new table using an existing schema. Use schema_create first to create a schema, or schema_list to choose an existing one.',
+        schema: S.Struct({
+          typename: S.String.annotations({
+            description: 'The fully qualified typename of the schema to use for the table.',
+          }),
+          name: S.optional(S.String).annotations({
+            description: 'Optional name for the table.',
+          }),
+        }),
+        execute: async ({ typename, name }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
+
+          // Validate schema exists first
+          const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+          if (!schema) {
+            return ToolResult.Error(`Schema not found: ${typename}`);
+          }
+
           const intent = pipe(
-            // TODO(ZaymonFC): Configure the starting table.
-            createIntent(TableAction.Create, { space: extensions.space }),
+            createIntent(TableAction.Create, {
+              space: extensions.space,
+              initialSchema: typename,
+              name: name ?? schema.typename,
+            }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
           );
+
           const { data, error } = await extensions.dispatch(intent);
           if (!data || error) {
             return ToolResult.Error(error?.message ?? 'Failed to create table');
           }
+
+          // Verify the table was created with a view
+          const table = data.object;
+          const view = await table.view?.load();
+          invariant(view, 'Table view was not initialized correctly');
 
           return ToolResult.Success(createArtifactElement(data.id));
         },
@@ -104,6 +130,9 @@ export default () => {
           return ToolResult.Success(schema);
         },
       }),
+      // TODO(ZaymonFC): Search the row of a table? General search functionality? Can we (for now) just dump the entire
+      //   table into the context and have it not get too diluted?
+      // TODO(ZaymonFC): LIMIT number and indicate that.
       defineTool({
         name: 'table_list_rows',
         description:
