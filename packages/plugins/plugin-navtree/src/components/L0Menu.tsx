@@ -23,7 +23,10 @@ const useL0ItemClick = (item: Node<any>, path: string[], parent?: Node<any>, typ
         case 'navigation':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {
-          const { data: invoke, caller } = item.properties;
+          const {
+            data: invoke,
+            properties: { caller },
+          } = item;
           return invoke?.(caller ? { node: parent, caller } : { node: parent });
         }
       }
