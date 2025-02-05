@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Tabs } from '@dxos/react-ui-tabs';
 
@@ -20,6 +20,7 @@ export const NavTree = (props: NavTreeProps) => {
   const [currentItemId, setCurrentItemId] = useState(topLevelItems[0].id ?? 'never');
 
   useLoadDescendents(props.root);
+  const path = useMemo(() => [props.id], [props.id]);
 
   return (
     <Tabs.Root
@@ -28,8 +29,8 @@ export const NavTree = (props: NavTreeProps) => {
       orientation='vertical'
       verticalVariant='stateless'
     >
-      <L0Menu topLevelItems={topLevelItems} />
-      <L1Panels topLevelItems={topLevelItems} currentItemId={currentItemId} />
+      <L0Menu topLevelItems={topLevelItems} path={path} parent={props.root} />
+      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={currentItemId} />
     </Tabs.Root>
   );
 };
