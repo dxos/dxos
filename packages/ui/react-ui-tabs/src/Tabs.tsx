@@ -136,15 +136,14 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
-  const { orientation } = useTabsContext('TabsTablist');
+  const { orientation, verticalVariant } = useTabsContext('TabsTablist');
   return (
     <TabsPrimitive.List
       {...props}
       className={mx(
-        'place-self-start max-bs-full is-full',
-        orientation === 'vertical'
-          ? 'overflow-y-auto p-1'
-          : 'flex items-stretch justify-start gap-2 overflow-x-auto p-2',
+        'max-bs-full is-full',
+        orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start gap-2 overflow-x-auto p-2',
+        orientation === 'vertical' && verticalVariant === 'stateful' && 'place-self-start p-1',
         classNames,
       )}
     >

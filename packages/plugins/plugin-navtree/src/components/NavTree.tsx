@@ -23,11 +23,13 @@ export const NavTree = (props: NavTreeProps) => {
   const path = useMemo(() => [props.id], [props.id]);
 
   return (
+    // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
     <Tabs.Root
       value={currentItemId}
       onValueChange={setCurrentItemId}
       orientation='vertical'
       verticalVariant='stateless'
+      classNames='grid grid-cols-[74px_1fr]'
     >
       <L0Menu topLevelItems={topLevelItems} path={path} parent={props.root} />
       <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={currentItemId} />

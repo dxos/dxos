@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { Banner } from './Banner';
 import { useBreakpoints } from '../../util';
@@ -29,9 +28,7 @@ export const Sidebar = () => {
           <Surface role='search-input' limit={1} />
         </>
       )}
-      <div role='none' className={mx('!overflow-y-auto', breakpoint !== 'desktop' && 'border-be border-separator')}>
-        <Surface role='navigation' data={navigationData} limit={1} />
-      </div>
+      <Surface role='navigation' data={navigationData} limit={1} />
       {!hoistStatusbar && <Surface role='status-bar--sidebar-footer' limit={1} />}
     </Main.NavigationSidebar>
   );
