@@ -24,6 +24,7 @@ import {
   QueueService,
   SpaceService,
   type ValueBag,
+  type GraphDiagnostic,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
@@ -100,6 +101,8 @@ export class ComputeGraphController extends Resource {
     computeNodeResolver: (node) => resolveComputeNode(node),
   });
 
+  private _diagnostics: GraphDiagnostic[] = [];
+
   private _services: Partial<Services> = {};
 
   /**
@@ -146,6 +149,10 @@ export class ComputeGraphController extends Resource {
 
   get graph() {
     return this._graph;
+  }
+
+  get diagnostics() {
+    return this._diagnostics;
   }
 
   get userState() {
@@ -213,6 +220,13 @@ export class ComputeGraphController extends Resource {
   async getMeta(node: ComputeNode): Promise<ComputeMeta> {
     const { meta } = await resolveComputeNode(node);
     return meta;
+  }
+
+  @synchronized
+  async checkGraph(): Promise<void> {
+    const executor = this._executor.clone();
+    await executor.load(this._graph);
+    this._diagnostics = executor.getDiagnostics();
   }
 
   async evalNode(nodeId: string) {
