@@ -44,7 +44,7 @@ export type TagBlock = {
 };
 
 /**
- * Permissive streaming parser for XML fragments, markdown fenced code blocks, and plain text.
+ * Permissive streaming parser for XML fragments, markdown fenced code blocks, JSON, and plain text.
  */
 export class StreamingParser {
   public readonly update = new Event<Block>();
