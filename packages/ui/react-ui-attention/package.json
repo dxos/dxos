@@ -36,13 +36,13 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/primitive": "^1.0.0",
-    "@radix-ui/react-compose-refs": "^1.0.0",
-    "@radix-ui/react-context": "^1.0.0",
-    "@radix-ui/react-menu": "^2.0.6",
-    "@radix-ui/react-primitive": "^1.0.2",
-    "@radix-ui/react-slot": "^1.0.1",
-    "@radix-ui/react-use-controllable-state": "^1.0.0"
+    "@radix-ui/primitive": "1.1.1",
+    "@radix-ui/react-compose-refs": "1.1.1",
+    "@radix-ui/react-context": "1.1.1",
+    "@radix-ui/react-menu": "2.1.6",
+    "@radix-ui/react-primitive": "2.0.2",
+    "@radix-ui/react-slot": "1.1.2",
+    "@radix-ui/react-use-controllable-state": "1.1.0"
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
