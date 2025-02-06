@@ -13,11 +13,11 @@ type Part = { event: string; data: any };
 
 describe('GenerationStream', () => {
   it('should stream messages', async ({ expect }) => {
-    const input = [['<cot>', '1. Ready.', '2. Aim.', '3. Fire.', '</cot>'].join('\n'), 'Hello world!'];
+    const input = [['<cot>', '1. Ready.', '2. Aim.', '3. Fire.', '</cot>', 'Hello world!'].join('\n')];
     const output = [];
 
     let block: string[] = [];
-    const stream = GenerationStream.fromSSEResponse({}, new Response(createTestStream(input)));
+    const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream(input)));
     for await (const event of stream) {
       switch (event.type) {
         case 'content_block_start': {
@@ -42,9 +42,10 @@ describe('GenerationStream', () => {
     await stream.complete();
   });
 
-  it('should parse mixed content.', ({ expect }) => {
+  it('should parse mixed content', ({ expect }) => {
+    const parser = new StreamingParser();
     const blocks: Block[] = [];
-    const parser = new StreamingParser((block) => {
+    parser.update.on((block) => {
       blocks.push(block);
     });
 
@@ -58,10 +59,42 @@ describe('GenerationStream', () => {
     expect(blocks.map((block) => block.type)).to.deep.eq(['text', 'tag', 'text', 'tag', 'text', 'code', 'code']);
     expect(blocks.map((block) => block.type === 'tag' && block.name).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
   });
+
+  it('should parse the SSE stream into blocks', async ({ expect }) => {
+    const parser = new StreamingParser();
+    const blocks: Block[] = [];
+    parser.update.on((block) => {
+      blocks.push(block);
+    });
+
+    const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream([TEXT])));
+    for await (const event of stream) {
+      switch (event.type) {
+        case 'message_stop': {
+          parser.end();
+          break;
+        }
+
+        case 'content_block_delta': {
+          const delta = (event.delta as any).text;
+          parser.write(delta);
+          break;
+        }
+      }
+    }
+
+    expect(blocks).to.have.length(7);
+    expect(blocks.map((block) => block.type)).to.deep.eq(['text', 'tag', 'text', 'tag', 'text', 'code', 'code']);
+    expect(blocks.map((block) => block.type === 'tag' && block.name).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
+  });
 });
 
-export const createTestStream = (blocks: string[]): ReadableStream => {
+/**
+ * Mock server-side events (SSE) stream.
+ */
+export const createTestSSEStream = (blocks: string[]): ReadableStream => {
   const encoder = new TextEncoder();
+
   return new ReadableStream({
     start: (controller) => {
       const push = (message: Part) => {
@@ -80,7 +113,7 @@ export const createTestStream = (blocks: string[]): ReadableStream => {
         });
 
         let index = 0;
-        for (const word of block.split(' ')) {
+        for (const word of block.split(/[ \t]+/)) {
           push({
             event: 'content_block_delta',
             data: { type: 'content_block_delta', index, delta: { type: 'text_delta', text: word + ' ' } },

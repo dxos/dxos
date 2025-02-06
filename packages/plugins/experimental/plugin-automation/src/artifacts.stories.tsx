@@ -10,7 +10,13 @@ import React, { useMemo, useState } from 'react';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Tool, type Message } from '@dxos/artifact';
-import { type ArtifactsContext, capabilities, genericTools, localServiceEndpoints } from '@dxos/artifact-testing';
+import {
+  type ArtifactsContext,
+  capabilities,
+  genericTools,
+  type IsObject,
+  localServiceEndpoints,
+} from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
@@ -31,7 +37,7 @@ import { createProcessorOptions } from './testing';
 const endpoints = localServiceEndpoints;
 
 type RenderProps = {
-  items?: ArtifactsContext['items']; // TODO(burdon): Typedef.
+  items?: IsObject[];
 };
 
 const Render = ({ items: _items }: RenderProps) => {

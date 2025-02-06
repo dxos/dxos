@@ -25,15 +25,4 @@
       "//",
     ],
   },
-  // Disabled them so they don't interfere with completion suggestions -- please move into user settings if they are used.
-  // "log": {
-  // 	"scope": "typescript,typescriptreact",
-  // 	"prefix": "log",
-  // 	"body": ["console.log('$1');"]
-  // },
-  // "todo": {
-  // 	"scope": "typescript,typescriptreact",
-  // 	"prefix": "todo",
-  // 	"body": ["TODO(): $1"]
-  // }
 }

@@ -37,7 +37,7 @@ declare global {
  * Maintains a queue of messages and handles streaming responses from the AI service.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Tests.
+// TODO(burdon): Factor out.
 export class ChatProcessor {
   /** Prior history from queue. */
   private _history: Message[] = [];
@@ -48,8 +48,8 @@ export class ChatProcessor {
   /** Streaming messages (from the AI service). */
   private _streaming: Signal<Message[]> = signal([]);
 
-  /** Current streaming response. */
-  private _response: GenerationStream | undefined;
+  /** Current streaming response (iterator). */
+  private _stream: GenerationStream | undefined;
 
   constructor(
     private readonly _client: AIServiceClientImpl,
@@ -72,15 +72,15 @@ export class ChatProcessor {
   async request(message: string, history: Message[] = []): Promise<Message[]> {
     log.info('requesting...', { message, history: history.length });
     this._history = history;
+    this._streaming.value = [];
     this._pending.value = [
       createStatic(Message, {
         role: 'user',
         content: [{ type: 'text', text: message }],
       }),
     ];
-    this._streaming.value = [];
 
-    await this.generate();
+    await this._generate();
     return this._reset();
   }
 
@@ -90,41 +90,62 @@ export class ChatProcessor {
    */
   async cancel(): Promise<Message[]> {
     log.info('cancelling...');
-    this._response?.abort();
+    this._stream?.abort();
     return this._reset();
   }
 
   private async _reset(): Promise<Message[]> {
     const pending = this._pending.value;
     this._history = [];
-    this._pending.value = [];
     this._streaming.value = [];
+    this._pending.value = [];
     return pending;
   }
 
-  private async generate() {
+  /**
+   * Generate a response from the AI service.
+   * Iterates over tool requests.
+   */
+  private async _generate() {
     try {
       let more = false;
       do {
         log.info('requesting...', { history: this._history.length, pending: this._pending.value.length });
-        this._response = await this._client.generate({
+        this._stream = await this._client.generate({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
           history: [...this._history, ...this._pending.value],
           tools: this._tools,
         });
 
-        // Process the stream.
+        // Consume the stream.
         queueMicrotask(async () => {
-          invariant(this._response);
-          for await (const event of this._response) {
+          // const parser = new StreamingParser();
+          // const blocks: Block[] = [];
+          // parser.update.on((block) => {
+          //   blocks.push(block);
+          //
+          //   // TODO(burdon): Convert to message.
+          //   this._streaming.value = blocks.map((block) => createStatic(Message, block));
+          // });
+
+          invariant(this._stream);
+          for await (const event of this._stream) {
             log.info('event', { event: event.type });
-            this._streaming.value = this._response.accumulatedMessages.map((message) => createStatic(Message, message));
+            switch (event.type) {
+              case 'message_stop': {
+                // parser.end();
+                break;
+              }
+            }
+
+            // TODO(burdon): Parse stream.
+            this._streaming.value = this._stream.messages.map((message) => createStatic(Message, message));
           }
         });
 
-        // Update pending messages.
-        const messages = await this._response.complete();
+        // Wait until complete.
+        const messages = await this._stream.complete();
         log.info('response', { messages: messages.length });
         this._pending.value.push(...messages.map((message) => createStatic(Message, message)));
         this._streaming.value = [];
@@ -154,7 +175,7 @@ export class ChatProcessor {
       log.catch('request failed', { err });
     } finally {
       log.info('done');
-      this._response = undefined;
+      this._stream = undefined;
       this._streaming.value = [];
     }
   }

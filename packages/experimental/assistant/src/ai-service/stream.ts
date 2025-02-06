@@ -4,24 +4,25 @@
 
 import { type Message } from '@dxos/artifact';
 import { Trigger } from '@dxos/async';
-import { type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ResultStreamEvent } from './defs';
+import { type GenerateRequest, type ResultStreamEvent } from './defs';
 import { iterSSEMessages } from './util';
 
-export type GenerationParams = {
-  spaceId?: SpaceId;
-  threadId?: ObjectId;
-};
+export type GenerationParams = Pick<GenerateRequest, 'spaceId' | 'threadId'>;
 
+/**
+ * Server-Sent Events (SSE) stream from the AI service.
+ * https://docs.anthropic.com/en/api/streaming
+ * https://platform.openai.com/docs/api-reference/streaming
+ * https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events
+ */
 export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
   /**
    * Creates a stream from an SSE response.
    */
-  static fromSSEResponse(params: GenerationParams, response: Response, controller = new AbortController()) {
+  static fromSSEResponse(response: Response, params: GenerationParams = {}, controller = new AbortController()) {
     const iterator = async function* () {
       for await (const sse of iterSSEMessages(response, controller)) {
         if (sse.event === 'completion') {
@@ -62,10 +63,25 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
     return new GenerationStream(controller, iterator, params);
   }
 
-  private readonly _done = new Trigger();
-  private _previousMessages: Message[] = [];
-  private _accumulatedMessage?: Message = undefined;
+  /**
+   * Accumulated messages.
+   */
+  private _messages: Message[] = [];
+
+  /**
+   * The current message being assembled.
+   */
+  private _current?: Message = undefined;
+
+  /**
+   * Iterator over the stream.
+   */
   private _iterator?: AsyncIterator<ResultStreamEvent> = undefined;
+
+  /**
+   * Trigger event when the stream is done.
+   */
+  private readonly _done = new Trigger();
 
   constructor(
     private readonly _controller: AbortController,
@@ -73,13 +89,18 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
     private readonly _params: GenerationParams,
   ) {}
 
+  /**
+   * Returns an iterator over the stream.
+   */
   [Symbol.asyncIterator](): AsyncIterator<ResultStreamEvent> {
     return this._createIterator();
   }
 
-  get accumulatedMessages(): Message[] {
-    // TODO(dmaretskyi): Support multiple accumulated messages.
-    return [...this._previousMessages, ...(this._accumulatedMessage == null ? [] : [this._accumulatedMessage])];
+  /**
+   * Accumulated messasges.
+   */
+  get messages(): Message[] {
+    return [...this._messages, ...(this._current == null ? [] : [this._current])];
   }
 
   /**
@@ -94,9 +115,12 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
    */
   async complete(): Promise<Message[]> {
     await this._done.wait();
-    return this.accumulatedMessages;
+    return this.messages;
   }
 
+  /**
+   * Creates an iterator over the stream.
+   */
   private _createIterator(): AsyncIterator<ResultStreamEvent> {
     const self = this;
     return (this._iterator ??= (() => {
@@ -111,55 +135,66 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
           this._done.throw(err);
         }
       };
+
       return generator.call(this);
     })());
   }
 
   private _processEvent(event: ResultStreamEvent) {
+    log('processing', { event: event.type });
+
     // TODO(dmaretskyi): Support multiple message, e.g., for service-defined tools.
     switch (event.type) {
+      //
+      // Message events
+      //
+
       case 'message_start': {
-        if (this._accumulatedMessage) {
-          this._previousMessages.push(this._accumulatedMessage);
-          this._accumulatedMessage = undefined;
+        if (this._current) {
+          this._messages.push(this._current);
+          this._current = undefined;
         }
-        this._accumulatedMessage = {
+
+        this._current = {
           ...event.message,
-          threadId: this._params.threadId,
           spaceId: this._params.spaceId,
+          threadId: this._params.threadId,
         };
         break;
       }
 
       case 'message_delta': {
-        if (this._accumulatedMessage === undefined) {
+        if (this._current === undefined) {
           throw new Error('Received message delta without a message start');
         }
         break;
       }
 
       case 'message_stop': {
-        if (this._accumulatedMessage === undefined) {
+        if (this._current === undefined) {
           throw new Error('Received message stop without a message start');
         }
         break;
       }
 
+      //
+      // Content block events
+      //
+
       case 'content_block_start': {
-        invariant(this._accumulatedMessage);
-        this._accumulatedMessage.content.push(event.content);
+        invariant(this._current);
+        this._current.content.push(event.content);
         break;
       }
 
       case 'content_block_delta': {
-        invariant(this._accumulatedMessage);
-        const snapshotContent = this._accumulatedMessage.content.at(event.index);
+        invariant(this._current);
+        const snapshotContent = this._current.content.at(event.index);
         if (snapshotContent?.type === 'text' && event.delta.type === 'text_delta') {
           snapshotContent.text += event.delta.text;
         } else if (snapshotContent?.type === 'tool_use' && event.delta.type === 'input_json_delta') {
           snapshotContent.inputJson ??= '';
           snapshotContent.inputJson += event.delta.partial_json;
-
           // TODO(dmaretskyi): Partial parsing.
           // if (jsonBuf) {
           //   snapshotContent.input = partialParse(jsonBuf);
@@ -169,8 +204,8 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
       }
 
       case 'content_block_stop': {
-        invariant(this._accumulatedMessage);
-        const lastBlock = this._accumulatedMessage.content.at(-1);
+        invariant(this._current);
+        const lastBlock = this._current.content.at(-1);
         if (lastBlock?.type === 'tool_use') {
           lastBlock.input =
             lastBlock.inputJson == null || lastBlock.inputJson === '' ? {} : JSON.parse(lastBlock.inputJson ?? '');

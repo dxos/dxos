@@ -33,6 +33,7 @@ export const ToolTypes = Object.freeze({
 export const GenerateRequest = S.Struct({
   spaceId: S.optional(SpaceIdSchema),
   threadId: S.optional(ObjectId),
+
   model: LLMModel,
 
   /**

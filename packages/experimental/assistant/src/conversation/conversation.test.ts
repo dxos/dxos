@@ -14,12 +14,13 @@ import { runLLM, type ConversationEvent } from './conversation';
 import { AIServiceClientImpl } from '../ai-service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
+// TODO(burdon): Local live LLM test.
 describe.skip('Conversation tests', () => {
   const client = new AIServiceClientImpl({
     endpoint: AI_SERVICE_ENDPOINT.LOCAL,
   });
 
-  test('hello', async ({ expect }) => {
+  test('basic', async ({ expect }) => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
@@ -30,10 +31,12 @@ describe.skip('Conversation tests', () => {
       client,
       logger: messageLogger,
     });
+
     log('result', { result });
+    expect(result.history.length).to.equal(2);
   });
 
-  test.only('tool call', async ({ expect }) => {
+  test('tool call', async ({ expect }) => {
     const custodian = defineTool({
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',

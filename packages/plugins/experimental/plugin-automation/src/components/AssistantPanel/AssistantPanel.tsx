@@ -93,7 +93,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
 
     const historyBefore = [...history, userMessage];
     for await (const _event of generationStream) {
-      setHistory([...historyBefore, ...generationStream.accumulatedMessages]);
+      setHistory([...historyBefore, ...generationStream.messages]);
     }
 
     await aiClient.current!.appendMessages(await generationStream.complete());

@@ -75,23 +75,14 @@ export class AIServiceClientImpl implements AIServiceClient {
    */
   async generate(request: GenerateRequest): Promise<GenerationStream> {
     const controller = new AbortController();
-    const signal = controller.signal;
-
     const response = await fetch(`${this._endpoint}/generate`, {
+      signal: controller.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
-      signal,
     });
 
     invariant(response.body instanceof ReadableStream);
-    return GenerationStream.fromSSEResponse(
-      {
-        spaceId: request.spaceId,
-        threadId: request.threadId,
-      },
-      response,
-      controller,
-    );
+    return GenerationStream.fromSSEResponse(response, request, controller);
   }
 }
