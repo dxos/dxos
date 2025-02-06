@@ -49,11 +49,9 @@ export const Surface = memo(
       const surfaces = useSurfaces();
       const data = useDefaultValue(_data, () => ({}));
 
-      const candidates = useMemo(() => {
-        const definitions = findCandidates(surfaces, { role, data });
-        return limit ? definitions.slice(0, limit) : definitions;
-      }, [surfaces, role, data, limit]);
-
+      // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
+      const definitions = findCandidates(surfaces, { role, data });
+      const candidates = limit ? definitions.slice(0, limit) : definitions;
       const nodes = candidates.map(({ component: Component, id }) => (
         <Component ref={forwardedRef} key={id} id={id} role={role} data={data} limit={limit} {...rest} />
       ));
