@@ -18,20 +18,23 @@ import { SETTINGS_DIALOG } from '../components';
 export default (context: PluginsContext) =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(SettingsAction.Open, ({ plugin }) => {
-      if (plugin) {
-        const state = context.requestCapability(SettingsInterfaceCapabilities.MutableState);
-        state.selected = plugin;
-      }
+    createResolver({
+      intent: SettingsAction.Open,
+      resolve: ({ plugin }) => {
+        if (plugin) {
+          const state = context.requestCapability(SettingsInterfaceCapabilities.MutableState);
+          state.selected = plugin;
+        }
 
-      return {
-        intents: [
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: SETTINGS_DIALOG,
-            dialogBlockAlign: 'start',
-          }),
-        ],
-      };
+        return {
+          intents: [
+            createIntent(LayoutAction.SetLayout, {
+              element: 'dialog',
+              component: SETTINGS_DIALOG,
+              dialogBlockAlign: 'start',
+            }),
+          ],
+        };
+      },
     }),
   );

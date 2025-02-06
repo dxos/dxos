@@ -10,13 +10,16 @@ import { CanvasType, DiagramType, SketchAction, TLDRAW_SCHEMA } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(SketchAction.Create, ({ name, schema = TLDRAW_SCHEMA, content = {} }) => ({
-      data: {
-        object: create(DiagramType, {
-          name,
-          canvas: makeRef(create(CanvasType, { schema, content })),
-          threads: [],
-        }),
-      },
-    })),
+    createResolver({
+      intent: SketchAction.Create,
+      resolve: ({ name, schema = TLDRAW_SCHEMA, content = {} }) => ({
+        data: {
+          object: create(DiagramType, {
+            name,
+            canvas: makeRef(create(CanvasType, { schema, content })),
+            threads: [],
+          }),
+        },
+      }),
+    }),
   );

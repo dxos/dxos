@@ -40,9 +40,12 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions) =>
       activate: (context) =>
         contributes(
           Capabilities.IntentResolver,
-          createResolver(HelpAction.Start, () => {
-            const state = context.requestCapability(HelpCapabilities.MutableState);
-            state.running = true;
+          createResolver({
+            intent: HelpAction.Start,
+            resolve: () => {
+              const state = context.requestCapability(HelpCapabilities.MutableState);
+              state.running = true;
+            },
           }),
         ),
     }),

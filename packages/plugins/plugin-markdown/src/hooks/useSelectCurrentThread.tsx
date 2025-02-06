@@ -17,9 +17,11 @@ import { MARKDOWN_PLUGIN } from '../meta';
 export const useSelectCurrentThread = (editorView: EditorView | undefined, documentId: string) => {
   const scrollIntoViewResolver = useMemo(
     () =>
-      createResolver(
-        LayoutAction.ScrollIntoView,
-        ({ cursor }) => {
+      createResolver({
+        intent: LayoutAction.ScrollIntoView,
+        disposition: 'hoist',
+        filter: (data): data is { cursor: string } => !!editorView && data.id === documentId && !!data.cursor,
+        resolve: ({ cursor }) => {
           invariant(editorView, 'Editor view is not defined.');
           const range = Cursor.getRangeFromCursor(editorView.state, cursor!);
           if (range) {
@@ -39,11 +41,7 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
             });
           }
         },
-        {
-          disposition: 'hoist',
-          filter: (data) => !!editorView && data.id === documentId && !!data.cursor,
-        },
-      ),
+      }),
     [documentId, editorView],
   );
 
