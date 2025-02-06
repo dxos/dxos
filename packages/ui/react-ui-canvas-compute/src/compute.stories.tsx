@@ -155,8 +155,6 @@ const Render = ({
     }
   }, []);
 
-  console.log(diagnostics);
-
   if (!controller) {
     return <div />;
   }
