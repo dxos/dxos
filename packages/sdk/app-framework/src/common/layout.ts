@@ -43,20 +43,23 @@ export namespace LayoutAction {
 
   export class SetLayoutMode extends S.TaggedClass<SetLayoutMode>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('mode'),
-      subject: S.optional(S.String),
-      options: S.Union(S.Struct({ mode: S.String }), S.Struct({ revert: S.Boolean })),
+      part: S.Literal('mode').annotations({ description: 'Setting the layout mode.' }),
+      subject: S.optional(S.String.annotations({ description: 'Item which is the subject of the new layout mode.' })),
+      options: S.Union(
+        S.Struct({ mode: S.String.annotations({ description: 'The new layout mode.' }) }),
+        S.Struct({ revert: S.Boolean.annotations({ description: 'Revert to the previous layout mode.' }) }),
+      ),
     }),
     output: S.Void,
   }) {}
 
   export class UpdateSidebar extends S.TaggedClass<UpdateSidebar>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('sidebar'),
-      subject: S.optional(S.String),
+      part: S.Literal('sidebar').annotations({ description: 'Updating the sidebar.' }),
+      subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the sidebar.' })),
       options: S.optional(
         S.Struct({
-          state: S.Boolean,
+          state: S.Boolean.annotations({ description: 'Whether the sidebar is open or closed.' }),
         }),
       ),
     }),
@@ -65,11 +68,13 @@ export namespace LayoutAction {
 
   export class UpdateComplementary extends S.TaggedClass<UpdateComplementary>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('complementary'),
-      subject: S.optional(S.String),
+      part: S.Literal('complementary').annotations({ description: 'Updating the complementary sidebar.' }),
+      subject: S.optional(
+        S.String.annotations({ description: 'URI of the component to display in the complementary area.' }),
+      ),
       options: S.optional(
         S.Struct({
-          state: S.Boolean,
+          state: S.Boolean.annotations({ description: 'Whether the complementary sidebar is open or closed.' }),
         }),
       ),
     }),
@@ -78,13 +83,19 @@ export namespace LayoutAction {
 
   export class UpdateDialog extends S.TaggedClass<UpdateDialog>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('dialog'),
+      part: S.Literal('dialog').annotations({ description: 'Updating the dialog.' }),
       subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the dialog.' })),
       options: S.Struct({
-        state: S.optional(S.Boolean),
-        blockAlign: S.optional(S.Literal('start', 'center')),
-        type: S.optional(S.Literal('default', 'alert')),
-        props: S.optional(S.Record({ key: S.String, value: S.Any })),
+        state: S.optional(S.Boolean.annotations({ description: 'Whether the dialog is open or closed.' })),
+        blockAlign: S.optional(
+          S.Literal('start', 'center').annotations({ description: 'The alignment of the dialog.' }),
+        ),
+        type: S.optional(S.Literal('default', 'alert').annotations({ description: 'The type of dialog.' })),
+        props: S.optional(
+          S.Record({ key: S.String, value: S.Any }).annotations({
+            description: 'Additional props for the dialog.',
+          }),
+        ),
       }),
     }),
     output: S.Void,
@@ -92,27 +103,33 @@ export namespace LayoutAction {
 
   export class UpdatePopover extends S.TaggedClass<UpdatePopover>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('popover'),
+      part: S.Literal('popover').annotations({ description: 'Updating the popover.' }),
       subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the popover.' })),
       options: S.Struct({
-        anchorId: S.String,
-        state: S.optional(S.Boolean),
-        props: S.optional(S.Record({ key: S.String, value: S.Any })),
+        anchorId: S.String.annotations({ description: 'The id of the element to anchor the popover to.' }),
+        state: S.optional(S.Boolean.annotations({ description: 'Whether the popover is open or closed.' })),
+        props: S.optional(
+          S.Record({ key: S.String, value: S.Any }).annotations({
+            description: 'Additional props for the popover.',
+          }),
+        ),
       }),
     }),
     output: S.Void,
   }) {}
 
   export const Toast = S.Struct({
-    id: S.String,
-    title: S.optional(Label),
-    description: S.optional(Label),
-    icon: S.optional(S.String),
-    duration: S.optional(S.Number),
-    closeLabel: S.optional(Label),
-    actionLabel: S.optional(Label),
-    actionAlt: S.optional(Label),
-    onAction: S.optional(S.Any),
+    id: S.String.annotations({ description: 'The id of the toast.' }),
+    title: S.optional(Label.annotations({ description: 'The title of the toast.' })),
+    description: S.optional(Label.annotations({ description: 'The description of the toast.' })),
+    icon: S.optional(S.String.annotations({ description: 'The icon of the toast.' })),
+    duration: S.optional(S.Number.annotations({ description: 'The duration of the toast.' })),
+    closeLabel: S.optional(Label.annotations({ description: 'The label of the close button.' })),
+    actionLabel: S.optional(Label.annotations({ description: 'The label of the action button.' })),
+    actionAlt: S.optional(Label.annotations({ description: 'The alt text of the action button.' })),
+    onAction: S.optional(
+      S.Any.annotations({ description: 'The action to perform when the action button is clicked.' }),
+    ),
   });
 
   export interface Toast extends Omit<S.Schema.Type<typeof Toast>, 'onAction'> {
@@ -121,22 +138,27 @@ export namespace LayoutAction {
 
   export class AddToast extends S.TaggedClass<AddToast>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('toast'),
-      subject: Toast,
+      part: S.Literal('toast').annotations({ description: 'Adding a toast.' }),
+      subject: Toast.annotations({ description: 'The toast to add.' }),
     }),
     output: S.Void,
   }) {}
 
   export class Open extends S.TaggedClass<Open>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('main'),
-      subject: S.Array(S.String),
+      part: S.Literal('main').annotations({ description: 'Opening an item in the main content area.' }),
+      subject: S.Array(S.String.annotations({ description: 'Ids of the items to open.' })),
       options: S.optional(
         S.Struct({
-          state: S.optional(S.Literal(true)),
-          scrollIntoView: S.optional(S.Boolean),
-          pivotId: S.optional(S.String),
-          positioning: S.optional(S.Literal('start', 'end')),
+          state: S.optional(S.Literal(true).annotations({ description: 'The items are being added.' })),
+          scrollIntoView: S.optional(S.Boolean.annotations({ description: 'Scroll the items into view.' })),
+          pivotId: S.optional(S.String.annotations({ description: 'The id of the item to place new items next to.' })),
+          positioning: S.optional(
+            S.Union(
+              S.Literal('start').annotations({ description: 'The items are being added before the pivot item.' }),
+              S.Literal('end').annotations({ description: 'The items are being added after the pivot item.' }),
+            ),
+          ),
         }),
       ),
     }),
@@ -145,10 +167,10 @@ export namespace LayoutAction {
 
   export class Set extends S.TaggedClass<Set>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('main'),
-      subject: S.Array(S.String),
+      part: S.Literal('main').annotations({ description: 'Setting items in the main content area.' }),
+      subject: S.Array(S.String.annotations({ description: 'Ids of the items to set.' })),
       options: S.Struct({
-        override: S.Literal(true),
+        override: S.Literal(true).annotations({ description: 'Override the current items in the main content area.' }),
       }),
     }),
     output: S.Void,
@@ -156,10 +178,10 @@ export namespace LayoutAction {
 
   export class Close extends S.TaggedClass<Close>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('main'),
-      subject: S.Array(S.String),
+      part: S.Literal('main').annotations({ description: 'Closing items in the main content area.' }),
+      subject: S.Array(S.String.annotations({ description: 'Ids of the items to close.' })),
       options: S.Struct({
-        state: S.Literal(false),
+        state: S.Literal(false).annotations({ description: 'The items are being removed.' }),
       }),
     }),
     output: S.Void,
@@ -167,17 +189,21 @@ export namespace LayoutAction {
 
   export class ScrollIntoView extends S.TaggedClass<ScrollIntoView>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('current'),
-      subject: S.optional(S.String),
-      options: S.optional(S.Record({ key: S.String, value: S.Any })),
+      part: S.Literal('current').annotations({ description: 'Setting the current item' }),
+      subject: S.optional(S.String.annotations({ description: 'The id of the item to set as current.' })),
+      options: S.optional(
+        S.Record({ key: S.String, value: S.Any }).annotations({
+          description: 'Additional options for the scroll into view.',
+        }),
+      ),
     }),
     output: S.Void,
   }) {}
 
   export class Expose extends S.TaggedClass<Expose>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      part: S.Literal('navigation'),
-      subject: S.String,
+      part: S.Literal('navigation').annotations({ description: 'Exposing an item in the navigation area.' }),
+      subject: S.String.annotations({ description: 'The id of the item to expose.' }),
     }),
     output: S.Void,
   }) {}

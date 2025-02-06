@@ -131,7 +131,7 @@ const setupApplicationUrlListener = (app: any, dispatch: any) => {
       // Currently, the dialogs are controlled by Client Plugin and not the Layout Plugin.
       window.location.href = location;
     } else {
-      // TODO(thure): what is `location` and is this right?
+      // TODO(thure): What is `location` and is this right?
       void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [location] }));
     }
   });
