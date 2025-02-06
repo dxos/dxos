@@ -5,7 +5,7 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
-import { type Tool } from '@dxos/artifact';
+import { type Message, type Tool } from '@dxos/artifact';
 import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -80,44 +80,59 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.generate({
+    const stream1 = await client.generate({
       model: '@anthropic/claude-3-5-haiku-20241022',
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',
       tools: [custodian],
     });
-    for await (const event of stream) {
+
+    for await (const event of stream1) {
       log('event', event);
     }
-    const [message] = await stream.complete();
-    log('full message', { message });
-    await client.appendMessages([message]);
 
-    const toolUse = message.content.find(({ type }) => type === 'tool_use')!;
-    invariant(toolUse.type === 'tool_use');
-    await client.appendMessages([
-      {
-        id: ObjectId.random(),
+    {
+      // TODO(burdon): !!!
+      await stream1.complete();
+      const messages: Message[] = [];
+
+      const [message1] = messages;
+      log('full message', { message: message1 });
+      await client.appendMessages([message1]);
+
+      const toolUse = message1.content.find(({ type }) => type === 'tool_use')!;
+      invariant(toolUse.type === 'tool_use');
+      await client.appendMessages([
+        {
+          id: ObjectId.random(),
+          spaceId,
+          threadId,
+          role: 'user',
+          content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is blue"' }],
+        },
+      ]);
+    }
+
+    {
+      const stream2 = await client.generate({
+        model: '@anthropic/claude-3-5-haiku-20241022',
         spaceId,
         threadId,
-        role: 'user',
-        content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is gray"' }],
-      },
-    ]);
+        systemPrompt: 'You are a helpful assistant.',
+        tools: [custodian],
+      });
 
-    const stream2 = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
-      spaceId,
-      threadId,
-      systemPrompt: 'You are a helpful assistant.',
-      tools: [custodian],
-    });
-    for await (const event of stream2) {
-      log('event', event);
+      for await (const event of stream2) {
+        log('event', event);
+      }
+
+      await stream2.complete();
+      const messages: Message[] = [];
+
+      const [message2] = messages;
+      log('full message', { message: message2 });
     }
-    const [message2] = await stream2.complete();
-    log('full message', { message: message2 });
   });
 
   test.skip('image generation', async () => {

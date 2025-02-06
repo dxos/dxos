@@ -11,9 +11,10 @@ import {
   type GenerateRequest,
   type GenerationStream,
   isToolUse,
+  MixedStreamParser,
   runTools,
 } from '@dxos/assistant';
-import { createStatic } from '@dxos/echo-schema';
+import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -118,34 +119,51 @@ export class ChatProcessor {
           tools: this._tools,
         });
 
-        // Consume the stream.
-        queueMicrotask(async () => {
-          // const parser = new StreamingParser();
-          // const blocks: Block[] = [];
-          // parser.update.on((block) => {
-          //   blocks.push(block);
-          //
-          //   // TODO(burdon): Convert to message.
-          //   this._streaming.value = blocks.map((block) => createStatic(Message, block));
-          // });
+        const messages: Message[] = [];
+        const parser = new MixedStreamParser();
+        parser.message.on(() => {
+          const message: Message = {
+            id: ObjectId.random(),
+            role: 'assistant',
+            content: [],
+          };
 
-          invariant(this._stream);
-          for await (const event of this._stream) {
-            log.info('event', { event: event.type });
-            switch (event.type) {
-              case 'message_stop': {
-                // parser.end();
-                break;
-              }
-            }
-
-            // TODO(burdon): Parse stream.
-            this._streaming.value = this._stream.messages.map((message) => createStatic(Message, message));
-          }
+          messages.push(message);
+        });
+        parser.block.on((block) => {
+          const message = messages.at(-1);
+          invariant(message);
+          log.info('block', { block });
         });
 
+        await parser.parse(this._stream);
+
+        // Consume the stream.
+        // queueMicrotask(async () => {
+        // const parser = new StreamingParser();
+        // const blocks: Block[] = [];
+        // parser.update.on((block) => {
+        //   blocks.push(block);
+        //
+        //   // TODO(burdon): Convert to message.
+        //   this._streaming.value = blocks.map((block) => createStatic(Message, block));
+        // });
+        // invariant(this._stream);
+        // for await (const event of this._stream) {
+        //   log.info('event', { event: event.type });
+        //   switch (event.type) {
+        //     case 'message_stop': {
+        //       // parser.end();
+        //       break;
+        //     }
+        //   }
+        //   // TODO(burdon): Parse stream.
+        //   this._streaming.value = this._stream.messages.map((message) => createStatic(Message, message));
+        // }
+        // });
+
         // Wait until complete.
-        const messages = await this._stream.complete();
+        await this._stream.complete();
         log.info('response', { messages: messages.length });
         this._pending.value.push(...messages.map((message) => createStatic(Message, message)));
         this._streaming.value = [];

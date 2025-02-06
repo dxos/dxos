@@ -54,8 +54,12 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     for await (const event of stream) {
       params.logger?.(event);
     }
-    const messages = await stream.complete();
+
+    // TODO(burdon): !!!
+    await stream.complete();
+    const messages: Message[] = [];
     const message = messages.at(-1);
+    invariant(message);
 
     log('llm result', { time: Date.now() - beginTs, message });
     invariant(message);

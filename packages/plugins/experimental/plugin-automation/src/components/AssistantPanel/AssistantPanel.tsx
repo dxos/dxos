@@ -91,12 +91,15 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       systemPrompt: await getSystemPrompt(),
     });
 
+    // TODO(burdon): !!!
     const historyBefore = [...history, userMessage];
     for await (const _event of generationStream) {
-      setHistory([...historyBefore, ...generationStream.messages]);
+      // setHistory([...historyBefore, ...generationStream.messages]);
     }
 
-    await aiClient.current!.appendMessages(await generationStream.complete());
+    await generationStream.complete();
+    const messages: Message[] = [];
+    await aiClient.current!.appendMessages(messages);
   };
 
   const getSystemPrompt = async () => {

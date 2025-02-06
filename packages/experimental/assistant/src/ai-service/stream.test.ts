@@ -4,95 +4,100 @@
 
 import { describe, it } from 'vitest';
 
-import { type Block, StreamingParser } from './parser';
+import { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+
+import { MixedStreamParser, type StreamChunk } from './parser';
 import { GenerationStream } from './stream';
-/** @ts-ignore */
-import TEXT from './stream.test.txt?raw';
+import { type GenerationStreamEvent } from './types';
 
 type Part = { event: string; data: any };
 
+const TEST_DATA = [
+  // JSON
+  {},
+
+  [
+    // Text
+    'some text',
+    'on multiple lines.',
+
+    // XML
+    '<select>',
+    '  <option value="1" />',
+    '</select>',
+
+    // JSON
+    '<cot>',
+    '  1. Analyze content.',
+    '  2. Create plan.',
+    '  3. Generate artifacts.',
+    '</cot>',
+
+    // Text
+    'some more text.',
+
+    // XML
+    '<artifact id="123" />',
+
+    // XML
+    '<artifact id="456" />',
+
+    // Text
+    'and some more text.',
+  ].join('\n'),
+
+  // JSON
+  {
+    type: 'input',
+    value: {
+      level: 1,
+      optional: true,
+    },
+  },
+];
+
 describe('GenerationStream', () => {
-  it('should stream messages', async ({ expect }) => {
-    const input = [['<cot>', '1. Ready.', '2. Aim.', '3. Fire.', '</cot>', 'Hello world!'].join('\n')];
-    const output = [];
-
-    let block: string[] = [];
-    const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream(input)));
+  it('should generate a stream of blocks', async ({ expect }) => {
+    const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream(TEST_DATA)));
+    const events: GenerationStreamEvent[] = [];
     for await (const event of stream) {
-      switch (event.type) {
-        case 'content_block_start': {
-          block = [(event.content as any).text];
-          break;
-        }
-
-        case 'content_block_delta': {
-          block.push((event.delta as any).text);
-          break;
-        }
-
-        case 'content_block_stop': {
-          output.push(block.join('').trim());
-          break;
-        }
-      }
+      events.push(event);
     }
 
-    expect(output.length).to.equal(input.length);
-    expect(output).to.deep.equal(input);
-    await stream.complete();
+    expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(3);
   });
 
-  it('should parse mixed content', ({ expect }) => {
-    const parser = new StreamingParser();
-    const blocks: Block[] = [];
-    parser.update.on((block) => {
+  it('should emit xml blocks', async ({ expect }) => {
+    const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream(TEST_DATA)));
+    const parser = new MixedStreamParser();
+    const blocks: StreamChunk[] = [];
+    parser.block.on((block) => {
       blocks.push(block);
     });
 
-    const words = TEXT.split(' ');
-    for (const word of words) {
-      parser.write(word + ' ');
-    }
-    parser.end();
+    await parser.parse(stream);
 
-    expect(blocks).to.have.length(7);
-    expect(blocks.map((block) => block.type)).to.deep.eq(['json', 'tag', 'text', 'tag', 'text', 'code', 'code']);
-    expect(blocks.map((block) => block.type === 'tag' && block.name).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
-  });
-
-  it('should parse the SSE stream into blocks', async ({ expect }) => {
-    const parser = new StreamingParser();
-    const blocks: Block[] = [];
-    parser.update.on((block) => {
-      blocks.push(block);
-    });
-
-    const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream([TEXT])));
-    for await (const event of stream) {
-      switch (event.type) {
-        case 'message_stop': {
-          parser.end();
-          break;
-        }
-
-        case 'content_block_delta': {
-          const delta = (event.delta as any).text;
-          parser.write(delta);
-          break;
-        }
-      }
-    }
-
-    expect(blocks).to.have.length(7);
-    expect(blocks.map((block) => block.type)).to.deep.eq(['json', 'tag', 'text', 'tag', 'text', 'code', 'code']);
-    expect(blocks.map((block) => block.type === 'tag' && block.name).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
+    log('blocks', { blocks });
+    expect(blocks.map((block) => block.type)).to.deep.eq([
+      //
+      'json',
+      'text',
+      'xml',
+      'xml',
+      'text',
+      'xml',
+      'xml',
+      'text',
+      'json',
+    ]);
   });
 });
 
 /**
  * Mock server-side events (SSE) stream.
  */
-export const createTestSSEStream = (blocks: string[]): ReadableStream => {
+export const createTestSSEStream = (blocks: (string | object)[]): ReadableStream => {
   const encoder = new TextEncoder();
 
   return new ReadableStream({
@@ -103,7 +108,7 @@ export const createTestSSEStream = (blocks: string[]): ReadableStream => {
 
       push({
         event: 'message_start',
-        data: { type: 'message_start', message: { id: '123', role: 'assistant', content: [] } },
+        data: { type: 'message_start', message: { id: ObjectId.random(), role: 'assistant', content: [] } },
       });
 
       for (const block of blocks) {
@@ -113,13 +118,23 @@ export const createTestSSEStream = (blocks: string[]): ReadableStream => {
         });
 
         let index = 0;
-        for (const word of block.split(/[ \t]+/)) {
-          push({
-            event: 'content_block_delta',
-            data: { type: 'content_block_delta', index, delta: { type: 'text_delta', text: word + ' ' } },
-          });
-
-          index += word.length + 1;
+        if (typeof block === 'string') {
+          for (const word of block.split(/[ \t]+/)) {
+            push({
+              event: 'content_block_delta',
+              data: { type: 'content_block_delta', index, delta: { type: 'text_delta', text: word + ' ' } },
+            });
+            index += word.length + 1;
+          }
+        } else {
+          const text = JSON.stringify(block, null, 2);
+          for (const line of text.split('\n')) {
+            push({
+              event: 'content_block_delta',
+              data: { type: 'content_block_delta', index, delta: { type: 'input_json_delta', partial_json: line } },
+            });
+            index += line.length + 1;
+          }
         }
 
         push({

@@ -2,245 +2,300 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as P from 'parsimmon';
+
 import { Event } from '@dxos/async';
-import { safeParseJson } from '@dxos/util';
+import { log } from '@dxos/log';
 
-export type Block = TextBlock | JsonBlock | CodeBlock | TagBlock;
+import { type GenerationStream } from './stream';
+
+export type StreamChunk =
+  | {
+      type: 'xml';
+      tag: string;
+      attributes?: Record<string, string>;
+      content: StreamChunk[];
+      closing?: boolean;
+      selfClosing?: boolean;
+    }
+  | { type: 'text'; content: string }
+  | { type: 'json'; content: string };
+
+const textChunk: P.Parser<StreamChunk> = P.regexp(/[^<]+/).map((content) => ({
+  type: 'text',
+  content,
+}));
+
+const attribute: P.Parser<[string, string]> = P.seq(
+  P.regexp(/[a-zA-Z_][a-zA-Z0-9_-]*/),
+  P.string('=').trim(P.optWhitespace),
+  P.alt(
+    P.regexp(/"[^"]*"/).map((s) => s.slice(1, -1)),
+    P.regexp(/'[^']*'/).map((s) => s.slice(1, -1)),
+  ),
+).map(([name, _, value]) => [name, value]);
+
+const tagName = P.regexp(/[a-zA-Z_][a-zA-Z0-9_-]*/);
+
+const selfClosingTag: P.Parser<StreamChunk> = P.seqMap(
+  P.string('<'),
+  tagName,
+  P.optWhitespace.then(attribute).many(),
+  P.optWhitespace.then(P.string('/>')),
+  (_, tag, attributes, __) => ({
+    type: 'xml',
+    tag,
+    attributes: Object.fromEntries(attributes),
+    content: [],
+    selfClosing: true,
+  }),
+);
+
+const openTag: P.Parser<StreamChunk> = P.seqMap(
+  P.string('<'),
+  tagName,
+  P.optWhitespace.then(attribute).many(),
+  P.string('>'),
+  P.regexp(/[^<]*/),
+  (_, tag, attributes, __, str) => {
+    const content = str.trim();
+    return {
+      type: 'xml',
+      tag,
+      attributes: Object.fromEntries(attributes),
+      content: content.length ? [{ type: 'text', content }] : [],
+    };
+  },
+);
+
+const closingTag: P.Parser<StreamChunk> = P.seqMap(
+  //
+  P.string('</'),
+  tagName,
+  P.string('>'),
+  (_, tag) => ({
+    type: 'xml',
+    tag,
+    content: [],
+    closing: true,
+  }),
+);
+
+const mixedChunk: P.Parser<StreamChunk> = P.alt(selfClosingTag, openTag, closingTag, textChunk);
 
 /**
- * Plain text.
+ * Permissive streaming transformer that can process mixed content of plain text and XML fragments.
  */
-export type TextBlock = {
-  type: 'text';
-  content: string;
-};
-
-/**
- * Raw JSON block.
- */
-export type JsonBlock = {
-  type: 'json';
-  data: any;
-};
-
-/**
- * Fenced markdown code block.
- */
-export type CodeBlock = {
-  type: 'code';
-  language: string;
-  content: string;
-};
-
-/**
- * XML tag.
- */
-export type TagBlock = {
-  type: 'tag';
-  name: string;
-  content: string;
-  attributes: Record<string, string>;
-  selfClosing: boolean;
-};
-
-/**
- * Permissive streaming parser for XML fragments, markdown fenced code blocks, JSON, and plain text.
- */
-export class StreamingParser {
-  public readonly update = new Event<Block>();
-
-  private _tag: string | undefined;
+export class XMLStreamTransformer {
   private _buffer = '';
 
-  /**
-   * Current tag name if processing a tag.
-   */
-  get tag() {
-    return this._tag;
-  }
-
-  /**
-   * Current buffer.
-   */
-  get buffer() {
-    return this._buffer;
-  }
-
-  /**
-   * Write a chunk of text to the parser.
-   */
-  write(chunk: string) {
+  transform(chunk: string): StreamChunk[] {
+    log('chunk', { chunk });
     this._buffer += chunk;
-    this.processBuffer();
-  }
 
-  /**
-   * Signal that no more input will be written.
-   */
-  end() {
-    if (this._buffer.length > 0) {
-      this.emitTextOrJsonBlock(this._buffer);
+    const results: StreamChunk[] = [];
+    const parser = mixedChunk.many();
+    const parseResult = parser.parse(this._buffer);
+    if (parseResult.status) {
+      for (const value of parseResult.value) {
+        // Skip if empty line.
+        if (value.type === 'text' && value.content.trim().length === 0) {
+          continue;
+        }
+
+        results.push(value);
+      }
+
       this._buffer = '';
     }
+
+    return results;
   }
 
-  private processBuffer() {
-    while (this._buffer.length > 0) {
-      // Try to parse code block first.
-      if (this.tryParseCodeBlock()) {
-        this._tag = undefined;
-        continue;
-      }
-
-      // TODO(burdon): Use sax to heandle nested tags.
-      // If no tag start found, keep buffering.
-      const tagStartIndex = this._buffer.indexOf('<');
-      if (tagStartIndex === -1) {
-        this._tag = undefined;
-        return;
-      }
-
-      // Emit any text before the tag.
-      if (tagStartIndex > 0) {
-        this.emitTextOrJsonBlock(this._buffer.slice(0, tagStartIndex));
-        this._buffer = this._buffer.slice(tagStartIndex);
-        continue;
-      }
-
-      // If incomplete tag, keep buffering.
-      const tagEndIndex = this._buffer.indexOf('>', tagStartIndex);
-      if (tagEndIndex === -1) {
-        return;
-      }
-
-      // Check if this is a self-closing tag.
-      const isSelfClosing = this._buffer[tagEndIndex - 1] === '/';
-      const actualTagEndIndex = isSelfClosing ? tagEndIndex - 1 : tagEndIndex;
-
-      // Parse the tag name and attributes.
-      const tagContent = this._buffer.slice(tagStartIndex + 1, actualTagEndIndex).trim();
-      const [tagName, ...attrParts] = tagContent.split(/\s+/);
-      const attributes = this.parseAttributes(attrParts.join(' '));
-      this._tag = tagName;
-
-      // Self-closing tag.
-      if (isSelfClosing) {
-        this.emitTagBlock(tagName, '', attributes, true);
-        this._buffer = this._buffer.slice(tagEndIndex + 1);
-        continue;
-      }
-
-      // If no closing tag yet, keep buffering.
-      const closingTagIndex = this._buffer.indexOf('</' + tagName + '>', tagEndIndex);
-      if (closingTagIndex === -1) {
-        return;
-      }
-
-      // Complete tag.
-      const content = this._buffer.slice(tagEndIndex + 1, closingTagIndex);
-      this.emitTagBlock(tagName, content, attributes, false);
-      this._buffer = this._buffer.slice(closingTagIndex + tagName.length + 3); // +3 for '</>'
-      this._tag = undefined;
-    }
+  flush(): StreamChunk[] {
+    const remaining = this._buffer;
+    this._buffer = '';
+    return remaining.length > 0 ? [{ type: 'text', content: remaining }] : [];
   }
+}
+
+/**
+ * Parse mixed content of plain text, XML fragments, and JSON blocks.
+ */
+export class MixedStreamParser {
+  /**
+   * New message.
+   */
+  public message = new Event();
 
   /**
-   * Try to parse a code block.
+   * New block.
    */
-  private tryParseCodeBlock(): boolean {
-    const codeBlockStart = this._buffer.indexOf('```');
-    if (codeBlockStart === -1) {
-      return false;
-    }
-
-    // If there's text before the code block, emit it first.
-    if (codeBlockStart > 0) {
-      this.emitTextOrJsonBlock(this._buffer.slice(0, codeBlockStart));
-      this._buffer = this._buffer.slice(codeBlockStart);
-      return true;
-    }
-
-    // Look for the closing fence.
-    const nextNewline = this._buffer.indexOf('\n', codeBlockStart);
-    if (nextNewline === -1) {
-      return false; // Incomplete, keep buffering.
-    }
-
-    const codeBlockEnd = this._buffer.indexOf('\n```', nextNewline);
-    if (codeBlockEnd === -1) {
-      return false; // No closing fence yet, keep buffering.
-    }
-
-    // Extract language (if specified) and content.
-    const languageLine = this._buffer.slice(3, nextNewline).trim();
-    const content = this._buffer.slice(nextNewline + 1, codeBlockEnd);
-
-    this.emitCodeBlock(languageLine, content);
-    this._buffer = this._buffer.slice(codeBlockEnd + 4); // +4 for '\n```'
-    return true;
-  }
+  public block = new Event<StreamChunk>();
 
   /**
-   * Parse the attributes of a tag.
+   * Update current block (while streaming).
    */
-  private parseAttributes(attrString: string): Record<string, string> {
-    const attributes: Record<string, string> = {};
-    if (!attrString) {
-      return attributes;
-    }
+  public update = new Event<StreamChunk>();
 
-    // Match attribute patterns like: name="value" or name='value' or name=value.
-    const attrPattern = /(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+  async parse(stream: GenerationStream) {
+    const transformer = new XMLStreamTransformer();
+    let current: StreamChunk | undefined;
 
-    let match;
-    while ((match = attrPattern.exec(attrString)) !== null) {
-      const [, name, doubleQuoted, singleQuoted, unquoted] = match;
-      attributes[name] = doubleQuoted ?? singleQuoted ?? unquoted;
-    }
+    for await (const event of stream) {
+      switch (event.type) {
+        //
+        // Messages.
+        //
 
-    return attributes;
-  }
+        case 'message_start': {
+          this.message.emit();
+          break;
+        }
 
-  //
-  // Emitters
-  //
+        case 'message_delta': {
+          break;
+        }
 
-  private emitTextOrJsonBlock(content: string) {
-    const text = content.trim();
-    if (text.length > 0) {
-      if (text.startsWith('{') && text.endsWith('}')) {
-        const data = safeParseJson(text);
-        if (data) {
-          this.update.emit({
-            type: 'json',
-            data,
-          });
-          return;
+        case 'message_stop': {
+          break;
+        }
+
+        //
+        // Content blocks.
+        //
+
+        case 'content_block_start': {
+          if (current) {
+            this.block.emit(current);
+          }
+
+          current = undefined;
+          break;
+        }
+
+        case 'content_block_delta': {
+          switch (event.delta.type) {
+            //
+            // Text
+            //
+            case 'text_delta': {
+              const chunks = transformer.transform(event.delta.text);
+              for (const chunk of chunks) {
+                log('chunk', { chunk });
+
+                switch (current?.type) {
+                  // XML Fragment.
+                  case 'xml': {
+                    if (chunk.type === 'xml') {
+                      if (chunk.selfClosing) {
+                        current.content.push(chunk);
+                      } else if (chunk.closing) {
+                        this.block.emit(current);
+                        current = undefined;
+                      } else {
+                        // TODO(burdon): Nested XML?
+                        log.warn('unhandled nested xml', { chunk });
+                      }
+                    } else {
+                      // Append text.
+                      if (current.content.length === 0) {
+                        current.content.push(chunk);
+                      } else {
+                        const last = current.content[current.content.length - 1];
+                        if (last.type === 'text') {
+                          last.content = joinTrimmed(last.content, chunk.content);
+                        } else {
+                          current.content.push(chunk);
+                        }
+                      }
+                    }
+                    break;
+                  }
+
+                  // Text Fragment.
+                  case 'text': {
+                    if (chunk.type === 'xml') {
+                      this.block.emit(current);
+                      if (chunk.selfClosing) {
+                        this.block.emit(chunk);
+                        current = undefined;
+                      } else {
+                        current = chunk;
+                      }
+                    } else {
+                      // Append text.
+                      current.content = joinTrimmed(current.content, chunk.content);
+                    }
+                    break;
+                  }
+
+                  // No current node.
+                  default: {
+                    if (chunk.type === 'xml' && chunk.selfClosing) {
+                      this.block.emit(chunk);
+                    } else {
+                      current = chunk;
+                    }
+                  }
+                }
+              }
+              break;
+            }
+
+            //
+            // JSON
+            //
+            case 'input_json_delta': {
+              if (!current) {
+                current = { type: 'json', content: event.delta.partial_json.trim() };
+              } else {
+                current.content += event.delta.partial_json.trim();
+              }
+              break;
+            }
+          }
+          break;
+        }
+
+        case 'content_block_stop': {
+          if (current) {
+            this.block.emit(current);
+            current = undefined;
+          }
+          break;
         }
       }
 
-      this.update.emit({
-        type: 'text',
-        content: text,
-      });
-    }
-  }
-
-  private emitCodeBlock(language: string, content: string) {
-    this.update.emit({
-      type: 'code',
-      language,
-      content: content.trim(),
-    });
-  }
-
-  private emitTagBlock(name: string, content: string, attributes: Record<string, string>, selfClosing: boolean) {
-    this.update.emit({
-      type: 'tag',
-      name,
-      content: content.trim(),
-      attributes,
-      selfClosing,
-    });
+      if (current) {
+        this.update.emit(current);
+      }
+    } // for.
   }
 }
+
+/**
+ * Trim whitespace preserving EOL characters.
+ */
+const trim = (input: string): string => {
+  return input
+    .split(/(\r\n|\n)/)
+    .map((line, i) => {
+      if (i % 2 === 1) {
+        return line;
+      }
+
+      return line.replace(/^[\t ]+|[\t ]+$/g, '');
+    })
+    .join('');
+};
+
+/**
+ * Join strings.
+ */
+const joinTrimmed = (a: string, b: string): string => {
+  const trimmedA = trim(a);
+  const trimmedB = trim(b);
+
+  return /[\r\n]$/.test(trimmedA) ? trimmedA + trimmedB : trimmedA + ' ' + trimmedB;
+};

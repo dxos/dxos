@@ -83,6 +83,6 @@ export class AIServiceClientImpl implements AIServiceClient {
     });
 
     invariant(response.body instanceof ReadableStream);
-    return GenerationStream.fromSSEResponse(response, request, controller);
+    return GenerationStream.fromSSEResponse(response, controller);
   }
 }

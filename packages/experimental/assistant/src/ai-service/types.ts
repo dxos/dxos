@@ -55,8 +55,13 @@ export const GenerateRequest = S.Struct({
 
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
 
+/**
+ * Server-Sent Events (SSE) stream from the AI service.
+ * https://docs.anthropic.com/en/api/streaming
+ * https://platform.openai.com/docs/api-reference/streaming
+ * https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events
+ */
 // TODO(dmaretskyi): Effect schema.
-// TODO(burdon): Where is this defined?
 export type GenerationStreamEvent =
   | {
       // TODO(dmaretskyi): Normalize types to our schema.

@@ -50,7 +50,10 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       const stream = Stream.fromAsyncIterable(result, (e) => new Error(String(e)));
       const [stream1, stream2] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
-      const outputMessagesEffect = Effect.promise(async () => result.complete());
+      const outputMessagesEffect = Effect.promise(async () => {
+        await result.complete();
+        return [] as Message[]; // TODO(burdon): !!!
+      });
 
       const outputWithAPrompt = Effect.gen(function* () {
         const outputMessages = yield* outputMessagesEffect;
@@ -71,15 +74,17 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
               nodeId: logger.nodeId!,
               event,
             });
+
             return Effect.void;
           }),
           Stream.runDrain,
         );
 
         const messages = yield* outputMessagesEffect;
+
         log.info('messages', { messages });
         return messages
-          .map((msg) => msg.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
+          .map((message) => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])))
           .join('');
       });
 
