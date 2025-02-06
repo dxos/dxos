@@ -6,13 +6,9 @@ import type { ExecutorContext } from '@nx/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { register } from 'module';
 
-import {
-  ModuleSpecifier,
-  parseAndGenerateSchema,
-  preconfigureProtobufjs,
-  registerResolver,
-} from '@dxos/protobuf-compiler';
+register('extensionless', `file://${__filename}`);
 
 export interface GenerateExecutorOptions {
   basePath: string;
@@ -27,6 +23,10 @@ export interface GenerateExecutorOptions {
 }
 
 export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
+  const { ModuleSpecifier, parseAndGenerateSchema, preconfigureProtobufjs, registerResolver } = await import(
+    '@dxos/protobuf-compiler'
+  );
+
   console.info('Executing protobuf generator...');
   if (context.isVerbose) {
     console.info(`Options: ${JSON.stringify(options, null, 2)}`);

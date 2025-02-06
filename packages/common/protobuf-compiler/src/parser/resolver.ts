@@ -5,6 +5,9 @@
 import { existsSync } from 'fs';
 import { basename, dirname, join } from 'path';
 import pb from 'protobufjs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 
 export type ProtoResolver = (origin: string, target: string) => string | null;
 
