@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, firstIdInPart, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { getActiveSpace } from '@dxos/plugin-space';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
@@ -21,9 +21,9 @@ export default () =>
       id: 'search-input',
       role: 'search-input',
       component: () => {
-        const location = useCapability(Capabilities.Location);
+        const active = useCapability(Capabilities.Active);
         const { graph } = useCapability(Capabilities.AppGraph);
-        const space = graph && location ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
+        const space = graph ? getActiveSpace(graph, active[0]) : undefined;
         return space ? <SearchMain space={space} /> : null;
       },
     }),

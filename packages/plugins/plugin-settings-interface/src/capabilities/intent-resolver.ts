@@ -28,10 +28,12 @@ export default (context: PluginsContext) =>
 
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: SETTINGS_DIALOG,
-              dialogBlockAlign: 'start',
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: SETTINGS_DIALOG,
+              options: {
+                blockAlign: 'start',
+              },
             }),
           ],
         };

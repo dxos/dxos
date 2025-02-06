@@ -6,6 +6,7 @@ import { EditorView } from '@codemirror/view';
 import { useMemo } from 'react';
 
 import { createResolver, LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 
@@ -18,10 +19,16 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
   const scrollIntoViewResolver = useMemo(
     () =>
       createResolver({
-        intent: LayoutAction.ScrollIntoView,
+        intent: LayoutAction.UpdateLayout,
         disposition: 'hoist',
-        filter: (data): data is { cursor: string } => !!editorView && data.id === documentId && !!data.cursor,
-        resolve: ({ cursor }) => {
+        filter: (data): data is { part: 'current'; subject: string; options: { cursor: string } } => {
+          if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+            return false;
+          }
+
+          return !!editorView && data.subject === documentId && !!data.options?.cursor;
+        },
+        resolve: ({ options: { cursor } }) => {
           invariant(editorView, 'Editor view is not defined.');
           const range = Cursor.getRangeFromCursor(editorView.state, cursor!);
           if (range) {

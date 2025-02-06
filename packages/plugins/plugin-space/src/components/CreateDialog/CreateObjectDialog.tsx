@@ -5,7 +5,7 @@
 import { pipe } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { chain, createIntent, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import {
   getSpace,
@@ -71,7 +71,7 @@ export const CreateObjectDialog = ({
         const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (shouldNavigate(object)) {
-          await dispatch(pipe(addObjectIntent, chain(NavigationAction.Open, {})));
+          await dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
         } else {
           await dispatch(addObjectIntent);
         }

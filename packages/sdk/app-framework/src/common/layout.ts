@@ -6,79 +6,6 @@ import { S } from '@dxos/echo-schema';
 
 import { Label } from '../plugin-intent';
 
-//
-// Provides
-//
-
-export const Toast = S.Struct({
-  id: S.String,
-  title: S.optional(Label),
-  description: S.optional(Label),
-  icon: S.optional(S.String),
-  duration: S.optional(S.Number),
-  closeLabel: S.optional(Label),
-  actionLabel: S.optional(Label),
-  actionAlt: S.optional(Label),
-  // TODO(wittjosiah): Make class with customizable method?
-  onAction: S.optional(S.Any),
-});
-
-export type Toast = S.Schema.Type<typeof Toast>;
-
-/**
- * Basic state provided by a layout plugin.
- *
- * Layout provides the state of global UI landmarks, such as the sidebar, dialog, and popover.
- * Generally only one dialog or popover should be open at a time, a layout plugin should manage this.
- * For other landmarks, such as toasts, rendering them in the layout prevents them from unmounting when navigating.
- */
-
-const LayoutMode = S.Union(S.Literal('deck'), S.Literal('solo'), S.Literal('fullscreen'));
-export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
-export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
-
-export const Layout = S.mutable(
-  S.Struct({
-    layoutMode: LayoutMode,
-
-    sidebarOpen: S.Boolean,
-    complementarySidebarOpen: S.Boolean,
-    /**
-     * @deprecated Data to be passed to the complementary sidebar Surface.
-     */
-    complementarySidebarContent: S.optional(S.Any),
-
-    dialogOpen: S.Boolean,
-    /**
-     * Data to be passed to the dialog Surface.
-     */
-    dialogContent: S.optional(S.Any),
-    // TODO(wittjosiah): Custom properties?
-    dialogBlockAlign: S.optional(S.Literal('start', 'center')),
-    dialogType: S.optional(S.Literal('default', 'alert')),
-
-    popoverOpen: S.Boolean,
-    /**
-     * Data to be passed to the popover Surface.
-     */
-    popoverContent: S.optional(S.Any),
-    popoverAnchorId: S.optional(S.String),
-
-    toasts: S.mutable(S.Array(Toast)),
-
-    /**
-     * The identifier of a component to scroll into view when it is mounted.
-     */
-    scrollIntoView: S.optional(S.String),
-  }),
-);
-
-export type Layout = S.Schema.Type<typeof Layout>;
-
-//
-// Intents
-//
-
 export const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
 export const LAYOUT_ACTION = `${LAYOUT_PLUGIN}/action`;
 
@@ -86,71 +13,170 @@ export const LAYOUT_ACTION = `${LAYOUT_PLUGIN}/action`;
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
-  export class SetLayout extends S.TaggedClass<SetLayout>()(`${LAYOUT_ACTION}/set-layout`, {
+  export const UPDATE_LAYOUT = `${LAYOUT_ACTION}/update-layout`;
+
+  /**
+   * Generic layout action.
+   */
+  export class UpdateLayout extends S.TaggedClass<UpdateLayout>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      /**
-       * Element to set the state of.
-       */
-      element: S.Literal('fullscreen', 'sidebar', 'complementary', 'dialog', 'popover', 'toast'),
-
-      /**
-       * Whether the element is on or off.
-       *
-       * If omitted, the element's state will be toggled or set based on other provided data.
-       * For example, if `component` is provided, the state will be set to `true`.
-       */
-      state: S.optional(S.Boolean),
-
-      /**
-       * Component to render in the dialog or popover.
-       */
-      component: S.optional(S.String),
-
-      /**
-       * Data to be passed to the dialog or popover Surface.
-       */
-      subject: S.optional(S.Any),
-
-      /**
-       * Anchor ID for the popover.
-       */
-      anchorId: S.optional(S.String),
-
-      // TODO(wittjosiah): Custom properties?
-
-      /**
-       * Block alignment for the dialog.
-       */
-      dialogBlockAlign: S.optional(S.Literal('start', 'center')),
-
-      /**
-       * Type of dialog.
-       */
-      dialogType: S.optional(S.Literal('default', 'alert')),
+      part: S.String.annotations({ description: 'The part of the layout to mutate.' }),
+      subject: S.optional(S.Any.annotations({ description: 'The subject of the layout update.' })),
+      options: S.optional(
+        S.Record({ key: S.String, value: S.Any }).annotations({
+          description: 'Additional options for the layout action.',
+        }),
+      ),
     }),
     output: S.Void,
   }) {}
 
-  // TODO(wittjosiah): Do all these need to be separate actions?
+  //
+  // Common layout actions.
+  //
 
-  export class SetLayoutMode extends S.TaggedClass<SetLayoutMode>()(`${LAYOUT_ACTION}/set-layout-mode`, {
-    input: S.Union(
-      S.Struct({
-        layoutMode: LayoutMode,
-      }),
-      S.Struct({
-        revert: S.Literal(true),
-      }),
-    ),
+  // NOTE: These are layout actions which are currently in common use.
+  //  They constrain the generic layout action types to provide additional type safety.
+  //  However, they all follow the same generic structure and intent id.
+  //  This allows for plugins to update the layout without depending on a specific layout plugin.
+  //  The expectation is that other norms other than these will emerge over time.
+
+  export class SetLayoutMode extends S.TaggedClass<SetLayoutMode>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('mode'),
+      subject: S.optional(S.String),
+      options: S.Union(S.Struct({ mode: S.String }), S.Struct({ revert: S.Boolean })),
+    }),
     output: S.Void,
   }) {}
 
-  export class ScrollIntoView extends S.TaggedClass<ScrollIntoView>()(`${LAYOUT_ACTION}/scroll-into-view`, {
+  export class UpdateSidebar extends S.TaggedClass<UpdateSidebar>()(UPDATE_LAYOUT, {
     input: S.Struct({
-      id: S.optional(S.String),
-      // TODO(wittjosiah): Factor out to thread scroll into view action?
-      cursor: S.optional(S.String),
-      ref: S.optional(S.String),
+      part: S.Literal('sidebar'),
+      subject: S.optional(S.String),
+      options: S.optional(
+        S.Struct({
+          state: S.Boolean,
+        }),
+      ),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class UpdateComplementary extends S.TaggedClass<UpdateComplementary>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('complementary'),
+      subject: S.optional(S.String),
+      options: S.optional(
+        S.Struct({
+          state: S.Boolean,
+        }),
+      ),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class UpdateDialog extends S.TaggedClass<UpdateDialog>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('dialog'),
+      subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the dialog.' })),
+      options: S.Struct({
+        state: S.optional(S.Boolean),
+        blockAlign: S.optional(S.Literal('start', 'center')),
+        type: S.optional(S.Literal('default', 'alert')),
+        props: S.optional(S.Record({ key: S.String, value: S.Any })),
+      }),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class UpdatePopover extends S.TaggedClass<UpdatePopover>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('popover'),
+      subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the popover.' })),
+      options: S.Struct({
+        anchorId: S.String,
+        state: S.optional(S.Boolean),
+        props: S.optional(S.Record({ key: S.String, value: S.Any })),
+      }),
+    }),
+    output: S.Void,
+  }) {}
+
+  export const Toast = S.Struct({
+    id: S.String,
+    title: S.optional(Label),
+    description: S.optional(Label),
+    icon: S.optional(S.String),
+    duration: S.optional(S.Number),
+    closeLabel: S.optional(Label),
+    actionLabel: S.optional(Label),
+    actionAlt: S.optional(Label),
+    onAction: S.optional(S.Any),
+  });
+
+  export interface Toast extends Omit<S.Schema.Type<typeof Toast>, 'onAction'> {
+    onAction?: () => void;
+  }
+
+  export class AddToast extends S.TaggedClass<AddToast>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('toast'),
+      subject: Toast,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Open extends S.TaggedClass<Open>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('main'),
+      subject: S.Array(S.String),
+      options: S.optional(
+        S.Struct({
+          scrollIntoView: S.optional(S.Boolean),
+          pivotId: S.optional(S.String),
+          positioning: S.optional(S.Literal('start', 'end')),
+        }),
+      ),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Set extends S.TaggedClass<Set>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('main'),
+      subject: S.Array(S.String),
+      options: S.Struct({
+        override: S.Literal(true),
+      }),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Close extends S.TaggedClass<Close>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('main'),
+      subject: S.Array(S.String),
+      options: S.Struct({
+        state: S.Literal(false),
+      }),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class ScrollIntoView extends S.TaggedClass<ScrollIntoView>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('current'),
+      subject: S.optional(S.String),
+      options: S.optional(S.Record({ key: S.String, value: S.Any })),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Expose extends S.TaggedClass<Expose>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('navigation'),
+      subject: S.String,
     }),
     output: S.Void,
   }) {}

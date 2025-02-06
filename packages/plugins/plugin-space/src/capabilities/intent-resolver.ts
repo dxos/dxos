@@ -7,16 +7,14 @@ import {
   contributes,
   createIntent,
   createResolver,
-  firstIdInPart,
   LayoutAction,
-  NavigationAction,
-  openIds,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -55,10 +53,12 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
       intent: SpaceAction.OpenCreateSpace,
       resolve: () => ({
         intents: [
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: CREATE_SPACE_DIALOG,
-            dialogBlockAlign: 'start',
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: CREATE_SPACE_DIALOG,
+            options: {
+              blockAlign: 'start',
+            },
           }),
         ],
       }),
@@ -81,9 +81,9 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
 
         return {
           data: {
-            space,
             id: space.id,
-            activeParts: { main: [space.id] },
+            subject: [space.id],
+            space,
           },
           intents: [
             createIntent(ObservabilityAction.SendEvent, {
@@ -100,13 +100,15 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
       intent: SpaceAction.Join,
       resolve: ({ invitationCode }) => ({
         intents: [
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: JOIN_DIALOG,
-            dialogBlockAlign: 'start',
-            subject: {
-              initialInvitationCode: invitationCode,
-            } satisfies Partial<JoinDialogProps>,
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: JOIN_DIALOG,
+            options: {
+              blockAlign: 'start',
+              props: {
+                initialInvitationCode: invitationCode,
+              } satisfies Partial<JoinDialogProps>,
+            },
           }),
         ],
       }),
@@ -115,23 +117,24 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
       intent: SpaceAction.Share,
       filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK],
       resolve: ({ space }) => {
-        const location = context.requestCapability(Capabilities.Location);
-        const layout = context.requestCapability(Capabilities.Layout);
-        const current = firstIdInPart(location.active, layout.layoutMode === 'solo' ? 'solo' : 'main');
+        const attention = context.requestCapability(AttentionCapabilities.Attention);
+        const current = attention.current.at(-1);
         const target = current?.startsWith(space.id) ? current : undefined;
 
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: SPACE_SETTINGS_DIALOG,
-              dialogBlockAlign: 'start',
-              subject: {
-                space,
-                target,
-                initialTab: 'members',
-                createInvitationUrl,
-              } satisfies Partial<SpaceSettingsDialogProps>,
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: SPACE_SETTINGS_DIALOG,
+              options: {
+                blockAlign: 'start',
+                props: {
+                  space,
+                  target,
+                  initialTab: 'members',
+                  createInvitationUrl,
+                } satisfies Partial<SpaceSettingsDialogProps>,
+              },
             }),
             createIntent(ObservabilityAction.SendEvent, {
               name: 'space.share',
@@ -180,11 +183,13 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
       resolve: ({ caller, space }) => {
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'popover',
-              anchorId: `dxos.org/ui/${caller}/${space.id}`,
-              component: POPOVER_RENAME_SPACE,
-              subject: space,
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              subject: POPOVER_RENAME_SPACE,
+              options: {
+                anchorId: `dxos.org/ui/${caller}/${space.id}`,
+                props: space,
+              },
             }),
           ],
         };
@@ -195,15 +200,17 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
       resolve: ({ space }) => {
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: SPACE_SETTINGS_DIALOG,
-              dialogBlockAlign: 'start',
-              subject: {
-                space,
-                initialTab: 'settings',
-                createInvitationUrl,
-              } satisfies Partial<SpaceSettingsDialogProps>,
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: SPACE_SETTINGS_DIALOG,
+              options: {
+                blockAlign: 'start',
+                props: {
+                  space,
+                  initialTab: 'settings',
+                  createInvitationUrl,
+                } satisfies Partial<SpaceSettingsDialogProps>,
+              },
             }),
           ],
         };
@@ -253,16 +260,18 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
 
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: CREATE_OBJECT_DIALOG,
-              dialogBlockAlign: 'start',
-              subject: {
-                target,
-                shouldNavigate: navigable
-                  ? (object: ReactiveObject<any>) => !(object instanceof CollectionType) || state.navigableCollections
-                  : () => false,
-              } satisfies Partial<CreateObjectDialogProps>,
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: CREATE_OBJECT_DIALOG,
+              options: {
+                blockAlign: 'start',
+                props: {
+                  target,
+                  shouldNavigate: navigable
+                    ? (object: ReactiveObject<any>) => !(object instanceof CollectionType) || state.navigableCollections
+                    : () => false,
+                } satisfies Partial<CreateObjectDialogProps>,
+              },
             }),
           ],
         };
@@ -278,8 +287,8 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
           return {
             error: new Error('Space limit reached.'),
             intents: [
-              createIntent(LayoutAction.SetLayout, {
-                element: 'toast',
+              createIntent(LayoutAction.AddToast, {
+                part: 'toast',
                 subject: {
                   id: `${SPACE_PLUGIN}/space-limit`,
                   title: ['space limit label', { ns: SPACE_PLUGIN }],
@@ -318,8 +327,8 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
         return {
           data: {
             id: fullyQualifiedId(object),
+            subject: [fullyQualifiedId(object)],
             object: object as HasId,
-            activeParts: { main: [fullyQualifiedId(object)] },
           },
           intents: [
             createIntent(ObservabilityAction.SendEvent, {
@@ -337,12 +346,12 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
     createResolver({
       intent: SpaceAction.RemoveObjects,
       resolve: async ({ objects, target, deletionData }, undo) => {
-        const location = context.requestCapability(Capabilities.Location);
+        const active = context.requestCapability(Capabilities.Active);
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
         invariant(space && objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space));
-        const openObjectIds = new Set<string>(openIds(location.active));
+        const openObjectIds = new Set<string>(active);
 
         if (!undo) {
           const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename]?.target;
@@ -392,7 +401,13 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
             },
             intents:
               deletionData.wasActive.length > 0
-                ? [createIntent(NavigationAction.Close, { activeParts: { main: deletionData.wasActive } })]
+                ? [
+                    createIntent(LayoutAction.Close, {
+                      part: 'main',
+                      subject: deletionData.wasActive,
+                      options: { state: false },
+                    }),
+                  ]
                 : undefined,
           };
         } else {
@@ -419,8 +434,9 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
               intents:
                 deletionData.wasActive.length > 0
                   ? [
-                      createIntent(NavigationAction.Open, {
-                        activeParts: { main: deletionData.wasActive as string[] },
+                      createIntent(LayoutAction.Open, {
+                        part: 'main',
+                        subject: deletionData.wasActive,
                       }),
                     ]
                   : undefined,
@@ -433,11 +449,13 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
       intent: SpaceAction.RenameObject,
       resolve: async ({ object, caller }) => ({
         intents: [
-          createIntent(LayoutAction.SetLayout, {
-            element: 'popover',
-            anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
-            component: POPOVER_RENAME_OBJECT,
-            subject: object,
+          createIntent(LayoutAction.UpdatePopover, {
+            part: 'popover',
+            subject: POPOVER_RENAME_OBJECT,
+            options: {
+              anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
+              props: object,
+            },
           }),
         ],
       }),

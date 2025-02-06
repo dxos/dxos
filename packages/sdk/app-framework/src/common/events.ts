@@ -58,6 +58,6 @@ export namespace Events {
    * Fired when plugin state is ready.
    */
   export const createStateEvent = (specifier: string) => defineEvent('dxos.org/app-framework/event/state', specifier);
-  export const LayoutReady = createStateEvent(Capabilities.Layout.identifier);
-  export const LocationReady = createStateEvent(Capabilities.Location.identifier);
+  export const LayoutModeReady = createStateEvent(Capabilities.LayoutMode.identifier);
+  export const ActiveReady = createStateEvent(Capabilities.Active.identifier);
 }

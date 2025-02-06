@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, LayoutAction, NavigationAction } from '@dxos/app-framework';
+import { createIntent, LayoutAction } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { SPACES } from '@dxos/plugin-space';
 
@@ -36,8 +36,8 @@ export default async (context: PluginsContext) => {
   const defaultSpaceNode = await graph.waitForNode(defaultSpace.id);
   await graph.expand(defaultSpaceNode);
 
-  await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
-  await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [fullyQualifiedId(readme)] } }));
+  await dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } }));
+  await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(readme)] }));
 
   return contributes(Capabilities.Null, null);
 };

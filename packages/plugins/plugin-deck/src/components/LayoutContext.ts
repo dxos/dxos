@@ -4,8 +4,9 @@
 
 import { type Context, createContext, useContext } from 'react';
 
-import type { Layout } from '@dxos/app-framework';
 import { raise } from '@dxos/debug';
+
+import { type Layout } from '../types';
 
 export const LayoutContext: Context<Layout | null> = createContext<Layout | null>(null);
 

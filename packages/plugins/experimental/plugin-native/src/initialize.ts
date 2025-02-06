@@ -3,7 +3,7 @@
 //
 
 import type { PluginsContext } from '@dxos/app-framework';
-import { NavigationAction, SettingsAction, LayoutAction, createIntent, Capabilities } from '@dxos/app-framework';
+import { SettingsAction, LayoutAction, createIntent, Capabilities } from '@dxos/app-framework';
 import { HELP_PLUGIN } from '@dxos/plugin-help';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 import { safeParseJson } from '@dxos/util';
@@ -84,10 +84,12 @@ const setupMenuItemListener = (dispatch: any, app: any) => {
     switch (id) {
       case 'App Name:Search commands': {
         void dispatch(
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: COMMANDS_DIALOG,
-            dialogBlockAlign: 'start',
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: COMMANDS_DIALOG,
+            options: {
+              blockAlign: 'start',
+            },
           }),
         );
         break;
@@ -98,9 +100,12 @@ const setupMenuItemListener = (dispatch: any, app: any) => {
       }
       case 'App Name:Show shortcuts': {
         void dispatch(
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: `${HELP_PLUGIN}/Shortcuts`,
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: `${HELP_PLUGIN}/Shortcuts`,
+            options: {
+              blockAlign: 'center',
+            },
           }),
         );
         break;
@@ -126,13 +131,8 @@ const setupApplicationUrlListener = (app: any, dispatch: any) => {
       // Currently, the dialogs are controlled by Client Plugin and not the Layout Plugin.
       window.location.href = location;
     } else {
-      void dispatch(
-        createIntent(
-          NavigationAction.Open,
-          // TODO(thure): what is `location` and is this right?
-          { activeParts: { main: [location] } },
-        ),
-      );
+      // TODO(thure): what is `location` and is this right?
+      void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [location] }));
     }
   });
 };
@@ -144,10 +144,12 @@ const setupGlobalHotkey = async (socketWindow: any, appWindow: any, dispatch: an
   binding.addEventListener('hotkey', () => {
     appWindow.restore();
     void dispatch(
-      createIntent(LayoutAction.SetLayout, {
-        element: 'dialog',
-        component: COMMANDS_DIALOG,
-        dialogBlockAlign: 'start',
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
+        subject: COMMANDS_DIALOG,
+        options: {
+          blockAlign: 'start',
+        },
       }),
     );
   });

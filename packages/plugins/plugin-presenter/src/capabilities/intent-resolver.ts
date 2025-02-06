@@ -8,7 +8,6 @@ import {
   createIntent,
   createResolver,
   LayoutAction,
-  NavigationAction,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -28,16 +27,16 @@ export default (context: PluginsContext) =>
         if (state.presenting) {
           return {
             intents: [
-              createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }),
-              createIntent(NavigationAction.Open, { activeParts: { fullScreen: fullyQualifiedId(object) } }),
+              createIntent(LayoutAction.SetLayoutMode, {
+                part: 'mode',
+                subject: fullyQualifiedId(object),
+                options: { mode: 'fullscreen' },
+              }),
             ],
           };
         } else {
           return {
-            intents: [
-              createIntent(LayoutAction.SetLayoutMode, { revert: true }),
-              createIntent(NavigationAction.Close, { activeParts: { fullScreen: fullyQualifiedId(object) } }),
-            ],
+            intents: [createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } })],
           };
         }
       },

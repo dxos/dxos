@@ -4,16 +4,7 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import {
-  NavigationAction,
-  LayoutAction,
-  type LayoutCoordinate,
-  isLayoutParts,
-  useIntentDispatcher,
-  createIntent,
-  useCapability,
-  Capabilities,
-} from '@dxos/app-framework';
+import { LayoutAction, useIntentDispatcher, createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
@@ -48,18 +39,15 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
 });
 
 export type SearchDialogProps = {
-  layoutCoordinate: LayoutCoordinate;
+  pivotId: string;
 };
 
-export const SearchDialog = ({ layoutCoordinate }: SearchDialogProps) => {
+export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const location = useCapability(Capabilities.Location);
+  const active = useCapability(Capabilities.Active);
+  const inactive = useCapability(Capabilities.Inactive);
   const { graph } = useCapability(Capabilities.AppGraph);
-  const providedClosed = location.closed ?? [];
-  const closed = (Array.isArray(providedClosed) ? providedClosed : [providedClosed])
-    .map((id) => graph?.findNode(id))
-    .filter(Boolean);
-  const active = location.active;
+  const closed = (Array.isArray(inactive) ? inactive : [inactive]).map((id) => graph?.findNode(id)).filter(Boolean);
   const [queryString, setQueryString] = useState('');
   const client = useClient();
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
@@ -69,28 +57,26 @@ export const SearchDialog = ({ layoutCoordinate }: SearchDialogProps) => {
 
   const handleSelect = useCallback(
     async (nodeId: string) => {
-      if (active && isLayoutParts(active)) {
-        // If node is already present in the active parts, scroll to it and close the dialog.
-        const index = active?.main?.findIndex((entry) => entry.id === nodeId);
-        if (index !== -1) {
-          await dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
-          await dispatch(createIntent(LayoutAction.ScrollIntoView, { id: nodeId }));
-          return;
-        }
+      await dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
 
+      // If node is already present in the active parts, scroll to it and close the dialog.
+      const index = active.findIndex((id) => id === nodeId);
+      if (index !== -1) {
+        await dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: nodeId }));
+      } else {
         await dispatch(
-          createIntent(NavigationAction.AddToActive, {
-            part: layoutCoordinate.part,
-            id: nodeId,
-            pivotId: layoutCoordinate.entryId,
-            positioning: 'end',
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [nodeId],
+            options: {
+              pivotId,
+              positioning: 'end',
+            },
           }),
         );
-        await dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
-        await dispatch(createIntent(LayoutAction.ScrollIntoView, { id: nodeId }));
       }
     },
-    [layoutCoordinate, dispatch, active],
+    [pivotId, dispatch, active],
   );
 
   return (

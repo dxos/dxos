@@ -189,7 +189,7 @@ export default (context: PluginsContext) => {
           const file = await handleToLocalFile(handle);
           state.files.push(file);
 
-          return { data: { id: file.id, activeParts: { main: [file.id] } } };
+          return { data: { id: file.id, subject: [file.id] } };
         }
 
         const input = document.createElement('input');
@@ -206,7 +206,7 @@ export default (context: PluginsContext) => {
         };
         input.click();
         const id = await result.wait();
-        return { data: { id, activeParts: { main: [id] } } };
+        return { data: { id, subject: [id] } };
       },
     }),
     createResolver({
@@ -216,7 +216,7 @@ export default (context: PluginsContext) => {
         const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
         const directory = await handleToLocalDirectory(handle);
         state.files.push(directory);
-        return { data: { id: directory.id, activeParts: { main: [directory.id, directory.children[0]?.id] } } };
+        return { data: { id: directory.id, subject: [directory.id] } };
       },
     }),
     createResolver({

@@ -12,7 +12,7 @@ export default () =>
     createResolver({
       intent: SearchAction.OpenSearch,
       resolve: () => ({
-        intents: [createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true })],
+        intents: [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' })],
       }),
     }),
   );

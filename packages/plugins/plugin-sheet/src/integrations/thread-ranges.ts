@@ -13,6 +13,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
+import { S } from '@dxos/echo-schema';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
@@ -44,9 +45,20 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
       createResolver({
         intent: LayoutAction.ScrollIntoView,
         disposition: 'hoist',
-        filter: (data): data is { cursor: string; ref: GridContentProps['activeRefs'] } =>
-          data.id === fullyQualifiedId(model.sheet) && !!data.cursor,
-        resolve: ({ cursor, ref }) => {
+        filter: (
+          data,
+        ): data is {
+          part: 'current';
+          subject: string;
+          options: { cursor: string; ref: GridContentProps['activeRefs'] };
+        } => {
+          if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+            return false;
+          }
+
+          return data.subject === fullyQualifiedId(model.sheet) && !!data.options?.cursor;
+        },
+        resolve: ({ options: { cursor, ref } }) => {
           setActiveRefs(ref);
           // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
           const range = parseThreadAnchorAsCellRange(cursor!);

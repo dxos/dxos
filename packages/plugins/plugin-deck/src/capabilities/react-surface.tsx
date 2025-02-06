@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 
-import { LayoutSettings } from '../../components';
-import { DECK_PLUGIN } from '../../meta';
-import { type DeckSettingsProps } from '../../types';
+import { LayoutSettings } from '../components';
+import { DECK_PLUGIN } from '../meta';
+import { type DeckSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, {

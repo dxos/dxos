@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, isLayoutParts, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { type Ref } from '@dxos/echo-schema';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
@@ -21,18 +21,14 @@ export default () =>
       filter: (data): data is { subject: ChannelType } =>
         data.subject instanceof ChannelType && !!data.subject.threads[0],
       component: ({ data, role }) => {
-        const location = useCapability(Capabilities.Location);
+        const active = useCapability(Capabilities.Active);
         const channel = data.subject;
         const thread = channel.threads[0].target!;
-        // TODO(zan): Maybe we should have utility for positional main object ids.
-        if (isLayoutParts(location?.active) && location.active.main) {
-          const layoutEntries = location.active.main;
-          const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);
-          if (currentPosition > 0) {
-            const objectToTheLeft = layoutEntries[currentPosition - 1];
-            const context = getSpace(channel)?.db.getObjectById(objectToTheLeft.id);
-            return <ThreadContainer role={role} thread={thread} context={context} />;
-          }
+        const currentPosition = active.findIndex((id) => id === channel.id);
+        if (currentPosition > 0) {
+          const objectToTheLeft = active[currentPosition - 1];
+          const context = getSpace(channel)?.db.getObjectById(objectToTheLeft);
+          return <ThreadContainer role={role} thread={thread} context={context} />;
         }
 
         return <ThreadContainer role={role} thread={thread} />;

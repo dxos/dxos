@@ -8,7 +8,6 @@ import {
   createIntent,
   createResolver,
   LayoutAction,
-  NavigationAction,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo-schema';
@@ -52,8 +51,7 @@ export default (context: PluginsContext) =>
             data: { object: thread },
             intents: [
               createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
-              createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }),
-              createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true }),
+              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' }),
             ],
           };
         } else {
@@ -72,7 +70,7 @@ export default (context: PluginsContext) =>
 
         return {
           intents: !skipOpen
-            ? [createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } })]
+            ? [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'comments' })]
             : undefined,
         };
       },

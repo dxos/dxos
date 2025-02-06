@@ -40,14 +40,16 @@ export default ({ context, onReset }: IntentResolverOptions) =>
       resolve: async (data) => {
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: JOIN_DIALOG,
-              dialogBlockAlign: 'start',
-              subject: {
-                initialInvitationCode: data.invitationCode,
-                initialDisposition: 'accept-halo-invitation',
-              } satisfies Partial<JoinPanelProps>,
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: JOIN_DIALOG,
+              options: {
+                blockAlign: 'start',
+                props: {
+                  initialInvitationCode: data.invitationCode,
+                  initialDisposition: 'accept-halo-invitation',
+                },
+              },
             }),
           ],
         };
@@ -58,10 +60,12 @@ export default ({ context, onReset }: IntentResolverOptions) =>
       resolve: async () => {
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: IDENTITY_DIALOG,
-              dialogBlockAlign: 'start',
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: IDENTITY_DIALOG,
+              options: {
+                blockAlign: 'start',
+              },
             }),
             createIntent(ObservabilityAction.SendEvent, { name: 'identity.share' }),
           ],
@@ -73,11 +77,15 @@ export default ({ context, onReset }: IntentResolverOptions) =>
       resolve: async () => {
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              component: JOIN_DIALOG,
-              dialogBlockAlign: 'start',
-              subject: { initialDisposition: 'recover-identity' } satisfies Partial<JoinPanelProps>,
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: JOIN_DIALOG,
+              options: {
+                blockAlign: 'start',
+                props: {
+                  initialDisposition: 'recover-identity',
+                } satisfies Partial<JoinPanelProps>,
+              },
             }),
           ],
         };
@@ -106,13 +114,14 @@ export default ({ context, onReset }: IntentResolverOptions) =>
         const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
         return {
           intents: [
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              dialogBlockAlign: 'start',
-              dialogType: 'alert',
-              state: true,
-              component: RECOVER_CODE_DIALOG,
-              subject: { code: seedphrase },
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              subject: RECOVER_CODE_DIALOG,
+              options: {
+                blockAlign: 'start',
+                type: 'alert',
+                props: { code: seedphrase },
+              },
             }),
           ],
         };

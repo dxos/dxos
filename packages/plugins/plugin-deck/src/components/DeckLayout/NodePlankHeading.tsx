@@ -4,15 +4,7 @@
 
 import React, { Fragment, memo, useEffect, useMemo } from 'react';
 
-import {
-  createIntent,
-  LayoutAction,
-  NavigationAction,
-  SLUG_PATH_SEPARATOR,
-  Surface,
-  useIntentDispatcher,
-  type LayoutCoordinate,
-} from '@dxos/app-framework';
+import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -21,11 +13,13 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { PlankControls } from './PlankControls';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
+import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
-  coordinate: LayoutCoordinate;
+  id: string;
+  part: 'solo' | 'deck' | 'complementary';
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
@@ -36,7 +30,8 @@ export type NodePlankHeadingProps = {
 
 export const NodePlankHeading = memo(
   ({
-    coordinate,
+    id,
+    part,
     node,
     canIncrementStart,
     canIncrementEnd,
@@ -63,30 +58,29 @@ export const NodePlankHeading = memo(
       return () => cancelAnimationFrame(frame);
     }, [node]);
 
-    const layoutPart = coordinate.part;
     // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
-    const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
+    const attendableId = id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        solo: layoutPart === 'solo' || layoutPart === 'main',
+        solo: part === 'solo' || part === 'deck',
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [breakpoint, layoutPart, canIncrementStart, canIncrementEnd],
+      [part, canIncrementStart, canIncrementEnd],
     );
 
     return (
       <StackItem.Heading
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1',
-          layoutPart === 'solo' ? soloInlinePadding : 'pli-1',
+          part === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
               icon={icon}
-              related={layoutPart === 'complementary'}
+              related={part === 'complementary'}
               attendableId={attendableId}
               triggerLabel={t('actions menu label')}
               actions={[actions, graph.actions(node)].filter((a) => a.length > 0)}
@@ -107,46 +101,34 @@ export const NodePlankHeading = memo(
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}
-            related={layoutPart === 'complementary'}
+            related={part === 'complementary'}
             {...(pending && { classNames: 'text-description' })}
           >
             {label}
           </StackItem.HeadingLabel>
         </TextTooltip>
-        {node && layoutPart !== 'complementary' && (
-          // TODO(Zan): What are we doing with layout coordinate here?
-          <Surface role='navbar-end' data={{ subject: node.data }} />
-        )}
-        {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
+        {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
         <PlankControls
           capabilities={capabilities}
-          isSolo={layoutPart === 'solo'}
+          isSolo={part === 'solo'}
           onClick={(eventType) => {
-            if (!layoutPart) {
-              return;
-            }
-
-            // TODO(Zan): Update this to use the new layout actions.
             if (eventType === 'solo') {
-              return dispatch(
-                createIntent(NavigationAction.Adjust, {
-                  type: eventType,
-                  layoutCoordinate: { part: 'main', entryId: coordinate.entryId },
-                }),
-              );
+              return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
             } else if (eventType === 'close') {
-              if (layoutPart === 'complementary') {
-                return dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: false }));
+              if (part === 'complementary') {
+                return dispatch(
+                  createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: false } }),
+                );
               } else {
                 return dispatch(
-                  createIntent(NavigationAction.Close, { activeParts: { [layoutPart]: [coordinate.entryId] } }),
+                  createIntent(LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
                 );
               }
             } else {
-              return dispatch(createIntent(NavigationAction.Adjust, { type: eventType, layoutCoordinate: coordinate }));
+              return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
             }
           }}
-          close={layoutPart === 'complementary' ? 'minify-end' : true}
+          close={part === 'complementary' ? 'minify-end' : true}
         >
           <ToggleComplementarySidebarButton />
         </PlankControls>

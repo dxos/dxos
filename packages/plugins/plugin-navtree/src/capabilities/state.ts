@@ -67,15 +67,11 @@ export default (context: PluginsContext) => {
   const isOpen = (path: string[]) => getItem(path).open;
   const isCurrent = (path: string[]) => getItem(path).current;
 
-  const location = context.requestCapability(Capabilities.Location);
-  const layout = context.requestCapability(Capabilities.Layout);
-
   let previous: string[] = [];
   const unsubscribe = effect(() => {
-    const part = layout.layoutMode === 'solo' ? 'solo' : 'main';
-    const current = location.active[part]?.map(({ id }) => id) ?? [];
-    const removed = previous.filter((id) => !current.includes(id));
-    previous = current;
+    const active = context.requestCapability(Capabilities.Active);
+    const removed = previous.filter((id) => !active.includes(id));
+    previous = active;
 
     // TODO(wittjosiah): This is setTimeout because there's a race between the keys be initialized.
     //   This could be avoided if the location was a path as well and not just an id.
@@ -87,7 +83,7 @@ export default (context: PluginsContext) => {
         });
       });
 
-      current.forEach((id) => {
+      active.forEach((id) => {
         const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
         keys.forEach((key) => {
           setItem(Path.parts(key), 'current', true);

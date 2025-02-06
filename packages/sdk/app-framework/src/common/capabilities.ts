@@ -8,12 +8,9 @@ import { type GraphBuilder } from '@dxos/app-graph';
 import { type Space } from '@dxos/client-protocol';
 import { type S } from '@dxos/echo-schema';
 import { type RootSettingsStore } from '@dxos/local-storage';
-import { type DeepReadonly } from '@dxos/util';
 
 import { type FileInfo } from './file';
 import { type NodeSerializer } from './graph';
-import { type Layout } from './layout';
-import { type LayoutParts } from './navigation';
 import { type SurfaceDefinition } from './surface';
 import { type Resource } from './translations';
 import { defineCapability, type PluginManager } from '../core';
@@ -40,13 +37,23 @@ export namespace Capabilities {
     'dxos.org/app-framework/capability/intent-dispatcher',
   );
 
-  export const Layout = defineCapability<Readonly<Layout>>('dxos.org/app-framework/capability/layout');
-  export const MutableLayout = defineCapability<Layout>('dxos.org/app-framework/capability/layout');
+  export const LayoutMode = defineCapability<string>('dxos.org/app-framework/capability/layout-mode');
+  export const DialogOpen = defineCapability<boolean>('dxos.org/app-framework/capability/dialog-open');
 
-  export type MutableLocation = { active: LayoutParts; closed: string[] };
-  export type Location = DeepReadonly<MutableLocation>;
-  export const Location = defineCapability<Location>('dxos.org/app-framework/capability/location');
-  export const MutableLocation = defineCapability<MutableLocation>('dxos.org/app-framework/capability/location');
+  /**
+   * Identifiers of items which are currently active in the application.
+   */
+  export const Active = defineCapability<string[]>('dxos.org/app-framework/capability/active');
+
+  /**
+   * Identifiers of items which were previously active in the application.
+   */
+  export const Inactive = defineCapability<string[]>('dxos.org/app-framework/capability/inactive');
+
+  /**
+   * Identifier of the item which should be scrolled into view.
+   */
+  export const ScrollIntoView = defineCapability<string>('dxos.org/app-framework/capability/scroll-into-view');
 
   export const Translations = defineCapability<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
 
