@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as protobufjs from 'protobufjs';
+import pb from 'protobufjs';
 import * as ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
@@ -12,10 +12,10 @@ import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 
-export const getFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode => {
+export const getFieldType = (field: pb.Field, subs: SubstitutionsMap): ts.TypeNode => {
   if (field.repeated) {
     return f.createArrayTypeNode(getScalarFieldType(field, subs));
-  } else if (field.map && field instanceof protobufjs.MapField) {
+  } else if (field.map && field instanceof pb.MapField) {
     return f.createTypeReferenceNode('Partial', [
       f.createTypeReferenceNode('Record', [
         f.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
@@ -27,7 +27,7 @@ export const getFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): t
   }
 };
 
-export const getScalarFieldType = (field: protobufjs.Field, subs: SubstitutionsMap): ts.TypeNode => {
+export const getScalarFieldType = (field: pb.Field, subs: SubstitutionsMap): ts.TypeNode => {
   invariant(field.message);
   field.resolve();
   return types(field.resolvedType ?? field.type, field.message, subs);

@@ -2,7 +2,10 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist"
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "target": "ESNext"
   },
   "include": [
     "src",
