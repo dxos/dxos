@@ -3,8 +3,9 @@
 //
 
 import { Event } from '@dxos/async';
+import { safeParseJson } from '@dxos/util';
 
-export type Block = TextBlock | TagBlock | CodeBlock;
+export type Block = TextBlock | JsonBlock | CodeBlock | TagBlock;
 
 /**
  * Plain text.
@@ -12,6 +13,14 @@ export type Block = TextBlock | TagBlock | CodeBlock;
 export type TextBlock = {
   type: 'text';
   content: string;
+};
+
+/**
+ * Raw JSON block.
+ */
+export type JsonBlock = {
+  type: 'json';
+  data: any;
 };
 
 /**
@@ -70,7 +79,7 @@ export class StreamingParser {
    */
   end() {
     if (this._buffer.length > 0) {
-      this.emitTextBlock(this._buffer);
+      this.emitTextOrJsonBlock(this._buffer);
       this._buffer = '';
     }
   }
@@ -92,7 +101,7 @@ export class StreamingParser {
 
       // Emit any text before the tag.
       if (tagStartIndex > 0) {
-        this.emitTextBlock(this._buffer.slice(0, tagStartIndex));
+        this.emitTextOrJsonBlock(this._buffer.slice(0, tagStartIndex));
         this._buffer = this._buffer.slice(tagStartIndex);
         continue;
       }
@@ -145,7 +154,7 @@ export class StreamingParser {
 
     // If there's text before the code block, emit it first.
     if (codeBlockStart > 0) {
-      this.emitTextBlock(this._buffer.slice(0, codeBlockStart));
+      this.emitTextOrJsonBlock(this._buffer.slice(0, codeBlockStart));
       this._buffer = this._buffer.slice(codeBlockStart);
       return true;
     }
@@ -195,8 +204,20 @@ export class StreamingParser {
   // Emitters
   //
 
-  private emitTextBlock(text: string) {
-    if (text.trim().length > 0) {
+  private emitTextOrJsonBlock(content: string) {
+    const text = content.trim();
+    if (text.length > 0) {
+      if (text.startsWith('{') && text.endsWith('}')) {
+        const data = safeParseJson(text);
+        if (data) {
+          this.update.emit({
+            type: 'json',
+            data,
+          });
+          return;
+        }
+      }
+
       this.update.emit({
         type: 'text',
         content: text,

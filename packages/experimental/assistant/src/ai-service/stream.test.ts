@@ -56,7 +56,7 @@ describe('GenerationStream', () => {
     parser.end();
 
     expect(blocks).to.have.length(7);
-    expect(blocks.map((block) => block.type)).to.deep.eq(['text', 'tag', 'text', 'tag', 'text', 'code', 'code']);
+    expect(blocks.map((block) => block.type)).to.deep.eq(['json', 'tag', 'text', 'tag', 'text', 'code', 'code']);
     expect(blocks.map((block) => block.type === 'tag' && block.name).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
   });
 
@@ -84,7 +84,7 @@ describe('GenerationStream', () => {
     }
 
     expect(blocks).to.have.length(7);
-    expect(blocks.map((block) => block.type)).to.deep.eq(['text', 'tag', 'text', 'tag', 'text', 'code', 'code']);
+    expect(blocks.map((block) => block.type)).to.deep.eq(['json', 'tag', 'text', 'tag', 'text', 'code', 'code']);
     expect(blocks.map((block) => block.type === 'tag' && block.name).filter(Boolean)).to.deep.eq(['cot', 'artifact']);
   });
 });

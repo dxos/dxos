@@ -1,3 +1,4 @@
+
 {
   "test": 100
 }
@@ -8,9 +9,7 @@
 3. Output step.
 </cot>
 
-This is some text.
-
-This is a tool call.
+JSON is only recognized if there is no text before it.
 
 {
   "test": 100
@@ -18,9 +17,9 @@ This is a tool call.
 
 <artifact id="100" />
 
-This is some code.
+This is some text.
 
-```json
+```
 {
   "test": 100
 }

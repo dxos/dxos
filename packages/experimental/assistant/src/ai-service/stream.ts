@@ -7,7 +7,7 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type GenerateRequest, type ResultStreamEvent } from './defs';
+import { type GenerateRequest, type GenerationStreamEvent } from './types';
 import { iterSSEMessages } from './util';
 
 export type GenerationParams = Pick<GenerateRequest, 'spaceId' | 'threadId'>;
@@ -18,7 +18,7 @@ export type GenerationParams = Pick<GenerateRequest, 'spaceId' | 'threadId'>;
  * https://platform.openai.com/docs/api-reference/streaming
  * https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events
  */
-export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
+export class GenerationStream implements AsyncIterable<GenerationStreamEvent> {
   /**
    * Creates a stream from an SSE response.
    */
@@ -76,7 +76,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
   /**
    * Iterator over the stream.
    */
-  private _iterator?: AsyncIterator<ResultStreamEvent> = undefined;
+  private _iterator?: AsyncIterator<GenerationStreamEvent> = undefined;
 
   /**
    * Trigger event when the stream is done.
@@ -85,14 +85,15 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
   constructor(
     private readonly _controller: AbortController,
-    private readonly _getIterator: () => AsyncIterableIterator<ResultStreamEvent>,
+    private readonly _getIterator: () => AsyncIterableIterator<GenerationStreamEvent>,
+    // TODO(burdon): Remove; just pass raw data.
     private readonly _params: GenerationParams,
   ) {}
 
   /**
    * Returns an iterator over the stream.
    */
-  [Symbol.asyncIterator](): AsyncIterator<ResultStreamEvent> {
+  [Symbol.asyncIterator](): AsyncIterator<GenerationStreamEvent> {
     return this._createIterator();
   }
 
@@ -121,7 +122,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
   /**
    * Creates an iterator over the stream.
    */
-  private _createIterator(): AsyncIterator<ResultStreamEvent> {
+  private _createIterator(): AsyncIterator<GenerationStreamEvent> {
     const self = this;
     return (this._iterator ??= (() => {
       const generator = async function* (this: GenerationStream) {
@@ -140,7 +141,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
     })());
   }
 
-  private _processEvent(event: ResultStreamEvent) {
+  private _processEvent(event: GenerationStreamEvent) {
     log('processing', { event: event.type });
 
     // TODO(dmaretskyi): Support multiple message, e.g., for service-defined tools.
@@ -189,15 +190,15 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
       case 'content_block_delta': {
         invariant(this._current);
-        const snapshotContent = this._current.content.at(event.index);
-        if (snapshotContent?.type === 'text' && event.delta.type === 'text_delta') {
-          snapshotContent.text += event.delta.text;
-        } else if (snapshotContent?.type === 'tool_use' && event.delta.type === 'input_json_delta') {
-          snapshotContent.inputJson ??= '';
-          snapshotContent.inputJson += event.delta.partial_json;
+        const buffer = this._current.content.at(event.index);
+        if (buffer?.type === 'text' && event.delta.type === 'text_delta') {
+          buffer.text += event.delta.text;
+        } else if (buffer?.type === 'tool_use' && event.delta.type === 'input_json_delta') {
+          buffer.inputJson ??= '';
+          buffer.inputJson += event.delta.partial_json;
           // TODO(dmaretskyi): Partial parsing.
           // if (jsonBuf) {
-          //   snapshotContent.input = partialParse(jsonBuf);
+          //   buffer.input = partialParse(jsonBuf);
           // }
         }
         break;

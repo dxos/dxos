@@ -5,7 +5,7 @@
 import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
-import { type ResultStreamEvent } from '@dxos/assistant';
+import { type GenerationStreamEvent } from '@dxos/assistant';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
@@ -80,7 +80,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
     });
   }
 
-  private async *createStream(response: string, onDone: () => void): AsyncGenerator<ResultStreamEvent> {
+  private async *createStream(response: string, onDone: () => void): AsyncGenerator<GenerationStreamEvent> {
     // Simulate initial API delay.
     await this.delay(this.config.initDelay);
 

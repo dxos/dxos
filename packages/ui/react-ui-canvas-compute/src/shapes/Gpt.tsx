@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import type { ResultStreamEvent } from '@dxos/assistant';
+import type { GenerationStreamEvent } from '@dxos/assistant';
 import { GptInput, GptOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -44,7 +44,7 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
           break;
         }
         case 'custom': {
-          const token: ResultStreamEvent = ev.event;
+          const token: GenerationStreamEvent = ev.event;
           switch (token.type) {
             case 'content_block_delta':
               switch (token.delta.type) {

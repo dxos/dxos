@@ -12,7 +12,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
-import { ToolTypes } from './defs';
+import { ToolTypes } from './types';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });

@@ -6,7 +6,7 @@ import { it } from '@effect/vitest';
 import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
-import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
+import { AIServiceClientImpl, type GenerationStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -60,7 +60,7 @@ describe('Gpt pipelines', () => {
           log.info('token', { token });
         });
 
-        const tokenStream: Stream.Stream<ResultStreamEvent> = yield* output.values.tokenStream;
+        const tokenStream: Stream.Stream<GenerationStreamEvent> = yield* output.values.tokenStream;
         const tokens = yield* tokenStream.pipe(
           Stream.filterMap((ev) =>
             ev.type === 'content_block_delta' && ev.delta.type === 'text_delta'
@@ -142,7 +142,7 @@ describe('Gpt pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-        const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
+        const { tokenStream, text }: { tokenStream: Stream.Stream<GenerationStreamEvent>; text: Effect.Effect<string> } =
           yield* runtime
             .runGraph(
               'dxn:compute:gpt2',

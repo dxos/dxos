@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type AIServiceClient, type ResultStreamEvent, type LLMModel } from '../ai-service';
+import { type AIServiceClient, type GenerationStreamEvent, type LLMModel } from '../ai-service';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
@@ -33,7 +33,7 @@ export type ConversationEvent =
       type: 'message';
       message: Message;
     }
-  | ResultStreamEvent;
+  | GenerationStreamEvent;
 
 export const runLLM = async (params: CreateLLMConversationParams) => {
   let conversationResult: any = null;

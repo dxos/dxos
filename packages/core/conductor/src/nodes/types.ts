@@ -5,7 +5,7 @@
 import { AST } from '@effect/schema';
 
 import { Tool, Message } from '@dxos/artifact';
-import { type ResultStreamEvent } from '@dxos/assistant';
+import { type GenerationStreamEvent } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
@@ -115,7 +115,7 @@ export const TimerTriggerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }
 // GPT
 //
 
-const GptStreamEventSchema = S.Any as S.Schema<ResultStreamEvent>;
+const GptStreamEventSchema = S.Any as S.Schema<GenerationStreamEvent>;
 
 export const GptMessage = S.Struct({
   role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
