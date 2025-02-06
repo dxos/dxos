@@ -220,7 +220,7 @@ export const RawTreeItem = <T = any,>({
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mt-[2px] aria-[current]:bg-input',
+          'grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,

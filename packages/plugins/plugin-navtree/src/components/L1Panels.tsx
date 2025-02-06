@@ -5,12 +5,14 @@
 import React, { Fragment, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { useNavTreeContext } from './NavTreeContext';
 import { NavTreeItemColumns } from './NavTreeItemColumns';
 import { useLoadDescendents } from '../hooks';
+import { NAVTREE_PLUGIN } from '../meta';
 import { l0ItemType } from '../util';
 
 type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string };
@@ -18,6 +20,7 @@ type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string };
 const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
   const navTreeContext = useNavTreeContext();
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+  const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Tabs.Tabpanel
       key={item.id}
@@ -25,15 +28,20 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
       classNames='absolute inset-block-0 inline-end-0 is-[calc(var(--nav-sidebar-size)-var(--l0-size))]'
     >
       {item.id === currentItemId && (
-        <Tree
-          {...navTreeContext}
-          id={item.id}
-          root={item}
-          path={itemPath}
-          draggable
-          gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-          renderColumns={NavTreeItemColumns}
-        />
+        <>
+          <h2 role='header' className='bs-[--rail-action] flex items-center border-be border-separator pli-3'>
+            {toLocalizedString(item.properties.label, t)}
+          </h2>
+          <Tree
+            {...navTreeContext}
+            id={item.id}
+            root={item}
+            path={itemPath}
+            draggable
+            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+            renderColumns={NavTreeItemColumns}
+          />
+        </>
       )}
     </Tabs.Tabpanel>
   );

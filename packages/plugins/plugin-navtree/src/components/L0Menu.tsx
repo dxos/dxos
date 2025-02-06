@@ -61,7 +61,7 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
         />
       )}
       {type === 'tab' ? (
-        <span className='place-self-center text-3xl'>{avatarValue}</span>
+        <span className='place-self-center text-3xl font-light'>{avatarValue}</span>
       ) : (
         item.properties.icon && <Icon icon={item.properties.icon} size={7} classNames='place-self-center' />
       )}
@@ -87,7 +87,7 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
   );
 };
 
-const delayDuration = 800;
+const delayDuration = 1200;
 
 export const L0Menu = ({
   topLevelItems,
@@ -117,17 +117,24 @@ export const L0Menu = ({
     expandTimerRef.current = 0;
     setExpanded(false);
   }, []);
+  const handleFocus = useCallback(() => {
+    if (document.body.getAttribute('data-is-keyboard') === 'true') {
+      handleExpand();
+    } else {
+      handleDelayedExpand();
+    }
+  }, []);
   return (
     <DismissableLayer
       asChild
       onDismiss={handleClose}
       onPointerEnter={handleDelayedExpand}
       onPointerLeave={handleClose}
-      onFocus={handleExpand}
+      onFocus={handleFocus}
     >
       <Tabs.Tablist
         data-state={expanded ? 'expanded' : 'collapsed'}
-        classNames='group/l0 absolute inset-block-0 inline-start-0 plb-1 grid grid-cols-[var(--l0-size)_0] auto-rows-[--l0-size] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-deck'
+        classNames='group/l0 absolute inset-block-0 inline-start-0 plb-1 grid grid-cols-[var(--l0-size)_0] auto-rows-[--l0-size] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-scrim backdrop-blur border-ie border-separator'
       >
         {topLevelItems.map((item) => {
           if (l0ItemType(item) === 'collection') {
