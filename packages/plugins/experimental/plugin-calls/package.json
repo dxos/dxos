@@ -44,7 +44,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-visually-hidden": "^1.1.0",
+    "@radix-ui/react-visually-hidden": "1.1.2",
     "react-flip-toolkit": "^7.2.4",
     "react-router-dom": "^6.4.0",
     "react-use": "^17.5.1",
