@@ -3,5 +3,5 @@
 //
 
 export * from './collection';
-export * from './thread';
+export * from '../../../plugin-thread/src/thread';
 export * from './types';

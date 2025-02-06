@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { MessageState, type MessageType } from '@dxos/plugin-space/types';
+import { type MessageType } from '@dxos/schema-common';
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
@@ -24,6 +24,13 @@ const setMessageProperty = (message: MessageType, property: string, value: any) 
 
   message.properties[property] = value;
 };
+
+export enum MessageState {
+  NONE = 0,
+  ARCHIVED = 1,
+  DELETED = 2,
+  SPAM = 3,
+}
 
 export type MailboxOptions = { readTimout?: number };
 

@@ -3,10 +3,11 @@
 //
 
 import { S } from '@dxos/echo-schema';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
+import { MessageType } from '@dxos/schema-common';
 
-import { THREAD_PLUGIN } from './meta';
+import { THREAD_PLUGIN } from '../meta';
+import { ChannelType, ThreadType } from '../thread';
 
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;

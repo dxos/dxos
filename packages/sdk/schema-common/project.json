@@ -1,8 +1,8 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "plugin-thread",
+  "name": "schema-common",
   "tags": [
-    "scope:plugins"
+    "scope:sdk"
   ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
@@ -11,19 +11,14 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/types/index.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }
