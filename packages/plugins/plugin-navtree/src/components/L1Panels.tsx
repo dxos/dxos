@@ -38,6 +38,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
             id={item.id}
             root={item}
             path={itemPath}
+            levelOffset={5}
             draggable
             gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}

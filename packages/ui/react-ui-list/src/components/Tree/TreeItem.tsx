@@ -51,6 +51,7 @@ export const isTreeData = (data: unknown): data is TreeData => S.is(TreeDataSche
 export type TreeItemProps<T = any> = {
   item: T;
   path: string[];
+  levelOffset?: number;
   last: boolean;
   draggable?: boolean;
   renderColumns?: FC<{
@@ -74,6 +75,7 @@ export const RawTreeItem = <T = any,>({
   canDrop,
   onOpenChange,
   onSelect,
+  levelOffset = 2,
 }: TreeItemProps<T>) => {
   const { getItems, getProps, isOpen, isCurrent } = useTree();
   const items = getItems(item);
@@ -81,7 +83,7 @@ export const RawTreeItem = <T = any,>({
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);
-  const level = path.length - 2;
+  const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const data = useMemo(() => ({ id, path, item }) satisfies TreeData, [id, path, item]);
@@ -211,6 +213,8 @@ export const RawTreeItem = <T = any,>({
     [isBranch, open, handleOpenChange, handleSelect],
   );
 
+  const suppressOpenToggle = !isBranch && level < 1;
+
   return (
     <>
       <Treegrid.Row
@@ -243,11 +247,11 @@ export const RawTreeItem = <T = any,>({
       >
         <Treegrid.Cell
           indent
-          classNames='relative grid grid-cols-subgrid col-[tree-row]'
+          classNames={['relative grid grid-cols-subgrid col-[tree-row]', suppressOpenToggle && 'pis-2']}
           style={paddingIndentation(level - 1)}
         >
           <div role='none' className='flex items-center'>
-            <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />
+            <TreeItemToggle open={open} isBranch={isBranch} hidden={suppressOpenToggle} onToggle={handleOpenChange} />
             <TreeItemHeading
               ref={buttonRef}
               label={label}
