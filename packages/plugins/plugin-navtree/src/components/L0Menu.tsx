@@ -12,7 +12,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { useNavTreeContext } from './NavTreeContext';
 import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
-import { l0ItemType } from '../util';
+import { getFirstTwoRenderableChars, l0ItemType } from '../util';
 
 type L0ItemProps = {
   item: Node<any>;
@@ -47,6 +47,11 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
   const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
   const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
   const rootProps = type === 'tab' ? { value: item.id, tabIndex: 0 } : { onClick: handleClick };
+  const localizedString = toLocalizedString(item.properties.label, t);
+  const avatarValue = useMemo(
+    () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('') : []),
+    [type, item.properties.label, t],
+  );
   return (
     <Root {...(rootProps as any)} className='group/l0i grid grid-cols-subgrid col-span-2 relative cursor-pointer'>
       {type !== 'collection' && (
@@ -55,9 +60,13 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
           className='group-hover/l0i:bg-input transition-colors absolute inset-block-1 inset-inline-2 bg-base rounded -z-[1]'
         />
       )}
-      {item.properties.icon && <Icon icon={item.properties.icon} size={7} classNames='place-self-center' />}
+      {type === 'tab' ? (
+        <span className='place-self-center text-3xl'>{avatarValue}</span>
+      ) : (
+        item.properties.icon && <Icon icon={item.properties.icon} size={7} classNames='place-self-center' />
+      )}
       <span id={`${item.id}-label`} className='is-[--l01-size] text-start' style={{ alignSelf: 'center' }}>
-        {toLocalizedString(item.properties.label, t)}
+        {localizedString}
       </span>
     </Root>
   );

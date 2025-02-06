@@ -46,6 +46,7 @@ export default (context: PluginsContext) => {
     cacheable: ['label', 'role'],
     properties: {
       label: ['spaces label', { ns: SPACE_PLUGIN }],
+      icon: 'ph--planet--regular',
       testId: 'spacePlugin.spaces',
       role: 'branch',
       l0Disposition: 'collection',
