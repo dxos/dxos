@@ -5,8 +5,8 @@
 import {
   Root as AvatarRootPrimitive,
   type AvatarProps as AvatarRootPrimitiveProps,
-  type ImageLoadingStatus,
   Fallback as AvatarFallbackPrimitive,
+  type AvatarImageProps as AvatarImagePrimitiveProps,
 } from '@radix-ui/react-avatar';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -243,9 +243,7 @@ const AvatarMaskedText = (props: AvatarMaskedTextProps) => {
   );
 };
 
-type AvatarImageProps = ComponentPropsWithRef<'image'> & {
-  onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
-};
+type AvatarImageProps = ComponentPropsWithRef<'image'> & Pick<AvatarImagePrimitiveProps, 'onLoadingStatusChange'>;
 
 const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
   ({ onLoadingStatusChange, ...props }, forwardedRef) => {
@@ -264,8 +262,7 @@ const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
 
 type AvatarIconProps = {
   icon: string;
-  onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
-};
+} & Pick<AvatarImagePrimitiveProps, 'onLoadingStatusChange'>;
 
 const AvatarIcon = forwardRef<SVGSVGElement, AvatarIconProps>(({ onLoadingStatusChange, ...props }, forwardedRef) => {
   const { size } = useAvatarContext('AvatarIcon');
