@@ -19,6 +19,16 @@ export default () =>
       await initializeTable({ space, table, initialSchema });
       return { data: { object: table } };
     }),
+    createResolver(TableAction.AddRow, async ({ table, data }) => {
+      const space = getSpace(table);
+      invariant(space);
+      invariant(table.view?.target);
+
+      const schema = space.db.schemaRegistry.getSchema(table.view.target.query.type);
+      invariant(schema);
+
+      space.db.add(create(schema, data));
+    }),
     createResolver(TableAction.DeleteColumn, ({ table, fieldId, deletionData }, undo) => {
       invariant(table.view);
 

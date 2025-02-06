@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActiveParts } from '@dxos/app-framework';
 import { AST, S, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -10,6 +9,11 @@ import { type ComplexMap } from '@dxos/util';
 
 import { CollectionType } from './collection';
 import { SPACE_PLUGIN } from '../meta';
+
+// I've copy pasted this here to not depend on the whole @dxos/app-framework package in types entrypoint.
+/** @deprecated */
+export const ActiveParts = S.Record({ key: S.String, value: S.Union(S.String, S.mutable(S.Array(S.String))) });
+export type ActiveParts = S.Schema.Type<typeof ActiveParts>;
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
 

@@ -4,7 +4,7 @@
 
 import { AST, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
-import { GameType } from '@dxos/plugin-chess/types';
+import { ChessType } from '@dxos/plugin-chess/types';
 
 import { Engine } from './engine';
 
@@ -22,7 +22,7 @@ export type Meta = S.Schema.Type<typeof MetaSchema>;
 /**
  * Runtime types.
  */
-export const types = [GameType];
+export const types = [ChessType];
 
 /**
  * Chess function handler.

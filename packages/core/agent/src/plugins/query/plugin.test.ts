@@ -55,7 +55,7 @@ describe('QueryPlugin', () => {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
 
       org = generator.createObject({ types: [TestSchemaType.organization] });
       await space.db.flush();
@@ -147,7 +147,7 @@ describe('QueryPlugin', () => {
         const space = await agent.spaces.create({ name: 'first space' });
         await space.waitUntilReady();
         const generator = createSpaceObjectGenerator(space);
-        generator.addSchemas();
+        await generator.addSchemas();
 
         await generator.createObject({ types: [TestSchemaType.organization] });
         const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });

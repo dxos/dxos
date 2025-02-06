@@ -15,10 +15,12 @@ export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'di
    * (`row-span-2`) or was buggy. See the description of the StackItem.Content component itself for more information.
    */
   toolbar: boolean;
+
   /**
    * Whether to provide for the layout of a statusbar after the content.
    */
   statusbar?: boolean;
+
   /**
    * Whether to set a certain aspect ratio on the content, including the toolbar and statusbar. This is provided for
    * convenience and consistency; it can instead be specified by the `classNames` or `style` props as needed.

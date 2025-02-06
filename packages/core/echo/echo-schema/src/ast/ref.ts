@@ -53,7 +53,6 @@ interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
   isRef: (obj: any) => obj is Ref<any>;
-
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
 }
 

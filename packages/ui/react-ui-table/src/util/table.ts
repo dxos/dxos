@@ -82,7 +82,7 @@ export const initializeTable = async ({
         name: 'View',
         typename: contactSchema.typename,
         jsonSchema: contactSchema.jsonSchema,
-        fields: ['name', 'active', 'email', 'salary'],
+        fields: ['name', 'email', 'salary', 'active'],
       }),
     );
 
@@ -92,6 +92,13 @@ export const initializeTable = async ({
         id: table.view.target!.fields.find((f) => f.path === 'salary')!.id,
         path: 'salary' as JsonPath,
         size: 150,
+      },
+    });
+    projection.setFieldProjection({
+      field: {
+        id: table.view.target!.fields.find((f) => f.path === 'active')!.id,
+        path: 'active' as JsonPath,
+        size: 100,
       },
     });
 

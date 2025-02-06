@@ -8,7 +8,6 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { isReactiveObject } from '@dxos/live-object';
-import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
@@ -69,10 +68,6 @@ const filterMatchInner = (
 
   if (filter.type) {
     const type = core.getType()?.toDXN() ?? DXN.fromTypename(EXPANDO_TYPENAME);
-    log('type compare', {
-      type,
-      filterType: filter.type,
-    });
     if (!filter.type.some((filterType) => compareTypes(filterType, type))) {
       return false;
     }

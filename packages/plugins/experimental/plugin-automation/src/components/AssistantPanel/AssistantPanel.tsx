@@ -6,8 +6,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
+import { type Message } from '@dxos/artifact';
+import { type AIServiceClient, AIServiceClientImpl } from '@dxos/assistant';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
+import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { useClient, useConfig } from '@dxos/react-client';
 import { ContextMenu, type ThemedClassName } from '@dxos/react-ui';
@@ -58,13 +60,13 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       setContextSpaceId(contextSpaceId);
       setThreadId(threadId);
 
-      const messages = await aiClient.current!.getMessagesInThread(contextSpaceId, threadId);
+      const messages = await aiClient.current!.getMessages(contextSpaceId, threadId);
       setHistory(messages);
     });
   }, []);
 
   const handleRequest = async (input: string) => {
-    if (input === '') {
+    if (!aiClient.current || input === '') {
       return;
     }
 
@@ -78,10 +80,10 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       role: 'user',
       content: [{ type: 'text', text: input }],
     };
-    await aiClient.current!.insertMessages([userMessage]);
+    await aiClient.current.appendMessages([userMessage]);
     setHistory([...history, userMessage]);
 
-    const generationStream = await aiClient.current!.generate({
+    const generationStream = await aiClient.current.generate({
       model: '@anthropic/claude-3-5-sonnet-20241022',
       spaceId: contextSpaceId!,
       threadId: threadId!,
@@ -91,10 +93,10 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
 
     const historyBefore = [...history, userMessage];
     for await (const _event of generationStream) {
-      setHistory([...historyBefore, ...generationStream.accumulatedMessages]);
+      setHistory([...historyBefore, ...generationStream.messages]);
     }
 
-    await aiClient.current!.insertMessages(await generationStream.complete());
+    await aiClient.current!.appendMessages(await generationStream.complete());
   };
 
   const getSystemPrompt = async () => {
@@ -114,7 +116,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     // setContextSpaceId(contextSpaceId);
     setThreadId(threadId);
 
-    const messages = await aiClient.current!.getMessagesInThread(contextSpaceId!, threadId);
+    const messages = await aiClient.current!.getMessages(contextSpaceId!, threadId);
     setHistory(messages);
   };
 

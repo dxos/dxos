@@ -3,6 +3,7 @@
 //
 
 import { Context } from '@dxos/context';
+import type { MaybePromise } from '@dxos/util';
 
 export type UnsubscribeCallback = () => void;
 
@@ -41,6 +42,11 @@ export type ListenerOptions = {
   weak?: boolean;
   once?: boolean;
 };
+
+type EventCallback<T> = (data: T) => MaybePromise<void>;
+
+// TODO(dmaretskyi): Remove this once the code is cleaned up.
+const DO_NOT_ERROR_ON_ASYNC_CALLBACK = true;
 
 /**
  * An EventEmitter variant that does not do event multiplexing and represents a single event.
@@ -102,7 +108,25 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    */
   emit(data: T) {
     for (const listener of this._listeners) {
-      void listener.trigger(data);
+      listener.trigger(data);
+
+      if (listener.once) {
+        this._listeners.delete(listener);
+      }
+    }
+  }
+
+  /**
+   * Emit an event and wait for async listeners to complete.
+   * In most cases should only be called by the class or entity containing the event.
+   * All listeners are called in order of subscription with persistent ones first.
+   * Listeners are called sequentially.
+   *
+   * @param data param that will be passed to all listeners.
+   */
+  async emitAsync(data: T) {
+    for (const listener of this._listeners) {
+      await listener.triggerAsync(data);
 
       if (listener.once) {
         this._listeners.delete(listener);
@@ -118,9 +142,9 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * @param options.weak If true, the callback will be weakly referenced and will be garbage collected if no other references to it exist.
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): UnsubscribeCallback;
-  on(ctx: Context, callback: (data: T) => void, options?: ListenerOptions): UnsubscribeCallback;
-  on(_ctx: any, _callback?: (data: T) => void, options?: ListenerOptions): UnsubscribeCallback {
+  on(callback: EventCallback<T>): UnsubscribeCallback;
+  on(ctx: Context, callback: EventCallback<T>, options?: ListenerOptions): UnsubscribeCallback;
+  on(_ctx: any, _callback?: EventCallback<T>, options?: ListenerOptions): UnsubscribeCallback {
     const [ctx, callback] = _ctx instanceof Context ? [_ctx, _callback] : [new Context(), _ctx];
     const weak = !!options?.weak;
     const once = !!options?.once;
@@ -408,13 +432,13 @@ export interface ReadOnlyEvent<T = void> {
 }
 
 class EventListener<T> {
-  public readonly callback: ((data: T) => void) | WeakRef<(data: T) => void>;
+  public readonly callback: EventCallback<T> | WeakRef<EventCallback<T>>;
 
   private readonly _clearDispose?: () => void = undefined;
 
   constructor(
     event: Event<T>,
-    listener: (data: T) => void,
+    listener: EventCallback<T>,
     public readonly ctx: Context,
     public readonly once: boolean,
     public readonly weak: boolean,
@@ -438,11 +462,27 @@ class EventListener<T> {
     }
   }
 
-  derefCallback(): ((data: T) => void) | undefined {
-    return this.weak ? (this.callback as WeakRef<(data: T) => void>).deref() : (this.callback as (data: T) => void);
+  derefCallback(): EventCallback<T> | undefined {
+    return this.weak ? (this.callback as WeakRef<EventCallback<T>>).deref() : (this.callback as EventCallback<T>);
   }
 
-  async trigger(data: T) {
+  trigger(data: T) {
+    let result!: MaybePromise<void>;
+    try {
+      const callback = this.derefCallback();
+      result = callback?.(data);
+    } catch (err: any) {
+      this.ctx.raise(err);
+    }
+
+    if (!DO_NOT_ERROR_ON_ASYNC_CALLBACK) {
+      if (result instanceof Promise) {
+        throw new TypeError('Event has async callbacks, use emitAsync instead');
+      }
+    }
+  }
+
+  async triggerAsync(data: T) {
     try {
       const callback = this.derefCallback();
       await callback?.(data);

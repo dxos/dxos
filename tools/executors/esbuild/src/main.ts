@@ -4,6 +4,7 @@
 
 import type { ExecutorContext } from '@nx/devkit';
 import { build, type Format, type Platform, type Plugin } from 'esbuild';
+import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
@@ -117,6 +118,9 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
             },
           } satisfies Plugin,
           yamlPlugin({}),
+          // GLSL support for shaders.
+          // https://github.com/vanruesc/esbuild-plugin-glsl
+          glsl({}),
           ...(format === 'cjs' ? [esmOutputToCjs()] : []),
         ].filter((x) => x !== undefined),
       });

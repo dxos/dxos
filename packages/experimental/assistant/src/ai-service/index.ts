@@ -3,4 +3,6 @@
 //
 
 export * from './client';
-export * from './schema';
+export * from './parser';
+export * from './stream';
+export * from './types';

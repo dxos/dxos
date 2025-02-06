@@ -287,7 +287,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(objData).to.deep.contain({
         '@id': obj.id,
         '@meta': { keys: [] },
-        '@type': { '/': 'dxn:type:example.com/type/Test' },
+        '@type': { '/': 'dxn:type:example.com/type/Test:0.1.0' },
         ...TEST_OBJECT,
       });
     }
