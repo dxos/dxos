@@ -4,6 +4,7 @@
 
 import React, { Fragment, useMemo } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
@@ -25,11 +26,11 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
     <Tabs.Tabpanel
       key={item.id}
       value={item.id}
-      classNames='absolute inset-block-0 inline-end-0 is-[calc(var(--nav-sidebar-size)-var(--l0-size))]'
+      classNames='absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))]'
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='bs-[--rail-action] flex items-center border-be border-separator pis-3'>
+          <h2 className='bs-[--rail-size] flex items-center border-be border-scrim pis-3'>
             <span className='flex-1 truncate'>{toLocalizedString(item.properties.label, t)}</span>
             <NavTreeItemColumns path={itemPath} item={item} open />
           </h2>
@@ -43,6 +44,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
             gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}
           />
+          {navTreeContext.hoistStatusbar && <Surface role='status-bar--sidebar-footer' limit={1} />}
         </>
       )}
     </Tabs.Tabpanel>

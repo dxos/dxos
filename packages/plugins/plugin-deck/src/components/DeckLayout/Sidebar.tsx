@@ -7,7 +7,6 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 
-import { Banner } from './Banner';
 import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useHoistStatusbar } from '../../util/useHoistStatusbar';
 import { useLayout } from '../LayoutContext';
@@ -19,23 +18,16 @@ export const Sidebar = () => {
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
 
-  const navigationData = useMemo(() => ({ popoverAnchorId }), [popoverAnchorId]);
+  const navigationData = useMemo(
+    () => ({ popoverAnchorId, topbar, hoistStatusbar }),
+    [popoverAnchorId, topbar, hoistStatusbar],
+  );
 
   return (
     <Main.NavigationSidebar
-      classNames={[
-        'grid grid-rows-[var(--rail-size)_var(--rail-action)_1fr_min-content_min-content] md:grid-rows-[var(--rail-size)_var(--rail-action)_1fr_min-content]',
-        topbar && 'grid-rows-[1fr_min-content] block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-      ]}
+      classNames={['grid', topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]']}
     >
-      {!topbar && (
-        <>
-          <Banner variant='sidebar' />
-          <Surface role='search-input' limit={1} />
-        </>
-      )}
       <Surface role='navigation' data={navigationData} limit={1} />
-      {!hoistStatusbar && <Surface role='status-bar--sidebar-footer' limit={1} />}
     </Main.NavigationSidebar>
   );
 };

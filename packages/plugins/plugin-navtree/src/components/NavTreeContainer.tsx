@@ -39,10 +39,12 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
+  topbar?: boolean;
+  hoistStatusbar?: boolean;
 } & Pick<NavTreeContextValue, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
 
 export const NavTreeContainer = memo(
-  ({ isCurrent, isOpen, onOpenChange, popoverAnchorId, ...props }: NavTreeContainerProps) => {
+  ({ isCurrent, isOpen, onOpenChange, popoverAnchorId, topbar, hoistStatusbar, ...props }: NavTreeContainerProps) => {
     const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -210,6 +212,8 @@ export const NavTreeContainer = memo(
         loadDescendents,
         renderItemEnd,
         popoverAnchorId,
+        topbar,
+        hoistStatusbar,
         getItems,
         getProps,
         isCurrent,
@@ -223,6 +227,8 @@ export const NavTreeContainer = memo(
         loadDescendents,
         renderItemEnd,
         popoverAnchorId,
+        topbar,
+        hoistStatusbar,
         getItems,
         getProps,
         isCurrent,
@@ -233,7 +239,6 @@ export const NavTreeContainer = memo(
       ],
     );
 
-    // TODO(thure): What gives this an inline `overflow: initial`?
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
         <NavTree root={graph.root} id={graph.root.id} {...props} />

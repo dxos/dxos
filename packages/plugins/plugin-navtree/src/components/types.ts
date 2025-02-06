@@ -38,4 +38,6 @@ export type NavTreeContextValue = Pick<
   loadDescendents?: (node: Node) => MaybePromise<void>;
   renderItemEnd?: FC<{ node: Node; open: boolean }>;
   popoverAnchorId?: string;
+  topbar?: boolean;
+  hoistStatusbar?: boolean;
 };

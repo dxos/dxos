@@ -273,7 +273,6 @@ export const constructSpaceActions = ({
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--users--regular',
           disabled: locked,
-          disposition: 'item',
           keyBinding: {
             macos: 'meta+.',
             windows: 'alt+.',

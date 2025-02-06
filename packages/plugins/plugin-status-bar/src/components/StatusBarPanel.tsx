@@ -10,7 +10,7 @@ import { Icon, Popover } from '@dxos/react-ui';
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
 
-export const StatusBarPanel = () => {
+export const StatusBarPanel = ({ variant = 'main-footer' }: { variant?: 'main-footer' | 'sidebar-footer' }) => {
   const [open, setOpen] = useState(false);
 
   // TODO(wittjosiah): Factor out feedback and discord buttons.

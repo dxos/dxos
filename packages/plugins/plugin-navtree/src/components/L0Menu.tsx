@@ -5,6 +5,7 @@
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import React, { type MouseEvent, useCallback, useMemo, useRef, useState } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -53,11 +54,15 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
     [type, item.properties.label, t],
   );
   return (
-    <Root {...(rootProps as any)} className='group/l0i grid grid-cols-subgrid col-span-2 relative cursor-pointer'>
+    <Root
+      {...(rootProps as any)}
+      data-type={type}
+      className='group/l0i grid grid-cols-subgrid col-span-2 relative data[type!="collection"]:cursor-pointer'
+    >
       {type !== 'collection' && (
         <div
           role='none'
-          className='group-hover/l0i:bg-input transition-colors absolute inset-block-1 inset-inline-2 bg-base rounded -z-[1]'
+          className='group-hover/l0i:bg-input transition-colors absolute inset-inline-2 inset-block-1 bg-base rounded -z-[1]'
         />
       )}
       {type === 'tab' ? (
@@ -88,6 +93,8 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
 };
 
 const delayDuration = 1200;
+
+const bannerVariant = { variant: 'l0' };
 
 export const L0Menu = ({
   topLevelItems,
@@ -126,16 +133,14 @@ export const L0Menu = ({
   }, []);
   return (
     <DismissableLayer
-      asChild
       onDismiss={handleClose}
       onPointerEnter={handleDelayedExpand}
       onPointerLeave={handleClose}
       onFocus={handleFocus}
+      data-state={expanded ? 'expanded' : 'collapsed'}
+      className='group/l0 absolute inset-block-0 inline-start-0 grid grid-cols-[var(--l0-size)_0] grid-rows-[1fr_min-content] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-scrim backdrop-blur'
     >
-      <Tabs.Tablist
-        data-state={expanded ? 'expanded' : 'collapsed'}
-        classNames='group/l0 absolute inset-block-0 inline-start-0 plb-1 grid grid-cols-[var(--l0-size)_0] auto-rows-[--l0-size] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-scrim backdrop-blur border-ie border-separator'
-      >
+      <Tabs.Tablist classNames='grid grid-cols-subgrid col-span-2 auto-rows-[calc(var(--l0-size)-.5rem)] overflow-y-auto plb-1'>
         {topLevelItems.map((item) => {
           if (l0ItemType(item) === 'collection') {
             return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
@@ -144,6 +149,7 @@ export const L0Menu = ({
           }
         })}
       </Tabs.Tablist>
+      <Surface role='banner' data={bannerVariant} />
     </DismissableLayer>
   );
 };
