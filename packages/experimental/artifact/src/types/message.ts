@@ -123,7 +123,7 @@ export type MessageRole = S.Schema.Type<typeof MessageRole>;
 const MessageSchema = S.Struct({
   id: ObjectId,
 
-  // TODO(burdon): Remove?
+  // TODO(burdon): Remove? Move to context?
   spaceId: S.optional(SpaceIdSchema),
   threadId: S.optional(ObjectId),
 
