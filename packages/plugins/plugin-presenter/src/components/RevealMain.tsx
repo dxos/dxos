@@ -13,8 +13,8 @@ import { RevealPlayer } from './Reveal';
 import { PresenterAction } from '../types';
 
 const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {
-  const layoutMode = useCapability(Capabilities.LayoutMode);
-  const fullscreen = layoutMode === 'fullscreen';
+  const layout = useCapability(Capabilities.Layout);
+  const fullscreen = layout.mode === 'fullscreen';
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (

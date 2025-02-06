@@ -346,12 +346,12 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
     createResolver({
       intent: SpaceAction.RemoveObjects,
       resolve: async ({ objects, target, deletionData }, undo) => {
-        const active = context.requestCapability(Capabilities.Active);
+        const layout = context.requestCapability(Capabilities.Layout);
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
         invariant(space && objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space));
-        const openObjectIds = new Set<string>(active);
+        const openObjectIds = new Set<string>(layout.active);
 
         if (!undo) {
           const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename]?.target;

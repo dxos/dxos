@@ -70,10 +70,12 @@ export const HelpContextProvider = ({
   onRunningChanged,
 }: HelpContextProviderProps) => {
   const manager = usePluginManager();
-  const paused = useCapability(Capabilities.DialogOpen);
+  const layout = useCapability(Capabilities.Layout);
   const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
   const [stepIndex, _setStepIndex] = useState(0);
   const [steps, setSteps] = useState(initialSteps);
+
+  const paused = layout.dialogOpen;
 
   const setStepIndex = (index: number) => {
     if (runningProp) {

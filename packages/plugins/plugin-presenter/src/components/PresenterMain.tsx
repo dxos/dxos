@@ -21,8 +21,8 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const layoutMode = useCapability(Capabilities.LayoutMode);
-  const fullscreen = layoutMode === 'fullscreen';
+  const layout = useCapability(Capabilities.Layout);
+  const fullscreen = layout.mode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.

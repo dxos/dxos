@@ -21,9 +21,9 @@ export default () =>
       id: 'search-input',
       role: 'search-input',
       component: () => {
-        const active = useCapability(Capabilities.Active);
+        const layout = useCapability(Capabilities.Layout);
         const { graph } = useCapability(Capabilities.AppGraph);
-        const space = graph ? getActiveSpace(graph, active[0]) : undefined;
+        const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
         return space ? <SearchMain space={space} /> : null;
       },
     }),

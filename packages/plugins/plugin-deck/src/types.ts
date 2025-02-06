@@ -38,7 +38,7 @@ export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
 export const PlankSizing = S.Record({ key: S.String, value: S.Number });
 export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 
-export const Layout = S.mutable(
+export const DeckState = S.mutable(
   S.Struct({
     modeHistory: S.mutable(S.Array(LayoutMode)),
 
@@ -77,11 +77,11 @@ export const Layout = S.mutable(
   }),
 );
 
-export type Layout = S.Schema.Type<typeof Layout>;
+export type DeckState = S.Schema.Type<typeof DeckState>;
 
-export const getMode = (layout: Layout): LayoutMode => {
-  if (layout.solo) {
-    return layout.fullscreen ? 'fullscreen' : 'solo';
+export const getMode = (state: DeckState): LayoutMode => {
+  if (state.solo) {
+    return state.fullscreen ? 'fullscreen' : 'solo';
   }
 
   return 'deck';

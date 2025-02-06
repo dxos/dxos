@@ -37,23 +37,23 @@ export namespace Capabilities {
     'dxos.org/app-framework/capability/intent-dispatcher',
   );
 
-  export const LayoutMode = defineCapability<string>('dxos.org/app-framework/capability/layout-mode');
-  export const DialogOpen = defineCapability<boolean>('dxos.org/app-framework/capability/dialog-open');
-
-  /**
-   * Identifiers of items which are currently active in the application.
-   */
-  export const Active = defineCapability<string[]>('dxos.org/app-framework/capability/active');
-
-  /**
-   * Identifiers of items which were previously active in the application.
-   */
-  export const Inactive = defineCapability<string[]>('dxos.org/app-framework/capability/inactive');
-
-  /**
-   * Identifier of the item which should be scrolled into view.
-   */
-  export const ScrollIntoView = defineCapability<string>('dxos.org/app-framework/capability/scroll-into-view');
+  export type Layout = Readonly<{
+    mode: string;
+    dialogOpen: boolean;
+    /**
+     * Identifiers of items which are currently active in the application.
+     */
+    active: string[];
+    /**
+     * Identifiers of items which were previously active in the application.
+     */
+    inactive: string[];
+    /**
+     * Identifier of the item which should be scrolled into view.
+     */
+    scrollIntoView: string | undefined;
+  }>;
+  export const Layout = defineCapability<Layout>('dxos.org/app-framework/capability/layout');
 
   export const Translations = defineCapability<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
 

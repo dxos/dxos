@@ -28,6 +28,7 @@ export default async (context: PluginsContext) => {
 
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);
+  const layout = context.requestCapability(Capabilities.Layout);
   const attention = context.requestCapability(AttentionCapabilities.Attention);
   const state = context.requestCapability(SpaceCapabilities.MutableState);
   const client = context.requestCapability(ClientCapabilities.Client);
@@ -52,9 +53,7 @@ export default async (context: PluginsContext) => {
   // Await missing objects.
   subscriptions.add(
     scheduledEffect(
-      () => ({
-        active: context.requestCapability(Capabilities.Active) as string[],
-      }),
+      () => ({ active: layout.active }),
       ({ active }) => {
         if (active.length !== 1) {
           return;
@@ -99,10 +98,7 @@ export default async (context: PluginsContext) => {
   // Broadcast active node to other peers in the space.
   subscriptions.add(
     scheduledEffect(
-      () => ({
-        active: context.requestCapability(Capabilities.Active) as string[],
-        inactive: context.requestCapability(Capabilities.Inactive) as string[],
-      }),
+      () => ({ active: layout.active, inactive: layout.inactive }),
       ({ active, inactive }) => {
         const send = () => {
           const spaces = client.spaces.get();

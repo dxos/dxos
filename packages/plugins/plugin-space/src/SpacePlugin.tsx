@@ -140,7 +140,7 @@ export const SpacePlugin = ({
       id: `${meta.id}/module/spaces-ready`,
       activatesOn: allOf(
         Events.DispatcherReady,
-        Events.ActiveReady,
+        Events.LayoutReady,
         Events.AppGraphReady,
         AttentionEvents.AttentionReady,
         SpaceEvents.StateReady,

@@ -189,7 +189,7 @@ export class OnboardingManager {
   }
 
   private async _closeWelcome() {
-    const layoutMode = this._context.requestCapability(Capabilities.LayoutMode);
+    const layout = this._context.requestCapability(Capabilities.Layout);
     await this._dispatch(
       createIntent(LayoutAction.Close, {
         part: 'main',
@@ -197,7 +197,7 @@ export class OnboardingManager {
         options: { state: false },
       }),
     );
-    if (layoutMode !== 'deck') {
+    if (layout.mode !== 'deck') {
       await this._dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } }));
     }
   }

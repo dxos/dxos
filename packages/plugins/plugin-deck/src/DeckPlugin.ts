@@ -42,7 +42,7 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/layout`,
       activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      activatesAfter: [Events.LayoutModeReady, Events.ActiveReady, DeckEvents.StateReady],
+      activatesAfter: [Events.LayoutReady, DeckEvents.StateReady],
       activate: DeckState,
     }),
     defineModule({

@@ -186,15 +186,15 @@ export default (context: PluginsContext) =>
         S.is(LayoutAction.Open.fields.input)(data),
       resolve: ({ subject, options }) => {
         const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
         const settings = context
           .requestCapabilities(Capabilities.SettingsStore)[0]
           ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
-        const previouslyOpenIds = new Set<string>(layout.solo ? [layout.solo] : layout.deck);
+        const previouslyOpenIds = new Set<string>(state.solo ? [state.solo] : state.deck);
         const toAttend = batch(() => {
-          const next = layout.solo
+          const next = state.solo
             ? (subject as string[])
             : subject.reduce(
                 (acc, entryId) =>
@@ -202,13 +202,13 @@ export default (context: PluginsContext) =>
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
                   }),
-                layout.deck,
+                state.deck,
               );
 
-          return setActive({ next, layout, attention });
+          return setActive({ next, state, attention });
         });
 
-        const ids = layout.solo ? [layout.solo] : layout.deck;
+        const ids = state.solo ? [state.solo] : state.deck;
         const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
 
         return {
@@ -237,10 +237,10 @@ export default (context: PluginsContext) =>
       filter: (data): data is S.Schema.Type<typeof LayoutAction.Close.fields.input> =>
         S.is(LayoutAction.Close.fields.input)(data),
       resolve: ({ subject }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const next = subject.reduce((acc, id) => closeEntry(acc, id), layout.deck);
-        const toAttend = setActive({ next, layout, attention });
+        const next = subject.reduce((acc, id) => closeEntry(acc, id), state.deck);
+        const toAttend = setActive({ next, state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
         };
@@ -251,9 +251,9 @@ export default (context: PluginsContext) =>
       filter: (data): data is S.Schema.Type<typeof LayoutAction.Set.fields.input> =>
         S.is(LayoutAction.Set.fields.input)(data),
       resolve: ({ subject }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const toAttend = setActive({ next: subject as string[], layout, attention });
+        const toAttend = setActive({ next: subject as string[], state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
         };
@@ -278,21 +278,21 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: DeckAction.Adjust,
       resolve: (adjustment) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
 
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
             setActive({
-              next: incrementPlank(layout.deck, adjustment),
-              layout,
+              next: incrementPlank(state.deck, adjustment),
+              state,
               attention,
             });
           }
 
           if (adjustment.type === 'solo') {
             const entryId = adjustment.id;
-            if (!layout.solo) {
+            if (!state.solo) {
               // Solo the entry.
               return {
                 intents: [createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } })],

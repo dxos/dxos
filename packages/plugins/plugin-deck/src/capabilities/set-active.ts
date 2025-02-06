@@ -6,26 +6,26 @@ import { batch } from '@preact/signals-core';
 
 import { type AttentionManager } from '@dxos/plugin-attention';
 
-import { type Layout } from '../types';
+import { type DeckState } from '../types';
 
 export type SetActiveOptions = {
   next: string[];
-  layout: Layout;
+  state: DeckState;
   attention?: AttentionManager;
 };
 
-export const setActive = ({ next, layout, attention }: SetActiveOptions) => {
+export const setActive = ({ next, state, attention }: SetActiveOptions) => {
   return batch(() => {
-    const active = layout.solo ? [layout.solo] : layout.deck;
+    const active = state.solo ? [state.solo] : state.deck;
     const removed = active.filter((id) => !next.includes(id));
-    const closed = Array.from(new Set([...layout.closed.filter((id) => !next.includes(id)), ...removed]));
+    const closed = Array.from(new Set([...state.closed.filter((id) => !next.includes(id)), ...removed]));
 
-    layout.closed.splice(0, layout.closed.length, ...closed);
+    state.closed.splice(0, state.closed.length, ...closed);
 
-    if (layout.solo) {
-      layout.solo = next[0];
+    if (state.solo) {
+      state.solo = next[0];
     } else {
-      layout.deck.splice(0, layout.deck.length, ...next);
+      state.deck.splice(0, state.deck.length, ...next);
     }
 
     if (attention) {
@@ -33,7 +33,7 @@ export const setActive = ({ next, layout, attention }: SetActiveOptions) => {
       const [attendedId] = Array.from(attended);
       const isAttendedAvailable = !!attendedId && next.includes(attendedId);
       if (!isAttendedAvailable) {
-        const active = layout.solo ? [layout.solo] : layout.deck;
+        const active = state.solo ? [state.solo] : state.deck;
         const attendedIndex = active.indexOf(attendedId);
         // If outside of bounds, focus on the first/last plank, otherwise focus on the new plank in the same position.
         const index = attendedIndex === -1 ? 0 : attendedIndex >= active.length ? active.length - 1 : attendedIndex;

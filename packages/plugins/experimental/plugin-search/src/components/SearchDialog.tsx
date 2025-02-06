@@ -44,10 +44,11 @@ export type SearchDialogProps = {
 
 export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const active = useCapability(Capabilities.Active);
-  const inactive = useCapability(Capabilities.Inactive);
+  const layout = useCapability(Capabilities.Layout);
   const { graph } = useCapability(Capabilities.AppGraph);
-  const closed = (Array.isArray(inactive) ? inactive : [inactive]).map((id) => graph?.findNode(id)).filter(Boolean);
+  const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
+    .map((id) => graph?.findNode(id))
+    .filter(Boolean);
   const [queryString, setQueryString] = useState('');
   const client = useClient();
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
@@ -60,7 +61,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
       await dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
 
       // If node is already present in the active parts, scroll to it and close the dialog.
-      const index = active.findIndex((id) => id === nodeId);
+      const index = layout.active.findIndex((id) => id === nodeId);
       if (index !== -1) {
         await dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: nodeId }));
       } else {
@@ -76,7 +77,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
         );
       }
     },
-    [pivotId, dispatch, active],
+    [pivotId, dispatch, layout],
   );
 
   return (

@@ -6,8 +6,8 @@ import { type Context, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type Layout } from '../types';
+import { type DeckState } from '../types';
 
-export const LayoutContext: Context<Layout | null> = createContext<Layout | null>(null);
+export const LayoutContext: Context<DeckState | null> = createContext<DeckState | null>(null);
 
-export const useLayout = (): Layout => useContext(LayoutContext) ?? raise(new Error('Missing LayoutContext'));
+export const useLayout = (): DeckState => useContext(LayoutContext) ?? raise(new Error('Missing LayoutContext'));

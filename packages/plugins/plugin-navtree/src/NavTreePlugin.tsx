@@ -25,7 +25,7 @@ export const NavTreePlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.ActiveReady,
+      activatesOn: Events.LayoutReady,
       activatesAfter: [NavTreeEvents.StateReady],
       activate: State,
     }),
@@ -56,13 +56,13 @@ export const NavTreePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/expose`,
-      activatesOn: allOf(Events.DispatcherReady, Events.ActiveReady, NavTreeEvents.StateReady),
+      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, NavTreeEvents.StateReady),
       activate: async (context) => {
-        const active = context.requestCapability(Capabilities.Active);
+        const layout = context.requestCapability(Capabilities.Layout);
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
 
-        if (dispatch && active.length === 1) {
-          await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: active[0] }));
+        if (dispatch && layout.active.length === 1) {
+          await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] }));
         }
 
         return [];

@@ -21,12 +21,12 @@ export default () =>
       filter: (data): data is { subject: ChannelType } =>
         data.subject instanceof ChannelType && !!data.subject.threads[0],
       component: ({ data, role }) => {
-        const active = useCapability(Capabilities.Active);
+        const layout = useCapability(Capabilities.Layout);
         const channel = data.subject;
         const thread = channel.threads[0].target!;
-        const currentPosition = active.findIndex((id) => id === channel.id);
+        const currentPosition = layout.active.findIndex((id) => id === channel.id);
         if (currentPosition > 0) {
-          const objectToTheLeft = active[currentPosition - 1];
+          const objectToTheLeft = layout.active[currentPosition - 1];
           const context = getSpace(channel)?.db.getObjectById(objectToTheLeft);
           return <ThreadContainer role={role} thread={thread} context={context} />;
         }
