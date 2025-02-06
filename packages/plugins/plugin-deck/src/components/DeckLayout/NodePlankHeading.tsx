@@ -21,7 +21,7 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { PlankControls } from './PlankControls';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
-import { useBreakpoints } from '../../util';
+import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
@@ -53,6 +53,7 @@ export const NodePlankHeading = memo(
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
     const breakpoint = useBreakpoints();
+    const topbar = layoutAppliesTopbar(breakpoint);
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -103,7 +104,7 @@ export const NodePlankHeading = memo(
             </StackItem.SigilButton>
           )}
         </ActionRoot>
-        {breakpoint !== 'desktop' && <ToggleSidebarButton />}
+        {!topbar && <ToggleSidebarButton />}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}

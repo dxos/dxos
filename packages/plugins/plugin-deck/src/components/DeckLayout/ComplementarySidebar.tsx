@@ -18,6 +18,7 @@ import { CloseComplementarySidebarButton } from './SidebarButton';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { type Panel } from '../../types';
+import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useLayout } from '../LayoutContext';
 
 export type ComplementarySidebarProps = {
@@ -36,6 +37,8 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const { t } = useTranslation(DECK_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   useNodeActionExpander(node);
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint);
 
   const [internalValue, setInternalValue] = useState(activePanelId);
 
@@ -53,7 +56,9 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
 
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
-    <Main.ComplementarySidebar classNames='lg:block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]'>
+    <Main.ComplementarySidebar
+      classNames={topbar ? 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]' : undefined}
+    >
       <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
         <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
           <Tabs.Root
