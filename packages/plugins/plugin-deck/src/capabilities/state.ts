@@ -49,7 +49,7 @@ export default () => {
       return state.values.dialogOpen;
     },
     get active() {
-      return state.values.deck;
+      return state.values.solo ? [state.values.solo] : state.values.deck;
     },
     get inactive() {
       return state.values.closed;
