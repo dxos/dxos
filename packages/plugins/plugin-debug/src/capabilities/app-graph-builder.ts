@@ -35,7 +35,7 @@ export default (context: PluginsContext) => {
           type: 'dxos.org/plugin/debug/devtools',
           properties: {
             label: ['devtools label', { ns: DEBUG_PLUGIN }],
-            l0Disposition: 'navigation',
+            disposition: 'navigation',
             icon: 'ph--hammer--regular',
           },
         },
@@ -61,7 +61,7 @@ export default (context: PluginsContext) => {
             data: { graph },
             properties: {
               label: ['debug label', { ns: DEBUG_PLUGIN }],
-              l0Disposition: 'navigation',
+              disposition: 'navigation',
               icon: 'ph--bug--regular',
             },
           },

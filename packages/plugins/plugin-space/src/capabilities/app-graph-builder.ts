@@ -49,7 +49,7 @@ export default (context: PluginsContext) => {
       icon: 'ph--planet--regular',
       testId: 'spacePlugin.spaces',
       role: 'branch',
-      l0Disposition: 'collection',
+      disposition: 'collection',
       disabled: true,
       childrenPersistenceClass: 'echo',
       onRearrangeChildren: async (nextOrder: Space[]) => {

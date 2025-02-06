@@ -31,7 +31,7 @@ import {
 import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
-import { DEFAULT_INDENTATION, paddingIndendation } from './helpers';
+import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 
 type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
@@ -244,7 +244,7 @@ export const RawTreeItem = <T = any,>({
         <Treegrid.Cell
           indent
           classNames='relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndendation(level)}
+          style={paddingIndentation(level - 1)}
         >
           <div role='none' className='flex items-center'>
             <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />

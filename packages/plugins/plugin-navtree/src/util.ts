@@ -129,11 +129,11 @@ export const expandActions = (graph: Graph, node: Node) => {
 };
 
 export const l0ItemType = (item: Node<any>) => {
-  if (item.properties.l0Disposition === 'collection') {
+  if (item.properties.disposition === 'collection') {
     return 'collection';
   } else if (isActionLike(item)) {
     return 'action';
-  } else if (item.properties.l0Disposition === 'navigation') {
+  } else if (item.properties.disposition === 'navigation') {
     return 'link';
   } else {
     return 'tab';
