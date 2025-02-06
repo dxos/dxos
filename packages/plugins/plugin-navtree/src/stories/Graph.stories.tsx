@@ -18,7 +18,7 @@ import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NavTree } from '../components';
+import { StorybookNavTree } from './StorybookNavTree';
 import { getActions, getChildren } from '../util';
 
 faker.seed(3);
@@ -53,9 +53,9 @@ const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }
 
 export const Default = {};
 
-const meta: Meta<typeof NavTree> = {
+const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/Graph',
-  component: NavTree,
+  component: StorybookNavTree,
   decorators: [withTheme, withLayout({ tooltips: true })],
   render: (args) => {
     useEffect(() => {
@@ -78,9 +78,10 @@ const meta: Meta<typeof NavTree> = {
       });
     }, []);
 
-    return <NavTree {...args} />;
+    return <StorybookNavTree {...args} />;
   },
   args: {
+    root: graph.root,
     id: graph.root.id,
     getActions: (node: Node) => getActions(graph, node),
     getItems: (node?: Node) => graph.nodes(node ?? graph.root),

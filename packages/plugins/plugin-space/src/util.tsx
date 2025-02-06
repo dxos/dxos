@@ -256,7 +256,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['create object in space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--plus--regular',
-          disposition: 'toolbar',
+          disposition: 'item',
           testId: 'spacePlugin.createObject',
         },
       },
@@ -273,6 +273,7 @@ export const constructSpaceActions = ({
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--users--regular',
           disabled: locked,
+          disposition: 'item',
           keyBinding: {
             macos: 'meta+.',
             windows: 'alt+.',
