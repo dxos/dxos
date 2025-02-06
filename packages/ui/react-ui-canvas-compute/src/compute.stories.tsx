@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, type ComputeNode } from '@dxos/conductor';
+import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -36,6 +36,7 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
+import { DiagnosticOverlay } from './components';
 
 // const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
@@ -145,6 +146,15 @@ const Render = ({
     [controller, registry],
   );
 
+  const [diagnostics, setDiagnostics] = useState<GraphDiagnostic[]>([]);
+  useEffect(() => {
+    if (controller) {
+      void controller.checkGraph().then(() => {
+        setDiagnostics(controller.diagnostics);
+      });
+    }
+  }, []);
+
   if (!controller) {
     return <div />;
   }
@@ -167,6 +177,7 @@ const Render = ({
             <Editor.Canvas>{children}</Editor.Canvas>
             <Editor.UI />
           </Editor.Root>
+          <DiagnosticOverlay diagnostics={diagnostics} />
         </Container>
       </ComputeContext.Provider>
 
