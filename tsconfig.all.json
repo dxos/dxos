@@ -43,6 +43,9 @@
       "path": "packages/common/effect/tsconfig.json"
     },
     {
+      "path": "packages/common/errors/tsconfig.json"
+    },
+    {
       "path": "packages/common/esbuild-plugins/tsconfig.json"
     },
     {

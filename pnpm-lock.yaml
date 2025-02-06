@@ -1410,6 +1410,8 @@ importers:
         specifier: ^3.12.3
         version: 3.12.7
 
+  packages/common/errors: {}
+
   packages/common/esbuild-plugins:
     dependencies:
       assert:
