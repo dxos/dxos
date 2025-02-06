@@ -55,9 +55,8 @@ export const GenerateRequest = S.Struct({
 
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;
 
-export type LLMStopReason = 'tool_use' | 'end_turn';
-
 // TODO(dmaretskyi): Effect schema.
+// TODO(burdon): Where is this defined?
 export type GenerationStreamEvent =
   | {
       // TODO(dmaretskyi): Normalize types to our schema.
@@ -67,7 +66,7 @@ export type GenerationStreamEvent =
   | {
       type: 'message_delta';
       delta: {
-        stopReason: LLMStopReason;
+        stopReason: 'tool_use' | 'end_turn';
       };
     }
   | {

@@ -92,6 +92,7 @@ export class StreamingParser {
         continue;
       }
 
+      // TODO(burdon): Use sax to heandle nested tags.
       // If no tag start found, keep buffering.
       const tagStartIndex = this._buffer.indexOf('<');
       if (tagStartIndex === -1) {

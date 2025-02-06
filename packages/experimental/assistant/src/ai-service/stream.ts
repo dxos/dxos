@@ -6,6 +6,7 @@ import { type Message } from '@dxos/artifact';
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { safeParseJson } from '@dxos/util';
 
 import { type GenerateRequest, type GenerationStreamEvent } from './types';
 import { iterSSEMessages } from './util';
@@ -208,8 +209,7 @@ export class GenerationStream implements AsyncIterable<GenerationStreamEvent> {
         invariant(this._current);
         const lastBlock = this._current.content.at(-1);
         if (lastBlock?.type === 'tool_use') {
-          lastBlock.input =
-            lastBlock.inputJson == null || lastBlock.inputJson === '' ? {} : JSON.parse(lastBlock.inputJson ?? '');
+          lastBlock.input = safeParseJson(lastBlock.inputJson, {});
         }
         break;
       }
