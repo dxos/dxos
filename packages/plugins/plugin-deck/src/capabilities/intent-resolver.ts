@@ -82,7 +82,7 @@ export default (context: PluginsContext) =>
           layout.complementarySidebarPanel = subject;
         }
 
-        const next = options?.state ?? !layout.complementarySidebarOpen;
+        const next = subject ? true : options?.state ?? !layout.complementarySidebarOpen;
         if (next !== layout.complementarySidebarOpen) {
           layout.complementarySidebarOpen = next;
         }
@@ -153,7 +153,7 @@ export default (context: PluginsContext) =>
 
           const removed = current.filter((id) => !next.includes(id));
           const closed = Array.from(new Set([...layout.closed.filter((id) => !next.includes(id)), ...removed]));
-          layout.closed.splice(0, layout.closed.length, ...closed);
+          layout.closed = closed;
 
           if (mode === 'solo' && next[0]) {
             layout.solo = next[0];
@@ -193,7 +193,7 @@ export default (context: PluginsContext) =>
           ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
         const previouslyOpenIds = new Set<string>(state.solo ? [state.solo] : state.deck);
-        const toAttend = batch(() => {
+        batch(() => {
           const next = state.solo
             ? (subject as string[])
             : subject.reduce(
@@ -216,7 +216,7 @@ export default (context: PluginsContext) =>
             ...(options?.scrollIntoView !== false
               ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
               : []),
-            ...(toAttend ? [createIntent(LayoutAction.Expose, { part: 'navigation', subject: toAttend })] : []),
+            createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
             ...newlyOpen.map((id) => {
               const active = graph?.findNode(id)?.data;
               const typename = isReactiveObject(active) ? getTypename(active) : undefined;

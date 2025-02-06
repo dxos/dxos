@@ -20,12 +20,12 @@ export const setActive = ({ next, state, attention }: SetActiveOptions) => {
     const removed = active.filter((id) => !next.includes(id));
     const closed = Array.from(new Set([...state.closed.filter((id) => !next.includes(id)), ...removed]));
 
-    state.closed.splice(0, state.closed.length, ...closed);
+    state.closed = closed;
 
     if (state.solo) {
       state.solo = next[0];
     } else {
-      state.deck.splice(0, state.deck.length, ...next);
+      state.deck = next;
     }
 
     if (attention) {

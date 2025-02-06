@@ -133,6 +133,7 @@ export namespace LayoutAction {
       subject: S.Array(S.String),
       options: S.optional(
         S.Struct({
+          state: S.optional(S.Literal(true)),
           scrollIntoView: S.optional(S.Boolean),
           pivotId: S.optional(S.String),
           positioning: S.optional(S.Literal('start', 'end')),

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, memo, useEffect, useMemo } from 'react';
+import React, { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
@@ -69,6 +69,35 @@ export const NodePlankHeading = memo(
       [part, canIncrementStart, canIncrementEnd],
     );
 
+    const sigilActions = useMemo(
+      () => node && [actions, graph.actions(node)].filter((a) => a.length > 0),
+      [actions, node, graph],
+    );
+    const handleAction = useCallback((action: StackItemSigilAction) => {
+      typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN });
+    }, []);
+
+    const handlePlankAction = useCallback(
+      (eventType: DeckAction.PartAdjustment) => {
+        if (eventType === 'solo') {
+          return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
+        } else if (eventType === 'close') {
+          if (part === 'complementary') {
+            return dispatch(
+              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: false } }),
+            );
+          } else {
+            return dispatch(
+              createIntent(LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
+            );
+          }
+        } else {
+          return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
+        }
+      },
+      [dispatch, id, part],
+    );
+
     return (
       <StackItem.Heading
         classNames={[
@@ -77,16 +106,14 @@ export const NodePlankHeading = memo(
         ]}
       >
         <ActionRoot>
-          {node ? (
+          {node && sigilActions ? (
             <StackItem.Sigil
               icon={icon}
               related={part === 'complementary'}
               attendableId={attendableId}
               triggerLabel={t('actions menu label')}
-              actions={[actions, graph.actions(node)].filter((a) => a.length > 0)}
-              onAction={(action) =>
-                typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
-              }
+              actions={sigilActions}
+              onAction={handleAction}
             >
               <Surface role='menu-footer' data={{ subject: node.data }} />
             </StackItem.Sigil>
@@ -111,23 +138,7 @@ export const NodePlankHeading = memo(
         <PlankControls
           capabilities={capabilities}
           isSolo={part === 'solo'}
-          onClick={(eventType) => {
-            if (eventType === 'solo') {
-              return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
-            } else if (eventType === 'close') {
-              if (part === 'complementary') {
-                return dispatch(
-                  createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: false } }),
-                );
-              } else {
-                return dispatch(
-                  createIntent(LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
-                );
-              }
-            } else {
-              return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
-            }
-          }}
+          onClick={handlePlankAction}
           close={part === 'complementary' ? 'minify-end' : true}
         >
           <ToggleComplementarySidebarButton />

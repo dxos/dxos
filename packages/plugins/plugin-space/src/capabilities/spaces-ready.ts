@@ -98,12 +98,12 @@ export default async (context: PluginsContext) => {
   // Broadcast active node to other peers in the space.
   subscriptions.add(
     scheduledEffect(
-      () => ({ active: layout.active, inactive: layout.inactive }),
-      ({ active, inactive }) => {
+      () => ({ current: attention.current, active: layout.active, inactive: layout.inactive }),
+      ({ current, active, inactive }) => {
         const send = () => {
           const spaces = client.spaces.get();
           const identity = client.halo.identity.get();
-          if (identity && active.length === 1) {
+          if (identity) {
             // Group parts by space for efficient messaging.
             const idsBySpace = reduceGroupBy(active, (id) => {
               try {
@@ -140,7 +140,7 @@ export default async (context: PluginsContext) => {
               void space
                 .postMessage('viewing', {
                   identityKey: identity.identityKey.toHex(),
-                  attended: attention.current ? [...attention.current] : [],
+                  attended: current,
                   added,
                   removed,
                 })

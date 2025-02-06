@@ -14,8 +14,8 @@ export default () =>
     createSurface({
       id: SEARCH_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject: SearchDialogProps } => data.component === SEARCH_DIALOG,
-      component: ({ data }) => <SearchDialog {...data.subject} />,
+      filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
+      component: ({ data }) => <SearchDialog {...data.props} />,
     }),
     createSurface({
       id: 'search-input',

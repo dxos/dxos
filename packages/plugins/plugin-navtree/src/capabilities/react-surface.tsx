@@ -25,8 +25,8 @@ export default () =>
     createSurface({
       id: COMMANDS_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject?: string } => data.component === COMMANDS_DIALOG,
-      component: ({ data }) => <CommandsDialogContent selected={data.subject} />,
+      filter: (data): data is { props: { selected?: string } } => data.component === COMMANDS_DIALOG,
+      component: ({ data }) => <CommandsDialogContent {...data.props} />,
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/navigation`,
