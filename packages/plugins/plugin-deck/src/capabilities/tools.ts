@@ -2,13 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  NavigationAction,
-  type PromiseIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -41,10 +35,12 @@ export default () =>
       execute: async ({ id, pivotId }, { extensions }) => {
         invariant(extensions?.dispatch, 'No intent dispatcher');
         const { data, error } = await extensions.dispatch(
-          createIntent(NavigationAction.AddToActive, {
-            id,
+          createIntent(LayoutAction.Open, {
+            subject: [id],
             part: 'main',
-            pivotId,
+            options: {
+              pivotId,
+            },
           }),
         );
         if (error) {
