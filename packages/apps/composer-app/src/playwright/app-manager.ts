@@ -202,6 +202,7 @@ export class AppManager {
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
+    await this.page.pause();
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
     await this.page.keyboard.press('Enter');
   }
