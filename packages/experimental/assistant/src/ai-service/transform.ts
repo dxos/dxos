@@ -40,6 +40,7 @@ const selfClosingTag: P.Parser<StreamBlock> = P.seqMap(
   tagName,
   P.optWhitespace.then(attribute).many(),
   P.optWhitespace.then(P.string('/>')),
+  P.optWhitespace,
   (_, tag, attributes, __) => ({
     type: 'xml',
     tag,
@@ -69,6 +70,7 @@ const closeTag: P.Parser<StreamBlock> = P.seqMap(
   P.string('</'),
   tagName,
   P.string('>'),
+  P.optWhitespace,
   (_, tag) => ({
     type: 'xml',
     tag,
@@ -90,7 +92,7 @@ export class StreamTransform {
     this._buffer += chunk;
 
     const results: StreamBlock[] = [];
-    const parser = mixedChunk.many().skip(P.all);
+    const parser = mixedChunk.many(); // .skip(P.all);
     const result = parser.parse(this._buffer);
     if (result.status) {
       for (const chunk of result.value) {
