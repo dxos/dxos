@@ -11,12 +11,17 @@ import { AutomationAction, GptChatType } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(AutomationAction.Create, ({ name }) => ({
-      data: {
-        object: create(GptChatType, {
-          name,
-          queue: makeRef({ id: ObjectId.random() }), // new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
-        }),
-      },
-    })),
+    createResolver({
+      intent: AutomationAction.Create,
+      resolve: ({ name }) => ({
+        data: {
+          object: create(GptChatType, {
+            name,
+            // TODO(burdon): ???
+            // new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
+            queue: makeRef({ id: ObjectId.random() }),
+          }),
+        },
+      }),
+    }),
   );

@@ -12,6 +12,7 @@ export const ReactRoot = lazy(() => import('./react-root'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const DeckSettings = lazy(() => import('./settings'));
 export const DeckState = lazy(() => import('./state'));
+export const Tools = lazy(() => import('./tools'));
 export const UrlHandler = lazy(() => import('./url-handler'));
 
 export * from './capabilities';

@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import {
+  contributes,
+  createIntent,
+  Capabilities,
+  LayoutAction,
+  type PromiseIntentDispatcher,
+} from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
