@@ -7,7 +7,6 @@ import React, {
   type PropsWithChildren,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -59,9 +58,10 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
     [text],
   );
 
+  // TODO(burdon): Custom scrollbar.
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <div ref={scrollRef} className='flex flex-col grow overflow-x-hidden overflow-y-scroll scrollbar-thin'>
+      <div ref={scrollRef} className='flex flex-col grow overflow-x-hidden overflow-y-scroll scrollbar-none'>
         {messages.map((message) => (
           <ThreadMessage key={message.id} classNames='px-4 py-2' message={message} debug={debug} />
         ))}
@@ -105,15 +105,16 @@ export const ThreadMessage = ({ classNames, message, debug }: ThreadMessageProps
       <div className={mx('flex flex-col gap-2')}>
         {debug && <div className='text-xs text-subdued'>{message.id}</div>}
         {content.map((block, idx) => (
-          <Block key={idx} role={role} block={block} />
+          <Block key={idx} id={String(idx)} role={role} block={block} />
         ))}
       </div>
     </div>
   );
 };
 
-const Block = ({ role, block }: Pick<Message, 'role'> & { block: MessageContentBlock }) => {
-  const content = useMemo(() => getContent(block), [block]);
+// TODO(burdon): Need block.id to prevent flickering.
+const Block = ({ id, block, role }: Pick<Message, 'role'> & { id: string; block: MessageContentBlock }) => {
+  const content = getContent(block);
   return (
     <div className={mx('p-1 px-2 overflow-hidden rounded-md', role === 'user' ? 'dark:bg-blue-800' : 'bg-base')}>
       {content}
@@ -154,7 +155,7 @@ const getContent = (block: MessageContentBlock) => {
 };
 
 // TODO(burdon): Typewriter effect if streaming.
-// TODO(burdon): Open/close is reset after streaming stops.
+// TODO(burdon): Open/close is reset after streaming stops. Memoize?
 const Container = ({ title, children }: PropsWithChildren<{ title?: string }>) => {
   const [open, setOpen] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);

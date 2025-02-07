@@ -99,7 +99,7 @@ export class MixedStreamParser {
                       } else {
                         const last = current.content[current.content.length - 1];
                         if (last.type === 'text') {
-                          last.content = joinTrimmed(last.content, chunk.content);
+                          last.content = join(last.content, chunk.content);
                         } else {
                           current.content.push(chunk);
                         }
@@ -120,7 +120,7 @@ export class MixedStreamParser {
                       }
                     } else {
                       // Append text.
-                      current.content = joinTrimmed(current.content, chunk.content);
+                      current.content = join(current.content, chunk.content);
                     }
                     break;
                   }
@@ -225,10 +225,13 @@ const trim = (text: string): string => {
 /**
  * Join strings.
  */
-const joinTrimmed = (str1: string, str2: string): string => {
-  const trim1 = trim(str1);
-  const trim2 = trim(str2);
+// TODO(burdon): Depends on tokenization.
+const join = (str1: string, str2: string): string => {
+  // const trim1 = trim(str1);
+  // const trim2 = trim(str2);
 
-  const startsWithNonAlpha = /^[^a-zA-Z0-9]/.test(trim2);
-  return trim1 + (startsWithNonAlpha ? '' : ' ') + trim2;
+  // const startsWithNonAlpha = /^[^a-zA-Z0-9]/.test(trim2);
+  // return trim1 + (startsWithNonAlpha ? ' ' : '') + trim2;
+
+  return str1 + ' ' + str2;
 };

@@ -35,6 +35,7 @@ const attribute: P.Parser<[string, string]> = P.seq(
 const tagName = P.regexp(/[a-zA-Z_][a-zA-Z0-9_-]*/);
 
 const selfClosingTag: P.Parser<StreamBlock> = P.seqMap(
+  //
   P.string('<'),
   tagName,
   P.optWhitespace.then(attribute).many(),
@@ -49,23 +50,21 @@ const selfClosingTag: P.Parser<StreamBlock> = P.seqMap(
 );
 
 const openTag: P.Parser<StreamBlock> = P.seqMap(
+  //
   P.string('<'),
   tagName,
   P.optWhitespace.then(attribute).many(),
   P.string('>'),
   P.regexp(/[^<]*/),
-  (_, tag, attributes, __, str) => {
-    const content = str.trim();
-    return {
-      type: 'xml',
-      tag,
-      attributes: Object.fromEntries(attributes),
-      content: content.length ? [{ type: 'text', content }] : [],
-    };
-  },
+  (_, tag, attributes, __, content) => ({
+    type: 'xml',
+    tag,
+    attributes: Object.fromEntries(attributes),
+    content: content.length ? [{ type: 'text', content }] : [],
+  }),
 );
 
-const closingTag: P.Parser<StreamBlock> = P.seqMap(
+const closeTag: P.Parser<StreamBlock> = P.seqMap(
   //
   P.string('</'),
   tagName,
@@ -78,7 +77,7 @@ const closingTag: P.Parser<StreamBlock> = P.seqMap(
   }),
 );
 
-const mixedChunk: P.Parser<StreamBlock> = P.alt(selfClosingTag, openTag, closingTag, textChunk);
+const mixedChunk: P.Parser<StreamBlock> = P.alt(selfClosingTag, openTag, closeTag, textChunk);
 
 /**
  * Permissive streaming transformer that processes mixed content (plain text and XML fragments) from the AI service.
