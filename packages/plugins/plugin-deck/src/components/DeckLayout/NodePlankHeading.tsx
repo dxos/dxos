@@ -21,7 +21,6 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { PlankControls } from './PlankControls';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
-import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
@@ -52,8 +51,6 @@ export const NodePlankHeading = memo(
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
-    const breakpoint = useBreakpoints();
-    const topbar = layoutAppliesTopbar(breakpoint);
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -73,7 +70,7 @@ export const NodePlankHeading = memo(
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [breakpoint, layoutPart, canIncrementStart, canIncrementEnd],
+      [layoutPart, canIncrementStart, canIncrementEnd],
     );
 
     return (

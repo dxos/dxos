@@ -213,8 +213,6 @@ export const RawTreeItem = <T = any,>({
     [isBranch, open, handleOpenChange, handleSelect],
   );
 
-  const suppressOpenToggle = !isBranch && level < 1;
-
   return (
     <>
       <Treegrid.Row
