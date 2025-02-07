@@ -31,7 +31,7 @@ export const SelectOptionInput = ({
     }
   }, [options, onValueChange, type]);
 
-  const onClick = React.useCallback(() => {
+  const handleAdd = React.useCallback(() => {
     const newOption = { id: PublicKey.random().truncate(), title: 'New Option', color: 'gray' };
     onValueChange(type, [...(options ?? []), newOption]);
   }, [options, type, onValueChange]);
@@ -64,7 +64,7 @@ export const SelectOptionInput = ({
         <Input.Label>{label}</Input.Label>
       </InputHeader>
       <div className='flex flex-col'>
-        <button onClick={onClick}>Add</button>
+        <button onClick={handleAdd}>Add</button>
         {options && (
           <List.Root items={options} isItem={(item) => true} onMove={handleMove}>
             {({ items }) => (
@@ -77,9 +77,11 @@ export const SelectOptionInput = ({
                   >
                     <List.ItemDragHandle />
                     <List.ItemTitle>{item.title}</List.ItemTitle>
-                    <List.ItemDeleteButton onDelete={ () => {
-                      handleDelete(item.id);
-                    }} />
+                    <List.ItemDeleteButton
+                      onDelete={() => {
+                        handleDelete(item.id);
+                      }}
+                    />
                   </List.Item>
                 ))}
               </div>
