@@ -26,24 +26,32 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
     <Tabs.Tabpanel
       key={item.id}
       value={item.id}
-      classNames='absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))]'
+      classNames={[
+        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] grid-cols-1',
+        item.id === currentItemId && 'grid',
+        navTreeContext.hoistStatusbar
+          ? 'grid-rows-[var(--rail-size)_1fr_min-content]'
+          : 'grid-rows-[var(--rail-size)_1fr]',
+      ]}
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='bs-[--rail-size] flex items-center border-be border-separator pis-3'>
+          <h2 className='flex items-center border-be border-separator pis-3'>
             <span className='flex-1 truncate'>{toLocalizedString(item.properties.label, t)}</span>
             <NavTreeItemColumns path={itemPath} item={item} open />
           </h2>
-          <Tree
-            {...navTreeContext}
-            id={item.id}
-            root={item}
-            path={itemPath}
-            levelOffset={5}
-            draggable
-            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-            renderColumns={NavTreeItemColumns}
-          />
+          <div role='none' className='overflow-y-auto'>
+            <Tree
+              {...navTreeContext}
+              id={item.id}
+              root={item}
+              path={itemPath}
+              levelOffset={5}
+              draggable
+              gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+              renderColumns={NavTreeItemColumns}
+            />
+          </div>
           {!navTreeContext.hoistStatusbar && <Surface role='status-bar--sidebar-footer' limit={1} />}
         </>
       )}
