@@ -49,10 +49,6 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     [examples, description],
   );
 
-  if (array) {
-    return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
-  }
-
   const FoundComponent = lookupComponent?.({
     prop: name,
     schema: S.make(ast),
@@ -71,7 +67,28 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   }
 
   const jsonPath = createJsonPath(path ?? []);
-  const InputComponent = Custom?.[jsonPath] || getInputComponent(type, format);
+  const CustomComponent = Custom?.[jsonPath];
+  if (CustomComponent) {
+    return (
+      <div>
+        <CustomComponent
+          type={type}
+          format={format}
+          label={label}
+          inputOnly={inline}
+          placeholder={placeholder}
+          disabled={readonly}
+          {...inputProps}
+        />
+      </div>
+    );
+  }
+
+  if (array) {
+    return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
+  }
+
+  const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
     return (
       <div>

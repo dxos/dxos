@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormProps, type InputComponent, SelectInput } from '../Form';
+import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
   view: ViewType;
@@ -92,7 +92,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
         if (props.type !== type) {
-          return { ...props, ..._props, type };
+          return { ..._props, ...props, type };
         }
 
         return props;
@@ -160,6 +160,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
           }
         />
       ),
+      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionInput {...props} />,
     }),
     [t, schemas, referenceSchema],
   );

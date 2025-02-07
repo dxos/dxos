@@ -205,6 +205,28 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     }
   } else if ('enum' in root) {
     result = S.Union(...root.enum!.map((e) => S.Literal(e)));
+  } else if ('oneOf' in root) {
+    // NOTE(ZaymonFC): SingleSelect format uses oneOf to represent option choices:
+    // {
+    //   type: 'string',
+    //   format: 'single-select',
+    //   oneOf: [
+    //     { const: 'draft', title: 'Draft' },        // Stable ID
+    //     { const: 'published', title: 'Published' }  // Display label
+    //   ]
+    // }
+    //
+    // TODO(ZaymonFC): Consider general handling of JSON Schema combinators.
+    if (root.oneOf?.every((schema) => 'const' in schema)) {
+      const literals = root.oneOf.map((schema) => {
+        const annotations = jsonSchemaFieldsToAnnotations(schema);
+        const literal = S.Literal(schema.const);
+        return Object.keys(annotations).length > 0 ? literal.pipe(S.annotations(annotations)) : literal;
+      });
+      result = S.Union(...literals);
+    } else {
+      result = S.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
+    }
   } else if ('anyOf' in root) {
     result = S.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('type' in root) {

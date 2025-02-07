@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type AST, type JsonProp, S } from '@dxos/effect';
+import { AST, type JsonProp, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
@@ -298,6 +298,47 @@ describe('json-to-effect', () => {
     const schema2 = S.String.annotations({ [FormatAnnotationId]: 'currency' });
 
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
+  });
+
+  test('object with oneOf const values and annotations', () => {
+    const jsonSchema: JsonSchemaType = {
+      type: 'object',
+      required: ['selectedOption'], // Add this if we want it required
+      properties: {
+        selectedOption: {
+          oneOf: [
+            { const: 'option-1-id', title: 'Small', description: 'Small size option' },
+            { const: 'option-2-id', title: 'Medium', description: 'Medium size option' },
+            { const: 'option-3-id', title: 'Large', description: 'Large size option' },
+          ],
+          type: 'string',
+        },
+      },
+    };
+
+    const schema = toEffectSchema(jsonSchema);
+    // TODO(Zan): Workout where the annotations are going?
+    const origSchema = S.Struct({
+      selectedOption: S.Union(
+        S.Literal('option-1-id'),
+        // .annotations({
+        //   [AST.TitleAnnotationId]: 'Small',
+        //   [AST.DescriptionAnnotationId]: 'Small size option',
+        // }),
+        S.Literal('option-2-id'),
+        // .annotations({
+        //   [AST.TitleAnnotationId]: 'Medium',
+        //   [AST.DescriptionAnnotationId]: 'Medium size option',
+        // }),
+        S.Literal('option-3-id'),
+        // .annotations({
+        //   [AST.TitleAnnotationId]: 'Large',
+        //   [AST.DescriptionAnnotationId]: 'Large size option',
+        // }),
+      ),
+    });
+
+    expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(origSchema.ast));
   });
 
   const prepareAstForCompare = (obj: AST.AST): any =>
