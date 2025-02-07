@@ -13,13 +13,13 @@ import { type AIServiceClient, type GenerationStreamEvent, type LLMModel } from 
 export type CreateLLMConversationParams = {
   model: LLMModel;
 
+  spaceId?: SpaceId;
+  threadId?: ObjectId;
+
   /**
    * System prompt that specifies instructions for the LLM.
    */
   system?: string;
-
-  spaceId?: SpaceId;
-  threadId?: ObjectId;
 
   tools: Tool[];
   history?: Message[];

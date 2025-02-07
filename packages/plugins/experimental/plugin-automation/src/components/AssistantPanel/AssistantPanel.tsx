@@ -73,17 +73,17 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     setInput('');
 
     // TODO(dmaretskyi): Can we call `create(Message, { ... })` here?
-    const userMessage: Message = {
+    const prompt: Message = {
       id: ObjectId.random(),
       spaceId: contextSpaceId!,
       threadId: threadId!,
       role: 'user',
       content: [{ type: 'text', text: input }],
     };
-    await aiClient.current.appendMessages([userMessage]);
-    setHistory([...history, userMessage]);
+    await aiClient.current.appendMessages([prompt]);
+    setHistory([...history, prompt]);
 
-    const generationStream = await aiClient.current.generate({
+    const stream = await aiClient.current.generate({
       model: '@anthropic/claude-3-5-sonnet-20241022',
       spaceId: contextSpaceId!,
       threadId: threadId!,
@@ -92,12 +92,12 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     });
 
     // TODO(burdon): !!!
-    const historyBefore = [...history, userMessage];
-    for await (const _event of generationStream) {
-      setHistory([...historyBefore, ...generationStream.messages]);
+    const historyBefore = [...history, prompt];
+    for await (const _event of stream) {
+      // setHistory([...historyBefore, ...stream.messages]);
     }
 
-    await generationStream.complete();
+    await stream.complete();
     const messages: Message[] = [];
     await aiClient.current!.appendMessages(messages);
   };
