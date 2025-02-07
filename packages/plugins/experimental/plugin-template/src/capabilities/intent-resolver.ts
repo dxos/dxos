@@ -10,7 +10,10 @@ import { TemplateAction, TemplateType } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(TemplateAction.Create, ({ name }) => ({
-      data: { object: create(TemplateType, { name }) },
-    })),
+    createResolver({
+      intent: TemplateAction.Create,
+      resolve: ({ name }) => ({
+        data: { object: create(TemplateType, { name }) },
+      }),
+    }),
   );

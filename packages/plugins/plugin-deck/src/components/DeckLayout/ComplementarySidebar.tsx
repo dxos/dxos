@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createIntent, NavigationAction, SLUG_PATH_SEPARATOR, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
 import { Main, ScrollArea, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
@@ -16,7 +16,7 @@ import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
-import { type Panel } from '../../types';
+import { SLUG_PATH_SEPARATOR, type Panel } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useLayout } from '../LayoutContext';
 
@@ -48,7 +48,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const handleValueChange = useCallback(
     (nextValue: string) => {
       setInternalValue(nextValue);
-      void dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: nextValue } }));
+      void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
     },
     [dispatch],
   );

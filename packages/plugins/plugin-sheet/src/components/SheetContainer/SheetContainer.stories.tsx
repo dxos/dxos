@@ -76,8 +76,11 @@ const meta: Meta = {
       capabilities: [
         contributes(
           Capabilities.IntentResolver,
-          createResolver(SheetAction.DropAxis, ({ model, axis, axisIndex }) => {
-            model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+          createResolver({
+            intent: SheetAction.DropAxis,
+            resolve: ({ model, axis, axisIndex }) => {
+              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+            },
           }),
         ),
       ],

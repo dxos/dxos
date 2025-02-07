@@ -22,7 +22,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
 
   // TODO(burdon): Should not depend on split screen.
   const layout = useCapability(Capabilities.Layout);
-  const fullscreen = layout.layoutMode === 'fullscreen';
+  const fullscreen = layout.mode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.

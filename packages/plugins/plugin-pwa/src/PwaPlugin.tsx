@@ -29,8 +29,8 @@ export const PwaPlugin = () =>
         const updateSW = registerSW({
           onNeedRefresh: () =>
             dispatch?.(
-              createIntent(LayoutAction.SetLayout, {
-                element: 'toast',
+              createIntent(LayoutAction.AddToast, {
+                part: 'toast',
                 subject: {
                   id: `${PWA_PLUGIN}/need-refresh`,
                   title: ['need refresh label', { ns: PWA_PLUGIN }],
@@ -44,8 +44,8 @@ export const PwaPlugin = () =>
             ),
           onOfflineReady: () =>
             dispatch?.(
-              createIntent(LayoutAction.SetLayout, {
-                element: 'toast',
+              createIntent(LayoutAction.AddToast, {
+                part: 'toast',
                 subject: {
                   id: `${PWA_PLUGIN}/offline-ready`,
                   title: ['offline ready label', { ns: PWA_PLUGIN }],
