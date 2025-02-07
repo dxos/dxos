@@ -6,6 +6,7 @@ import React from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { List } from '@dxos/react-ui-list';
 
 import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
@@ -38,13 +39,47 @@ export const SelectOptionInput = ({
     onValueChange(type, options);
   }, [type, onValueChange]);
 
-  // TODO(ZaymonFC): WIP.
+  const handleMove = React.useCallback(
+    (from: number, to: number) => {
+      if (!options) {
+        return;
+      }
+
+      const newOptions = [...options];
+      const [removed] = newOptions.splice(from, 1);
+      newOptions.splice(to, 0, removed);
+      onValueChange(type, newOptions);
+    },
+    [options, type, onValueChange],
+  );
+
   return (
     <Input.Root validationValence={status}>
       <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
-        <button onClick={onClick}>+</button>
       </InputHeader>
+      <div className='flex flex-col'>
+        <button onClick={onClick}>Add</button>
+        {options && (
+          <List.Root items={options} isItem={(item) => true} onMove={handleMove}>
+            {({ items }) => (
+              <div role='list' className='w-full overflow-auto'>
+                {items?.map((item) => (
+                  <List.Item
+                    key={item.id}
+                    item={item}
+                    classNames='grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded hover:bg-ghostHover'
+                  >
+                    <List.ItemDragHandle />
+                    <List.ItemTitle>{item.title}</List.ItemTitle>
+                    <List.ItemDeleteButton />
+                  </List.Item>
+                ))}
+              </div>
+            )}
+          </List.Root>
+        )}
+      </div>
     </Input.Root>
   );
 };
