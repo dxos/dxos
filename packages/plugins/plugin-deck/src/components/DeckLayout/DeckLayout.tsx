@@ -23,6 +23,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
+import { ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
@@ -42,6 +43,8 @@ export type DeckLayoutProps = {
 
 const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
+
+const fixedSidebarToggleStyles = 'bs-[--rail-item] is-[--rail-item] absolute inline-start-2 block-end-2 z-[1] !bg-deck';
 
 export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
@@ -193,6 +196,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 className={!isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
                 {...(isSoloModeLoaded && { inert: '' })}
               >
+                {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
                 <Stack
                   orientation='horizontal'
                   size='contain'
@@ -221,6 +225,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
                 {...(!isSoloModeLoaded && { inert: '' })}
               >
+                {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
                   <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
                 </StackContext.Provider>
