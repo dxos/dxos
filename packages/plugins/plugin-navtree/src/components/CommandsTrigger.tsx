@@ -20,10 +20,12 @@ export const CommandsTrigger = () => {
       classNames='m-1 !pli-1 lg:!pli-2'
       onClick={() =>
         dispatch(
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: COMMANDS_DIALOG,
-            dialogBlockAlign: 'start',
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: COMMANDS_DIALOG,
+            options: {
+              blockAlign: 'start',
+            },
           }),
         )
       }

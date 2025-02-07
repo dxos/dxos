@@ -108,8 +108,8 @@ describe('Intent dispatcher', () => {
     const { dispatch } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
 
-    expect(intent.first.action).toBe(Compute._tag);
-    expect(intent.last.action).toBe(Concat._tag);
+    expect(intent.first.id).toBe(Compute._tag);
+    expect(intent.last.id).toBe(Concat._tag);
     expect(intent.all.length).toBe(3);
 
     const program = Effect.gen(function* () {
@@ -137,7 +137,10 @@ describe('Intent dispatcher', () => {
   });
 
   test('filter resolvers by plugin', async () => {
-    const otherComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }));
+    const otherComputeResolver = createResolver({
+      intent: Compute,
+      resolve: async (data) => ({ data: { value: data?.value * 3 } }),
+    });
     const { dispatch } = createDispatcher((module) => (module === 'test' ? [computeResolver] : [otherComputeResolver]));
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
@@ -153,8 +156,10 @@ describe('Intent dispatcher', () => {
   });
 
   test('filter resolvers by predicate', async () => {
-    const conditionalComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }), {
+    const conditionalComputeResolver = createResolver({
+      intent: Compute,
       filter: (data): data is { value: number } => data?.value > 1,
+      resolve: async (data) => ({ data: { value: data?.value * 3 } }),
     });
     const { dispatch } = createDispatcher(() => [conditionalComputeResolver, computeResolver]);
     const program = Effect.gen(function* () {
@@ -171,8 +176,10 @@ describe('Intent dispatcher', () => {
   });
 
   test('hoist resolvers', async () => {
-    const hoistedComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }), {
+    const hoistedComputeResolver = createResolver({
+      intent: Compute,
       disposition: 'hoist',
+      resolve: async (data) => ({ data: { value: data?.value * 3 } }),
     });
     const { dispatchPromise } = createDispatcher(() => [computeResolver, hoistedComputeResolver]);
     const { data } = await dispatchPromise(createIntent(Compute, { value: 1 }));
@@ -180,13 +187,17 @@ describe('Intent dispatcher', () => {
   });
 
   test('fallback resolvers', async () => {
-    const conditionalComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 2 } }), {
+    const conditionalComputeResolver = createResolver({
+      intent: Compute,
       filter: (data): data is { value: number } => data?.value === 1,
+      resolve: async (data) => ({ data: { value: data?.value * 2 } }),
     });
-    const fallbackComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }), {
+    const fallbackComputeResolver = createResolver({
+      intent: Compute,
       disposition: 'fallback',
+      resolve: async (data) => ({ data: { value: data?.value * 3 } }),
     });
-    const { dispatch } = createDispatcher(() => [fallbackComputeResolver, conditionalComputeResolver]);
+    const { dispatch } = createDispatcher(() => [conditionalComputeResolver, fallbackComputeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
@@ -224,8 +235,9 @@ class ToString extends S.TaggedClass<ToString>()('ToString', {
   }),
 }) {}
 
-const toStringResolver = createResolver(ToString, async (data) => {
-  return { data: { string: data.value.toString() } };
+const toStringResolver = createResolver({
+  intent: ToString,
+  resolve: async (data) => ({ data: { string: data.value.toString() } }),
 });
 
 class Compute extends S.TaggedClass<Compute>()('Compute', {
@@ -237,16 +249,19 @@ class Compute extends S.TaggedClass<Compute>()('Compute', {
   }),
 }) {}
 
-const computeResolver = createResolver(Compute, (data, undo) => {
-  return Effect.gen(function* () {
-    if (undo) {
-      return { data: { value: data.value / 2 } };
-    }
+const computeResolver = createResolver({
+  intent: Compute,
+  resolve: (data, undo) => {
+    return Effect.gen(function* () {
+      if (undo) {
+        return { data: { value: data.value / 2 } };
+      }
 
-    yield* Effect.sleep(data.value * 10);
-    const value = data.value * 2;
-    return { data: { value }, undoable: { message: 'test', data: { value } } };
-  });
+      yield* Effect.sleep(data.value * 10);
+      const value = data.value * 2;
+      return { data: { value }, undoable: { message: 'test', data: { value } } };
+    });
+  },
 });
 
 class Concat extends S.TaggedClass<Concat>()('Concat', {
@@ -259,8 +274,9 @@ class Concat extends S.TaggedClass<Concat>()('Concat', {
   }),
 }) {}
 
-const concatResolver = createResolver(Concat, async (data) => {
-  return { data: { string: data.string + data.plus } };
+const concatResolver = createResolver({
+  intent: Concat,
+  resolve: async (data) => ({ data: { string: data.string + data.plus } }),
 });
 
 class Add extends S.TaggedClass<Add>()('Add', {
@@ -268,8 +284,9 @@ class Add extends S.TaggedClass<Add>()('Add', {
   output: S.Number,
 }) {}
 
-const addResolver = createResolver(Add, async (data) => {
-  return { data: data[0] + data[1] };
+const addResolver = createResolver({
+  intent: Add,
+  resolve: async (data) => ({ data: data[0] + data[1] }),
 });
 
 class SideEffect extends S.TaggedClass<SideEffect>()('SideEffect', {
@@ -277,4 +294,7 @@ class SideEffect extends S.TaggedClass<SideEffect>()('SideEffect', {
   output: S.Void,
 }) {}
 
-const sideEffectResolver = createResolver(SideEffect, async () => {});
+const sideEffectResolver = createResolver({
+  intent: SideEffect,
+  resolve: async () => {},
+});

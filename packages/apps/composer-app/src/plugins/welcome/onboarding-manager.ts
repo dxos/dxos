@@ -3,10 +3,10 @@
 //
 
 import {
+  Capabilities,
   createIntent,
-  type Layout,
   LayoutAction,
-  NavigationAction,
+  type PluginsContext,
   type PromiseIntentDispatcher,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger } from '@dxos/async';
@@ -26,7 +26,7 @@ import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 export type OnboardingManagerParams = {
   dispatch: PromiseIntentDispatcher;
   client: Client;
-  layout: Layout;
+  context: PluginsContext;
   firstRun?: Trigger;
   hubUrl?: string;
   token?: string;
@@ -40,7 +40,7 @@ export class OnboardingManager {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _dispatch: PromiseIntentDispatcher;
   private readonly _client: Client;
-  private readonly _layout: Layout;
+  private readonly _context: PluginsContext;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
@@ -54,7 +54,7 @@ export class OnboardingManager {
   constructor({
     dispatch,
     client,
-    layout,
+    context,
     hubUrl,
     token,
     recoverIdentity,
@@ -65,7 +65,7 @@ export class OnboardingManager {
 
     this._dispatch = dispatch;
     this._client = client;
-    this._layout = layout;
+    this._context = context;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
     this._token = token;
@@ -178,20 +178,28 @@ export class OnboardingManager {
   }
 
   private async _showWelcome() {
-    await this._dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }));
     // NOTE: Active parts cannot contain '/' characters currently.
     await this._dispatch(
-      createIntent(NavigationAction.Open, { activeParts: { fullScreen: `surface:${WELCOME_SCREEN}` } }),
+      createIntent(LayoutAction.SetLayoutMode, {
+        part: 'mode',
+        subject: `surface:${WELCOME_SCREEN}`,
+        options: { mode: 'fullscreen' },
+      }),
     );
   }
 
   private async _closeWelcome() {
-    if (this._layout.layoutMode !== 'deck') {
-      await this._dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
-    }
+    const layout = this._context.requestCapability(Capabilities.Layout);
     await this._dispatch(
-      createIntent(NavigationAction.Close, { activeParts: { fullScreen: `surface:${WELCOME_SCREEN}` } }),
+      createIntent(LayoutAction.Close, {
+        part: 'main',
+        subject: [`surface:${WELCOME_SCREEN}`],
+        options: { state: false },
+      }),
     );
+    if (layout.mode !== 'deck') {
+      await this._dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } }));
+    }
   }
 
   private async _createIdentity() {

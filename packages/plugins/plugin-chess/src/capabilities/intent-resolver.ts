@@ -12,13 +12,15 @@ import { ChessAction, ChessType } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(ChessAction.Create, ({ name, fen }) => {
-      const pgn = fen ? new Chess(fen).pgn() : undefined;
-
-      return {
-        data: {
-          object: create(ChessType, { name, fen, pgn }),
-        },
-      };
+    createResolver({
+      intent: ChessAction.Create,
+      resolve: ({ name, fen }) => {
+        const pgn = fen ? new Chess(fen).pgn() : undefined;
+        return {
+          data: {
+            object: create(ChessType, { name, fen, pgn }),
+          },
+        };
+      },
     }),
   );

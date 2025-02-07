@@ -13,14 +13,20 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     // TODO(wittjosiah): Deleting the object doesn't delete the wnfs blob.
     //  Consider ways to trigger blob deletion based on object deletion and/or adding file system manager.
-    createResolver(WnfsAction.Create, ({ name, type, cid }) => ({
-      data: {
-        object: create(FileType, { name, type, cid }),
+    createResolver({
+      intent: WnfsAction.Create,
+      resolve: ({ name, type, cid }) => ({
+        data: {
+          object: create(FileType, { name, type, cid }),
+        },
+      }),
+    }),
+    createResolver({
+      intent: WnfsAction.Upload,
+      resolve: async ({ file, space }) => {
+        const blockstore = context.requestCapability(WnfsCapabilities.Blockstore);
+        const info = await upload({ file, blockstore, space });
+        return { data: info };
       },
-    })),
-    createResolver(WnfsAction.Upload, async ({ file, space }) => {
-      const blockstore = context.requestCapability(WnfsCapabilities.Blockstore);
-      const info = await upload({ file, blockstore, space });
-      return { data: info };
     }),
   ]);
