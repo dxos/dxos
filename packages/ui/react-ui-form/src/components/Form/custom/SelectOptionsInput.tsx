@@ -69,7 +69,9 @@ export const SelectOptionInput = ({
                   >
                     <List.ItemDragHandle />
                     <List.ItemTitle>{item.title}</List.ItemTitle>
-                    <List.ItemDeleteButton onDelete={() => handleDelete(item.id)} />
+                    <List.ItemDeleteButton onDelete={ () => {
+                      handleDelete(item.id);
+                    }} />
                   </List.Item>
                 ))}
               </div>
