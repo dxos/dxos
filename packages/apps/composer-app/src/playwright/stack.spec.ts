@@ -36,7 +36,7 @@ test.describe('Stack tests', () => {
   test('create new document section', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection', nth: 0 });
-    await host.toggleCollectionCollapsed(2);
+    await host.toggleCollectionCollapsed(1);
     await Stack.createSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     const plank = host.deck.plank();

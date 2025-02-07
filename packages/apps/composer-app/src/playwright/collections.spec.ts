@@ -55,7 +55,7 @@ test.describe('Collection tests', () => {
     expect(await host.getObjectByName('New collection').getAttribute('aria-owns')).toEqual(docId);
   });
 
-  test.only('delete a collection', async () => {
+  test('delete a collection', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection', nth: 0 });
     await host.toggleCollectionCollapsed(0);
