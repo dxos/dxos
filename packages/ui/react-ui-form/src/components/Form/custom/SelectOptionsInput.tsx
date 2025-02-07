@@ -29,11 +29,21 @@ export const SelectOptionInput = ({
     }
   }, [options, onValueChange, type]);
 
+  const onClick = React.useCallback(() => {
+    const options = [
+      { id: 'one', title: 'One', color: 'red' },
+      { id: 'two', title: 'Two', color: 'blue' },
+      { id: 'three', title: 'Three', color: 'green' },
+    ];
+    onValueChange(type, options);
+  }, [type, onValueChange]);
+
   // TODO(ZaymonFC): WIP.
   return (
     <Input.Root validationValence={status}>
       <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
+        <button onClick={onClick}>+</button>
       </InputHeader>
     </Input.Root>
   );

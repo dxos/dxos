@@ -343,8 +343,8 @@ describe('ViewProjection', () => {
         type: TypeEnum.String,
         format: FormatEnum.SingleSelect,
         options: [
-          { id: 'draft', label: 'Draft' },
-          { id: 'published', label: 'Published' },
+          { id: 'draft', title: 'Draft', color: '#gray' },
+          { id: 'published', title: 'Published', color: '#green' },
         ],
       },
     });
@@ -354,8 +354,8 @@ describe('ViewProjection', () => {
       type: 'string',
       format: FormatEnum.SingleSelect,
       oneOf: [
-        { const: 'draft', title: 'Draft' },
-        { const: 'published', title: 'Published' },
+        { const: 'draft', title: 'Draft', color: '#gray' },
+        { const: 'published', title: 'Published', color: '#green' },
       ],
     });
 
@@ -363,8 +363,8 @@ describe('ViewProjection', () => {
     const { props } = projection.getFieldProjection(fieldId);
     expect(props.format).to.equal(FormatEnum.SingleSelect);
     expect(props.options).to.deep.equal([
-      { id: 'draft', label: 'Draft' },
-      { id: 'published', label: 'Published' },
+      { id: 'draft', label: 'Draft', color: '#gray' },
+      { id: 'published', label: 'Published', color: '#green' },
     ]);
 
     // Update options
@@ -373,35 +373,27 @@ describe('ViewProjection', () => {
       props: {
         ...props,
         options: [
-          { id: 'draft', label: 'Draft' },
-          { id: 'published', label: 'Published' },
-          { id: 'archived', label: 'Archived' },
+          { id: 'draft', title: 'Draft', color: '#gray' },
+          { id: 'published', title: 'Published', color: '#green' },
+          { id: 'archived', title: 'Archived', color: '#red' },
         ],
       },
     });
 
     // Verify updated JSON Schema
     expect(mutable.jsonSchema.properties?.status?.oneOf).to.deep.equal([
-      { const: 'draft', title: 'Draft' },
-      { const: 'published', title: 'Published' },
-      { const: 'archived', title: 'Archived' },
+      { const: 'draft', title: 'Draft', color: '#gray' },
+      { const: 'published', title: 'Published', color: '#green' },
+      { const: 'archived', title: 'Archived', color: '#red' },
     ]);
 
-    // Get the schema with constraints
     const effectSchema = mutable.getSchemaSnapshot();
 
-    // Test validation
-    expect(() =>
-      S.validateSync(effectSchema)({
-        status: 'draft',
-      }),
-    ).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
 
-    expect(() =>
-      S.validateSync(effectSchema)({
-        status: 'invalid-status',
-      }),
-    ).to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
   });
 
   // TODO(burdon): Test changing format.
