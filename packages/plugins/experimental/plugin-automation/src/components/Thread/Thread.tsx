@@ -14,7 +14,7 @@ import React, {
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { Button, Icon, Input, type ThemedClassName } from '@dxos/react-ui';
-import { Ball } from '@dxos/react-ui-sfx';
+import { Spinner } from '@dxos/react-ui-sfx';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -69,7 +69,7 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
       </div>
 
       <div className='flex p-4 gap-3 items-center'>
-        <Ball active={streaming} />
+        <Spinner active={streaming} />
         <Input.Root>
           <Input.TextInput
             autoFocus
@@ -111,10 +111,7 @@ export const ThreadMessage: FC<
       <div className={mx('flex flex-col gap-2')}>
         {debug && <div className='text-xs text-subdued'>{message.id}</div>}
         {content.map((block, idx) => (
-          <>
-            {debug && <div className='text-xs text-subdued'>{idx}</div>}
-            <Block key={idx} id={String(idx)} role={role} block={block} />
-          </>
+          <Block key={idx} id={String(idx)} role={role} block={block} />
         ))}
       </div>
     </div>

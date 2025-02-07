@@ -10,9 +10,9 @@ import React, { useState } from 'react';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Ball, type BallProps } from './Ball';
+import { Spinner, type SpinnerProps } from './Spinner';
 
-const Render = ({ active: _active }: BallProps) => {
+const Render = ({ active: _active }: SpinnerProps) => {
   const [active, setActive] = useState(_active);
 
   return (
@@ -22,23 +22,23 @@ const Render = ({ active: _active }: BallProps) => {
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
         <div className='flex w-6 h-6'>
-          <Ball active={active} />
+          <Spinner active={active} />
         </div>
       </div>
     </div>
   );
 };
 
-const meta: Meta<BallProps> = {
+const meta: Meta<SpinnerProps> = {
   title: 'ui/react-ui-sfx/motion',
-  component: Ball,
+  component: Spinner,
   render: Render,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
 
-type Story = StoryObj<BallProps>;
+type Story = StoryObj<SpinnerProps>;
 
 export const Default: Story = {
   args: {

@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 
 export type StreamBlock =
   | {
-      type: 'xml';
+      type: 'tag';
       tag: string;
       attributes?: Record<string, string>;
       content: StreamBlock[];
@@ -42,7 +42,7 @@ const selfClosingTag: P.Parser<StreamBlock> = P.seqMap(
   P.optWhitespace.then(P.string('/>')),
   P.optWhitespace,
   (_, tag, attributes, __) => ({
-    type: 'xml',
+    type: 'tag',
     tag,
     attributes: Object.fromEntries(attributes),
     content: [],
@@ -58,7 +58,7 @@ const openTag: P.Parser<StreamBlock> = P.seqMap(
   P.string('>'),
   P.regexp(/[^<]*/),
   (_, tag, attributes, __, content) => ({
-    type: 'xml',
+    type: 'tag',
     tag,
     attributes: Object.fromEntries(attributes),
     content: content.length ? [{ type: 'text', content }] : [],
@@ -72,7 +72,7 @@ const closeTag: P.Parser<StreamBlock> = P.seqMap(
   P.string('>'),
   P.optWhitespace,
   (_, tag) => ({
-    type: 'xml',
+    type: 'tag',
     tag,
     content: [],
     closing: true,
