@@ -80,19 +80,19 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream1 = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
-      spaceId,
-      threadId,
-      systemPrompt: 'You are a helpful assistant.',
-      tools: [custodian],
-    });
-
-    for await (const event of stream1) {
-      log('event', event);
-    }
-
     {
+      const stream1 = await client.generate({
+        model: '@anthropic/claude-3-5-haiku-20241022',
+        spaceId,
+        threadId,
+        systemPrompt: 'You are a helpful assistant.',
+        tools: [custodian],
+      });
+
+      for await (const event of stream1) {
+        log('event', event);
+      }
+
       // TODO(burdon): !!!
       await stream1.complete();
       const messages: Message[] = [];

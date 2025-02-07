@@ -35,6 +35,7 @@ export type ConversationEvent =
     }
   | GenerationStreamEvent;
 
+// TODO(burdon): Replace with processor from plugin-automation?
 export const runLLM = async (params: CreateLLMConversationParams) => {
   let conversationResult: any = null;
   const history = params.history ?? [];

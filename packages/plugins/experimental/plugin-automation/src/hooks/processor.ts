@@ -86,7 +86,6 @@ export class ChatProcessor {
     });
 
     // Streaming update.
-    // TODO(burdon): Optional.
     this._parser.update.on((block) => {
       this._streaming.value = createMessageBlock(block);
     });

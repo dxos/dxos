@@ -26,6 +26,10 @@ export type AssistantPanelProps = ThemedClassName<{
   subject?: ReactiveEchoObject<any>;
 }>;
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const config = useConfig();
