@@ -11,7 +11,7 @@ import { create } from '@dxos/live-object';
 import { Capabilities, Events } from './common';
 import { PluginManager, type PluginManagerOptions, type Plugin } from './core';
 import { topologicalSort } from './helpers';
-import { ErrorBoundary, PluginManagerProvider } from './react';
+import { ErrorBoundary, PluginManagerProvider, useCapabilities } from './react';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
@@ -100,17 +100,21 @@ export const createApp = ({
 
   return () => (
     <ErrorBoundary fallback={fallback}>
-      <App placeholder={placeholder} manager={manager} state={state} />
+      <PluginManagerProvider value={manager}>
+        <App placeholder={placeholder} state={state} />
+      </PluginManagerProvider>
     </ErrorBoundary>
   );
 };
 
 type AppProps = Required<Pick<CreateAppOptions, 'placeholder'>> & {
-  manager: PluginManager;
   state: { ready: boolean; error: unknown };
 };
 
-const App = ({ placeholder, manager, state }: AppProps) => {
+const App = ({ placeholder, state }: AppProps) => {
+  const reactContexts = useCapabilities(Capabilities.ReactContext);
+  const reactRoots = useCapabilities(Capabilities.ReactRoot);
+
   if (state.error) {
     // This trigger the error boundary to provide UI feedback for the startup error.
     throw state.error;
@@ -121,18 +125,13 @@ const App = ({ placeholder, manager, state }: AppProps) => {
     return <>{placeholder}</>;
   }
 
-  const reactContexts = manager.context.requestCapabilities(Capabilities.ReactContext);
-  const reactRoots = manager.context.requestCapabilities(Capabilities.ReactRoot);
-
   const ComposedContext = composeContexts(reactContexts);
   return (
-    <PluginManagerProvider value={manager}>
-      <ComposedContext>
-        {reactRoots.map(({ id, root: Component }) => (
-          <Component key={id} />
-        ))}
-      </ComposedContext>
-    </PluginManagerProvider>
+    <ComposedContext>
+      {reactRoots.map(({ id, root: Component }) => (
+        <Component key={id} />
+      ))}
+    </ComposedContext>
   );
 };
 

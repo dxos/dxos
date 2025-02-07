@@ -265,6 +265,15 @@ export class PluginManager {
     return untracked(() => Effect.runPromise(this._reset(event)));
   }
 
+  /**
+   * Calls reset on all pending reset events until there are none left.
+   */
+  async resetAll(): Promise<void> {
+    do {
+      await Promise.all(this.pendingReset.map((event) => this.reset(event)));
+    } while (this.pendingReset.length > 0);
+  }
+
   private _addPlugin(plugin: Plugin) {
     untracked(() => {
       log('add plugin', { id: plugin.meta.id });
@@ -345,8 +354,11 @@ export class PluginManager {
     });
   }
 
+  /**
+   * @internal
+   */
   // TODO(wittjosiah): Improve error typing.
-  private _activate(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
+  _activate(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const key = typeof event === 'string' ? event : eventKey(event);
       log('activating', { key });

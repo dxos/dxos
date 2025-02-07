@@ -160,7 +160,7 @@ export type IntentContext = {
 /**
  * Sets of an intent dispatcher.
  *
- * @param resolvers An array of available intent resolvers.
+ * @param getResolvers A function that returns an array of available intent resolvers.
  * @param params.historyLimit The maximum number of intent results to keep in history.
  * @param params.executionLimit The maximum recursion depth of intent chains.
  */
@@ -275,7 +275,6 @@ export const dispatcherModule = defineModule({
   //   This is fine for now because it's how it worked prior to capabilities api anyways.
   //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
   activatesOn: Events.Startup,
-  activatesBefore: [Events.SetupIntents],
   activatesAfter: [Events.DispatcherReady],
   activate: (context) => {
     const state = create<IntentContext>({
@@ -294,8 +293,17 @@ export const dispatcherModule = defineModule({
         .flat(),
     );
 
-    state.dispatch = dispatch;
-    state.dispatchPromise = dispatchPromise;
+    const manager = context.requestCapability(Capabilities.PluginManager);
+    state.dispatch = (intentChain, depth) => {
+      return Effect.gen(function* () {
+        yield* manager._activate(Events.SetupIntents);
+        return yield* dispatch(intentChain, depth);
+      });
+    };
+    state.dispatchPromise = async (intentChain) => {
+      await manager.activate(Events.SetupIntents);
+      return await dispatchPromise(intentChain);
+    };
     state.undo = undo;
     state.undoPromise = undoPromise;
 

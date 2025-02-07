@@ -6,34 +6,40 @@ import React, { useCallback } from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { CountEvent, createPluginId, Number } from './generator';
+import { createGeneratorIntent, createPluginId, Number } from './generator';
 import { Capabilities } from '../../common';
 import { contributes } from '../../core';
-import { usePluginManager } from '../../react';
+import { createIntent, useIntentDispatcher } from '../../plugin-intent';
+import { useCapabilities, usePluginManager } from '../../react';
 
 export const Toolbar = () => {
   const manager = usePluginManager();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleAdd = useCallback(async () => {
     const id = createPluginId(Math.random().toString(16).substring(2, 8));
     await manager.add(id);
   }, [manager]);
 
-  const handleCount = useCallback(async () => {
-    if (manager.pendingReset.includes(CountEvent.id)) {
-      await manager.reset(CountEvent);
-    } else {
-      await manager.activate(CountEvent);
-    }
-  }, [manager]);
+  const handleReset = useCallback(() => manager.resetAll(), [manager]);
 
-  const count = manager.context.requestCapabilities(Number).reduce((acc, curr) => acc + curr, 0);
+  const count = useCapabilities(Number).reduce((acc, curr) => acc + curr, 0);
+
+  const generatorPlugins = manager.plugins.filter((plugin) => plugin.meta.id.startsWith('dxos.org/test/generator/'));
 
   return (
     <>
       <Button onClick={handleAdd}>Add</Button>
-      <Button onClick={handleCount}>Count</Button>
+      {/* NOTE: With the current plugins in the playground, this will never be enabled. */}
+      <Button disabled={manager.pendingReset.length === 0} onClick={handleReset}>
+        Reset
+      </Button>
       <div className='flex items-center'>Count: {count}</div>
+      {generatorPlugins.map((plugin) => (
+        <Button key={plugin.meta.id} onClick={() => dispatch(createIntent(createGeneratorIntent(plugin.meta.id)))}>
+          {plugin.meta.id.replace('dxos.org/test/generator/', '')}
+        </Button>
+      ))}
     </>
   );
 };
