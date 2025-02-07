@@ -4,7 +4,6 @@
 
 import React, { forwardRef } from 'react';
 
-import { type PartAdjustment } from '@dxos/app-framework';
 import {
   Button,
   ButtonGroup,
@@ -16,8 +15,9 @@ import {
 } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../../meta';
+import { type DeckAction } from '../../types';
 
-export type PlankControlHandler = (event: PartAdjustment) => void;
+export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 
 export type PlankCapabilities = {
   incrementStart?: boolean;
@@ -52,6 +52,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
 
 // TODO(wittjosiah): Duplicate of stack LayoutControls?
 //   Translations were to be duplicated between packages.
+// NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
     { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },
@@ -62,7 +63,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
-        {pin && !isSolo && ['both', 'start'].includes(pin) && (
+        {/* {pin && !isSolo && ['both', 'start'].includes(pin) && (
           <PlankControl
             label={t('pin start label')}
             variant='ghost'
@@ -70,7 +71,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
             onClick={() => onClick?.('pin-start')}
             icon='ph--caret-line-left--regular'
           />
-        )}
+        )} */}
 
         {can.solo && (
           <PlankControl
@@ -100,14 +101,14 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           </>
         )}
 
-        {pin && !isSolo && ['both', 'end'].includes(pin) && (
+        {/* {pin && !isSolo && ['both', 'end'].includes(pin) && (
           <PlankControl
             label={t('pin end label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-end')}
             icon='ph--caret-line-right--regular'
           />
-        )}
+        )} */}
 
         {close && !isSolo && (
           <PlankControl

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { type ComponentProps, useMemo, useState } from 'react';
 
 import { IconButton, useTranslation, Input } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -23,6 +23,17 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEmptyColumn }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const [namingColumn, setNamingColumn] = useState(false);
+
+  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
+  //   omit fields from the form?
+  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
+    if (!model.columnField) {
+      return undefined;
+    }
+    return {
+      [model.columnField]: () => <></>,
+    };
+  }, [model.columnField]);
 
   return (
     <Stack
@@ -90,7 +101,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                         </>
                       )}
                     </div>
-                    <Form readonly values={card} schema={model.cardSchema} />
+                    <Form values={card} schema={model.cardSchema} Custom={Custom} readonly />
                   </div>
                 </StackItem.Root>
               ))}

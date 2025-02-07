@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
@@ -256,7 +256,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['create object in space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--plus--regular',
-          disposition: 'toolbar',
+          disposition: 'item',
           testId: 'spacePlugin.createObject',
         },
       },
@@ -486,10 +486,10 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: NavigationAction.Expose._tag,
+      id: getId(LayoutAction.Expose._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(object) }));
+        await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: fullyQualifiedId(object) }));
       },
       properties: {
         label: ['expose object label', { ns: SPACE_PLUGIN }],

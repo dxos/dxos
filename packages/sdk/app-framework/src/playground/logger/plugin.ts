@@ -19,8 +19,11 @@ export const LoggerPlugin = () =>
       activate: () => [
         contributes(
           Capabilities.IntentResolver,
-          createResolver(Log, ({ message }) => {
-            log.info(message);
+          createResolver({
+            intent: Log,
+            resolve: ({ message }) => {
+              log.info(message);
+            },
           }),
         ),
       ],

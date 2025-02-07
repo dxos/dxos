@@ -9,19 +9,26 @@ import { TreeType, TreeItemType, OutlinerAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
-    createResolver(OutlinerAction.Create, ({ name }) => ({
-      data: {
-        object: create(TreeType, {
-          root: makeRef(
-            create(TreeItemType, {
-              content: '',
-              items: [makeRef(create(TreeItemType, { content: '', items: [] }))],
-            }),
-          ),
-        }),
+    createResolver({
+      intent: OutlinerAction.Create,
+      resolve: ({ name }) => ({
+        data: {
+          object: create(TreeType, {
+            name,
+            root: makeRef(
+              create(TreeItemType, {
+                content: '',
+                items: [makeRef(create(TreeItemType, { content: '', items: [] }))],
+              }),
+            ),
+          }),
+        },
+      }),
+    }),
+    createResolver({
+      intent: OutlinerAction.ToggleCheckbox,
+      resolve: ({ object }) => {
+        object.checkbox = !object.checkbox;
       },
-    })),
-    createResolver(OutlinerAction.ToggleCheckbox, ({ object }) => {
-      object.checkbox = !object.checkbox;
     }),
   ]);

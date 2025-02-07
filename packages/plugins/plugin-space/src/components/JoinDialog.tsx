@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -31,8 +31,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       if (result?.spaceKey) {
         await Promise.all([
           dispatch(
-            createIntent(LayoutAction.SetLayout, {
-              element: 'toast',
+            createIntent(LayoutAction.AddToast, {
+              part: 'toast',
               subject: {
                 id: `${SPACE_PLUGIN}/join-success`,
                 duration: 5_000,
@@ -42,9 +42,11 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
             }),
           ),
           dispatch(
-            createIntent(LayoutAction.SetLayout, {
-              element: 'dialog',
-              state: false,
+            createIntent(LayoutAction.UpdateDialog, {
+              part: 'dialog',
+              options: {
+                state: false,
+              },
             }),
           ),
         ]);
@@ -60,8 +62,8 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         // If the target has not yet replicated, this will trigger a loading toast.
         await graph.waitForPath({ target }).catch(() => {});
         await Promise.all([
-          dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [target] } })),
-          dispatch(createIntent(NavigationAction.Expose, { id: target })),
+          dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [target] })),
+          dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: target })),
         ]);
       }
 

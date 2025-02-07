@@ -83,7 +83,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                     return;
                   }
 
-                  void dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
+                  void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
                   setTimeout(() => {
                     const node = graph.nodes(group ?? action, { relation: 'inbound' })[0];
                     void (node && isAction(action) && action.data({ node, caller: KEY_BINDING }));

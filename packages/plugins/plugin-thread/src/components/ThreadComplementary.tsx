@@ -62,9 +62,12 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         //  This may be overloading this intent or highjacking its intended purpose.
         void dispatch(
           createIntent(LayoutAction.ScrollIntoView, {
-            id: fullyQualifiedId(subject),
-            cursor: thread.anchor,
-            ref: threadId,
+            part: 'current',
+            subject: fullyQualifiedId(subject),
+            options: {
+              cursor: thread.anchor,
+              ref: threadId,
+            },
           }),
         );
       }

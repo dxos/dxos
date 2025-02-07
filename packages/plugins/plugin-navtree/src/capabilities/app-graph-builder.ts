@@ -19,10 +19,12 @@ export default (context: PluginsContext) =>
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             await dispatch(
-              createIntent(LayoutAction.SetLayout, {
-                element: 'dialog',
-                component: COMMANDS_DIALOG,
-                dialogBlockAlign: 'start',
+              createIntent(LayoutAction.UpdateDialog, {
+                part: 'dialog',
+                subject: COMMANDS_DIALOG,
+                options: {
+                  blockAlign: 'start',
+                },
               }),
             );
           },

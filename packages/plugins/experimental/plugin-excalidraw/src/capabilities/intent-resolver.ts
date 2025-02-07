@@ -11,13 +11,16 @@ import { SketchAction } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(SketchAction.Create, ({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) => ({
-      data: {
-        object: create(DiagramType, {
-          name,
-          canvas: makeRef(create(CanvasType, { schema, content })),
-          threads: [],
-        }),
-      },
-    })),
+    createResolver({
+      intent: SketchAction.Create,
+      resolve: ({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) => ({
+        data: {
+          object: create(DiagramType, {
+            name,
+            canvas: makeRef(create(CanvasType, { schema, content })),
+            threads: [],
+          }),
+        },
+      }),
+    }),
   );

@@ -11,11 +11,20 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -23,6 +32,8 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -31,12 +42,11 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "@radix-ui/react-visually-hidden": "^1.1.0",
+    "@radix-ui/react-visually-hidden": "1.1.2",
     "clsx": "^2.1.1",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "react-flip-toolkit": "^7.2.4",
-    "react-query": "^3.39.3",
     "react-router-dom": "^6.4.0",
     "react-use": "^17.5.1",
     "rxjs": "^7.8.1",

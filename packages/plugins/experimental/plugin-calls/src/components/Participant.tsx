@@ -6,12 +6,11 @@ import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
-import type { UserState } from '@dxos/protocols/proto/dxos/edge/calls';
-
 import { VideoSrcObject } from './VideoSrcObject';
 import { useSubscribedState } from './hooks/rxjsHooks';
 import { useRoomContext } from './hooks/useRoomContext';
 import { cn } from './utils/style';
+import { type UserState } from '../types';
 
 interface Props {
   flipId: string;
@@ -57,8 +56,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     },
     ref,
   ) => {
-    const { dataSaverMode } = useRoomContext();
-
     const pinned = flipId === pinnedId;
 
     useEffect(() => {
@@ -83,14 +80,8 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
           >
             <VideoSrcObject
               className={cn(
-                'absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity',
+                'absolute inset-0 h-full w-full object-contain',
                 isSelf && !isScreenShare && '-scale-x-100',
-                {
-                  'opacity-100': isScreenShare
-                    ? user.tracks.screenShareEnabled
-                    : user.tracks.videoEnabled && (!dataSaverMode || isSelf),
-                },
-                isSelf && isScreenShare && 'opacity-75',
               )}
               videoTrack={videoTrack}
             />

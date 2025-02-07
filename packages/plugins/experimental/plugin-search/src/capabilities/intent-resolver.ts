@@ -9,7 +9,10 @@ import { SearchAction } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(SearchAction.OpenSearch, () => ({
-      intents: [createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true })],
-    })),
+    createResolver({
+      intent: SearchAction.OpenSearch,
+      resolve: () => ({
+        intents: [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' })],
+      }),
+    }),
   );

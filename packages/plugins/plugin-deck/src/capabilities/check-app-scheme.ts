@@ -7,8 +7,8 @@
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 
-import { DECK_PLUGIN } from '../../meta';
-import { type DeckSettingsProps } from '../../types';
+import { DECK_PLUGIN } from '../meta';
+import { type DeckSettingsProps } from '../types';
 
 const isSocket = !!(globalThis as any).__args;
 

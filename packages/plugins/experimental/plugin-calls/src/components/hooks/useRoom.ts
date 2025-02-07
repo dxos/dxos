@@ -4,53 +4,66 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { type Stream } from '@dxos/codec-protobuf';
+import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { type UserState, type RoomState } from '@dxos/protocols/proto/dxos/edge/calls';
-import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type PublicKey, useClient } from '@dxos/react-client';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { useClient, type PublicKey } from '@dxos/react-client';
+import { useIdentity } from '@dxos/react-client/halo';
 
-import { codec } from '../types';
+import { codec, type RoomState, type UserState } from '../../types';
 
-export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: string }) => {
-  const [roomState, setRoomState] = useState<RoomState>({ users: [], meetingId: roomId.toHex() });
+export const useRoom = ({ roomId }: { roomId: PublicKey }) => {
+  const [roomState, setRoomState] = useState<RoomState>({
+    users: [],
+    meetingId: roomId.toHex(),
+  });
 
-  const userLeftFunctionRef = useRef(() => {});
+  const haloIdentity = useIdentity();
+  const client = useClient();
+  const identityKey = haloIdentity!.identityKey.toHex();
+  const displayName = haloIdentity?.profile?.displayName ?? generateName(haloIdentity!.identityKey.toHex());
+  const peerKey = client.halo.device!.deviceKey.toHex();
+
+  const stream = useRef<Stream<SwarmResponse>>();
 
   useEffect(() => {
-    return () => userLeftFunctionRef.current();
-  }, []);
+    if (!stream.current) {
+      stream.current = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
+      stream.current.subscribe((event) => {
+        log.info('roomState', {
+          users: event.peers?.map((p) => codec.decode(p.state!)) ?? [],
+          meetingId: roomId.toHex(),
+        });
+        setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
+      });
 
-  const client = useClient();
-  const peerInfo: Peer = {
-    identityKey: client.halo.identity.get()!.identityKey.toHex(),
-    peerKey: client.halo.device!.deviceKey.toHex(),
-    state: codec.encode({
-      id: client.halo.identity.get()!.identityKey.toHex(),
-      name: username,
-      joined: false,
-      raisedHand: false,
-      speaking: false,
-      tracks: {},
-    }),
-  };
-
-  useMemo(() => {
-    const stream = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
-    stream.subscribe((event) => {
-      setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
-    });
-
-    client.services.services.NetworkService?.joinSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
-      log.catch(err),
-    );
-    log.verbose('joined room', { roomId, peerInfo });
+      client.services.services.NetworkService?.joinSwarm({
+        topic: roomId,
+        peer: {
+          identityKey,
+          peerKey,
+          state: codec.encode({
+            id: peerKey,
+            name: displayName,
+            joined: false,
+            raisedHand: false,
+            speaking: false,
+            tracks: {},
+          }),
+        },
+      }).catch((err) => log.catch(err));
+    }
   }, [roomId]);
 
   useEffect(() => {
     const onBeforeUnload = () => {
-      client.services.services.NetworkService?.leaveSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
-        log.catch(err),
+      log.info('leaving room', { roomId });
+      client.services.services.NetworkService?.leaveSwarm({ topic: roomId, peer: { identityKey, peerKey } }).catch(
+        (err) => log.catch(err),
       );
+      stream.current?.close().catch((err) => log.catch(err));
+      stream.current = undefined;
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => {
@@ -58,27 +71,31 @@ export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: str
     };
   }, [roomId]);
 
-  const identity = useMemo(
-    () => roomState.users!.find((u) => u.id === peerInfo.identityKey!),
-    [roomState.users, peerInfo.identityKey],
+  const identity: UserState = useMemo(
+    () => ({
+      ...roomState.users!.find((u) => u.id === peerKey),
+      name: displayName,
+    }),
+    [roomState.users, peerKey, displayName],
   );
 
-  const otherUsers = useMemo(
-    () => roomState.users!.filter((u) => u.id !== peerInfo.identityKey!),
-    [roomState.users, peerInfo.identityKey],
+  const otherUsers: UserState[] = useMemo(
+    () => roomState.users!.filter((u) => u.id !== peerKey),
+    [roomState.users, peerKey],
   );
-
+  log.info('otherUsers', { identity, otherUsers });
   return {
     identity,
     otherUsers,
     roomState,
-    updateUserState: (user: UserState) => {
-      client.services.services
-        .NetworkService!.joinSwarm({
-          topic: roomId,
-          peer: { ...peerInfo, state: codec.encode(user) },
-        })
-        .catch((err) => log.catch(err));
-    },
+    updateUserState: (user: UserState) =>
+      client.services.services.NetworkService?.joinSwarm({
+        topic: roomId,
+        peer: {
+          identityKey,
+          peerKey,
+          state: codec.encode(user),
+        },
+      }).catch((err) => log.catch(err)),
   };
 };
