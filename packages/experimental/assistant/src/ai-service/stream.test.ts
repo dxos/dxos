@@ -28,7 +28,7 @@ const TEST_DATA = [
     '  <option value="1" />',
     '</select>',
 
-    // JSON
+    // XML
     '<cot>',
     '  1. Analyze content.',
     '  2. Create plan.',
