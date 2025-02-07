@@ -2,122 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as P from 'parsimmon';
-
+import { type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { type GenerationStream } from './stream';
-
-export type StreamChunk =
-  | {
-      type: 'xml';
-      tag: string;
-      attributes?: Record<string, string>;
-      content: StreamChunk[];
-      closing?: boolean;
-      selfClosing?: boolean;
-    }
-  | { type: 'text'; content: string }
-  | { type: 'json'; content: string };
-
-const textChunk: P.Parser<StreamChunk> = P.regexp(/[^<]+/).map((content) => ({
-  type: 'text',
-  content,
-}));
-
-const attribute: P.Parser<[string, string]> = P.seq(
-  P.regexp(/[a-zA-Z_][a-zA-Z0-9_-]*/),
-  P.string('=').trim(P.optWhitespace),
-  P.alt(
-    P.regexp(/"[^"]*"/).map((s) => s.slice(1, -1)),
-    P.regexp(/'[^']*'/).map((s) => s.slice(1, -1)),
-  ),
-).map(([name, _, value]) => [name, value]);
-
-const tagName = P.regexp(/[a-zA-Z_][a-zA-Z0-9_-]*/);
-
-const selfClosingTag: P.Parser<StreamChunk> = P.seqMap(
-  P.string('<'),
-  tagName,
-  P.optWhitespace.then(attribute).many(),
-  P.optWhitespace.then(P.string('/>')),
-  (_, tag, attributes, __) => ({
-    type: 'xml',
-    tag,
-    attributes: Object.fromEntries(attributes),
-    content: [],
-    selfClosing: true,
-  }),
-);
-
-const openTag: P.Parser<StreamChunk> = P.seqMap(
-  P.string('<'),
-  tagName,
-  P.optWhitespace.then(attribute).many(),
-  P.string('>'),
-  P.regexp(/[^<]*/),
-  (_, tag, attributes, __, str) => {
-    const content = str.trim();
-    return {
-      type: 'xml',
-      tag,
-      attributes: Object.fromEntries(attributes),
-      content: content.length ? [{ type: 'text', content }] : [],
-    };
-  },
-);
-
-const closingTag: P.Parser<StreamChunk> = P.seqMap(
-  //
-  P.string('</'),
-  tagName,
-  P.string('>'),
-  (_, tag) => ({
-    type: 'xml',
-    tag,
-    content: [],
-    closing: true,
-  }),
-);
-
-const mixedChunk: P.Parser<StreamChunk> = P.alt(selfClosingTag, openTag, closingTag, textChunk);
-
-/**
- * Permissive streaming transformer that can process mixed content of plain text and XML fragments.
- */
-export class XMLStreamTransformer {
-  private _buffer = '';
-
-  transform(chunk: string): StreamChunk[] {
-    log('chunk', { chunk });
-    this._buffer += chunk;
-
-    const results: StreamChunk[] = [];
-    const parser = mixedChunk.many();
-    const parseResult = parser.parse(this._buffer);
-    if (parseResult.status) {
-      for (const value of parseResult.value) {
-        // Skip if empty line.
-        if (value.type === 'text' && value.content.trim().length === 0) {
-          continue;
-        }
-
-        results.push(value);
-      }
-
-      this._buffer = '';
-    }
-
-    return results;
-  }
-
-  flush(): StreamChunk[] {
-    const remaining = this._buffer;
-    this._buffer = '';
-    return remaining.length > 0 ? [{ type: 'text', content: remaining }] : [];
-  }
-}
+import { StreamTransformer, type StreamBlock } from './transformer';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
@@ -131,16 +21,16 @@ export class MixedStreamParser {
   /**
    * New block.
    */
-  public block = new Event<StreamChunk>();
+  public block = new Event<StreamBlock>();
 
   /**
    * Update current block (while streaming).
    */
-  public update = new Event<StreamChunk>();
+  public update = new Event<StreamBlock>();
 
   async parse(stream: GenerationStream) {
-    const transformer = new XMLStreamTransformer();
-    let current: StreamChunk | undefined;
+    const transformer = new StreamTransformer();
+    let current: StreamBlock | undefined;
 
     for await (const event of stream) {
       switch (event.type) {
@@ -165,12 +55,20 @@ export class MixedStreamParser {
         // Content blocks.
         //
 
-        case 'content_block_start': {
-          if (current) {
-            this.block.emit(current);
-          }
+        //
+        //
+        //
+        // TODO(burdon): Block info (e.g., tool use); data type?
+        //
+        //
+        //
 
-          current = undefined;
+        case 'content_block_start': {
+          log.info('content_block_start', { event });
+          if (current) {
+            log.warn('unterminated content block', { current });
+            current = undefined;
+          }
           break;
         }
 
@@ -275,27 +173,63 @@ export class MixedStreamParser {
 }
 
 /**
+ * Convert stream block to message content block.
+ */
+export const createMessageBlock = (block: StreamBlock): MessageContentBlock | undefined => {
+  switch (block.type) {
+    case 'text': {
+      return { type: 'text', text: block.content };
+      break;
+    }
+
+    case 'xml': {
+      switch (block.tag) {
+        case 'cot': {
+          const content = block.content
+            .map((block) => {
+              switch (block.type) {
+                case 'text': {
+                  return block.content;
+                }
+                default:
+                  return null;
+              }
+            })
+            .join('\n');
+
+          return { type: 'text', disposition: 'cot', text: content };
+        }
+
+        // case 'artifact': {
+        //   return { type: 'text', disposition: 'artifact' };
+        // }
+      }
+      break;
+    }
+
+    case 'json': {
+      return { type: 'json', disposition: 'artifact', json: block.content };
+    }
+  }
+};
+
+/**
  * Trim whitespace preserving EOL characters.
  */
-const trim = (input: string): string => {
-  return input
-    .split(/(\r\n|\n)/)
-    .map((line, i) => {
-      if (i % 2 === 1) {
-        return line;
-      }
-
-      return line.replace(/^[\t ]+|[\t ]+$/g, '');
-    })
-    .join('');
+const trim = (text: string): string => {
+  return text
+    .split('\n')
+    .map((line) => line.trim())
+    .join('\n');
 };
 
 /**
  * Join strings.
  */
-const joinTrimmed = (a: string, b: string): string => {
-  const trimmedA = trim(a);
-  const trimmedB = trim(b);
+const joinTrimmed = (str1: string, str2: string): string => {
+  const trim1 = trim(str1);
+  const trim2 = trim(str2);
 
-  return /[\r\n]$/.test(trimmedA) ? trimmedA + trimmedB : trimmedA + ' ' + trimmedB;
+  const startsWithNonAlpha = /^[^a-zA-Z0-9]/.test(trim2);
+  return trim1 + (startsWithNonAlpha ? '' : ' ') + trim2;
 };

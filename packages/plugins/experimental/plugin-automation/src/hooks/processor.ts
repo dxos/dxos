@@ -5,14 +5,15 @@
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type Tool, Message } from '@dxos/artifact';
+import { type Tool, Message, type MessageContentBlock } from '@dxos/artifact';
 import {
+  createMessageBlock,
+  isToolUse,
+  runTools,
   type AIServiceClientImpl,
   type GenerateRequest,
   type GenerationStream,
-  isToolUse,
   MixedStreamParser,
-  runTools,
 } from '@dxos/assistant';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -38,33 +39,73 @@ declare global {
  * Maintains a queue of messages and handles streaming responses from the AI service.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Factor out.
+// TODO(burdon): Rename.
 export class ChatProcessor {
+  /** Stream parser. */
+  private _parser = new MixedStreamParser();
+
+  /** Current streaming response (iterator). */
+  private _stream: GenerationStream | undefined;
+
   /** Prior history from queue. */
   private _history: Message[] = [];
 
   /** Pending messages (incl. the initial user message). */
-  private _pending: Signal<Message[]> = signal([]);
+  private _messages: Signal<Message[]> = signal([]);
 
   /** Streaming messages (from the AI service). */
-  private _streaming: Signal<Message[]> = signal([]);
-
-  /** Current streaming response (iterator). */
-  private _stream: GenerationStream | undefined;
+  private _streaming: Signal<MessageContentBlock | undefined> = signal(undefined);
 
   constructor(
     private readonly _client: AIServiceClientImpl,
     private readonly _tools?: Tool[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = defaultOptions,
-  ) {}
+  ) {
+    // New message.
+    this._parser.message.on(() => {
+      const message: Message = {
+        id: ObjectId.random(),
+        role: 'assistant',
+        content: [],
+      };
+
+      this._messages.value = [...this._messages.value, message];
+      this._streaming.value = undefined;
+    });
+
+    // New block.
+    this._parser.block.on((block) => {
+      log.info('block', { block });
+      const messageBlock = createMessageBlock(block);
+      if (messageBlock) {
+        const message = this._messages.value.at(-1);
+        invariant(message);
+        message.content.push(messageBlock);
+      }
+      this._streaming.value = undefined;
+    });
+
+    // Streaming update.
+    // TODO(burdon): Optional.
+    this._parser.update.on((block) => {
+      this._streaming.value = createMessageBlock(block);
+    });
+  }
 
   get isStreaming(): ReadonlySignal<boolean> {
-    return computed(() => this._pending.value.length > 0);
+    return computed(() => !!this._streaming.value);
   }
 
   get messages(): ReadonlySignal<Message[]> {
-    return computed(() => [...this._pending.value, ...this._streaming.value]);
+    if (this._streaming.value) {
+      const messages = this._messages.value.slice(0, -1);
+      const current = this._messages.value.at(-1)!;
+      const temp: Message = { ...current, content: [...current.content, this._streaming.value] };
+      return computed(() => [...messages, temp]);
+    } else {
+      return this._messages;
+    }
   }
 
   /**
@@ -73,13 +114,13 @@ export class ChatProcessor {
   async request(message: string, history: Message[] = []): Promise<Message[]> {
     log.info('requesting...', { message, history: history.length });
     this._history = history;
-    this._streaming.value = [];
-    this._pending.value = [
+    this._messages.value = [
       createStatic(Message, {
         role: 'user',
         content: [{ type: 'text', text: message }],
       }),
     ];
+    this._streaming.value = undefined;
 
     await this._generate();
     return this._reset();
@@ -96,11 +137,11 @@ export class ChatProcessor {
   }
 
   private async _reset(): Promise<Message[]> {
-    const pending = this._pending.value;
+    const messages = this._messages.value;
     this._history = [];
-    this._streaming.value = [];
-    this._pending.value = [];
-    return pending;
+    this._messages.value = [];
+    this._streaming.value = undefined;
+    return messages;
   }
 
   /**
@@ -111,69 +152,28 @@ export class ChatProcessor {
     try {
       let more = false;
       do {
-        log.info('requesting...', { history: this._history.length, pending: this._pending.value.length });
+        log.info('requesting...', { history: this._history.length, pending: this._messages.value.length });
         this._stream = await this._client.generate({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
-          history: [...this._history, ...this._pending.value],
+          history: [...this._history, ...this._messages.value],
           tools: this._tools,
         });
 
-        const messages: Message[] = [];
-        const parser = new MixedStreamParser();
-        parser.message.on(() => {
-          const message: Message = {
-            id: ObjectId.random(),
-            role: 'assistant',
-            content: [],
-          };
-
-          messages.push(message);
-        });
-        parser.block.on((block) => {
-          const message = messages.at(-1);
-          invariant(message);
-          log.info('block', { block });
-        });
-
-        await parser.parse(this._stream);
-
-        // Consume the stream.
-        // queueMicrotask(async () => {
-        // const parser = new StreamingParser();
-        // const blocks: Block[] = [];
-        // parser.update.on((block) => {
-        //   blocks.push(block);
-        //
-        //   // TODO(burdon): Convert to message.
-        //   this._streaming.value = blocks.map((block) => createStatic(Message, block));
-        // });
-        // invariant(this._stream);
-        // for await (const event of this._stream) {
-        //   log.info('event', { event: event.type });
-        //   switch (event.type) {
-        //     case 'message_stop': {
-        //       // parser.end();
-        //       break;
-        //     }
-        //   }
-        //   // TODO(burdon): Parse stream.
-        //   this._streaming.value = this._stream.messages.map((message) => createStatic(Message, message));
-        // }
-        // });
-
         // Wait until complete.
+        await this._parser.parse(this._stream);
         await this._stream.complete();
-        log.info('response', { messages: messages.length });
-        this._pending.value.push(...messages.map((message) => createStatic(Message, message)));
-        this._streaming.value = [];
+        this._streaming.value = undefined;
+
+        // Add messages.
+        log.info('response', { messages: this._messages.value.length });
 
         // Resolve tool use locally.
         more = false;
-        if (messages.length > 0 && isToolUse(messages.at(-1)!)) {
+        if (this._messages.value.length > 0 && isToolUse(this._messages.value.at(-1)!)) {
           log.info('tool request...');
           const response = await runTools({
-            message: messages.at(-1)!,
+            message: this._messages.value.at(-1)!,
             tools: this._tools ?? [],
             extensions: this._extensions,
           });
@@ -181,7 +181,7 @@ export class ChatProcessor {
           log.info('tool response', { response });
           switch (response.type) {
             case 'continue': {
-              this._pending.value.push(response.message);
+              this._messages.value = [...this._messages.value, response.message];
               more = true;
               break;
             }
@@ -194,7 +194,7 @@ export class ChatProcessor {
     } finally {
       log.info('done');
       this._stream = undefined;
-      this._streaming.value = [];
+      this._streaming.value = undefined;
     }
   }
 }

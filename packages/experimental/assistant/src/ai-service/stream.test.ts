@@ -7,8 +7,9 @@ import { describe, it } from 'vitest';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { MixedStreamParser, type StreamChunk } from './parser';
+import { MixedStreamParser } from './parser';
 import { GenerationStream } from './stream';
+import { type StreamBlock } from './transformer';
 import { type GenerationStreamEvent } from './types';
 
 type Part = { event: string; data: any };
@@ -71,7 +72,7 @@ describe('GenerationStream', () => {
   it('should emit xml blocks', async ({ expect }) => {
     const stream = GenerationStream.fromSSEResponse(new Response(createTestSSEStream(TEST_DATA)));
     const parser = new MixedStreamParser();
-    const blocks: StreamChunk[] = [];
+    const blocks: StreamBlock[] = [];
     parser.block.on((block) => {
       blocks.push(block);
     });

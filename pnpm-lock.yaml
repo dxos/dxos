@@ -5847,6 +5847,12 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      react-markdown:
+        specifier: ^8.0.5
+        version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
+      unified:
+        specifier: ^11.0.0
+        version: 11.0.4
     devDependencies:
       '@dxos/artifact-testing':
         specifier: workspace:*
@@ -45400,7 +45406,7 @@ snapshots:
 
   '@types/hast@2.3.4':
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
 
   '@types/hast@3.0.4':
     dependencies:
@@ -45602,11 +45608,11 @@ snapshots:
 
   '@types/mdast@3.0.10':
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
 
   '@types/mdast@4.0.3':
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
 
   '@types/mdurl@1.0.2': {}
 
@@ -51919,7 +51925,7 @@ snapshots:
       hast-util-whitespace: 2.0.0
       html-void-elements: 2.0.1
       property-information: 6.1.1
-      space-separated-tokens: 2.0.1
+      space-separated-tokens: 2.0.2
       stringify-entities: 4.0.3
       unist-util-is: 5.1.1
 
@@ -54236,7 +54242,7 @@ snapshots:
   mdast-util-directive@3.0.0:
     dependencies:
       '@types/mdast': 4.0.3
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       devlop: 1.1.0
       mdast-util-from-markdown: 2.0.0
       mdast-util-to-markdown: 2.1.0
@@ -54272,7 +54278,7 @@ snapshots:
   mdast-util-from-markdown@2.0.0:
     dependencies:
       '@types/mdast': 4.0.3
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       decode-named-character-reference: 1.0.2
       devlop: 1.1.0
       mdast-util-to-string: 4.0.0
@@ -54381,7 +54387,7 @@ snapshots:
   mdast-util-to-markdown@2.1.0:
     dependencies:
       '@types/mdast': 4.0.3
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       longest-streak: 3.0.1
       mdast-util-phrasing: 4.1.0
       mdast-util-to-string: 4.0.0
@@ -57168,7 +57174,7 @@ snapshots:
       react-is: 18.2.0
       remark-parse: 10.0.1
       remark-rehype: 10.1.0
-      space-separated-tokens: 2.0.1
+      space-separated-tokens: 2.0.2
       style-to-object: 0.4.4
       unified: 10.1.2
       unist-util-visit: 4.1.1
@@ -59993,7 +59999,7 @@ snapshots:
 
   unified@11.0.4:
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       bail: 2.0.2
       devlop: 1.1.0
       extend: 3.0.2
@@ -60033,7 +60039,7 @@ snapshots:
 
   unist-util-is@6.0.0:
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
 
   unist-util-position@4.0.3:
     dependencies:
@@ -60049,7 +60055,7 @@ snapshots:
 
   unist-util-stringify-position@4.0.0:
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
 
   unist-util-visit-parents@2.1.2:
     dependencies:
@@ -60067,7 +60073,7 @@ snapshots:
 
   unist-util-visit-parents@6.0.1:
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       unist-util-is: 6.0.0
 
   unist-util-visit@1.4.1:
@@ -60088,7 +60094,7 @@ snapshots:
 
   unist-util-visit@5.0.0:
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
 
@@ -60362,7 +60368,7 @@ snapshots:
 
   vfile-message@4.0.2:
     dependencies:
-      '@types/unist': 3.0.0
+      '@types/unist': 3.0.3
       unist-util-stringify-position: 4.0.0
 
   vfile@4.2.1:

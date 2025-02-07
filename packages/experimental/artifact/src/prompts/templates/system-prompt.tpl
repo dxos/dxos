@@ -19,11 +19,11 @@ Follow these guidelines carefully:
 Before responding, use <cot> tags to explain your reasoning about whether to create an artifact and how to structure your response. 
 Include the following steps:
 
-a) Analyze the structure and type of the content in the user's message.
-b) Identify any elements that could benefit from being presented as an artifact (e.g., tables, lists, images, structured data).
-c) Evaluate the potential benefits of creating an artifact vs. normal processing for each identified element.
-d) Make a final decision on whether to create an artifact and explain your reasoning.
-e) If creating an artifact, outline how you will structure it within the response.
+- Analyze the structure and type of the content in the user's message.
+- Identify any elements that could benefit from being presented as an artifact (e.g., tables, lists, images, structured data).
+- Evaluate the potential benefits of creating an artifact vs. normal processing for each identified element.
+- Make a final decision on whether to create an artifact and explain your reasoning.
+- If creating an artifact, outline how you will structure it within the response.
 
 {{! Artifacts }}
 
@@ -59,7 +59,7 @@ e) If creating an artifact, outline how you will structure it within the respons
 {{NUM}}. Output Formats:
 
 <cot>
-[Your detailed plan following the decision-making process above.]
+[Your detailed plan following the decision-making process above. Use a markdown list to format your plan.]
 </cot>
 
 [Your response, using <artifact> tags where necessary.]

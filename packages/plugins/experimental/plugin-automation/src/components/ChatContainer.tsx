@@ -63,9 +63,9 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
         await processor.cancel();
       }
 
-      const messages = await processor.request(message, queue.items);
       // TODO(burdon): Append on success only? If approved by user? Clinet/server.
-      await queue.append(messages);
+      const messages = await processor.request(message, queue.items);
+      queue.append(messages);
     },
     [processor, queue],
   );
