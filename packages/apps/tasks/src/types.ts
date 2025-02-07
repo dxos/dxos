@@ -11,7 +11,7 @@ export type TaskProps = {
   completed: boolean;
 };
 
-export class TaskType extends TypedObject({ typename: 'dxos.app.tasks.Task', version: '0.1.0' })({
+export class TaskType extends TypedObject({ typename: 'example.com/type/Task', version: '0.1.0' })({
   title: S.String,
   completed: S.Boolean,
 }) {}
