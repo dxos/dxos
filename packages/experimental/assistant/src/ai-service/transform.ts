@@ -91,15 +91,11 @@ export class StreamTransform {
     // log.info('transform', { chunk });
     this._buffer += chunk;
 
-    log.info('buffer', { buffer: this._buffer });
+    // log.info('buffer', { buffer: this._buffer });
     const results: StreamBlock[] = [];
     const parser = mixedChunk.many().skip(P.optWhitespace);
     const result = parser.parse(this._buffer);
     if (result.status) {
-      if (result.value.length > 0) {
-        console.log(`${JSON.stringify(this._buffer)} => ${result.value.map((c) => c.type)}`);
-      }
-
       for (const chunk of result.value) {
         // Skip if empty line.
         // log.info('chunk', chunk);
