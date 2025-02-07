@@ -13,12 +13,11 @@ import { CloseSidebarButton, ToggleSidebarButton } from './SidebarButton';
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' | 'l0' }>) => {
   if (variant === 'l0') {
     return (
-      <header className='grid grid-cols-subgrid col-span-2 bs-[--l0-size] overflow-hidden relative'>
-        <div role='none' className='absolute block-start-0 bs-0.5 rounded inset-inline-3 bg-base -z-[1]' />
+      <header className='grid grid-cols-subgrid col-span-2 bs-[--l0-size] overflow-hidden border-bs border-separator'>
         <div role='none' className='place-self-center grid'>
           <Surface role='notch-start' limit={1} />
         </div>
-        <div role='none' className='is-[--l01-size] grid items-center pie-2'>
+        <div role='none' className='is-[--l01-size] grid items-center pie-4'>
           <Surface role='header-end' limit={1} />
         </div>
       </header>

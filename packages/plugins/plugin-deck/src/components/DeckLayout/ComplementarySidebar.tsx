@@ -14,7 +14,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
-import { CloseComplementarySidebarButton } from './SidebarButton';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { type Panel } from '../../types';
@@ -68,7 +67,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             attendableId={attended[0]}
             classNames='contents'
           >
-            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch'>
+            <StackItem.Heading classNames='grid items-stretch border-be border-separator'>
               <ScrollArea.Root classNames='flex-1 min-is-0'>
                 <ScrollArea.Viewport>
                   <Tabs.Tablist classNames='bs-[--rail-content] is-min items-stretch pis-[max(.5rem,env(safe-area-inset-left))] sm:pis-2'>
@@ -83,7 +82,6 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                   </ScrollArea.Scrollbar>
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-              <CloseComplementarySidebarButton />
             </StackItem.Heading>
             <ScrollArea.Root>
               <ScrollArea.Viewport>

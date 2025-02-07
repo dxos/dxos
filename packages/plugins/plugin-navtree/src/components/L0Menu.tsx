@@ -62,9 +62,13 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
       {type !== 'collection' && (
         <div
           role='none'
-          className='group-hover/l0i:bg-input transition-colors absolute inset-inline-2 inset-block-1 bg-base rounded -z-[1]'
+          className='group-hover/l0i:bg-input transition-colors absolute inset-inline-2 inset-block-1 bg-input rounded -z-[1]'
         />
       )}
+      <div
+        role='none'
+        className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+      />
       {type === 'tab' ? (
         <span className='place-self-center text-3xl font-light'>{avatarValue}</span>
       ) : (
@@ -138,7 +142,7 @@ export const L0Menu = ({
       onPointerLeave={handleClose}
       onFocus={handleFocus}
       data-state={expanded ? 'expanded' : 'collapsed'}
-      className='group/l0 absolute inset-block-0 inline-start-0 grid grid-cols-[var(--l0-size)_0] grid-rows-[1fr_min-content] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-scrim backdrop-blur'
+      className='group/l0 absolute inset-block-0 inline-start-0 grid grid-cols-[var(--l0-size)_0] grid-rows-[1fr_min-content] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-l0 backdrop-blur border-ie border-separator'
     >
       <Tabs.Tablist classNames='grid grid-cols-subgrid col-span-2 auto-rows-[calc(var(--l0-size)-.5rem)] overflow-y-auto plb-1'>
         {topLevelItems.map((item) => {
