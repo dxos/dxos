@@ -5,9 +5,10 @@
 import { type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
+import { isNotFalsy } from '@dxos/util';
 
 import { type GenerationStream } from './stream';
-import { StreamTransformer, type StreamBlock } from './transformer';
+import { StreamTransform, type StreamBlock } from './transform';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
@@ -29,7 +30,7 @@ export class MixedStreamParser {
   public update = new Event<StreamBlock>();
 
   async parse(stream: GenerationStream) {
-    const transformer = new StreamTransformer();
+    const transformer = new StreamTransform();
     let current: StreamBlock | undefined;
 
     for await (const event of stream) {
@@ -55,19 +56,15 @@ export class MixedStreamParser {
         // Content blocks.
         //
 
-        //
-        //
-        //
-        // TODO(burdon): Block info (e.g., tool use); data type?
-        //
-        //
-        //
-
         case 'content_block_start': {
-          log.info('content_block_start', { event });
           if (current) {
             log.warn('unterminated content block', { current });
             current = undefined;
+          }
+
+          log.info('content_block_start', { event });
+          if (event.content.type === 'tool_use') {
+            current = { type: 'json', disposition: 'tool_use', content: '' };
           }
           break;
         }
@@ -191,10 +188,12 @@ export const createMessageBlock = (block: StreamBlock): MessageContentBlock | un
                 case 'text': {
                   return block.content;
                 }
+
                 default:
                   return null;
               }
             })
+            .filter(isNotFalsy)
             .join('\n');
 
           return { type: 'text', disposition: 'cot', text: content };

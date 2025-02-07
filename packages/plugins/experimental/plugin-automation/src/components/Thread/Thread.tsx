@@ -7,6 +7,7 @@ import React, {
   type PropsWithChildren,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -30,9 +31,12 @@ export type ThreadProps = {
 export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  const [text, setText] = useState('');
-  useEffect(() => scroll(), [messages]);
+  useEffect(() => {
+    const t = setTimeout(() => scroll(), 100);
+    return () => clearTimeout(t);
+  }, [messages]);
 
+  const [text, setText] = useState('');
   const handleKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (ev) => {
       switch (ev.key) {
@@ -58,8 +62,8 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div ref={scrollRef} className='flex flex-col grow overflow-x-hidden overflow-y-scroll scrollbar-thin'>
-        {messages.map((message, i) => (
-          <ThreadMessage key={i} classNames='px-4 py-2' message={message} debug={debug} />
+        {messages.map((message) => (
+          <ThreadMessage key={message.id} classNames='px-4 py-2' message={message} debug={debug} />
         ))}
       </div>
 
@@ -101,14 +105,18 @@ export const ThreadMessage = ({ classNames, message, debug }: ThreadMessageProps
       <div className={mx('flex flex-col gap-2')}>
         {debug && <div className='text-xs text-subdued'>{message.id}</div>}
         {content.map((block, idx) => (
-          <div
-            key={idx}
-            className={mx('p-1 px-2 overflow-hidden rounded-md', role === 'user' ? 'dark:bg-blue-800' : 'bg-base')}
-          >
-            {getContent(block)}
-          </div>
+          <Block key={idx} role={role} block={block} />
         ))}
       </div>
+    </div>
+  );
+};
+
+const Block = ({ role, block }: Pick<Message, 'role'> & { block: MessageContentBlock }) => {
+  const content = useMemo(() => getContent(block), [block]);
+  return (
+    <div className={mx('p-1 px-2 overflow-hidden rounded-md', role === 'user' ? 'dark:bg-blue-800' : 'bg-base')}>
+      {content}
     </div>
   );
 };
@@ -116,6 +124,7 @@ export const ThreadMessage = ({ classNames, message, debug }: ThreadMessageProps
 const getContent = (block: MessageContentBlock) => {
   const titles: Record<string, string> = {
     ['cot' as const]: 'Chain of thought',
+    ['tool_use' as const]: 'Tool',
   };
 
   // TODO(burdon): Pills: open/close.
@@ -123,14 +132,19 @@ const getContent = (block: MessageContentBlock) => {
     case 'text': {
       const title = block.disposition ? titles[block.disposition] : undefined;
       return (
-        <Block title={title}>
+        <Container title={title}>
           <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
-        </Block>
+        </Container>
       );
     }
 
     case 'json': {
-      return <Json data={safeParseJson(block.json)} />;
+      const title = block.disposition ? titles[block.disposition] : undefined;
+      return (
+        <Container title={title}>
+          <Json data={safeParseJson(block.json)} />
+        </Container>
+      );
     }
 
     default: {
@@ -141,7 +155,7 @@ const getContent = (block: MessageContentBlock) => {
 
 // TODO(burdon): Typewriter effect if streaming.
 // TODO(burdon): Open/close is reset after streaming stops.
-const Block = ({ title, children }: PropsWithChildren<{ title?: string }>) => {
+const Container = ({ title, children }: PropsWithChildren<{ title?: string }>) => {
   const [open, setOpen] = useState(true);
   return (
     <div>

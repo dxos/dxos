@@ -50,10 +50,10 @@ export class ChatProcessor {
   /** Prior history from queue. */
   private _history: Message[] = [];
 
-  /** Pending messages (incl. the initial user message). */
+  /** Pending messages (incl. the user request). */
   private _messages: Signal<Message[]> = signal([]);
 
-  /** Streaming messages (from the AI service). */
+  /** Current streaming block (from the AI service). */
   private _streaming: Signal<MessageContentBlock | undefined> = signal(undefined);
 
   constructor(
@@ -163,14 +163,15 @@ export class ChatProcessor {
         // Wait until complete.
         await this._parser.parse(this._stream);
         await this._stream.complete();
-        this._streaming.value = undefined;
 
         // Add messages.
-        log.info('response', { messages: this._messages.value.length });
+        log.info('response', { messages: this._messages.value });
 
         // Resolve tool use locally.
         more = false;
-        if (this._messages.value.length > 0 && isToolUse(this._messages.value.at(-1)!)) {
+        const message = this._messages.value.at(-1);
+        invariant(message);
+        if (isToolUse(message)) {
           log.info('tool request...');
           const response = await runTools({
             message: this._messages.value.at(-1)!,

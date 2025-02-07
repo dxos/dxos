@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { MixedStreamParser } from './parser';
 import { GenerationStream } from './stream';
-import { type StreamBlock } from './transformer';
+import { type StreamBlock } from './transform';
 import { type GenerationStreamEvent } from './types';
 
 type Part = { event: string; data: any };

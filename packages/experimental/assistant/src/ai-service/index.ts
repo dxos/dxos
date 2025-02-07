@@ -5,5 +5,5 @@
 export * from './client';
 export * from './parser';
 export * from './stream';
-export * from './transformer';
+export * from './transform';
 export * from './types';

@@ -34,18 +34,24 @@ export const GenerateRequest = S.Struct({
   spaceId: S.optional(SpaceIdSchema),
   threadId: S.optional(ObjectId),
 
+  // TODO(burdon): Make optional with default.
   model: LLMModel,
+
+  /**
+   * Current request.
+   */
+  // TODO(burdon): Remove from history.
+  // prompt: Message,
+
+  /**
+   * System instructions to the LLM.
+   */
+  systemPrompt: S.optional(S.String),
 
   /**
    * History of messages to include in the context window.
    */
   history: S.optional(S.Array(Message)),
-
-  /**
-   * System instructions to the LLM.
-   */
-  // TODO(dmaretskyi): Should this be part of the thread?.
-  systemPrompt: S.optional(S.String),
 
   /**
    * Tools available for the LLM.

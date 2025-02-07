@@ -145,7 +145,11 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   };
 };
 
-export const isToolUse = (message: Message) => message.content.at(-1)?.type === 'tool_use';
+export const isToolUse = (message: Message) => {
+  const block = message.content.at(-1);
+  invariant(block);
+  return block.type === 'json' && block.disposition === 'tool_use';
+};
 
 export type RunToolsOptions = {
   message: Message;
