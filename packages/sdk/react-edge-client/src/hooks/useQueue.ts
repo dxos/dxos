@@ -37,6 +37,7 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
     }
 
     try {
+      console.log('!!!!!!!!!!!');
       setItems((prevItems) => [...prevItems, ...items]);
       void client.insertIntoQueue(subspaceTag, spaceId, queueId, items);
     } catch (err) {

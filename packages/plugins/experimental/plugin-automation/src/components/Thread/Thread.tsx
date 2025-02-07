@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
-import { Button, Icon, Input, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -80,8 +80,6 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
             onKeyDown={handleKeyDown}
           />
         </Input.Root>
-        {/* TODO(burdon): Create pill. */}
-        {debug && <Button onClick={() => onSubmit('show me a chess puzzle')}>Test</Button>}
         <Icon
           icon={'ph--spinner-gap--regular'}
           classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}
@@ -108,7 +106,7 @@ export const ThreadMessage: FC<
   const { role, content = [] } = message;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
-      <div className={mx('flex flex-col gap-2')}>
+      <div className={mx('flex flex-col gap-2 overflow-hidden')}>
         {debug && <div className='text-xs text-subdued'>{message.id}</div>}
         {content.map((block, idx) => (
           <Block key={idx} id={String(idx)} role={role} block={block} />

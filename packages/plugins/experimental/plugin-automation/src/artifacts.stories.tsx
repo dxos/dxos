@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -29,7 +29,7 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useQueue } from '@dxos/react-edge-client';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
@@ -38,6 +38,12 @@ import { ChatProcessor } from './hooks';
 import { createProcessorOptions } from './testing';
 
 const endpoints = localServiceEndpoints;
+
+const prompts = [
+  // Test prompts.
+  'hello',
+  'show me a chess puzzle',
+];
 
 type RenderProps = {
   items?: IsObject[];
@@ -94,7 +100,12 @@ const Render = ({ items: _items }: RenderProps) => {
   // State.
   const artifactItems = artifactsContext.items.toReversed();
   const messages = [...queue.items, ...processor.messages.value];
-  log.info('messages', { messages: messages.map((m) => m.id) });
+
+  log.info('messages', {
+    messages: messages.map((m) => m.id),
+    queue: queue.items.length,
+    proc: processor.messages.value.length,
+  });
 
   const handleSubmit = async (message: string) => {
     // TODO(burdon): Button to cancel. Otherwise queue request.
@@ -105,7 +116,15 @@ const Render = ({ items: _items }: RenderProps) => {
     // TODO(burdon): Append on success only? If approved by user? Clinet/server.
     const messages = await processor.request(message, queue.items);
     queue.append(messages);
+    console.log('===', messages.length, queue.items.length);
   };
+
+  const [test, setTest] = useState(0);
+  const handleTest = useCallback(() => {
+    void handleSubmit(prompts[test]);
+    log.info('test', { test });
+    setTest((test) => (test < prompts.length - 1 ? test + 1 : 0));
+  }, [test]);
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -133,6 +152,7 @@ const Render = ({ items: _items }: RenderProps) => {
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor.cancel()} />
+            <Button onClick={handleTest}>Test</Button>
           </Input.Root>
         </Toolbar.Root>
 
