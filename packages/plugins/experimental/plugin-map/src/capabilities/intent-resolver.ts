@@ -10,11 +10,17 @@ import { MapAction, MapType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
-    createResolver(MapAction.Create, ({ name, coordinates }) => ({
-      data: { object: create(MapType, { name, coordinates }) },
-    })),
-    createResolver(MapAction.Toggle, () => {
-      const state = context.requestCapability(MapCapabilities.MutableState);
-      state.type = state.type === 'globe' ? 'map' : 'globe';
+    createResolver({
+      intent: MapAction.Create,
+      resolve: ({ name, coordinates }) => ({
+        data: { object: create(MapType, { name, coordinates }) },
+      }),
+    }),
+    createResolver({
+      intent: MapAction.Toggle,
+      resolve: () => {
+        const state = context.requestCapability(MapCapabilities.MutableState);
+        state.type = state.type === 'globe' ? 'map' : 'globe';
+      },
     }),
   ]);

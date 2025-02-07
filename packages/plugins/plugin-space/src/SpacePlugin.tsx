@@ -141,7 +141,6 @@ export const SpacePlugin = ({
       activatesOn: allOf(
         Events.DispatcherReady,
         Events.LayoutReady,
-        Events.LocationReady,
         Events.AppGraphReady,
         AttentionEvents.AttentionReady,
         SpaceEvents.StateReady,

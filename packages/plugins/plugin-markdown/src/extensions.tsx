@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import {
   createIntent,
-  NavigationAction,
+  LayoutAction,
   type PromiseIntentDispatcher,
   useCapabilities,
   useIntentDispatcher,
@@ -148,11 +148,12 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
             dispatch && document
               ? onRenderLink((id: string) => {
                   void dispatch(
-                    createIntent(NavigationAction.AddToActive, {
-                      id,
+                    createIntent(LayoutAction.Open, {
                       part: 'main',
-                      pivotId: fullyQualifiedId(document),
-                      scrollIntoView: true,
+                      subject: [id],
+                      options: {
+                        pivotId: fullyQualifiedId(document),
+                      },
                     }),
                   );
                 })

@@ -12,28 +12,34 @@ import { createKanban, KanbanAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
-    createResolver(KanbanAction.Create, async ({ space }) => ({
-      data: { object: await createKanban(space) },
-    })),
-    createResolver(KanbanAction.DeleteCardField, ({ kanban, fieldId, deletionData }, undo) => {
-      invariant(kanban.cardView);
+    createResolver({
+      intent: KanbanAction.Create,
+      resolve: async ({ space }) => ({
+        data: { object: await createKanban(space) },
+      }),
+    }),
+    createResolver({
+      intent: KanbanAction.DeleteCardField,
+      resolve: ({ kanban, fieldId, deletionData }, undo) => {
+        invariant(kanban.cardView);
 
-      const schema =
-        kanban.cardView.target && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.type);
-      invariant(schema);
-      const projection = new ViewProjection(schema, kanban.cardView.target!);
+        const schema =
+          kanban.cardView.target && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.type);
+        invariant(schema);
+        const projection = new ViewProjection(schema, kanban.cardView.target!);
 
-      if (!undo) {
-        const { deleted, index } = projection.deleteFieldProjection(fieldId);
-        return {
-          undoable: {
-            message: ['card field deleted label', { ns: KANBAN_PLUGIN }],
-            data: { deletionData: { ...deleted, index } },
-          },
-        };
-      } else if (undo && deletionData) {
-        const { field, props, index } = deletionData;
-        projection.setFieldProjection({ field, props }, index);
-      }
+        if (!undo) {
+          const { deleted, index } = projection.deleteFieldProjection(fieldId);
+          return {
+            undoable: {
+              message: ['card field deleted label', { ns: KANBAN_PLUGIN }],
+              data: { deletionData: { ...deleted, index } },
+            },
+          };
+        } else if (undo && deletionData) {
+          const { field, props, index } = deletionData;
+          projection.setFieldProjection({ field, props }, index);
+        }
+      },
     }),
   ]);

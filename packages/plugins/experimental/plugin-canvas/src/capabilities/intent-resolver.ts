@@ -12,13 +12,16 @@ import { CanvasAction } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(CanvasAction.Create, ({ name }) => ({
-      data: {
+    createResolver({
+      intent: CanvasAction.Create,
+      resolve: ({ name }) => ({
+        data: {
         object: create(CanvasBoardType, {
           name,
           computeGraph: makeRef(create(ComputeGraph, { graph: { nodes: [], edges: [] } })),
           layout: { nodes: [], edges: [] },
         }),
       },
-    })),
+      }),
+    }),
   );

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { createIntent, useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
@@ -24,7 +24,7 @@ import { ViewProjection } from '@dxos/schema';
 import { TableAction } from '../types';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
+const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
 

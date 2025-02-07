@@ -108,7 +108,7 @@ export namespace SpaceAction {
     input: SpaceForm,
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
       space: SpaceSchema,
     }),
   }) {}
@@ -194,7 +194,7 @@ export namespace SpaceAction {
     }),
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
       object: EchoObjectSchema,
     }),
   }) {}

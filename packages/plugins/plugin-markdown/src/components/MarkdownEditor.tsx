@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorAction,
@@ -92,8 +92,13 @@ export const MarkdownEditor = ({
   // TODO(Zan): Factor out to thread plugin.
   const commentObserver = useCommentState(toolbarState);
   const onCommentClick = useCallback(async () => {
-    await dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }));
-    await dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true }));
+    await dispatch(
+      createIntent(LayoutAction.UpdateComplementary, {
+        part: 'complementary',
+        subject: 'comments',
+        options: { state: true },
+      }),
+    );
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 

@@ -5,13 +5,7 @@
 import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
-import {
-  type LayoutPart,
-  SettingsAction,
-  useIntentDispatcher,
-  createIntent,
-  usePluginManager,
-} from '@dxos/app-framework';
+import { SettingsAction, useIntentDispatcher, createIntent, usePluginManager } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import {
   Button,
@@ -20,7 +14,6 @@ import {
   Popover,
   Tooltip,
   Trans,
-  useDefaultValue,
   useSidebars,
   useTranslation,
   Icon,
@@ -37,8 +30,7 @@ const repo = 'https://github.com/dxos/dxos';
 
 const VERSION_REGEX = /([\d.]+)/;
 
-export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
-  const layoutPart = useDefaultValue(props.layoutPart, () => 'sidebar');
+export const NavTreeFooter = (props: { reverse?: boolean }) => {
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
@@ -59,7 +51,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
       role='none'
       className={mx(
         'flex pbe-[env(safe-area-inset-bottom)] box-content justify-end',
-        layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
+        props.reverse && 'md:justify-end flex-row-reverse',
       )}
     >
       <Popover.Root>

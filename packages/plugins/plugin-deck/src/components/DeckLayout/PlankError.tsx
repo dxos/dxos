@@ -4,12 +4,11 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { type LayoutCoordinate } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { NodePlankHeading } from './NodePlankHeading';
+import { NodePlankHeading, type NodePlankHeadingProps } from './NodePlankHeading';
 import { PlankLoading } from './PlankLoading';
 import { DECK_PLUGIN } from '../../meta';
 
@@ -33,11 +32,13 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
 };
 
 export const PlankError = ({
-  layoutCoordinate,
+  id,
+  part,
   node,
   error,
 }: {
-  layoutCoordinate: LayoutCoordinate;
+  id: string;
+  part: NodePlankHeadingProps['part'];
   node?: Node;
   error?: Error;
 }) => {
@@ -47,7 +48,7 @@ export const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading coordinate={layoutCoordinate} node={node} pending={!timedOut} />
+      <NodePlankHeading id={id} part={part} node={node} pending={!timedOut} />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );
