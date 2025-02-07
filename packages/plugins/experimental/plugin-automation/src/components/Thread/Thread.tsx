@@ -157,20 +157,33 @@ const getContent = (block: MessageContentBlock) => {
 // TODO(burdon): Open/close is reset after streaming stops.
 const Container = ({ title, children }: PropsWithChildren<{ title?: string }>) => {
   const [open, setOpen] = useState(true);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   return (
     <div>
       {title && (
-        <div className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer'>
+        <div
+          className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer'
+          onClick={() => setOpen(!open)}
+        >
           <Icon
             size={4}
             icon={'ph--caret-right--regular'}
-            classNames={['transition duration-200', open ? 'rotate-90' : 'transform-none']}
-            onClick={() => setOpen(!open)}
+            classNames={['transition transition-transform duration-200', open ? 'rotate-90' : 'transform-none']}
           />
           <span>{title}</span>
         </div>
       )}
-      <div className={mx('transition duration-500', open ? 'opactity-100' : 'opacity-20')}>{open && children}</div>
+      <div
+        className={mx('transition-[height] duration-500 overflow-hidden')}
+        style={{
+          height: open ? `${contentRef.current?.scrollHeight}px` : '0px',
+        }}
+      >
+        <div ref={contentRef} className={mx('transition-opacity duration-500', open ? 'opactity-100' : 'opacity-0')}>
+          {children}
+        </div>
+      </div>
     </div>
   );
 };
