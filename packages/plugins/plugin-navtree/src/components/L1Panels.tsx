@@ -44,7 +44,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
             gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}
           />
-          {navTreeContext.hoistStatusbar && <Surface role='status-bar--sidebar-footer' limit={1} />}
+          {!navTreeContext.hoistStatusbar && <Surface role='status-bar--sidebar-footer' limit={1} />}
         </>
       )}
     </Tabs.Tabpanel>
