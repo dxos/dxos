@@ -25,9 +25,10 @@ import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
-import { useClient } from '@dxos/react-client';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { useSpace } from '@dxos/react-client/echo';
 import { useQueue } from '@dxos/react-edge-client';
 import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -50,7 +51,7 @@ type RenderProps = {
 };
 
 const Render = ({ items: _items }: RenderProps) => {
-  const client = useClient();
+  const space = useSpace();
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Configuration.
@@ -93,12 +94,12 @@ const Render = ({ items: _items }: RenderProps) => {
         aiClient,
         tools,
         {
-          space: client.spaces.default,
+          space,
           dispatch,
         },
         createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
       ),
-    [client, aiClient, tools, artifactDefinitions],
+    [aiClient, tools, space, dispatch, artifactDefinitions],
   );
 
   // State.
@@ -193,11 +194,20 @@ const meta: Meta<typeof Render> = {
   title: 'plugins/plugin-automation/artifacts',
   render: Render,
   decorators: [
-    //
+    // prettier-ignore
     withSignals,
-    withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({
-      plugins: [IntentPlugin(), ChessPlugin(), MapPlugin()],
+      plugins: [
+        IntentPlugin(),
+        ClientPlugin({
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+          },
+        }),
+        SpacePlugin({ observability: false }),
+        ChessPlugin(),
+        MapPlugin(),
+      ],
       capabilities,
     }),
     withTheme,

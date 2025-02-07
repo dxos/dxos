@@ -44,11 +44,17 @@ export type SpacePluginOptions = {
    * Query parameter for the invitation code.
    */
   invitationParam?: string;
+
+  /**
+   * Whether to send observability events.
+   */
+  observability?: boolean;
 };
 
 export const SpacePlugin = ({
   invitationUrl = window.location.origin,
   invitationParam = 'spaceInvitationCode',
+  observability = true,
 }: SpacePluginOptions = {}) => {
   const createInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -117,7 +123,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
-      activate: (context) => IntentResolver({ createInvitationUrl, context }),
+      activate: (context) => IntentResolver({ createInvitationUrl, context, observability }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
