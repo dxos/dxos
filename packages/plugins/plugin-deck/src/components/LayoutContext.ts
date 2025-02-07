@@ -4,9 +4,10 @@
 
 import { type Context, createContext, useContext } from 'react';
 
-import type { Layout } from '@dxos/app-framework';
 import { raise } from '@dxos/debug';
 
-export const LayoutContext: Context<Layout | null> = createContext<Layout | null>(null);
+import { type DeckState } from '../types';
 
-export const useLayout = (): Layout => useContext(LayoutContext) ?? raise(new Error('Missing LayoutContext'));
+export const LayoutContext: Context<DeckState | null> = createContext<DeckState | null>(null);
+
+export const useLayout = (): DeckState => useContext(LayoutContext) ?? raise(new Error('Missing LayoutContext'));

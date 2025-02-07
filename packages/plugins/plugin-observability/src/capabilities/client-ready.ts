@@ -34,11 +34,10 @@ export default async ({ context, namespace, observability }: ClientReadyOptions)
       environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
     if (!state.notified && notify) {
       await dispatch(
-        createIntent(LayoutAction.SetLayout, {
-          element: 'toast',
+        createIntent(LayoutAction.AddToast, {
+          part: 'toast',
           subject: {
             id: `${OBSERVABILITY_PLUGIN}/notice`,
-            // TODO(wittjosiah): Non-react translation utils.
             title: ['observability toast label', { ns: OBSERVABILITY_PLUGIN }],
             description: ['observability toast description', { ns: OBSERVABILITY_PLUGIN }],
             duration: Infinity,

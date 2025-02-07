@@ -13,6 +13,11 @@ export const GeneratorPlugin = () =>
     defineModule({
       id: 'dxos.org/test/generator/main',
       activatesOn: Events.Startup,
-      activate: async () => [await Main(), await Toolbar()],
+      activate: Main,
+    }),
+    defineModule({
+      id: 'dxos.org/test/generator/toolbar',
+      activatesOn: Events.Startup,
+      activate: Toolbar,
     }),
   ]);

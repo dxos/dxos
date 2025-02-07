@@ -2,19 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  LayoutAction,
-  NavigationAction,
-  openIds,
-  type PluginsContext,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, LayoutAction, type PluginsContext } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 
-import { DECK_PLUGIN } from '../../meta';
+import { DeckCapabilities } from './capabilities';
+import { DECK_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(
@@ -23,13 +16,15 @@ export default (context: PluginsContext) =>
       id: DECK_PLUGIN,
       filter: (node): node is Node<null> => node.id === ROOT_ID,
       actions: () => {
+        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+
         // NOTE(Zan): This is currently disabled.
         // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
         const _fullscreen = {
-          id: `${LayoutAction.SetLayoutMode._tag}/fullscreen`,
+          id: `${LayoutAction.UpdateLayout._tag}/fullscreen`,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }));
+            await dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'fullscreen' } }));
           },
           properties: {
             label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
@@ -42,13 +37,15 @@ export default (context: PluginsContext) =>
         };
 
         const closeCurrent = {
-          id: `${NavigationAction.Close._tag}/current`,
+          id: `${LayoutAction.Close._tag}/current`,
           data: async () => {
             const attention = context.requestCapability(AttentionCapabilities.Attention);
             const attended = attention.current.at(-1);
             if (attended) {
               const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-              await dispatch(createIntent(NavigationAction.Close, { activeParts: { main: [attended] } }));
+              await dispatch(
+                createIntent(LayoutAction.Close, { part: 'main', subject: [attended], options: { state: false } }),
+              );
             }
           },
           properties: {
@@ -58,18 +55,13 @@ export default (context: PluginsContext) =>
         };
 
         const closeOthers = {
-          id: `${NavigationAction.Close._tag}/others`,
+          id: `${LayoutAction.Close._tag}/others`,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            const location = context.requestCapability(Capabilities.Location);
             const attention = context.requestCapability(AttentionCapabilities.Attention);
             const attended = attention.current.at(-1);
-            const ids = openIds(location.active, ['main']).filter((id) => id !== attended);
-            await dispatch(
-              createIntent(NavigationAction.Close, {
-                activeParts: { main: ids },
-              }),
-            );
+            const ids = layout.deck.filter((id) => id !== attended);
+            await dispatch(createIntent(LayoutAction.Close, { part: 'main', subject: ids, options: { state: false } }));
           },
           properties: {
             label: ['close others label', { ns: DECK_PLUGIN }],
@@ -78,14 +70,11 @@ export default (context: PluginsContext) =>
         };
 
         const closeAll = {
-          id: `${NavigationAction.Close._tag}/all`,
+          id: `${LayoutAction.Close._tag}/all`,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            const location = context.requestCapability(Capabilities.Location);
             await dispatch(
-              createIntent(NavigationAction.Close, {
-                activeParts: { main: openIds(location.active, ['main']) },
-              }),
+              createIntent(LayoutAction.Close, { part: 'main', subject: layout.deck, options: { state: false } }),
             );
           },
           properties: {
@@ -94,8 +83,7 @@ export default (context: PluginsContext) =>
           },
         };
 
-        const layoutMode = context.requestCapabilities(Capabilities.Layout)[0]?.layoutMode;
-        return layoutMode === 'deck' ? [closeCurrent, closeOthers, closeAll] : [];
+        return !layout.solo ? [closeCurrent, closeOthers, closeAll] : [];
       },
     }),
   );
