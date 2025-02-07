@@ -4,23 +4,26 @@
 
 import React from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
 
-export const ToggleSidebarButton = () => {
+export const ToggleSidebarButton = ({
+  classNames,
+  variant = 'ghost',
+}: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
   const layoutContext = useLayout();
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
-      variant='ghost'
+      variant={variant}
       iconOnly
       icon='ph--sidebar--regular'
       size={4}
       label={t('open navigation sidebar label')}
       onClick={() => (layoutContext.sidebarOpen = !layoutContext.sidebarOpen)}
-      classNames='!pli-2 order-first'
+      classNames={['!pli-2 order-first', classNames]}
     />
   );
 };
