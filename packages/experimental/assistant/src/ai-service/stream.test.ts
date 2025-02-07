@@ -28,6 +28,8 @@ const TEST_DATA = [
     '  <option value="1" />',
     '</select>',
 
+    // 'Hello',
+
     // XML
     '<cot>',
     '  1. Analyze content.',
@@ -69,36 +71,43 @@ describe('GenerationStream', () => {
     expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(3);
   });
 
-  it.only('should emit xml blocks', async ({ expect }) => {
-    const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA)));
-    const parser = new MixedStreamParser();
-    const blocks: StreamBlock[] = [];
-    parser.block.on((block) => {
-      blocks.push(block);
+  for (const splitBy of ['word', 'character'] as const) {
+    it(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
+      const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA, { splitBy })));
+      const parser = new MixedStreamParser();
+      const blocks: StreamBlock[] = [];
+      parser.block.on((block) => {
+        blocks.push(block);
+      });
+
+      await parser.parse(stream);
+
+      log.info('blocks', { blocks });
+      expect(blocks.map((block) => block.type)).to.deep.eq([
+        //
+        'json',
+        'text',
+        'xml',
+        'text',
+        'xml',
+        'text',
+        'xml',
+        'text',
+        'xml',
+        'text',
+        'json',
+      ]);
     });
-
-    await parser.parse(stream);
-
-    log('blocks', { blocks });
-    expect(blocks.map((block) => block.type)).to.deep.eq([
-      //
-      'json',
-      'text',
-      'xml',
-      'xml',
-      'text',
-      'xml',
-      'xml',
-      'text',
-      'json',
-    ]);
-  });
+  }
 });
 
 /**
  * Mock server-side events (SSE) stream.
  */
-export const createTestSSEStream = (blocks: (string | object)[]): ReadableStream => {
+export const createTestSSEStream = (
+  blocks: (string | object)[],
+  { splitBy = 'word' }: { splitBy?: 'word' | 'character' } = {},
+): ReadableStream => {
   const encoder = new TextEncoder();
 
   return new ReadableStream({
@@ -120,10 +129,14 @@ export const createTestSSEStream = (blocks: (string | object)[]): ReadableStream
 
         let index = 0;
         if (typeof block === 'string') {
-          for (const word of block.split(/[ \t]+/)) {
+          for (const word of block.split(splitBy === 'word' ? /([ \t\n]+)/ : '')) {
             push({
               event: 'content_block_delta',
-              data: { type: 'content_block_delta', index, delta: { type: 'text_delta', text: word + ' ' } },
+              data: {
+                type: 'content_block_delta',
+                index,
+                delta: { type: 'text_delta', text: word },
+              },
             });
             index += word.length + 1;
           }
