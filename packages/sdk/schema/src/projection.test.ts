@@ -363,8 +363,8 @@ describe('ViewProjection', () => {
     const { props } = projection.getFieldProjection(fieldId);
     expect(props.format).to.equal(FormatEnum.SingleSelect);
     expect(props.options).to.deep.equal([
-      { id: 'draft', label: 'Draft', color: '#gray' },
-      { id: 'published', label: 'Published', color: '#green' },
+      { id: 'draft', title: 'Draft', color: '#gray' },
+      { id: 'published', title: 'Published', color: '#green' },
     ]);
 
     // Update options

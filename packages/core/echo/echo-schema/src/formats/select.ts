@@ -9,7 +9,7 @@ import { S } from '@dxos/effect';
  * Used to define choices in a {single|multi}-select field.
  *
  * @property {string} id - Stable identifier for the option. Must be non-empty.
- * @property {string} label - Display text shown to users in the UI.
+ * @property {string} title - Display text shown to users in the UI.
  * @property {string} color - Color code (e.g., hex) used for visual styling.
  */
 export const SelectOptionSchema = S.Struct({

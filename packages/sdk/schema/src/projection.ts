@@ -94,7 +94,7 @@ export class ViewProjection {
         ? {
             options: oneOf.map((opt) => ({
               id: opt.const as string,
-              label: opt.title ?? (opt.const as string),
+              title: opt.title ?? (opt.const as string),
               color: (opt as any).color,
             })),
           }
@@ -161,11 +161,7 @@ export class ViewProjection {
       }
 
       if (format === FormatEnum.SingleSelect && options) {
-        jsonProperty.oneOf = options.map((opt) => ({
-          const: opt.id,
-          title: opt.title,
-          color: opt.color,
-        }));
+        jsonProperty.oneOf = options.map(({ id, title, color }) => ({ const: id, title, color }));
       }
 
       invariant(type !== TypeEnum.Ref);
