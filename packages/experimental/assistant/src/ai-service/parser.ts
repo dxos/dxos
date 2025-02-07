@@ -85,8 +85,8 @@ export class MixedStreamParser {
                   //
                   // XML Fragment.
                   //
-                  case 'xml': {
-                    if (chunk.type === 'xml') {
+                  case 'tag': {
+                    if (chunk.type === 'tag') {
                       if (chunk.selfClosing) {
                         current.content.push(chunk);
                       } else if (chunk.closing) {
@@ -103,7 +103,7 @@ export class MixedStreamParser {
                       } else {
                         const last = current.content[current.content.length - 1];
                         if (last.type === 'text') {
-                          last.content = join(last.content, chunk.content);
+                          last.content += chunk.content;
                         } else {
                           current.content.push(chunk);
                         }
@@ -116,7 +116,7 @@ export class MixedStreamParser {
                   // Text Fragment.
                   //
                   case 'text': {
-                    if (chunk.type === 'xml') {
+                    if (chunk.type === 'tag') {
                       this.block.emit(current);
                       if (chunk.selfClosing) {
                         this.block.emit(chunk);
@@ -126,7 +126,7 @@ export class MixedStreamParser {
                       }
                     } else {
                       // Append text.
-                      current.content = join(current.content, chunk.content);
+                      current.content += chunk.content;
                     }
                     break;
                   }
@@ -135,7 +135,7 @@ export class MixedStreamParser {
                   // No current chunk.
                   //
                   default: {
-                    if (chunk.type === 'xml' && chunk.selfClosing) {
+                    if (chunk.type === 'tag' && chunk.selfClosing) {
                       this.block.emit(chunk);
                     } else {
                       current = chunk;
@@ -182,12 +182,18 @@ export class MixedStreamParser {
  */
 export const createMessageBlock = (block: StreamBlock): MessageContentBlock | undefined => {
   switch (block.type) {
+    //
+    // Text
+    //
     case 'text': {
       return { type: 'text', text: block.content };
       break;
     }
 
-    case 'xml': {
+    //
+    // XML
+    //
+    case 'tag': {
       switch (block.tag) {
         case 'cot': {
           const content = block.content
@@ -214,34 +220,11 @@ export const createMessageBlock = (block: StreamBlock): MessageContentBlock | un
       break;
     }
 
+    //
+    // JSON
+    //
     case 'json': {
       return { type: 'json', disposition: 'artifact', json: block.content };
     }
-  }
-};
-
-/**
- * Trim whitespace preserving EOL characters.
- */
-const trim = (text: string): string => {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .join('\n');
-};
-
-/**
- * Join strings.
- */
-// TODO(burdon): Depends on tokenization.
-const join = (str1: string, str2: string): string => {
-  // const trim1 = trim(str1);
-  // const trim2 = trim(str2);
-
-  const endWithNonAlpha = /[^a-zA-Z0-9]$/.test(str1);
-  if (endWithNonAlpha) {
-    return str1 + '_' + str2;
-  } else {
-    return str1 + str2;
   }
 };

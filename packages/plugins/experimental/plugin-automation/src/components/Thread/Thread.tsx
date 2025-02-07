@@ -111,10 +111,7 @@ export const ThreadMessage: FC<
       <div className={mx('flex flex-col gap-2')}>
         {debug && <div className='text-xs text-subdued'>{message.id}</div>}
         {content.map((block, idx) => (
-          <>
-            {debug && <div className='text-xs text-subdued'>{idx}</div>}
-            <Block key={idx} id={String(idx)} role={role} block={block} />
-          </>
+          <Block key={idx} id={String(idx)} role={role} block={block} />
         ))}
       </div>
     </div>
