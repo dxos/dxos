@@ -39,7 +39,6 @@ declare global {
  * Maintains a queue of messages and handles streaming responses from the AI service.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Rename.
 export class ChatProcessor {
   /** Stream parser. */
   private _parser = new MixedStreamParser();
