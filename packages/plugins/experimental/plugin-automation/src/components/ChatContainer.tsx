@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Message } from '@dxos/artifact';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -40,7 +40,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
       new ChatProcessor(
         aiClient,
         tools,
-        { space, dispatch },
+        { space, dispatch, pivotId: fullyQualifiedId(chat) },
         { model: '@anthropic/claude-3-5-sonnet-20241022', systemPrompt },
       ),
     [aiClient, tools, space, systemPrompt],
