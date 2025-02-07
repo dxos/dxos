@@ -64,12 +64,12 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
     <Root
       {...(rootProps as any)}
       data-type={type}
-      className='group/l0i grid grid-cols-subgrid col-span-2 overflow-hidden relative data[type!="collection"]:cursor-pointer'
+      className='group/l0i ch-focus-ring-group grid grid-cols-subgrid col-span-2 overflow-hidden relative data[type!="collection"]:cursor-pointer'
     >
       {type !== 'collection' && (
         <div
           role='none'
-          className='group-hover/l0i:bg-input transition-colors absolute inset-inline-2 inset-block-1 bg-input rounded -z-[1]'
+          className='absolute -z-[1] inset-inline-2 inset-block-1 bg-input rounded group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors'
         />
       )}
       <div
