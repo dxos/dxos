@@ -23,9 +23,11 @@ const loadSocketSupplyModules = async () => {
   const app = await import(/* @vite-ignore */ module);
   const windowModule = 'socket:window';
   const socketWindow = await import(/* @vite-ignore */ windowModule);
+  const processModule = 'socket:process';
+  const socketProcess = await import(/* @vite-ignore */ processModule);
   const { meta_title: appName } = app.config;
 
-  return { app, socketWindow, appName };
+  return { app, socketWindow, socketProcess, appName };
 };
 
 const configureDesktopWindowSizing = async (app: any) => {
@@ -154,10 +156,12 @@ const setupGlobalHotkey = async (socketWindow: any, appWindow: any, dispatch: an
 };
 
 export const initializeNativeApp = async (context: PluginsContext) => {
-  const { app, socketWindow, appName } = await loadSocketSupplyModules();
+  const { app, socketWindow, socketProcess, appName } = await loadSocketSupplyModules();
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
 
-  if (process.platform === 'darwin' || process.platform === 'win32') {
+  document.body.setAttribute('data-platform', socketProcess.platform);
+
+  if (socketProcess.platform === 'mac' || socketProcess.platform === 'win') {
     await configureDesktopWindowSizing(app);
     await configureSystemMenu(app, appName);
     setupMenuItemListener(dispatch, app);
