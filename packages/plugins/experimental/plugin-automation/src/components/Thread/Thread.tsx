@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type FC,
   type KeyboardEventHandler,
   type PropsWithChildren,
   useCallback,
@@ -12,7 +13,7 @@ import React, {
 } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
-import { Icon, Input, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, Input, type ThemedClassName } from '@dxos/react-ui';
 import { Ball } from '@dxos/react-ui-sfx';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -79,6 +80,8 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
             onKeyDown={handleKeyDown}
           />
         </Input.Root>
+        {/* TODO(burdon): Create pill. */}
+        {debug && <Button onClick={() => onSubmit('hello')}>Test</Button>}
         <Icon
           icon={'ph--spinner-gap--regular'}
           classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}
@@ -89,12 +92,15 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
   );
 };
 
-export type ThreadMessageProps = ThemedClassName<{
-  message: Message;
-  debug?: boolean;
-}>;
-
-export const ThreadMessage = ({ classNames, message, debug }: ThreadMessageProps) => {
+/**
+ * Message with blocks.
+ */
+export const ThreadMessage: FC<
+  ThemedClassName<{
+    message: Message;
+    debug?: boolean;
+  }>
+> = ({ classNames, message, debug }) => {
   if (typeof message !== 'object') {
     return <div className={mx(classNames)}>{message}</div>;
   }
@@ -105,7 +111,10 @@ export const ThreadMessage = ({ classNames, message, debug }: ThreadMessageProps
       <div className={mx('flex flex-col gap-2')}>
         {debug && <div className='text-xs text-subdued'>{message.id}</div>}
         {content.map((block, idx) => (
-          <Block key={idx} id={String(idx)} role={role} block={block} />
+          <>
+            {debug && <div className='text-xs text-subdued'>{idx}</div>}
+            <Block key={idx} id={String(idx)} role={role} block={block} />
+          </>
         ))}
       </div>
     </div>
@@ -164,7 +173,7 @@ const Container = ({ title, children }: PropsWithChildren<{ title?: string }>) =
     <div>
       {title && (
         <div
-          className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer'
+          className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer select-none'
           onClick={() => setOpen(!open)}
         >
           <Icon

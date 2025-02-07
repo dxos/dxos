@@ -34,6 +34,8 @@ export class MixedStreamParser {
     let current: StreamBlock | undefined;
 
     for await (const event of stream) {
+      // log.info('event', { type: event.type, event });
+
       switch (event.type) {
         //
         // Messages.
@@ -77,10 +79,12 @@ export class MixedStreamParser {
             case 'text_delta': {
               const chunks = transformer.transform(event.delta.text);
               for (const chunk of chunks) {
-                log('chunk', { chunk });
+                // log.info('text_delta', { chunk, current });
 
                 switch (current?.type) {
+                  //
                   // XML Fragment.
+                  //
                   case 'xml': {
                     if (chunk.type === 'xml') {
                       if (chunk.selfClosing) {
@@ -108,7 +112,9 @@ export class MixedStreamParser {
                     break;
                   }
 
+                  //
                   // Text Fragment.
+                  //
                   case 'text': {
                     if (chunk.type === 'xml') {
                       this.block.emit(current);
@@ -125,7 +131,9 @@ export class MixedStreamParser {
                     break;
                   }
 
-                  // No current node.
+                  //
+                  // No current chunk.
+                  //
                   default: {
                     if (chunk.type === 'xml' && chunk.selfClosing) {
                       this.block.emit(chunk);
@@ -230,8 +238,10 @@ const join = (str1: string, str2: string): string => {
   // const trim1 = trim(str1);
   // const trim2 = trim(str2);
 
-  // const startsWithNonAlpha = /^[^a-zA-Z0-9]/.test(trim2);
-  // return trim1 + (startsWithNonAlpha ? ' ' : '') + trim2;
-
-  return str1 + ' ' + str2;
+  const endWithNonAlpha = /[^a-zA-Z0-9]$/.test(str1);
+  if (endWithNonAlpha) {
+    return str1 + '_' + str2;
+  } else {
+    return str1 + str2;
+  }
 };

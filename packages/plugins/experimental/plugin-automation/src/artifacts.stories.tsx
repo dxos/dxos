@@ -131,7 +131,7 @@ const Render = ({ items: _items }: RenderProps) => {
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={messages} streaming={processor.isStreaming.value} onSubmit={handleSubmit} />
+        <Thread messages={messages} streaming={processor.isStreaming.value} onSubmit={handleSubmit} debug />
       </div>
 
       {/* Artifacts Deck/Mosaic */}

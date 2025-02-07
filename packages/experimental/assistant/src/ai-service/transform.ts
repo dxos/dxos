@@ -90,16 +90,17 @@ export class StreamTransform {
     this._buffer += chunk;
 
     const results: StreamBlock[] = [];
-    const parser = mixedChunk.many();
-    const parseResult = parser.parse(this._buffer);
-    if (parseResult.status) {
-      for (const value of parseResult.value) {
+    const parser = mixedChunk.many().skip(P.all);
+    const result = parser.parse(this._buffer);
+    if (result.status) {
+      for (const chunk of result.value) {
         // Skip if empty line.
-        if (value.type === 'text' && value.content.length === 0) {
+        log.info('chunk', { chunk });
+        if (chunk.type === 'text' && chunk.content.length === 0) {
           continue;
         }
 
-        results.push(value);
+        results.push(chunk);
       }
 
       this._buffer = '';

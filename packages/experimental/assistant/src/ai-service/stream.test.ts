@@ -69,7 +69,7 @@ describe('GenerationStream', () => {
     expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(3);
   });
 
-  it('should emit xml blocks', async ({ expect }) => {
+  it.only('should emit xml blocks', async ({ expect }) => {
     const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA)));
     const parser = new MixedStreamParser();
     const blocks: StreamBlock[] = [];
