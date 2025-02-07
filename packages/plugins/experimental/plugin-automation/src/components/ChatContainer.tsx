@@ -51,10 +51,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
     [chat.queue.dxn],
   );
   const queue = useQueue<Message>(edgeClient, queueDxn);
-  const messages = useMemo(
-    () => [...queue.items, ...processor.messages.value],
-    [queue.items, processor.messages.value],
-  );
+  const messages = useMemo(() => [...queue.items, ...processor.messages], [queue.items, processor.messages]);
 
   const handleSubmit = useCallback(
     async (message: string) => {
@@ -72,7 +69,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
 
   return (
     <StackItem.Content toolbar={false} role={role}>
-      <Thread messages={messages} streaming={processor.isStreaming.value} onSubmit={handleSubmit} />
+      <Thread messages={messages} streaming={processor.isStreaming} onSubmit={handleSubmit} />
     </StackItem.Content>
   );
 };

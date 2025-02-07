@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Tool, type Message } from '@dxos/artifact';
 import {
@@ -86,25 +86,30 @@ const Render = ({ items: _items }: RenderProps) => {
   );
 
   // TODO(burdon): Create hook.
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const processor = useMemo(
     () =>
       new ChatProcessor(
         aiClient,
         tools,
-        { space: client.spaces.default },
+        {
+          space: client.spaces.default,
+          dispatch,
+        },
         createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
       ),
-    [client, aiClient, tools, artifactsContext, artifactDefinitions],
+    [client, aiClient, tools, artifactDefinitions],
   );
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
-  const messages = [...queue.items, ...processor.messages.value];
+  const messages = [...queue.items, ...processor.messages];
 
   log.info('messages', {
     messages: messages.map((m) => m.id),
     queue: queue.items.length,
-    proc: processor.messages.value.length,
+    proc: processor.messages.length,
+    streaming: processor.isStreaming,
   });
 
   const handleSubmit = async (message: string) => {
@@ -113,7 +118,7 @@ const Render = ({ items: _items }: RenderProps) => {
       await processor.cancel();
     }
 
-    // TODO(burdon): Append on success only? If approved by user? Clinet/server.
+    // TODO(burdon): Append on success only? If approved by user? Client/server.
     const messages = await processor.request(message, queue.items);
     queue.append(messages);
     console.log('===', messages.length, queue.items.length);
@@ -156,7 +161,7 @@ const Render = ({ items: _items }: RenderProps) => {
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={messages} streaming={processor.isStreaming.value} onSubmit={handleSubmit} debug />
+        <Thread messages={messages} streaming={processor.isStreaming} onSubmit={handleSubmit} debug />
       </div>
 
       {/* Artifacts Deck/Mosaic */}
@@ -191,7 +196,10 @@ const meta: Meta<typeof Render> = {
     //
     withSignals,
     withClientProvider({ createIdentity: true, createSpace: true }),
-    withPluginManager({ plugins: [ChessPlugin(), MapPlugin()], capabilities }),
+    withPluginManager({
+      plugins: [IntentPlugin(), ChessPlugin(), MapPlugin()],
+      capabilities,
+    }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],

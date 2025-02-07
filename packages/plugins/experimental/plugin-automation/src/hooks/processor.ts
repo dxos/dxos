@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, type Signal, batch, computed, signal } from '@preact/signals-core';
+import { type Signal, batch, signal } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type Tool, Message, type MessageContentBlock } from '@dxos/artifact';
@@ -89,11 +89,17 @@ export class ChatProcessor {
     });
   }
 
-  get isStreaming(): ReadonlySignal<boolean> {
-    return computed(() => !!this._block.value);
+  /**
+   * @reactive
+   */
+  get isStreaming(): boolean {
+    return !!this._block.value;
   }
 
-  get messages(): ReadonlySignal<Message[]> {
+  /**
+   * @reactive
+   */
+  get messages(): Message[] {
     if (this._block.value) {
       // Patch the current message with the partial block.
       const messages = this._messages.value;
@@ -103,9 +109,9 @@ export class ChatProcessor {
         content: [...this._current.value.content, this._block.value],
       };
 
-      return computed(() => [...messages, temp]);
+      return [...messages, temp];
     } else {
-      return this._messages;
+      return this._messages.value;
     }
   }
 
@@ -115,13 +121,15 @@ export class ChatProcessor {
   async request(message: string, history: Message[] = []): Promise<Message[]> {
     log.info('requesting...', { message, history: history.length });
     this._history = history;
-    this._messages.value = [
-      createStatic(Message, {
-        role: 'user',
-        content: [{ type: 'text', text: message }],
-      }),
-    ];
-    this._block.value = undefined;
+    batch(() => {
+      this._messages.value = [
+        createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: message }],
+        }),
+      ];
+      this._block.value = undefined;
+    });
 
     await this._generate();
     return this._reset();
@@ -139,9 +147,11 @@ export class ChatProcessor {
 
   private async _reset(): Promise<Message[]> {
     const messages = this._messages.value;
-    this._history = [];
-    this._messages.value = [];
-    this._block.value = undefined;
+    batch(() => {
+      this._history = [];
+      this._messages.value = [];
+      this._block.value = undefined;
+    });
     return messages;
   }
 
@@ -196,7 +206,6 @@ export class ChatProcessor {
     } finally {
       log.info('done');
       this._stream = undefined;
-      this._block.value = undefined;
     }
   }
 }

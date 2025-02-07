@@ -4,8 +4,6 @@
 
 import * as P from 'parsimmon';
 
-import { log } from '@dxos/log';
-
 export type StreamBlock =
   | {
       type: 'tag';
@@ -88,17 +86,13 @@ export class StreamTransform {
   private _buffer = '';
 
   transform(chunk: string): StreamBlock[] {
-    // log.info('transform', { chunk });
     this._buffer += chunk;
 
-    // log.info('buffer', { buffer: this._buffer });
     const results: StreamBlock[] = [];
     const parser = mixedChunk.many().skip(P.optWhitespace);
     const result = parser.parse(this._buffer);
     if (result.status) {
       for (const chunk of result.value) {
-        // Skip if empty line.
-        // log.info('chunk', chunk);
         results.push(chunk);
       }
 
@@ -108,6 +102,7 @@ export class StreamTransform {
     return results;
   }
 
+  // TODO(burdon): Process remaining buffer?
   flush(): StreamBlock[] {
     const remaining = this._buffer;
     this._buffer = '';

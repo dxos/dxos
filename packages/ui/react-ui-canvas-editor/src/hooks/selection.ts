@@ -14,6 +14,7 @@ export class SelectionModel {
     return this._selected.value.size;
   }
 
+  // TODO(burdon): ???
   get selected(): ReadonlySignal<string[]> {
     return computed(() => Array.from(this._selected.value.values()));
   }
