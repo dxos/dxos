@@ -181,7 +181,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel1')
+      .getByTestId('navtree.treeItem.actionsLevel3')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
@@ -197,7 +197,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel1')
+      .getByTestId('navtree.treeItem.actionsLevel3')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
