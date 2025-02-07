@@ -3,7 +3,7 @@
 //
 
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnums, S, FormatEnum, Format, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnums, S, FormatEnum, Format, TypedObject, formatToType, TypeEnum, EchoObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 const availableFormats = FormatEnums;
@@ -85,8 +85,6 @@ export const schemaTools = [
       invariant(extensions?.space, 'No space.');
       const space = extensions.space;
 
-      // TODO(ZaymonFC): It would be better to construct the full JSON schema here, formats and all.
-
       const typeToSchema: Record<TypeEnum, S.Any> = {
         [TypeEnum.String]: S.String.pipe(S.optional),
         [TypeEnum.Number]: S.Number.pipe(S.optional),
@@ -95,12 +93,14 @@ export const schemaTools = [
         [TypeEnum.Ref]: S.String.pipe(S.optional), // TODO(burdon): Is this correct for refs?
       };
 
+      // TODO(ZaymonFC): It would be better to construct the full JSON schema here, formats and all.
+      //   This way we are falling back to the primitive type only.
       const fields: any = Object.fromEntries(
         properties.map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
       );
 
-      const structSchema = TypedObject({ typename, version: '0.1.0' })(fields);
-      const [registeredSchema] = await space.db.schemaRegistry.register([structSchema]);
+      const schema = TypedObject({ typename, version: '0.1.0' })(fields);
+      const [registeredSchema] = await space.db.schemaRegistry.register([schema]);
 
       return ToolResult.Success(registeredSchema);
     },
