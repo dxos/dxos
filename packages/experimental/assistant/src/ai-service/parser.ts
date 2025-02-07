@@ -29,6 +29,9 @@ export class MixedStreamParser {
    */
   public update = new Event<StreamBlock>();
 
+  /**
+   * Parse stream until end.
+   */
   async parse(stream: GenerationStream) {
     const transformer = new StreamTransform();
     let current: StreamBlock | undefined;
