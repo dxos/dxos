@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { generateId } from '@dxos/util';
 import { type SelectOption } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -31,13 +32,9 @@ export const SelectOptionInput = ({
   }, [options, onValueChange, type]);
 
   const onClick = React.useCallback(() => {
-    const options = [
-      { id: 'one', title: 'One', color: 'red' },
-      { id: 'two', title: 'Two', color: 'blue' },
-      { id: 'three', title: 'Three', color: 'green' },
-    ];
-    onValueChange(type, options);
-  }, [type, onValueChange]);
+    const newOption = { id: generateId(), title: 'New Option', color: 'gray' };
+    onValueChange(type, [...(options ?? []), newOption]);
+  }, [options, type, onValueChange]);
 
   const handleMove = React.useCallback(
     (from: number, to: number) => {
