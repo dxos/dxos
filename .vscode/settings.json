@@ -21,7 +21,8 @@
     "Hypergraph",
     "mykola",
     "protobuf",
-    "testutils"
+    "testutils",
+    "wittjosiah"
   ],
   "files.associations": {
     "nx.json": "jsonc",
