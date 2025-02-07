@@ -5,8 +5,8 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 
-import { DECK_PLUGIN } from '../../meta';
-import { DeckSettingsSchema, type DeckSettingsProps } from '../../types';
+import { DECK_PLUGIN } from '../meta';
+import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 
 export default () => {
   const settings = create<DeckSettingsProps>({

@@ -20,8 +20,8 @@ test.describe('Collection tests', () => {
 
   test('create collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 1 });
-    await expect(host.getObject(2)).toContainText('New collection');
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await expect(host.getObject(1)).toContainText('New collection');
   });
 
   test('re-order collections', async ({ browserName }) => {
@@ -29,17 +29,17 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 1 });
-    await host.createObject({ type: 'Collection', nth: 1 });
-    await host.renameObject('Collection 1', 2);
-    await host.renameObject('Collection 2', 3);
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.renameObject('Collection 1', 1);
+    await host.renameObject('Collection 2', 2);
 
     // Items are 32px tall.
     await host.dragTo(host.getObjectByName('Collection 2'), host.getObjectByName('Collection 1'), { x: 0, y: -15 });
 
     // Folders are now in reverse order.
-    await expect(host.getObject(2)).toContainText('Collection 2');
-    await expect(host.getObject(3)).toContainText('Collection 1');
+    await expect(host.getObject(1)).toContainText('Collection 2');
+    await expect(host.getObject(2)).toContainText('Collection 1');
   });
 
   test('drag object into collection', async ({ browserName }) => {
@@ -47,8 +47,8 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 1 });
-    await host.toggleCollectionCollapsed(2);
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.toggleCollectionCollapsed(1);
     await host.dragTo(host.getObjectByName('New document'), host.getObjectByName('New collection'), { x: 0, y: 0 });
     // Document is now inside the collection.
     const docId = await host.getObjectByName('New document').getAttribute('id');
@@ -57,35 +57,35 @@ test.describe('Collection tests', () => {
 
   test('delete a collection', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Collection', nth: 1 });
-    await host.toggleCollectionCollapsed(2);
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.toggleCollectionCollapsed(0);
     // Create an item inside the collection.
-    await host.createObject({ type: 'Document', nth: 2 });
-    await expect(host.getObjectLinks()).toHaveCount(4);
+    await host.createObject({ type: 'Document', nth: 1 });
+    await expect(host.getObjectLinks()).toHaveCount(2);
 
     // Delete the containing collection.
-    await host.deleteObject(2);
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await host.deleteObject(1);
+    await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
+    await host.createObject({ type: 'Collection', nth: 0 });
+    await host.toggleCollectionCollapsed(1);
+    // Create a collection inside the collection.
     await host.createObject({ type: 'Collection', nth: 1 });
     await host.toggleCollectionCollapsed(2);
-    // Create a collection inside the collection.
-    await host.createObject({ type: 'Collection', nth: 2 });
-    await host.toggleCollectionCollapsed(3);
     // Create an item inside the contained collection.
-    await host.createObject({ type: 'Document', nth: 3 });
-    await expect(host.getObjectLinks()).toHaveCount(5);
+    await host.createObject({ type: 'Document', nth: 2 });
+    await expect(host.getObjectLinks()).toHaveCount(4);
 
     // Delete the containing collection.
-    await host.deleteObject(2);
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await host.deleteObject(1);
+    await expect(host.getObjectLinks()).toHaveCount(1);
 
     // Undo the deletion.
     await host.toastAction(0);
 
-    await expect(host.getObjectLinks()).toHaveCount(5);
+    await expect(host.getObjectLinks()).toHaveCount(4);
   });
 });
