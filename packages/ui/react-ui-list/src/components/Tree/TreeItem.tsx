@@ -222,7 +222,7 @@ export const RawTreeItem = <T = any,>({
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input',
+          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-input',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
@@ -245,7 +245,7 @@ export const RawTreeItem = <T = any,>({
       >
         <Treegrid.Cell
           indent
-          classNames={['relative grid grid-cols-subgrid col-[tree-row]']}
+          classNames='relative grid grid-cols-subgrid col-[tree-row]'
           style={paddingIndentation(level - 1)}
         >
           <div role='none' className='flex items-center'>
