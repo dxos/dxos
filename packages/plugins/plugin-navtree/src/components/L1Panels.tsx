@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
