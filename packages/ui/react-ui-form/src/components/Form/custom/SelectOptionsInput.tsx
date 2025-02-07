@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { generateId } from '@dxos/util';
 import { type SelectOption } from '@dxos/echo-schema';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { PublicKey } from '@dxos/keys';
+import { Input } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
-import { translationKey } from '../../../translations';
+// import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
 
 export const SelectOptionInput = ({
@@ -21,7 +21,7 @@ export const SelectOptionInput = ({
   onValueChange,
   onBlur,
 }: InputProps) => {
-  const { t } = useTranslation(translationKey);
+  // const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const options = getValue<SelectOption[] | undefined>();
 
@@ -32,7 +32,7 @@ export const SelectOptionInput = ({
   }, [options, onValueChange, type]);
 
   const onClick = React.useCallback(() => {
-    const newOption = { id: generateId(), title: 'New Option', color: 'gray' };
+    const newOption = { id: PublicKey.random().truncate(), title: 'New Option', color: 'gray' };
     onValueChange(type, [...(options ?? []), newOption]);
   }, [options, type, onValueChange]);
 
