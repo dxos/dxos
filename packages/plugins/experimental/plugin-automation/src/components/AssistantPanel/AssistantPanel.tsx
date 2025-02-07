@@ -94,7 +94,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     // TODO(burdon): !!!
     const historyBefore = [...history, userMessage];
     for await (const _event of generationStream) {
-      // setHistory([...historyBefore, ...generationStream.messages]);
+      setHistory([...historyBefore, ...generationStream.messages]);
     }
 
     await generationStream.complete();

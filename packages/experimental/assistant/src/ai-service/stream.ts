@@ -11,54 +11,54 @@ import { iterSSEMessages } from './util';
 export type GenerationParams = Pick<GenerateRequest, 'spaceId' | 'threadId'>;
 
 /**
+ * Creates a stream from an SSE response.
+ */
+export const fromSSEResponse = (response: Response, controller = new AbortController()) => {
+  const iterator = async function* () {
+    for await (const sse of iterSSEMessages(response, controller)) {
+      if (sse.event === 'completion') {
+        try {
+          yield JSON.parse(sse.data);
+        } catch (err) {
+          log.error('could not parse message into JSON:', { data: sse.data, raw: sse.raw });
+          throw err;
+        }
+      }
+
+      if (
+        sse.event === 'message_start' ||
+        sse.event === 'message_delta' ||
+        sse.event === 'message_stop' ||
+        sse.event === 'content_block_start' ||
+        sse.event === 'content_block_delta' ||
+        sse.event === 'content_block_stop'
+      ) {
+        try {
+          yield JSON.parse(sse.data);
+        } catch (err) {
+          log.error('could not parse message into JSON:', { data: sse.data, raw: sse.raw });
+          throw err;
+        }
+      }
+
+      if (sse.event === 'ping') {
+        continue;
+      }
+
+      if (sse.event === 'error') {
+        throw new Error(`Message generation error: ${sse.data}`);
+      }
+    }
+  };
+
+  return new GenerationStream(controller, iterator);
+};
+
+/**
  * Server-Sent Events (SSE) stream from the AI service.
  * https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events
  */
 export class GenerationStream implements AsyncIterable<GenerationStreamEvent> {
-  /**
-   * Creates a stream from an SSE response.
-   */
-  static fromSSEResponse(response: Response, controller = new AbortController()) {
-    const iterator = async function* () {
-      for await (const sse of iterSSEMessages(response, controller)) {
-        if (sse.event === 'completion') {
-          try {
-            yield JSON.parse(sse.data);
-          } catch (err) {
-            log.error('could not parse message into JSON:', { data: sse.data, raw: sse.raw });
-            throw err;
-          }
-        }
-
-        if (
-          sse.event === 'message_start' ||
-          sse.event === 'message_delta' ||
-          sse.event === 'message_stop' ||
-          sse.event === 'content_block_start' ||
-          sse.event === 'content_block_delta' ||
-          sse.event === 'content_block_stop'
-        ) {
-          try {
-            yield JSON.parse(sse.data);
-          } catch (err) {
-            log.error('could not parse message into JSON:', { data: sse.data, raw: sse.raw });
-            throw err;
-          }
-        }
-
-        if (sse.event === 'ping') {
-          continue;
-        }
-
-        if (sse.event === 'error') {
-          throw new Error(`Message generation error: ${sse.data}`);
-        }
-      }
-    };
-
-    return new GenerationStream(controller, iterator);
-  }
-
   /**
    * Iterator over the stream.
    */

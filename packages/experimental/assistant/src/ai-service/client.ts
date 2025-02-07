@@ -8,7 +8,7 @@ import { Message, type Space, type Thread } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 
-import { GenerationStream } from './stream';
+import { fromSSEResponse, type GenerationStream } from './stream';
 import { type GenerateRequest } from './types';
 
 // TODO(burdon): Rename.
@@ -83,6 +83,6 @@ export class AIServiceClientImpl implements AIServiceClient {
     });
 
     invariant(response.body instanceof ReadableStream);
-    return GenerationStream.fromSSEResponse(response, controller);
+    return fromSSEResponse(response, controller);
   }
 }
