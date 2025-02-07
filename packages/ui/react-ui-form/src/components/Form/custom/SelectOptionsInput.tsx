@@ -36,6 +36,14 @@ export const SelectOptionInput = ({
     onValueChange(type, [...(options ?? []), newOption]);
   }, [options, type, onValueChange]);
 
+  const handleDelete = React.useCallback(
+    (id: string) => {
+      const newOptions = options?.filter((option) => option.id !== id) ?? [];
+      onValueChange(type, newOptions);
+    },
+    [options, type, onValueChange],
+  );
+
   const handleMove = React.useCallback(
     (from: number, to: number) => {
       if (!options) {
