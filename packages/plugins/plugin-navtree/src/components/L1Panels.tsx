@@ -36,7 +36,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-separator pis-3'>
+          <h2 className='flex items-center border-be border-separator pis-5'>
             <span className='flex-1 truncate'>{toLocalizedString(item.properties.label, t)}</span>
             <NavTreeItemColumns path={itemPath} item={item} open />
           </h2>

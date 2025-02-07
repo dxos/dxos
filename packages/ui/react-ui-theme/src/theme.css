@@ -30,7 +30,7 @@
   --rail-item: calc(var(--rail-content) - 1rem);
   --topbar-size: var(--rail-size);
   --statusbar-size: theme(spacing.8);
-  --nav-sidebar-size: 18.5rem;
+  --nav-sidebar-size: 22.5rem;
   --complementary-sidebar-size: 22.5rem;
   --l0-size: 74px;
   --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
