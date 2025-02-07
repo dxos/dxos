@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, batch, computed, signal } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type Tool, Message, type MessageContentBlock } from '@dxos/artifact';
 import {
-  createMessageBlock,
   isToolUse,
   runTools,
   type AIServiceClientImpl,
@@ -15,7 +14,7 @@ import {
   type GenerationStream,
   MixedStreamParser,
 } from '@dxos/assistant';
-import { createStatic, ObjectId } from '@dxos/echo-schema';
+import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -52,8 +51,11 @@ export class ChatProcessor {
   /** Pending messages (incl. the user request). */
   private _messages: Signal<Message[]> = signal([]);
 
+  /** Current message. */
+  private _current: Signal<Message | undefined> = signal(undefined);
+
   /** Current streaming block (from the AI service). */
-  private _streaming: Signal<MessageContentBlock | undefined> = signal(undefined);
+  private _block: Signal<MessageContentBlock | undefined> = signal(undefined);
 
   constructor(
     private readonly _client: AIServiceClientImpl,
@@ -61,45 +63,46 @@ export class ChatProcessor {
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = defaultOptions,
   ) {
-    // New message.
-    this._parser.message.on(() => {
-      const message: Message = {
-        id: ObjectId.random(),
-        role: 'assistant',
-        content: [],
-      };
-
-      this._messages.value = [...this._messages.value, message];
-      this._streaming.value = undefined;
+    // Message complete.
+    this._parser.message.on((message) => {
+      batch(() => {
+        this._messages.value = [...this._messages.value, message];
+        this._block.value = undefined;
+      });
     });
 
-    // New block.
-    this._parser.block.on((block) => {
-      log.info('block', { block });
-      const messageBlock = createMessageBlock(block);
-      if (messageBlock) {
-        const message = this._messages.value.at(-1);
-        invariant(message);
-        message.content.push(messageBlock);
-      }
-      this._streaming.value = undefined;
+    // Block complete.
+    this._parser.block.on((message) => {
+      batch(() => {
+        log.info('block complete', { message });
+        this._current.value = message;
+        this._block.value = undefined;
+      });
     });
 
     // Streaming update.
-    this._parser.update.on((block) => {
-      this._streaming.value = createMessageBlock(block);
+    this._parser.update.on(({ message, block }) => {
+      batch(() => {
+        this._current.value = message;
+        this._block.value = block;
+      });
     });
   }
 
   get isStreaming(): ReadonlySignal<boolean> {
-    return computed(() => !!this._streaming.value);
+    return computed(() => !!this._block.value);
   }
 
   get messages(): ReadonlySignal<Message[]> {
-    if (this._streaming.value) {
-      const messages = this._messages.value.slice(0, -1);
-      const current = this._messages.value.at(-1)!;
-      const temp: Message = { ...current, content: [...current.content, this._streaming.value] };
+    if (this._block.value) {
+      // Patch the current message with the partial block.
+      const messages = this._messages.value;
+      invariant(this._current.value);
+      const temp: Message = {
+        ...this._current.value!,
+        content: [...this._current.value.content, this._block.value],
+      };
+
       return computed(() => [...messages, temp]);
     } else {
       return this._messages;
@@ -118,7 +121,7 @@ export class ChatProcessor {
         content: [{ type: 'text', text: message }],
       }),
     ];
-    this._streaming.value = undefined;
+    this._block.value = undefined;
 
     await this._generate();
     return this._reset();
@@ -138,7 +141,7 @@ export class ChatProcessor {
     const messages = this._messages.value;
     this._history = [];
     this._messages.value = [];
-    this._streaming.value = undefined;
+    this._block.value = undefined;
     return messages;
   }
 
@@ -193,7 +196,7 @@ export class ChatProcessor {
     } finally {
       log.info('done');
       this._stream = undefined;
-      this._streaming.value = undefined;
+      this._block.value = undefined;
     }
   }
 }

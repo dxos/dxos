@@ -81,7 +81,7 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
           />
         </Input.Root>
         {/* TODO(burdon): Create pill. */}
-        {debug && <Button onClick={() => onSubmit('hello')}>Test</Button>}
+        {debug && <Button onClick={() => onSubmit('show me a chess puzzle')}>Test</Button>}
         <Icon
           icon={'ph--spinner-gap--regular'}
           classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}

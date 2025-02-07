@@ -4,12 +4,12 @@
 
 import { describe, it } from 'vitest';
 
+import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { MixedStreamParser } from './parser';
 import { createGenerationStream } from './stream';
-import { type StreamBlock } from './transform';
 import { type GenerationStreamEvent } from './types';
 
 type Part = { event: string; data: any };
@@ -69,18 +69,18 @@ describe('GenerationStream', () => {
     expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(3);
   });
 
-  it.only('should emit xml blocks', async ({ expect }) => {
+  it('should emit xml blocks', async ({ expect }) => {
     const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA)));
     const parser = new MixedStreamParser();
-    const blocks: StreamBlock[] = [];
-    parser.block.on((block) => {
-      blocks.push(block);
+    let message: Message | undefined;
+    parser.message.on((_message) => {
+      message = _message;
     });
 
     await parser.parse(stream);
 
-    log('blocks', { blocks });
-    expect(blocks.map((block) => block.type)).to.deep.eq([
+    log('blocks', { message });
+    expect(message?.content.map((block) => block.type)).to.deep.eq([
       //
       'json',
       'text',

@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type MessageContentBlock } from '@dxos/artifact';
+import { Message, type MessageContentBlock } from '@dxos/artifact';
 import { Event } from '@dxos/async';
+import { createStatic } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { isNotFalsy } from '@dxos/util';
+import { isNotFalsy, safeParseJson } from '@dxos/util';
 
 import { type GenerationStream } from './stream';
 import { StreamTransform, type StreamBlock } from './transform';
@@ -14,27 +16,59 @@ import { StreamTransform, type StreamBlock } from './transform';
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
  */
 export class MixedStreamParser {
-  /**
-   * New message.
-   */
-  public message = new Event();
+  private _message?: Message | undefined;
 
   /**
-   * New block.
+   * Message complete.
    */
-  public block = new Event<StreamBlock>();
+  public message = new Event<Message>();
 
   /**
-   * Update current block (while streaming).
+   * Complete block added to Message.
    */
-  public update = new Event<StreamBlock>();
+  public block = new Event<Message>();
+
+  /**
+   * Update partial block (while streaming).
+   */
+  public update = new Event<{ message: Message; block: MessageContentBlock }>();
+
+  /**
+   * Emit block.
+   */
+  // TODO(burdon): Clean-up.
+  private _emitBlock(block: StreamBlock | undefined, content?: MessageContentBlock) {
+    if (!block) {
+      invariant(this._message);
+      invariant(content);
+      this._message.content.push(content);
+      this.block.emit(this._message);
+    } else {
+      const messageBlock = createMessageBlock(block, content);
+      if (messageBlock) {
+        invariant(this._message);
+        this._message.content.push(messageBlock);
+        this.block.emit(this._message);
+      }
+    }
+  }
+
+  private _emitUpdate(block: StreamBlock, content?: MessageContentBlock) {
+    const messageBlock = createMessageBlock(block, content);
+    if (messageBlock) {
+      invariant(this._message);
+      this.update.emit({ message: this._message, block: messageBlock });
+    }
+  }
 
   /**
    * Parse stream until end.
    */
   async parse(stream: GenerationStream) {
     const transformer = new StreamTransform();
-    let current: StreamBlock | undefined;
+
+    let current: StreamBlock | undefined; // TODO(burdon): Just acccumulate.
+    let content: MessageContentBlock | undefined;
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
@@ -45,7 +79,11 @@ export class MixedStreamParser {
         //
 
         case 'message_start': {
-          this.message.emit();
+          this._message = createStatic(Message, {
+            role: 'assistant',
+            content: [],
+          });
+
           break;
         }
 
@@ -54,6 +92,9 @@ export class MixedStreamParser {
         }
 
         case 'message_stop': {
+          invariant(this._message);
+          this.message.emit(this._message);
+          this._message = undefined;
           break;
         }
 
@@ -67,9 +108,11 @@ export class MixedStreamParser {
             current = undefined;
           }
 
+          // TODO(burdon): Parse initial content.
           log.info('content_block_start', { event });
+          content = event.content;
           if (event.content.type === 'tool_use') {
-            current = { type: 'json', disposition: 'tool_use', content: '' };
+            // current = { type: 'json', disposition: 'tool_use', content: '' };
           }
           break;
         }
@@ -93,7 +136,7 @@ export class MixedStreamParser {
                       if (chunk.selfClosing) {
                         current.content.push(chunk);
                       } else if (chunk.closing) {
-                        this.block.emit(current);
+                        this._emitBlock(current, content);
                         current = undefined;
                       } else {
                         // TODO(burdon): Nested XML?
@@ -104,7 +147,8 @@ export class MixedStreamParser {
                       if (current.content.length === 0) {
                         current.content.push(chunk);
                       } else {
-                        const last = current.content[current.content.length - 1];
+                        const last = current.content.at(-1);
+                        invariant(last);
                         if (last.type === 'text') {
                           last.content += chunk.content;
                         } else {
@@ -120,9 +164,9 @@ export class MixedStreamParser {
                   //
                   case 'text': {
                     if (chunk.type === 'tag') {
-                      this.block.emit(current);
+                      this._emitBlock(current, content);
                       if (chunk.selfClosing) {
-                        this.block.emit(chunk);
+                        this._emitBlock(chunk, content);
                         current = undefined;
                       } else {
                         current = chunk;
@@ -139,7 +183,7 @@ export class MixedStreamParser {
                   //
                   default: {
                     if (chunk.type === 'tag' && chunk.selfClosing) {
-                      this.block.emit(chunk);
+                      this._emitBlock(chunk, content);
                     } else {
                       current = chunk;
                     }
@@ -153,11 +197,16 @@ export class MixedStreamParser {
             // JSON
             //
             case 'input_json_delta': {
-              if (!current) {
-                current = { type: 'json', content: event.delta.partial_json.trim() };
-              } else {
-                current.content += event.delta.partial_json.trim();
-              }
+              invariant(content);
+              invariant(content.type === 'tool_use');
+              content.inputJson ??= '';
+              content.inputJson += event.delta.partial_json;
+
+              // if (!current) {
+              //   current = { type: 'json', content: event.delta.partial_json };
+              // } else {
+              //   // current.content += event.delta.partial_json;
+              // }
               break;
             }
           }
@@ -165,8 +214,11 @@ export class MixedStreamParser {
         }
 
         case 'content_block_stop': {
-          if (current) {
-            this.block.emit(current);
+          if (content?.type === 'tool_use') {
+            content.input = safeParseJson(content.inputJson, {});
+            this._emitBlock(undefined, content);
+          } else if (current) {
+            this._emitBlock(current, content);
             current = undefined;
           }
           break;
@@ -174,7 +226,7 @@ export class MixedStreamParser {
       }
 
       if (current) {
-        this.update.emit(current);
+        this._emitUpdate(current);
       }
     } // for.
   }
@@ -183,13 +235,15 @@ export class MixedStreamParser {
 /**
  * Convert stream block to message content block.
  */
-export const createMessageBlock = (block: StreamBlock): MessageContentBlock | undefined => {
+export const createMessageBlock = (block: StreamBlock, base?: MessageContentBlock): MessageContentBlock | undefined => {
+  log.info('createMessageBlock', { block, base });
+
   switch (block.type) {
     //
     // Text
     //
     case 'text': {
-      return { type: 'text', text: block.content };
+      return { ...base, type: 'text', text: block.content };
       break;
     }
 
@@ -213,7 +267,7 @@ export const createMessageBlock = (block: StreamBlock): MessageContentBlock | un
             .filter(isNotFalsy)
             .join('\n');
 
-          return { type: 'text', disposition: 'cot', text: content };
+          return { ...base, type: 'text', disposition: 'cot', text: content };
         }
 
         // case 'artifact': {
@@ -227,7 +281,7 @@ export const createMessageBlock = (block: StreamBlock): MessageContentBlock | un
     // JSON
     //
     case 'json': {
-      return { type: 'json', disposition: 'artifact', json: block.content };
+      return { ...base, type: 'json', disposition: 'artifact', json: block.content };
     }
   }
 };

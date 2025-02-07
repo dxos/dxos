@@ -22,9 +22,12 @@ import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { MapPlugin } from '@dxos/plugin-map';
+import { useClient } from '@dxos/react-client';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { useQueue } from '@dxos/react-edge-client';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -41,6 +44,7 @@ type RenderProps = {
 };
 
 const Render = ({ items: _items }: RenderProps) => {
+  const client = useClient();
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Configuration.
@@ -81,15 +85,16 @@ const Render = ({ items: _items }: RenderProps) => {
       new ChatProcessor(
         aiClient,
         tools,
-        { artifacts: artifactsContext },
+        { space: client.spaces.default },
         createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
       ),
-    [aiClient, tools, artifactsContext, artifactDefinitions],
+    [client, aiClient, tools, artifactsContext, artifactDefinitions],
   );
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
   const messages = [...queue.items, ...processor.messages.value];
+  log.info('messages', { messages: messages.map((m) => m.id) });
 
   const handleSubmit = async (message: string) => {
     // TODO(burdon): Button to cancel. Otherwise queue request.
@@ -97,8 +102,8 @@ const Render = ({ items: _items }: RenderProps) => {
       await processor.cancel();
     }
 
-    const messages = await processor.request(message, queue.items);
     // TODO(burdon): Append on success only? If approved by user? Clinet/server.
+    const messages = await processor.request(message, queue.items);
     queue.append(messages);
   };
 
@@ -165,9 +170,10 @@ const meta: Meta<typeof Render> = {
   decorators: [
     //
     withSignals,
+    withClientProvider({ createIdentity: true, createSpace: true }),
+    withPluginManager({ plugins: [ChessPlugin(), MapPlugin()], capabilities }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
-    withPluginManager({ plugins: [ChessPlugin(), MapPlugin()], capabilities }),
   ],
 };
 
