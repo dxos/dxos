@@ -117,7 +117,7 @@ export class AppManager {
     name,
     timeout = 10_000,
   }: { type?: string; name?: string; timeout?: number } = {}) {
-    await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
 
     await this.page.getByTestId('create-object-form.schema-input').fill(type);
@@ -130,10 +130,12 @@ export class AppManager {
     await objectForm.getByTestId('save-button').click();
 
     await this.waitForSpaceReady(timeout);
+
+    await this.getSpaceItems().nth(1).click();
   }
 
   async joinSpace() {
-    await this.page.getByTestId('spacePlugin.joinSpace').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
   async waitForSpaceReady(timeout = 30_000) {
@@ -145,10 +147,10 @@ export class AppManager {
   }
 
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
-    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
+    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
     if (typeof nextState !== 'undefined') {
-      const state = await toggle.getAttribute('aria-expanded');
+      const state = await toggle.getAttribute('aria-selected');
       if (state !== nextState.toString()) {
         await toggle.click();
       }
@@ -179,7 +181,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
+      .getByTestId('navtree.treeItem.actionsLevel1')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
@@ -195,7 +197,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel2')
+      .getByTestId('navtree.treeItem.actionsLevel1')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.

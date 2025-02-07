@@ -45,9 +45,16 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const type = l0ItemType(item);
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
+  const { getProps } = useNavTreeContext();
+  const { id, testId } = getProps?.(item, path) ?? {};
   const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
   const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
-  const rootProps = type === 'tab' ? { value: item.id, tabIndex: 0 } : { onClick: handleClick };
+  const rootProps =
+    type === 'tab'
+      ? { value: item.id, tabIndex: 0, 'data-testid': testId, 'data-itemid': id }
+      : type !== 'collection'
+        ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
+        : { onClick: handleClick };
   const localizedString = toLocalizedString(item.properties.label, t);
   const avatarValue = useMemo(
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('') : []),
@@ -57,7 +64,7 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
     <Root
       {...(rootProps as any)}
       data-type={type}
-      className='group/l0i grid grid-cols-subgrid col-span-2 relative data[type!="collection"]:cursor-pointer'
+      className='group/l0i grid grid-cols-subgrid col-span-2 overflow-hidden relative data[type!="collection"]:cursor-pointer'
     >
       {type !== 'collection' && (
         <div
@@ -74,7 +81,7 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
       ) : (
         item.properties.icon && <Icon icon={item.properties.icon} size={7} classNames='place-self-center' />
       )}
-      <span id={`${item.id}-label`} className='is-[--l01-size] text-start' style={{ alignSelf: 'center' }}>
+      <span id={`${item.id}__label`} className='is-[--l01-size] text-start' style={{ alignSelf: 'center' }}>
         {localizedString}
       </span>
     </Root>
@@ -86,8 +93,15 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
   useLoadDescendents(item);
   const collectionItems = navTreeContext.getItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
+  const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
   return (
-    <div role='group' className='contents group/l0c' aria-labelledby={`${item.id}-label`}>
+    <div
+      role='group'
+      className='contents group/l0c'
+      aria-labelledby={`${item.id}__label`}
+      data-itemid={id}
+      data-testid={testId}
+    >
       <L0Item item={item} parent={parent} path={groupPath} />
       {collectionItems.map((collectionItem) => (
         <L0Item key={collectionItem.id} item={collectionItem} parent={item} path={groupPath} />

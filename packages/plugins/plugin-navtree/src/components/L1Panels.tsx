@@ -22,10 +22,14 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
   const navTreeContext = useNavTreeContext();
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  // const { getProps } = useNavTreeContext();
+  // const { id, testId } = getProps?.(item, path) ?? {};
   return (
     <Tabs.Tabpanel
       key={item.id}
       value={item.id}
+      // data-testid={testId}
+      // data-itemid={id}
       classNames={[
         'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] grid-cols-1',
         item.id === currentItemId && 'grid',
