@@ -30,7 +30,7 @@ export const StatusBarPlugin = () =>
           createSurface({
             id: meta.id,
             role: 'status-bar--sidebar-footer',
-            component: () => <StatusBarPanel />,
+            component: () => <StatusBarPanel variant='sidebar-footer' />,
           }),
         ]),
     }),
