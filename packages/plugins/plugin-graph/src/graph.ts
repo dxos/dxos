@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { batch, effect } from '@preact/signals-core';
+
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { type Graph, GraphBuilder } from '@dxos/app-graph';
 
@@ -15,7 +17,11 @@ export default async (context: PluginsContext) => {
     localStorage.setItem(KEY, builder.graph.pickle());
   }, 5_000);
 
-  context.requestCapabilities(Capabilities.AppGraphBuilder).forEach((extension) => builder.addExtension(extension));
+  const unsubscribe = effect(() => {
+    batch(() => {
+      context.requestCapabilities(Capabilities.AppGraphBuilder).forEach((extension) => builder.addExtension(extension));
+    });
+  });
 
   await builder.initialize();
   await builder.graph.expand(builder.graph.root);
@@ -25,7 +31,10 @@ export default async (context: PluginsContext) => {
   return contributes(
     Capabilities.AppGraph,
     { graph: builder.graph, explore: (options) => builder.explore(options) },
-    () => clearInterval(interval),
+    () => {
+      clearInterval(interval);
+      unsubscribe();
+    },
   );
 };
 

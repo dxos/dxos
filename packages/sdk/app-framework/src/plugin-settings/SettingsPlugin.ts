@@ -16,6 +16,7 @@ export const SettingsPlugin = () =>
       activatesBefore: [Events.SetupSettings],
       activatesAfter: [Events.SettingsReady],
       activate: (context) => {
+        // TODO(wittjosiah): This should subscribe to capabilities and create stores for newly added settings objects.
         const allSettings = context.requestCapabilities(Capabilities.Settings);
         const settingsStore = new RootSettingsStore();
 

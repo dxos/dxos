@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect, type Signal, signal } from '@preact/signals-core';
+import { effect, type Signal, signal, untracked } from '@preact/signals-core';
 
 import { Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -253,8 +253,10 @@ export class GraphBuilder {
       return this;
     }
 
-    this._dispatcher.state[extension.id] = [];
-    this._extensions[extension.id] = extension;
+    untracked(() => {
+      this._dispatcher.state[extension.id] = [];
+      this._extensions[extension.id] = extension;
+    });
     return this;
   }
 
@@ -262,7 +264,9 @@ export class GraphBuilder {
    * Remove a node builder from the graph builder.
    */
   removeExtension(id: string): GraphBuilder {
-    delete this._extensions[id];
+    untracked(() => {
+      delete this._extensions[id];
+    });
     return this;
   }
 
