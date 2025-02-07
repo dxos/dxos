@@ -4,3 +4,4 @@
 
 export * from './overscroll';
 export * from './useBreakpoints';
+export * from './layoutAppliesTopbar';

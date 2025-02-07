@@ -25,7 +25,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-primitive": "^1.0.2",
+    "@radix-ui/react-primitive": "2.0.2",
     "date-fns": "^3.3.1"
   },
   "devDependencies": {

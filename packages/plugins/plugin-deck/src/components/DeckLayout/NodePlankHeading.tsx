@@ -11,10 +11,9 @@ import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
-import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
+import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
-import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
@@ -47,7 +46,6 @@ export const NodePlankHeading = memo(
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
-    const breakpoint = useBreakpoints();
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -101,7 +99,7 @@ export const NodePlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-separator items-stretch gap-1',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12',
           part === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
@@ -124,7 +122,6 @@ export const NodePlankHeading = memo(
             </StackItem.SigilButton>
           )}
         </ActionRoot>
-        {breakpoint !== 'desktop' && <ToggleSidebarButton />}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}

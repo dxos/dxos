@@ -54,6 +54,8 @@ export default () =>
             isCurrent={isCurrent}
             onOpenChange={handleOpenChange}
             popoverAnchorId={data.popoverAnchorId as string | undefined}
+            topbar={data.topbar as boolean}
+            hoistStatusbar={data.hoistStatusbar as boolean}
           />
         );
       },

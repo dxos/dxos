@@ -35,7 +35,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-context": "1.1.1",
     "effect": "^3.12.1"
   },
   "devDependencies": {
