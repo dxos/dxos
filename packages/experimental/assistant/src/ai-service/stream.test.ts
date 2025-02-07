@@ -8,7 +8,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { MixedStreamParser } from './parser';
-import { fromSSEResponse } from './stream';
+import { createGenerationStream } from './stream';
 import { type StreamBlock } from './transform';
 import { type GenerationStreamEvent } from './types';
 
@@ -60,7 +60,7 @@ const TEST_DATA = [
 
 describe('GenerationStream', () => {
   it('should generate a stream of blocks', async ({ expect }) => {
-    const stream = fromSSEResponse(new Response(createTestSSEStream(TEST_DATA)));
+    const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA)));
     const events: GenerationStreamEvent[] = [];
     for await (const event of stream) {
       events.push(event);
@@ -70,7 +70,7 @@ describe('GenerationStream', () => {
   });
 
   it('should emit xml blocks', async ({ expect }) => {
-    const stream = fromSSEResponse(new Response(createTestSSEStream(TEST_DATA)));
+    const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA)));
     const parser = new MixedStreamParser();
     const blocks: StreamBlock[] = [];
     parser.block.on((block) => {

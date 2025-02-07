@@ -5,15 +5,13 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type GenerateRequest, type GenerationStreamEvent } from './types';
+import { type GenerationStreamEvent } from './types';
 import { iterSSEMessages } from './util';
-
-export type GenerationParams = Pick<GenerateRequest, 'spaceId' | 'threadId'>;
 
 /**
  * Creates a stream from an SSE response.
  */
-export const fromSSEResponse = (response: Response, controller = new AbortController()) => {
+export const createGenerationStream = (response: Response, controller = new AbortController()) => {
   const iterator = async function* () {
     for await (const sse of iterSSEMessages(response, controller)) {
       if (sse.event === 'completion') {
@@ -60,14 +58,14 @@ export const fromSSEResponse = (response: Response, controller = new AbortContro
  */
 export class GenerationStream implements AsyncIterable<GenerationStreamEvent> {
   /**
-   * Iterator over the stream.
-   */
-  private _iterator?: AsyncIterator<GenerationStreamEvent> = undefined;
-
-  /**
    * Trigger event when the stream is done.
    */
   private readonly _done = new Trigger();
+
+  /**
+   * Iterator over the stream.
+   */
+  private _iterator?: AsyncIterator<GenerationStreamEvent> = undefined;
 
   constructor(
     private readonly _controller: AbortController,
