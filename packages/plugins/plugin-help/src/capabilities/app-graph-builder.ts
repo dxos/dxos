@@ -43,7 +43,15 @@ export default (context: PluginsContext) =>
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             const state = context.requestCapability(HelpCapabilities.MutableState);
             state.showHints = true;
-            await dispatch?.(createIntent(LayoutAction.SetLayout, { element: 'dialog', component: SHORTCUTS_DIALOG }));
+            await dispatch(
+              createIntent(LayoutAction.UpdateDialog, {
+                part: 'dialog',
+                subject: SHORTCUTS_DIALOG,
+                options: {
+                  blockAlign: 'center',
+                },
+              }),
+            );
           },
           properties: {
             label: ['open shortcuts label', { ns: HELP_PLUGIN }],

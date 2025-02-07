@@ -109,14 +109,14 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: SPACE_SETTINGS_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject: SpaceSettingsDialogProps } => data.component === SPACE_SETTINGS_DIALOG,
-      component: ({ data }) => <SpaceSettingsDialog {...data.subject} createInvitationUrl={createInvitationUrl} />,
+      filter: (data): data is { props: SpaceSettingsDialogProps } => data.component === SPACE_SETTINGS_DIALOG,
+      component: ({ data }) => <SpaceSettingsDialog {...data.props} createInvitationUrl={createInvitationUrl} />,
     }),
     createSurface({
       id: JOIN_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject: JoinPanelProps } => data.component === JOIN_DIALOG,
-      component: ({ data }) => <JoinDialog {...data.subject} />,
+      filter: (data): data is { props: JoinPanelProps } => data.component === JOIN_DIALOG,
+      component: ({ data }) => <JoinDialog {...data.props} />,
     }),
     createSurface({
       id: CREATE_SPACE_DIALOG,
@@ -127,7 +127,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: CREATE_OBJECT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject: Partial<CreateObjectDialogProps> } => data.component === CREATE_OBJECT_DIALOG,
+      filter: (data): data is { props: Partial<CreateObjectDialogProps> } => data.component === CREATE_OBJECT_DIALOG,
       component: ({ data }) => {
         const schemas = useCapabilities(ClientCapabilities.Schema).flat();
         const manager = usePluginManager();
@@ -142,21 +142,21 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           [manager],
         );
 
-        return <CreateObjectDialog schemas={schemas} resolve={resolve} {...data.subject} />;
+        return <CreateObjectDialog schemas={schemas} resolve={resolve} {...data.props} />;
       },
     }),
     createSurface({
       id: POPOVER_RENAME_SPACE,
       role: 'popover',
-      filter: (data): data is { subject: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.subject),
-      component: ({ data }) => <PopoverRenameSpace space={data.subject} />,
+      filter: (data): data is { props: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.props),
+      component: ({ data }) => <PopoverRenameSpace space={data.props} />,
     }),
     createSurface({
       id: POPOVER_RENAME_OBJECT,
       role: 'popover',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } =>
-        data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.subject),
-      component: ({ data }) => <PopoverRenameObject object={data.subject} />,
+      filter: (data): data is { props: ReactiveEchoObject<any> } =>
+        data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.props),
+      component: ({ data }) => <PopoverRenameObject object={data.props} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,

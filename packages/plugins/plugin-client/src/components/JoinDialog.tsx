@@ -24,7 +24,7 @@ export const JoinDialog = (props: JoinPanelProps) => {
     async (result: InvitationResult | null) => {
       if (result?.identityKey) {
         await Promise.all([
-          dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false })),
+          dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } })),
           dispatch(
             createIntent(ObservabilityAction.SendEvent, {
               name: props.initialDisposition === 'recover-identity' ? 'identity.recover' : 'identity.join',

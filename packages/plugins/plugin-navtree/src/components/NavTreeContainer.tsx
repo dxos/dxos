@@ -7,7 +7,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher, Surface } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher, Surface } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
@@ -128,11 +128,13 @@ export const NavTreeContainer = memo(
 
         const current = isCurrent(path, node);
         if (!current) {
-          void dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [node.id] } }));
+          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [node.id] }));
         } else if (option) {
-          void dispatch(createIntent(NavigationAction.Close, { activeParts: { main: [node.id] } }));
+          void dispatch(
+            createIntent(LayoutAction.Close, { part: 'main', subject: [node.id], options: { state: false } }),
+          );
         } else {
-          void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: node.id }));
+          void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: node.id }));
         }
 
         const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
