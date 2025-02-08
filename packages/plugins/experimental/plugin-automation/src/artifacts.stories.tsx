@@ -11,11 +11,11 @@ import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatch
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Tool, type Message } from '@dxos/artifact';
 import {
-  type ArtifactsContext,
   capabilities,
   genericTools,
-  type IsObject,
   localServiceEndpoints,
+  type ArtifactsContext,
+  type IsObject,
 } from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
@@ -24,10 +24,10 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useSpace } from '@dxos/react-client/echo';
 import { useQueue } from '@dxos/react-edge-client';
 import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -45,7 +45,7 @@ type RenderProps = {
 } & Pick<ThreadProps, 'debug'>;
 
 const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
-  const client = useClient();
+  const space = useSpace();
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Configuration.
@@ -83,12 +83,12 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         aiClient,
         tools,
         {
-          space: client.spaces.default,
+          space,
           dispatch,
         },
         createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
       ),
-    [client, aiClient, tools, artifactDefinitions, dispatch],
+    [aiClient, tools, space, dispatch, artifactDefinitions],
   );
 
   // Queue.
@@ -184,12 +184,15 @@ const meta: Meta<typeof Render> = {
   render: Render,
   decorators: [
     withSignals,
-    withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({
       plugins: [
         IntentPlugin(),
-        // ClientPlugin(),
-        SpacePlugin(),
+        ClientPlugin({
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+          },
+        }),
+        SpacePlugin({ observability: false }),
         ChessPlugin(),
         MapPlugin(),
       ],

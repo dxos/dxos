@@ -40,8 +40,14 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
       new ChatProcessor(
         aiClient,
         tools,
-        { space, dispatch },
-        { model: '@anthropic/claude-3-5-sonnet-20241022', systemPrompt },
+        {
+          space,
+          dispatch,
+        },
+        {
+          model: '@anthropic/claude-3-5-sonnet-20241022',
+          systemPrompt,
+        },
       ),
     [aiClient, tools, space, systemPrompt],
   );

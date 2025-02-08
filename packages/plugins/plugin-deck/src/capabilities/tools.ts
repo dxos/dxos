@@ -17,6 +17,7 @@ import { invariant } from '@dxos/invariant';
 declare global {
   interface ToolContextExtensions {
     dispatch?: PromiseIntentDispatcher;
+    pivotId?: string;
   }
 }
 
@@ -38,14 +39,15 @@ export default () =>
           }),
         ),
       }),
-      execute: async ({ id, pivotId }, { extensions }) => {
+      execute: async ({ id }, { extensions }) => {
         invariant(extensions?.dispatch, 'No intent dispatcher');
         const { data, error } = await extensions.dispatch(
           createIntent(LayoutAction.Open, {
             subject: [id],
             part: 'main',
             options: {
-              pivotId,
+              pivotId: extensions.pivotId,
+              positioning: 'end',
             },
           }),
         );
