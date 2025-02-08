@@ -156,7 +156,7 @@ export const L0Menu = ({
       onPointerLeave={handleClose}
       onFocus={handleFocus}
       data-state={expanded ? 'expanded' : 'collapsed'}
-      className='group/l0 absolute inset-block-0 inline-start-0 grid grid-cols-[var(--l0-size)_0] grid-rows-[1fr_min-content] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-l0 backdrop-blur border-ie border-separator'
+      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 grid grid-cols-[var(--l0-size)_0] grid-rows-[1fr_min-content] contain-layout !is-[--l0-size] data-[state=expanded]:!is-[--l1-size] data-[state=expanded]:grid-cols-[var(--l0-size)_calc(var(--l1-size)-var(--l0-size))] transition-[inline-size,grid-template-columns] duration-200 ease-in-out bg-l0 backdrop-blur border-ie border-separator'
     >
       <Tabs.Tablist classNames='grid grid-cols-subgrid col-span-2 auto-rows-[calc(var(--l0-size)-.5rem)] overflow-y-auto plb-1'>
         {topLevelItems.map((item) => {
