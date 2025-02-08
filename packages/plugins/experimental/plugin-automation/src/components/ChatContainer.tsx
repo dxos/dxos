@@ -57,7 +57,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
     [chat.queue.dxn],
   );
   const queue = useQueue<Message>(edgeClient, queueDxn);
-  const messages = useMemo(() => [...queue.items, ...processor.messages.value], [queue.items, processor.messages]);
+  const messages = [...queue.items, ...processor.messages.value];
 
   const handleSubmit = useCallback(
     async (message: string) => {

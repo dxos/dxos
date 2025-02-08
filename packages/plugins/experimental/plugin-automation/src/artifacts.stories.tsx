@@ -98,7 +98,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   // State.
   const artifactItems = artifactsContext.items.toReversed();
   const messages = [...queue.items, ...processor.messages.value];
-  console.log('messages', { messages: messages.map((m) => m.content.length) });
+  console.log('messages', { messages: messages.map((m) => ({ id: m.id, content: m.content.length })) });
 
   const handleSubmit = async (message: string) => {
     if (processor.isStreaming) {
