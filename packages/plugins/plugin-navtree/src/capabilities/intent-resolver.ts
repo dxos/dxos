@@ -17,10 +17,15 @@ export default (context: PluginsContext) =>
         S.is(LayoutAction.Expose.fields.input)(data),
       resolve: async ({ subject }) => {
         const { graph } = context.requestCapability(Capabilities.AppGraph);
-        const { getItem, setItem } = context.requestCapability(NavTreeCapabilities.State);
+        const { l0State, getItem, setItem } = context.requestCapability(NavTreeCapabilities.State);
 
         try {
           const path = await graph.waitForPath({ target: subject }, { timeout: 1_000 });
+          // TODO(wittjosiah): Is there a better way to handle this?
+          if (path.length === 3) {
+            l0State.current = path[2];
+          }
+
           [...Array(path.length)].forEach((_, index) => {
             const subpath = path.slice(0, index);
             const value = getItem(subpath);

@@ -7,7 +7,7 @@ import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { DeckCapabilities } from './capabilities';
-import { DECK_ACTION, getMode, type DeckState, type PlankSizing } from '../types';
+import { DECK_ACTION, getMode, type Deck, type DeckState, type PlankSizing } from '../types';
 
 export default () => {
   const state = new LocalStorageStore<DeckState>(DECK_ACTION, {
@@ -25,10 +25,10 @@ export default () => {
     popoverOpen: false,
     toasts: [],
     currentUndoId: undefined,
+    decks: {},
+    activeDeck: 'never',
     fullscreen: false,
     solo: undefined,
-    deck: [],
-    closed: [],
     plankSizing: {},
     scrollIntoView: undefined,
   });
@@ -37,8 +37,9 @@ export default () => {
     .prop({ key: 'sidebarOpen', type: LocalStorageStore.bool() })
     .prop({ key: 'complementarySidebarOpen', type: LocalStorageStore.bool() })
     .prop({ key: 'fullscreen', type: LocalStorageStore.bool() })
+    .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, Deck>>() })
+    .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'solo', type: LocalStorageStore.string({ allowUndefined: true }) })
-    .prop({ key: 'deck', type: LocalStorageStore.json<string[]>() })
     .prop({ key: 'plankSizing', type: LocalStorageStore.json<PlankSizing>() });
 
   const layout = create<Capabilities.Layout>({
@@ -49,10 +50,10 @@ export default () => {
       return state.values.dialogOpen;
     },
     get active() {
-      return state.values.solo ? [state.values.solo] : state.values.deck;
+      return state.values.solo ? [state.values.solo] : state.values.decks[state.values.activeDeck]?.active ?? [];
     },
     get inactive() {
-      return state.values.closed;
+      return state.values.decks[state.values.activeDeck]?.inactive ?? [];
     },
     get scrollIntoView() {
       return state.values.scrollIntoView;

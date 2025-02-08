@@ -9,7 +9,8 @@ import { NAVTREE_PLUGIN } from '../meta';
 
 export namespace NavTreeCapabilities {
   export const State = defineCapability<{
-    state: Map<string, ReactiveObject<{ open: boolean; current: boolean }>>;
+    l0State: ReactiveObject<{ current: string }>;
+    l1State: Map<string, ReactiveObject<{ open: boolean; current: boolean }>>;
     getItem: (path: string[]) => ReactiveObject<{ open: boolean; current: boolean }>;
     setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
     isOpen: (path: string[]) => boolean;

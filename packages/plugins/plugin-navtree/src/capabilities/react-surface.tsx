@@ -4,7 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { createSurface, Capabilities, contributes, useCapability } from '@dxos/app-framework';
+import {
+  createSurface,
+  Capabilities,
+  contributes,
+  useCapability,
+  useIntentDispatcher,
+  LayoutAction,
+  createIntent,
+} from '@dxos/app-framework';
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';
@@ -33,7 +41,8 @@ export default () =>
       role: 'navigation',
       component: ({ data }) => {
         const { graph } = useCapability(Capabilities.AppGraph);
-        const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
+        const { l0State, isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 
         const handleOpenChange = useCallback(
           ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
@@ -48,6 +57,14 @@ export default () =>
           [graph],
         );
 
+        const handleTabChange = useCallback(
+          async (tab: string) => {
+            await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: tab }));
+            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: tab }));
+          },
+          [dispatch],
+        );
+
         return (
           <NavTreeContainer
             isOpen={isOpen}
@@ -56,6 +73,8 @@ export default () =>
             popoverAnchorId={data.popoverAnchorId as string | undefined}
             topbar={data.topbar as boolean}
             hoistStatusbar={data.hoistStatusbar as boolean}
+            tab={l0State.current}
+            onTabChange={handleTabChange}
           />
         );
       },

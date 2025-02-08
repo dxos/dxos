@@ -15,6 +15,9 @@ const uriToSoloPart = (uri: string): string | undefined => {
   return slug.length > 0 ? slug : undefined;
 };
 
+// TODO(wittjosiah): Introduce a way to link to a specific deck.
+//   Would need a way to differentiate between a deck and a solo.
+//   Probably justifies introducing routing capabilities.
 export default async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher) ?? {};
   const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
@@ -24,8 +27,7 @@ export default async (context: PluginsContext) => {
     if (pathname === '/reset') {
       layout.fullscreen = false;
       layout.solo = undefined;
-      layout.deck = [];
-      layout.closed = [];
+      layout.decks = {};
       window.location.pathname = '/';
       return;
     }
@@ -33,8 +35,9 @@ export default async (context: PluginsContext) => {
     const solo = uriToSoloPart(pathname);
     if (!solo) {
       layout.solo = undefined;
-      if (layout.deck[0]) {
-        await dispatch?.(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: layout.deck[0] }));
+      const first = layout.decks[layout.activeDeck]?.active[0];
+      if (first) {
+        await dispatch?.(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first }));
       }
       return;
     }

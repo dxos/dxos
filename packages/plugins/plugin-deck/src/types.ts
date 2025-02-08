@@ -38,6 +38,12 @@ export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
 export const PlankSizing = S.Record({ key: S.String, value: S.Number });
 export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 
+export const Deck = S.Struct({
+  active: S.mutable(S.Array(S.String)),
+  inactive: S.mutable(S.Array(S.String)),
+});
+export type Deck = S.Schema.Type<typeof Deck>;
+
 export const DeckState = S.mutable(
   S.Struct({
     modeHistory: S.mutable(S.Array(LayoutMode)),
@@ -64,10 +70,10 @@ export const DeckState = S.mutable(
     toasts: S.mutable(S.Array(LayoutAction.Toast)),
     currentUndoId: S.optional(S.String),
 
-    fullscreen: S.Boolean,
+    activeDeck: S.String,
+    decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
     solo: S.optional(S.String),
-    deck: S.mutable(S.Array(S.String)),
-    closed: S.mutable(S.Array(S.String)),
+    fullscreen: S.Boolean,
     plankSizing: S.mutable(PlankSizing),
 
     /**

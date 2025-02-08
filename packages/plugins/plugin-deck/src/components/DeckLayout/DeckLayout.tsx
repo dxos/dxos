@@ -50,12 +50,14 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
     popoverOpen,
     popoverContent,
     popoverAnchorId,
+    activeDeck,
+    decks,
     fullscreen,
     solo,
-    deck,
     plankSizing,
     toasts,
   } = context;
+  const deck = decks[activeDeck]?.active ?? [];
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);

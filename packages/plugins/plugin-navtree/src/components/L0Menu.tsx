@@ -22,10 +22,12 @@ type L0ItemProps = {
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { onSelect, isCurrent } = useNavTreeContext();
+  const { onTabChange, onSelect, isCurrent } = useNavTreeContext();
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
+        case 'tab':
+          return onTabChange?.(item.id);
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {
@@ -51,7 +53,7 @@ const L0Item = ({ item, parent, path }: L0ItemProps) => {
   const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
   const rootProps =
     type === 'tab'
-      ? { value: item.id, tabIndex: 0, 'data-testid': testId, 'data-itemid': id }
+      ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
       : type !== 'collection'
         ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
         : { onClick: handleClick };
