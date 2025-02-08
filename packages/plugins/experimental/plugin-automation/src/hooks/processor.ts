@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Signal, batch, signal } from '@preact/signals-core';
+import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type Tool, Message, type MessageContentBlock } from '@dxos/artifact';
@@ -40,7 +40,7 @@ declare global {
  */
 export class ChatProcessor {
   /** Stream parser. */
-  private _parser = new MixedStreamParser();
+  private readonly _parser = new MixedStreamParser();
 
   /** Current streaming response (iterator). */
   private _stream: GenerationStream | undefined;
@@ -49,13 +49,29 @@ export class ChatProcessor {
   private _history: Message[] = [];
 
   /** Pending messages (incl. the user request). */
-  private _messages: Signal<Message[]> = signal([]);
+  private _pending: Signal<Message[]> = signal([]);
 
   /** Current message. */
   private _current: Signal<Message | undefined> = signal(undefined);
 
   /** Current streaming block (from the AI service). */
   private _streaming: Signal<MessageContentBlock | undefined> = signal(undefined);
+
+  /** Messages (incl. the current message). */
+  private readonly _messages: Signal<Message[]> = computed(() => {
+    const messages = [...this._pending.value];
+    if (this._current.value) {
+      if (this._streaming.value) {
+        const { content, ...rest } = this._current.value;
+        const message = { ...rest, content: [...content, this._streaming.value] };
+        messages.push(message);
+      } else {
+        messages.push(this._current.value);
+      }
+    }
+
+    return messages;
+  });
 
   constructor(
     private readonly _client: AIServiceClientImpl,
@@ -67,12 +83,10 @@ export class ChatProcessor {
     this._parser.message.on((message) => {
       log.info('== MESSAGE ==');
       batch(() => {
-        this._messages.value = [...this._messages.value, message];
+        this._pending.value = [...this._pending.value, message];
         this._streaming.value = undefined;
       });
     });
-
-    // === BLOCK IS CALLED BEFORE ADDED TO MESSAGE -- CHANGE TO MESSAGE START? ===
 
     // Block complete.
     this._parser.block.on((message) => {
@@ -85,8 +99,9 @@ export class ChatProcessor {
 
     // Streaming update (happens before message complete).
     this._parser.update.on(({ message, block }) => {
+      log.info('== UP ==', { block });
       batch(() => {
-        this._current.value = message;
+        // this._current.value = message; // TODO(brudon): Remove?
         this._streaming.value = block;
       });
     });
@@ -102,21 +117,8 @@ export class ChatProcessor {
   /**
    * @reactive
    */
-  get messages(): Message[] {
-    if (this._streaming.value) {
-      // Patch the current message with the partial block.
-      const messages = this._messages.value;
-      invariant(this._current.value);
-      // const message = messages.at(-1);
-      const temp: Message = {
-        ...this._current.value,
-        content: [...this._current.value.content, this._streaming.value],
-      };
-
-      return [...messages, temp];
-    } else {
-      return this._messages.value;
-    }
+  get messages(): Signal<Message[]> {
+    return this._messages;
   }
 
   /**
@@ -125,7 +127,7 @@ export class ChatProcessor {
   async request(message: string, history: Message[] = []): Promise<Message[]> {
     batch(() => {
       this._history = history;
-      this._messages.value = [
+      this._pending.value = [
         createStatic(Message, {
           role: 'user',
           content: [{ type: 'text', text: message }],
@@ -149,10 +151,10 @@ export class ChatProcessor {
   }
 
   private async _reset(): Promise<Message[]> {
-    const messages = this._messages.value;
+    const messages = this._pending.value;
     batch(() => {
       this._history = [];
-      this._messages.value = [];
+      this._pending.value = [];
       this._streaming.value = undefined;
     });
 
@@ -167,11 +169,11 @@ export class ChatProcessor {
     try {
       let more = false;
       do {
-        log.info('requesting...', { history: this._history.length, messages: this._messages.value.length });
+        log.info('requesting...', { history: this._history.length, messages: this._pending.value.length });
         this._stream = await this._client.generate({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
-          history: [...this._history, ...this._messages.value],
+          history: [...this._history, ...this._pending.value],
           tools: this._tools,
         });
 
@@ -180,16 +182,16 @@ export class ChatProcessor {
         await this._stream.complete();
 
         // Add messages.
-        log.info('response', { messages: this._messages.value });
+        log.info('response', { messages: this._pending.value });
 
         // Resolve tool use locally.
         more = false;
-        const message = this._messages.value.at(-1);
+        const message = this._pending.value.at(-1);
         invariant(message);
         if (isToolUse(message)) {
           log.info('tool request...');
           const response = await runTools({
-            message: this._messages.value.at(-1)!,
+            message: this._pending.value.at(-1)!,
             tools: this._tools ?? [],
             extensions: this._extensions,
           });
@@ -197,7 +199,7 @@ export class ChatProcessor {
           log.info('tool response', { response });
           switch (response.type) {
             case 'continue': {
-              this._messages.value = [...this._messages.value, response.message];
+              this._pending.value = [...this._pending.value, response.message];
               more = true;
               break;
             }

@@ -84,12 +84,8 @@ export class MixedStreamParser {
         //
 
         case 'message_start': {
-          this._message = createStatic(Message, {
-            role: 'assistant',
-            content: [],
-          });
+          this._message = createStatic(Message, { role: 'assistant', content: [] });
           this.message.emit(this._message);
-
           break;
         }
 
@@ -98,7 +94,6 @@ export class MixedStreamParser {
         }
 
         case 'message_stop': {
-          invariant(this._message);
           this._message = undefined;
           break;
         }
