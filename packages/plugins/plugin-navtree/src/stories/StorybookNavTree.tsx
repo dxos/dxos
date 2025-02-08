@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { NavTree } from '../components';
 import { NavTreeContext } from '../components/NavTreeContext';
@@ -22,8 +22,12 @@ export const StorybookNavTree = ({
   onOpenChange,
   ...props
 }: NavTreeProps & NavTreeContextValue) => {
+  const [tab, onTabChange] = useState('never');
+
   const contextValue = useMemo(
     () => ({
+      tab,
+      onTabChange,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -37,6 +41,8 @@ export const StorybookNavTree = ({
       onSelect,
     }),
     [
+      tab,
+      onTabChange,
       getActions,
       loadDescendents,
       renderItemEnd,

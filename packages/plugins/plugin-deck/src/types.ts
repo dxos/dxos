@@ -41,6 +41,9 @@ export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 export const Deck = S.Struct({
   active: S.mutable(S.Array(S.String)),
   inactive: S.mutable(S.Array(S.String)),
+  solo: S.optional(S.String),
+  fullscreen: S.Boolean,
+  plankSizing: S.mutable(PlankSizing),
 });
 export type Deck = S.Schema.Type<typeof Deck>;
 
@@ -72,9 +75,7 @@ export const DeckState = S.mutable(
 
     activeDeck: S.String,
     decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
-    solo: S.optional(S.String),
-    fullscreen: S.Boolean,
-    plankSizing: S.mutable(PlankSizing),
+    deck: S.mutable(Deck),
 
     /**
      * The identifier of a component to scroll into view when it is mounted.
@@ -85,9 +86,9 @@ export const DeckState = S.mutable(
 
 export type DeckState = S.Schema.Type<typeof DeckState>;
 
-export const getMode = (state: DeckState): LayoutMode => {
-  if (state.solo) {
-    return state.fullscreen ? 'fullscreen' : 'solo';
+export const getMode = (deck: Deck): LayoutMode => {
+  if (deck.solo) {
+    return deck.fullscreen ? 'fullscreen' : 'solo';
   }
 
   return 'deck';

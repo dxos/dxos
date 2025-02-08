@@ -20,29 +20,27 @@ const uriToSoloPart = (uri: string): string | undefined => {
 //   Probably justifies introducing routing capabilities.
 export default async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher) ?? {};
-  const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+  const state = context.requestCapability(DeckCapabilities.MutableDeckState);
 
   const handleNavigation = async () => {
     const pathname = window.location.pathname;
     if (pathname === '/reset') {
-      layout.fullscreen = false;
-      layout.solo = undefined;
-      layout.decks = {};
+      state.decks = {};
       window.location.pathname = '/';
       return;
     }
 
     const solo = uriToSoloPart(pathname);
     if (!solo) {
-      layout.solo = undefined;
-      const first = layout.decks[layout.activeDeck]?.active[0];
+      state.deck.solo = undefined;
+      const first = state.deck.active[0];
       if (first) {
         await dispatch?.(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first }));
       }
       return;
     }
 
-    layout.solo = solo;
+    state.deck.solo = solo;
     await dispatch?.(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: solo }));
   };
 
@@ -50,7 +48,7 @@ export default async (context: PluginsContext) => {
   window.addEventListener('popstate', handleNavigation);
 
   const unsubscribe = scheduledEffect(
-    () => ({ solo: layout.solo }),
+    () => ({ solo: state.deck.solo }),
     ({ solo }) => {
       const path = solo ? `/${solo}` : '';
       // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…

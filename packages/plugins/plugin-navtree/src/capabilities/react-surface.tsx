@@ -39,10 +39,12 @@ export default () =>
     createSurface({
       id: `${NAVTREE_PLUGIN}/navigation`,
       role: 'navigation',
+      filter: (data): data is { popoverAnchorId?: string; topbar: boolean; hoistStatusbar: boolean; current: string } =>
+        typeof data.current === 'string',
       component: ({ data }) => {
         const { graph } = useCapability(Capabilities.AppGraph);
         const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const { l0State, isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
+        const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 
         const handleOpenChange = useCallback(
           ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
@@ -58,10 +60,7 @@ export default () =>
         );
 
         const handleTabChange = useCallback(
-          async (tab: string) => {
-            await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: tab }));
-            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: tab }));
-          },
+          (tab: string) => dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: tab })),
           [dispatch],
         );
 
@@ -73,7 +72,7 @@ export default () =>
             popoverAnchorId={data.popoverAnchorId as string | undefined}
             topbar={data.topbar as boolean}
             hoistStatusbar={data.hoistStatusbar as boolean}
-            tab={l0State.current}
+            tab={data.current}
             onTabChange={handleTabChange}
           />
         );
