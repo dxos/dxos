@@ -17,8 +17,6 @@ import { ChatProcessor } from '../hooks';
 import { type GptChatType } from '../types';
 
 export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
-  const edgeClient = useEdgeClient();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -35,6 +33,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   // TODO(burdon): Create hook.
   // TODO(wittjosiah): Should these be created in the component?
   // TODO(zan): Combine with ai service client?
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const processor = useMemo(
     () =>
       new ChatProcessor(
@@ -49,13 +48,15 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
           systemPrompt,
         },
       ),
-    [aiClient, tools, space, systemPrompt],
+    [aiClient, tools, space, dispatch, systemPrompt],
   );
+
   // TODO(wittjosiah): Remove transformation.
   const queueDxn = useMemo(
     () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space!.id, chat.queue.dxn.parts.at(-1)!]),
     [chat.queue.dxn],
   );
+  const edgeClient = useEdgeClient();
   const queue = useQueue<Message>(edgeClient, queueDxn);
   const messages = useMemo(() => [...queue.items, ...processor.messages], [queue.items, processor.messages]);
 

@@ -44,23 +44,16 @@ type RenderProps = {
   prompts?: string[];
 } & Pick<ThreadProps, 'debug'>;
 
+// TODO(burdon): Use ChatContainer.
 const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const space = useSpace();
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
   // Configuration.
+  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useMemo<Tool[]>(
-    () => [
-      // prettier-ignore
-      ...genericTools,
-      ...artifactDefinitions.flatMap((definition) => definition.tools),
-    ],
+    () => [...genericTools, ...artifactDefinitions.flatMap((definition) => definition.tools)],
     [genericTools, artifactDefinitions],
   );
-
-  // TODO(burdon): Common naming/packaging.
-  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
-  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
 
   // Artifacts.
   // TODO(burdon): Factor out class.
@@ -76,6 +69,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     }),
   );
 
+  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
+  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const processor = useMemo(
     () =>
