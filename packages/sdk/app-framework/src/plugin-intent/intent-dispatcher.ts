@@ -5,7 +5,7 @@
 import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { type MaybePromise, byDisposition, type Disposition } from '@dxos/util';
+import { type MaybePromise, byDisposition, type Disposition, type GuardedType } from '@dxos/util';
 
 import { IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
@@ -28,13 +28,13 @@ const HISTORY_LIMIT = 100;
 /**
  * The return value of an intent effect.
  */
-export type IntentEffectResult<Fields extends IntentParams> = {
+export type IntentEffectResult<Input, Output> = {
   /**
    * The output of the action that was performed.
    *
    * If the intent is apart of a chain of intents, the data will be passed to the next intent.
    */
-  data?: IntentResultData<Fields>;
+  data?: Output;
 
   /**
    * If provided, the action will be undoable.
@@ -48,7 +48,7 @@ export type IntentEffectResult<Fields extends IntentParams> = {
     /**
      * Will be merged with the original intent data when firing the undo intent.
      */
-    data?: Partial<IntentData<Fields>>;
+    data?: Partial<Input>;
   };
 
   /**
@@ -66,33 +66,32 @@ export type IntentEffectResult<Fields extends IntentParams> = {
   intents?: AnyIntentChain[];
 };
 
-export type AnyIntentEffectResult = IntentEffectResult<any>;
+export type AnyIntentEffectResult = IntentEffectResult<any, any>;
 
 /**
  * The result of an intent dispatcher.
  */
-export type IntentDispatcherResult<Fields extends IntentParams> = Pick<IntentEffectResult<Fields>, 'data' | 'error'>;
+export type IntentDispatcherResult<Input, Output> = Pick<IntentEffectResult<Input, Output>, 'data' | 'error'>;
 
 /**
  * The implementation of an intent effect.
  */
-export type IntentEffectDefinition<Fields extends IntentParams> = (
-  data: IntentData<Fields>,
+export type IntentEffectDefinition<Input, Output> = (
+  data: Input,
   undo: boolean,
-) => MaybePromise<IntentEffectResult<Fields> | void> | Effect.Effect<IntentEffectResult<Fields> | void>;
+) => MaybePromise<IntentEffectResult<Input, Output> | void> | Effect.Effect<IntentEffectResult<Input, Output> | void>;
 
 /**
  * Intent resolver to match intents to their effects.
  */
-export type IntentResolver<Tag extends string, Fields extends IntentParams> = Readonly<{
-  action: Tag;
+export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+  intent: IntentSchema<Tag, Fields>;
   disposition?: Disposition;
-  // TODO(wittjosiah): Would be nice to make this a guard for intents with optional data.
-  filter?: (data: IntentData<Fields>) => boolean;
-  effect: IntentEffectDefinition<Fields>;
+  filter?: (data: IntentData<Fields>) => data is Data;
+  resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
 
-export type AnyIntentResolver = IntentResolver<any, any>;
+export type AnyIntentResolver = IntentResolver<any, any, any>;
 
 /**
  * Creates an intent resolver to match intents to their effects.
@@ -101,22 +100,16 @@ export type AnyIntentResolver = IntentResolver<any, any>;
  * @param params.disposition Determines the priority of the resolver when multiple are resolved.
  * @param params.filter Optional filter to determine if the resolver should be used.
  */
-export const createResolver = <Tag extends string, Fields extends IntentParams>(
-  schema: IntentSchema<Tag, Fields>,
-  effect: IntentEffectDefinition<Fields>,
-  params: Pick<IntentResolver<Tag, Fields>, 'disposition' | 'filter'> = {},
-): IntentResolver<Tag, Fields> => ({
-  action: schema._tag,
-  effect,
-  ...params,
-});
+export const createResolver = <Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>>(
+  resolver: IntentResolver<Tag, Fields, Data>,
+) => resolver;
 
 /**
  * Invokes intents and returns the result.
  */
 export type PromiseIntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
-) => Promise<Simplify<IntentDispatcherResult<Fields>>>;
+) => Promise<Simplify<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>>;
 
 /**
  * Creates an effect for intents.
@@ -124,9 +117,15 @@ export type PromiseIntentDispatcher = <Fields extends IntentParams>(
 export type IntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
   depth?: number,
-) => Effect.Effect<Simplify<Required<IntentDispatcherResult<Fields>>['data']>, Error>;
+) => Effect.Effect<
+  Simplify<Required<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>['data']>,
+  Error
+>;
 
-type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<Fields> & {
+type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<
+  IntentData<Fields>,
+  IntentResultData<Fields>
+> & {
   _intent: Intent<Tag, Fields>;
 };
 
@@ -135,7 +134,7 @@ export type AnyIntentResult = IntentResult<any, any>;
 /**
  * Invokes the most recent undoable intent with undo flags.
  */
-export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any>>;
+export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any, any>>;
 
 /**
  * Creates an effect which undoes the last intent.
@@ -168,24 +167,20 @@ export const createDispatcher = (
 ): IntentContext => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
-  const handleIntent = (intent: AnyIntent) => {
-    return Effect.gen(function* () {
+  const handleIntent = (intent: AnyIntent) =>
+    Effect.gen(function* () {
       const candidates = getResolvers(intent.module)
-        .filter((r) => r.action === intent.action)
+        .filter((r) => r.intent._tag === intent.id)
         .filter((r) => !r.filter || r.filter(intent.data))
         .toSorted(byDisposition);
       if (candidates.length === 0) {
-        return {
-          _intent: intent,
-          error: new NoResolversError(intent.action),
-        } as AnyIntentResult;
+        yield* Effect.fail(new NoResolversError(intent.id));
       }
 
-      const effect = candidates[0].effect(intent.data, intent.undo ?? false);
+      const effect = candidates[0].resolve(intent.data, intent.undo ?? false);
       const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(async () => effect);
       return { _intent: intent, ...result } as AnyIntentResult;
     });
-  };
 
   const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
     return Effect.gen(function* () {

@@ -80,16 +80,20 @@ export const contributes = <T>(
 };
 
 type LazyCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
+// TODO(wittjosiah): Not having the array be `any` causes type errors when using the lazy capability.
+type LazyCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<Capability<any>[]> }>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
  */
-export const lazy =
-  <T, U>(c: LazyCapability<T, U>) =>
-  (props?: T): Promise<Capability<U>> =>
-    c().then(({ default: getCapability }) => {
-      return getCapability(props as T);
-    });
+export function lazy<T, U>(c: LazyCapability<T, U>): (props?: T) => Promise<Capability<U>>;
+export function lazy<T>(c: LazyCapabilities<T>): (props?: T) => Promise<Capability<any>[]>;
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+export function lazy<T, U>(
+  c: LazyCapability<T, U> | LazyCapabilities<T>,
+): (props?: T) => Promise<Capability<U> | Capability<any>[]> {
+  return (props?: T) => c().then(({ default: getCapability }) => getCapability(props as T));
+}
 
 /**
  * Context which is passed to plugins, allowing them to interact with each other.

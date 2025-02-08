@@ -6,18 +6,16 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, useCapabilities, useCapability } from '@dxos/app-framework';
 
-import { DeckLayout } from '../../components';
-import { DECK_PLUGIN } from '../../meta';
-import { type DeckSettingsProps } from '../../types';
-import { DeckCapabilities } from '../capabilities';
+import { DeckCapabilities } from './capabilities';
+import { DeckLayout } from '../components';
+import { DECK_PLUGIN } from '../meta';
+import { type DeckSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactRoot, {
     id: DECK_PLUGIN,
     root: () => {
-      const layout = useCapability(Capabilities.Layout);
-      const location = useCapability(Capabilities.Location);
-      const deck = useCapability(DeckCapabilities.MutableDeckState);
+      const layout = useCapability(DeckCapabilities.MutableDeckState);
       const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
       const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
 
@@ -28,8 +26,8 @@ export default () =>
             // Allow time for the toast to animate out.
             // TODO(burdon): Factor out and unregister timeout.
             setTimeout(() => {
-              if (layout.toasts[index].id === deck.currentUndoId) {
-                deck.currentUndoId = undefined;
+              if (layout.toasts[index].id === layout.currentUndoId) {
+                layout.currentUndoId = undefined;
               }
               layout.toasts.splice(index, 1);
             }, 1_000);
@@ -40,10 +38,8 @@ export default () =>
 
       return (
         <DeckLayout
-          layoutParts={location.active}
           showHints={settings.showHints}
           overscroll={settings.overscroll}
-          toasts={layout.toasts}
           panels={panels}
           onDismissToast={handleDismissToast}
         />

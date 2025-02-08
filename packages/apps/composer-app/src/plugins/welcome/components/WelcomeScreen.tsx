@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -74,14 +74,19 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
     const handleDone = async (result: InvitationResult | null) => {
       await dispatch(
-        createIntent(NavigationAction.Close, {
-          activeParts: {
-            fullScreen: WELCOME_SCREEN,
-            main: client.spaces.default.id,
-          },
+        createIntent(LayoutAction.Close, {
+          part: 'main',
+          subject: [`surface:${WELCOME_SCREEN}`],
+          options: { state: false },
         }),
       );
-      await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
+      await dispatch(
+        createIntent(LayoutAction.SetLayoutMode, {
+          part: 'mode',
+          subject: result?.target ?? undefined,
+          options: { mode: 'solo' },
+        }),
+      );
 
       if (identityCreated) {
         await dispatch(createIntent(ClientAction.CreateRecoveryCode));

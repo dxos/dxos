@@ -10,7 +10,10 @@ import { ExplorerAction, ViewType } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(ExplorerAction.Create, ({ name }) => ({
-      data: { object: create(ViewType, { name, type: '' }) },
-    })),
+    createResolver({
+      intent: ExplorerAction.Create,
+      resolve: ({ name }) => ({
+        data: { object: create(ViewType, { name, type: '' }) },
+      }),
+    }),
   );

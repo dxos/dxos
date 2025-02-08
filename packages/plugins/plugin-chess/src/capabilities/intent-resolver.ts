@@ -10,9 +10,12 @@ import { ChessAction, GameType } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(ChessAction.Create, ({ name }) => ({
-      data: {
-        object: create(GameType, { name }),
-      },
-    })),
+    createResolver({
+      intent: ChessAction.Create,
+      resolve: ({ name }) => ({
+        data: {
+          object: create(GameType, { name }),
+        },
+      }),
+    }),
   );

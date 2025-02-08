@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createIntent, NavigationAction, SLUG_PATH_SEPARATOR, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
 import { Main, ScrollArea, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
@@ -14,10 +14,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
-import { CloseComplementarySidebarButton } from './SidebarButton';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
-import { type Panel } from '../../types';
+import { SLUG_PATH_SEPARATOR, type Panel } from '../../types';
+import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useLayout } from '../LayoutContext';
 
 export type ComplementarySidebarProps = {
@@ -36,6 +36,8 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const { t } = useTranslation(DECK_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   useNodeActionExpander(node);
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint);
 
   const [internalValue, setInternalValue] = useState(activePanelId);
 
@@ -46,14 +48,16 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const handleValueChange = useCallback(
     (nextValue: string) => {
       setInternalValue(nextValue);
-      void dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: nextValue } }));
+      void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
     },
     [dispatch],
   );
 
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
-    <Main.ComplementarySidebar classNames='lg:block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]'>
+    <Main.ComplementarySidebar
+      classNames={topbar ? 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]' : undefined}
+    >
       <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
         <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
           <Tabs.Root
@@ -63,7 +67,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             attendableId={attended[0]}
             classNames='contents'
           >
-            <StackItem.Heading classNames='border-be border-separator grid grid-cols-[1fr_min-content] items-stretch'>
+            <StackItem.Heading classNames='grid items-stretch border-be border-separator'>
               <ScrollArea.Root classNames='flex-1 min-is-0'>
                 <ScrollArea.Viewport>
                   <Tabs.Tablist classNames='bs-[--rail-content] is-min items-stretch pis-[max(.5rem,env(safe-area-inset-left))] sm:pis-2'>
@@ -78,7 +82,6 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                   </ScrollArea.Scrollbar>
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-              <CloseComplementarySidebarButton />
             </StackItem.Heading>
             <ScrollArea.Root>
               <ScrollArea.Viewport>
