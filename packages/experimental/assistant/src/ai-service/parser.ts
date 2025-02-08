@@ -29,7 +29,7 @@ export class MixedStreamParser {
   /**
    * Update partial block (while streaming).
    */
-  public update = new Event<{ message: Message; block: MessageContentBlock }>();
+  public update = new Event<MessageContentBlock>();
 
   /**
    * Current message.
@@ -58,7 +58,7 @@ export class MixedStreamParser {
     const messageBlock = createMessageBlock(block, content);
     if (messageBlock) {
       invariant(this._message);
-      this.update.emit({ message: this._message, block: messageBlock });
+      this.update.emit(messageBlock);
     }
   }
 

@@ -9,14 +9,14 @@ import { computed, signal, type ReadonlySignal, type Signal } from '@preact/sign
  */
 export class SelectionModel {
   private readonly _selected: Signal<Set<string>> = signal(new Set<string>());
+  private readonly _selectedIds = computed(() => Array.from(this._selected.value.values()));
 
   get size(): number {
     return this._selected.value.size;
   }
 
-  // TODO(burdon): ???
   get selected(): ReadonlySignal<string[]> {
-    return computed(() => Array.from(this._selected.value.values()));
+    return this._selectedIds;
   }
 
   contains(id: string) {
@@ -40,6 +40,7 @@ export class SelectionModel {
         set.add(id);
       }
     });
+
     this._selected.value = set;
   }
 }

@@ -42,28 +42,26 @@ export class ChatProcessor {
   /** Stream parser. */
   private readonly _parser = new MixedStreamParser();
 
-  /** Current streaming response (iterator). */
-  private _stream: GenerationStream | undefined;
-
-  /** Prior history from queue. */
-  private _history: Message[] = [];
-
   /** Pending messages (incl. the user request). */
-  private _pending: Signal<Message[]> = signal([]);
+  private readonly _pending: Signal<Message[]> = signal([]);
 
   /** Current message. */
-  private _current: Signal<Message | undefined> = signal(undefined);
+  private readonly _current: Signal<Message | undefined> = signal(undefined);
 
   /** Current streaming block (from the AI service). */
-  private _streaming: Signal<MessageContentBlock | undefined> = signal(undefined);
+  private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
+
+  private readonly _streaming: Signal<boolean> = computed(() => {
+    return !!this._block.value;
+  });
 
   /** Messages (incl. the current message). */
   private readonly _messages: Signal<Message[]> = computed(() => {
     const messages = [...this._pending.value];
     if (this._current.value) {
-      if (this._streaming.value) {
+      if (this._block.value) {
         const { content, ...rest } = this._current.value;
-        const message = { ...rest, content: [...content, this._streaming.value] };
+        const message = { ...rest, content: [...content, this._block.value] };
         messages.push(message);
       } else {
         messages.push(this._current.value);
@@ -72,6 +70,12 @@ export class ChatProcessor {
 
     return messages;
   });
+
+  /** Current streaming response (iterator). */
+  private _stream: GenerationStream | undefined;
+
+  /** Prior history from queue. */
+  private _history: Message[] = [];
 
   constructor(
     private readonly _client: AIServiceClientImpl,
@@ -84,7 +88,8 @@ export class ChatProcessor {
       log.info('== MESSAGE ==');
       batch(() => {
         this._pending.value = [...this._pending.value, message];
-        this._streaming.value = undefined;
+        this._current.value = message;
+        this._block.value = undefined;
       });
     });
 
@@ -93,16 +98,16 @@ export class ChatProcessor {
       log.info('== BLOCK ==');
       batch(() => {
         this._current.value = message;
-        this._streaming.value = undefined;
+        this._block.value = undefined;
       });
     });
 
     // Streaming update (happens before message complete).
-    this._parser.update.on(({ message, block }) => {
+    this._parser.update.on((block) => {
       log.info('== UP ==', { block });
       batch(() => {
-        // this._current.value = message; // TODO(brudon): Remove?
-        this._streaming.value = block;
+        invariant(this._current.value);
+        this._block.value = block;
       });
     });
   }
@@ -110,8 +115,8 @@ export class ChatProcessor {
   /**
    * @reactive
    */
-  get isStreaming(): boolean {
-    return !!this._streaming.value;
+  get streaming(): Signal<boolean> {
+    return this._streaming;
   }
 
   /**
@@ -133,7 +138,7 @@ export class ChatProcessor {
           content: [{ type: 'text', text: message }],
         }),
       ];
-      this._streaming.value = undefined;
+      this._block.value = undefined;
     });
 
     await this._generate();
@@ -155,7 +160,7 @@ export class ChatProcessor {
     batch(() => {
       this._history = [];
       this._pending.value = [];
-      this._streaming.value = undefined;
+      this._block.value = undefined;
     });
 
     return messages;

@@ -47,13 +47,34 @@ type RenderProps = {
 // TODO(burdon): Use ChatContainer.
 const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const space = useSpace();
-
-  // Configuration.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useMemo<Tool[]>(
     () => [...genericTools, ...artifactDefinitions.flatMap((definition) => definition.tools)],
     [genericTools, artifactDefinitions],
   );
+
+  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
+  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const processor = useMemo<ChatProcessor | undefined>(() => {
+    if (!space) {
+      return;
+    }
+
+    return new ChatProcessor(
+      aiClient,
+      tools,
+      {
+        space,
+        dispatch,
+      },
+      createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
+    );
+  }, [aiClient, tools, space, dispatch, artifactDefinitions]);
+
+  // Queue.
+  const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
+  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
 
   // Artifacts.
   // TODO(burdon): Factor out class.
@@ -69,40 +90,25 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     }),
   );
 
-  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
-  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const processor = useMemo(
-    () =>
-      new ChatProcessor(
-        aiClient,
-        tools,
-        {
-          space,
-          dispatch,
-        },
-        createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
-      ),
-    [aiClient, tools, space, dispatch, artifactDefinitions],
-  );
-
-  // Queue.
-  const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
-  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
-
   // State.
   const artifactItems = artifactsContext.items.toReversed();
-  const messages = [...queue.items, ...processor.messages.value];
+  const messages = [...queue.items, ...(processor?.messages.value ?? [])];
   console.log('messages', { messages: messages.map((m) => ({ id: m.id, content: m.content.length })) });
 
-  const handleSubmit = async (message: string) => {
-    if (processor.isStreaming) {
-      await processor.cancel();
-    }
+  const handleSubmit = useCallback(
+    async (message: string) => {
+      if (!processor) {
+        return;
+      }
+      if (processor.streaming.value) {
+        await processor.cancel();
+      }
 
-    const messages = await processor.request(message, queue.items);
-    queue.append(messages);
-  };
+      const messages = await processor?.request(message, queue.items);
+      queue.append(messages);
+    },
+    [processor],
+  );
 
   const [prompt, setPrompt] = useState(0);
   const handleTest = useCallback(() => {
@@ -135,12 +141,12 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               icon='ph--trash--regular'
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
-            <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor.cancel()} />
+            <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
             {prompts.length > 0 && <Button onClick={handleTest}>Test</Button>}
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={messages} streaming={processor.isStreaming} onSubmit={handleSubmit} {...props} />
+        <Thread messages={messages} streaming={processor?.streaming.value} onSubmit={handleSubmit} {...props} />
       </div>
 
       {/* Artifacts Deck/Mosaic */}
@@ -196,13 +202,14 @@ export default meta;
 
 export const Default = {
   args: {
-    debug: false,
+    debug: true,
     prompts: ['hello', 'show me a chess puzzle'],
   },
 };
 
 export const WithInitialItems = {
   args: {
+    debug: true,
     items: [
       createStatic(ChessType, {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
