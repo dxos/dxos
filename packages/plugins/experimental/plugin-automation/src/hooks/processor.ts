@@ -55,7 +55,7 @@ export class ChatProcessor {
   private _current: Signal<Message | undefined> = signal(undefined);
 
   /** Current streaming block (from the AI service). */
-  private _block: Signal<MessageContentBlock | undefined> = signal(undefined);
+  private _streaming: Signal<MessageContentBlock | undefined> = signal(undefined);
 
   constructor(
     private readonly _client: AIServiceClientImpl,
@@ -65,26 +65,29 @@ export class ChatProcessor {
   ) {
     // Message complete.
     this._parser.message.on((message) => {
+      log.info('== MESSAGE ==');
       batch(() => {
         this._messages.value = [...this._messages.value, message];
-        this._block.value = undefined;
+        this._streaming.value = undefined;
       });
     });
+
+    // === BLOCK IS CALLED BEFORE ADDED TO MESSAGE -- CHANGE TO MESSAGE START? ===
 
     // Block complete.
     this._parser.block.on((message) => {
+      log.info('== BLOCK ==');
       batch(() => {
-        log.info('block complete', { message });
         this._current.value = message;
-        this._block.value = undefined;
+        this._streaming.value = undefined;
       });
     });
 
-    // Streaming update.
+    // Streaming update (happens before message complete).
     this._parser.update.on(({ message, block }) => {
       batch(() => {
         this._current.value = message;
-        this._block.value = block;
+        this._streaming.value = block;
       });
     });
   }
@@ -93,20 +96,21 @@ export class ChatProcessor {
    * @reactive
    */
   get isStreaming(): boolean {
-    return !!this._block.value;
+    return !!this._streaming.value;
   }
 
   /**
    * @reactive
    */
   get messages(): Message[] {
-    if (this._block.value) {
+    if (this._streaming.value) {
       // Patch the current message with the partial block.
       const messages = this._messages.value;
       invariant(this._current.value);
+      // const message = messages.at(-1);
       const temp: Message = {
-        ...this._current.value!,
-        content: [...this._current.value.content, this._block.value],
+        ...this._current.value,
+        content: [...this._current.value.content, this._streaming.value],
       };
 
       return [...messages, temp];
@@ -119,16 +123,15 @@ export class ChatProcessor {
    * Make GPT request.
    */
   async request(message: string, history: Message[] = []): Promise<Message[]> {
-    log.info('requesting...', { message, history: history.length });
-    this._history = history;
     batch(() => {
+      this._history = history;
       this._messages.value = [
         createStatic(Message, {
           role: 'user',
           content: [{ type: 'text', text: message }],
         }),
       ];
-      this._block.value = undefined;
+      this._streaming.value = undefined;
     });
 
     await this._generate();
@@ -150,8 +153,9 @@ export class ChatProcessor {
     batch(() => {
       this._history = [];
       this._messages.value = [];
-      this._block.value = undefined;
+      this._streaming.value = undefined;
     });
+
     return messages;
   }
 
@@ -163,7 +167,7 @@ export class ChatProcessor {
     try {
       let more = false;
       do {
-        log.info('requesting...', { history: this._history.length, pending: this._messages.value.length });
+        log.info('requesting...', { history: this._history.length, messages: this._messages.value.length });
         this._stream = await this._client.generate({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.

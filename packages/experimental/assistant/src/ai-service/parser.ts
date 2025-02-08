@@ -16,8 +16,6 @@ import { StreamTransform, type StreamBlock } from './transform';
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
  */
 export class MixedStreamParser {
-  private _message?: Message | undefined;
-
   /**
    * Message complete.
    */
@@ -34,8 +32,10 @@ export class MixedStreamParser {
   public update = new Event<{ message: Message; block: MessageContentBlock }>();
 
   /**
-   * Emit block.
+   * Current message.
    */
+  private _message?: Message | undefined;
+
   // TODO(burdon): Clean-up.
   private _emitBlock(block: StreamBlock | undefined, content?: MessageContentBlock) {
     if (!block) {
@@ -53,6 +53,7 @@ export class MixedStreamParser {
     }
   }
 
+  // TODO(burdon): Clean-up.
   private _emitUpdate(block: StreamBlock, content?: MessageContentBlock) {
     const messageBlock = createMessageBlock(block, content);
     if (messageBlock) {
@@ -67,11 +68,15 @@ export class MixedStreamParser {
   async parse(stream: GenerationStream) {
     const transformer = new StreamTransform();
 
-    let current: StreamBlock | undefined; // TODO(burdon): Just acccumulate.
+    //
+    //
+    //
+    //
     let content: MessageContentBlock | undefined;
+    let current: StreamBlock | undefined; // TODO(burdon): Just acccumulate.
 
     for await (const event of stream) {
-      // log.info('event', { type: event.type, event });
+      log('event', { type: event.type, event });
 
       switch (event.type) {
         //
@@ -83,6 +88,7 @@ export class MixedStreamParser {
             role: 'assistant',
             content: [],
           });
+          this.message.emit(this._message);
 
           break;
         }
@@ -93,7 +99,6 @@ export class MixedStreamParser {
 
         case 'message_stop': {
           invariant(this._message);
-          this.message.emit(this._message);
           this._message = undefined;
           break;
         }
@@ -111,9 +116,6 @@ export class MixedStreamParser {
           // TODO(burdon): Parse initial content.
           log.info('content_block_start', { event });
           content = event.content;
-          if (event.content.type === 'tool_use') {
-            // current = { type: 'json', disposition: 'tool_use', content: '' };
-          }
           break;
         }
 
@@ -236,7 +238,7 @@ export class MixedStreamParser {
  * Convert stream block to message content block.
  */
 export const createMessageBlock = (block: StreamBlock, base?: MessageContentBlock): MessageContentBlock | undefined => {
-  log.info('createMessageBlock', { block, base });
+  log('createMessageBlock', { block, base });
 
   switch (block.type) {
     //

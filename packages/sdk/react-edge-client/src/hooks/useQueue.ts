@@ -69,10 +69,6 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
   }, [queueDxn?.toString()]);
 
   useEffect(() => {
-    void refresh();
-  }, [queueDxn?.toString()]);
-
-  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (options.pollInterval) {
       const poll = () => {
@@ -89,8 +85,8 @@ export const useQueue = <T>(client: EdgeHttpClient, queueDxn?: DXN, options: Use
 
   return {
     items,
-    append,
     isLoading,
     error,
+    append,
   };
 };

@@ -129,7 +129,8 @@ const Block = ({ id, block, role }: Pick<Message, 'role'> & { id: string; block:
 const getContent = (block: MessageContentBlock) => {
   const titles: Record<string, string> = {
     ['cot' as const]: 'Chain of thought',
-    ['tool_use' as const]: 'Tool',
+    ['tool_use' as const]: 'Tool request',
+    ['tool_result' as const]: 'Tool result',
   };
 
   // TODO(burdon): Pills: open/close.
@@ -137,7 +138,7 @@ const getContent = (block: MessageContentBlock) => {
     case 'text': {
       const title = block.disposition ? titles[block.disposition] : undefined;
       return (
-        <Container title={title}>
+        <Container title={title} toggle={!!title}>
           <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
         </Container>
       );
@@ -146,21 +147,27 @@ const getContent = (block: MessageContentBlock) => {
     case 'json': {
       const title = block.disposition ? titles[block.disposition] : undefined;
       return (
-        <Container title={title}>
-          <Json data={safeParseJson(block.json)} />
+        <Container title={title ?? 'JSON'} toggle>
+          <Json data={safeParseJson(block.json ?? block)} />
         </Container>
       );
     }
 
     default: {
-      return <Json data={block} />;
+      const title = titles[block.type];
+      return (
+        <Container title={title ?? 'JSON'} toggle>
+          <Json data={block} />
+        </Container>
+      );
     }
   }
 };
 
 // TODO(burdon): Typewriter effect if streaming.
 // TODO(burdon): Open/close is reset after streaming stops. Memoize?
-const Container = ({ title, children }: PropsWithChildren<{ title?: string }>) => {
+const Container = ({ title, toggle, children }: PropsWithChildren<{ title?: string; toggle?: boolean }>) => {
+  // TODO(burdon): Set default.
   const [open, setOpen] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -169,13 +176,15 @@ const Container = ({ title, children }: PropsWithChildren<{ title?: string }>) =
       {title && (
         <div
           className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer select-none'
-          onClick={() => setOpen(!open)}
+          onClick={toggle ? () => setOpen(!open) : undefined}
         >
-          <Icon
-            size={4}
-            icon={'ph--caret-right--regular'}
-            classNames={['transition transition-transform duration-200', open ? 'rotate-90' : 'transform-none']}
-          />
+          {toggle && (
+            <Icon
+              size={4}
+              icon={'ph--caret-right--regular'}
+              classNames={['transition transition-transform duration-200', open ? 'rotate-90' : 'transform-none']}
+            />
+          )}
           <span>{title}</span>
         </div>
       )}

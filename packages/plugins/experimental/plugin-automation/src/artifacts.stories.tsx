@@ -22,10 +22,10 @@ import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { MapPlugin } from '@dxos/plugin-map';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useQueue } from '@dxos/react-edge-client';
@@ -33,23 +33,18 @@ import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
-import { Thread } from './components';
+import { Thread, type ThreadProps } from './components';
 import { ChatProcessor } from './hooks';
 import { createProcessorOptions } from './testing';
 
 const endpoints = localServiceEndpoints;
 
-const prompts = [
-  // Test prompts.
-  'hello',
-  'show me a chess puzzle',
-];
-
 type RenderProps = {
   items?: IsObject[];
-};
+  prompts?: string[];
+} & Pick<ThreadProps, 'debug'>;
 
-const Render = ({ items: _items }: RenderProps) => {
+const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const client = useClient();
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
@@ -67,10 +62,6 @@ const Render = ({ items: _items }: RenderProps) => {
   const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
 
-  // Queue.
-  const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
-  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
-
   // Artifacts.
   // TODO(burdon): Factor out class.
   const [artifactsContext] = useState(() =>
@@ -85,7 +76,6 @@ const Render = ({ items: _items }: RenderProps) => {
     }),
   );
 
-  // TODO(burdon): Create hook.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const processor = useMemo(
     () =>
@@ -98,36 +88,36 @@ const Render = ({ items: _items }: RenderProps) => {
         },
         createProcessorOptions(artifactDefinitions.map((definition) => definition.instructions)),
       ),
-    [client, aiClient, tools, artifactDefinitions],
+    [client, aiClient, tools, artifactDefinitions, dispatch],
   );
+
+  // Queue.
+  const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
+  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
   const messages = [...queue.items, ...processor.messages];
 
-  log.info('messages', {
-    messages: messages.map((m) => m.id),
-    queue: queue.items.length,
-    proc: processor.messages.length,
-    streaming: processor.isStreaming,
-  });
+  // log.info('messages', {
+  //   messages: messages.map((m) => m.id),
+  //   queue: queue.items.length,
+  //   proc: processor.messages.length,
+  //   streaming: processor.isStreaming,
+  // });
 
   const handleSubmit = async (message: string) => {
-    // TODO(burdon): Button to cancel. Otherwise queue request.
     if (processor.isStreaming) {
       await processor.cancel();
     }
 
-    // TODO(burdon): Append on success only? If approved by user? Client/server.
     const messages = await processor.request(message, queue.items);
     queue.append(messages);
-    console.log('===', messages.length, queue.items.length);
   };
 
   const [test, setTest] = useState(0);
   const handleTest = useCallback(() => {
     void handleSubmit(prompts[test]);
-    log.info('test', { test });
     setTest((test) => (test < prompts.length - 1 ? test + 1 : 0));
   }, [test]);
 
@@ -157,11 +147,11 @@ const Render = ({ items: _items }: RenderProps) => {
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor.cancel()} />
-            <Button onClick={handleTest}>Test</Button>
+            {prompts.length > 0 && <Button onClick={handleTest}>Test</Button>}
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={messages} streaming={processor.isStreaming} onSubmit={handleSubmit} debug />
+        <Thread messages={messages} streaming={processor.isStreaming} onSubmit={handleSubmit} {...props} />
       </div>
 
       {/* Artifacts Deck/Mosaic */}
@@ -193,11 +183,16 @@ const meta: Meta<typeof Render> = {
   title: 'plugins/plugin-automation/artifacts',
   render: Render,
   decorators: [
-    //
     withSignals,
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({
-      plugins: [IntentPlugin(), ChessPlugin(), MapPlugin()],
+      plugins: [
+        IntentPlugin(),
+        // ClientPlugin(),
+        SpacePlugin(),
+        ChessPlugin(),
+        MapPlugin(),
+      ],
       capabilities,
     }),
     withTheme,
@@ -207,7 +202,12 @@ const meta: Meta<typeof Render> = {
 
 export default meta;
 
-export const Default = {};
+export const Default = {
+  args: {
+    debug: false,
+    prompts: ['hello', 'show me a chess puzzle'],
+  },
+};
 
 export const WithInitialItems = {
   args: {
