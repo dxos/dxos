@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { omit } from '@dxos/util';
 
 type MarkdownViewerProps = ThemedClassName<{
   content: string;
@@ -29,18 +30,18 @@ export const MarkdownViewer: FC<MarkdownViewerProps> = ({ content, classNames })
               {children}
             </a>
           ),
-          ul: ({ node, children, ...props }) => (
-            <ul className='leading-tight list-disc pl-6' {...props}>
-              {children}
-            </ul>
-          ),
           ol: ({ node, children, ...props }) => (
-            <ol className='leading-tight list-decimal pl-6' {...props}>
+            <ol className='leading-tight list-decimal pl-6' {...omit(props, ['ordered'])}>
               {children}
             </ol>
           ),
+          ul: ({ node, children, ...props }) => (
+            <ul className='leading-tight list-disc pl-6' {...omit(props, ['ordered'])}>
+              {children}
+            </ul>
+          ),
           li: ({ node, children, ...props }) => (
-            <li className='' {...props}>
+            <li className='' {...omit(props, ['ordered'])}>
               {children}
             </li>
           ),

@@ -97,14 +97,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
-  const messages = [...queue.items, ...processor.messages];
-
-  // log.info('messages', {
-  //   messages: messages.map((m) => m.id),
-  //   queue: queue.items.length,
-  //   proc: processor.messages.length,
-  //   streaming: processor.isStreaming,
-  // });
+  const messages = [...queue.items, ...processor.messages.value];
+  console.log('messages', { messages: messages.map((m) => m.content.length) });
 
   const handleSubmit = async (message: string) => {
     if (processor.isStreaming) {
@@ -115,11 +109,11 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     queue.append(messages);
   };
 
-  const [test, setTest] = useState(0);
+  const [prompt, setPrompt] = useState(0);
   const handleTest = useCallback(() => {
-    void handleSubmit(prompts[test]);
-    setTest((test) => (test < prompts.length - 1 ? test + 1 : 0));
-  }, [test]);
+    void handleSubmit(prompts[prompt]);
+    setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
+  }, [prompt]);
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -186,13 +180,13 @@ const meta: Meta<typeof Render> = {
     withSignals,
     withPluginManager({
       plugins: [
-        IntentPlugin(),
         ClientPlugin({
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },
         }),
         SpacePlugin({ observability: false }),
+        IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
       ],
