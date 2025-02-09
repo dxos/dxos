@@ -42,7 +42,7 @@ export type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
  */
 export const JsonContentBlock = S.Struct({
   type: S.Literal('json'),
-  disposition: S.optional(S.String), // (e.g., "tool_use", "tool_result").
+  disposition: S.optional(S.String),
   json: S.String,
 }).pipe(S.mutable);
 export type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
@@ -106,8 +106,9 @@ export const ToolResultContentBlock = S.Struct({
  */
 export const MessageContentBlock = S.Union(
   TextContentBlock,
-  ImageContentBlock,
   JsonContentBlock,
+  ImageContentBlock,
+
   // TODO(burdon): Replace with JsonContentBlock with disposition (to make MessageContentBlock reusable).
   ToolUseContentBlock,
   ToolResultContentBlock,

@@ -54,11 +54,11 @@ export class MixedStreamParser {
   }
 
   private _emitUpdate(block: StreamBlock, content?: MessageContentBlock) {
-    const messageBlock = createMessageBlock(block, content);
-    if (messageBlock) {
-      invariant(this._message);
-      this.update.emit(messageBlock);
-    }
+    // const messageBlock = createMessageBlock(block, content);
+    // if (messageBlock) {
+    //   invariant(this._message);
+    //   this.update.emit(messageBlock);
+    // }
   }
 
   /**
@@ -69,10 +69,10 @@ export class MixedStreamParser {
 
     // TODO(burdon): Consolidate.
     let content: MessageContentBlock | undefined;
-    let current: StreamBlock | undefined;
+    let current: StreamBlock | undefined; // TODO(burdon): REMOVE.
 
     for await (const event of stream) {
-      log('event', { type: event.type, event });
+      // log.info('event', { type: event.type, event });
 
       switch (event.type) {
         //
@@ -80,12 +80,20 @@ export class MixedStreamParser {
         //
 
         case 'message_start': {
+          if (this._message) {
+            log.warn('unterminated message');
+          }
+
           this._message = createStatic(Message, { role: 'assistant', content: [] });
           this.message.emit(this._message);
           break;
         }
 
         case 'message_delta': {
+          if (!this._message) {
+            log.warn('unexpected message delta');
+          }
+
           break;
         }
 
@@ -99,8 +107,8 @@ export class MixedStreamParser {
         //
 
         case 'content_block_start': {
-          if (current) {
-            log.warn('unterminated content block', { current });
+          if (content || current) {
+            log.warn('unterminated content block', { content, current });
             current = undefined;
           }
 
@@ -111,6 +119,10 @@ export class MixedStreamParser {
         }
 
         case 'content_block_delta': {
+          if (!content) {
+            log.warn('unexpected content block delta');
+          }
+
           switch (event.delta.type) {
             //
             // Text
@@ -191,9 +203,22 @@ export class MixedStreamParser {
             //
             case 'input_json_delta': {
               invariant(content);
-              if (content.type === 'tool_use') {
-                content.inputJson ??= '';
-                content.inputJson += event.delta.partial_json;
+              switch (content.type) {
+                case 'tool_use': {
+                  content.inputJson ??= '';
+                  content.inputJson += event.delta.partial_json;
+                  break;
+                }
+
+                case 'json': {
+                  content.json ??= '';
+                  content.json += event.delta.partial_json;
+                  break;
+                }
+
+                default: {
+                  log.warn('unhandled content block type', { content });
+                }
               }
               break;
             }
@@ -202,13 +227,23 @@ export class MixedStreamParser {
         }
 
         case 'content_block_stop': {
-          if (content?.type === 'tool_use') {
-            content.input = safeParseJson(content.inputJson, {});
-            this._emitBlock(undefined, content);
-          } else if (current) {
-            this._emitBlock(current, content);
-            current = undefined;
+          log.info('content_block_stop', { content, current });
+          switch (content?.type) {
+            case 'tool_use': {
+              // TODO(burdon): Remove inputJson accumulator.
+              content.input = safeParseJson(content.inputJson, {});
+              this._emitBlock(undefined, content);
+              break;
+            }
+
+            case 'json': {
+              this._emitBlock(current, content);
+              break;
+            }
           }
+
+          content = undefined;
+          current = undefined;
           break;
         }
       }
@@ -224,7 +259,7 @@ export class MixedStreamParser {
  * Convert stream block to message content block.
  */
 export const createMessageBlock = (block: StreamBlock, base?: MessageContentBlock): MessageContentBlock | undefined => {
-  log('createMessageBlock', { block, base });
+  log.info('createMessageBlock', { block, base });
 
   switch (block.type) {
     //
@@ -232,7 +267,6 @@ export const createMessageBlock = (block: StreamBlock, base?: MessageContentBloc
     //
     case 'text': {
       return { ...base, type: 'text', text: block.content };
-      break;
     }
 
     //
@@ -258,9 +292,10 @@ export const createMessageBlock = (block: StreamBlock, base?: MessageContentBloc
           return { ...base, type: 'text', disposition: 'cot', text: content };
         }
 
-        // case 'artifact': {
-        //   return { type: 'text', disposition: 'artifact' };
-        // }
+        case 'artifact': {
+          // TODO(burdon): Parse artifact.
+          return { type: 'json', disposition: 'artifact', json: '' };
+        }
       }
       break;
     }

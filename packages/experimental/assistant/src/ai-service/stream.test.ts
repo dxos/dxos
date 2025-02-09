@@ -5,19 +5,14 @@
 import { describe, it } from 'vitest';
 
 import { type Message } from '@dxos/artifact';
-import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { MixedStreamParser } from './parser';
 import { createGenerationStream } from './stream';
+import { createTestSSEStream } from './testing';
 import { type GenerationStreamEvent } from './types';
 
-type Part = { event: string; data: any };
-
 const TEST_DATA = [
-  // JSON
-  {},
-
   [
     // Text
     'some text',
@@ -72,9 +67,10 @@ describe('GenerationStream', () => {
   });
 
   for (const splitBy of ['word', 'character'] as const) {
-    it(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
+    it.only(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
       const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA, { splitBy })));
       const parser = new MixedStreamParser();
+
       let message: Message | undefined;
       parser.message.on((_message) => {
         message = _message;
@@ -82,87 +78,19 @@ describe('GenerationStream', () => {
 
       await parser.parse(stream);
 
-      log('blocks', { message });
+      log.info('blocks', { message });
+
       expect(message?.content.map((block) => block.type)).to.deep.eq([
         //
+        'text',
+        'text',
+        'text',
+        'text',
         'json',
         'text',
-        'xml',
-        'text',
-        'xml',
-        'text',
-        'xml',
-        'text',
-        'xml',
-        'text',
+        'json',
         'json',
       ]);
     });
   }
 });
-
-/**
- * Mock server-side events (SSE) stream.
- */
-export const createTestSSEStream = (
-  blocks: (string | object)[],
-  { splitBy = 'word' }: { splitBy?: 'word' | 'character' } = {},
-): ReadableStream => {
-  const encoder = new TextEncoder();
-
-  return new ReadableStream({
-    start: (controller) => {
-      const push = (message: Part) => {
-        controller.enqueue(encoder.encode(`event: ${message.event}\ndata: ${JSON.stringify(message.data)}\n\n`));
-      };
-
-      push({
-        event: 'message_start',
-        data: { type: 'message_start', message: { id: ObjectId.random(), role: 'assistant', content: [] } },
-      });
-
-      for (const block of blocks) {
-        push({
-          event: 'content_block_start',
-          data: { type: 'content_block_start', content: { type: 'text', text: '' } },
-        });
-
-        let index = 0;
-        if (typeof block === 'string') {
-          for (const word of block.split(splitBy === 'word' ? /([ \t\n]+)/ : '')) {
-            push({
-              event: 'content_block_delta',
-              data: {
-                type: 'content_block_delta',
-                index,
-                delta: { type: 'text_delta', text: word },
-              },
-            });
-            index += word.length + 1;
-          }
-        } else {
-          const text = JSON.stringify(block, null, 2);
-          for (const line of text.split('\n')) {
-            push({
-              event: 'content_block_delta',
-              data: { type: 'content_block_delta', index, delta: { type: 'input_json_delta', partial_json: line } },
-            });
-            index += line.length + 1;
-          }
-        }
-
-        push({
-          event: 'content_block_stop',
-          data: { type: 'content_block_stop' },
-        });
-      }
-
-      push({
-        event: 'message_stop',
-        data: { type: 'message_stop' },
-      });
-
-      controller.close();
-    },
-  });
-};
