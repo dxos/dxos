@@ -19,8 +19,8 @@ faker.seed(0);
 
 const Render = ({ messages, ...props }: ThreadProps) => {
   return (
-    <div className='flex grow justify-center overflow-center bg-white dark:bg-black'>
-      <div className='flex w-[500px] bg-base'>
+    <div className='flex grow justify-center overflow-center bg-base'>
+      <div className='flex w-[500px] bg-white dark:bg-black'>
         <Thread {...props} messages={messages} />
       </div>
     </div>

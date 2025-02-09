@@ -60,7 +60,7 @@ export const MarkdownViewer: FC<MarkdownViewerProps> = ({ classNames, content = 
           code: ({ children, className }) => {
             const [_, language] = /language-(\w+)/.exec(className || '') || [];
             return (
-              <SyntaxHighlighter PreTag='div' language={language}>
+              <SyntaxHighlighter PreTag='div' language={language} className='p-0'>
                 {children}
               </SyntaxHighlighter>
             );

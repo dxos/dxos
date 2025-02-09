@@ -17,7 +17,7 @@ import { StreamTransform, type StreamBlock } from './transform';
  */
 export class MixedStreamParser {
   /**
-   * Message complete.
+   * New message.
    */
   public message = new Event<Message>();
 
@@ -53,7 +53,6 @@ export class MixedStreamParser {
     }
   }
 
-  // TODO(burdon): Clean-up.
   private _emitUpdate(block: StreamBlock, content?: MessageContentBlock) {
     const messageBlock = createMessageBlock(block, content);
     if (messageBlock) {
@@ -69,11 +68,8 @@ export class MixedStreamParser {
     const transformer = new StreamTransform();
 
     // TODO(burdon): Consolidate.
-    //
-    //
-    //
     let content: MessageContentBlock | undefined;
-    let current: StreamBlock | undefined; // TODO(burdon): Just acccumulate.
+    let current: StreamBlock | undefined;
 
     for await (const event of stream) {
       log('event', { type: event.type, event });
@@ -198,12 +194,6 @@ export class MixedStreamParser {
               invariant(content.type === 'tool_use');
               content.inputJson ??= '';
               content.inputJson += event.delta.partial_json;
-
-              // if (!current) {
-              //   current = { type: 'json', content: event.delta.partial_json };
-              // } else {
-              //   // current.content += event.delta.partial_json;
-              // }
               break;
             }
           }
