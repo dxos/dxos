@@ -106,7 +106,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         await processor.request(message, {
           history: queue.items,
           onComplete: (messages) => {
-            log.info('append to queue', { messages });
             queue.append(messages);
           },
         });
