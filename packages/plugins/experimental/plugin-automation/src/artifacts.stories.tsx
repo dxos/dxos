@@ -113,7 +113,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
   }, [handleSubmit, prompt]);
 
-  console.log('messages', { processor, messages: messages.map((m) => ({ id: m.id, content: m.content.length })) });
+  console.log('messages', { messages: messages.length, processor: processor?.streaming.value });
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>

@@ -81,25 +81,14 @@ export class ChatProcessor {
   ) {
     // Message complete.
     this._parser.message.on((message) => {
-      log.info('== MESSAGE ==', { message });
       batch(() => {
         this._pending.value = [...this._pending.value, message];
         this._block.value = undefined;
       });
     });
 
-    // Block complete.
-    // this._parser.block.on((block) => {
-    //   log.info('== BLOCK ==');
-    //   batch(() => {
-    //     invariant(this._current.value);
-    //     this._block.value = undefined;
-    //   });
-    // });
-
     // Streaming update (happens before message complete).
     this._parser.update.on((block) => {
-      log.info('== UP ==', { block });
       batch(() => {
         this._block.value = block;
       });

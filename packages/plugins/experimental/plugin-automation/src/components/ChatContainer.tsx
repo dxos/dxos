@@ -63,7 +63,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   const handleSubmit = useCallback(
     async (message: string) => {
       // TODO(burdon): Button to cancel. Otherwise queue request.
-      if (processor.isStreaming) {
+      if (processor.streaming.value) {
         await processor.cancel();
       }
 
@@ -76,7 +76,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
 
   return (
     <StackItem.Content toolbar={false} role={role}>
-      <Thread messages={messages} streaming={processor.isStreaming} onSubmit={handleSubmit} />
+      <Thread messages={messages} streaming={processor.streaming.value} onSubmit={handleSubmit} />
     </StackItem.Content>
   );
 };
