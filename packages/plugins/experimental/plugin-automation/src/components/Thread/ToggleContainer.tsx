@@ -16,7 +16,7 @@ export const ToggleContainer = ({
   children,
 }: PropsWithChildren<{ title?: string; toggle?: boolean }>) => {
   // TODO(burdon): Set default.
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
 
   return (

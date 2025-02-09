@@ -39,6 +39,10 @@ export class MixedStreamParser {
   private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock) {
     const messageBlock = streamBlock ? mergeMessageBlock(contentBlock, streamBlock) : contentBlock;
     if (messageBlock) {
+      if (messageBlock.type === 'text' && messageBlock.text.length === 0) {
+        return;
+      }
+
       invariant(this._message);
       this._message.content.push(messageBlock);
       this.block.emit(messageBlock);
@@ -70,7 +74,6 @@ export class MixedStreamParser {
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
-
       switch (event.type) {
         //
         // Messages.
@@ -213,24 +216,6 @@ export class MixedStreamParser {
               } else {
                 streamBlock = { type: 'json', content: event.delta.partial_json };
               }
-
-              // switch (content.type) {
-              //   case 'tool_use': {
-              //     content.inputJson ??= '';
-              //     content.inputJson += event.delta.partial_json;
-              //     break;
-              //   }
-
-              //   case 'json': {
-              //     content.json ??= '';
-              //     content.json += event.delta.partial_json;
-              //     break;
-              //   }
-
-              //   default: {
-              //     log.warn('unhandled content block type', { content });
-              //   }
-              // }
               break;
             }
           }
@@ -244,21 +229,6 @@ export class MixedStreamParser {
           }
 
           this._emitBlock(contentBlock, streamBlock);
-
-          // switch (content?.type) {
-          //   case 'tool_use': {
-          //     // TODO(burdon): Remove inputJson accumulator.
-          //     content.input = safeParseJson(content.inputJson, {});
-          //     this._emitBlock(content);
-          //     break;
-          //   }
-
-          //   case 'json': {
-          //     this._emitBlock(content, current);
-          //     break;
-          //   }
-          // }
-
           contentBlock = undefined;
           streamBlock = undefined;
           break;
@@ -279,7 +249,7 @@ export const mergeMessageBlock = (
   contentBlock: MessageContentBlock,
   streamBlock: StreamBlock,
 ): MessageContentBlock | undefined => {
-  log.info('mergeMessageBlock', { contentBlock, streamBlock });
+  log('mergeMessageBlock', { contentBlock, streamBlock });
 
   switch (streamBlock.type) {
     //
