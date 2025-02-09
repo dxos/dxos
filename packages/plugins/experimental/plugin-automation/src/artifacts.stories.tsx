@@ -75,7 +75,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
 
   // Queue.
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
-  const queue = useQueue<Message>(edgeClient, DXN.parse(queueDxn, true));
+  const queue = useQueue<Message>(edgeClient, DXN.tryParse(queueDxn));
 
   // Artifacts.
   // TODO(burdon): Factor out class.
@@ -93,7 +93,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
 
   // State.
   const artifactItems = artifactsContext.items.toReversed();
-  const messages = [...queue.items, ...(processor?.messages.value ?? [])];
+  const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
 
   const handleSubmit = processor
     ? async (message: string) => {
@@ -102,8 +102,14 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
           await processor.cancel();
         }
 
-        const messages = await processor.request(message, queue.items);
-        queue.append(messages);
+        invariant(queue);
+        await processor.request(message, {
+          history: queue.items,
+          onComplete: (messages) => {
+            log.info('append to queue', { messages });
+            queue.append(messages);
+          },
+        });
       }
     : undefined;
 

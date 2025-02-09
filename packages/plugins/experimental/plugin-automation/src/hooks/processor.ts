@@ -32,6 +32,11 @@ declare global {
   }
 }
 
+type RequestOptions = {
+  history?: Message[];
+  onComplete?: (messages: Message[]) => void;
+};
+
 /**
  * Handles interactions with an AI service.
  * Manages message history, and executes tools based on AI responses.
@@ -112,9 +117,9 @@ export class ChatProcessor {
   /**
    * Make GPT request.
    */
-  async request(message: string, history: Message[] = []): Promise<Message[]> {
+  async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
     batch(() => {
-      this._history = history;
+      this._history = options.history ?? [];
       this._pending.value = [
         createStatic(Message, {
           role: 'user',
@@ -125,6 +130,7 @@ export class ChatProcessor {
     });
 
     await this._generate();
+    options.onComplete?.(this._pending.value);
     return this._reset();
   }
 
