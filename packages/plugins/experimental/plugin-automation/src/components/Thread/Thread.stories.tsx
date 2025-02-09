@@ -59,7 +59,7 @@ export const Default: Story = {
           {
             type: 'text',
             disposition: 'cot',
-            text: ['1. Consider the question.', '2. Plan the route.', '3. Plot the course.'].join('\n'),
+            text: ['1. Consider the question and context.', '2. Plan the route.', '3. Plot the course.'].join('\n'),
           },
           {
             type: 'text',
@@ -71,11 +71,23 @@ export const Default: Story = {
             name: 'search',
             input: {},
           },
+        ],
+      },
+      {
+        id: ObjectId.random(),
+        role: 'user',
+        content: [
           {
             type: 'tool_result',
             toolUseId: 'tool-use-1',
             content: 'This is a tool result.',
           },
+        ],
+      },
+      {
+        id: ObjectId.random(),
+        role: 'assistant',
+        content: [
           {
             type: 'text',
             text: 'This is a long text block.',

@@ -100,13 +100,13 @@ export const ThreadMessage: FC<
 
   const { role, content = [] } = message;
   return (
-    <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
-      <div className={mx('flex flex-col gap-2 overflow-hidden')}>
-        {debug && <div className='text-xs text-subdued'>{message.id}</div>}
-        {content.map((block, idx) => (
-          <Block key={idx} id={String(idx)} role={role} block={block} />
-        ))}
-      </div>
+    <div className={mx('flex flex-col gap-2 overflow-hidden')}>
+      {debug && <div className='text-xs text-subdued'>{message.id}</div>}
+      {content.map((block, idx) => (
+        <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
+          <Block id={String(idx)} role={role} block={block} />
+        </div>
+      ))}
     </div>
   );
 };
