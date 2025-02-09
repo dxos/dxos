@@ -118,7 +118,7 @@ export const TimerTriggerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }
 const GptStreamEventSchema = S.Any as S.Schema<GenerationStreamEvent>;
 
 export const GptMessage = S.Struct({
-  role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
+  role: S.Union(S.Literal('system'), S.Literal('user')),
   message: S.String,
 });
 

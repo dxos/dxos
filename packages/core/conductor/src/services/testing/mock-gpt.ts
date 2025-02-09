@@ -68,11 +68,6 @@ export class MockGpt implements Context.Tag.Service<GptService> {
             role: 'user',
             content: [{ type: 'text', text: prompt }],
           },
-          {
-            id: ObjectId.random(),
-            role: 'assistant',
-            content: [{ type: 'text', text: response }],
-          },
         ]),
         tokenStream: Effect.succeed(stream1),
         tokenCount: Effect.fail(NotExecuted),

@@ -4,7 +4,7 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { GptChatType } from './schema';
+import { AIChatType } from './schema';
 import { AUTOMATION_PLUGIN } from '../meta';
 
 export namespace AutomationAction {
@@ -15,7 +15,7 @@ export namespace AutomationAction {
       name: S.optional(S.String),
     }),
     output: S.Struct({
-      object: GptChatType,
+      object: AIChatType,
     }),
   }) {}
 }

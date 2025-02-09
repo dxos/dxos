@@ -14,9 +14,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Thread } from './Thread';
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
-import { type GptChatType } from '../types';
+import { type AIChatType } from '../types';
 import { invariant } from '@dxos/invariant';
-export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
+export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);

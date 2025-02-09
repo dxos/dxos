@@ -19,7 +19,7 @@ import { RefArray } from '@dxos/react-client/echo';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { AutomationAction, ChainPromptType, ChainType, GptChatType } from './types';
+import { AutomationAction, ChainPromptType, ChainType, AIChatType } from './types';
 
 // TODO(wittjosiah): Rename to AssistantPlugin?
 export const AutomationPlugin = () =>
@@ -48,7 +48,7 @@ export const AutomationPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: GptChatType.typename,
+          id: AIChatType.typename,
           metadata: {
             createObject: (props: { name?: string }) => createIntent(AutomationAction.Create, props),
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
@@ -62,7 +62,7 @@ export const AutomationPlugin = () =>
       activatesOn: ClientEvents.SetupClient,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger]),
-        contributes(ClientCapabilities.Schema, [GptChatType]),
+        contributes(ClientCapabilities.Schema, [AIChatType]),
       ],
     }),
     defineModule({
@@ -73,11 +73,6 @@ export const AutomationPlugin = () =>
           id: 'automation',
           label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],
           icon: 'ph--magic-wand--regular',
-        }),
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'assistant',
-          label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
-          icon: 'ph--atom--regular',
         }),
       ],
     }),
