@@ -5,11 +5,9 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -19,30 +17,7 @@ import { Thread, type ThreadProps } from './Thread';
 
 faker.seed(0);
 
-const Render = ({ messages: _messages, ...props }: ThreadProps) => {
-  const [messages, setMessages] = useState(_messages);
-  useEffect(() => {
-    const message: Message = {
-      id: ObjectId.random(),
-      role: 'assistant',
-      content: [
-        {
-          type: 'text',
-          text: '',
-        },
-      ],
-    };
-
-    const i = setInterval(() => {
-      const block = message.content[0];
-      invariant(block.type === 'text');
-      block.text += ' ' + faker.lorem.word();
-      setMessages([..._messages, message]);
-    }, 200);
-
-    return () => clearInterval(i);
-  }, []);
-
+const Render = ({ messages, ...props }: ThreadProps) => {
   return (
     <div className='flex grow justify-center overflow-center bg-white dark:bg-black'>
       <div className='flex w-[500px] bg-base'>
@@ -77,25 +52,36 @@ export const Default: Story = {
           },
         ],
       },
-      // {
-      //   id: ObjectId.random(),
-      //   role: 'assistant',
-      //   content: [
-      //     {
-      //       type: 'text',
-      //       disposition: 'cot',
-      //       text: ['1. Consider the question.', '2. Plan the route.', '3. Plot the course.'].join('\n'),
-      //     },
-      //     {
-      //       type: 'text',
-      //       text: 'Things',
-      //     },
-      //     {
-      //       type: 'json',
-      //       json: '{}',
-      //     },
-      //   ],
-      // },
+      {
+        id: ObjectId.random(),
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            disposition: 'cot',
+            text: ['1. Consider the question.', '2. Plan the route.', '3. Plot the course.'].join('\n'),
+          },
+          {
+            type: 'text',
+            text: 'This is a long text block.',
+          },
+          {
+            type: 'tool_use',
+            id: 'tool-use-1',
+            name: 'search',
+            input: {},
+          },
+          {
+            type: 'tool_result',
+            toolUseId: 'tool-use-1',
+            content: 'This is a tool result.',
+          },
+          {
+            type: 'text',
+            text: 'This is a long text block.',
+          },
+        ],
+      },
     ],
   },
 };

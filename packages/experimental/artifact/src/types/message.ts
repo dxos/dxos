@@ -90,6 +90,7 @@ export const ToolUseContentBlock = S.Struct({
   /**
    * Used to accumulate the partial tool input JSON in streaming mode.
    */
+  // TODO(burdon): Remove from type definition?
   inputJson: S.optional(S.String),
 }).pipe(S.mutable);
 
