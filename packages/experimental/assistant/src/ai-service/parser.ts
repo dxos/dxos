@@ -36,29 +36,20 @@ export class MixedStreamParser {
    */
   private _message?: Message | undefined;
 
-  // TODO(burdon): Clean-up.
-  private _emitBlock(block: StreamBlock | undefined, content?: MessageContentBlock) {
-    if (!block) {
+  private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock) {
+    const messageBlock = streamBlock ? mergeMessageBlock(contentBlock, streamBlock) : contentBlock;
+    if (messageBlock) {
       invariant(this._message);
-      invariant(content);
-      this._message.content.push(content);
-      this.block.emit(content);
-    } else {
-      const messageBlock = createMessageBlock(block, content);
-      if (messageBlock) {
-        invariant(this._message);
-        this._message.content.push(messageBlock);
-        this.block.emit(messageBlock);
-      }
+      this._message.content.push(messageBlock);
+      this.block.emit(messageBlock);
     }
   }
 
-  private _emitUpdate(block: StreamBlock, content?: MessageContentBlock) {
-    // const messageBlock = createMessageBlock(block, content);
-    // if (messageBlock) {
-    //   invariant(this._message);
-    //   this.update.emit(messageBlock);
-    // }
+  private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock) {
+    const messageBlock = mergeMessageBlock(contentBlock, streamBlock);
+    if (messageBlock) {
+      this.update.emit(messageBlock);
+    }
   }
 
   /**
@@ -67,9 +58,15 @@ export class MixedStreamParser {
   async parse(stream: GenerationStream) {
     const transformer = new StreamTransform();
 
-    // TODO(burdon): Consolidate.
-    let content: MessageContentBlock | undefined;
-    let current: StreamBlock | undefined; // TODO(burdon): REMOVE.
+    /**
+     * Current content message block.
+     */
+    let contentBlock: MessageContentBlock | undefined;
+
+    /**
+     * Current partial block used to accumulate content.
+     */
+    let streamBlock: StreamBlock | undefined;
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
@@ -81,7 +78,7 @@ export class MixedStreamParser {
 
         case 'message_start': {
           if (this._message) {
-            log.warn('unterminated message');
+            log.warn('unexpected message_start');
           }
 
           this._message = createStatic(Message, { role: 'assistant', content: [] });
@@ -91,14 +88,18 @@ export class MixedStreamParser {
 
         case 'message_delta': {
           if (!this._message) {
-            log.warn('unexpected message delta');
+            log.warn('unexpected message_delta');
           }
 
           break;
         }
 
         case 'message_stop': {
-          this._message = undefined;
+          if (!this._message) {
+            log.warn('unexpected message_stop');
+          } else {
+            this._message = undefined;
+          }
           break;
         }
 
@@ -107,20 +108,20 @@ export class MixedStreamParser {
         //
 
         case 'content_block_start': {
-          if (content || current) {
-            log.warn('unterminated content block', { content, current });
-            current = undefined;
+          if (contentBlock) {
+            log.warn('unexpected content_block_start', { content: contentBlock });
           }
 
           // TODO(burdon): Parse initial content.
           log.info('content_block_start', { event });
-          content = event.content;
+          contentBlock = event.content;
           break;
         }
 
         case 'content_block_delta': {
-          if (!content) {
-            log.warn('unexpected content block delta');
+          if (!contentBlock) {
+            log.warn('unexpected content_block_delta');
+            break;
           }
 
           switch (event.delta.type) {
@@ -132,32 +133,32 @@ export class MixedStreamParser {
               for (const chunk of chunks) {
                 // log.info('text_delta', { chunk, current });
 
-                switch (current?.type) {
+                switch (streamBlock?.type) {
                   //
                   // XML Fragment.
                   //
                   case 'tag': {
                     if (chunk.type === 'tag') {
                       if (chunk.selfClosing) {
-                        current.content.push(chunk);
+                        streamBlock.content.push(chunk);
                       } else if (chunk.closing) {
-                        this._emitBlock(current, content);
-                        current = undefined;
+                        this._emitBlock(contentBlock, streamBlock);
+                        streamBlock = undefined;
                       } else {
                         // TODO(burdon): Nested XML?
                         log.warn('unhandled nested xml', { chunk });
                       }
                     } else {
                       // Append text.
-                      if (current.content.length === 0) {
-                        current.content.push(chunk);
+                      if (streamBlock.content.length === 0) {
+                        streamBlock.content.push(chunk);
                       } else {
-                        const last = current.content.at(-1);
+                        const last = streamBlock.content.at(-1);
                         invariant(last);
                         if (last.type === 'text') {
                           last.content += chunk.content;
                         } else {
-                          current.content.push(chunk);
+                          streamBlock.content.push(chunk);
                         }
                       }
                     }
@@ -169,16 +170,16 @@ export class MixedStreamParser {
                   //
                   case 'text': {
                     if (chunk.type === 'tag') {
-                      this._emitBlock(current, content);
+                      this._emitBlock(contentBlock, streamBlock);
                       if (chunk.selfClosing) {
-                        this._emitBlock(chunk, content);
-                        current = undefined;
+                        this._emitBlock(contentBlock, chunk);
+                        streamBlock = undefined;
                       } else {
-                        current = chunk;
+                        streamBlock = chunk;
                       }
                     } else {
                       // Append text.
-                      current.content += chunk.content;
+                      streamBlock.content += chunk.content;
                     }
                     break;
                   }
@@ -188,9 +189,9 @@ export class MixedStreamParser {
                   //
                   default: {
                     if (chunk.type === 'tag' && chunk.selfClosing) {
-                      this._emitBlock(chunk, content);
+                      this._emitBlock(contentBlock, chunk);
                     } else {
-                      current = chunk;
+                      streamBlock = chunk;
                     }
                   }
                 }
@@ -202,24 +203,34 @@ export class MixedStreamParser {
             // JSON
             //
             case 'input_json_delta': {
-              invariant(content);
-              switch (content.type) {
-                case 'tool_use': {
-                  content.inputJson ??= '';
-                  content.inputJson += event.delta.partial_json;
-                  break;
-                }
-
-                case 'json': {
-                  content.json ??= '';
-                  content.json += event.delta.partial_json;
-                  break;
-                }
-
-                default: {
-                  log.warn('unhandled content block type', { content });
-                }
+              if (!contentBlock) {
+                log.warn('unexpected input_json_delta', { contentBlock });
+                break;
               }
+
+              if (streamBlock?.type === 'json') {
+                streamBlock.content += event.delta.partial_json;
+              } else {
+                streamBlock = { type: 'json', content: event.delta.partial_json };
+              }
+
+              // switch (content.type) {
+              //   case 'tool_use': {
+              //     content.inputJson ??= '';
+              //     content.inputJson += event.delta.partial_json;
+              //     break;
+              //   }
+
+              //   case 'json': {
+              //     content.json ??= '';
+              //     content.json += event.delta.partial_json;
+              //     break;
+              //   }
+
+              //   default: {
+              //     log.warn('unhandled content block type', { content });
+              //   }
+              // }
               break;
             }
           }
@@ -227,29 +238,35 @@ export class MixedStreamParser {
         }
 
         case 'content_block_stop': {
-          log.info('content_block_stop', { content, current });
-          switch (content?.type) {
-            case 'tool_use': {
-              // TODO(burdon): Remove inputJson accumulator.
-              content.input = safeParseJson(content.inputJson, {});
-              this._emitBlock(undefined, content);
-              break;
-            }
-
-            case 'json': {
-              this._emitBlock(current, content);
-              break;
-            }
+          if (!contentBlock) {
+            log.warn('unexpected content_block_stop');
+            break;
           }
 
-          content = undefined;
-          current = undefined;
+          this._emitBlock(contentBlock, streamBlock);
+
+          // switch (content?.type) {
+          //   case 'tool_use': {
+          //     // TODO(burdon): Remove inputJson accumulator.
+          //     content.input = safeParseJson(content.inputJson, {});
+          //     this._emitBlock(content);
+          //     break;
+          //   }
+
+          //   case 'json': {
+          //     this._emitBlock(content, current);
+          //     break;
+          //   }
+          // }
+
+          contentBlock = undefined;
+          streamBlock = undefined;
           break;
         }
       }
 
-      if (current) {
-        this._emitUpdate(current);
+      if (contentBlock && streamBlock) {
+        this._emitUpdate(contentBlock, streamBlock);
       }
     } // for.
   }
@@ -258,24 +275,27 @@ export class MixedStreamParser {
 /**
  * Convert stream block to message content block.
  */
-export const createMessageBlock = (block: StreamBlock, base?: MessageContentBlock): MessageContentBlock | undefined => {
-  log.info('createMessageBlock', { block, base });
+export const mergeMessageBlock = (
+  contentBlock: MessageContentBlock,
+  streamBlock: StreamBlock,
+): MessageContentBlock | undefined => {
+  log.info('mergeMessageBlock', { contentBlock, streamBlock });
 
-  switch (block.type) {
+  switch (streamBlock.type) {
     //
     // Text
     //
     case 'text': {
-      return { ...base, type: 'text', text: block.content };
+      return { ...contentBlock, type: 'text', text: streamBlock.content };
     }
 
     //
     // XML
     //
     case 'tag': {
-      switch (block.tag) {
+      switch (streamBlock.tag) {
         case 'cot': {
-          const content = block.content
+          const content = streamBlock.content
             .map((block) => {
               switch (block.type) {
                 case 'text': {
@@ -289,12 +309,12 @@ export const createMessageBlock = (block: StreamBlock, base?: MessageContentBloc
             .filter(isNotFalsy)
             .join('\n');
 
-          return { ...base, type: 'text', disposition: 'cot', text: content };
+          return { ...contentBlock, type: 'text', disposition: 'cot', text: content };
         }
 
         case 'artifact': {
-          // TODO(burdon): Parse artifact.
-          return { type: 'json', disposition: 'artifact', json: '' };
+          const { attributes } = streamBlock;
+          return { type: 'json', disposition: 'artifact', json: JSON.stringify(attributes) };
         }
       }
       break;
@@ -304,7 +324,13 @@ export const createMessageBlock = (block: StreamBlock, base?: MessageContentBloc
     // JSON
     //
     case 'json': {
-      return { ...base, type: 'json', disposition: 'artifact', json: block.content };
+      switch (contentBlock.type) {
+        case 'tool_use': {
+          return { ...contentBlock, input: safeParseJson(streamBlock.content) };
+        }
+      }
+
+      return { ...contentBlock, type: 'json', disposition: 'artifact', json: streamBlock.content };
     }
   }
 };

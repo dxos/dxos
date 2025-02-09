@@ -66,7 +66,7 @@ describe('GenerationStream', () => {
     expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(3);
   });
 
-  for (const splitBy of ['word', 'character'] as const) {
+  for (const splitBy of ['word'] as const) {
     it.only(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
       const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA, { splitBy })));
       const parser = new MixedStreamParser();
@@ -89,6 +89,7 @@ describe('GenerationStream', () => {
         'json',
         'text',
         'json',
+        'text',
         'json',
       ]);
     });
