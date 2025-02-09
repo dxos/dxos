@@ -191,9 +191,10 @@ export class MixedStreamParser {
             //
             case 'input_json_delta': {
               invariant(content);
-              invariant(content.type === 'tool_use');
-              content.inputJson ??= '';
-              content.inputJson += event.delta.partial_json;
+              if (content.type === 'tool_use') {
+                content.inputJson ??= '';
+                content.inputJson += event.delta.partial_json;
+              }
               break;
             }
           }
