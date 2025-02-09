@@ -24,7 +24,7 @@ export class MixedStreamParser {
   /**
    * Complete block added to Message.
    */
-  public block = new Event<Message>();
+  public block = new Event<MessageContentBlock>();
 
   /**
    * Update partial block (while streaming).
@@ -42,13 +42,13 @@ export class MixedStreamParser {
       invariant(this._message);
       invariant(content);
       this._message.content.push(content);
-      this.block.emit(this._message);
+      this.block.emit(content);
     } else {
       const messageBlock = createMessageBlock(block, content);
       if (messageBlock) {
         invariant(this._message);
         this._message.content.push(messageBlock);
-        this.block.emit(this._message);
+        this.block.emit(messageBlock);
       }
     }
   }
@@ -68,7 +68,7 @@ export class MixedStreamParser {
   async parse(stream: GenerationStream) {
     const transformer = new StreamTransform();
 
-    //
+    // TODO(burdon): Consolidate.
     //
     //
     //

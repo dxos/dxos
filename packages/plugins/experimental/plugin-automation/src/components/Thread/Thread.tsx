@@ -25,7 +25,7 @@ export type ThreadProps = {
   messages: Message[];
   streaming?: boolean;
   debug?: boolean;
-  onSubmit: (message: string) => void;
+  onSubmit?: (message: string) => void;
 };
 
 export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) => {
@@ -48,7 +48,7 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
         case 'Enter': {
           const value = text.trim();
           if (value.length > 0) {
-            onSubmit(value);
+            onSubmit?.(value);
             setText('');
             scroll();
           }
@@ -68,24 +68,26 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
         ))}
       </div>
 
-      <div className='flex p-4 gap-3 items-center'>
-        <Spinner active={streaming} />
-        <Input.Root>
-          <Input.TextInput
-            autoFocus
-            classNames='px-2 bg-base rounded'
-            placeholder='Ask a question...'
-            value={text}
-            onChange={(ev) => setText(ev.target.value)}
-            onKeyDown={handleKeyDown}
+      {onSubmit && (
+        <div className='flex p-4 gap-3 items-center'>
+          <Spinner active={streaming} />
+          <Input.Root>
+            <Input.TextInput
+              autoFocus
+              classNames='px-2 bg-base rounded'
+              placeholder='Ask a question...'
+              value={text}
+              onChange={(ev) => setText(ev.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </Input.Root>
+          <Icon
+            icon={'ph--spinner-gap--regular'}
+            classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}
+            size={6}
           />
-        </Input.Root>
-        <Icon
-          icon={'ph--spinner-gap--regular'}
-          classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}
-          size={6}
-        />
-      </div>
+        </div>
+      )}
     </div>
   );
 };

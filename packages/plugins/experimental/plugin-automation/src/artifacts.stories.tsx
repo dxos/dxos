@@ -21,6 +21,7 @@ import { AIServiceClientImpl } from '@dxos/assistant';
 import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
@@ -93,28 +94,26 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   // State.
   const artifactItems = artifactsContext.items.toReversed();
   const messages = [...queue.items, ...(processor?.messages.value ?? [])];
-  console.log('messages', { messages: messages.map((m) => ({ id: m.id, content: m.content.length })) });
 
-  const handleSubmit = useCallback(
-    async (message: string) => {
-      if (!processor) {
-        return;
-      }
-      if (processor.streaming.value) {
-        await processor.cancel();
-      }
+  const handleSubmit = processor
+    ? async (message: string) => {
+        invariant(processor);
+        if (processor.streaming.value) {
+          await processor.cancel();
+        }
 
-      const messages = await processor?.request(message, queue.items);
-      queue.append(messages);
-    },
-    [processor],
-  );
+        const messages = await processor.request(message, queue.items);
+        queue.append(messages);
+      }
+    : undefined;
 
   const [prompt, setPrompt] = useState(0);
   const handleTest = useCallback(() => {
-    void handleSubmit(prompts[prompt]);
+    void handleSubmit?.(prompts[prompt]);
     setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
-  }, [prompt]);
+  }, [handleSubmit, prompt]);
+
+  console.log('messages', { processor, messages: messages.map((m) => ({ id: m.id, content: m.content.length })) });
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -142,11 +141,16 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
-            {prompts.length > 0 && <Button onClick={handleTest}>Test</Button>}
+            {processor && prompts.length > 0 && <Button onClick={handleTest}>Test</Button>}
           </Input.Root>
         </Toolbar.Root>
 
-        <Thread messages={messages} streaming={processor?.streaming.value} onSubmit={handleSubmit} {...props} />
+        <Thread
+          messages={messages}
+          streaming={processor?.streaming.value}
+          onSubmit={processor ? handleSubmit : undefined}
+          {...props}
+        />
       </div>
 
       {/* Artifacts Deck/Mosaic */}

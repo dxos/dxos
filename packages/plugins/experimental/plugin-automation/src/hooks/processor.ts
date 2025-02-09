@@ -45,9 +45,6 @@ export class ChatProcessor {
   /** Pending messages (incl. the user request). */
   private readonly _pending: Signal<Message[]> = signal([]);
 
-  /** Current message. */
-  private readonly _current: Signal<Message | undefined> = signal(undefined);
-
   /** Current streaming block (from the AI service). */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
 
@@ -58,14 +55,13 @@ export class ChatProcessor {
   /** Messages (incl. the current message). */
   private readonly _messages: Signal<Message[]> = computed(() => {
     const messages = [...this._pending.value];
-    if (this._current.value) {
-      if (this._block.value) {
-        const { content, ...rest } = this._current.value;
-        const message = { ...rest, content: [...content, this._block.value] };
-        messages.push(message);
-      } else {
-        messages.push(this._current.value);
-      }
+    const current = messages.pop();
+    if (this._block.value) {
+      // Add streaming block.
+      invariant(current);
+      const { content, ...rest } = current;
+      const message = { ...rest, content: [...content, this._block.value] };
+      messages.push(message);
     }
 
     return messages;
@@ -85,28 +81,26 @@ export class ChatProcessor {
   ) {
     // Message complete.
     this._parser.message.on((message) => {
-      log.info('== MESSAGE ==');
+      log.info('== MESSAGE ==', { message });
       batch(() => {
         this._pending.value = [...this._pending.value, message];
-        this._current.value = message;
         this._block.value = undefined;
       });
     });
 
     // Block complete.
-    this._parser.block.on((message) => {
-      log.info('== BLOCK ==');
-      batch(() => {
-        this._current.value = message;
-        this._block.value = undefined;
-      });
-    });
+    // this._parser.block.on((block) => {
+    //   log.info('== BLOCK ==');
+    //   batch(() => {
+    //     invariant(this._current.value);
+    //     this._block.value = undefined;
+    //   });
+    // });
 
     // Streaming update (happens before message complete).
     this._parser.update.on((block) => {
       log.info('== UP ==', { block });
       batch(() => {
-        invariant(this._current.value);
         this._block.value = block;
       });
     });
