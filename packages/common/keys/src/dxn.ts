@@ -56,36 +56,30 @@ export class DXN {
     return dxn.startsWith('dxn:');
   }
 
-  static parse(dxn: string): DXN;
-  static parse(dxn: string, noThrow: boolean): DXN | undefined;
-  static parse(dxn: string, noThrow?: boolean): DXN | undefined {
+  static parse(dxn: string): DXN {
     if (typeof dxn !== 'string') {
-      if (noThrow) {
-        return undefined;
-      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
-      if (noThrow) {
-        return undefined;
-      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(typeof kind === 'string' && kind.length > 0)) {
-      if (noThrow) {
-        return undefined;
-      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
     if (!(parts.length > 0)) {
-      if (noThrow) {
-        return undefined;
-      }
       throw new Error(`Invalid DXN: ${dxn}`);
     }
 
     return new DXN(kind, parts);
+  }
+
+  static tryParse(dxn: string) {
+    try {
+      return DXN.parse(dxn);
+    } catch (error) {
+      return undefined;
+    }
   }
 
   /**

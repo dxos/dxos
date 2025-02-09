@@ -15,7 +15,7 @@ import { Thread } from './Thread';
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { type GptChatType } from '../types';
-
+import { invariant } from '@dxos/invariant';
 export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
   const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
@@ -58,7 +58,7 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
   );
   const edgeClient = useEdgeClient();
   const queue = useQueue<Message>(edgeClient, queueDxn);
-  const messages = [...queue.items, ...processor.messages.value];
+  const messages = [...(queue?.items ?? []), ...processor.messages.value];
 
   const handleSubmit = useCallback(
     async (message: string) => {
@@ -67,9 +67,12 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
         await processor.cancel();
       }
 
+      invariant(queue);
       // TODO(burdon): Append on success only? If approved by user? Clinet/server.
-      const messages = await processor.request(message, queue.items);
-      queue.append(messages);
+      await processor.request(message, {
+        history: queue.items,
+        onComplete: (messages) => queue.append(messages),
+      });
     },
     [processor, queue],
   );
