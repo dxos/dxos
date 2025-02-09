@@ -55,8 +55,8 @@ export class ChatProcessor {
   /** Messages (incl. the current message). */
   private readonly _messages: Signal<Message[]> = computed(() => {
     const messages = [...this._pending.value];
-    const current = messages.pop();
     if (this._block.value) {
+      const current = messages.pop();
       // Add streaming block.
       invariant(current);
       const { content, ...rest } = current;
