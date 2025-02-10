@@ -46,8 +46,10 @@ export default (context: PluginsContext) => {
     cacheable: ['label', 'role'],
     properties: {
       label: ['spaces label', { ns: SPACE_PLUGIN }],
+      icon: 'ph--planet--regular',
       testId: 'spacePlugin.spaces',
       role: 'branch',
+      disposition: 'collection',
       disabled: true,
       childrenPersistenceClass: 'echo',
       onRearrangeChildren: async (nextOrder: Space[]) => {
@@ -106,7 +108,6 @@ export default (context: PluginsContext) => {
             icon: 'ph--sign-in--regular',
             testId: 'spacePlugin.joinSpace',
             disposition: 'item',
-            className: 'border-b border-separator',
           },
         },
       ],

@@ -75,6 +75,7 @@ export default defineConfig((env) => ({
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
+        'socket:process'
       ],
     },
   },

@@ -16,6 +16,9 @@
       "@dxos/plugin-calls": [
         "packages/plugins/experimental/plugin-calls/src/index.ts"
       ],
+      "@dxos/plugin-calls/types": [
+        "packages/plugins/experimental/plugin-calls/src/types/index.ts"
+      ],
       "@dxos/plugin-canvas": [
         "packages/plugins/experimental/plugin-canvas/src/index.ts"
       ],
@@ -210,6 +213,9 @@
       ],
       "@dxos/app-framework/testing": [
         "packages/sdk/app-framework/src/testing/index.ts"
+      ],
+      "@dxos/app-framework/worker": [
+        "packages/sdk/app-framework/src/worker.ts"
       ],
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"

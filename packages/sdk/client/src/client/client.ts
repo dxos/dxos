@@ -15,7 +15,7 @@ import {
   type Halo,
   PropertiesType,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';

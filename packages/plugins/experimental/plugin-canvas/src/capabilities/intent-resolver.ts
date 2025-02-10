@@ -10,7 +10,10 @@ import { CanvasBoardType, CanvasAction } from '../types';
 export default () =>
   contributes(
     Capabilities.IntentResolver,
-    createResolver(CanvasAction.Create, ({ name }) => ({
-      data: { object: create(CanvasBoardType, { name, layout: { shapes: [] } }) },
-    })),
+    createResolver({
+      intent: CanvasAction.Create,
+      resolve: ({ name }) => ({
+        data: { object: create(CanvasBoardType, { name, layout: { shapes: [] } }) },
+      }),
+    }),
   );

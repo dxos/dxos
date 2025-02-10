@@ -5,11 +5,13 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
-import { type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
+import { buf } from '@dxos/protocols/buf';
+import { TracksSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { useSubscribedState } from './rxjsHooks';
 import type { RoomContextType } from './useRoomContext';
 import type { UserMedia } from './useUserMedia';
+import { type UserState } from '../../types';
 import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
 
 interface Config {
@@ -26,48 +28,36 @@ export const useBroadcastStatus = ({ userMedia, identity, peer, pushedTracks, up
   const { audioEnabled, videoEnabled, screenShareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
   const { sessionId } = useSubscribedState(peer.session$) ?? {};
-
-  const id = identity?.id;
-  const name = identity?.name;
+  const id = identity!.id;
+  const name = identity!.name;
   useEffect(() => {
-    if (id && name) {
-      const user: UserState = {
-        id,
-        name,
-        joined: true,
-        raisedHand: false,
-        speaking: false,
-        transceiverSessionId: sessionId,
-        tracks: {
-          audioEnabled,
-          videoEnabled,
-          screenShareEnabled,
-          video,
-          audio,
-          screenshare,
-        },
-      };
-
-      const sendUserUpdate = () => {
-        updateUserState(user);
-      };
-
-      // let's send our userUpdate right away
-      sendUserUpdate();
-    }
+    updateUserState({
+      id,
+      name,
+      joined: true,
+      raisedHand: false,
+      speaking: false,
+      transceiverSessionId: sessionId,
+      tracks: buf.create(TracksSchema, {
+        audioEnabled,
+        videoEnabled,
+        screenShareEnabled,
+        video,
+        audio,
+        screenshare,
+      }),
+    });
   }, [id, name, sessionId, audio, video, screenshare, audioEnabled, videoEnabled, screenShareEnabled]);
 
   useUnmount(() => {
-    if (id && name) {
-      updateUserState({
-        id,
-        name,
-        joined: false,
-        raisedHand: false,
-        speaking: false,
-        transceiverSessionId: sessionId,
-        tracks: {},
-      });
-    }
+    updateUserState({
+      id,
+      name,
+      joined: false,
+      raisedHand: false,
+      speaking: false,
+      transceiverSessionId: sessionId,
+      tracks: buf.create(TracksSchema, {}),
+    });
   });
 };

@@ -42,7 +42,7 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
-        const props = inputProps as any as InputProps<any>;
+        const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
         if (!space) {
           return null;
@@ -50,13 +50,7 @@ export default () =>
         // TODO(ZaymonFC): Make this reactive.
         const schemata = space?.db.schemaRegistry.query().runSync();
 
-        return (
-          <SelectInput<any>
-            {...props}
-            property={props.property as any}
-            options={schemata.map((schema) => ({ value: schema.typename }))}
-          />
-        );
+        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),
   ]);

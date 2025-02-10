@@ -19,7 +19,6 @@ export const WelcomePlugin = () =>
         Events.AppGraphReady,
         Events.SettingsReady,
         Events.LayoutReady,
-        Events.LocationReady,
         ClientEvents.ClientReady,
       ),
       activate: Onboarding,

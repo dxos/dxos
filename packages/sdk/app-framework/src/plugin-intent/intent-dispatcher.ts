@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Ref } from 'effect';
+import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { type MaybePromise, pick, byDisposition, type Disposition } from '@dxos/util';
+import { create } from '@dxos/live-object';
+import { type MaybePromise, byDisposition, type Disposition, type GuardedType } from '@dxos/util';
 
-import { IntentAction } from './actions';
+import { INTENT_PLUGIN, IntentAction } from './actions';
+import { CycleDetectedError, NoResolversError } from './errors';
 import {
   createIntent,
   type AnyIntent,
@@ -20,6 +22,8 @@ import {
   type IntentSchema,
   type Label,
 } from './intent';
+import { Capabilities, Events } from '../common';
+import { contributes, defineModule } from '../core';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;
@@ -27,13 +31,13 @@ const HISTORY_LIMIT = 100;
 /**
  * The return value of an intent effect.
  */
-export type IntentEffectResult<Fields extends IntentParams> = {
+export type IntentEffectResult<Input, Output> = {
   /**
    * The output of the action that was performed.
    *
    * If the intent is apart of a chain of intents, the data will be passed to the next intent.
    */
-  data?: IntentResultData<Fields>;
+  data?: Output;
 
   /**
    * If provided, the action will be undoable.
@@ -47,13 +51,15 @@ export type IntentEffectResult<Fields extends IntentParams> = {
     /**
      * Will be merged with the original intent data when firing the undo intent.
      */
-    data?: Partial<IntentData<Fields>>;
+    data?: Partial<Input>;
   };
 
   /**
    * An error that occurred while performing the action.
    *
    * If the intent is apart of a chain of intents and an error occurs, the chain will be aborted.
+   *
+   * Return caught error instead of throwing to trigger other intent to be triggered prior to returning the error.
    */
   error?: Error;
 
@@ -63,33 +69,32 @@ export type IntentEffectResult<Fields extends IntentParams> = {
   intents?: AnyIntentChain[];
 };
 
-export type AnyIntentEffectResult = IntentEffectResult<any>;
+export type AnyIntentEffectResult = IntentEffectResult<any, any>;
 
 /**
  * The result of an intent dispatcher.
  */
-export type IntentDispatcherResult<Fields extends IntentParams> = Pick<IntentEffectResult<Fields>, 'data' | 'error'>;
+export type IntentDispatcherResult<Input, Output> = Pick<IntentEffectResult<Input, Output>, 'data' | 'error'>;
 
 /**
  * The implementation of an intent effect.
  */
-export type IntentEffectDefinition<Fields extends IntentParams> = (
-  data: IntentData<Fields>,
+export type IntentEffectDefinition<Input, Output> = (
+  data: Input,
   undo: boolean,
-) => MaybePromise<IntentEffectResult<Fields> | void> | Effect.Effect<IntentEffectResult<Fields> | void>;
+) => MaybePromise<IntentEffectResult<Input, Output> | void> | Effect.Effect<IntentEffectResult<Input, Output> | void>;
 
 /**
  * Intent resolver to match intents to their effects.
  */
-export type IntentResolver<Tag extends string, Fields extends IntentParams> = Readonly<{
-  action: Tag;
+export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+  intent: IntentSchema<Tag, Fields>;
   disposition?: Disposition;
-  // TODO(wittjosiah): Would be nice to make this a guard for intents with optional data.
-  filter?: (data: IntentData<Fields>) => boolean;
-  effect: IntentEffectDefinition<Fields>;
+  filter?: (data: IntentData<Fields>) => data is Data;
+  resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
 
-export type AnyIntentResolver = IntentResolver<any, any>;
+export type AnyIntentResolver = IntentResolver<any, any, any>;
 
 /**
  * Creates an intent resolver to match intents to their effects.
@@ -98,22 +103,16 @@ export type AnyIntentResolver = IntentResolver<any, any>;
  * @param params.disposition Determines the priority of the resolver when multiple are resolved.
  * @param params.filter Optional filter to determine if the resolver should be used.
  */
-export const createResolver = <Tag extends string, Fields extends IntentParams>(
-  schema: IntentSchema<Tag, Fields>,
-  effect: IntentEffectDefinition<Fields>,
-  params: Pick<IntentResolver<Tag, Fields>, 'disposition' | 'filter'> = {},
-): IntentResolver<Tag, Fields> => ({
-  action: schema._tag,
-  effect,
-  ...params,
-});
+export const createResolver = <Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>>(
+  resolver: IntentResolver<Tag, Fields, Data>,
+) => resolver;
 
 /**
  * Invokes intents and returns the result.
  */
 export type PromiseIntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
-) => Promise<Simplify<IntentDispatcherResult<Fields>>>;
+) => Promise<Simplify<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>>;
 
 /**
  * Creates an effect for intents.
@@ -121,23 +120,29 @@ export type PromiseIntentDispatcher = <Fields extends IntentParams>(
 export type IntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
   depth?: number,
-) => Effect.Effect<Simplify<IntentDispatcherResult<Fields>>, Error>;
+) => Effect.Effect<
+  Simplify<Required<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>['data']>,
+  Error
+>;
 
-type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<Fields> & {
+type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<
+  IntentData<Fields>,
+  IntentResultData<Fields>
+> & {
   _intent: Intent<Tag, Fields>;
 };
 
-type AnyIntentResult = IntentResult<any, any>;
+export type AnyIntentResult = IntentResult<any, any>;
 
 /**
  * Invokes the most recent undoable intent with undo flags.
  */
-export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any> | undefined>;
+export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any, any>>;
 
 /**
  * Creates an effect which undoes the last intent.
  */
-export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any> | undefined, Error>;
+export type IntentUndo = () => Effect.Effect<any, Error>;
 
 /**
  * Check if a chain of results is undoable.
@@ -165,31 +170,25 @@ export const createDispatcher = (
 ): IntentContext => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
-  const handleIntent = (intent: AnyIntent) => {
-    return Effect.gen(function* () {
+  const handleIntent = (intent: AnyIntent) =>
+    Effect.gen(function* () {
       const candidates = getResolvers(intent.module)
-        .filter((r) => r.action === intent.action)
+        .filter((r) => r.intent._tag === intent.id)
         .filter((r) => !r.filter || r.filter(intent.data))
         .toSorted(byDisposition);
       if (candidates.length === 0) {
-        return {
-          _intent: intent,
-          error: new Error(`No resolver found for action: ${intent.action}`),
-        } satisfies AnyIntentResult;
+        yield* Effect.fail(new NoResolversError(intent.id));
       }
 
-      const effect = candidates[0].effect(intent.data, intent.undo ?? false);
+      const effect = candidates[0].resolve(intent.data, intent.undo ?? false);
       const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(async () => effect);
-      return { _intent: intent, ...result } satisfies AnyIntentResult;
+      return { _intent: intent, ...result } as AnyIntentResult;
     });
-  };
 
   const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
     return Effect.gen(function* () {
       if (depth > executionLimit) {
-        yield* Effect.fail(
-          new Error('Intent execution limit exceeded. This is likely due to an infinite loop within intent resolvers.'),
-        );
+        yield* Effect.fail(new CycleDetectedError());
       }
 
       const resultsRef = yield* Ref.make<AnyIntentResult[]>([]);
@@ -206,36 +205,38 @@ export const createDispatcher = (
           }
         }
         if (result.error) {
-          break;
+          yield* Effect.fail(result.error);
         }
       }
 
       const results = yield* resultsRef.get;
       const result = results[0];
-      if (result) {
-        yield* Ref.update(historyRef, (history) => {
-          const next = [...history, results];
-          if (next.length > historyLimit) {
-            next.splice(0, next.length - historyLimit);
-          }
-          return next;
-        });
-
-        if (result.undoable && isUndoable(results)) {
-          // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
-          yield* dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message }));
+      yield* Ref.update(historyRef, (history) => {
+        const next = [...history, results];
+        if (next.length > historyLimit) {
+          next.splice(0, next.length - historyLimit);
         }
+        return next;
+      });
 
-        return pick(result, ['data', 'error']);
-      } else {
-        return { data: {}, error: new Error('No results') };
+      if (result.undoable && isUndoable(results)) {
+        // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
+        yield* pipe(
+          dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message })),
+          Effect.catchSome((err) =>
+            err instanceof NoResolversError ? Option.some(Effect.succeed(undefined)) : Option.none(),
+          ),
+        );
       }
+
+      return result.data;
     });
   };
 
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
-    const program = dispatch(intentChain);
-    return Effect.runPromise(program);
+    return Effect.runPromise(dispatch(intentChain))
+      .then((data) => ({ data }))
+      .catch((error) => ({ error }));
   };
 
   const undo: IntentUndo = () => {
@@ -257,9 +258,47 @@ export const createDispatcher = (
   };
 
   const undoPromise: PromiseIntentUndo = () => {
-    const program = undo();
-    return Effect.runPromise(program);
+    return Effect.runPromise(undo())
+      .then((data) => ({ data }))
+      .catch((error) => ({ error }));
   };
 
   return { dispatch, dispatchPromise, undo, undoPromise };
 };
+
+const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
+const defaultPromise = () => Effect.runPromise(defaultEffect());
+
+export const dispatcherModule = defineModule({
+  id: `${INTENT_PLUGIN}/module/dispatcher`,
+  // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
+  //   This is fine for now because it's how it worked prior to capabilities api anyways.
+  //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
+  activatesOn: Events.Startup,
+  activatesBefore: [Events.SetupIntents],
+  activatesAfter: [Events.DispatcherReady],
+  activate: (context) => {
+    const state = create<IntentContext>({
+      dispatch: defaultEffect,
+      dispatchPromise: defaultPromise,
+      undo: defaultEffect,
+      undoPromise: defaultPromise,
+    });
+
+    // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
+    const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
+      context
+        .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
+          return module ? moduleId === module : true;
+        })
+        .flat(),
+    );
+
+    state.dispatch = dispatch;
+    state.dispatchPromise = dispatchPromise;
+    state.undo = undo;
+    state.undoPromise = undoPromise;
+
+    return contributes(Capabilities.IntentDispatcher, state);
+  },
+});

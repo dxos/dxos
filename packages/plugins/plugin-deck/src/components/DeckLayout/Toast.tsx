@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import type { Toast as ToastProps } from '@dxos/app-framework';
+import { type LayoutAction } from '@dxos/app-framework';
 import {
   Button,
   Icon,
@@ -28,7 +28,7 @@ export const Toast = ({
   closeLabel,
   onAction,
   onOpenChange,
-}: ToastProps & Pick<ToastRootProps, 'onOpenChange'>) => {
+}: LayoutAction.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
   const { t } = useTranslation(DECK_PLUGIN);
 
   return (

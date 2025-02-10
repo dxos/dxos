@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActiveParts } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 
 import { FILES_PLUGIN } from './meta';
@@ -31,7 +30,7 @@ export namespace LocalFilesAction {
     input: S.Void,
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
     }),
   }) {}
 
@@ -39,7 +38,7 @@ export namespace LocalFilesAction {
     input: S.Void,
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
     }),
   }) {}
 

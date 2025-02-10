@@ -19,6 +19,7 @@ import {
 import React, { forwardRef, type FunctionComponent } from 'react';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
+import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
 
 type TooltipProviderProps = TooltipProviderPrimitiveProps;
@@ -52,19 +53,22 @@ const TooltipArrow = forwardRef<SVGSVGElement, TooltipArrowProps>(({ classNames,
 
 type TooltipContentProps = ThemedClassName<TooltipContentPrimitiveProps>;
 
-const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const elevation = useElevationContext();
-  return (
-    <TooltipContentPrimitive
-      sideOffset={4}
-      collisionPadding={8}
-      {...props}
-      className={tx('tooltip.content', 'tooltip', { elevation }, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
+  ({ classNames, collisionPadding = 8, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const elevation = useElevationContext();
+    const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
+    return (
+      <TooltipContentPrimitive
+        sideOffset={4}
+        {...props}
+        collisionPadding={safeCollisionPadding}
+        className={tx('tooltip.content', 'tooltip', { elevation }, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 export const Tooltip = {
   Provider: TooltipProvider,

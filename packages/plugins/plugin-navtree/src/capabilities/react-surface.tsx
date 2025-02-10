@@ -8,8 +8,14 @@ import { createSurface, Capabilities, contributes, useCapability } from '@dxos/a
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';
-import { CommandsDialogContent, CommandsTrigger, NavTreeDocumentTitle, NotchStart } from '../components';
-import { NavTreeContainer } from '../components/NavTreeContainer';
+import {
+  CommandsDialogContent,
+  CommandsTrigger,
+  NavTreeDocumentTitle,
+  NotchStart,
+  NavTreeContainer,
+} from '../components';
+import { NavTreeFooter } from '../components/NavTreeFooter';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import { expandChildrenAndActions } from '../util';
@@ -19,8 +25,8 @@ export default () =>
     createSurface({
       id: COMMANDS_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject?: string } => data.component === COMMANDS_DIALOG,
-      component: ({ data }) => <CommandsDialogContent selected={data.subject} />,
+      filter: (data): data is { props: { selected?: string } } => data.component === COMMANDS_DIALOG,
+      component: ({ data }) => <CommandsDialogContent {...data.props} />,
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/navigation`,
@@ -48,6 +54,8 @@ export default () =>
             isCurrent={isCurrent}
             onOpenChange={handleOpenChange}
             popoverAnchorId={data.popoverAnchorId as string | undefined}
+            topbar={data.topbar as boolean}
+            hoistStatusbar={data.hoistStatusbar as boolean}
           />
         );
       },
@@ -61,6 +69,11 @@ export default () =>
       id: `${NAVTREE_PLUGIN}/notch-start`,
       role: 'notch-start',
       component: () => <NotchStart />,
+    }),
+    createSurface({
+      id: `${NAVTREE_PLUGIN}/header-end`,
+      role: 'header-end',
+      component: () => <NavTreeFooter />,
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/search-input`,
