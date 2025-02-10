@@ -130,8 +130,6 @@ export class AppManager {
     await objectForm.getByTestId('save-button').click();
 
     await this.waitForSpaceReady(timeout);
-
-    await this.getSpaceItems().nth(1).click();
   }
 
   async joinSpace() {
@@ -181,7 +179,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel3')
+      .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
@@ -197,7 +195,7 @@ export class AppManager {
     await this.page
       .getByTestId('spacePlugin.object')
       .nth(nth)
-      .getByTestId('navtree.treeItem.actionsLevel3')
+      .getByTestId('navtree.treeItem.actionsLevel2')
       .first()
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
