@@ -23,7 +23,9 @@ export default [
         'select preset template placeholder': 'Select preset',
         'open automation panel label': 'Show Automations',
         'automation panel label': 'Automations',
+
         'chat input placeholder': 'Ask a question...',
+        'chat stop': 'Cancel request.',
 
         'function select label': 'Function',
         'function select placeholder': 'Select function',

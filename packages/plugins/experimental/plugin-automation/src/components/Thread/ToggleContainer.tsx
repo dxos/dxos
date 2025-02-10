@@ -10,8 +10,6 @@ import { mx } from '@dxos/react-ui-theme';
 const duration = 200;
 
 // TODO(burdon): Externalize toggle state.
-// TODO(burdon): Set default open/close.
-// TODO(burdon): Open/close is reset after streaming stops. Memoize?
 export const ToggleContainer = ({
   title,
   icon,
@@ -19,7 +17,7 @@ export const ToggleContainer = ({
   defaultOpen,
   children,
 }: PropsWithChildren<{ title?: string; icon?: JSX.Element; defaultOpen?: boolean; toggle?: boolean }>) => {
-  const [expand, setExpand] = useState(defaultOpen);
+  const [expand, setExpand] = useState(defaultOpen || !toggle);
   const [expandX, setExpandX] = useState(expand);
   const [expandY, setExpandY] = useState(expand);
   useEffect(() => {

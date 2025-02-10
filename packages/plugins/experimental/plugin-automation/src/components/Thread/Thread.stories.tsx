@@ -19,10 +19,32 @@ faker.seed(2);
 
 const Render = ({ messages: _messages, ...props }: ThreadProps) => {
   const [messages, setMessages] = useState<Message[]>(_messages ?? []);
+  const [streaming, setStreaming] = useState(false);
 
   const handleSubmit = useCallback(
-    (message: string) => {
-      setMessages([...messages, { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text: message }] }]);
+    (text: string) => {
+      const request: Message = { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
+      const response: Message = {
+        id: ObjectId.random(),
+        role: 'assistant',
+        content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
+      };
+      setMessages([...messages, request, response]);
+      setStreaming(true);
+      setTimeout(() => {
+        response.content[0].pending = false;
+        setMessages([
+          ...messages,
+          request,
+          response,
+          {
+            id: ObjectId.random(),
+            role: 'assistant',
+            content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
+          },
+        ]);
+        setStreaming(false);
+      }, 3_000);
     },
     [messages],
   );
@@ -30,7 +52,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
   return (
     <div className='flex grow justify-center overflow-center bg-base'>
       <div className='flex w-[500px] bg-white dark:bg-black'>
-        <Thread {...props} messages={messages} onSubmit={handleSubmit} />
+        <Thread {...props} messages={messages} streaming={streaming} onSubmit={handleSubmit} onStop={() => {}} />
       </div>
     </div>
   );
@@ -67,7 +89,6 @@ const TEST_MESSAGES: Message[] = [
     content: [
       {
         type: 'text',
-        pending: true,
         disposition: 'cot',
         text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
           .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
