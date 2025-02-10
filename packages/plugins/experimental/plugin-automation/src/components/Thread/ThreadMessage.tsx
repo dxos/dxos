@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
@@ -63,26 +63,26 @@ const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
   text: ({ block }) => {
     invariant(block.type === 'text');
     const title = block.disposition ? titles[block.disposition] : undefined;
-    if (title) {
-      return (
-        <ToggleContainer
-          title={title}
-          icon={
-            block.pending ? (
-              <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
-            ) : undefined
-          }
-          defaultOpen={block.disposition === 'cot'}
-          toggle
-        >
-          <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
-        </ToggleContainer>
-      );
-    } else {
+    if (!title) {
       return (
         <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
       );
     }
+
+    return (
+      <ToggleContainer
+        title={title}
+        icon={
+          block.pending ? (
+            <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+          ) : undefined
+        }
+        defaultOpen={block.disposition === 'cot'}
+        toggle
+      >
+        <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
+      </ToggleContainer>
+    );
   },
 
   json: ({ block }) => {
@@ -90,7 +90,7 @@ const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
     const title = block.disposition ? titles[block.disposition] : undefined;
     return (
       <ToggleContainer title={title ?? 'JSON'} toggle>
-        <Json data={safeParseJson(block.json ?? block)} />
+        <Json data={safeParseJson(block.json ?? block)} classNames='text-sm' />
       </ToggleContainer>
     );
   },
@@ -99,16 +99,8 @@ const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
     const title = titles[block.type];
     return (
       <ToggleContainer title={title ?? 'JSON'} toggle>
-        <Json data={block} />
+        <Json data={block} classNames='text-sm' />
       </ToggleContainer>
     );
   },
-};
-
-const Json = ({ data, classNames }: ThemedClassName<{ data: any }>) => {
-  return (
-    <SyntaxHighlighter language='json' classNames={mx('overflow-hidden text-sm', classNames)}>
-      {JSON.stringify(data, null, 2)}
-    </SyntaxHighlighter>
-  );
 };

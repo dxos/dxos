@@ -5,6 +5,7 @@
 import React, { type KeyboardEventHandler, type UIEventHandler, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
+import { invariant } from '@dxos/invariant';
 import { Icon, Input } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
@@ -18,16 +19,29 @@ export type ThreadProps = {
   onSubmit?: (message: string) => void;
 };
 
+// TODO(burdon): Factor out scroll logic.
 export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scroll = () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  const autoScrollRef = useRef(false);
+  const scroll = async () => {
+    invariant(scrollRef.current);
+    autoScrollRef.current = true;
+    scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  };
 
-  // Scrolling.
-  const [sticky, setSticky] = useState(true);
-  const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>((ev) => {
-    const { scrollTop, clientHeight, scrollHeight } = ev.currentTarget;
-    setSticky(scrollTop + clientHeight >= scrollHeight);
+  // Detect scroll end.
+  useEffect(() => {
+    invariant(scrollRef.current);
+    const handleScrollEnd = () => {
+      autoScrollRef.current = false;
+    };
+
+    scrollRef.current.addEventListener('scrollend', handleScrollEnd);
+    return () => scrollRef.current?.removeEventListener('scrollend', handleScrollEnd);
   }, []);
+
+  // Auto scroll.
+  const [sticky, setSticky] = useState(true);
   useEffect(() => {
     if (!sticky) {
       return;
@@ -37,6 +51,18 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
     return () => clearTimeout(t);
   }, [messages]);
 
+  // Scrolling.
+  const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>((ev) => {
+    if (autoScrollRef.current) {
+      return;
+    }
+
+    const { scrollTop, clientHeight, scrollHeight } = ev.currentTarget;
+    const sticky = scrollTop + clientHeight >= scrollHeight;
+    setSticky(sticky);
+  }, []);
+
+  // Text input.
   const [text, setText] = useState('');
   const handleKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (ev) => {
@@ -51,7 +77,7 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
           if (value.length > 0) {
             onSubmit?.(value);
             setText('');
-            scroll();
+            void scroll();
           }
           break;
         }
