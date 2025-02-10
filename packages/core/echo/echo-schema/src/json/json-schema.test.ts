@@ -9,13 +9,13 @@ import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import {
-  type JsonSchemaType,
   PropertyMeta,
   setSchemaProperty,
   getSchemaProperty,
   getObjectAnnotation,
   getEchoIdentifierAnnotation,
   EntityKind,
+  JsonSchemaType,
 } from '../ast';
 import { createSchemaReference, getSchemaReference, Ref } from '../ast';
 import { FormatAnnotationId, Email } from '../formats';
@@ -193,6 +193,19 @@ describe('effect-to-json', () => {
     // TODO(dmaretskyi): Currently unable to deserialize.
     // const effectSchema = toEffectSchema(jsonSchema);
     // console.log(JSON.stringify(jsonSchema, null, 2));
+  });
+
+  test('tuple schema with description', () => {
+    const schema = S.Struct({
+      args: S.Tuple(
+        S.String.annotations({ description: 'The source currency' }),
+        S.String.annotations({ description: 'The target currency' }),
+      ),
+    });
+    const jsonSchema = toJsonSchema(schema);
+
+    console.log(JSON.stringify(jsonSchema, null, 2));
+    (S.asserts(JsonSchemaType) as any)(jsonSchema);
   });
 
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
