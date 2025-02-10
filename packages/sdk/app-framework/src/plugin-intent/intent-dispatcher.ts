@@ -5,9 +5,10 @@
 import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
+import { create } from '@dxos/live-object';
 import { type MaybePromise, byDisposition, type Disposition, type GuardedType } from '@dxos/util';
 
-import { IntentAction } from './actions';
+import { INTENT_PLUGIN, IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
 import {
   createIntent,
@@ -21,6 +22,8 @@ import {
   type IntentSchema,
   type Label,
 } from './intent';
+import { Capabilities, Events } from '../common';
+import { contributes, defineModule } from '../core';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;
@@ -262,3 +265,40 @@ export const createDispatcher = (
 
   return { dispatch, dispatchPromise, undo, undoPromise };
 };
+
+const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
+const defaultPromise = () => Effect.runPromise(defaultEffect());
+
+export const dispatcherModule = defineModule({
+  id: `${INTENT_PLUGIN}/module/dispatcher`,
+  // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
+  //   This is fine for now because it's how it worked prior to capabilities api anyways.
+  //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
+  activatesOn: Events.Startup,
+  activatesBefore: [Events.SetupIntents],
+  activatesAfter: [Events.DispatcherReady],
+  activate: (context) => {
+    const state = create<IntentContext>({
+      dispatch: defaultEffect,
+      dispatchPromise: defaultPromise,
+      undo: defaultEffect,
+      undoPromise: defaultPromise,
+    });
+
+    // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
+    const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
+      context
+        .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
+          return module ? moduleId === module : true;
+        })
+        .flat(),
+    );
+
+    state.dispatch = dispatch;
+    state.dispatchPromise = dispatchPromise;
+    state.undo = undo;
+    state.undoPromise = undoPromise;
+
+    return contributes(Capabilities.IntentDispatcher, state);
+  },
+});
