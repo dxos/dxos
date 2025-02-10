@@ -5,8 +5,9 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
+import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
@@ -15,11 +16,20 @@ import { Thread, type ThreadProps } from './Thread';
 
 faker.seed(2);
 
-const Render = ({ messages, ...props }: ThreadProps) => {
+const Render = ({ messages: _messages, ...props }: ThreadProps) => {
+  const [messages, setMessages] = useState<Message[]>(_messages ?? []);
+
+  const handleSubmit = useCallback(
+    (message: string) => {
+      setMessages([...messages, { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text: message }] }]);
+    },
+    [messages],
+  );
+
   return (
     <div className='flex grow justify-center overflow-center bg-base'>
       <div className='flex w-[500px] bg-white dark:bg-black'>
-        <Thread {...props} messages={messages} onSubmit={() => {}} />
+        <Thread {...props} messages={messages} onSubmit={handleSubmit} />
       </div>
     </div>
   );
