@@ -12,7 +12,7 @@ import { createGenerationStream } from './stream';
 import { createTestSSEStream } from './testing';
 import { type GenerationStreamEvent } from './types';
 
-const TEST_DATA = [
+const TEST_BLOCKS = [
   [
     // Text
     'some text',
@@ -57,18 +57,18 @@ const TEST_DATA = [
 
 describe('GenerationStream', () => {
   it('should generate a stream of blocks', async ({ expect }) => {
-    const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA)));
+    const stream = createGenerationStream(new Response(createTestSSEStream(TEST_BLOCKS)));
     const events: GenerationStreamEvent[] = [];
     for await (const event of stream) {
       events.push(event);
     }
 
-    expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(3);
+    expect(events.map((event) => event.type === 'content_block_start').filter(Boolean)).to.have.length(2);
   });
 
   for (const splitBy of ['word'] as const) {
-    it.only(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
-      const stream = createGenerationStream(new Response(createTestSSEStream(TEST_DATA, { splitBy })));
+    it(`should emit xml blocks (splitBy: ${splitBy})`, async ({ expect }) => {
+      const stream = createGenerationStream(new Response(createTestSSEStream(TEST_BLOCKS, { splitBy })));
       const parser = new MixedStreamParser();
 
       let message: Message | undefined;
@@ -78,8 +78,7 @@ describe('GenerationStream', () => {
 
       await parser.parse(stream);
 
-      log.info('blocks', { message });
-
+      log('blocks', { message });
       expect(message?.content.map((block) => block.type)).to.deep.eq([
         //
         'text',

@@ -116,8 +116,7 @@ export class MixedStreamParser {
             log.warn('unexpected content_block_start', { content: contentBlock });
           }
 
-          // TODO(burdon): Parse initial content.
-          log.info('content_block_start', { event });
+          // TODO(burdon): Parse initial content (factor out from content_block_delta).
           contentBlock = event.content;
           break;
         }
