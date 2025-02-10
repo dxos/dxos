@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
@@ -37,6 +37,7 @@ import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 import { Thread, type ThreadProps } from './components';
 import { ChatProcessor } from './hooks';
 import { createProcessorOptions } from './testing';
+import translations from './translations';
 
 const endpoints = localServiceEndpoints;
 
@@ -117,8 +118,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     void handleSubmit?.(prompts[prompt]);
     setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
   }, [handleSubmit, prompt]);
-
-  console.log('messages', { messages: messages.length, processor: processor?.streaming.value });
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -205,18 +204,23 @@ const meta: Meta<typeof Render> = {
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof Render>;
+
+export const Default: Story = {
   args: {
     debug: true,
     prompts: ['hello', 'show me a chess puzzle'],
   },
 };
 
-export const WithInitialItems = {
+export const WithInitialItems: Story = {
   args: {
     debug: true,
     items: [
