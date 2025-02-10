@@ -5,9 +5,8 @@
 import React, { type KeyboardEventHandler, useCallback, useRef, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
-import { Icon, Input } from '@dxos/react-ui';
+import { Input } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
 
 import { ScrollContainer, type ScrollController } from './ScrollContainer';
 import { ThreadMessage } from './ThreadMessage';
@@ -46,10 +45,9 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
     [text],
   );
 
-  // TODO(burdon): Custom scrollbar.
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <ScrollContainer ref={scroller} classNames='flex flex-col gap-2 py-2 grow overflow-x-hidden'>
+      <ScrollContainer ref={scroller} classNames='py-2 gap-2 overflow-x-hidden'>
         {messages?.map((message) => (
           <ThreadMessage key={message.id} classNames='px-4' message={message} debug={debug} />
         ))}
@@ -68,11 +66,6 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
               onKeyDown={handleKeyDown}
             />
           </Input.Root>
-          <Icon
-            icon={'ph--spinner-gap--regular'}
-            classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}
-            size={6}
-          />
         </div>
       )}
     </div>
