@@ -5,12 +5,12 @@
 import React, { type KeyboardEventHandler, useCallback, useRef, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
-import { Icon, Input } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
 
 import { ScrollContainer, type ScrollController } from './ScrollContainer';
 import { ThreadMessage } from './ThreadMessage';
+import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type ThreadProps = {
   messages?: Message[];
@@ -21,6 +21,7 @@ export type ThreadProps = {
 
 // TODO(burdon): Factor out scroll logic.
 export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scroller = useRef<ScrollController>(null);
 
   const [text, setText] = useState('');
@@ -46,10 +47,9 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
     [text],
   );
 
-  // TODO(burdon): Custom scrollbar.
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <ScrollContainer ref={scroller} classNames='flex flex-col gap-2 py-2 grow overflow-x-hidden'>
+      <ScrollContainer ref={scroller} classNames='py-2 gap-2 overflow-x-hidden'>
         {messages?.map((message) => (
           <ThreadMessage key={message.id} classNames='px-4' message={message} debug={debug} />
         ))}
@@ -62,17 +62,12 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
             <Input.TextInput
               autoFocus
               classNames='px-2 bg-base rounded'
-              placeholder='Ask a question...'
+              placeholder={t('chat input placeholder')}
               value={text}
               onChange={(ev) => setText(ev.target.value)}
               onKeyDown={handleKeyDown}
             />
           </Input.Root>
-          <Icon
-            icon={'ph--spinner-gap--regular'}
-            classNames={mx('animate-spin opacity-0 transition duration-500', streaming && 'opacity-100')}
-            size={6}
-          />
         </div>
       )}
     </div>

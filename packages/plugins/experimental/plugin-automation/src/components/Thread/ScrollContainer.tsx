@@ -27,6 +27,7 @@ export type ScrollContainerProps = ThemedClassName<PropsWithChildren>;
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
 // TODO(burdon): Move to react-ui.
+// TODO(burdon): Custom scrollbar.
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
   ({ children, classNames }, forwardedRef) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -79,7 +80,11 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     }, []);
 
     return (
-      <div ref={containerRef} onScroll={handleScroll} className={mx('overflow-y-scroll scrollbar-none', classNames)}>
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className={mx('flex flex-col grow overflow-y-scroll scrollbar-none', classNames)}
+      >
         {children}
       </div>
     );

@@ -13,6 +13,7 @@ import { faker } from '@dxos/random';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
+import translations from '../../translations';
 
 faker.seed(2);
 
@@ -40,73 +41,78 @@ const meta: Meta<ThreadProps> = {
   render: Render,
   component: Thread,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<ThreadProps>;
 
-export const Default: Story = {
-  args: {
-    messages: [
+const TEST_MESSAGES: Message[] = [
+  {
+    id: ObjectId.random(),
+    role: 'user',
+    content: [
       {
-        id: ObjectId.random(),
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: 'hello',
-          },
-        ],
-      },
-      {
-        id: ObjectId.random(),
-        role: 'assistant',
-        content: [
-          {
-            type: 'text',
-            pending: true,
-            disposition: 'cot',
-            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-              .join('\n'),
-          },
-          {
-            type: 'text',
-            text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
-              .map(() => faker.lorem.paragraphs())
-              .join('\n\n'),
-          },
-          {
-            type: 'tool_use',
-            id: '1234',
-            name: 'search',
-            input: {},
-          },
-        ],
-      },
-      {
-        id: ObjectId.random(),
-        role: 'user',
-        content: [
-          {
-            type: 'tool_result',
-            toolUseId: '1234',
-            content: 'This is a tool result.',
-          },
-        ],
-      },
-      {
-        id: ObjectId.random(),
-        role: 'assistant',
-        content: [
-          {
-            type: 'text',
-            text: faker.lorem.paragraphs(1),
-          },
-        ],
+        type: 'text',
+        text: 'hello',
       },
     ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'assistant',
+    content: [
+      {
+        type: 'text',
+        pending: true,
+        disposition: 'cot',
+        text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+          .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+          .join('\n'),
+      },
+      {
+        type: 'text',
+        text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
+          .map(() => faker.lorem.paragraphs())
+          .join('\n\n'),
+      },
+      {
+        type: 'tool_use',
+        id: '1234',
+        name: 'search',
+        input: {},
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'user',
+    content: [
+      {
+        type: 'tool_result',
+        toolUseId: '1234',
+        content: 'This is a tool result.',
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'assistant',
+    content: [
+      {
+        type: 'text',
+        text: faker.lorem.paragraphs(1),
+      },
+    ],
+  },
+];
+
+export const Default: Story = {
+  args: {
+    messages: TEST_MESSAGES,
   },
 };
 
