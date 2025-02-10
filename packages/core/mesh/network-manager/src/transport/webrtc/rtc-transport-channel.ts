@@ -118,7 +118,7 @@ export class RtcTransportChannel extends Resource implements Transport {
         await this.close();
       },
 
-      onmessage: (event: MessageEvent) => {
+      onmessage: async (event: MessageEvent) => {
         if (!this._stream) {
           log.warn('ignoring message on a closed channel');
           return;
@@ -127,6 +127,8 @@ export class RtcTransportChannel extends Resource implements Transport {
         let data = event.data;
         if (data instanceof ArrayBuffer) {
           data = Buffer.from(data);
+        } else if (data instanceof Blob) {
+          data = Buffer.from(await data.arrayBuffer());
         }
         this._stream.push(data);
       },
