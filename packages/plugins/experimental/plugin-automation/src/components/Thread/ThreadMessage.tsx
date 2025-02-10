@@ -1,0 +1,113 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { type FC } from 'react';
+
+import { type MessageContentBlock, type Message } from '@dxos/artifact';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
+import { safeParseJson } from '@dxos/util';
+
+import { ToggleContainer } from './ToggleContainer';
+import { MarkdownViewer } from '../MarkdownViewer';
+
+export const ThreadMessage: FC<
+  ThemedClassName<{
+    message: Message;
+    debug?: boolean;
+  }>
+> = ({ classNames, message, debug }) => {
+  if (typeof message !== 'object') {
+    return <div className={mx(classNames)}>{message}</div>;
+  }
+
+  const { role, content = [] } = message;
+  return (
+    <div className={mx('flex flex-col shrink-0 gap-2')}>
+      {debug && <div className='text-xs text-subdued'>{message.id}</div>}
+      {content.map((block, idx) => (
+        <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
+          <Block role={role} block={block} />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// TODO(burdon): Need block.id to prevent flickering?
+const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentBlock }) => {
+  const content = getContent(block);
+  return (
+    <div
+      className={mx(
+        'p-1 px-2 overflow-hidden rounded-md',
+        block.type === 'text' && role === 'user' ? 'bg-blue-200 dark:bg-blue-800' : 'bg-base',
+      )}
+    >
+      {content}
+    </div>
+  );
+};
+
+const getContent = (block: MessageContentBlock) => {
+  const titles: Record<string, string> = {
+    ['cot' as const]: 'Chain of thought',
+
+    // TODO(burdon): Only show if debugging.
+    ['tool_use' as const]: 'Tool request',
+    ['tool_result' as const]: 'Tool result',
+  };
+
+  switch (block.type) {
+    case 'text': {
+      const title = block.disposition ? titles[block.disposition] : undefined;
+      if (title) {
+        return (
+          <ToggleContainer
+            title={title}
+            icon={
+              block.pending ? (
+                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+              ) : undefined
+            }
+            toggle
+          >
+            <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
+          </ToggleContainer>
+        );
+      } else {
+        return (
+          <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
+        );
+      }
+    }
+
+    case 'json': {
+      const title = block.disposition ? titles[block.disposition] : undefined;
+      return (
+        <ToggleContainer title={title ?? 'JSON'} toggle>
+          <Json data={safeParseJson(block.json ?? block)} />
+        </ToggleContainer>
+      );
+    }
+
+    default: {
+      const title = titles[block.type];
+      return (
+        <ToggleContainer title={title ?? 'JSON'} toggle>
+          <Json data={block} />
+        </ToggleContainer>
+      );
+    }
+  }
+};
+
+const Json = ({ data, classNames }: ThemedClassName<{ data: any }>) => {
+  return (
+    <SyntaxHighlighter language='json' classNames={mx('overflow-hidden text-sm', classNames)}>
+      {JSON.stringify(data, null, 2)}
+    </SyntaxHighlighter>
+  );
+};
