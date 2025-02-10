@@ -41,7 +41,8 @@ export class DXN {
      */
     ECHO: 'echo',
     /**
-     * dxn:queue:<subspace tag>:<space id>:<queue id>[:object id]
+     * The subspace tag enables us to partition queues by usage within the context of a space.
+     * dxn:queue:<subspace_tag>:<space_id>:<queue_id>[:object_id]
      * dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
      * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
      */
@@ -179,6 +180,7 @@ export class DXN {
     if (typeof queueId !== 'string') {
       return undefined;
     }
+
     return {
       subspaceTag,
       spaceId: spaceId as SpaceId,
