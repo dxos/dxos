@@ -9,10 +9,11 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Input, Toolbar } from '@dxos/react-ui';
+import { Icon, Input, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 
-import { MarkdownViewer } from './components';
+import { ToggleContainer } from './ToggleContainer';
+import { MarkdownViewer } from '../MarkdownViewer';
 
 class Generator {
   private _running: NodeJS.Timeout | undefined;
@@ -30,7 +31,7 @@ class Generator {
         this._current.value += ' ';
       }
       this._current.value += faker.lorem.words(Math.ceil(Math.random() * 2));
-      if (Math.random() > 0.8) {
+      if (Math.random() > 0.95) {
         this._lines.value = [...this._lines.value, this._current.value + '.'];
         this._current.value = '';
       }
@@ -57,7 +58,7 @@ const Render = () => {
   }, [running]);
 
   return (
-    <div className='flex flex-col w-full'>
+    <div className='flex flex-col w-[500px]'>
       <Toolbar.Root classNames='p-4'>
         <Input.Root>
           <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
@@ -67,7 +68,18 @@ const Render = () => {
       </Toolbar.Root>
       <div className='flex p-4'>
         <div className='border border-border rounded-md p-2'>
-          <MarkdownViewer content={generator.text.value.join('\n\n')} />
+          <ToggleContainer
+            title='Markdown'
+            icon={
+              running ? (
+                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+              ) : undefined
+            }
+            defaultOpen
+            toggle
+          >
+            <MarkdownViewer classNames='text-sm' content={generator.text.value.join('\n\n')} />
+          </ToggleContainer>
         </div>
       </div>
     </div>
@@ -75,9 +87,9 @@ const Render = () => {
 };
 
 const meta: Meta = {
-  title: 'plugins/plugin-automation/components',
+  title: 'plugins/plugin-automation/ToggleContainer',
   render: Render,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true })],
+  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-base' })],
 };
 
 export default meta;
