@@ -75,8 +75,12 @@ export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: 
   const url = new URL(`./${relativeUrl}`, baseUrl.toString());
   options.spaceId && url.searchParams.set('spaceId', options.spaceId);
   options.subjectId && url.searchParams.set('subjectId', options.subjectId);
-  url.protocol = 'https';
+  url.protocol = isSecure(url.protocol) ? 'https' : 'http';
   return url.toString();
+};
+
+const isSecure = (protocol: string) => {
+  return protocol === 'https' || protocol === 'wss';
 };
 
 const createEdgeIdentity = (client: Client): EdgeIdentity => {
