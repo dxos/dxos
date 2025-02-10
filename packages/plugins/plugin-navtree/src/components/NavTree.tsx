@@ -54,8 +54,8 @@ export const NavTree = (props: NavTreeProps) => {
       verticalVariant='stateless'
       classNames='relative'
     >
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={currentItemId} />
       <L0Menu topLevelItems={topLevelItems} path={path} parent={props.root} />
+      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={currentItemId} />
     </Tabs.Root>
   );
 };
