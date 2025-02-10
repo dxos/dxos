@@ -144,6 +144,14 @@ export namespace LayoutAction {
     output: S.Void,
   }) {}
 
+  export class SwitchWorkspace extends S.TaggedClass<SwitchWorkspace>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('workspace').annotations({ description: 'Switching the workspace.' }),
+      subject: S.String.annotations({ description: 'The id of the workspace to switch to.' }),
+    }),
+    output: S.Void,
+  }) {}
+
   export class Open extends S.TaggedClass<Open>()(UPDATE_LAYOUT, {
     input: S.Struct({
       part: S.Literal('main').annotations({ description: 'Opening an item in the main content area.' }),

@@ -16,16 +16,16 @@ export type SetActiveOptions = {
 
 export const setActive = ({ next, state, attention }: SetActiveOptions) => {
   return batch(() => {
-    const active = state.solo ? [state.solo] : state.deck;
+    const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
     const removed = active.filter((id) => !next.includes(id));
-    const closed = Array.from(new Set([...state.closed.filter((id) => !next.includes(id)), ...removed]));
+    const closed = Array.from(new Set([...state.deck.inactive.filter((id) => !next.includes(id)), ...removed]));
 
-    state.closed = closed;
+    state.deck.inactive = closed;
 
-    if (state.solo) {
-      state.solo = next[0];
+    if (state.deck.solo) {
+      state.deck.solo = next[0];
     } else {
-      state.deck = next;
+      state.deck.active = next;
     }
 
     if (attention) {
@@ -33,7 +33,7 @@ export const setActive = ({ next, state, attention }: SetActiveOptions) => {
       const [attendedId] = Array.from(attended);
       const isAttendedAvailable = !!attendedId && next.includes(attendedId);
       if (!isAttendedAvailable) {
-        const active = state.solo ? [state.solo] : state.deck;
+        const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const attendedIndex = active.indexOf(attendedId);
         // If outside of bounds, focus on the first/last plank, otherwise focus on the new plank in the same position.
         const index = attendedIndex === -1 ? 0 : attendedIndex >= active.length ? active.length - 1 : attendedIndex;
