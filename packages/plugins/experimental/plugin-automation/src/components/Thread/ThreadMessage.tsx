@@ -5,6 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
+import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -36,9 +37,8 @@ export const ThreadMessage: FC<
   );
 };
 
-// TODO(burdon): Need block.id to prevent flickering?
 const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentBlock }) => {
-  const content = getContent(block);
+  const Component = componentMap[block.type] ?? componentMap.default;
   return (
     <div
       className={mx(
@@ -46,62 +46,63 @@ const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentB
         block.type === 'text' && role === 'user' ? 'bg-blue-200 dark:bg-blue-800' : 'bg-base',
       )}
     >
-      {content}
+      <Component block={block} />
     </div>
   );
 };
 
-const getContent = (block: MessageContentBlock) => {
-  const titles: Record<string, string> = {
-    ['cot' as const]: 'Chain of thought',
+const titles: Record<string, string> = {
+  ['cot' as const]: 'Chain of thought',
 
-    // TODO(burdon): Only show if debugging.
-    ['tool_use' as const]: 'Tool request',
-    ['tool_result' as const]: 'Tool result',
-  };
+  // TODO(burdon): Only show if debugging.
+  ['tool_use' as const]: 'Tool request',
+  ['tool_result' as const]: 'Tool result',
+};
 
-  switch (block.type) {
-    case 'text': {
-      const title = block.disposition ? titles[block.disposition] : undefined;
-      if (title) {
-        return (
-          <ToggleContainer
-            title={title}
-            icon={
-              block.pending ? (
-                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
-              ) : undefined
-            }
-            toggle
-          >
-            <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
-          </ToggleContainer>
-        );
-      } else {
-        return (
+const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
+  text: ({ block }) => {
+    invariant(block.type === 'text');
+    const title = block.disposition ? titles[block.disposition] : undefined;
+    if (title) {
+      return (
+        <ToggleContainer
+          title={title}
+          icon={
+            block.pending ? (
+              <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+            ) : undefined
+          }
+          defaultOpen={block.disposition === 'cot'}
+          toggle
+        >
           <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
-        );
-      }
-    }
-
-    case 'json': {
-      const title = block.disposition ? titles[block.disposition] : undefined;
-      return (
-        <ToggleContainer title={title ?? 'JSON'} toggle>
-          <Json data={safeParseJson(block.json ?? block)} />
         </ToggleContainer>
       );
-    }
-
-    default: {
-      const title = titles[block.type];
+    } else {
       return (
-        <ToggleContainer title={title ?? 'JSON'} toggle>
-          <Json data={block} />
-        </ToggleContainer>
+        <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
       );
     }
-  }
+  },
+
+  json: ({ block }) => {
+    invariant(block.type === 'json');
+    const title = block.disposition ? titles[block.disposition] : undefined;
+    return (
+      <ToggleContainer title={title ?? 'JSON'} toggle>
+        <Json data={safeParseJson(block.json ?? block)} />
+      </ToggleContainer>
+    );
+  },
+
+  default: ({ block }) => {
+    const title = titles[block.type];
+    return (
+      <ToggleContainer title={title ?? 'JSON'} toggle>
+        <Json data={block} />
+      </ToggleContainer>
+    );
+  },
 };
 
 const Json = ({ data, classNames }: ThemedClassName<{ data: any }>) => {

@@ -27,9 +27,10 @@ export const Thread = S.Struct({
 /** @deprecated */
 export interface Thread extends S.Schema.Type<typeof Thread> {}
 
-const AbstractContentBlock = S.Struct({
+export const AbstractContentBlock = S.Struct({
   pending: S.optional(S.Boolean),
 });
+export type AbstractContentBlock = S.Schema.Type<typeof AbstractContentBlock>;
 
 /**
  * Text
