@@ -25,6 +25,7 @@ import { getMode, type Overscroll } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useHoistStatusbar } from '../../util/useHoistStatusbar';
 import { useLayout } from '../LayoutContext';
+import { fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
   overscroll: Overscroll;
@@ -34,8 +35,6 @@ export type DeckLayoutProps = {
 
 const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
-
-const fixedSidebarToggleStyles = 'bs-[--rail-item] is-[--rail-item] absolute inline-start-2 block-end-2 z-[1] !bg-deck';
 
 export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
@@ -121,6 +120,15 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
     return {};
   }, [solo, overscroll, deck]);
 
+  const mainPosition = useMemo(
+    () => [
+      'grid !block-start-[env(safe-area-inset-top)]',
+      topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+      hoistStatusbar && 'lg:block-end-[--statusbar-size]',
+    ],
+    [topbar, hoistStatusbar],
+  );
+
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
   return (
@@ -158,7 +166,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
           {/* No content. */}
           {isEmpty && (
-            <Main.Content handlesFocus>
+            <Main.Content bounce handlesFocus classNames={mainPosition}>
               <ContentEmpty />
             </Main.Content>
           )}
@@ -167,11 +175,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
           {!isEmpty && (
             <Main.Content
               bounce
-              classNames={[
-                'grid !block-start-[env(safe-area-inset-top)]',
-                topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-                hoistStatusbar && 'lg:block-end-[--statusbar-size]',
-              ]}
+              classNames={mainPosition}
               handlesFocus
               style={
                 {
