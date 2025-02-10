@@ -4,6 +4,7 @@
 
 import { lazy } from 'react';
 
+export * from './MarkdownViewer';
 export * from './PromptEditor';
 export * from './Thread';
 export * from './TriggerEditor';
