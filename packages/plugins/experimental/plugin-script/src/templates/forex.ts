@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 // @ts-ignore
@@ -12,13 +12,17 @@ export default defineFunction({
   inputSchema: S.Struct({
     from: S.String.annotations({ description: 'The source currency' }),
     to: S.String.annotations({ description: 'The target currency' }),
-  }),
+  }).annotations({ description: 'Returns the exchange rate between two currencies.' }),
   handler: async ({
     event: {
       data: { request },
     },
   }: any) => {
-    const { from = 'EUR', to = 'USD' } = await request.json();
+    // TODO(dmaretskyi): Remove ugly parsing.
+    const {
+      data: { bodyText },
+    } = await request.json();
+    const { from, to } = JSON.parse(bodyText);
 
     const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
     const {
