@@ -13,7 +13,7 @@ import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
 
-faker.seed(0);
+faker.seed(2);
 
 const Render = ({ messages, ...props }: ThreadProps) => {
   return (
@@ -57,20 +57,19 @@ export const Default: Story = {
             type: 'text',
             pending: true,
             disposition: 'cot',
-            text: [
-              `1. ${faker.lorem.paragraph()}`,
-              `2. ${faker.lorem.paragraph()}`,
-              `3. ${faker.lorem.paragraph()}`,
-              `4. ${faker.lorem.paragraph()}`,
-            ].join('\n'),
+            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+              .join('\n'),
           },
           {
             type: 'text',
-            text: faker.lorem.paragraphs(3),
+            text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
+              .map(() => faker.lorem.paragraphs())
+              .join('\n\n'),
           },
           {
             type: 'tool_use',
-            id: 'tool-use-1',
+            id: '1234',
             name: 'search',
             input: {},
           },
@@ -82,7 +81,7 @@ export const Default: Story = {
         content: [
           {
             type: 'tool_result',
-            toolUseId: 'tool-use-1',
+            toolUseId: '1234',
             content: 'This is a tool result.',
           },
         ],

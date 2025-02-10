@@ -21,15 +21,16 @@ type MarkdownViewerProps = ThemedClassName<{
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  */
 // TODO(burdon): Styles.
+// TODO(burdon): Factor out (react-ui-syntax-highlighter).
 export const MarkdownViewer: FC<MarkdownViewerProps> = ({ classNames, content = '' }) => {
   return (
-    <div className={mx(classNames)}>
+    <div className={mx('space-y-2', classNames)}>
       <ReactMarkdown
         components={{
           a: ({ node, children, href, ...props }) => (
             <a
               href={href}
-              className='text-primary-500 hover:text-primary-500 underline'
+              className='text-primary-500 hover:text-primary-500'
               target='_blank'
               rel='noopener noreferrer'
               {...props}
@@ -73,6 +74,6 @@ export const MarkdownViewer: FC<MarkdownViewerProps> = ({ classNames, content = 
   );
 };
 
-const Cursor = () => {
-  return <span className='animate-[pulse_1s_steps(1)_infinite] text-primary-500'>▊</span>;
-};
+// const Cursor = () => {
+//   return <span className='animate-[pulse_1s_steps(1)_infinite] text-primary-500'>▊</span>;
+// };
