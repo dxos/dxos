@@ -5,8 +5,9 @@
 import React, { type KeyboardEventHandler, useCallback, useRef, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ScrollContainer, type ScrollController } from './ScrollContainer';
 import { ThreadMessage } from './ThreadMessage';
@@ -17,10 +18,11 @@ export type ThreadProps = {
   streaming?: boolean;
   debug?: boolean;
   onSubmit?: (message: string) => void;
+  onStop?: () => void;
 };
 
 // TODO(burdon): Factor out scroll logic.
-export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) => {
+export const Thread = ({ messages, streaming, debug, onSubmit, onStop }: ThreadProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scroller = useRef<ScrollController>(null);
 
@@ -68,6 +70,18 @@ export const Thread = ({ messages, streaming, debug, onSubmit }: ThreadProps) =>
               onKeyDown={handleKeyDown}
             />
           </Input.Root>
+          {onStop && (
+            <IconButton
+              disabled={!streaming}
+              classNames={mx('!p-1 !opacity-20 transition', streaming && '!opacity-80')}
+              variant='ghost'
+              size={5}
+              onClick={onStop}
+              icon='ph--x--regular'
+              label={t('chat stop')}
+              iconOnly
+            />
+          )}
         </div>
       )}
     </div>
