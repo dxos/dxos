@@ -22,6 +22,7 @@ const rotate = Array.from({ length: n }).reduce<number[]>(
   [0],
 );
 
+// TODO(burdon): See https://css-tricks.com (using tailwind spin only).
 export const Spinner = ({ active, classNames }: SpinnerProps) => (
   <AnimatePresence>
     <motion.div

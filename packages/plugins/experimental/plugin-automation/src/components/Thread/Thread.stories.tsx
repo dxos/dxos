@@ -5,12 +5,10 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
@@ -21,7 +19,7 @@ const Render = ({ messages, ...props }: ThreadProps) => {
   return (
     <div className='flex grow justify-center overflow-center bg-base'>
       <div className='flex w-[500px] bg-white dark:bg-black'>
-        <Thread {...props} messages={messages} />
+        <Thread {...props} messages={messages} onSubmit={() => {}} />
       </div>
     </div>
   );
@@ -40,7 +38,6 @@ type Story = StoryObj<ThreadProps>;
 
 export const Default: Story = {
   args: {
-    streaming: true,
     messages: [
       {
         id: ObjectId.random(),
@@ -58,12 +55,18 @@ export const Default: Story = {
         content: [
           {
             type: 'text',
+            pending: true,
             disposition: 'cot',
-            text: ['1. Consider the question and context.', '2. Plan the route.', '3. Plot the course.'].join('\n'),
+            text: [
+              `1. ${faker.lorem.paragraph()}`,
+              `2. ${faker.lorem.paragraph()}`,
+              `3. ${faker.lorem.paragraph()}`,
+              `4. ${faker.lorem.paragraph()}`,
+            ].join('\n'),
           },
           {
             type: 'text',
-            text: 'This is a long text block.',
+            text: faker.lorem.paragraphs(3),
           },
           {
             type: 'tool_use',
@@ -90,7 +93,7 @@ export const Default: Story = {
         content: [
           {
             type: 'text',
-            text: 'This is a long text block.',
+            text: faker.lorem.paragraphs(1),
           },
         ],
       },
@@ -98,43 +101,8 @@ export const Default: Story = {
   },
 };
 
-export const Line = {
-  render: () => {
-    const [lines, setLines] = useState<string[]>([]);
-    const [expanded, _] = useState(false);
-    return (
-      <div className='flex grow justify-center overflow-center bg-white dark:bg-black'>
-        <div className='flex flex-col w-[500px] bg-base'>
-          <Toolbar.Root>
-            <IconButton
-              icon='ph--plus--regular'
-              label='Add'
-              iconOnly
-              onClick={() => {
-                setLines((lines) => [...lines, faker.lorem.sentence(5)]);
-                // setExpanded((expanded) => !expanded);
-              }}
-            />
-          </Toolbar.Root>
-          <div>
-            {lines.map((line, i) => (
-              <div key={i} className='flex h-[32px] p-1 px-3 items-center'>
-                {line}
-              </div>
-            ))}
-          </div>
-          <div
-            className={mx(
-              'flex flex-col justify-end p-1 items-center h-[40px] transition-h duration-[250ms]',
-              expanded && 'h-[72px]',
-            )}
-          >
-            <Input.Root>
-              <Input.TextInput placeholder='Enter message...' />
-            </Input.Root>
-          </div>
-        </div>
-      </div>
-    );
+export const Input: Story = {
+  args: {
+    streaming: true,
   },
 };

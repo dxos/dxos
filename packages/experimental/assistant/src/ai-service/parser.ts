@@ -52,6 +52,7 @@ export class MixedStreamParser {
   private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock) {
     const messageBlock = mergeMessageBlock(contentBlock, streamBlock);
     if (messageBlock) {
+      messageBlock.pending = true;
       this.update.emit(messageBlock);
     }
   }
