@@ -36,8 +36,14 @@ export default async (context: PluginsContext) => {
   const defaultSpaceNode = await graph.waitForNode(defaultSpace.id);
   await graph.expand(defaultSpaceNode);
 
-  await dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } }));
-  await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(readme)] }));
+  await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
+  await dispatch(
+    createIntent(LayoutAction.SetLayoutMode, {
+      part: 'mode',
+      subject: fullyQualifiedId(readme),
+      options: { mode: 'solo' },
+    }),
+  );
 
   return contributes(Capabilities.Null, null);
 };

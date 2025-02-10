@@ -17,6 +17,11 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./worker": {
+      "types": "./dist/types/src/worker.d.ts",
+      "browser": "./dist/lib/browser/worker.mjs",
+      "node": "./dist/lib/node-esm/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -24,6 +29,9 @@
     "*": {
       "./testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "./worker": [
+        "dist/types/src/worker.d.ts"
       ]
     }
   },

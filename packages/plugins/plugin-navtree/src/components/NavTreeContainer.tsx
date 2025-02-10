@@ -41,10 +41,20 @@ export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
   hoistStatusbar?: boolean;
-} & Pick<NavTreeContextValue, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
+} & Pick<NavTreeContextValue, 'tab' | 'onTabChange' | 'isOpen' | 'isCurrent' | 'onOpenChange'>;
 
 export const NavTreeContainer = memo(
-  ({ isCurrent, isOpen, onOpenChange, popoverAnchorId, topbar, hoistStatusbar, ...props }: NavTreeContainerProps) => {
+  ({
+    tab,
+    onTabChange,
+    isCurrent,
+    isOpen,
+    onOpenChange,
+    popoverAnchorId,
+    topbar,
+    hoistStatusbar,
+    ...props
+  }: NavTreeContainerProps) => {
     const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -210,6 +220,8 @@ export const NavTreeContainer = memo(
 
     const navTreeContextValue = useMemo(
       () => ({
+        tab,
+        onTabChange,
         getActions,
         loadDescendents,
         renderItemEnd,
@@ -225,6 +237,8 @@ export const NavTreeContainer = memo(
         onSelect: handleSelect,
       }),
       [
+        tab,
+        onTabChange,
         getActions,
         loadDescendents,
         renderItemEnd,

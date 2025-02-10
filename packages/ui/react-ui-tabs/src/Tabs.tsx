@@ -10,7 +10,7 @@ import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, use
 
 import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { focusRing, ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
+import { ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -216,7 +216,7 @@ type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
 const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
   return (
-    <TabsPrimitive.Content {...props} className={mx('rounded-sm', focusRing, classNames)}>
+    <TabsPrimitive.Content {...props} className={mx('ch-focus-ring-inset', classNames)}>
       {children}
     </TabsPrimitive.Content>
   );
