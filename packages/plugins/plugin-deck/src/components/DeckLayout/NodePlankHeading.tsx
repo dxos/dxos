@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
@@ -96,6 +96,16 @@ export const NodePlankHeading = memo(
       [dispatch, id, part],
     );
 
+    // The button for focusing purposes is only useful on load.
+    // It will be confusing to have it be tabbable afterwards.
+    // Once the plank is loaded, ensure that the button is not tabbable.
+    const focusRef = useRef<HTMLButtonElement>(null);
+    useLayoutEffect(() => {
+      if (focusRef.current) {
+        focusRef.current.tabIndex = -1;
+      }
+    }, []);
+
     return (
       <StackItem.Heading
         classNames={[
@@ -103,6 +113,12 @@ export const NodePlankHeading = memo(
           part === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
+        {/*
+          TODO(wittjosiah): Hack to provide something that can be focused within the plank on load.
+            The browser won't allow the plank itself to be focused without a focus-ring because it's not on user action.
+            All other visible elements will either have a focus ring or tooltip or both.
+        */}
+        <button ref={focusRef} className='h-0 w-0'></button>
         <ActionRoot>
           {node && sigilActions ? (
             <StackItem.Sigil
