@@ -53,7 +53,6 @@ export const NavTreeContainer = memo(
     popoverAnchorId,
     topbar,
     hoistStatusbar,
-    ...props
   }: NavTreeContainerProps) => {
     const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
     const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -63,13 +62,16 @@ export const NavTreeContainer = memo(
     const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
     const getItems = useCallback(
-      (node?: Node) => {
+      (node?: Node, disposition?: string) => {
         return graph.nodes(node ?? graph.root, {
           filter: (node): node is Node => {
             return untracked(() => {
               const action = isActionLike(node);
-              const disposition = node.properties.disposition;
-              return !action || (action && disposition === 'item');
+              if (!disposition) {
+                return !action;
+              }
+
+              return node.properties.disposition === disposition;
             });
           },
         });
@@ -257,7 +259,7 @@ export const NavTreeContainer = memo(
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree root={graph.root} id={graph.root.id} {...props} />
+        <NavTree root={graph.root} id={graph.root.id} />
       </NavTreeContext.Provider>
     );
   },

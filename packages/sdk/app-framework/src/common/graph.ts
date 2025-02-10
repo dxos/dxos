@@ -3,7 +3,7 @@
 //
 
 import type { Node } from '@dxos/app-graph';
-import { type MaybePromise } from '@dxos/util';
+import { type MaybePromise, type Position } from '@dxos/util';
 
 // TODO(wittjosiah): Factor out.
 export type SerializedNode = {
@@ -16,7 +16,7 @@ export type SerializedNode = {
 export type NodeSerializer<T = any> = {
   inputType: string;
   outputType: string;
-  disposition?: 'hoist' | 'fallback';
+  position?: Position;
 
   /**
    * Takes a node and serializes it into a format that can be stored.

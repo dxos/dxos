@@ -37,7 +37,7 @@ export default () =>
     createSurface({
       id: `${SCRIPT_PLUGIN}/automation`,
       role: 'complementary--automation',
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
       component: ({ data }) => <AutomationPanel subject={data.subject} />,
     }),

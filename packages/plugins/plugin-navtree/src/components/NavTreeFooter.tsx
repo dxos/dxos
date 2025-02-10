@@ -5,21 +5,8 @@
 import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
-import { SettingsAction, useIntentDispatcher, createIntent, usePluginManager } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
-import {
-  Button,
-  Link,
-  Message,
-  Popover,
-  Tooltip,
-  Trans,
-  useSidebars,
-  useTranslation,
-  Icon,
-  IconButton,
-} from '@dxos/react-ui';
-import { LayoutControls } from '@dxos/react-ui-stack';
+import { Button, Link, Message, Popover, Trans, useSidebars, useTranslation, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -30,13 +17,12 @@ const repo = 'https://github.com/dxos/dxos';
 
 const VERSION_REGEX = /([\d.]+)/;
 
+// TODO(wittjosiah): Move version to the status bar.
 export const NavTreeFooter = (props: { reverse?: boolean }) => {
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
-  const manager = usePluginManager();
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
 
   const releaseUrl =
@@ -109,45 +95,6 @@ export const NavTreeFooter = (props: { reverse?: boolean }) => {
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
-
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          {/* TODO(burdon): Reconcile with action created by LayoutPlugin. */}
-          <IconButton
-            icon='ph--gear-six--regular'
-            iconOnly
-            label={t('open settings label')}
-            size={4}
-            variant='ghost'
-            classNames={buttonStyles}
-            data-testid='treeView.openSettings'
-            data-joyride='welcome/settings'
-            {...(!navigationSidebarOpen && { tabIndex: -1 })}
-            iconClassNames='rotate-90'
-            onClick={() => dispatch(createIntent(SettingsAction.Open))}
-          />
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content classNames='z-[12]'>
-            {t('open settings label')}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-
-      {/* NOTE(thure): Unpinning from the NavTree’s default position in Deck is temporarily disabled. */}
-      {manager.enabled.includes('dxos.org/plugin/deck') && (
-        <LayoutControls
-          variant='hide-disabled'
-          capabilities={{
-            incrementStart: false,
-            incrementEnd: false,
-          }}
-          onClick={(_type) => {
-            // TODO(Zan): If we inmplement pinning again, we should dispatch here.
-          }}
-        />
-      )}
     </div>
   );
 };
