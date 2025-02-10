@@ -44,21 +44,23 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
         setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
       });
 
-      client.services.services.NetworkService?.joinSwarm({
-        topic: roomId,
-        peer: {
-          identityKey,
-          peerKey,
-          state: codec.encode({
-            id: peerKey,
-            name: displayName,
-            joined: false,
-            raisedHand: false,
-            speaking: false,
-            tracks: {},
-          }),
-        },
-      }).catch(log.catch);
+      client.services.services
+        .NetworkService!.joinSwarm({
+          topic: roomId,
+          peer: {
+            identityKey,
+            peerKey,
+            state: codec.encode({
+              id: peerKey,
+              name: displayName,
+              joined: false,
+              raisedHand: false,
+              speaking: false,
+              tracks: {},
+            }),
+          },
+        })
+        .catch(log.catch);
     }
   }, [roomId]);
 
@@ -96,14 +98,16 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
     otherUsers,
     roomState,
     updateUserState: (user: UserState) => {
-      client.services.services.NetworkService?.joinSwarm({
-        topic: roomId,
-        peer: {
-          identityKey,
-          peerKey,
-          state: codec.encode(user),
-        },
-      }).catch((err) => log.catch(err));
+      client.services.services
+        .NetworkService!.joinSwarm({
+          topic: roomId,
+          peer: {
+            identityKey,
+            peerKey,
+            state: codec.encode(user),
+          },
+        })
+        .catch((err) => log.catch(err));
     },
   };
 };
