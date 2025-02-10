@@ -3,12 +3,12 @@
 //
 
 import { AUTOMATION_PLUGIN } from './meta';
-import { GptChatType } from './types';
+import { AIChatType } from './types';
 
 export default [
   {
     'en-US': {
-      [GptChatType.typename]: {
+      [AIChatType.typename]: {
         'typename label': 'GPT Chat',
       },
       [AUTOMATION_PLUGIN]: {
@@ -24,9 +24,13 @@ export default [
         'open automation panel label': 'Show Automations',
         'automation panel label': 'Automations',
 
+        'chat input placeholder': 'Ask a question...',
+        'chat stop': 'Cancel request.',
+
         'function select label': 'Function',
         'function select placeholder': 'Select function',
         'function enabled': 'Enabled',
+
         'trigger select label': 'Trigger',
         'trigger select placeholder': 'Trigger type',
 
@@ -47,9 +51,6 @@ export default [
         'trigger meta add': 'Add',
         'trigger meta remove': 'Remove',
         'trigger meta prop name placeholder': 'New meta property name',
-
-        'open assistant panel label': 'Show Assistant',
-        'assistant panel label': 'Assistant',
       },
     },
   },

@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Message } from '@dxos/artifact';
+import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
@@ -14,9 +15,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Thread } from './Thread';
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
-import { type GptChatType } from '../types';
-import { invariant } from '@dxos/invariant';
-export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string }) => {
+import { type AIChatType } from '../types';
+
+export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const space = getSpace(chat);
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -57,29 +58,33 @@ export const ChatContainer = ({ chat, role }: { chat: GptChatType; role: string 
     [chat.queue.dxn],
   );
   const edgeClient = useEdgeClient();
-  const queue = useQueue<Message>(edgeClient, queueDxn);
-  const messages = [...(queue?.items ?? []), ...processor.messages.value];
+  const messageQueue = useQueue<Message>(edgeClient, queueDxn);
+  const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
   const handleSubmit = useCallback(
     async (message: string) => {
-      // TODO(burdon): Button to cancel. Otherwise queue request.
       if (processor.streaming.value) {
         await processor.cancel();
       }
 
-      invariant(queue);
-      // TODO(burdon): Append on success only? If approved by user? Clinet/server.
+      invariant(messageQueue);
       await processor.request(message, {
-        history: queue.items,
-        onComplete: (messages) => queue.append(messages),
+        history: messageQueue.items,
+        onComplete: (messages) => messageQueue.append(messages),
       });
     },
-    [processor, queue],
+    [processor, messageQueue],
   );
+
+  const handleStop = useCallback(() => {
+    if (processor.streaming.value) {
+      void processor.cancel();
+    }
+  }, [processor]);
 
   return (
     <StackItem.Content toolbar={false} role={role}>
-      <Thread messages={messages} streaming={processor.streaming.value} onSubmit={handleSubmit} />
+      <Thread messages={messages} streaming={processor.streaming.value} onSubmit={handleSubmit} onStop={handleStop} />
     </StackItem.Content>
   );
 };

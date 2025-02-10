@@ -38,7 +38,7 @@ export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', ve
 }) {}
 
 // TODO(wittjosiah): Better name.
-export class GptChatType extends TypedObject({ typename: 'dxos.org/type/GptChat', version: '0.1.0' })({
+export class AIChatType extends TypedObject({ typename: 'dxos.org/type/AIChat', version: '0.1.0' })({
   name: S.optional(S.String),
   // TODO(wittjosiah): Should be a ref to a Queue.
   queue: Ref(Expando),

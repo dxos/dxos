@@ -5,48 +5,54 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
+import translations from '../../translations';
 
-faker.seed(0);
+faker.seed(2);
 
 const Render = ({ messages: _messages, ...props }: ThreadProps) => {
-  const [messages, setMessages] = useState(_messages);
-  useEffect(() => {
-    const message: Message = {
-      id: ObjectId.random(),
-      role: 'assistant',
-      content: [
-        {
-          type: 'text',
-          text: '',
-        },
-      ],
-    };
+  const [messages, setMessages] = useState<Message[]>(_messages ?? []);
+  const [streaming, setStreaming] = useState(false);
 
-    const i = setInterval(() => {
-      const block = message.content[0];
-      invariant(block.type === 'text');
-      block.text += ' ' + faker.lorem.word();
-      setMessages([..._messages, message]);
-    }, 200);
-
-    return () => clearInterval(i);
-  }, []);
+  const handleSubmit = useCallback(
+    (text: string) => {
+      const request: Message = { id: ObjectId.random(), role: 'user', content: [{ type: 'text', text }] };
+      const response: Message = {
+        id: ObjectId.random(),
+        role: 'assistant',
+        content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
+      };
+      setMessages([...messages, request, response]);
+      setStreaming(true);
+      setTimeout(() => {
+        response.content[0].pending = false;
+        setMessages([
+          ...messages,
+          request,
+          response,
+          {
+            id: ObjectId.random(),
+            role: 'assistant',
+            content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
+          },
+        ]);
+        setStreaming(false);
+      }, 3_000);
+    },
+    [messages],
+  );
 
   return (
-    <div className='flex grow justify-center overflow-center bg-white dark:bg-black'>
-      <div className='flex w-[500px] bg-base'>
-        <Thread {...props} messages={messages} />
+    <div className='flex grow justify-center overflow-center bg-base'>
+      <div className='flex w-[500px] bg-white dark:bg-black'>
+        <Thread {...props} messages={messages} streaming={streaming} onSubmit={handleSubmit} onStop={() => {}} />
       </div>
     </div>
   );
@@ -57,86 +63,82 @@ const meta: Meta<ThreadProps> = {
   render: Render,
   component: Thread,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<ThreadProps>;
 
+const TEST_MESSAGES: Message[] = [
+  {
+    id: ObjectId.random(),
+    role: 'user',
+    content: [
+      {
+        type: 'text',
+        text: 'hello',
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'assistant',
+    content: [
+      {
+        type: 'text',
+        disposition: 'cot',
+        text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+          .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+          .join('\n'),
+      },
+      {
+        type: 'text',
+        text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
+          .map(() => faker.lorem.paragraphs())
+          .join('\n\n'),
+      },
+      {
+        type: 'tool_use',
+        id: '1234',
+        name: 'search',
+        input: {},
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'user',
+    content: [
+      {
+        type: 'tool_result',
+        toolUseId: '1234',
+        content: 'This is a tool result.',
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'assistant',
+    content: [
+      {
+        type: 'text',
+        text: faker.lorem.paragraphs(1),
+      },
+    ],
+  },
+];
+
 export const Default: Story = {
   args: {
-    streaming: true,
-    messages: [
-      {
-        id: ObjectId.random(),
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: 'hello',
-          },
-        ],
-      },
-      // {
-      //   id: ObjectId.random(),
-      //   role: 'assistant',
-      //   content: [
-      //     {
-      //       type: 'text',
-      //       disposition: 'cot',
-      //       text: ['1. Consider the question.', '2. Plan the route.', '3. Plot the course.'].join('\n'),
-      //     },
-      //     {
-      //       type: 'text',
-      //       text: 'Things',
-      //     },
-      //     {
-      //       type: 'json',
-      //       json: '{}',
-      //     },
-      //   ],
-      // },
-    ],
+    messages: TEST_MESSAGES,
   },
 };
 
-export const Line = {
-  render: () => {
-    const [lines, setLines] = useState<string[]>([]);
-    const [expanded, _] = useState(false);
-    return (
-      <div className='flex grow justify-center overflow-center bg-white dark:bg-black'>
-        <div className='flex flex-col w-[500px] bg-base'>
-          <Toolbar.Root>
-            <IconButton
-              icon='ph--plus--regular'
-              label='Add'
-              iconOnly
-              onClick={() => {
-                setLines((lines) => [...lines, faker.lorem.sentence(5)]);
-                // setExpanded((expanded) => !expanded);
-              }}
-            />
-          </Toolbar.Root>
-          <div>
-            {lines.map((line, i) => (
-              <div key={i} className='flex h-[32px] p-1 px-3 items-center'>
-                {line}
-              </div>
-            ))}
-          </div>
-          <div
-            className={mx(
-              'flex flex-col justify-end p-1 items-center h-[40px] transition-h duration-[250ms]',
-              expanded && 'h-[72px]',
-            )}
-          >
-            <Input.Root>
-              <Input.TextInput placeholder='Enter message...' />
-            </Input.Root>
-          </div>
-        </div>
-      </div>
-    );
+export const Input: Story = {
+  args: {
+    streaming: true,
   },
 };

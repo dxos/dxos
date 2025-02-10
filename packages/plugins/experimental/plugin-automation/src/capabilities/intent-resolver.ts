@@ -6,7 +6,7 @@ import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { ObjectId } from '@dxos/echo-schema';
 import { create, makeRef } from '@dxos/live-object';
 
-import { AutomationAction, GptChatType } from '../types';
+import { AutomationAction, AIChatType } from '../types';
 
 export default () =>
   contributes(
@@ -15,7 +15,7 @@ export default () =>
       intent: AutomationAction.Create,
       resolve: ({ name }) => ({
         data: {
-          object: create(GptChatType, {
+          object: create(AIChatType, {
             name,
             // TODO(burdon): ???
             // new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),

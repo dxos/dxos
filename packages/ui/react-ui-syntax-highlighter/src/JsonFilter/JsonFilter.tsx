@@ -10,9 +10,17 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
-export type JsonFilterProps = ThemedClassName<{ data?: any }>;
+export type JsonProps = ThemedClassName<{ data?: any }>;
 
-export const JsonFilter = ({ data: initialData, classNames }: JsonFilterProps) => {
+export const Json = ({ data, classNames }: JsonProps) => {
+  return (
+    <SyntaxHighlighter language='json' classNames={classNames}>
+      {JSON.stringify(data, null, 2)}
+    </SyntaxHighlighter>
+  );
+};
+
+export const JsonFilter = ({ data: initialData, classNames }: JsonProps) => {
   const [data, setData] = useState(initialData);
   const [text, setText] = useState('');
   const [error, setError] = useState<Error | null>(null);
