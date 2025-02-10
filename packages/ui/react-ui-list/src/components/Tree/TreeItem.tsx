@@ -20,7 +20,6 @@ import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
 import {
-  focusRing,
   ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
@@ -228,7 +227,6 @@ export const RawTreeItem = <T = any,>({
           hoverableFocusedWithinControls,
           hoverableDescriptionIcons,
           ghostHover,
-          focusRing,
           className,
         )}
         data-itemid={id}
