@@ -23,10 +23,12 @@ export default [
         'select preset template placeholder': 'Select preset',
         'open automation panel label': 'Show Automations',
         'automation panel label': 'Automations',
+        'chat input placeholder': 'Ask a question...',
 
         'function select label': 'Function',
         'function select placeholder': 'Select function',
         'function enabled': 'Enabled',
+
         'trigger select label': 'Trigger',
         'trigger select placeholder': 'Trigger type',
 
