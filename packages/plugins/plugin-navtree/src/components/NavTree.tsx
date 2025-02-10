@@ -24,8 +24,8 @@ export const NavTree = ({ id, root }: NavTreeProps) => {
   return (
     // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} />
       <L0Menu topLevelItems={topLevelItems} path={path} parent={root} />
+      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} />
     </Tabs.Root>
   );
 };

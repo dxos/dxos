@@ -37,6 +37,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
           ? 'grid-rows-[var(--rail-size)_1fr_min-content]'
           : 'grid-rows-[var(--rail-size)_1fr]',
       ]}
+      tabIndex={-1}
     >
       {item.id === currentItemId && (
         <>
