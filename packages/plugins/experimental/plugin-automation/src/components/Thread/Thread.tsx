@@ -11,8 +11,8 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { MarkdownViewer } from './MarkdownViewer';
-import { ToggleContainer } from './ToggleContainer';
+import { MarkdownViewer } from '../MarkdownViewer';
+import { ToggleContainer } from '../ToggleContainer';
 
 export type ThreadProps = {
   messages: Message[];
