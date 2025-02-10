@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { IconButton, Input } from '@dxos/react-ui';
+import { IconButton, Input, Tag } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
@@ -27,18 +27,19 @@ export const SelectOptionInput = ({
   const { status, error } = getStatus();
   const options = getValue<SelectOption[] | undefined>();
 
-  React.useEffect(() => {
+  // Initialization.
+  useEffect(() => {
     if (options === undefined) {
       onValueChange(type, []);
     }
   }, [options, onValueChange, type]);
 
-  const handleAdd = React.useCallback(() => {
+  const handleAdd = useCallback(() => {
     const newOption = { id: PublicKey.random().truncate(), title: 'New Option', color: 'gray' };
     onValueChange(type, [...(options ?? []), newOption]);
   }, [options, type, onValueChange]);
 
-  const handleDelete = React.useCallback(
+  const handleDelete = useCallback(
     (id: string) => {
       const newOptions = options?.filter((option) => option.id !== id) ?? [];
       onValueChange(type, newOptions);
@@ -47,7 +48,7 @@ export const SelectOptionInput = ({
     [options, type, onValueChange],
   );
 
-  const handleMove = React.useCallback(
+  const handleMove = useCallback(
     (from: number, to: number) => {
       if (!options) {
         return;
@@ -61,7 +62,7 @@ export const SelectOptionInput = ({
     [options, type, onValueChange],
   );
 
-  const handleClick = React.useCallback((id: string) => {
+  const handleClick = useCallback((id: string) => {
     setSelectedId((current) => (current === id ? null : id));
   }, []);
 
@@ -76,44 +77,49 @@ export const SelectOptionInput = ({
             {({ items }) => (
               <div role='list' className='w-full overflow-auto'>
                 {items?.map((item) => (
-                  <List.Item
-                    key={item.id}
-                    item={item}
-                    classNames={mx(
-                      'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]',
-                      'cursor-pointer',
-                      ghostHover,
-                      selected === item.id && 'bg-hoverSurface',
-                    )}
-                  >
-                    <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleClick(item.id)}>{item.title}</List.ItemTitle>
-                    <List.ItemDeleteButton onClick={() => handleDelete(item.id)} />
-                  </List.Item>
+                  <div key={item.id}>
+                    <List.Item
+                      item={item}
+                      classNames={mx('p-1 plb-2', 'flex flex-col', 'cursor-pointer', 'hover:bg-hoverOverlay')}
+                    >
+                      <div className='flex items-center'>
+                        <List.ItemDragHandle />
+                        <List.ItemTitle onClick={() => handleClick(item.id)} classNames='flex-1'>
+                          <Tag>{item.title || '\u200b'}</Tag>
+                        </List.ItemTitle>
+                        <List.ItemDeleteButton onClick={() => handleDelete(item.id)} />
+                      </div>
+                      {selected === item.id && (
+                        <div className='ml-[16px] mt-2 flex flex-col gap-1'>
+                          {/* 16px to match drag handle width. */}
+                          <Input.Root>
+                            <Input.Label classNames='text-xs'>Label</Input.Label>
+                            <Input.TextInput
+                              value={item.title}
+                              onChange={(e) => {
+                                const newOptions = options?.map((o) =>
+                                  o.id === item.id ? { ...o, title: e.target.value } : o,
+                                );
+                                onValueChange(type, newOptions ?? []);
+                              }}
+                            />
+                          </Input.Root>
+                          <Input.Root>
+                            <Input.Label classNames='text-xs'>Color</Input.Label>
+                            <Input.TextInput value={'Some color input'} onChange={(e) => {}} />
+                          </Input.Root>
+                        </div>
+                      )}
+                    </List.Item>
+                  </div>
                 ))}
               </div>
             )}
           </List.Root>
         )}
-        {!selected && (
-          <div role='none' className='flex p-2 justify-center'>
-            <IconButton icon='ph--plus--regular' label='Add option' onClick={handleAdd} disabled={disabled} />
-          </div>
-        )}
-        {selected && (
-          <div role='none'>
-            <Input.Root>
-              <Input.Label>Label</Input.Label>
-              <Input.TextInput
-                value={options?.find((o) => o.id === selected)?.title ?? ''}
-                onChange={(e) => {
-                  const newOptions = options?.map((o) => (o.id === selected ? { ...o, title: e.target.value } : o));
-                  onValueChange(type, newOptions ?? []);
-                }}
-              />
-            </Input.Root>
-          </div>
-        )}
+        <div role='none' className='flex p-2 justify-center'>
+          <IconButton icon='ph--plus--regular' label='Add option' onClick={handleAdd} disabled={disabled} />
+        </div>
       </div>
     </Input.Root>
   );
