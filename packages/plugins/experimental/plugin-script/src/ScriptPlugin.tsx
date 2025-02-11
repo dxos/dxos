@@ -42,7 +42,7 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
@@ -59,7 +59,7 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [FunctionType]),
         contributes(ClientCapabilities.Schema, [ScriptType]),
@@ -67,7 +67,7 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

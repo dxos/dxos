@@ -34,7 +34,7 @@ export const SheetPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: SheetType.typename,
@@ -49,7 +49,7 @@ export const SheetPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.Schema, [SheetType]),
         // TODO(wittjosiah): Factor out to common package/plugin.
@@ -74,7 +74,7 @@ export const SheetPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

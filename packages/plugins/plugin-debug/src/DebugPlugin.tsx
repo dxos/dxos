@@ -41,7 +41,7 @@ export const DebugPlugin = () => {
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

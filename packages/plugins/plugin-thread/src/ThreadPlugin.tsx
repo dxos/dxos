@@ -45,7 +45,7 @@ export const ThreadPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
           id: ChannelType.typename,
@@ -90,7 +90,7 @@ export const ThreadPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.SystemSchema, [ThreadType, MessageType]),
     }),
     defineModule({
@@ -127,7 +127,7 @@ export const ThreadPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

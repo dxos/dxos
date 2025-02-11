@@ -27,7 +27,7 @@ export const TemplatePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: TemplateType.typename,
@@ -40,12 +40,12 @@ export const TemplatePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.Schema, [TemplateType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

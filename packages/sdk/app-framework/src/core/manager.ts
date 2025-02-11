@@ -165,8 +165,8 @@ export class PluginManager {
    * Enables a plugin.
    * @param id The id of the plugin.
    */
-  enable(id: string): boolean {
-    return untracked(() => {
+  enable(id: string): Promise<boolean> {
+    return untracked(async () => {
       log('enable plugin', { id });
       const plugin = this._getPlugin(id);
       if (!plugin) {
@@ -181,6 +181,10 @@ export class PluginManager {
         this._addModule(module);
         this._setPendingResetByModule(module);
       });
+
+      log('pending reset', { events: [...this.pendingReset] });
+      await Effect.runPromise(Effect.all(this.pendingReset.map((event) => this._activate(event))));
+
       return true;
     });
   }
@@ -206,8 +210,8 @@ export class PluginManager {
    * Disables a plugin.
    * @param id The id of the plugin.
    */
-  disable(id: string): boolean {
-    return untracked(() => {
+  disable(id: string): Promise<boolean> {
+    return untracked(async () => {
       log('disable plugin', { id });
       if (this._state.core.includes(id)) {
         return false;
@@ -221,16 +225,10 @@ export class PluginManager {
       const enabledIndex = this._state.enabled.findIndex((enabled) => enabled === id);
       if (enabledIndex !== -1) {
         this._state.enabled.splice(enabledIndex, 1);
+        await Effect.runPromise(this._deactivate(id));
 
         plugin.modules.forEach((module) => {
-          if (this._state.active.includes(module.id)) {
-            this._setPendingResetByModule(module);
-            if (!this._state.pendingRemoval.includes(module.id)) {
-              this._state.pendingRemoval.push(module.id);
-            }
-          } else {
-            this._removeModule(module.id);
-          }
+          this._removeModule(module.id);
         });
       }
 
@@ -267,6 +265,8 @@ export class PluginManager {
 
   /**
    * Calls reset on all pending reset events until there are none left.
+   *
+   * @deprecated
    */
   async resetAll(): Promise<void> {
     do {
@@ -337,14 +337,8 @@ export class PluginManager {
       const activationEvents = getEvents(module.activatesOn)
         .map(eventKey)
         .filter((key) => this._state.eventsFired.includes(key));
-      const parentEvents = activationEvents.flatMap((event) => {
-        const modules = this._getActiveModules().filter((module) =>
-          module.activatesBefore?.map(eventKey).includes(event),
-        );
-        return modules.flatMap((module) => getEvents(module.activatesOn)).map(eventKey);
-      });
 
-      const pendingReset = Array.from(new Set([...activationEvents, ...parentEvents])).filter(
+      const pendingReset = Array.from(new Set(activationEvents)).filter(
         (event) => !this._state.pendingReset.includes(event),
       );
       if (pendingReset.length > 0) {
@@ -375,6 +369,7 @@ export class PluginManager {
 
       this.activation.emit({ event: key, state: 'activating' });
 
+      log('activating modules', { key, modules: modules.map((module) => module.id) });
       for (const module of modules) {
         if (
           isAllOf(module.activatesOn) &&
@@ -387,11 +382,13 @@ export class PluginManager {
 
         yield* Effect.all(module.activatesBefore?.map((event) => this._activate(event)) ?? []);
 
+        log('activating module', { module: module.id });
         const result = yield* this._activateModule(module).pipe(Effect.either);
         if (Either.isLeft(result)) {
           this.activation.emit({ event: key, state: 'error', error: result.left });
           yield* Effect.fail(result.left);
         }
+        log('activated module', { module: module.id });
 
         yield* Effect.all(module.activatesAfter?.map((event) => this._activate(event)) ?? []);
       }

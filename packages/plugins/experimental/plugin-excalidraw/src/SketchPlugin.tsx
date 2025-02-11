@@ -33,7 +33,7 @@ export const ExcalidrawPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
@@ -46,7 +46,7 @@ export const ExcalidrawPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [CanvasType]),
         contributes(ClientCapabilities.Schema, [DiagramType]),
@@ -54,7 +54,7 @@ export const ExcalidrawPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

@@ -21,12 +21,6 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
   await client.initialize();
   await onClientInitialized?.(context, client);
 
-  // TODO(wittjosiah): This should subscribe to capabilities and add types for newly added capabilities.
-  const systemSchemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.SystemSchema).flat()));
-  const schemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.Schema).flat()));
-  client.addTypes(systemSchemas);
-  client.addTypes(schemas);
-
   // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
   client.reloaded.on(() => {
     client.halo.identity.subscribe(async (identity) => {

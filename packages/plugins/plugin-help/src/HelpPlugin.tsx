@@ -31,7 +31,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions) =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

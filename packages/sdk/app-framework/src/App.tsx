@@ -96,6 +96,8 @@ export const createApp = ({
 
   setupDevtools(manager);
 
+  // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
+  void manager.activate(Events.SetupSurfaces);
   void manager.activate(Events.Startup);
 
   return () => (

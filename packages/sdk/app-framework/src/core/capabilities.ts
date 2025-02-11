@@ -140,7 +140,11 @@ export class PluginsContext {
     }
 
     current.push(new CapabilityImpl(moduleId, implementation));
-    log('capability contributed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
+    log('capability contributed', {
+      id: interfaceDef.identifier,
+      moduleId,
+      count: untracked(() => current.length),
+    });
   }
 
   /**
@@ -156,6 +160,8 @@ export class PluginsContext {
     if (index !== -1) {
       current.splice(index, 1);
       log('capability removed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
+    } else {
+      log.warn('capability not removed', { id: interfaceDef.identifier });
     }
   }
 

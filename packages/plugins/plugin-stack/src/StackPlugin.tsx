@@ -31,7 +31,7 @@ export const StackPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
           id: StackViewType.typename,
@@ -60,12 +60,12 @@ export const StackPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.SystemSchema, [StackViewType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: () =>
         contributes(
           Capabilities.ReactSurface,
