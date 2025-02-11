@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
@@ -95,23 +95,25 @@ export const HuePickerToolbarButton = ({
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
-        {/* TODO(burdon): Change from DropdownMenu (show checked). */}
-        <DropdownMenu.Content side='bottom' classNames='!w-40'>
-          <DropdownMenu.Viewport classNames='grid grid-cols-4'>
-            {hueTokens.map((hue) => {
-              return (
-                <DropdownMenu.CheckboxItem
-                  key={hue}
-                  checked={hue === hueValue}
-                  onCheckedChange={() => setHueValue(hue)}
-                  classNames={'px-0 py-2 items-center justify-center'}
-                >
-                  <HuePreview hue={hue} />
-                </DropdownMenu.CheckboxItem>
-              );
-            })}
-          </DropdownMenu.Viewport>
-        </DropdownMenu.Content>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content side='bottom' classNames='!w-40'>
+            <DropdownMenu.Viewport classNames='grid grid-cols-4'>
+              {hueTokens.map((hue) => {
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={hue}
+                    checked={hue === hueValue}
+                    onCheckedChange={() => setHueValue(hue)}
+                    classNames={'px-0 py-2 items-center justify-center'}
+                  >
+                    <HuePreview hue={hue} />
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
       </DropdownMenu.Root>
     </Tooltip.Root>
   );

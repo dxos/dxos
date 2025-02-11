@@ -178,7 +178,7 @@ describe('Intent dispatcher', () => {
   test('hoist resolvers', async () => {
     const hoistedComputeResolver = createResolver({
       intent: Compute,
-      disposition: 'hoist',
+      position: 'hoist',
       resolve: async (data) => ({ data: { value: data?.value * 3 } }),
     });
     const { dispatchPromise } = createDispatcher(() => [computeResolver, hoistedComputeResolver]);
@@ -194,7 +194,7 @@ describe('Intent dispatcher', () => {
     });
     const fallbackComputeResolver = createResolver({
       intent: Compute,
-      disposition: 'fallback',
+      position: 'fallback',
       resolve: async (data) => ({ data: { value: data?.value * 3 } }),
     });
     const { dispatch } = createDispatcher(() => [conditionalComputeResolver, fallbackComputeResolver]);

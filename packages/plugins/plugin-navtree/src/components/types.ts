@@ -20,10 +20,11 @@ export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'>;
 
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode>,
-  'getItems' | 'getProps' | 'isCurrent' | 'isOpen' | 'onOpenChange' | 'canDrop' | 'onSelect'
+  'getProps' | 'isCurrent' | 'isOpen' | 'onOpenChange' | 'canDrop' | 'onSelect'
 > & {
   tab: string;
   onTabChange?: (tab: string) => void;
+  getItems: (node?: NavTreeItemGraphNode, disposition?: string) => NavTreeItemGraphNode[];
   getActions: (node: Node) => FlattenedActions;
   loadDescendents?: (node: Node) => MaybePromise<void>;
   renderItemEnd?: FC<{ node: Node; open: boolean }>;
