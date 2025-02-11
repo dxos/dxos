@@ -11,6 +11,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Ai, type UserMedia } from '../../hooks';
 import { CALLS_URL, type UserState } from '../../types';
+import { getTimeStr } from '../../utils';
 
 const useDocument = ({ space, ai }: { space: Space; ai: Ai }) => {
   const document = useRef<DocumentType | null>();
@@ -137,13 +138,7 @@ export const Transcription = ({
         const textToUse = wordsToUse?.map((word) => word.word).join(' ') + '';
         log.info('>>> textToUse', { textToUse });
 
-        const time = new Date(chunksToUse.at(0)!.timestamp).toLocaleTimeString('en-US', {
-          timeZone: 'UTC',
-          hour12: true,
-          hour: 'numeric',
-          minute: '2-digit',
-          second: '2-digit',
-        });
+        const time = getTimeStr(chunksToUse.at(0)!.timestamp);
         updateText(
           document.current!.content.target!,
           ['content'],

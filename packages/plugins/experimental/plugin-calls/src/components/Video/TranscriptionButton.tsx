@@ -11,6 +11,7 @@ import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { Button, Icon } from '@dxos/react-ui';
 
 import { useRoomContext } from '../../hooks';
+import { getTimeStr } from '../../utils';
 
 export const TranscriptionButton = () => {
   const { dispatchPromise } = useIntentDispatcher();
@@ -25,7 +26,7 @@ export const TranscriptionButton = () => {
         const document = (
           await dispatchPromise(
             pipe(
-              createIntent(MarkdownAction.Create, { name: 'transaction' }),
+              createIntent(MarkdownAction.Create, { name: 'Transcription ' + getTimeStr() }),
               chain(SpaceAction.AddObject, { target: space.properties[CollectionType.typename]!.target }),
             ),
           )
