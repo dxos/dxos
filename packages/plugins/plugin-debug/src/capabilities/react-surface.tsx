@@ -124,7 +124,7 @@ export default (context: PluginsContext) =>
     createSurface({
       id: `${DEBUG_PLUGIN}/wireframe`,
       role: ['article', 'section'],
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: ReactiveEchoObject<any> } => {
         const settings = context
           .requestCapability(Capabilities.SettingsStore)
