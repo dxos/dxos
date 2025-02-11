@@ -13,8 +13,8 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
-import { TableAction } from '../types';
 import { schemaTools } from './schema-tool';
+import { TableAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {

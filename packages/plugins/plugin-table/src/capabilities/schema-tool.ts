@@ -3,7 +3,7 @@
 //
 
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnums, S, FormatEnum, Format, TypedObject, formatToType, TypeEnum, EchoObject } from '@dxos/echo-schema';
+import { FormatEnums, S, FormatEnum, Format, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 const availableFormats = FormatEnums;
