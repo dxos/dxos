@@ -12,7 +12,8 @@ export default defineFunction({
   inputSchema: S.Struct({
     from: S.String.annotations({ description: 'The source currency' }),
     to: S.String.annotations({ description: 'The target currency' }),
-  }).annotations({ description: 'Returns the exchange rate between two currencies.' }),
+  }),
+
   handler: async ({
     event: {
       data: { from, to },
