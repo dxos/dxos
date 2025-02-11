@@ -15,20 +15,14 @@ export default defineFunction({
   }).annotations({ description: 'Returns the exchange rate between two currencies.' }),
   handler: async ({
     event: {
-      data: { request },
+      data: { from, to },
     },
   }: any) => {
-    // TODO(dmaretskyi): Remove ugly parsing.
-    const {
-      data: { bodyText },
-    } = await request.json();
-    const { from, to } = JSON.parse(bodyText);
-
     const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
     const {
       data: { rates },
     } = await res.json();
 
-    return new Response(rates[to].toString());
+    return rates[to].toString();
   },
 });
