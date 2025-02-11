@@ -87,7 +87,23 @@ export default (context: PluginsContext) =>
           },
         };
 
-        return !state.deck.solo ? [closeCurrent, closeOthers, closeAll] : [];
+        const toggleSidebar = {
+          id: `${LayoutAction.UpdateSidebar._tag}/nav`,
+          data: async () => {
+            state.sidebarOpen = !state.sidebarOpen;
+          },
+          properties: {
+            label: [
+              state.sidebarOpen ? 'close navigation sidebar label' : 'open navigation sidebar label',
+              { ns: DECK_PLUGIN },
+            ],
+            icon: 'ph--sidebar--regular',
+            disposition: 'pin-end',
+            l0Breakpoint: 'lg',
+          },
+        };
+
+        return !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
       },
     }),
   );

@@ -17,12 +17,11 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 export const NavTree = ({ id, root }: NavTreeProps) => {
   const { getItems, tab } = useNavTreeContext();
   const topLevelActions = getItems(root, 'item');
-  const _topLevelItems = getItems();
-  // TODO(wittjosiah): Pass these separately to L0Menu to have them pinned at the bottom.
+  const topLevelTabs = getItems();
   const pinnedItems = getItems(root, 'pin-end');
   const topLevelItems = useMemo(
-    () => [...topLevelActions, ..._topLevelItems, ...pinnedItems],
-    [topLevelActions, _topLevelItems, pinnedItems],
+    () => [...topLevelActions, ...topLevelTabs],
+    [topLevelActions, topLevelTabs, pinnedItems],
   );
 
   useLoadDescendents(root);
@@ -31,7 +30,7 @@ export const NavTree = ({ id, root }: NavTreeProps) => {
   return (
     // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
-      <L0Menu topLevelItems={topLevelItems} path={path} parent={root} />
+      <L0Menu topLevelItems={topLevelItems} pinnedItems={pinnedItems} path={path} parent={root} />
       <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} />
     </Tabs.Root>
   );

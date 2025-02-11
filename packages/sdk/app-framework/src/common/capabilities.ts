@@ -40,6 +40,7 @@ export namespace Capabilities {
   export type Layout = Readonly<{
     mode: string;
     dialogOpen: boolean;
+    sidebarOpen: boolean;
     /**
      * Identifiers of items which are currently active in the application.
      */

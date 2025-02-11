@@ -58,6 +58,9 @@ export default () => {
     get dialogOpen() {
       return state.values.dialogOpen;
     },
+    get sidebarOpen() {
+      return state.values.sidebarOpen;
+    },
     get active() {
       return state.values.deck.solo ? [state.values.deck.solo] : state.values.deck.active;
     },
