@@ -9,7 +9,7 @@ import { type Step } from '@dxos/plugin-help';
 const ensureSidebar: Step['before'] = async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   await dispatch(
-    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: true } }),
+    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: 'expanded' } }),
   );
   return await sleep(200);
 };

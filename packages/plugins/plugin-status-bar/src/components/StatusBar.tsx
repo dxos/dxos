@@ -4,7 +4,7 @@
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { Slot } from '@radix-ui/react-slot';
-import React, { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -17,8 +17,7 @@ const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNa
   </span>
 ));
 
-type StatusBarButtonProps = ThemedClassName<{ children: ReactNode; asChild?: boolean }> &
-  HTMLAttributes<HTMLButtonElement>;
+type StatusBarButtonProps = ThemedClassName<ComponentPropsWithRef<'button'> & { asChild?: boolean }>;
 
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
