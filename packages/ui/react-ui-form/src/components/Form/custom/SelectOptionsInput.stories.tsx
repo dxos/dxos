@@ -11,6 +11,7 @@ import { S, SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectOptionInput } from './SelectOptionsInput';
+import translations from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
 import { Form } from '../Form';
 
@@ -46,6 +47,7 @@ const meta: Meta = {
   title: 'ui/react-ui-form/SelectOptionsInput',
   component: SelectOptionInput,
   decorators: [withTheme, withLayout({ tooltips: true })],
+  parameters: { translations },
 };
 
 export default meta;

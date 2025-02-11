@@ -1,30 +1,23 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { type ChromaticPalette, Icon, Input, Tag, Toolbar } from '@dxos/react-ui';
+import { type ChromaticPalette, Icon, IconButton, Input, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePickerToolbarButton } from '@dxos/react-ui-pickers';
 import { hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
-// import { translationKey } from '../../../translations';
+import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
 
-export const SelectOptionInput = ({
-  type,
-  label,
-  disabled,
-  getStatus,
-  getValue,
-  onValueChange,
-  onBlur,
-}: InputProps) => {
-  const [selected, setSelectedId] = React.useState<string | null>(null);
-  // const { t } = useTranslation(translationKey);
+// TODO(ZaymonFC): Handle disabled.
+export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, onValueChange }: InputProps) => {
+  const [selected, setSelectedId] = useState<string | null>(null);
+  const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const options = getValue<SelectOption[] | undefined>();
 
@@ -36,15 +29,11 @@ export const SelectOptionInput = ({
   }, [options, onValueChange, type]);
 
   const randomHue = () => {
-    // Collect all the colors.
-    const colors = new Set(options?.map((option) => option.color) ?? []);
-
-    // Get keys as array.
+    const usedHues = new Set(options?.map((option) => option.color) ?? []);
     const hueKeys = Object.keys(hueTokenThemes) as Array<keyof typeof hueTokenThemes>;
 
     // Pick a random unused option from hueTokenThemes.
-    const unusedHues = hueKeys.filter((hue) => !colors.has(hue));
-
+    const unusedHues = hueKeys.filter((hue) => !usedHues.has(hue));
     if (unusedHues.length > 0) {
       return unusedHues[Math.floor(Math.random() * unusedHues.length)];
     }
@@ -54,9 +43,9 @@ export const SelectOptionInput = ({
   };
 
   const handleAdd = useCallback(() => {
-    const newOption = { id: PublicKey.random().truncate(), title: 'New Option', color: randomHue() };
+    const newOption = { id: PublicKey.random().truncate(), title: t('select option new'), color: randomHue() };
     onValueChange(type, [...(options ?? []), newOption]);
-  }, [options, type, onValueChange]);
+  }, [options, type, onValueChange, t]);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -85,6 +74,23 @@ export const SelectOptionInput = ({
     setSelectedId((current) => (current === id ? null : id));
   }, []);
 
+  const handleTitleChange = useCallback(
+    (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
+      const newOptions = options?.map((o) => (o.id === id ? { ...o, title: e.target.value } : o));
+      onValueChange(type, newOptions ?? []);
+    },
+    [options, type, onValueChange],
+  );
+
+  // Color onChange
+  const handleColorChange = useCallback(
+    (id: string) => (hue: string) => {
+      const newOptions = options?.map((o) => (o.id === id ? { ...o, color: hue } : o));
+      onValueChange(type, newOptions ?? []);
+    },
+    [options, type, onValueChange],
+  );
+
   return (
     <Input.Root validationValence={status}>
       <InputHeader error={error}>
@@ -106,37 +112,35 @@ export const SelectOptionInput = ({
                       <div className='flex items-center'>
                         <List.ItemDragHandle />
                         <List.ItemTitle onClick={() => handleClick(item.id)} classNames='flex-1'>
+                          {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                           <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
                         </List.ItemTitle>
-                        <List.ItemDeleteButton onClick={() => handleDelete(item.id)} />
+                        <Icon
+                          icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                          onClick={() => handleClick(item.id)}
+                        />
                       </div>
                       {selected === item.id && (
                         <div className='ml-[16px] mt-2 flex flex-col gap-1'>
                           {/* 16px to match drag handle width. */}
                           <Input.Root>
-                            <Input.Label classNames='text-xs'>Label</Input.Label>
-                            <Input.TextInput
-                              value={item.title}
-                              onChange={(e) => {
-                                const newOptions = options?.map((o) =>
-                                  o.id === item.id ? { ...o, title: e.target.value } : o,
-                                );
-                                onValueChange(type, newOptions ?? []);
-                              }}
-                            />
+                            <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
+                            <Input.TextInput value={item.title} onChange={handleTitleChange(item.id)} />
                           </Input.Root>
                           <Input.Root>
-                            <Input.Label classNames='text-xs'>Color</Input.Label>
-                            <Toolbar.Root>
-                              <HuePickerToolbarButton
-                                hue={item.color}
-                                onChangeHue={(hue) => {
-                                  const newOptions = options?.map((o) => (o.id === item.id ? { ...o, color: hue } : o));
-                                  onValueChange(type, newOptions ?? []);
-                                }}
-                              />
+                            <Input.Label classNames='text-xs'>{t('select option color')}</Input.Label>
+                            <Toolbar.Root classNames='p-0'>
+                              <HuePickerToolbarButton hue={item.color} onChangeHue={handleColorChange(item.id)} />
                             </Toolbar.Root>
                           </Input.Root>
+
+                          <span role='separator' className='bs-2' />
+
+                          <IconButton
+                            icon='ph--trash--fill'
+                            label={t('select option delete')}
+                            onClick={() => handleDelete(item.id)}
+                          />
                         </div>
                       )}
                     </List.Item>
@@ -150,7 +154,7 @@ export const SelectOptionInput = ({
                   >
                     <div className='flex items-center gap-1'>
                       <Icon icon='ph--plus--regular' />
-                      <span className='text-sm'>Add option</span>
+                      <span className='text-sm'>{t('select option add')}</span>
                     </div>
                   </div>
                 </div>
