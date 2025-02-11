@@ -5,6 +5,7 @@
 import React, { type FC } from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 
 import { Call } from './Call';
 import { CallsContextProvider } from './CallsContextProvider';
@@ -17,17 +18,17 @@ const Content = () => {
 };
 
 export type CallsProps = {
+  space: Space;
   roomId: PublicKey;
   iceServers: RTCIceServer[];
-  noRouter?: boolean;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ roomId, iceServers }) => {
+export const Calls: FC<CallsProps> = ({ space, roomId, iceServers }) => {
   return (
-    <CallsContextProvider roomId={roomId} iceServers={iceServers}>
+    <CallsContextProvider space={space} roomId={roomId} iceServers={iceServers}>
       <Content />
     </CallsContextProvider>
   );

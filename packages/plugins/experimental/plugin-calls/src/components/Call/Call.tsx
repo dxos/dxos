@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
 import { useMount } from 'react-use';
@@ -13,9 +12,10 @@ import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
+import { Transcription } from './Transcription';
 import { useRoomContext, useBroadcastStatus } from '../../hooks';
 import { Participant } from '../Participant';
-import { CameraButton, MicButton } from '../Video';
+import { CameraButton, MicButton, TranscriptionButton } from '../Video';
 
 // TODO(burdon): Factor out.
 export const useDebugEnabled = () => {
@@ -40,12 +40,13 @@ export const useDebugEnabled = () => {
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const debugEnabled = useDebugEnabled();
   const {
+    space,
     userMedia,
     peer,
     dataSaverMode,
     pushedTracks,
     setJoined,
-    room: { otherUsers, updateUserState, identity },
+    room: { otherUsers, updateUserState, identity, ai },
   } = useRoomContext()!;
 
   useMount(() => {
@@ -55,12 +56,13 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     }
   });
 
-  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks });
+  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai });
   const [pinnedId, setPinnedId] = useState<string>();
   const totalUsers = 1 + otherUsers.length;
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
+      {ai.transcription.enabled && <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} />}
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         {/* https://github.com/aholachek/react-flip-toolkit */}
         <Flipper flipKey={totalUsers} className='flex flex-col h-full overflow-y-scroll'>
@@ -120,10 +122,10 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
 
         <Toolbar.Root>
           <Button variant='destructive' onClick={() => setJoined(false)}>
-            <VisuallyHidden>Leave</VisuallyHidden>
             <Icon icon={'ph--phone-x--regular'} />
           </Button>
           <div className='grow'></div>
+          <TranscriptionButton />
           <MicButton />
           <CameraButton />
         </Toolbar.Root>

@@ -6,6 +6,7 @@ import React, { useState, useMemo, type ReactNode, useEffect, type FC, type Prop
 import { of } from 'rxjs';
 
 import { type PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 
 import {
   RoomContext,
@@ -21,6 +22,7 @@ import { CALLS_URL } from '../types';
 
 // Types for loader function response.
 type RoomData = {
+  space: Space;
   iceServers: RTCIceServer[];
   feedbackEnabled: boolean;
   maxWebcamFramerate: number;
@@ -29,15 +31,17 @@ type RoomData = {
 };
 
 type CallsContextProps = {
+  space: Space;
   iceServers: RTCIceServer[];
   roomId: PublicKey;
   children: ReactNode;
 };
 
-export const CallsContextProvider: FC<CallsContextProps> = ({ iceServers, roomId, children }) => {
+export const CallsContextProvider: FC<CallsContextProps> = ({ space, iceServers, roomId, children }) => {
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   useEffect(() => {
     setRoomData({
+      space,
       iceServers,
       feedbackEnabled: true,
       maxWebcamFramerate: 24,
@@ -65,6 +69,7 @@ const Room: FC<RoomProps> = ({
   maxWebcamBitrate,
   maxWebcamFramerate,
   maxWebcamQualityLevel,
+  space,
   children,
 }) => {
   const [joined, setJoined] = useState(false);
@@ -111,6 +116,7 @@ const Room: FC<RoomProps> = ({
   const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
 
   const context: RoomContextType = {
+    space,
     joined,
     setJoined,
     dataSaverMode,
