@@ -94,7 +94,7 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: [
-              state.sidebarState ? 'collapse navigation sidebar label' : 'open navigation sidebar label',
+              state.sidebarState === 'expanded' ? 'collapse navigation sidebar label' : 'open navigation sidebar label',
               { ns: DECK_PLUGIN },
             ],
             icon: 'ph--sidebar--regular',

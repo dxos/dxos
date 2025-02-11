@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Capabilities, Surface, useCapability } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
@@ -19,6 +19,7 @@ import { l0ItemType } from '../util';
 type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string };
 
 const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
+  const layout = useCapability(Capabilities.Layout);
   const navTreeContext = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   // TODO(wittjosiah): Remove?
@@ -38,6 +39,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
           : 'grid-rows-[var(--rail-size)_1fr]',
       ]}
       tabIndex={-1}
+      {...(layout.sidebarState !== 'expanded' && { inert: 'true' })}
     >
       {item.id === currentItemId && (
         <>
