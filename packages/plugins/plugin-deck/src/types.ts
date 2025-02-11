@@ -51,7 +51,7 @@ export const DeckState = S.mutable(
   S.Struct({
     modeHistory: S.mutable(S.Array(LayoutMode)),
 
-    sidebarOpen: S.Boolean,
+    sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
     complementarySidebarOpen: S.Boolean,
     complementarySidebarPanel: S.optional(S.String),
 

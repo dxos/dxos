@@ -23,7 +23,6 @@ import {
   NotchStart,
   NavTreeContainer,
 } from '../components';
-import { NavTreeFooter } from '../components/NavTreeFooter';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import { expandChildrenAndActions } from '../util';
@@ -87,11 +86,6 @@ export default () =>
       id: `${NAVTREE_PLUGIN}/notch-start`,
       role: 'notch-start',
       component: () => <NotchStart />,
-    }),
-    createSurface({
-      id: `${NAVTREE_PLUGIN}/header-end`,
-      role: 'header-end',
-      component: () => <NavTreeFooter />,
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/search-input`,

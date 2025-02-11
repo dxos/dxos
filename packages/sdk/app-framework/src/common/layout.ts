@@ -59,7 +59,9 @@ export namespace LayoutAction {
       subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the sidebar.' })),
       options: S.optional(
         S.Struct({
-          state: S.Boolean.annotations({ description: 'Whether the sidebar is open or closed.' }),
+          state: S.Literal('closed', 'collapsed', 'expanded').annotations({
+            description: 'Whether the sidebar is closed, collapsed, or expanded.',
+          }),
         }),
       ),
     }),
