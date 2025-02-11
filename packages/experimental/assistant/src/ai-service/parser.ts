@@ -294,7 +294,7 @@ export const mergeMessageBlock = (
     case 'json': {
       switch (contentBlock.type) {
         case 'tool_use': {
-          return { ...contentBlock, input: safeParseJson(streamBlock.content) };
+          return { ...contentBlock, input: safeParseJson(streamBlock.content) ?? '{}' };
         }
       }
 
