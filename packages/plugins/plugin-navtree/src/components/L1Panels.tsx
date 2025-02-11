@@ -22,15 +22,10 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
   const layout = useCapability(Capabilities.Layout);
   const navTreeContext = useNavTreeContext();
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  // TODO(wittjosiah): Remove?
-  // const { getProps } = useNavTreeContext();
-  // const { id, testId } = getProps?.(item, path) ?? {};
   return (
     <Tabs.Tabpanel
       key={item.id}
       value={item.id}
-      // data-testid={testId}
-      // data-itemid={id}
       classNames={[
         'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1',
         item.id === currentItemId && 'grid',
