@@ -1,14 +1,14 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { S, SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectOptionInput } from './SelectOptionsInput';
 import { TestLayout, TestPanel } from '../../testing';
@@ -19,12 +19,12 @@ const schema = S.Struct({
 }).pipe(S.mutable);
 
 const DefaultStory = () => {
-  const [values, setValues] = React.useState<{ options: SelectOption[] }>({
+  const [values, setValues] = useState<{ options: SelectOption[] }>({
     // TODO(Zaymon): Pick colors from our limited set.
     options: [
-      { id: 'opt_1', title: 'First option', color: '#6B7280' },
-      { id: 'opt_2', title: 'Second option', color: '#3B82F6' },
-      { id: 'opt_3', title: 'Third option', color: '#10B981' },
+      { id: 'opt_1', title: 'First option', color: 'amber' },
+      { id: 'opt_2', title: 'Second option', color: 'emerald' },
+      { id: 'opt_3', title: 'Third option', color: 'rose' },
     ],
   });
 
@@ -45,7 +45,7 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'ui/react-ui-form/SelectOptionsInput',
   component: SelectOptionInput,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
 };
 
 export default meta;

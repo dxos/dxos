@@ -11091,6 +11091,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-pickers':
+        specifier: workspace:*
+        version: link:../react-ui-pickers
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
