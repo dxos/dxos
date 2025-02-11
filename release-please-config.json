@@ -839,6 +839,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-pickers/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-searchlist/package.json",
           "jsonpath": "$.version"
         },

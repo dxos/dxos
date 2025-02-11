@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import emojiData from '@emoji-mart/data';
@@ -87,32 +87,34 @@ export const EmojiPickerToolbarButton = ({
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
-        <Popover.Content
-          side='bottom'
-          onKeyDownCapture={(event) => {
-            if (event.key === 'Escape') {
-              event.stopPropagation();
-              setEmojiPickerOpen(false);
-              suppressNextTooltip.current = true;
-            }
-          }}
-        >
-          {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
-          <EmojiMart
-            data={emojiData}
-            onEmojiSelect={({ native }: { native?: string }) => {
-              if (native) {
-                setEmojiValue(native);
+        <Popover.Portal>
+          <Popover.Content
+            side='bottom'
+            onKeyDownCapture={(event) => {
+              if (event.key === 'Escape') {
+                event.stopPropagation();
                 setEmojiPickerOpen(false);
+                suppressNextTooltip.current = true;
               }
             }}
-            autoFocus={true}
-            maxFrequentRows={0}
-            noCountryFlags={true}
-            theme={themeMode}
-          />
-          <Popover.Arrow />
-        </Popover.Content>
+          >
+            {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
+            <EmojiMart
+              data={emojiData}
+              onEmojiSelect={({ native }: { native?: string }) => {
+                if (native) {
+                  setEmojiValue(native);
+                  setEmojiPickerOpen(false);
+                }
+              }}
+              autoFocus={true}
+              maxFrequentRows={0}
+              noCountryFlags={true}
+              theme={themeMode}
+            />
+            <Popover.Arrow />
+          </Popover.Content>
+        </Popover.Portal>
       </Popover.Root>
     </Tooltip.Root>
   );

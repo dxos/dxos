@@ -6,7 +6,7 @@ import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { create } from '@dxos/live-object';
-import { type MaybePromise, byDisposition, type Disposition, type GuardedType } from '@dxos/util';
+import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
 
 import { INTENT_PLUGIN, IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
@@ -89,7 +89,7 @@ export type IntentEffectDefinition<Input, Output> = (
  */
 export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
   intent: IntentSchema<Tag, Fields>;
-  disposition?: Disposition;
+  position?: Position;
   filter?: (data: IntentData<Fields>) => data is Data;
   resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
@@ -175,7 +175,7 @@ export const createDispatcher = (
       const candidates = getResolvers(intent.module)
         .filter((r) => r.intent._tag === intent.id)
         .filter((r) => !r.filter || r.filter(intent.data))
-        .toSorted(byDisposition);
+        .toSorted(byPosition);
       if (candidates.length === 0) {
         yield* Effect.fail(new NoResolversError(intent.id));
       }

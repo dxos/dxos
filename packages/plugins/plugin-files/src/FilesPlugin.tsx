@@ -57,7 +57,7 @@ export const FilesPlugin = () =>
           {
             inputType: ROOT_TYPE,
             outputType: 'text/directory',
-            disposition: 'fallback',
+            position: 'fallback',
             serialize: async () => ({
               name: 'root',
               data: 'root',

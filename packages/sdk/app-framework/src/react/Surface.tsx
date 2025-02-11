@@ -5,7 +5,7 @@
 import React, { memo, forwardRef, Suspense, useMemo } from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';
-import { byDisposition } from '@dxos/util';
+import { byPosition } from '@dxos/util';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCapabilities } from './useCapabilities';
@@ -23,7 +23,7 @@ const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<Surf
       Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
     )
     .filter(({ filter }) => (filter ? filter(data ?? {}) : true))
-    .toSorted(byDisposition);
+    .toSorted(byPosition);
 };
 
 /**

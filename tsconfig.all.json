@@ -490,6 +490,9 @@
       "path": "packages/ui/react-ui-mosaic/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-searchlist/tsconfig.json"
     },
     {

@@ -81,7 +81,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/collection-fallback`,
       role: 'article',
-      disposition: 'fallback',
+      position: 'fallback',
       filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
@@ -95,14 +95,14 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/object-settings-base-panel`,
       role: 'complementary--settings',
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
       component: ({ data }) => <BaseObjectSettings object={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/object-settings-advanced-panel`,
       role: 'complementary--settings',
-      disposition: 'fallback',
+      position: 'fallback',
       filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
       component: ({ data }) => <AdvancedObjectSettings object={data.subject} />,
     }),
@@ -173,7 +173,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
       role: 'navtree-item-end',
-      disposition: 'fallback',
+      position: 'fallback',
       filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
       component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
     }),
@@ -186,7 +186,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/navbar-presence`,
       role: 'navbar-end',
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: Space | ReactiveEchoObject<any> } =>
         isSpace(data.subject) || isEchoObject(data.subject),
       component: ({ data }) => {

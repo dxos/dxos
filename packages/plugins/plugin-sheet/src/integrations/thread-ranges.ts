@@ -44,7 +44,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
     () =>
       createResolver({
         intent: LayoutAction.ScrollIntoView,
-        disposition: 'hoist',
+        position: 'hoist',
         filter: (
           data,
         ): data is {
