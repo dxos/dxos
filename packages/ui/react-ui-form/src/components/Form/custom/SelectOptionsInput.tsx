@@ -8,7 +8,7 @@ import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { IconButton, Input, Tag } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 // import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
