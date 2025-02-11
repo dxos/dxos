@@ -35,16 +35,16 @@
         inline-size: calc(100dvw - var(--l0-size));
       }
 
-      &[data-sidebar-inline-end-state="expanded"] {
+      &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="expanded"] {
         inline-size: calc(100dvw - var(--complementary-sidebar-size));
-      }
-
-      &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="expanded"] {
-        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size));
       }
 
       &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="expanded"] {
         inline-size: calc(100dvw - var(--l0-size) - var(--complementary-sidebar-size));
+      }
+
+      &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="expanded"] {
+        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size));
       }
     }
   }
