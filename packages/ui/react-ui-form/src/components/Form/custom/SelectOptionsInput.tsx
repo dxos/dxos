@@ -6,7 +6,7 @@ import React, { useCallback, useEffect } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { ChromaticPalette, IconButton, Input, Tag, Toolbar } from '@dxos/react-ui';
+import { ChromaticPalette, Icon, IconButton, Input, Tag, Toolbar } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePickerBlock, HuePickerToolbarButton } from '@dxos/react-ui-pickers';
 import { hueTokenThemes, mx } from '@dxos/react-ui-theme';
@@ -142,13 +142,22 @@ export const SelectOptionInput = ({
                     </List.Item>
                   </div>
                 ))}
+                <div role='listitem'>
+                  <div
+                    role='button'
+                    className={mx('p-1 plb-2', 'flex flex-col', 'cursor-pointer', 'hover:bg-hoverOverlay')}
+                    onClick={handleAdd}
+                  >
+                    <div className='flex items-center justify-center gap-1'>
+                      <Icon icon='ph--plus--regular' size={4} />
+                      <span className='text-sm text-secondary'>Add option</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </List.Root>
         )}
-        <div role='none' className='flex p-2 justify-center'>
-          <IconButton icon='ph--plus--regular' label='Add option' onClick={handleAdd} disabled={disabled} />
-        </div>
       </div>
     </Input.Root>
   );
