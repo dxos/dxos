@@ -4,14 +4,15 @@
 - [x] SVGR pieces.
 - [x] Board.
 - [x] Drag pieces without snapshot.
-- [ ] Absolut position of pieces.
-- [ ] Move animation.
-
-## Phase 2
-- [ ] Move validation.
+- [x] Absolut position of pieces.
+- [ ] Move callback and validation.
+- [ ] Animation.
 - [ ] Drop indicators.
+- [ ] Flip board.
 - [ ] Styles/light/dark mode.
 
 ## Phase 2
-- [ ] Generic board (shogi).
-- [ ] Promption.
+- [ ] Touch UX.
+- [ ] Generic board (go, shogi, checkers, xianqi, etc).
+- [ ] Promption selection.
+- [ ] Key nav.

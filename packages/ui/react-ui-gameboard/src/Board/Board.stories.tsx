@@ -9,7 +9,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Board, type BoardProps } from './Board';
-import { getPieces } from '../chess';
+import { getPieces } from '../Chessboard';
 
 const meta: Meta<BoardProps> = {
   title: 'ui/react-ui-gameboard/Board',

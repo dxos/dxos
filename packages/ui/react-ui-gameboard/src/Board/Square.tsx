@@ -3,24 +3,25 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useRef, useState, useEffect, type PropsWithChildren } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { canMove, isCoord, isPiece, type Coord } from './types';
+import { isValidMove, isEqualLocation, isLocation, isPiece, type Location } from './types';
+import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
 
-export type SquareProps = ThemedClassName<
-  PropsWithChildren<{
-    location: Coord;
-    label?: string;
-  }>
->;
+export type SquareProps = ThemedClassName<{
+  location: Location;
+  bounds: DOMRectBounds;
+  label?: string;
+}>;
 
-export const Square = ({ location, label, children, classNames }: SquareProps) => {
+export const Square = ({ location, bounds, label, classNames }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<HoveredState>('idle');
 
@@ -30,13 +31,21 @@ export const Square = ({ location, label, children, classNames }: SquareProps) =
 
     return dropTargetForElements({
       element: el,
+      getData: () => ({ location }),
+      canDrop: ({ source }) => {
+        if (!isLocation(source.data.location)) {
+          return false;
+        }
+
+        return !isEqualLocation(source.data.location, location);
+      },
       onDragEnter: ({ source }) => {
-        // Source is the piece being dragged over the drop target.
-        if (!isCoord(source.data.location) || !isPiece(source.data.pieceType)) {
+        log.info('onDragEnter', { source: source.data });
+        if (!isLocation(source.data.location) || !isPiece(source.data.pieceType)) {
           return;
         }
 
-        if (canMove(source.data.location, location, source.data.pieceType, [])) {
+        if (isValidMove(source.data.location, location, source.data.pieceType)) {
           setState('validMove');
         } else {
           setState('invalidMove');
@@ -50,15 +59,18 @@ export const Square = ({ location, label, children, classNames }: SquareProps) =
   return (
     <div
       ref={ref}
-      {...{ ['data-location' as const]: location.join(',') }}
-      className={mx('relative flex justify-center items-center aspect-square bg-transparent', classNames)}
+      style={bounds}
+      className={mx(
+        'absolute flex justify-center items-center select-none',
+        classNames,
+        state === 'validMove' && 'border border-primary-500',
+      )}
     >
       {label && <div className={mx('absolute top-1 left-1 text-xs text-neutral-500')}>{label}</div>}
-      {children}
     </div>
   );
 };
 
-export const getSquareLocation = (container: HTMLElement, location: Coord): HTMLElement | null => {
+export const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
   return container.querySelector(`[data-location="${location.join(',')}"]`);
 };
