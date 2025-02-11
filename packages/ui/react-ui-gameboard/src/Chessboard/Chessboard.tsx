@@ -2,63 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-import React, { type PropsWithChildren, type FC, type SVGProps, useRef, useMemo, Fragment } from 'react';
+import React, { type PropsWithChildren, useRef, useMemo, Fragment } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import { invariant } from '@dxos/invariant';
 import { type ClassNameValue } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
 
 import { type PieceRecord, type Location, Square, getSquareLocation, Piece, isEqualLocation } from '../Board';
 import { getRelativeBounds, type DOMRectBounds } from '../Board/util';
-import { BB, BK, BQ, BN, BP, BR, WB, WK, WN, WP, WQ, WR } from '../gen/pieces/chess/alpha';
 
-export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
-
-export const ChessPieces: Record<ChessPiece, FC<SVGProps<SVGSVGElement>>> = {
-  BK,
-  BQ,
-  BR,
-  BB,
-  BN,
-  BP,
-  WK,
-  WQ,
-  WR,
-  WB,
-  WN,
-  WP,
-};
-
-export const posToLocation = (pos: string): Location => {
-  const col = pos.charCodeAt(0) - 'a'.charCodeAt(0);
-  const row = parseInt(pos[1]) - 1;
-  return [row, col];
-};
-
-export const locationToPos = ([row, col]: Location): string => {
-  return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
-};
-
-export const getPieces = (fen?: string): PieceRecord<ChessPiece>[] =>
-  new Chess(fen).board().flatMap((row) =>
-    row
-      .map((location) => {
-        if (!location) {
-          return null;
-        }
-        const { square, type, color } = location;
-        return { type: `${color.toUpperCase()}${type.toUpperCase()}` as ChessPiece, location: posToLocation(square) };
-      })
-      .filter(isNotFalsy),
-  );
-
-const getColor = ([row, col]: Location) => {
-  return (col * 7 + row) % 2 === 0 ? 'bg-neutral-200' : 'bg-neutral-50';
-};
-
-type ChessboardProps = PropsWithChildren<{
+export type ChessboardProps = PropsWithChildren<{
   rows?: number;
   cols?: number;
   pieces?: PieceRecord[];
