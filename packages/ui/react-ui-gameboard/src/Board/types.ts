@@ -2,36 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-export type Coord = [number, number];
+export type Location = [number, number];
 
 export type PieceType = string;
 
 export type PieceRecord<T extends PieceType = PieceType> = {
-  location: Coord;
+  location: Location;
   type: T;
 };
 
 export const isPiece = (piece: unknown): piece is PieceType => typeof piece === 'string';
 
-export const isCoord = (token: unknown): token is Coord =>
+export const isLocation = (token: unknown): token is Location =>
   Array.isArray(token) && token.length === 2 && token.every((val) => typeof val === 'number');
 
-export const isEqualCoord = (c1: Coord, c2: Coord): boolean => c1[0] === c2[0] && c1[1] === c2[1];
+export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] === l2[0] && l1[1] === l2[1];
 
-export const canMove = (start: Coord, destination: Coord, pieceType: PieceType, pieces: PieceRecord[]) => {
-  const rowDist = Math.abs(start[0] - destination[0]);
-  const colDist = Math.abs(start[1] - destination[1]);
-
-  if (pieces.find((piece) => isEqualCoord(piece.location, destination))) {
-    return false;
-  }
-
-  switch (pieceType) {
-    case 'king':
-      return [0, 1].includes(rowDist) && [0, 1].includes(colDist);
-    case 'pawn':
-      return colDist === 0 && start[0] - destination[0] === -1;
-    default:
-      return false;
-  }
+// TODO(burdon): Get game state from context (generalize).
+export const isValidMove = (source: Location, target: Location, pieceType: PieceType) => {
+  return true;
 };
