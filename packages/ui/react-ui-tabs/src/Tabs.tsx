@@ -224,13 +224,11 @@ const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => 
 
 type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
 
-const TabPrimitive = (props: TabsTabPrimitiveProps) => <TabsPrimitive.Trigger {...props} />;
-
 export const Tabs = {
   Root: TabsRoot,
   Tablist: TabsTablist,
   Tab: TabsTab,
-  TabPrimitive,
+  TabPrimitive: TabsPrimitive.Trigger,
   TabGroupHeading: TabsTabGroupHeading,
   Tabpanel: TabsTabpanel,
   BackButton: TabsBackButton,

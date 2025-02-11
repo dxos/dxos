@@ -7,7 +7,8 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
 
 import { StatusBarPanel } from './components';
-import { meta } from './meta';
+import { VersionNumber } from './components/VersionNumber';
+import { meta, STATUS_BAR_PLUGIN } from './meta';
 import translations from './translations';
 
 export const StatusBarPlugin = () =>
@@ -31,6 +32,11 @@ export const StatusBarPlugin = () =>
             id: meta.id,
             role: 'status-bar--sidebar-footer',
             component: () => <StatusBarPanel variant='sidebar-footer' />,
+          }),
+          createSurface({
+            id: `${STATUS_BAR_PLUGIN}/header-end`,
+            role: 'header-end',
+            component: () => <VersionNumber />,
           }),
         ]),
     }),

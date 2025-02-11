@@ -35,10 +35,12 @@ const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 const MAIN_NAME = 'Main';
 const GENERIC_CONSUMER_NAME = 'GenericConsumer';
 
+type SidebarState = 'expanded' | 'collapsed' | 'closed';
+
 type MainContextValue = {
   resizing: boolean;
-  navigationSidebarOpen: boolean;
-  setNavigationSidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
+  navigationSidebarState: SidebarState;
+  setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
   complementarySidebarOpen: boolean;
   setComplementarySidebarOpen: Dispatch<SetStateAction<boolean | undefined>>;
 };
@@ -73,8 +75,8 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
   resizing: false,
-  navigationSidebarOpen: false,
-  setNavigationSidebarOpen: (nextOpen) => {
+  navigationSidebarState: 'closed',
+  setNavigationSidebarState: (nextState) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
     log.warn('Attempt to set sidebar state without initializing `MainRoot`');
   },
@@ -86,17 +88,18 @@ const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME
 });
 
 const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
-  const { setNavigationSidebarOpen, navigationSidebarOpen, setComplementarySidebarOpen, complementarySidebarOpen } =
+  const { setNavigationSidebarState, navigationSidebarState, setComplementarySidebarOpen, complementarySidebarOpen } =
     useMainContext(consumerName);
   return {
-    navigationSidebarOpen,
-    setNavigationSidebarOpen,
+    navigationSidebarState,
+    setNavigationSidebarState,
     toggleNavigationSidebar: useCallback(
-      () => setNavigationSidebarOpen(!navigationSidebarOpen),
-      [navigationSidebarOpen, setNavigationSidebarOpen],
+      () => setNavigationSidebarState(navigationSidebarState === 'expanded' ? 'closed' : 'expanded'),
+      [navigationSidebarState, setNavigationSidebarState],
     ),
-    openNavigationSidebar: useCallback(() => setNavigationSidebarOpen(true), [setNavigationSidebarOpen]),
-    closeNavigationSidebar: useCallback(() => setNavigationSidebarOpen(false), [setNavigationSidebarOpen]),
+    openNavigationSidebar: useCallback(() => setNavigationSidebarState('expanded'), [setNavigationSidebarState]),
+    collapseNavigationSidebar: useCallback(() => setNavigationSidebarState('collapsed'), [setNavigationSidebarState]),
+    closeNavigationSidebar: useCallback(() => setNavigationSidebarState('closed'), [setNavigationSidebarState]),
     complementarySidebarOpen,
     setComplementarySidebarOpen,
     toggleComplementarySidebar: useCallback(
@@ -109,9 +112,9 @@ const useSidebars = (consumerName = GENERIC_CONSUMER_NAME) => {
 };
 
 type MainRootProps = PropsWithChildren<{
-  navigationSidebarOpen?: boolean;
-  defaultNavigationSidebarOpen?: boolean;
-  onNavigationSidebarOpenChange?: (nextOpen: boolean) => void;
+  navigationSidebarState?: SidebarState;
+  defaultNavigationSidebarState?: SidebarState;
+  onNavigationSidebarStateChange?: (nextState: SidebarState) => void;
   complementarySidebarOpen?: boolean;
   defaultComplementarySidebarOpen?: boolean;
   onComplementarySidebarOpenChange?: (nextOpen: boolean) => void;
@@ -120,9 +123,9 @@ type MainRootProps = PropsWithChildren<{
 const resizeDebounce = 3000;
 
 const MainRoot = ({
-  navigationSidebarOpen: propsNavigationSidebarOpen,
-  defaultNavigationSidebarOpen,
-  onNavigationSidebarOpenChange,
+  navigationSidebarState: propsNavigationSidebarState,
+  defaultNavigationSidebarState,
+  onNavigationSidebarStateChange,
   complementarySidebarOpen: propsComplementarySidebarOpen,
   defaultComplementarySidebarOpen,
   onComplementarySidebarOpenChange,
@@ -130,11 +133,12 @@ const MainRoot = ({
   ...props
 }: MainRootProps) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const [navigationSidebarOpen = isLg, setNavigationSidebarOpen] = useControllableState<boolean>({
-    prop: propsNavigationSidebarOpen,
-    defaultProp: defaultNavigationSidebarOpen,
-    onChange: onNavigationSidebarOpenChange,
-  });
+  const [navigationSidebarState = isLg ? 'expanded' : 'collapsed', setNavigationSidebarState] =
+    useControllableState<SidebarState>({
+      prop: propsNavigationSidebarState,
+      defaultProp: defaultNavigationSidebarState,
+      onChange: onNavigationSidebarStateChange,
+    });
   const [complementarySidebarOpen = false, setComplementarySidebarOpen] = useControllableState<boolean>({
     prop: propsComplementarySidebarOpen,
     defaultProp: defaultComplementarySidebarOpen,
@@ -164,8 +168,8 @@ const MainRoot = ({
     <MainProvider
       {...props}
       {...{
-        navigationSidebarOpen,
-        setNavigationSidebarOpen,
+        navigationSidebarState,
+        setNavigationSidebarState,
         complementarySidebarOpen,
         setComplementarySidebarOpen,
       }}
@@ -184,15 +188,15 @@ const handleOpenAutoFocus = (event: Event) => {
 
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
   swipeToDismiss?: boolean;
-  open: boolean;
+  state?: SidebarState;
   resizing?: boolean;
-  setOpen: Dispatch<SetStateAction<boolean | undefined>>;
+  onStateChange?: (nextState: SidebarState) => void;
   side: 'inline-start' | 'inline-end';
 };
 
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   (
-    { classNames, children, swipeToDismiss, onOpenAutoFocus, open, resizing, setOpen, side, ...props },
+    { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, side, ...props },
     forwardedRef,
   ) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -200,7 +204,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
-      onDismiss: () => setOpen(false),
+      onDismiss: () => onStateChange?.('closed'),
     });
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -213,16 +217,16 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     );
     const Root = isLg ? Primitive.div : DialogContent;
     return (
-      <DialogRoot open={open} modal={false}>
+      <DialogRoot open={state !== 'closed'} modal={false}>
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...props}
           data-side={side === 'inline-end' ? 'ie' : 'is'}
-          data-state={open ? 'open' : 'closed'}
+          data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
           onKeyDown={handleKeyDown}
-          {...(!open && { inert: 'true' })}
+          {...(state === 'closed' && { inert: 'true' })}
           ref={ref}
         >
           {children}
@@ -232,17 +236,17 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   },
 );
 
-type MainNavigationSidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' | 'side'>;
+type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
 const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
-  const { navigationSidebarOpen, setNavigationSidebarOpen, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
+  const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
   const mover = useLandmarkMover(props.onKeyDown, '0');
   return (
     <MainSidebar
       {...mover}
       {...props}
-      open={navigationSidebarOpen}
-      setOpen={setNavigationSidebarOpen}
+      state={navigationSidebarState}
+      onStateChange={setNavigationSidebarState}
       resizing={resizing}
       side='inline-start'
       ref={forwardedRef}
@@ -252,18 +256,22 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
 
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
-type MainComplementarySidebarProps = Omit<MainSidebarProps, 'open' | 'setOpen' | 'side'>;
+type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
 const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
   const { complementarySidebarOpen, setComplementarySidebarOpen, resizing } =
     useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
   const mover = useLandmarkMover(props.onKeyDown, '2');
+  const handleSetComplementarySidebarState = useCallback(
+    (nextState: SidebarState) => setComplementarySidebarOpen(nextState !== 'closed'),
+    [],
+  );
   return (
     <MainSidebar
       {...mover}
       {...props}
-      open={complementarySidebarOpen}
-      setOpen={setComplementarySidebarOpen}
+      state={complementarySidebarOpen ? 'expanded' : 'closed'}
+      onStateChange={handleSetComplementarySidebarState}
       resizing={resizing}
       side='inline-end'
       ref={forwardedRef}
@@ -281,7 +289,7 @@ type MainProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & 
 
 const MainContent = forwardRef<HTMLDivElement, MainProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainProps, forwardedRef) => {
-    const { navigationSidebarOpen, complementarySidebarOpen } = useMainContext(MAIN_NAME);
+    const { navigationSidebarState, complementarySidebarOpen } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : role ? 'div' : 'main';
 
@@ -292,8 +300,8 @@ const MainContent = forwardRef<HTMLDivElement, MainProps>(
         role={role}
         {...(handlesFocus && { ...mover })}
         {...props}
-        data-sidebar-inline-start-state={navigationSidebarOpen ? 'open' : 'closed'}
-        data-sidebar-inline-end-state={complementarySidebarOpen ? 'open' : 'closed'}
+        data-sidebar-inline-start-state={navigationSidebarState}
+        data-sidebar-inline-end-state={complementarySidebarOpen ? 'expanded' : 'closed'}
         className={tx('main.content', 'main', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >
@@ -309,23 +317,23 @@ type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primit
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const { navigationSidebarOpen, setNavigationSidebarOpen, complementarySidebarOpen, setComplementarySidebarOpen } =
+  const { navigationSidebarState, setNavigationSidebarState, complementarySidebarOpen, setComplementarySidebarOpen } =
     useMainContext(MAIN_NAME);
   const { tx } = useThemeContext();
   return (
     <div
       onClick={() => {
-        setNavigationSidebarOpen(false);
+        setNavigationSidebarState('collapsed');
         setComplementarySidebarOpen(false);
       }}
       {...props}
       className={tx(
         'main.overlay',
         'main__overlay',
-        { isLg, inlineStartSidebarOpen: navigationSidebarOpen, inlineEndSidebarOpen: complementarySidebarOpen },
+        { isLg, inlineStartSidebarOpen: navigationSidebarState, inlineEndSidebarOpen: complementarySidebarOpen },
         classNames,
       )}
-      data-state={navigationSidebarOpen || complementarySidebarOpen ? 'open' : 'closed'}
+      data-state={navigationSidebarState === 'expanded' || complementarySidebarOpen ? 'open' : 'closed'}
       aria-hidden='true'
       ref={forwardedRef}
     />
@@ -342,4 +350,4 @@ export const Main = {
 
 export { useMainContext, useSidebars };
 
-export type { MainRootProps, MainProps, MainOverlayProps, MainNavigationSidebarProps };
+export type { MainRootProps, MainProps, MainOverlayProps, MainNavigationSidebarProps, SidebarState };
