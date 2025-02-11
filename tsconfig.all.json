@@ -472,6 +472,9 @@
       "path": "packages/ui/react-ui-form/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-gameboard/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
