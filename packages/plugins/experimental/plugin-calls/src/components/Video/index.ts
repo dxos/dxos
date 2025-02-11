@@ -5,3 +5,4 @@
 export * from './CameraButton';
 export * from './MicButton';
 export * from './VideoObject';
+export * from './TranscriptionButton';
