@@ -107,7 +107,7 @@ describe('effect-to-json', () => {
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {
-        id: { type: 'string' },
+        id: { type: 'string', description: 'a string' },
         name: { type: 'string', title: 'Name', description: 'Person name' },
         email: {
           type: 'string',
@@ -150,9 +150,11 @@ describe('effect-to-json', () => {
       properties: {
         id: {
           type: 'string',
+          description: 'a string',
         },
         name: {
           type: 'string',
+          description: 'a string',
         },
         org: {
           $id: '/schemas/echo/ref',
@@ -204,7 +206,7 @@ describe('effect-to-json', () => {
     });
     const jsonSchema = toJsonSchema(schema);
 
-    console.log(JSON.stringify(jsonSchema, null, 2));
+    // console.log(JSON.stringify(jsonSchema, null, 2));
     (S.asserts(JsonSchemaType) as any)(jsonSchema);
   });
 
@@ -321,6 +323,16 @@ describe('json-to-effect', () => {
     const schema2 = S.String.annotations({ [FormatAnnotationId]: 'currency' });
 
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
+  });
+
+  test('description gets preserved', () => {
+    const schema = S.Struct({
+      name: S.String.annotations({ description: 'Name' }),
+    });
+    const jsonSchema = toJsonSchema(schema);
+    const effectSchema = toEffectSchema(jsonSchema);
+    const jsonSchema2 = toJsonSchema(effectSchema);
+    expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
 
   const prepareAstForCompare = (obj: AST.AST): any =>

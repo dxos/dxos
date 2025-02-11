@@ -80,7 +80,7 @@ export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: 
 };
 
 const isSecure = (protocol: string) => {
-  return protocol === 'https' || protocol === 'wss';
+  return protocol === 'https:' || protocol === 'wss:';
 };
 
 const createEdgeIdentity = (client: Client): EdgeIdentity => {
