@@ -13,6 +13,7 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, Input, Toolbar, Tooltip, useClipboard, useId, useTranslation } from '@dxos/react-ui';
+import { EmojiPickerToolbarButton, HuePickerToolbarButton } from '@dxos/react-ui-pickers';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -24,7 +25,7 @@ import {
 import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
-import { Viewport, CloseButton, EmojiPickerToolbarButton, Heading, HuePickerToolbarButton } from '../../components';
+import { Viewport, CloseButton, Heading } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
