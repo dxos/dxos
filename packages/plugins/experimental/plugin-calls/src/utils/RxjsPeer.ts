@@ -168,7 +168,7 @@ export class RxjsPeer {
     const { apiBase } = this.config;
     const response = await this.fetch(`${apiBase}/sessions/new?SESSION`, { method: 'POST' });
     if (response.status > 400) {
-      throw new Error('Error creating Calls session');
+      throw new Error('Error creating Calls session', { cause: await response.text() });
     }
 
     try {

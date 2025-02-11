@@ -89,7 +89,7 @@ export const useUserMedia = (): UserMedia => {
         switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack))),
         shareReplay({ refCount: true, bufferSize: 1 }),
       ),
-    [videoEnabled$, blackCanvasStreamTrack],
+    [videoEnabled$],
   );
   const videoTrack = useSubscribedState(videoTrack$);
   const videoDeviceId = videoTrack?.getSettings().deviceId;
