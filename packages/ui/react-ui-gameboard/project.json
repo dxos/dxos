@@ -1,27 +1,39 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-ui-gameboard",
-  "tags": ["scope:ui"],
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
-      "dependsOn": ["gen"],
+      "dependsOn": [
+        "gen"
+      ],
       "options": {
-        "entryPoints": ["{projectRoot}/src/index.ts"]
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
       }
     },
     "gen": {
       "cache": true,
       "executor": "nx:run-script",
-      "inputs": ["{projectRoot}/assets/*.*"],
+      "inputs": [
+        "{projectRoot}/assets/*.*"
+      ],
       "options": {
         "script": "gen:pieces"
       },
-      "outputs": ["{projectRoot}/src/gen"]
+      "outputs": [
+        "{projectRoot}/src/gen"
+      ]
     },
     "lint": {}
   },
-  "implicitDependencies": ["esbuild"]
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }
