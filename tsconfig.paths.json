@@ -214,6 +214,9 @@
       "@dxos/app-framework/testing": [
         "packages/sdk/app-framework/src/testing/index.ts"
       ],
+      "@dxos/app-framework/worker": [
+        "packages/sdk/app-framework/src/worker.ts"
+      ],
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"
       ],

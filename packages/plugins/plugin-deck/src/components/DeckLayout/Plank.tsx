@@ -25,13 +25,13 @@ export type PlankProps = {
   part: NodePlankHeadingProps['part'];
   path?: string[];
   order?: number;
-  deck?: string[];
+  active?: string[];
   layoutMode: LayoutMode;
 };
 
-export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, deck, layoutMode }: PlankProps) => {
+export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { plankSizing, popoverAnchorId, scrollIntoView } = useLayout();
+  const { deck, popoverAnchorId, scrollIntoView } = useLayout();
   const { graph } = useGraph();
   const node = useNode(graph, id);
   const rootElement = useRef<HTMLDivElement | null>(null);
@@ -39,12 +39,12 @@ export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, deck, layoutMod
   const Root = part === 'solo' ? 'article' : StackItem.Root;
 
   const attendableAttrs = useAttendableAttributes(id);
-  const index = deck ? deck.findIndex((entryId) => entryId === id) : 0;
-  const length = deck?.length ?? 1;
-  const canIncrementStart = deck && index !== undefined && index > 0 && length !== undefined && length > 1;
-  const canIncrementEnd = deck && index !== undefined && index < length - 1 && length !== undefined;
+  const index = active ? active.findIndex((entryId) => entryId === id) : 0;
+  const length = active?.length ?? 1;
+  const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
+  const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-  const size = plankSizing?.[id] as number | undefined;
+  const size = deck.plankSizing[id] as number | undefined;
   const setSize = useCallback(
     debounce((nextSize: number) => {
       return dispatch(createIntent(DeckAction.UpdatePlankSize, { id, size: nextSize }));

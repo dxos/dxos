@@ -114,6 +114,20 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
 
   return (
     <>
+      <div role='form' className='flex flex-col w-full p-2 gap-4'>
+        <Input.Root>
+          <div role='none' className='flex flex-col gap-1'>
+            <Input.Label>{t('description label')}</Input.Label>
+            <Input.TextInput
+              placeholder={t('description placeholder')}
+              value={script.description ?? ''}
+              onChange={(event) => {
+                script.description = event.target.value;
+              }}
+            />
+          </div>
+        </Input.Root>
+      </div>
       {fn && functionUrl && (
         <>
           <Separator />

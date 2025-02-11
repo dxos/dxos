@@ -20,7 +20,7 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
     () =>
       createResolver({
         intent: LayoutAction.UpdateLayout,
-        disposition: 'hoist',
+        position: 'hoist',
         filter: (data): data is { part: 'current'; subject: string; options: { cursor: string } } => {
           if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
             return false;

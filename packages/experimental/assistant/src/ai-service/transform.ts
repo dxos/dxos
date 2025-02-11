@@ -4,6 +4,9 @@
 
 import * as P from 'parsimmon';
 
+/**
+ * Parsed block.
+ */
 export type StreamBlock =
   | {
       type: 'tag';
@@ -106,6 +109,13 @@ export class StreamTransform {
   flush(): StreamBlock[] {
     const remaining = this._buffer;
     this._buffer = '';
-    return remaining.length > 0 ? [{ type: 'text', content: remaining }] : [];
+    return remaining.length > 0
+      ? [
+          {
+            type: 'text',
+            content: remaining,
+          },
+        ]
+      : [];
   }
 }

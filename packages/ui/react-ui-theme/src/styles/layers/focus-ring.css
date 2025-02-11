@@ -24,6 +24,31 @@
     }
   }
 
+  .ch-focus-ring-group {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply outline-none;
+      }
+
+      &:focus-visible .ch-focus-ring-group-indicator {
+        @apply ring-2 ring-offset-0 ring-primary-350 ring-offset-white;
+
+        .dark & .ch-focus-ring-group-indicator {
+          @apply ring-primary-450 ring-offset-black;
+        }
+
+        &:hover {
+          @apply outline-none;
+
+          .dark & {
+            @apply outline-none;
+          }
+        }
+      }
+    }
+  }
+
   .ch-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {

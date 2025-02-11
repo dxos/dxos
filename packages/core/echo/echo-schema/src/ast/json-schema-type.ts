@@ -123,8 +123,18 @@ const _JsonSchemaType = S.mutable(
     //
 
     minLength: S.optional(NonNegativeInteger),
-    items: S.optional(S.suspend(() => JsonSchemaType)),
-    additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
+    items: S.optional(
+      S.Union(
+        S.suspend(() => JsonSchemaType),
+        S.Array(S.suspend(() => JsonSchemaType)),
+      ),
+    ),
+    additionalItems: S.optional(
+      S.Union(
+        S.suspend(() => JsonSchemaType),
+        S.Boolean,
+      ),
+    ),
     maxItems: S.optional(NonNegativeInteger),
     minItems: S.optional(NonNegativeInteger),
     uniqueItems: S.optional(S.Boolean),
@@ -257,7 +267,7 @@ const _JsonSchemaType = S.mutable(
         }),
       ),
     ),
-  }),
+  }).annotations({ description: 'JSON Schema' }),
 );
 
 /**

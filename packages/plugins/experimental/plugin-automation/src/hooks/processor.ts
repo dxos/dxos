@@ -38,14 +38,17 @@ type RequestOptions = {
 };
 
 /**
- * Handles interactions with an AI service.
- * Manages message history, and executes tools based on AI responses.
+ * Handles interactions with the AI service.
  * Maintains a queue of messages and handles streaming responses from the AI service.
+ * Executes tools based on AI responses.
  * Supports cancellation of in-progress requests.
  */
 export class ChatProcessor {
-  /** Stream parser. */
+  /** SSE stream parser. */
   private readonly _parser = new MixedStreamParser();
+
+  /** Current streaming response (iterator). */
+  private _stream: GenerationStream | undefined;
 
   /** Pending messages (incl. the user request). */
   private readonly _pending: Signal<Message[]> = signal([]);
@@ -53,16 +56,23 @@ export class ChatProcessor {
   /** Current streaming block (from the AI service). */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
 
-  private readonly _streaming: Signal<boolean> = computed(() => {
-    return !!this._block.value;
-  });
+  /** Prior history from queue. */
+  private _history: Message[] = [];
 
-  /** Messages (incl. the current message). */
-  private readonly _messages: Signal<Message[]> = computed(() => {
+  /**
+   * Streaming state.
+   * @reactive
+   */
+  public readonly streaming: Signal<boolean> = computed(() => this._block.value !== undefined);
+
+  /**
+   * Array of Messages (incl. the current message being streamed).
+   * @reactive
+   */
+  public readonly messages: Signal<Message[]> = computed(() => {
     const messages = [...this._pending.value];
     if (this._block.value) {
       const current = messages.pop();
-      // Add streaming block.
       invariant(current);
       const { content, ...rest } = current;
       const message = { ...rest, content: [...content, this._block.value] };
@@ -71,12 +81,6 @@ export class ChatProcessor {
 
     return messages;
   });
-
-  /** Current streaming response (iterator). */
-  private _stream: GenerationStream | undefined;
-
-  /** Prior history from queue. */
-  private _history: Message[] = [];
 
   constructor(
     private readonly _client: AIServiceClientImpl,
@@ -98,20 +102,6 @@ export class ChatProcessor {
         this._block.value = block;
       });
     });
-  }
-
-  /**
-   * @reactive
-   */
-  get streaming(): Signal<boolean> {
-    return this._streaming;
-  }
-
-  /**
-   * @reactive
-   */
-  get messages(): Signal<Message[]> {
-    return this._messages;
   }
 
   /**

@@ -130,6 +130,7 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
         fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
 
       script.changed = false;
+      deployedFunction.description = script.description;
 
       if (meta.inputSchema) {
         deployedFunction.inputSchema = meta.inputSchema;

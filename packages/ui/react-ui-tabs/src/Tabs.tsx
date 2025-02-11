@@ -10,7 +10,7 @@ import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, use
 
 import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { focusRing, ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
+import { ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -216,7 +216,7 @@ type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
 const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
   return (
-    <TabsPrimitive.Content {...props} className={mx('rounded-sm', focusRing, classNames)}>
+    <TabsPrimitive.Content {...props} className={mx('ch-focus-ring-inset', classNames)}>
       {children}
     </TabsPrimitive.Content>
   );
@@ -224,13 +224,11 @@ const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => 
 
 type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
 
-const TabPrimitive = (props: TabsTabPrimitiveProps) => <TabsPrimitive.Trigger {...props} />;
-
 export const Tabs = {
   Root: TabsRoot,
   Tablist: TabsTablist,
   Tab: TabsTab,
-  TabPrimitive,
+  TabPrimitive: TabsPrimitive.Trigger,
   TabGroupHeading: TabsTabGroupHeading,
   Tabpanel: TabsTabpanel,
   BackButton: TabsBackButton,
