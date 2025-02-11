@@ -336,7 +336,13 @@ export class MockDataSource implements DataSource {
             source,
             target,
           });
-        } else if (propSchema.type === 'array' && propSchema.items?.$id === JSON_SCHEMA_ECHO_REF_ID) {
+        } else if (
+          propSchema.type === 'array' &&
+          propSchema.items &&
+          typeof propSchema.items === 'object' &&
+          '$id' in propSchema.items &&
+          propSchema.items.$id === JSON_SCHEMA_ECHO_REF_ID
+        ) {
           const label = formatInferredRelationshipLabel(typenameDxn, name);
 
           const source = this.nodes.find((node) => node.id === object.id);
