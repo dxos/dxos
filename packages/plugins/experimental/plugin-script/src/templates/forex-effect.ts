@@ -25,6 +25,8 @@ export default defineFunction({
     to: S.String.annotations({ description: 'The target currency' }),
   }),
 
+  outputSchema: S.String,
+
   handler: async ({
     event: {
       data: { from, to },
