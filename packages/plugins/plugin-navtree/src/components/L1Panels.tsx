@@ -31,7 +31,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
       // data-testid={testId}
       // data-itemid={id}
       classNames={[
-        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] grid-cols-1',
+        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1',
         item.id === currentItemId && 'grid',
         navTreeContext.hoistStatusbar
           ? 'grid-rows-[var(--rail-size)_1fr_min-content]'

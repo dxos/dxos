@@ -90,11 +90,11 @@ export default (context: PluginsContext) =>
         const toggleSidebar = {
           id: `${LayoutAction.UpdateSidebar._tag}/nav`,
           data: async () => {
-            state.sidebarOpen = !state.sidebarOpen;
+            state.sidebarState = state.sidebarState === 'expanded' ? 'collapsed' : 'expanded';
           },
           properties: {
             label: [
-              state.sidebarOpen ? 'close navigation sidebar label' : 'open navigation sidebar label',
+              state.sidebarState ? 'collapse navigation sidebar label' : 'open navigation sidebar label',
               { ns: DECK_PLUGIN },
             ],
             icon: 'ph--sidebar--regular',

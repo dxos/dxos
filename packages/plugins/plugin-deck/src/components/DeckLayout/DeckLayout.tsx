@@ -39,7 +39,7 @@ const PlankSeparator = ({ index }: { index: number }) =>
 export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
   const {
-    sidebarOpen,
+    sidebarState,
     complementarySidebarOpen,
     complementarySidebarPanel,
     dialogOpen,
@@ -148,8 +148,8 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
       {!fullscreen && (
         <Main.Root
-          navigationSidebarOpen={context.sidebarOpen}
-          onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
+          navigationSidebarState={context.sidebarState}
+          onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
           complementarySidebarOpen={context.complementarySidebarOpen}
           onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
         >
@@ -177,7 +177,12 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
               handlesFocus
               style={
                 {
-                  '--dx-main-sidebarWidth': sidebarOpen ? 'var(--nav-sidebar-size)' : '0px',
+                  '--dx-main-sidebarWidth':
+                    sidebarState === 'expanded'
+                      ? 'var(--nav-sidebar-size)'
+                      : sidebarState === 'collapsed'
+                        ? 'var(--l0-size)'
+                        : '0',
                   '--dx-main-complementaryWidth': complementarySidebarOpen
                     ? 'var(--complementary-sidebar-size)'
                     : '0px',

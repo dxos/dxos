@@ -21,7 +21,7 @@ const VERSION_REGEX = /([\d.]+)/;
 export const NavTreeFooter = (props: { reverse?: boolean }) => {
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
+  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
 
@@ -42,7 +42,11 @@ export const NavTreeFooter = (props: { reverse?: boolean }) => {
     >
       <Popover.Root>
         <Popover.Trigger asChild>
-          <Button variant='ghost' classNames={buttonStyles} {...(!navigationSidebarOpen && { tabIndex: -1 })}>
+          <Button
+            variant='ghost'
+            classNames={buttonStyles}
+            {...(navigationSidebarState === 'closed' && { tabIndex: -1 })}
+          >
             v{v}
           </Button>
         </Popover.Trigger>
