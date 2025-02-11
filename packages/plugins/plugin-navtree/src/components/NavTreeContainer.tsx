@@ -68,7 +68,7 @@ export const NavTreeContainer = memo(
             return untracked(() => {
               const action = isActionLike(node);
               if (!disposition) {
-                return !action;
+                return !action || node.properties.disposition === 'item';
               }
 
               return node.properties.disposition === disposition;

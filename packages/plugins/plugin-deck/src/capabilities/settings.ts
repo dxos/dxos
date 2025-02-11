@@ -15,7 +15,7 @@ export default () => {
     flatDeck: false,
     enableNativeRedirect: false,
     newPlankPositioning: 'start',
-    overscroll: 'centering',
+    overscroll: 'none',
   });
 
   return contributes(Capabilities.Settings, { schema: DeckSettingsSchema, prefix: DECK_PLUGIN, value: settings });
