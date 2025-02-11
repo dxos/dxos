@@ -4,7 +4,7 @@
 
 import { type JSX, type ForwardedRef, type PropsWithChildren, type ReactNode } from 'react';
 
-import { type GuardedType, type MakeOptional, type Disposition } from '@dxos/util';
+import { type GuardedType, type MakeOptional, type Position } from '@dxos/util';
 
 import { type ErrorBoundary } from '../react';
 
@@ -73,7 +73,7 @@ export type SurfaceComponent<T extends Record<string, any> = Record<string, unkn
 export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
   role: string | string[];
-  disposition?: Disposition;
+  position?: Position;
   filter?: (data: Record<string, unknown>) => data is T;
   component: SurfaceComponent<GuardedType<SurfaceDefinition<T>['filter']>>;
 }>;

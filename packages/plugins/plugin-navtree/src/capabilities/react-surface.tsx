@@ -96,7 +96,7 @@ export default () =>
     createSurface({
       id: `${NAVTREE_PLUGIN}/search-input`,
       role: 'search-input',
-      disposition: 'fallback',
+      position: 'fallback',
       component: () => <CommandsTrigger />,
     }),
   ]);

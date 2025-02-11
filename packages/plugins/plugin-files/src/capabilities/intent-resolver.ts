@@ -9,13 +9,12 @@ import {
   createResolver,
   type SerializedNode,
   SettingsAction,
-  type NodeSerializer,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { isActionLike, type Node } from '@dxos/plugin-graph';
-import { type MaybePromise } from '@dxos/util';
+import { byPosition, type MaybePromise } from '@dxos/util';
 
 import { FileCapabilities } from './capabilities';
 import { FILES_PLUGIN } from '../meta';
@@ -119,7 +118,7 @@ export default (context: PluginsContext) => {
 
             const [serializer] = serializers
               .filter((serializer) => node.type === serializer.inputType)
-              .sort(byDisposition);
+              .sort(byPosition);
             if (!serializer && node.data !== null) {
               return false;
             }
@@ -163,7 +162,7 @@ export default (context: PluginsContext) => {
               // For directories, the output type cannot be inferred from the file extension.
               handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
             )
-            .sort(byDisposition);
+            .sort(byPosition);
 
           return serializer?.deserialize({ name, data, type }, ancestors);
         };
@@ -313,19 +312,4 @@ const traverseFileSystem = async (
       await traverseFileSystem(entry, visitor, [...ancestors, result]);
     }
   }
-};
-
-const byDisposition = (a: NodeSerializer, b: NodeSerializer) => {
-  const aDisposition = a.disposition ?? 'default';
-  const bDisposition = b.disposition ?? 'default';
-
-  if (aDisposition === bDisposition) {
-    return 0;
-  } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {
-    return -1;
-  } else if (bDisposition === 'hoist' || aDisposition === 'fallback') {
-    return 1;
-  }
-
-  return 0;
 };

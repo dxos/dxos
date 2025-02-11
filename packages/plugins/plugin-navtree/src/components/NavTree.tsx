@@ -16,7 +16,14 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTree = ({ id, root }: NavTreeProps) => {
   const { getItems, tab } = useNavTreeContext();
-  const topLevelItems = getItems();
+  const topLevelActions = getItems(root, 'item');
+  const _topLevelItems = getItems();
+  // TODO(wittjosiah): Pass these separately to L0Menu to have them pinned at the bottom.
+  const pinnedItems = getItems(root, 'pin-end');
+  const topLevelItems = useMemo(
+    () => [...topLevelActions, ..._topLevelItems, ...pinnedItems],
+    [topLevelActions, _topLevelItems, pinnedItems],
+  );
 
   useLoadDescendents(root);
   const path = useMemo(() => [id], [id]);
