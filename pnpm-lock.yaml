@@ -11548,7 +11548,7 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(emoji-mart@5.5.2)(react@18.2.0)
       '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
+        specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
       '@dxos/react-ui':
