@@ -4,7 +4,8 @@
 - [x] SVGR pieces.
 - [x] Board.
 - [x] Drag pieces without snapshot.
-- [ ] Absolut position of pieces.
+- [x] Absolut position of pieces.
+- [ ] Dragging bug.
 - [ ] Move animation.
 
 ## Phase 2
