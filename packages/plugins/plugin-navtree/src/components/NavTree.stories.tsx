@@ -60,7 +60,7 @@ const meta: Meta<typeof StorybookNavTree> = {
       actions: arg.nodes?.filter((node) => isActionLike(node)) ?? [],
       groupedActions: {},
     }),
-    getItems: (testItem?: NodeArg<any>) => {
+    getItems: (testItem?: any) => {
       return testItem?.nodes ?? tree.nodes ?? [];
     },
     getProps: (testItem: NodeArg<any>) => ({

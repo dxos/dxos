@@ -23,7 +23,13 @@ export const mainPadding = 'ch-main-content-padding';
 export const mainPaddingTransitions = 'ch-main-content-padding-transitions';
 
 export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
-  mx(mainPadding, mainPaddingTransitions, bounce && 'ch-main-bounce-layout', ...etc);
+  mx(
+    mainPadding,
+    mainPaddingTransitions,
+    bounce && 'ch-main-bounce-layout',
+    handlesFocus && 'ch-focus-ring-inset-over-all',
+    ...etc,
+  );
 
 export const mainIntrinsicSize = 'ch-main-intrinsic-size';
 

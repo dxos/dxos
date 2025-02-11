@@ -809,6 +809,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-gameboard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-grid/package.json",
           "jsonpath": "$.version"
         },
@@ -830,6 +835,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-mosaic/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-pickers/package.json",
           "jsonpath": "$.version"
         },
         {
