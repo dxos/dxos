@@ -78,4 +78,9 @@ export const formatInferredRelationshipLabel = (typename: string, property: stri
 };
 
 export const isReference = (schema: JsonSchemaType) =>
-  schema.$id === JSON_SCHEMA_ECHO_REF_ID || (schema.type === 'array' && schema.items?.$id === JSON_SCHEMA_ECHO_REF_ID);
+  schema.$id === JSON_SCHEMA_ECHO_REF_ID ||
+  (schema.type === 'array' &&
+    !Array.isArray(schema.items) &&
+    typeof schema.items === 'object' &&
+    '$id' in schema.items &&
+    schema.items.$id === JSON_SCHEMA_ECHO_REF_ID);

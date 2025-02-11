@@ -258,7 +258,10 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
           result = S.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
         } else {
           invariant(root.items);
-          result = S.Array(toEffectSchema(root.items, defs));
+          const items = root.items;
+          result = Array.isArray(items)
+            ? S.Tuple(...items.map((v) => toEffectSchema(v, defs)))
+            : S.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
         break;
       }
