@@ -11637,6 +11637,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      use-resize-observer:
+        specifier: ^9.0.0
+        version: 9.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
