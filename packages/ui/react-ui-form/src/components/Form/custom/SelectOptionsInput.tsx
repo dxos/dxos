@@ -6,9 +6,9 @@ import React, { useCallback, useEffect } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { ChromaticPalette, Icon, IconButton, Input, Tag, Toolbar } from '@dxos/react-ui';
+import { type ChromaticPalette, Icon, Input, Tag, Toolbar } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { HuePickerBlock, HuePickerToolbarButton } from '@dxos/react-ui-pickers';
+import { HuePickerToolbarButton } from '@dxos/react-ui-pickers';
 import { hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 // import { translationKey } from '../../../translations';
@@ -148,9 +148,9 @@ export const SelectOptionInput = ({
                     className={mx('p-1 plb-2', 'flex flex-col', 'cursor-pointer', 'hover:bg-hoverOverlay')}
                     onClick={handleAdd}
                   >
-                    <div className='flex items-center justify-center gap-1'>
-                      <Icon icon='ph--plus--regular' size={4} />
-                      <span className='text-sm text-secondary'>Add option</span>
+                    <div className='flex items-center gap-1'>
+                      <Icon icon='ph--plus--regular' />
+                      <span className='text-sm'>Add option</span>
                     </div>
                   </div>
                 </div>
