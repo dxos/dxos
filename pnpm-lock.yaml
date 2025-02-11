@@ -8795,6 +8795,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -8813,6 +8816,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: 1.1.2
         version: 1.1.2(@types/react@18.2.79)(react@18.2.0)
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.6.0
       effect:
         specifier: ^3.12.1
         version: 3.12.7
