@@ -11,12 +11,14 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { useAi, type Ai } from './useAi';
 import { codec, type RoomState, type UserState } from '../types';
 
 export type UseRoomState = {
   roomState: RoomState;
   identity: UserState;
   otherUsers: UserState[];
+  ai: Ai;
   updateUserState: (user: UserState) => void;
 };
 
@@ -26,6 +28,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
     users: [],
   });
 
+  const ai = useAi();
   const haloIdentity = useIdentity();
   const client = useClient();
   const identityKey = haloIdentity!.identityKey.toHex();
@@ -37,11 +40,21 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
     if (!stream.current) {
       stream.current = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
       stream.current.subscribe((event) => {
-        log('roomState', {
+        log.info('roomState', {
           users: event.peers?.map((peer) => codec.decode(peer.state!)) ?? [],
           meetingId: roomId.toHex(),
         });
-        setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
+        const users = event.peers?.map((p) => codec.decode(p.state!)) ?? [];
+        setRoomState({ users, meetingId: roomId.toHex() });
+        // Note: Small CRDT for merging transcription states.
+        const maxTimestamp = Math.max(...users.map((user) => user.transcription?.lamportTimestamp ?? 0));
+        const newTranscriptionState = users.find(
+          (user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp,
+        );
+        if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState) {
+          log.info('>>> newTranscriptionState', { newTranscriptionState });
+          ai.setTranscription(newTranscriptionState.transcription!);
+        }
       });
 
       client.services.services
@@ -57,6 +70,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
               raisedHand: false,
               speaking: false,
               tracks: {},
+              transcription: ai.transcription,
             }),
           },
         })
@@ -94,6 +108,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
   );
 
   return {
+    ai,
     identity,
     otherUsers,
     roomState,
