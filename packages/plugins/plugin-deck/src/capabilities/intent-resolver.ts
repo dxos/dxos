@@ -63,9 +63,9 @@ export default (context: PluginsContext) =>
         S.is(LayoutAction.UpdateSidebar.fields.input)(data),
       resolve: ({ options }) => {
         const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
-        const next = options?.state ?? !layout.sidebarOpen;
-        if (next !== layout.sidebarOpen) {
-          layout.sidebarOpen = next;
+        const next = options?.state ?? layout.sidebarState;
+        if (next !== layout.sidebarState) {
+          layout.sidebarState = next;
         }
       },
     }),

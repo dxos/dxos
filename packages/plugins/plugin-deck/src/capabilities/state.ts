@@ -6,6 +6,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { type SidebarState } from '@dxos/react-ui';
 
 import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
@@ -15,7 +16,7 @@ export default () => {
   const state = new LocalStorageStore<DeckState>(DECK_PLUGIN, {
     // TODO(Zan): Cap depth!
     modeHistory: [],
-    sidebarOpen: true,
+    sidebarState: 'expanded',
     complementarySidebarOpen: false,
     complementarySidebarPanel: undefined,
     dialogContent: null,
@@ -46,7 +47,7 @@ export default () => {
   });
 
   state
-    .prop({ key: 'sidebarOpen', type: LocalStorageStore.bool() })
+    .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarOpen', type: LocalStorageStore.bool() })
     .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, Deck>>() })
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() });
@@ -57,6 +58,9 @@ export default () => {
     },
     get dialogOpen() {
       return state.values.dialogOpen;
+    },
+    get sidebarState() {
+      return state.values.sidebarState;
     },
     get active() {
       return state.values.deck.solo ? [state.values.deck.solo] : state.values.deck.active;

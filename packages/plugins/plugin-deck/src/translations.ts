@@ -9,10 +9,10 @@ export default [
     'en-US': {
       [DECK_PLUGIN]: {
         'main header label': 'Main header',
-        'open navigation sidebar label': 'Open navigation sidebar',
-        'close navigation sidebar label': 'Minimize navigation sidebar',
-        'open complementary sidebar label': 'Open sidebar',
-        'close complementary sidebar label': 'Minimize sidebar',
+        'open navigation sidebar label': 'Open sidebar',
+        'collapse navigation sidebar label': 'Minimize sidebar',
+        'open complementary sidebar label': 'Open context sidebar',
+        'close complementary sidebar label': 'Minimize context sidebar',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':
@@ -32,7 +32,7 @@ export default [
         'error fallback message': 'Unable to open this item',
         'plank heading fallback label': 'Untitled',
         'actions menu label': 'Options',
-        'settings deck label': 'Disable Deck',
+        'settings deck label': 'Disable deck',
         'reload required message': 'Reload required.',
         'pending heading': 'Loading…',
         'insert plank label': 'Open',
@@ -45,7 +45,7 @@ export default [
         'show solo plank label': 'Maximize',
         'close label': 'Close',
         'minify label': 'Minify',
-        'settings overscroll label': 'Plank Overscrolling',
+        'settings overscroll label': 'Plank overscrolling',
         'select overscroll placeholder': 'Select plank overscrolling behavior',
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
