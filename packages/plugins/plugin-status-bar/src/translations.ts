@@ -14,7 +14,13 @@ type StatusBarTranslationKeys =
   | 'feedback text area placeholder'
   | 'send feedback label'
   | 'name label'
-  | 'name placeholder';
+  | 'name placeholder'
+  | 'warning title'
+  | 'technology preview message'
+  | 'learn more label'
+  | 'released message'
+  | 'see release label'
+  | 'powered by dxos message';
 
 type RequiredTranslation = { [key in StatusBarTranslationKeys]: string };
 type TranslationEntry = { [STATUS_BAR_PLUGIN]: RequiredTranslation };
@@ -34,6 +40,12 @@ const translations: Record<Language, TranslationEntry> = {
     'feedback text area label': 'Feedback',
     'feedback text area placeholder': 'Found a bug? Have a suggestion? Let us know!',
     'send feedback label': 'Send Feedback',
+    'warning title': 'WARNING',
+    'technology preview message': 'Composer is still in technology preview.',
+    'learn more label': 'Learn more',
+    'released message': 'This version released {{released}}.',
+    'see release label': 'See release on GitHub',
+    'powered by dxos message': 'Powered by <dxos>DXOS</dxos>',
   }),
 };
 
