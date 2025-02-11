@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type DXN, type SpaceId } from '@dxos/keys';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { type EdgeHttpClient } from '@dxos/edge-client';
+import { failedInvariant } from '@dxos/invariant';
+import { type DXN, type SpaceId } from '@dxos/keys';
 
 export type UseQueueOptions = {
   pollInterval?: number;
@@ -28,11 +28,11 @@ export type Queue<T> = {
  */
 // TODO(dmaretskyi): Move to echo.
 class QueueImpl<T> implements Queue<T> {
+  private readonly _signal = compositeRuntime.createSignal();
+
   private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
-
-  private readonly _signal = compositeRuntime.createSignal();
 
   private _items: T[] = [];
   private _isLoading = true;

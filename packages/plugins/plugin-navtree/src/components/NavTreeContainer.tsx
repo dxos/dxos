@@ -41,10 +41,19 @@ export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
   hoistStatusbar?: boolean;
-} & Pick<NavTreeContextValue, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
+} & Pick<NavTreeContextValue, 'tab' | 'onTabChange' | 'isOpen' | 'isCurrent' | 'onOpenChange'>;
 
 export const NavTreeContainer = memo(
-  ({ isCurrent, isOpen, onOpenChange, popoverAnchorId, topbar, hoistStatusbar, ...props }: NavTreeContainerProps) => {
+  ({
+    tab,
+    onTabChange,
+    isCurrent,
+    isOpen,
+    onOpenChange,
+    popoverAnchorId,
+    topbar,
+    hoistStatusbar,
+  }: NavTreeContainerProps) => {
     const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -53,13 +62,16 @@ export const NavTreeContainer = memo(
     const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
     const getItems = useCallback(
-      (node?: Node) => {
+      (node?: Node, disposition?: string) => {
         return graph.nodes(node ?? graph.root, {
           filter: (node): node is Node => {
             return untracked(() => {
               const action = isActionLike(node);
-              const disposition = node.properties.disposition;
-              return !action || (action && disposition === 'item');
+              if (!disposition) {
+                return !action;
+              }
+
+              return node.properties.disposition === disposition;
             });
           },
         });
@@ -210,6 +222,8 @@ export const NavTreeContainer = memo(
 
     const navTreeContextValue = useMemo(
       () => ({
+        tab,
+        onTabChange,
         getActions,
         loadDescendents,
         renderItemEnd,
@@ -225,6 +239,8 @@ export const NavTreeContainer = memo(
         onSelect: handleSelect,
       }),
       [
+        tab,
+        onTabChange,
         getActions,
         loadDescendents,
         renderItemEnd,
@@ -243,7 +259,7 @@ export const NavTreeContainer = memo(
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree root={graph.root} id={graph.root.id} {...props} />
+        <NavTree root={graph.root} id={graph.root.id} />
       </NavTreeContext.Provider>
     );
   },

@@ -44,17 +44,17 @@ type RequestOptions = {
  * Supports cancellation of in-progress requests.
  */
 export class ChatProcessor {
-  /** Stream parser. */
+  /** SSE stream parser. */
   private readonly _parser = new MixedStreamParser();
+
+  /** Current streaming response (iterator). */
+  private _stream: GenerationStream | undefined;
 
   /** Pending messages (incl. the user request). */
   private readonly _pending: Signal<Message[]> = signal([]);
 
   /** Current streaming block (from the AI service). */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
-
-  /** Current streaming response (iterator). */
-  private _stream: GenerationStream | undefined;
 
   /** Prior history from queue. */
   private _history: Message[] = [];

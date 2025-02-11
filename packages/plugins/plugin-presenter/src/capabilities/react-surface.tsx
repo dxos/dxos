@@ -17,14 +17,14 @@ export default () =>
     createSurface({
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'main',
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
       component: ({ data }) => <RevealMain document={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'main',
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
       component: ({ data }) => <PresenterMain collection={data.subject} />,
     }),

@@ -10,7 +10,7 @@ const style = {
 };
 
 /**
- * https://www.svgrepo.com/collection/line-awesome/
+ * https://www.svgrepo.com/collection/line-awesome
  * https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
  * By Cburnett
  */

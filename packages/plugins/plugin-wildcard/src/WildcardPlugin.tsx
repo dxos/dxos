@@ -28,7 +28,7 @@ export const WildcardPlugin = () =>
           createSurface({
             id: meta.id,
             role: 'card',
-            disposition: 'fallback',
+            position: 'fallback',
             // TODO(wittjosiah): Should there be a props predicate filter as well?
             component: ({ data, role, ...props }, forwardedRef) => {
               const object = data?.subject;

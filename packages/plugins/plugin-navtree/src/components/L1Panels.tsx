@@ -20,8 +20,8 @@ type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string };
 
 const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
   const navTreeContext = useNavTreeContext();
-  const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  // TODO(wittjosiah): Remove?
   // const { getProps } = useNavTreeContext();
   // const { id, testId } = getProps?.(item, path) ?? {};
   return (
@@ -37,19 +37,20 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
           ? 'grid-rows-[var(--rail-size)_1fr_min-content]'
           : 'grid-rows-[var(--rail-size)_1fr]',
       ]}
+      tabIndex={-1}
     >
       {item.id === currentItemId && (
         <>
           <h2 className='flex items-center border-be border-separator pis-4'>
             <span className='flex-1 truncate'>{toLocalizedString(item.properties.label, t)}</span>
-            <NavTreeItemColumns path={itemPath} item={item} open />
+            <NavTreeItemColumns path={path} item={item} open />
           </h2>
           <div role='none' className='overflow-y-auto'>
             <Tree
               {...navTreeContext}
               id={item.id}
               root={item}
-              path={itemPath}
+              path={path}
               levelOffset={5}
               draggable
               gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'

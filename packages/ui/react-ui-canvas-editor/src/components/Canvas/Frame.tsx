@@ -84,7 +84,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       draggable({
         element,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
+        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
           if (!nativeDrag) {
             disableNativeDragPreview({ nativeSetDragImage });
             return;
