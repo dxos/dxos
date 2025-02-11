@@ -5,7 +5,9 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { forwardRef, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { type PieceRecord, isLocation, isEqualLocation, canMove, isPiece } from './types';
+import { log } from '@dxos/log';
+
+import { type PieceRecord, isLocation, isEqualLocation, isValidMove, isPiece } from './types';
 import { Chessboard } from '../Chessboard';
 
 export type BoardProps = {
@@ -15,9 +17,11 @@ export type BoardProps = {
 
 export const Board = ({ pieces: _pieces }: BoardProps) => {
   const [pieces, setPieces] = useState<PieceRecord[]>(_pieces ?? []);
+
   useEffect(() => {
     return monitorForElements({
       onDrop: ({ source, location }) => {
+        log.info('onDrop', { source, location });
         const destination = location.current.dropTargets[0];
         if (!destination) {
           return;
@@ -32,7 +36,7 @@ export const Board = ({ pieces: _pieces }: BoardProps) => {
 
         const piece = pieces.find((p) => isEqualLocation(p.location, sourceLocation));
         const restOfPieces = pieces.filter((p) => p !== piece);
-        if (canMove(sourceLocation, destinationLocation, pieceType, pieces) && piece !== undefined) {
+        if (isValidMove(sourceLocation, destinationLocation, pieceType) && piece !== undefined) {
           setPieces([{ type: piece.type, location: destinationLocation }, ...restOfPieces]);
         }
       },
@@ -41,7 +45,7 @@ export const Board = ({ pieces: _pieces }: BoardProps) => {
 
   return (
     <Container>
-      <Chessboard pieces={pieces} />
+      <Chessboard pieces={pieces} showLabels={false} />
     </Container>
   );
 };

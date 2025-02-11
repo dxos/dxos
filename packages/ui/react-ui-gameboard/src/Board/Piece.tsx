@@ -3,8 +3,8 @@
 //
 
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
-// import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
+// import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import React, { useState, useRef, useEffect, type FC, type SVGProps } from 'react';
 import { createPortal } from 'react-dom';
@@ -32,17 +32,18 @@ export const Piece = ({ classNames, location, pieceType, bounds, Component }: Pi
   useEffect(() => {
     const el = ref.current;
     invariant(el);
+
     return draggable({
       element: el,
       getInitialData: () => ({ location, pieceType }),
       onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
         log('onGenerateDragPreview', { source: source.data });
         setCustomNativeDragPreview({
-          // getOffset: centerUnderPointer,
-          getOffset: preserveOffsetOnSource({
-            element: source.element,
-            input: location.current.input,
-          }),
+          getOffset: centerUnderPointer,
+          // getOffset: preserveOffsetOnSource({
+          //   element: source.element,
+          //   input: location.current.input,
+          // }),
           render: ({ container }) => {
             setPreview(container);
             const { width, height } = el.getBoundingClientRect();

@@ -5,14 +5,13 @@
 - [x] Board.
 - [x] Drag pieces without snapshot.
 - [x] Absolut position of pieces.
-- [ ] Dragging bug.
-- [ ] Move animation.
-
-## Phase 2
-- [ ] Move validation.
+- [ ] Move callback and validation.
+- [ ] Animation.
 - [ ] Drop indicators.
+- [ ] Flip board.
 - [ ] Styles/light/dark mode.
 
 ## Phase 2
-- [ ] Generic board (shogi).
-- [ ] Promption.
+- [ ] Generic board (go, shogi, checkers, xianqi, etc).
+- [ ] Promption selection.
+- [ ] Key nav.
