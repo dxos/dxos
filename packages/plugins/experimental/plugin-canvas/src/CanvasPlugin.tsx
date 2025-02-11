@@ -45,7 +45,10 @@ export const CanvasPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupClient,
-      activate: () => contributes(ClientCapabilities.Schema, [CanvasBoardType, ComputeGraph, FunctionTrigger]),
+      activate: () => [
+        contributes(ClientCapabilities.SystemSchema, [ComputeGraph, FunctionTrigger]),
+        contributes(ClientCapabilities.Schema, [CanvasBoardType]),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

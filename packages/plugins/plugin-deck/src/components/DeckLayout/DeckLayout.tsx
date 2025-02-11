@@ -25,6 +25,7 @@ import { getMode, type Overscroll } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useHoistStatusbar } from '../../util/useHoistStatusbar';
 import { useLayout } from '../LayoutContext';
+import { fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
   overscroll: Overscroll;
@@ -34,8 +35,6 @@ export type DeckLayoutProps = {
 
 const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
-
-const fixedSidebarToggleStyles = 'bs-[--rail-item] is-[--rail-item] absolute inline-start-2 block-end-2 z-[1] !bg-deck';
 
 export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
@@ -50,12 +49,10 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
     popoverOpen,
     popoverContent,
     popoverAnchorId,
-    fullscreen,
-    solo,
     deck,
-    plankSizing,
     toasts,
   } = context;
+  const { active, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
@@ -71,7 +68,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
       const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
       return attention.current;
     });
-    const firstId = solo ?? deck[0];
+    const firstId = solo ?? active[0];
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
       //   If the plank is directly focused on first load the focus ring appears.
@@ -97,7 +94,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
     }
   }, []);
 
-  const layoutMode = getMode(context);
+  const layoutMode = getMode(deck);
   useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
@@ -112,14 +109,23 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
     [solo],
   );
 
-  const isEmpty = !solo && deck.length === 0;
+  const isEmpty = !solo && active.length === 0;
 
   const padding = useMemo(() => {
     if (!solo && overscroll === 'centering') {
-      return calculateOverscroll(deck.length);
+      return calculateOverscroll(active.length);
     }
     return {};
   }, [solo, overscroll, deck]);
+
+  const mainPosition = useMemo(
+    () => [
+      'grid !block-start-[env(safe-area-inset-top)]',
+      topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+      hoistStatusbar && 'lg:block-end-[--statusbar-size]',
+    ],
+    [topbar, hoistStatusbar],
+  );
 
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
@@ -158,7 +164,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
           {/* No content. */}
           {isEmpty && (
-            <Main.Content handlesFocus>
+            <Main.Content bounce handlesFocus classNames={mainPosition}>
               <ContentEmpty />
             </Main.Content>
           )}
@@ -167,11 +173,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
           {!isEmpty && (
             <Main.Content
               bounce
-              classNames={[
-                'grid !block-start-[env(safe-area-inset-top)]',
-                topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-                hoistStatusbar && 'lg:block-end-[--statusbar-size]',
-              ]}
+              classNames={mainPosition}
               handlesFocus
               style={
                 {
@@ -179,8 +181,8 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
                   '--dx-main-complementaryWidth': complementarySidebarOpen
                     ? 'var(--complementary-sidebar-size)'
                     : '0px',
-                  '--dx-main-contentFirstWidth': `${plankSizing[deck[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-                  '--dx-main-contentLastWidth': `${plankSizing[deck[(deck.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                  '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                  '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
                 } as MainProps['style']
               }
             >
@@ -195,14 +197,14 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   onScroll={handleScroll}
-                  itemsCount={2 * (deck.length ?? 0) - 1}
+                  itemsCount={2 * (active.length ?? 0) - 1}
                   style={padding}
                   ref={deckRef}
                 >
-                  {deck.map((entryId, index) => (
+                  {active.map((entryId, index) => (
                     <Fragment key={entryId}>
                       <PlankSeparator index={index} />
-                      <Plank id={entryId} part='deck' order={index * 2 + 1} deck={deck} layoutMode={layoutMode} />
+                      <Plank id={entryId} part='deck' order={index * 2 + 1} active={active} layoutMode={layoutMode} />
                     </Fragment>
                   ))}
                 </Stack>

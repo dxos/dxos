@@ -2,60 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { type Node } from '@dxos/app-graph';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { L0Menu } from './L0Menu';
 import { L1Panels } from './L1Panels';
 import { useNavTreeContext } from './NavTreeContext';
-import { type NavTreeContextValue, type NavTreeProps } from './types';
+import { type NavTreeProps } from './types';
 import { useLoadDescendents } from '../hooks';
-import { l0ItemType } from '../util';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-const findFirstTab = (getItems: NavTreeContextValue['getItems'], topLevelItems: Node<any>[]): string => {
-  for (let i = 0; i < topLevelItems.length; i++) {
-    const item = topLevelItems[i];
-    switch (l0ItemType(item)) {
-      case 'tab':
-        return item.id;
-      case 'collection': {
-        const collectionItems = getItems(item);
-        for (let j = 0; j < collectionItems.length; j++) {
-          const collectionItem = collectionItems[j];
-          if (l0ItemType(collectionItem) === 'tab') {
-            return collectionItem.id;
-          }
-        }
-      }
-    }
-  }
-  return 'never';
-};
+export const NavTree = ({ id, root }: NavTreeProps) => {
+  const { getItems, tab } = useNavTreeContext();
+  const topLevelActions = getItems(root, 'item');
+  const _topLevelItems = getItems();
+  // TODO(wittjosiah): Pass these separately to L0Menu to have them pinned at the bottom.
+  const pinnedItems = getItems(root, 'pin-end');
+  const topLevelItems = useMemo(
+    () => [...topLevelActions, ..._topLevelItems, ...pinnedItems],
+    [topLevelActions, _topLevelItems, pinnedItems],
+  );
 
-export const NavTree = (props: NavTreeProps) => {
-  const { getItems } = useNavTreeContext();
-  const topLevelItems = getItems();
-  const firstTab = findFirstTab(getItems, topLevelItems);
-  const [currentItemId, setCurrentItemId] = useState(firstTab);
-
-  useLoadDescendents(props.root);
-  const path = useMemo(() => [props.id], [props.id]);
+  useLoadDescendents(root);
+  const path = useMemo(() => [id], [id]);
 
   return (
     // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
-    <Tabs.Root
-      value={currentItemId}
-      onValueChange={setCurrentItemId}
-      orientation='vertical'
-      verticalVariant='stateless'
-      classNames='relative'
-    >
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={currentItemId} />
-      <L0Menu topLevelItems={topLevelItems} path={path} parent={props.root} />
+    <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
+      <L0Menu topLevelItems={topLevelItems} path={path} parent={root} />
+      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} />
     </Tabs.Root>
   );
 };

@@ -268,10 +268,8 @@ export const mergeMessageBlock = (
           const content = streamBlock.content
             .map((block) => {
               switch (block.type) {
-                case 'text': {
+                case 'text':
                   return block.content;
-                }
-
                 default:
                   return null;
               }

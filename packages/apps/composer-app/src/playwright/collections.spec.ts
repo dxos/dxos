@@ -61,7 +61,7 @@ test.describe('Collection tests', () => {
     await host.toggleCollectionCollapsed(0);
     // Create an item inside the collection.
     await host.createObject({ type: 'Document', nth: 1 });
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await expect(host.getObjectLinks()).toHaveCount(3);
 
     // Delete the containing collection.
     await host.deleteObject(1);

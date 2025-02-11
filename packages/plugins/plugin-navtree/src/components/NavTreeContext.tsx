@@ -4,17 +4,10 @@
 
 import { createContext, useContext } from 'react';
 
+import { raise } from '@dxos/debug';
+
 import { type NavTreeContextValue } from './types';
 
-export const NavTreeContext = createContext<NavTreeContextValue>({
-  getActions: () => ({ actions: [], groupedActions: {} }),
-  loadDescendents: () => {},
-  renderItemEnd: () => null,
-  getItems: () => [],
-  getProps: () => ({ id: 'never', label: 'never' }),
-  isCurrent: () => false,
-  isOpen: () => false,
-  onOpenChange: () => {},
-});
+export const NavTreeContext = createContext<NavTreeContextValue | null>(null);
 
-export const useNavTreeContext = () => useContext(NavTreeContext);
+export const useNavTreeContext = () => useContext(NavTreeContext) ?? raise(new Error('NavTreeContext not found'));

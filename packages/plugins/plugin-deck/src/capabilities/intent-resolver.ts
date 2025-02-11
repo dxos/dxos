@@ -142,42 +142,64 @@ export default (context: PluginsContext) =>
         return true;
       },
       resolve: ({ subject, options }) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
 
         const setMode = (mode: LayoutMode) => {
-          const current = layout.solo ? [layout.solo] : layout.deck;
+          const deck = state.deck;
+          const current = deck.solo ? [deck.solo] : deck.active;
           // When un-soloing, the solo entry is added to the deck.
           const next = (
-            mode === 'solo' ? [subject ?? layout.solo ?? layout.deck[0]] : [...layout.deck, layout.solo]
+            mode === 'solo' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]
           ).filter(nonNullable);
 
           const removed = current.filter((id) => !next.includes(id));
-          const closed = Array.from(new Set([...layout.closed.filter((id) => !next.includes(id)), ...removed]));
-          layout.closed = closed;
+          const closed = Array.from(new Set([...deck.inactive.filter((id) => !next.includes(id)), ...removed]));
+          deck.inactive = closed;
 
           if (mode === 'solo' && next[0]) {
-            layout.solo = next[0];
-          } else if (mode !== 'solo' && layout.solo) {
-            layout.solo = undefined;
+            deck.solo = next[0];
+          } else if (mode !== 'solo' && deck.solo) {
+            deck.solo = undefined;
           }
 
-          if (mode === 'fullscreen' && !layout.fullscreen) {
-            layout.fullscreen = true;
-          } else if (mode !== 'fullscreen' && layout.fullscreen) {
-            layout.fullscreen = false;
+          if (mode === 'fullscreen' && !deck.fullscreen) {
+            deck.fullscreen = true;
+          } else if (mode !== 'fullscreen' && deck.fullscreen) {
+            deck.fullscreen = false;
           }
         };
 
         return batch(() => {
           if ('mode' in options) {
-            layout.modeHistory.push(options.mode as LayoutMode);
+            state.modeHistory.push(options.mode as LayoutMode);
             setMode(options.mode as LayoutMode);
           } else if ('revert' in options) {
-            setMode(layout.modeHistory.pop() ?? 'solo');
+            setMode(state.modeHistory.pop() ?? 'solo');
           } else {
             log.warn('Invalid layout mode', options);
           }
         });
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
+      filter: (data): data is S.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+        S.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      resolve: ({ subject }) => {
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        batch(() => {
+          state.activeDeck = subject;
+          if (!state.decks[subject]) {
+            state.decks[subject] = { active: [], inactive: [], fullscreen: false, plankSizing: {} };
+          }
+        });
+
+        const first = state.decks[state.activeDeck].active[0];
+        if (first) {
+          return {
+            intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
+          };
+        }
       },
     }),
     createResolver({
@@ -192,9 +214,9 @@ export default (context: PluginsContext) =>
           .requestCapabilities(Capabilities.SettingsStore)[0]
           ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
-        const previouslyOpenIds = new Set<string>(state.solo ? [state.solo] : state.deck);
+        const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
         batch(() => {
-          const next = state.solo
+          const next = state.deck.solo
             ? (subject as string[])
             : subject.reduce(
                 (acc, entryId) =>
@@ -202,13 +224,13 @@ export default (context: PluginsContext) =>
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
                   }),
-                state.deck,
+                state.deck.active,
               );
 
           return setActive({ next, state, attention });
         });
 
-        const ids = state.solo ? [state.solo] : state.deck;
+        const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
 
         return {
@@ -239,7 +261,7 @@ export default (context: PluginsContext) =>
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const next = subject.reduce((acc, id) => closeEntry(acc, id), state.deck);
+        const next = subject.reduce((acc, id) => closeEntry(acc, id), state.deck.active);
         const toAttend = setActive({ next, state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
@@ -271,8 +293,8 @@ export default (context: PluginsContext) =>
     createResolver({
       intent: DeckAction.UpdatePlankSize,
       resolve: (data) => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
-        layout.plankSizing[data.id] = data.size;
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        state.deck.plankSizing[data.id] = data.size;
       },
     }),
     createResolver({
@@ -284,7 +306,7 @@ export default (context: PluginsContext) =>
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
             setActive({
-              next: incrementPlank(state.deck, adjustment),
+              next: incrementPlank(state.deck.active, adjustment),
               state,
               attention,
             });
@@ -292,7 +314,7 @@ export default (context: PluginsContext) =>
 
           if (adjustment.type === 'solo') {
             const entryId = adjustment.id;
-            if (!state.solo) {
+            if (!state.deck.solo) {
               // Solo the entry.
               return {
                 intents: [createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } })],

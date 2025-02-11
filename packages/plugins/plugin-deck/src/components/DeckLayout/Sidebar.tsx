@@ -12,15 +12,14 @@ import { useHoistStatusbar } from '../../util/useHoistStatusbar';
 import { useLayout } from '../LayoutContext';
 
 export const Sidebar = () => {
-  const layoutContext = useLayout();
-  const { popoverAnchorId } = layoutContext;
+  const { popoverAnchorId, activeDeck: current } = useLayout();
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
 
   const navigationData = useMemo(
-    () => ({ popoverAnchorId, topbar, hoistStatusbar }),
-    [popoverAnchorId, topbar, hoistStatusbar],
+    () => ({ popoverAnchorId, topbar, hoistStatusbar, current }),
+    [popoverAnchorId, topbar, hoistStatusbar, current],
   );
 
   return (
