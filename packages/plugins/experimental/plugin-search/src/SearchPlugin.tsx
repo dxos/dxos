@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { contributes, Events, defineModule, definePlugin, Capabilities, oneOf } from '@dxos/app-framework';
+import { contributes, Events, defineModule, definePlugin, Capabilities } from '@dxos/app-framework';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface, ReactContext } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta, SEARCH_RESULT } from './meta';
 import type { SearchResult } from './search-sync';
 import translations from './translations';
@@ -18,7 +18,7 @@ export const SearchPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: SEARCH_RESULT,
@@ -37,13 +37,8 @@ export const SearchPlugin = () =>
         }),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

@@ -21,7 +21,7 @@ export const WildcardPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: () =>
         contributes(
           Capabilities.ReactSurface,

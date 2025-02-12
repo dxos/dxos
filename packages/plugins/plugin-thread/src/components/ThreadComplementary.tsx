@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useCapability, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadCapabilities } from '@dxos/plugin-space';
 import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';

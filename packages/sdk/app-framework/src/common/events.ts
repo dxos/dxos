@@ -16,6 +16,16 @@ export namespace Events {
   //
 
   /**
+   * Fired to load any newly available surfaces.
+   */
+  export const SetupSurfaces = defineEvent('dxos.org/app-framework/event/setup-surfaces');
+
+  /**
+   * Fired to load any newly available metadata.
+   */
+  export const SetupMetadata = defineEvent('dxos.org/app-framework/event/setup-metadata');
+
+  /**
    * Fired before the intent dispatcher is activated.
    */
   export const SetupIntents = defineEvent('dxos.org/app-framework/event/setup-intents');

@@ -4,7 +4,7 @@
 
 import { createResolver, defineModule, definePlugin, Events, contributes, Capabilities } from '@dxos/app-framework';
 
-import { AppGraphBuilder, HelpState, ReactContext, ReactSurface } from './capabilities';
+import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { HelpCapabilities } from './capabilities/capabilities';
 import { meta } from './meta';
 import translations from './translations';
@@ -25,13 +25,13 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions) =>
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
+      id: `${meta.id}/module/react-root`,
       activatesOn: Events.Startup,
-      activate: () => ReactContext(steps),
+      activate: () => ReactRoot(steps),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({
