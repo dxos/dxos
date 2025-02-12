@@ -17,6 +17,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "../plugin-thread/src/thread.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"

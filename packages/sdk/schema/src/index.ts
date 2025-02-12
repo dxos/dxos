@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './common';
 export * from './format';
 export * from './projection';
 export * from './properties';
