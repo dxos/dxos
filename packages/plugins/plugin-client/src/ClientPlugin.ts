@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
 
 import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface, Schema } from './capabilities';
 import { ClientEvents } from './events';
@@ -25,7 +25,7 @@ export const ClientPlugin = ({
   return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/client`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activatesAfter: [ClientEvents.ClientReady],
       activate: (context) => Client({ ...options, context }),
     }),

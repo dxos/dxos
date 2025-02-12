@@ -16,7 +16,7 @@ export const SheetPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/compute-graph-registry`,
-      activatesOn: Events.Startup,
+      activatesOn: ClientEvents.ClientReady,
       activate: ComputeGraphRegistry,
     }),
     defineModule({
