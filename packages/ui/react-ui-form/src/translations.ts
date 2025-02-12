@@ -57,6 +57,7 @@ export default [
 
         // SelectOptionsInput
         'select option label': 'Label',
+        'select option label placeholder': 'Option label',
         'select option color': 'Color',
         'select option delete': 'Delete',
         'select option add': 'Add option',

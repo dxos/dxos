@@ -87,6 +87,15 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
     [options, type, onValueChange],
   );
 
+  const handleKeyDown = useCallback(
+    (id: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        setSelectedId(null);
+      }
+    },
+    [],
+  );
+
   // Color onChange
   const handleColorChange = useCallback(
     (id: string) => (hue: string) => {
@@ -135,28 +144,26 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                       {selected === item.id && (
                         <div className='ml-[16px] mt-2 flex flex-col gap-1'>
                           {/* 16px to match drag handle width. */}
-                          <Input.Root>
-                            <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
+                          <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
+                          <div className='flex flex-row items-center gap-1'>
                             <Input.TextInput
+                              placeholder={t('select option label placeholder')}
                               ref={selected === item.id ? inputRef : undefined}
                               value={item.title}
                               onChange={handleTitleChange(item.id)}
+                              onKeyDown={handleKeyDown(item.id)}
+                              classNames='flex-1'
                             />
-                          </Input.Root>
-                          <Input.Root>
-                            <Input.Label classNames='text-xs'>{t('select option color')}</Input.Label>
-                            <Toolbar.Root classNames='p-0'>
+                            <Toolbar.Root classNames='p-0 m-0 !w-auto'>
                               <HuePickerToolbarButton hue={item.color} onChangeHue={handleColorChange(item.id)} />
                             </Toolbar.Root>
-                          </Input.Root>
-
-                          <span role='separator' className='bs-2' />
-
-                          <IconButton
-                            icon='ph--trash--fill'
-                            label={t('select option delete')}
-                            onClick={() => handleDelete(item.id)}
-                          />
+                            <IconButton
+                              icon='ph--trash--fill'
+                              iconOnly
+                              label={t('select option delete')}
+                              onClick={() => handleDelete(item.id)}
+                            />
+                          </div>
                         </div>
                       )}
                     </List.Item>
