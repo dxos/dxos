@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createIntent, useCapabilities, useCapability, Capabilities } from '@dxos/app-framework';
+import { createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { ObservabilityCapabilities } from '@dxos/plugin-observability';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -16,7 +16,7 @@ export const NotchStart = () => {
   const identity = useIdentity();
   // TODO(wittjosiah): Can this be removed now?
   const [observability] = useCapabilities(ObservabilityCapabilities.Observability);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
     <HaloButton
       size={8}

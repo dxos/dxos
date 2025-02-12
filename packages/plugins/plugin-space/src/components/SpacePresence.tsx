@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
+import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { PublicKey, useClient } from '@dxos/react-client';
@@ -209,7 +209,7 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
   // TODO(wittjosiah): If the attended node is deep in the graph and the graph is not fully loaded
   //   this will result in an empty path until the graph is connected.
   // TODO(wittjosiah): Consider using this indicator for all open nodes instead of just attended.
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const { graph } = useAppGraph();
   const attended = useAttended();
   const startOfAttention = attended.at(-1);
   const path = usePath(graph, startOfAttention);

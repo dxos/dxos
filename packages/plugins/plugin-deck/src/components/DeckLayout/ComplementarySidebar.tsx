@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent, LayoutAction, Surface, useCapability } from '@dxos/app-framework';
+import { createIntent, LayoutAction, Surface, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { Main, ScrollArea, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { railGridHorizontal, StackContext, StackItem } from '@dxos/react-ui-stack';
@@ -30,10 +30,10 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const panelIds = useMemo(() => panels.map((p) => p.id), [panels]);
   const activePanelId = panelIds.find((p) => p === current) ?? panels[0].id;
   const activeEntryId = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${activePanelId}` : undefined;
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const { graph } = useAppGraph();
   const node = useNode(graph, activeEntryId);
   const { t } = useTranslation(DECK_PLUGIN);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   useNodeActionExpander(node);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);

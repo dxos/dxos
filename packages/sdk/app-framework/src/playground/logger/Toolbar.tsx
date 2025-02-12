@@ -10,10 +10,10 @@ import { Log } from './schema';
 import { Capabilities, createSurface } from '../../common';
 import { contributes } from '../../core';
 import { createIntent } from '../../plugin-intent';
-import { useCapability } from '../../react';
+import { useIntentDispatcher } from '../../react';
 
 export const Logger = () => {
-  const { dispatchPromise } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise } = useIntentDispatcher();
   const handleClick = useCallback(() => dispatchPromise(createIntent(Log, { message: 'Hello, world!' })), []);
   return <Button onClick={handleClick}>Log</Button>;
 };

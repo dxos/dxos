@@ -5,7 +5,7 @@
 import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ import { type FilesState, LocalFilesAction, type FilesSettingsProps } from '../t
 
 export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProps; state: FilesState }) => {
   const { t } = useTranslation(FILES_PLUGIN);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
     <>

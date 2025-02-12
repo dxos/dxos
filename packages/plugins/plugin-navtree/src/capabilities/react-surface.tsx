@@ -5,12 +5,14 @@
 import React, { useCallback } from 'react';
 
 import {
-  createSurface,
   Capabilities,
   contributes,
-  useCapability,
-  LayoutAction,
   createIntent,
+  createSurface,
+  LayoutAction,
+  useAppGraph,
+  useCapability,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
@@ -40,8 +42,8 @@ export default () =>
       filter: (data): data is { popoverAnchorId?: string; topbar: boolean; hoistStatusbar: boolean; current: string } =>
         typeof data.current === 'string',
       component: ({ data }) => {
-        const { graph } = useCapability(Capabilities.AppGraph);
-        const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+        const { graph } = useAppGraph();
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 
         const handleOpenChange = useCallback(

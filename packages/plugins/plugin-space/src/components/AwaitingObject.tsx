@@ -5,7 +5,7 @@
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { createIntent, useCapability, Capabilities, LayoutAction } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher, useLayout } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
@@ -22,8 +22,8 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
   const { t } = useTranslation(SPACE_PLUGIN);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
-  const layout = useCapability(Capabilities.Layout);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const layout = useLayout();
 
   const client = useClient();
   const objects = useQuery(client.spaces, Filter.all());

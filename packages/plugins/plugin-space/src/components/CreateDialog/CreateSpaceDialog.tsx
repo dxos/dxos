@@ -5,7 +5,7 @@
 import { Effect } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { Capabilities, createIntent, LayoutAction, useCapability } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type S } from '@dxos/echo-schema';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -21,7 +21,7 @@ const initialValues: FormValues = { edgeReplication: true };
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(SPACE_PLUGIN);
-  const { dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatch } = useIntentDispatcher();
 
   const handleCreateSpace = useCallback(
     async (data: FormValues) => {

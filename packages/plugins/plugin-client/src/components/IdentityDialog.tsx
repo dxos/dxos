@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, createIntent, LayoutAction, useCapability } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Clipboard, Dialog } from '@dxos/react-ui';
 import { IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
@@ -15,7 +15,7 @@ import { ClientAction } from '../types';
 export const IDENTITY_DIALOG = `${CLIENT_PLUGIN}/IdentityDialog`;
 
 export const IdentityDialog = (props: IdentityPanelProps) => {
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
 
   const handleDone = useCallback(

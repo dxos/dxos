@@ -4,14 +4,14 @@
 
 import { useCallback } from 'react';
 
-import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type ReactiveObject } from '@dxos/live-object';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
 
 export const useAnalyticsCallback = (spaceId: string | undefined, name: string, meta?: any) => {
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return useCallback(
     (dynamicMeta?: any) => {

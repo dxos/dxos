@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Surface, createIntent, Capabilities, useCapability } from '@dxos/app-framework';
+import { Surface, createIntent, useLayout, useIntentDispatcher } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Main } from '@dxos/react-ui';
 import {
@@ -21,12 +21,12 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const layout = useCapability(Capabilities.Layout);
+  const layout = useLayout();
   const fullscreen = layout.mode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleSetRunning = (running: boolean) => {
     void dispatch(createIntent(PresenterAction.TogglePresentation, { object: collection, state: running }));
   };

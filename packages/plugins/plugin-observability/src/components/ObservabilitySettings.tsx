@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
@@ -26,7 +26,7 @@ export type ObservabilitySettingsProps = S.Schema.Type<typeof ObservabilitySetti
 
 export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySettingsProps }) => {
   const { t } = useTranslation(OBSERVABILITY_PLUGIN);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
     <>

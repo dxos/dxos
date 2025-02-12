@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Surface, useCapability } from '@dxos/app-framework';
+import { Surface, useAppGraph } from '@dxos/app-framework';
 import { useAttended } from '@dxos/react-ui-attention';
 
 import { useNode, useNodeActionExpander } from '../../hooks';
@@ -12,7 +12,7 @@ import { useNode, useNodeActionExpander } from '../../hooks';
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {
   const [id] = useAttended();
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const { graph } = useAppGraph();
   const activeNode = useNode(graph, id);
   useNodeActionExpander(activeNode);
 

@@ -10,11 +10,11 @@ import { createGeneratorIntent, createPluginId, Number } from './generator';
 import { Capabilities } from '../../common';
 import { contributes } from '../../core';
 import { createIntent } from '../../plugin-intent';
-import { useCapabilities, useCapability, usePluginManager } from '../../react';
+import { useCapabilities, useIntentDispatcher, usePluginManager } from '../../react';
 
 export const Toolbar = () => {
   const manager = usePluginManager();
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleAdd = useCallback(async () => {
     const id = createPluginId(Math.random().toString(16).substring(2, 8));

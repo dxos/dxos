@@ -5,7 +5,7 @@
 import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 
-import { Capabilities, createIntent, SettingsAction, useCapability } from '@dxos/app-framework';
+import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -25,7 +25,7 @@ export type ScriptSettingsPanelProps = {
 
 export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(script);
   const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));

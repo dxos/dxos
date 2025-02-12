@@ -4,7 +4,7 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
-import { Capabilities, createIntent, type Plugin, useCapability, usePluginManager } from '@dxos/app-framework';
+import { createIntent, type Plugin, useIntentDispatcher, usePluginManager } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
@@ -18,7 +18,7 @@ const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin, { meta: { name: b 
 export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
   const manager = usePluginManager();
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Memoize to prevent plugins from disappearing when toggling enabled.
   const installed = useMemo(

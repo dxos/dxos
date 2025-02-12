@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Capabilities, useCapability, LayoutAction, createIntent } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Button, Dialog, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
@@ -18,8 +18,8 @@ import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 export const CommandsDialogContent = ({ selected: initial }: { selected?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const [selected, setSelected] = useState<string | undefined>(initial);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { graph } = useAppGraph();
 
   // Traverse graph.
   // TODO(burdon): Factor out commonality with shortcut dialog.

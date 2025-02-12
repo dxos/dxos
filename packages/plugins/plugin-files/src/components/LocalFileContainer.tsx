@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { Capabilities, useCapability, Surface } from '@dxos/app-framework';
+import { useAppGraph, Surface } from '@dxos/app-framework';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -32,7 +32,7 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
 
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const { graph } = useAppGraph();
   const node = graph.findNode(entity.id);
   const action =
     node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);

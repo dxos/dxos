@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, useCapability, Capabilities } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -28,7 +28,7 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
   };
   const id = fullyQualifiedId(sketch);
   const { hasAttention } = useAttention(id);
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const onThreadCreate = useCallback(() => {
     // TODO(Zan): Consider a more appropriate anchor format.

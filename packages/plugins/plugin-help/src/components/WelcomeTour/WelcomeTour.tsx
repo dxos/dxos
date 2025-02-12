@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
-import { usePluginManager, useCapability, Capabilities } from '@dxos/app-framework';
+import { usePluginManager, useLayout } from '@dxos/app-framework';
 
 import { type Step, HelpContext } from '../../types';
 import { floaterProps, Tooltip } from '../Tooltip';
@@ -65,7 +65,7 @@ export type WelcomeTourProps = {
 
 export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
   const manager = usePluginManager();
-  const layout = useCapability(Capabilities.Layout);
+  const layout = useLayout();
   const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
   const [stepIndex, _setStepIndex] = useState(0);
   const [steps, setSteps] = useState(initialSteps);

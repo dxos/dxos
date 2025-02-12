@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
@@ -15,7 +15,7 @@ import { TableAction } from '../types';
 type TableViewEditorProps = { table: TableType };
 
 const TableViewEditor = ({ table }: TableViewEditorProps) => {
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
 
   // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and

@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Capabilities, createIntent, LayoutAction, Surface, useCapability } from '@dxos/app-framework';
+import { createIntent, LayoutAction, Surface, useCapability, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
@@ -29,9 +29,9 @@ export type PlankProps = {
 };
 
 export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankProps) => {
-  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
