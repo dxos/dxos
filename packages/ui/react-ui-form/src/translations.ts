@@ -56,7 +56,6 @@ export default [
         'placeholder longitude': 'Longitude',
 
         // SelectOptionsInput
-        'select option new': 'New Option',
         'select option label': 'Label',
         'select option color': 'Color',
         'select option delete': 'Delete',

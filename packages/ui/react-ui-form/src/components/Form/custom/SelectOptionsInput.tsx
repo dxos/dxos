@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import React, { useCallback, useEffect, useState, type ChangeEvent, useRef } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -17,6 +17,8 @@ import { InputHeader, type InputProps } from '../Input';
 // TODO(ZaymonFC): Handle disabled.
 export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, onValueChange }: InputProps) => {
   const [selected, setSelectedId] = useState<string | null>(null);
+  const [isNewOption, setIsNewOption] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const options = getValue<SelectOption[] | undefined>();
@@ -43,9 +45,12 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
   };
 
   const handleAdd = useCallback(() => {
-    const newOption = { id: PublicKey.random().truncate(), title: t('select option new'), color: randomHue() };
+    const newId = PublicKey.random().truncate();
+    const newOption = { id: newId, title: '', color: randomHue() };
     onValueChange(type, [...(options ?? []), newOption]);
-  }, [options, type, onValueChange, t]);
+    setSelectedId(newId);
+    setIsNewOption(true);
+  }, [options, type, onValueChange]);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -91,6 +96,13 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
     [options, type, onValueChange],
   );
 
+  useEffect(() => {
+    if (selected && isNewOption && inputRef.current) {
+      inputRef.current.focus();
+      setIsNewOption(false);
+    }
+  }, [selected, isNewOption]);
+
   return (
     <Input.Root validationValence={status}>
       <InputHeader error={error}>
@@ -125,7 +137,11 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                           {/* 16px to match drag handle width. */}
                           <Input.Root>
                             <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
-                            <Input.TextInput value={item.title} onChange={handleTitleChange(item.id)} />
+                            <Input.TextInput
+                              ref={selected === item.id ? inputRef : undefined}
+                              value={item.title}
+                              onChange={handleTitleChange(item.id)}
+                            />
                           </Input.Root>
                           <Input.Root>
                             <Input.Label classNames='text-xs'>{t('select option color')}</Input.Label>
