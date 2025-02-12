@@ -35,7 +35,6 @@ type PluginManagerState = {
   // Modules
   modules: PluginModule[];
   active: string[];
-  pendingRemoval: string[];
 
   // Events
   eventsFired: string[];
@@ -67,7 +66,6 @@ export class PluginManager {
       enabled,
       modules: [],
       active: [],
-      pendingRemoval: [],
       pendingReset: [],
       eventsFired: [],
     });
@@ -119,15 +117,6 @@ export class PluginManager {
    */
   get active(): ReactiveObject<readonly string[]> {
     return this._state.active;
-  }
-
-  /**
-   * Ids of modules which are pending removal.
-   *
-   * @reactive
-   */
-  get pendingRemoval(): ReactiveObject<readonly string[]> {
-    return this._state.pendingRemoval;
   }
 
   /**
@@ -364,6 +353,9 @@ export class PluginManager {
       const modules = this._getInactiveModulesByEvent(key);
       if (modules.length === 0) {
         log('no modules to activate', { key });
+        if (!this._state.eventsFired.includes(key)) {
+          this._state.eventsFired.push(key);
+        }
         return false;
       }
 
@@ -492,13 +484,6 @@ export class PluginManager {
       log('reset', { key });
       const modules = this._getActiveModulesByEvent(key);
       const results = yield* Effect.all(modules.map((module) => this._deactivateModule(module)));
-
-      if (this._state.pendingRemoval.length > 0) {
-        this._state.pendingRemoval.forEach((id) => {
-          this._removeModule(id);
-        });
-        this._state.pendingRemoval.splice(0, this._state.pendingRemoval.length);
-      }
 
       if (results.every((result) => result)) {
         return yield* this._activate(key);
