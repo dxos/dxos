@@ -413,7 +413,7 @@ export class PluginManager {
       log('activating module', { module: module.id });
       // TODO(wittjosiah): This is not handling errors thrown if this is synchronous.
       const maybeCapabilities = typeof getCapabilities === 'function' ? getCapabilities() : getCapabilities;
-      const someCapabilities = yield* Match.value(maybeCapabilities).pipe(
+      const resolvedCapabilities = yield* Match.value(maybeCapabilities).pipe(
         // TODO(wittjosiah): Activate with an effect?
         // Match.when(Effect.isEffect, (effect) => effect),
         Match.when(isPromise, (promise) =>
@@ -424,7 +424,7 @@ export class PluginManager {
         ),
         Match.orElse((program) => Effect.succeed(program)),
       );
-      const capabilities = Match.value(someCapabilities).pipe(
+      const capabilities = Match.value(resolvedCapabilities).pipe(
         Match.when(Array.isArray, (array) => array),
         Match.orElse((value) => [value]),
       );
