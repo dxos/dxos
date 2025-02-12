@@ -55,14 +55,14 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },
+    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, classNames, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden !pli-2 !plb-3' : '!pli-2 !plb-3';
 
     return (
-      <ButtonGroup {...props} ref={forwardedRef}>
+      <ButtonGroup {...props} classNames={['app-no-drag', classNames]} ref={forwardedRef}>
         {/* {pin && !isSolo && ['both', 'start'].includes(pin) && (
           <PlankControl
             label={t('pin start label')}
