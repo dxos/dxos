@@ -45,7 +45,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
 };
 
 const l0Breakpoints: Record<string, string> = {
-  lg: 'hidden lg:block',
+  lg: 'hidden lg:grid',
 };
 
 const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
@@ -74,7 +74,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
           {...(rootProps as any)}
           data-type={type}
           className={mx(
-            'group/l0i ch-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer',
+            'group/l0i ch-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
             l0Breakpoints[item.properties.l0Breakpoint],
           )}
         >
@@ -82,10 +82,8 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             <div
               role='none'
               className={mx(
-                'absolute -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors',
-                type === 'tab' || pinned
-                  ? 'inset-inline-2 inset-block-1 rounded'
-                  : 'rounded-full inset-inline-3 inset-block-2',
+                'absolute inset-inline-3 inset-block-2 -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors',
+                type === 'tab' || pinned ? 'rounded' : 'rounded-full',
                 pinned ? 'bg-transparent' : 'bg-input',
               )}
             />
@@ -154,7 +152,7 @@ export const L0Menu = ({
   return (
     <div
       role='none'
-      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_1px_var(--l0-size)] contain-layout !is-[--l0-size] bg-l0 backdrop-blur border-ie border-separator'
+      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_1px_var(--l0-size)] contain-layout !is-[--l0-size] bg-l0 backdrop-blur border-ie border-separator app-drag [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
     >
       <Tabs.Tablist classNames='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1'>
         {topLevelItems.map((item) => {
@@ -173,7 +171,7 @@ export const L0Menu = ({
           ))}
       </div>
       <span role='separator' className='bs-px is-4 bg-separator place-self-center' />
-      <div role='none' className='grid p-2'>
+      <div role='none' className='grid p-2 app-no-drag'>
         <NotchStart />
       </div>
     </div>
