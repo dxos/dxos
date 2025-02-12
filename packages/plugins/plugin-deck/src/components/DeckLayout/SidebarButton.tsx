@@ -72,7 +72,7 @@ export const CloseComplementarySidebarButton = () => {
       size={4}
       icon='ph--caret-line-right--regular'
       label={t('close complementary sidebar label')}
-      classNames='!rounded-none border-is border-separator dx-focus-ring-inset pie-2 lg:pie-[max(.5rem,env(safe-area-inset-right))]'
+      classNames='rounded-none border-is border-separator dx-focus-ring-inset pie-2 lg:pie-[max(.5rem,env(safe-area-inset-right))]'
       onClick={() => (layoutContext.complementarySidebarOpen = false)}
     />
   );
