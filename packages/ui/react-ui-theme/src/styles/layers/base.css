@@ -1,0 +1,24 @@
+@layer dx-base {
+  :root {
+    touch-action: pan-x pan-y;
+    font-synthesis: none;
+    font-variation-settings: 'wght' 400,
+    'slnt' 0;
+    scroll-padding-block-start: theme(spacing.14);
+    scroll-padding-block-end: theme(spacing.2);
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .dark {
+    color: var(--surface-text);
+  }
+
+  html {
+    background-color: var(--surface-bg);
+    color: var(--surface-text);
+    @apply font-body;
+  }
+}

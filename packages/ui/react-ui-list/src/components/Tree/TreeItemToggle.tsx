@@ -23,7 +23,7 @@ export const TreeItemToggle = memo(
         aria-expanded={open}
         variant='ghost'
         density='fine'
-        classNames={mx('is-4 ch-focus-ring-inset !pli-0', hidden ? 'hidden' : !isBranch && 'invisible')}
+        classNames={mx('is-4 dx-focus-ring-inset pli-0', hidden ? 'hidden' : !isBranch && 'invisible')}
         onClick={onToggle}
       >
         <Icon
