@@ -82,9 +82,9 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             <div
               role='none'
               className={mx(
-                'absolute inset-inline-3 inset-block-2 -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors',
+                'absolute -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors',
                 type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-                pinned ? 'bg-transparent' : 'bg-input',
+                pinned ? 'bg-transparent inset-inline-3 inset-block-1' : 'bg-input inset-inline-3 inset-block-2',
               )}
             />
           )}
@@ -152,9 +152,9 @@ export const L0Menu = ({
   return (
     <div
       role='none'
-      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_1px_var(--l0-size)] contain-layout !is-[--l0-size] bg-l0 backdrop-blur border-ie border-separator app-drag [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
+      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-l0 backdrop-blur border-ie border-separator app-drag'
     >
-      <Tabs.Tablist classNames='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1'>
+      <Tabs.Tablist classNames='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'>
         {topLevelItems.map((item) => {
           if (l0ItemType(item) === 'collection') {
             return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
@@ -163,17 +163,21 @@ export const L0Menu = ({
           }
         })}
       </Tabs.Tablist>
-      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] plb-2'>
+      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
           .map((item) => (
             <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
           ))}
       </div>
-      <span role='separator' className='bs-px is-4 bg-separator place-self-center' />
       <div role='none' className='grid p-2 app-no-drag'>
         <NotchStart />
       </div>
+      <div
+        role='none'
+        className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
+        style={{ background: 'linear-gradient(to bottom, var(--dx-base) 0%, var(--dx-base) 70%, transparent 100%)' }}
+      />
     </div>
   );
 };
