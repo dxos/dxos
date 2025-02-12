@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { isValidMove, isEqualLocation, isLocation, isPiece, type Location } from './types';
+import { isValidMove, isLocation, isPiece, type Location } from './types';
 import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
@@ -33,14 +33,11 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
       element: el,
       getData: () => ({ location }),
       canDrop: ({ source }) => {
-        if (!isLocation(source.data.location)) {
-          return false;
-        }
-
-        return !isEqualLocation(source.data.location, location);
+        log('canDrop', { date: Date.now(), source: source.data });
+        return true;
       },
       onDragEnter: ({ source }) => {
-        log.info('onDragEnter', { source: source.data });
+        log('onDragEnter', { date: Date.now(), source: source.data });
         if (!isLocation(source.data.location) || !isPiece(source.data.pieceType)) {
           return;
         }
@@ -66,11 +63,7 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
         state === 'validMove' && 'border border-primary-500',
       )}
     >
-      {label && <div className={mx('absolute top-1 left-1 text-xs text-neutral-500')}>{label}</div>}
+      {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}
     </div>
   );
-};
-
-export const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
-  return container.querySelector(`[data-location="${location.join(',')}"]`);
 };

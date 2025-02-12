@@ -2,26 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef, useMemo, Fragment } from 'react';
+import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import { invariant } from '@dxos/invariant';
 import { type ClassNameValue } from '@dxos/react-ui';
 
-import { type PieceRecord, type Location, Square, getSquareLocation, Piece, isEqualLocation } from '../Board';
-import { getRelativeBounds, type DOMRectBounds } from '../Board/util';
+import { type ChessPiece, ChessPieces, locationToPos, getSquareColor, mapPieces } from './chess';
+import {
+  type DOMRectBounds,
+  type Location,
+  Piece,
+  type PieceRecord,
+  type PieceRecordMap,
+  Square,
+  getRelativeBounds,
+  locationToString,
+} from '../Board';
 
 export type ChessboardProps = PropsWithChildren<{
   rows?: number;
   cols?: number;
-  pieces?: PieceRecord[];
+  pieces?: PieceRecordMap;
   showLabels?: boolean;
 }>;
 
 /**
  * Chessboard layout.
  */
-export const Chessboard = ({ rows = 8, cols = 8, pieces, showLabels = false }: ChessboardProps) => {
+export const Chessboard = ({ rows = 8, cols = 8, pieces: _pieces, showLabels = false }: ChessboardProps) => {
+  console.log('Chessboard');
+
   const { ref: containerRef, width, height } = useResizeObserver();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -32,23 +43,21 @@ export const Chessboard = ({ rows = 8, cols = 8, pieces, showLabels = false }: C
   }, [rows, cols]);
 
   // Use browser layout engine to position squares.
-  const layout = useMemo(
-    () =>
-      locations.map((location) => (
+  const layout = useMemo(() => {
+    return locations.map((location) => {
+      return (
         <div
-          key={location.join(',')}
+          key={locationToString(location)}
           {...{
-            ['data-location' as const]: location.join(','),
+            ['data-location' as const]: locationToString(location),
           }}
         />
-      )),
-    [locations],
-  );
+      );
+    });
+  }, [locations]);
 
-  // Calculate the bounds of each square.
-  const squares = useMemo<
-    { location: Location; bounds: DOMRectBounds; className: ClassNameValue; piece?: PieceRecord }[]
-  >(() => {
+  // Update squares when resized.
+  const squares = useMemo<{ location: Location; bounds: DOMRectBounds; classNames: ClassNameValue }[]>(() => {
     if (!ref.current) {
       return [];
     }
@@ -57,10 +66,29 @@ export const Chessboard = ({ rows = 8, cols = 8, pieces, showLabels = false }: C
       invariant(ref.current);
       const square = getSquareLocation(ref.current, location)!;
       const bounds = getRelativeBounds(ref.current, square);
-      const piece = pieces?.find((p) => isEqualLocation(p.location, location));
-      return { location, bounds, className: getColor(location), piece };
+      return { location, bounds, classNames: getSquareColor(location) };
     });
-  }, [pieces, width, height]);
+  }, [locations, width, height]);
+
+  const [pieces, setPieces] = useState<PieceRecordMap>({});
+  useEffect(() => {
+    setPieces(mapPieces(pieces, _pieces ?? {}));
+  }, [_pieces]);
+
+  // Get the bounds of each square and piece.
+  const positions = useMemo<{ bounds: DOMRectBounds; piece: PieceRecord }[]>(() => {
+    if (!ref.current) {
+      return [];
+    }
+
+    return Object.values(pieces).map((piece) => {
+      invariant(ref.current);
+      const square = getSquareLocation(ref.current, piece.location);
+      invariant(square);
+      const bounds = getRelativeBounds(ref.current, square);
+      return { bounds, piece };
+    });
+  }, [squares, pieces]);
 
   return (
     <div ref={containerRef} className='relative'>
@@ -68,25 +96,32 @@ export const Chessboard = ({ rows = 8, cols = 8, pieces, showLabels = false }: C
         {layout}
       </div>
       <div>
-        {squares.map(({ location, bounds, className, piece }) => (
-          <Fragment key={location.join(',')}>
-            <Square
-              location={location}
-              label={showLabels ? locationToPos(location) : undefined}
-              bounds={bounds}
-              classNames={[className]}
-            />
-            {piece && (
-              <Piece
-                bounds={bounds}
-                location={location}
-                pieceType={piece.type}
-                Component={ChessPieces[piece.type as ChessPiece]}
-              />
-            )}
-          </Fragment>
+        {squares.map(({ location, bounds, classNames }) => (
+          <Square
+            key={locationToString(location)}
+            location={location}
+            label={showLabels ? locationToPos(location) : undefined}
+            bounds={bounds}
+            classNames={classNames}
+          />
+        ))}
+      </div>
+      <div>
+        {positions.map(({ bounds, piece }) => (
+          <Piece
+            key={piece.id}
+            bounds={bounds}
+            location={piece.location}
+            pieceType={piece.type}
+            label={piece.id}
+            Component={ChessPieces[piece.type as ChessPiece]}
+          />
         ))}
       </div>
     </div>
   );
+};
+
+const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
+  return container.querySelector(`[data-location="${locationToString(location)}"]`);
 };

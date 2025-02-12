@@ -2,14 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+export type Side = 'black' | 'white';
+
 export type Location = [number, number];
 
 export type PieceType = string;
 
 export type PieceRecord<T extends PieceType = PieceType> = {
-  location: Location;
+  id: string;
   type: T;
+  location: Location;
 };
+
+/**
+ * Map of pieces by location.
+ */
+export type PieceRecordMap<T extends PieceType = PieceType> = Record<string, PieceRecord<T>>;
+
+export type Move = {
+  source: Location;
+  target: Location;
+  piece: PieceType;
+  promotion?: PieceType;
+};
+
+export const locationToString = (location: Location): string => location.join(',');
+export const stringToLocation = (str: string): Location => str.split(',').map(Number) as Location;
 
 export const isPiece = (piece: unknown): piece is PieceType => typeof piece === 'string';
 

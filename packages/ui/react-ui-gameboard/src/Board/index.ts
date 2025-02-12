@@ -3,6 +3,7 @@
 //
 
 export * from './types';
+export * from './util';
 
 export * from './Board';
 export * from './Square';

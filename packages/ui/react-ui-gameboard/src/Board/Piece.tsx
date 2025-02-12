@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { useBoardContext } from './context';
 import { type Location } from './types';
 import { type DOMRectBounds } from './util';
 
@@ -21,13 +22,15 @@ export type PieceProps = ThemedClassName<{
   location: Location;
   pieceType: string;
   bounds: DOMRectBounds;
+  label?: string;
   Component: FC<SVGProps<SVGSVGElement>>;
 }>;
 
-export const Piece = ({ classNames, location, pieceType, bounds, Component }: PieceProps) => {
+export const Piece = ({ classNames, location, pieceType, bounds, label, Component }: PieceProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState<boolean>(false);
   const [preview, setPreview] = useState<HTMLElement>();
+  const [dragging, setDragging] = useState(false);
+  const { dragging: isDragging } = useBoardContext();
 
   useEffect(() => {
     const el = ref.current;
@@ -65,15 +68,21 @@ export const Piece = ({ classNames, location, pieceType, bounds, Component }: Pi
     <>
       <div
         ref={ref}
-        className={mx('absolute flex justify-center items-center aspect-square', classNames, dragging && 'opacity-0')}
         style={bounds}
+        className={mx(
+          'absolute flex justify-center items-center transition-[top,left] duration-500',
+          classNames,
+          dragging && 'opacity-20', // Must not unmount component while dragging.
+          isDragging && 'pointer-events-none', // Don't block the square's drop target.
+        )}
       >
         <Component className={mx('w-full h-full')} />
+        {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}
       </div>
 
       {preview &&
         createPortal(
-          <div className={mx('absolute flex justify-center items-center aspect-square', classNames)}>
+          <div className={mx('absolute flex justify-center items-center', classNames)}>
             <Component className={mx('w-full h-full')} />
           </div>,
           preview,

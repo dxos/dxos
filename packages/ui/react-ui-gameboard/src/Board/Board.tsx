@@ -7,46 +7,56 @@ import React, { forwardRef, type PropsWithChildren, useEffect, useState } from '
 
 import { log } from '@dxos/log';
 
-import { type PieceRecord, isLocation, isEqualLocation, isValidMove, isPiece } from './types';
+import { BoardContext } from './context';
+import { isLocation, isPiece, type Side, type Move, type PieceRecordMap } from './types';
 import { Chessboard } from '../Chessboard';
 
 export type BoardProps = {
-  pieces?: PieceRecord[];
-  orientation?: 'white' | 'black'; // TODO(burdon): Flip.
+  orientation?: Side;
+  pieces?: PieceRecordMap;
+  showLabels?: boolean;
+  isValidMove?: (move: Move) => boolean;
+  onDrop?: (move: Move) => boolean;
 };
 
-export const Board = ({ pieces: _pieces }: BoardProps) => {
-  const [pieces, setPieces] = useState<PieceRecord[]>(_pieces ?? []);
+/**
+ * Generic board container.
+ */
+export const Board = ({ onDrop, ...props }: BoardProps) => {
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     return monitorForElements({
+      onDragStart: ({ source }) => {
+        log('onDragStart', { source });
+        setDragging(true);
+      },
       onDrop: ({ source, location }) => {
-        log.info('onDrop', { source, location });
-        const destination = location.current.dropTargets[0];
-        if (!destination) {
+        log('onDrop', { source, location });
+        const target = location.current.dropTargets[0];
+        if (!target) {
           return;
         }
 
-        const destinationLocation = destination.data.location;
+        const targetLocation = target.data.location;
         const sourceLocation = source.data.location;
         const pieceType = source.data.pieceType;
-        if (!isLocation(destinationLocation) || !isLocation(sourceLocation) || !isPiece(pieceType)) {
+        if (!isLocation(targetLocation) || !isLocation(sourceLocation) || !isPiece(pieceType)) {
           return;
         }
 
-        const piece = pieces.find((p) => isEqualLocation(p.location, sourceLocation));
-        const restOfPieces = pieces.filter((p) => p !== piece);
-        if (isValidMove(sourceLocation, destinationLocation, pieceType) && piece !== undefined) {
-          setPieces([{ type: piece.type, location: destinationLocation }, ...restOfPieces]);
-        }
+        onDrop?.({ source: sourceLocation, target: targetLocation, piece: pieceType });
+        setDragging(false);
       },
     });
-  }, [pieces]);
+  }, []);
 
   return (
-    <Container>
-      <Chessboard pieces={pieces} showLabels={false} />
-    </Container>
+    <BoardContext.Provider value={{ dragging }}>
+      <Container>
+        <Chessboard {...props} />
+      </Container>
+    </BoardContext.Provider>
   );
 };
 
@@ -55,17 +65,8 @@ export const Board = ({ pieces: _pieces }: BoardProps) => {
  */
 const Container = forwardRef<HTMLDivElement, PropsWithChildren>(({ children }, forwardedRef) => {
   return (
-    <div ref={forwardedRef} className='relative w-full h-full'>
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <div
-          style={{
-            width: 'min(100vw, 100vh)',
-            height: 'min(100vw, 100vh)',
-          }}
-        >
-          {children}
-        </div>
-      </div>
+    <div ref={forwardedRef} className='flex w-full h-full justify-center overflow-hidden'>
+      <div className='max-w-full max-h-full aspect-square content-center'>{children}</div>
     </div>
   );
 });
