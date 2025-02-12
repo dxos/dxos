@@ -8,12 +8,12 @@ import React, { forwardRef, type PropsWithChildren, useEffect, useState } from '
 import { log } from '@dxos/log';
 
 import { BoardContext } from './context';
-import { isLocation, isPiece, type Side, type Move, type PieceRecordMap } from './types';
+import { isLocation, isPiece, type Player, type Move, type PieceMap } from './types';
 import { Chessboard } from '../Chessboard';
 
 export type BoardProps = {
-  orientation?: Side;
-  pieces?: PieceRecordMap;
+  orientation?: Player;
+  pieces?: PieceMap;
   showLabels?: boolean;
   debug?: boolean;
   isValidMove?: (move: Move) => boolean;

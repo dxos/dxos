@@ -5,49 +5,49 @@
 import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
-import { invariant } from '@dxos/invariant';
-import { type ClassNameValue } from '@dxos/react-ui';
-
 import { type ChessPiece, ChessPieces, getSquareColor, locationToPos, mapPieces } from './chess';
 import {
   type DOMRectBounds,
   type Location,
-  Piece,
   type PieceRecord,
-  type PieceRecordMap,
+  type PieceMap,
+  type Player,
+  Piece,
   Square,
   getRelativeBounds,
   locationToString,
 } from '../Board';
 
 export type ChessboardProps = PropsWithChildren<{
-  rows?: number;
-  cols?: number;
-  pieces?: PieceRecordMap;
+  orientation?: Player;
+  pieces?: PieceMap;
   showLabels?: boolean;
   debug?: boolean;
+  rows?: number;
+  cols?: number;
 }>;
 
 /**
  * Chessboard layout.
  */
 export const Chessboard = ({
-  rows = 8,
-  cols = 8,
+  orientation,
   pieces: _pieces,
   showLabels = false,
   debug = false,
+  rows = 8,
+  cols = 8,
 }: ChessboardProps) => {
   const { ref: containerRef, width, height } = useResizeObserver();
   const gridRef = useRef<HTMLDivElement>(null);
 
   const locations = useMemo<Location[]>(() => {
-    return Array.from({ length: rows }, (_, i) => rows - 1 - i).flatMap((row) =>
+    return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
       Array.from({ length: cols }).map((_, col) => [row, col] as Location),
     );
-  }, [rows, cols]);
+  }, [orientation, rows, cols]);
 
-  // Use browser layout engine to position squares.
+  // Use DOM grid layout to position squares.
   const layout = useMemo(() => {
     return locations.map((location) => {
       return (
@@ -61,22 +61,23 @@ export const Chessboard = ({
     });
   }, [locations]);
 
-  // Update squares when resized.
-  const squares = useMemo<{ location: Location; bounds: DOMRectBounds; classNames: ClassNameValue }[]>(() => {
-    if (!gridRef.current) {
-      return [];
-    }
-
-    return locations.map((location) => {
-      invariant(gridRef.current);
-      const square = getSquareLocation(gridRef.current, location)!;
-      const bounds = getRelativeBounds(gridRef.current, square);
-      return { location, bounds, classNames: getSquareColor(location) };
-    });
+  // Build map of square locations to bounds.
+  const [grid, setGrid] = useState<Record<string, DOMRectBounds>>({});
+  useEffect(() => {
+    setGrid(
+      locations.reduce(
+        (acc, location) => {
+          const square = getSquareLocation(gridRef.current!, location)!;
+          const bounds = getRelativeBounds(gridRef.current!, square);
+          return { ...acc, [locationToString(location)]: bounds };
+        },
+        {} as Record<string, DOMRectBounds>,
+      ),
+    );
   }, [locations, width, height]);
 
   // TODO(burdon): Detect new game and reset.
-  const [pieces, setPieces] = useState<PieceRecordMap>({});
+  const [pieces, setPieces] = useState<PieceMap>({});
   useEffect(() => {
     setPieces(mapPieces(pieces, _pieces ?? {}));
   }, [_pieces]);
@@ -88,13 +89,10 @@ export const Chessboard = ({
     }
 
     return Object.values(pieces).map((piece) => {
-      invariant(gridRef.current);
-      const square = getSquareLocation(gridRef.current, piece.location);
-      invariant(square);
-      const bounds = getRelativeBounds(gridRef.current, square);
+      const bounds = grid[locationToString(piece.location)];
       return { bounds, piece };
     });
-  }, [squares, pieces]);
+  }, [grid, pieces]);
 
   return (
     <div ref={containerRef} className='relative'>
@@ -102,13 +100,13 @@ export const Chessboard = ({
         {layout}
       </div>
       <div>
-        {squares.map(({ location, bounds, classNames }) => (
+        {locations.map((location) => (
           <Square
             key={locationToString(location)}
             location={location}
             label={showLabels ? locationToPos(location) : undefined}
-            bounds={bounds}
-            classNames={classNames}
+            bounds={grid[locationToString(location)]}
+            classNames={getSquareColor(location)}
           />
         ))}
       </div>
@@ -116,11 +114,11 @@ export const Chessboard = ({
         {positions.map(({ bounds, piece }) => (
           <Piece
             key={piece.id}
-            bounds={bounds}
             location={piece.location}
             pieceType={piece.type}
             label={debug ? piece.id : undefined}
-            transition={false}
+            transition={true}
+            bounds={bounds}
             Component={ChessPieces[piece.type as ChessPiece]}
           />
         ))}

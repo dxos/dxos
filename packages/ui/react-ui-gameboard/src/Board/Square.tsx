@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { isValidMove, isLocation, isPiece, type Location } from './types';
+import { isLocation, isPiece, type Location } from './types';
 import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
@@ -42,11 +42,11 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
           return;
         }
 
-        if (isValidMove(source.data.location, location, source.data.pieceType)) {
-          setState('validMove');
-        } else {
-          setState('invalidMove');
-        }
+        // if (isValidMove(source.data.location, location, source.data.pieceType)) {
+        setState('validMove');
+        // } else {
+        //   setState('invalidMove');
+        // }
       },
       onDragLeave: () => setState('idle'),
       onDrop: () => setState('idle'),

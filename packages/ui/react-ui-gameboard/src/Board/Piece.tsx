@@ -33,6 +33,8 @@ export const Piece = ({ classNames, location, pieceType, bounds, label, transiti
   const [dragging, setDragging] = useState(false);
   const { dragging: isDragging } = useBoardContext();
 
+  // useTrackProps({ classNames, location, pieceType, bounds, label, transition }, 'Piece');
+
   useEffect(() => {
     const el = ref.current;
     invariant(el);
@@ -60,6 +62,8 @@ export const Piece = ({ classNames, location, pieceType, bounds, label, transiti
           nativeSetDragImage,
         });
       },
+      // TODO(burdon): Check size.
+      canDrag: () => true,
       onDragStart: () => setDragging(true),
       onDrop: () => setDragging(false),
     });

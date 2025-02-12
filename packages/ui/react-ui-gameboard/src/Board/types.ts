@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export type Side = 'black' | 'white';
+export type Player = 'black' | 'white';
 
 export type Location = [number, number];
 
@@ -17,7 +17,7 @@ export type PieceRecord<T extends PieceType = PieceType> = {
 /**
  * Map of pieces by location.
  */
-export type PieceRecordMap<T extends PieceType = PieceType> = Record<string, PieceRecord<T>>;
+export type PieceMap<T extends PieceType = PieceType> = Record<string, PieceRecord<T>>;
 
 export type Move = {
   source: Location;
@@ -29,14 +29,11 @@ export type Move = {
 export const locationToString = (location: Location): string => location.join(',');
 export const stringToLocation = (str: string): Location => str.split(',').map(Number) as Location;
 
+// Type guard.
 export const isPiece = (piece: unknown): piece is PieceType => typeof piece === 'string';
 
+// Type guard.
 export const isLocation = (token: unknown): token is Location =>
   Array.isArray(token) && token.length === 2 && token.every((val) => typeof val === 'number');
 
 export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] === l2[0] && l1[1] === l2[1];
-
-// TODO(burdon): Get game state from context (generalize).
-export const isValidMove = (source: Location, target: Location, pieceType: PieceType) => {
-  return true;
-};
