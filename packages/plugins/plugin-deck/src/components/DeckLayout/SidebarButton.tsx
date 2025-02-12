@@ -25,7 +25,7 @@ export const ToggleSidebarButton = ({
       onClick={() =>
         (layoutContext.sidebarState = layoutContext.sidebarState === 'expanded' ? 'collapsed' : 'expanded')
       }
-      classNames={['!pli-2 order-first', classNames]}
+      classNames={['pli-2 order-first', classNames]}
     />
   );
 };
@@ -41,7 +41,7 @@ export const CloseSidebarButton = () => {
       size={4}
       label={t('close navigation sidebar label')}
       onClick={() => (layoutContext.sidebarState = 'collapsed')}
-      classNames='!rounded-none !pli-1 ch-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
+      classNames='rounded-none pli-1 dx-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
     />
   );
 };
@@ -55,7 +55,7 @@ export const ToggleComplementarySidebarButton = () => {
       onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
       variant='ghost'
       label={t('open complementary sidebar label')}
-      classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
+      classNames='pli-2 plb-3 [&>svg]:-scale-x-100'
       icon='ph--sidebar-simple--regular'
       size={4}
     />
@@ -72,7 +72,7 @@ export const CloseComplementarySidebarButton = () => {
       size={4}
       icon='ph--caret-line-right--regular'
       label={t('close complementary sidebar label')}
-      classNames='!rounded-none border-is border-separator ch-focus-ring-inset pie-2 lg:pie-[max(.5rem,env(safe-area-inset-right))]'
+      classNames='rounded-none border-is border-separator dx-focus-ring-inset pie-2 lg:pie-[max(.5rem,env(safe-area-inset-right))]'
       onClick={() => (layoutContext.complementarySidebarOpen = false)}
     />
   );

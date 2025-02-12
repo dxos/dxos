@@ -74,7 +74,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
           {...(rootProps as any)}
           data-type={type}
           className={mx(
-            'group/l0i ch-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
+            'group/l0i dx-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
             l0Breakpoints[item.properties.l0Breakpoint],
           )}
         >
@@ -82,7 +82,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             <div
               role='none'
               className={mx(
-                'absolute -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors',
+                'absolute -z-[1] group-hover/l0i:bg-input dx-focus-ring-group-indicator transition-colors',
                 type === 'tab' || pinned ? 'rounded' : 'rounded-full',
                 pinned ? 'bg-transparent inset-inline-3 inset-block-1' : 'bg-input inset-inline-3 inset-block-2',
               )}

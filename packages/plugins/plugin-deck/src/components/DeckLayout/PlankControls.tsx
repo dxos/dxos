@@ -59,7 +59,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(DECK_PLUGIN);
-    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden !pli-2 !plb-3' : '!pli-2 !plb-3';
+    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden pli-2 plb-3' : 'pli-2 plb-3';
 
     return (
       <ButtonGroup {...props} classNames={['app-no-drag', classNames]} ref={forwardedRef}>
