@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { isLocation, isPiece, type Location } from './types';
+import { isLocation, isPiece, type Move, type Location } from './types';
 import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
@@ -19,9 +19,10 @@ export type SquareProps = ThemedClassName<{
   location: Location;
   bounds: DOMRectBounds;
   label?: string;
+  isValidMove?: (move: Move) => boolean;
 }>;
 
-export const Square = ({ location, bounds, label, classNames }: SquareProps) => {
+export const Square = ({ location, bounds, label, classNames, isValidMove }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<HoveredState>('idle');
 
@@ -42,11 +43,13 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
           return;
         }
 
-        // if (isValidMove(source.data.location, location, source.data.pieceType)) {
-        setState('validMove');
-        // } else {
-        //   setState('invalidMove');
-        // }
+        const sourceLocation = source.data.location;
+        const pieceType = source.data.pieceType;
+        if (isValidMove?.({ source: sourceLocation, target: location, piece: pieceType })) {
+          setState('validMove');
+        } else {
+          setState('invalidMove');
+        }
       },
       onDragLeave: () => setState('idle'),
       onDrop: () => setState('idle'),
@@ -58,9 +61,9 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
       ref={ref}
       style={bounds}
       className={mx(
-        'absolute flex justify-center items-center select-none',
+        'absolute flex justify-center items-center border-2 box-border select-none',
         classNames,
-        state === 'validMove' && 'border border-primary-500',
+        state === 'validMove' ? 'border-primary-500' : 'border-transparent',
       )}
     >
       {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}

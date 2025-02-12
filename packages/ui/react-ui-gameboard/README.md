@@ -5,13 +5,13 @@
 - [x] Board.
 - [x] Drag pieces without snapshot.
 - [x] Absolut position of pieces.
-- [ ] Move callback and validation (drop square/drag).
-- [ ] Model.
-- [ ] Animation bug.
-- [ ] Animate when position changed.
+- [x] Move callback and validation (drop square/drag).
+- [x] Animation bug.
 - [x] Flip board.
-- [ ] Styles/light/dark mode.
+- [x] Styles/light/dark mode.
+- [ ] Model (move, validation, reset game, etc.)
 - [ ] Reset board when creating a new game.
+- [ ] Animate only when position changed.
 
 ## Phase 2
 - [ ] Touch UX.

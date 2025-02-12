@@ -69,15 +69,23 @@ export const Piece = ({ classNames, location, pieceType, bounds, label, transiti
     });
   }, [location, pieceType]);
 
+  // Make sure only applied once.
+  // TODO(burdon): Sometimes jumps without animation.
+  useEffect(() => {
+    ref.current!.style.top = bounds.top + 'px';
+    ref.current!.style.left = bounds.left + 'px';
+    ref.current!.style.width = bounds.width + 'px';
+    ref.current!.style.height = bounds.height + 'px';
+  }, [bounds]);
+
   return (
     <>
       <div
         ref={ref}
-        style={bounds}
         className={mx(
           'absolute flex justify-center items-center',
           classNames,
-          transition && 'transition-[top,left] duration-500',
+          transition && 'transition-[top,left] duration-300 ease-in-out',
           dragging && 'opacity-20', // Must not unmount component while dragging.
           isDragging && 'pointer-events-none', // Don't block the square's drop target.
         )}

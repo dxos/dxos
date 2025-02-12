@@ -16,6 +16,7 @@ import {
   Square,
   getRelativeBounds,
   locationToString,
+  type Move,
 } from '../Board';
 
 export type ChessboardProps = PropsWithChildren<{
@@ -25,6 +26,7 @@ export type ChessboardProps = PropsWithChildren<{
   debug?: boolean;
   rows?: number;
   cols?: number;
+  isValidMove?: (move: Move) => boolean;
 }>;
 
 /**
@@ -37,6 +39,7 @@ export const Chessboard = ({
   debug = false,
   rows = 8,
   cols = 8,
+  isValidMove,
 }: ChessboardProps) => {
   const { ref: containerRef, width, height } = useResizeObserver();
   const gridRef = useRef<HTMLDivElement>(null);
@@ -107,6 +110,7 @@ export const Chessboard = ({
             label={showLabels ? locationToPos(location) : undefined}
             bounds={grid[locationToString(location)]}
             classNames={getSquareColor(location)}
+            isValidMove={isValidMove}
           />
         ))}
       </div>

@@ -40,6 +40,7 @@ const Render = ({ fen }: { fen: string }) => {
       <Toolbar.Root>
         <Button onClick={handleReset}>Reset</Button>
         <Button onClick={handleMove}>Move</Button>
+        <div className='grow'></div>
         <Button onClick={() => setOrientation((orientation) => (orientation === 'white' ? 'black' : 'white'))}>
           Toggle
         </Button>
@@ -47,8 +48,8 @@ const Render = ({ fen }: { fen: string }) => {
       <Board
         pieces={pieces}
         orientation={orientation}
-        showLabels={true}
-        debug={true}
+        showLabels={false}
+        debug={false}
         isValidMove={(move) => {
           return makeMove(new Chess(game.fen()), move) !== null;
         }}

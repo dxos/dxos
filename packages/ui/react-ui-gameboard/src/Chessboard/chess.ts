@@ -37,8 +37,19 @@ export const locationToPos = ([row, col]: Location): string => {
   return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 };
 
+const styles = {
+  neutral: {
+    white: 'bg-neutral-200',
+    black: 'bg-neutral-50',
+  },
+  blue: {
+    white: 'bg-[#ccd3db]',
+    black: 'bg-[#6c95b9]',
+  },
+};
+
 export const getSquareColor = ([row, col]: Location) => {
-  return (col * 7 + row) % 2 === 0 ? 'bg-neutral-200' : 'bg-neutral-50';
+  return (col * 7 + row) % 2 === 0 ? styles.blue.white : styles.blue.black;
 };
 
 /**
@@ -48,7 +59,7 @@ export const makeMove = (game: Chess, { source, target }: Move): Chess | null =>
   const s = locationToPos(source);
   const t = locationToPos(target);
   try {
-    log.info('makeMove', { s, t });
+    log('makeMove', { s, t });
     game.move({ from: s, to: t }, { strict: false });
     return game;
   } catch (err) {
