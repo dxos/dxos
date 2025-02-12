@@ -2,19 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionType } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { Markdown, Thread, ReactContext, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
+import { Markdown, Thread, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
 import { meta, SHEET_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -24,7 +16,7 @@ export const SheetPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/compute-graph-registry`,
-      activatesOn: Events.Startup,
+      activatesOn: ClientEvents.ClientReady,
       activate: ComputeGraphRegistry,
     }),
     defineModule({
@@ -34,7 +26,7 @@ export const SheetPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: SheetType.typename,
@@ -49,7 +41,7 @@ export const SheetPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.Schema, [SheetType]),
         // TODO(wittjosiah): Factor out to common package/plugin.
@@ -68,13 +60,8 @@ export const SheetPlugin = () =>
       activate: Thread,
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

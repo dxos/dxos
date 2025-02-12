@@ -7,9 +7,9 @@ import { type Context, createContext, useContext, type Provider, useEffect } fro
 import { raise } from '@dxos/debug';
 import { pick } from '@dxos/util';
 
-import { type AnyIntentResolver, type IntentContext } from './intent-dispatcher';
+import { usePluginManager } from './PluginManagerProvider';
 import { Capabilities } from '../common';
-import { usePluginManager } from '../react';
+import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
 
 const IntentContext: Context<IntentContext | undefined> = createContext<IntentContext | undefined>(undefined);
 

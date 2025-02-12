@@ -52,7 +52,10 @@ export default (context: PluginsContext) => {
         return !!settings?.debug && node.id === 'root';
       },
       connector: () => {
-        const graph = context.requestCapability(Capabilities.AppGraph);
+        const [graph] = context.requestCapabilities(Capabilities.AppGraph);
+        if (!graph) {
+          return;
+        }
 
         return [
           {

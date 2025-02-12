@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { definePlugin, type Plugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -25,17 +25,21 @@ const icons = [
 ];
 
 const DefaultStory = () => {
-  const [plugins] = useState<PluginMeta[]>(
+  const [plugins] = useState<Plugin[]>(
     faker.helpers.multiple(
-      () => ({
-        id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
-        name: `${faker.lorem.sentence(3)}`,
-        description: faker.datatype.boolean() ? `${faker.lorem.sentences()}` : undefined,
-        tags: faker.datatype.boolean({ probability: 0.6 })
-          ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
-          : undefined,
-        icon: faker.helpers.arrayElement(icons),
-      }),
+      () =>
+        definePlugin(
+          {
+            id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+            name: `${faker.lorem.sentence(3)}`,
+            description: faker.datatype.boolean() ? `${faker.lorem.sentences()}` : undefined,
+            tags: faker.datatype.boolean({ probability: 0.6 })
+              ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
+              : undefined,
+            icon: faker.helpers.arrayElement(icons),
+          },
+          [],
+        ),
       { count: 16 },
     ),
   );

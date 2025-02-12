@@ -31,6 +31,6 @@ export const LoggerPlugin = () =>
     defineModule({
       id: 'dxos.org/test/logger/surfaces',
       activatesOn: Events.Startup,
-      activate: () => Toolbar(),
+      activate: Toolbar,
     }),
   ]);
