@@ -19,7 +19,7 @@ export const NotchStart = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
     <HaloButton
-      size={8}
+      size={12}
       identityKey={identity?.identityKey.toHex()}
       hue={identity?.profile?.data?.hue}
       emoji={identity?.profile?.data?.emoji}

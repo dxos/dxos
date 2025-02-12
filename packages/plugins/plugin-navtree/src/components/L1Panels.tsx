@@ -38,8 +38,8 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-separator pis-4'>
-            <span className='flex-1 truncate'>{toLocalizedString(item.properties.label, t)}</span>
+          <h2 className='flex items-center border-be border-separator pis-4 app-drag'>
+            <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
             <NavTreeItemColumns path={path} item={item} open />
           </h2>
           <div role='none' className='overflow-y-auto'>

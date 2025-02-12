@@ -16,24 +16,24 @@ export type MainStyleProps = Partial<{
 }>;
 
 export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
-  mx('ch-main-sidebar', 'ch-focus-ring-inset-over-all', ...etc);
+  mx('dx-main-sidebar', 'dx-focus-ring-inset-over-all', ...etc);
 
-export const mainPadding = 'ch-main-content-padding';
+export const mainPadding = 'dx-main-content-padding';
 
-export const mainPaddingTransitions = 'ch-main-content-padding-transitions';
+export const mainPaddingTransitions = 'dx-main-content-padding-transitions';
 
 export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce, handlesFocus }, ...etc) =>
   mx(
     mainPadding,
     mainPaddingTransitions,
-    bounce && 'ch-main-bounce-layout',
-    handlesFocus && 'ch-focus-ring-inset-over-all',
+    bounce && 'dx-main-bounce-layout',
+    handlesFocus && 'dx-focus-ring-inset-over-all',
     ...etc,
   );
 
-export const mainIntrinsicSize = 'ch-main-intrinsic-size';
+export const mainIntrinsicSize = 'dx-main-intrinsic-size';
 
-export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('ch-main-overlay', ...etc);
+export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
 export const mainTheme = {
   content: mainContent,

@@ -99,7 +99,7 @@ export const NodePlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag',
           part === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
