@@ -1,5 +1,5 @@
 @layer utilities {
-  .ch-focus-ring, .ch-focus-ring-inset {
+  .dx-focus-ring, .dx-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
@@ -24,17 +24,17 @@
     }
   }
 
-  .ch-focus-ring-group {
+  .dx-focus-ring-group {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
         @apply outline-none;
       }
 
-      &:focus-visible .ch-focus-ring-group-indicator {
+      &:focus-visible .dx-focus-ring-group-indicator {
         @apply ring-2 ring-offset-0 ring-primary-350 ring-offset-white;
 
-        .dark & .ch-focus-ring-group-indicator {
+        .dark & .dx-focus-ring-group-indicator {
           @apply ring-primary-450 ring-offset-black;
         }
 
@@ -49,7 +49,7 @@
     }
   }
 
-  .ch-focus-ring-inset {
+  .dx-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus-visible {
@@ -58,7 +58,7 @@
     }
   }
 
-  .ch-focus-ring-inset-over-all, .ch-focus-ring-main[data-handles-focus="true"] {
+  .dx-focus-ring-inset-over-all, .dx-focus-ring-main[data-handles-focus="true"] {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
@@ -89,7 +89,7 @@
       }
     }
   }
-  .ch-focus-ring-inset-over-all {
+  .dx-focus-ring-inset-over-all {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
@@ -97,7 +97,7 @@
       }
     }
   }
-  .ch-focus-ring-main[data-handles-focus="true"] {
+  .dx-focus-ring-main[data-handles-focus="true"] {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {

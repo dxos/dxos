@@ -1,7 +1,7 @@
-/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
+/* TODO(thure): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
 @layer dx-components {
-  .ch-checkbox--switch,
-  .ch-checkbox {
+  .dx-checkbox--switch,
+  .dx-checkbox {
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
@@ -21,13 +21,13 @@
     }
   }
 
-  .ch-checkbox {
+  .dx-checkbox {
     @apply is-4 bs-4 border-0 overflow-hidden shadow-inner transition-colors bg-unAccent accent-unAccent text-inverse shrink-0 inline-grid place-items-center rounded-sm;
   }
 
-  /* TODO(ZaymonFC): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
+  /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
   /* NOTE: This isn't compatible with the Radix switch. */
-  .ch-checkbox--switch {
+  .dx-checkbox--switch {
     @apply inline-block appearance-none relative shrink-0 bs-5 is-8;
     @apply shadow-inner transition-colors bg-unAccent;
     @apply cursor-pointer rounded-full;

@@ -2,7 +2,7 @@
 
 @layer utilities {
 
-  .ch-main-content-padding {
+  .dx-main-content-padding {
     @apply pis-0 scroll-ps-0 pie-0 scroll-pe-0;
 
     @media (min-width: theme('screens.lg')) {
@@ -19,12 +19,12 @@
     }
   }
 
-  .ch-main-content-padding-transitions {
+  .dx-main-content-padding-transitions {
     transition-property: padding-inline-start, padding-inline-end, scroll-padding-start, scroll-padding-end;
     @apply duration-200 ease-in-out-symmetric;
   }
 
-  .ch-main-intrinsic-size {
+  .dx-main-intrinsic-size {
     @apply is-dvw transition-[inline-size] ease-in-out-symmetric duration-200;
 
     @media (min-width: theme('screens.lg')) {
@@ -49,7 +49,7 @@
     }
   }
 
-  .ch-main-bounce-layout {
+  .dx-main-bounce-layout {
     @apply fixed inset-0 z-0 overflow-auto overscroll-auto
   }
 
@@ -57,7 +57,7 @@
 
 @layer dx-components {
 
-  .ch-main-sidebar {
+  .dx-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;
     @apply duration-200 ease-in-out-symmetric;
     @apply border border-separator rounded-lg;
@@ -124,7 +124,7 @@
     }
   }
 
-  .ch-main-overlay {
+  .dx-main-overlay {
     @apply fixed inset-0 bg-scrim;
     @apply transition-opacity duration-200 ease-in-out-symmetric;
     @apply opacity-0 hidden;
