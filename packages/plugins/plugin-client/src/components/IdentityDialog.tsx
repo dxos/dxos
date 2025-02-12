@@ -21,9 +21,9 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
   const handleDone = useCallback(
     () =>
       dispatch(
-        createIntent(LayoutAction.SetLayout, {
-          element: 'dialog',
-          state: false,
+        createIntent(LayoutAction.UpdateDialog, {
+          part: 'dialog',
+          options: { state: false },
         }),
       ),
     [dispatch],

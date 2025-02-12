@@ -20,7 +20,6 @@ import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
 import {
-  focusRing,
   ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
@@ -31,7 +30,7 @@ import {
 import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
-import { DEFAULT_INDENTATION, paddingIndendation } from './helpers';
+import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 
 type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
@@ -51,6 +50,7 @@ export const isTreeData = (data: unknown): data is TreeData => S.is(TreeDataSche
 export type TreeItemProps<T = any> = {
   item: T;
   path: string[];
+  levelOffset?: number;
   last: boolean;
   draggable?: boolean;
   renderColumns?: FC<{
@@ -74,6 +74,7 @@ export const RawTreeItem = <T = any,>({
   canDrop,
   onOpenChange,
   onSelect,
+  levelOffset = 2,
 }: TreeItemProps<T>) => {
   const { getItems, getProps, isOpen, isCurrent } = useTree();
   const items = getItems(item);
@@ -81,7 +82,7 @@ export const RawTreeItem = <T = any,>({
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);
-  const level = path.length - 2;
+  const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const data = useMemo(() => ({ id, path, item }) satisfies TreeData, [id, path, item]);
@@ -220,13 +221,12 @@ export const RawTreeItem = <T = any,>({
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mt-[2px] aria-[current]:bg-input',
+          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-input',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
           hoverableDescriptionIcons,
           ghostHover,
-          focusRing,
           className,
         )}
         data-itemid={id}
@@ -244,7 +244,7 @@ export const RawTreeItem = <T = any,>({
         <Treegrid.Cell
           indent
           classNames='relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndendation(level)}
+          style={paddingIndentation(level - 1)}
         >
           <div role='none' className='flex items-center'>
             <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />

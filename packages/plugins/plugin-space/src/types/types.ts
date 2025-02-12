@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActiveParts } from '@dxos/app-framework';
 import { AST, S, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -104,7 +103,7 @@ export namespace SpaceAction {
     input: SpaceForm,
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
       space: SpaceSchema,
     }),
   }) {}
@@ -190,7 +189,7 @@ export namespace SpaceAction {
     }),
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
       object: EchoObjectSchema,
     }),
   }) {}

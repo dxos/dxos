@@ -70,12 +70,12 @@ export default defineConfig((env) => ({
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
-          typescript: ['typescript'],
         },
       },
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
+        'socket:process'
       ],
     },
   },

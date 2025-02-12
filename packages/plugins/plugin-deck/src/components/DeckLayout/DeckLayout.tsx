@@ -2,30 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
-import {
-  firstIdInPart,
-  Surface,
-  usePluginManager,
-  type LayoutParts,
-  type Toast as ToastSchema,
-} from '@dxos/app-framework';
+import { Surface, usePluginManager } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  AlertDialog,
-  Button,
-  Dialog as NaturalDialog,
-  Main,
-  Popover,
-  useOnTransition,
-  useTranslation,
-  type MainProps,
-} from '@dxos/react-ui';
+import { AlertDialog, Dialog as NaturalDialog, Main, Popover, useOnTransition, type MainProps } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
-import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
+import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
 import { ComplementarySidebar, type ComplementarySidebarProps } from './ComplementarySidebar';
@@ -33,17 +17,17 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
+import { ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
-import { DECK_PLUGIN } from '../../meta';
-import { type Overscroll } from '../../types';
-import { calculateOverscroll } from '../../util';
-import { useDeckContext } from '../DeckContext';
+import { Topbar } from './Topbar';
+import { getMode, type Overscroll } from '../../types';
+import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
+import { useHoistStatusbar } from '../../util/useHoistStatusbar';
 import { useLayout } from '../LayoutContext';
+import { fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
-  layoutParts: LayoutParts;
-  toasts: ToastSchema[];
   overscroll: Overscroll;
   showHints: boolean;
   onDismissToast: (id: string) => void;
@@ -52,12 +36,12 @@ export type DeckLayoutProps = {
 const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
 
-export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
+export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
   const {
-    layoutMode,
     sidebarOpen,
     complementarySidebarOpen,
+    complementarySidebarPanel,
     dialogOpen,
     dialogContent,
     dialogBlockAlign,
@@ -65,16 +49,19 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     popoverOpen,
     popoverContent,
     popoverAnchorId,
+    fullscreen,
+    solo,
+    deck,
+    plankSizing,
+    toasts,
   } = context;
-  const { t } = useTranslation(DECK_PLUGIN);
-  const { plankSizing } = useDeckContext();
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint);
+  const hoistStatusbar = useHoistStatusbar(breakpoint);
   const pluginManager = usePluginManager();
-  const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
-
-  const isSoloModeLoaded = layoutMode === 'solo' && Boolean(layoutParts.solo?.[0]);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
@@ -83,7 +70,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
       const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
       return attention.current;
     });
-    const firstId = isSoloModeLoaded ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
+    const firstId = solo ?? deck[0];
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
       //   If the plank is directly focused on first load the focus ring appears.
@@ -109,6 +96,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     }
   }, []);
 
+  const layoutMode = getMode(context);
   useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
@@ -116,21 +104,30 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
    */
   const handleScroll = useCallback(
     (event: UIEvent) => {
-      if (layoutMode === 'deck' && event.currentTarget === event.target) {
+      if (!solo && event.currentTarget === event.target) {
         scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
       }
     },
-    [layoutMode],
+    [solo],
   );
 
-  const isEmpty = (layoutParts.main?.length ?? 0) === 0 && (layoutParts.solo?.length ?? 0) === 0;
+  const isEmpty = !solo && deck.length === 0;
 
   const padding = useMemo(() => {
-    if (layoutMode === 'deck' && overscroll === 'centering') {
-      return calculateOverscroll(layoutParts.main?.length ?? 0);
+    if (!solo && overscroll === 'centering') {
+      return calculateOverscroll(deck.length);
     }
     return {};
-  }, [layoutMode, overscroll, layoutParts.main]);
+  }, [solo, overscroll, deck]);
+
+  const mainPosition = useMemo(
+    () => [
+      'grid !block-start-[env(safe-area-inset-top)]',
+      topbar && '!block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+      hoistStatusbar && 'lg:block-end-[--statusbar-size]',
+    ],
+    [topbar, hoistStatusbar],
+  );
 
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
@@ -149,37 +146,27 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     >
       <ActiveNode />
 
-      {layoutMode === 'fullscreen' && <Fullscreen id={fullScreenSlug} />}
+      {fullscreen && <Fullscreen id={solo} />}
 
-      {layoutMode !== 'fullscreen' && (
+      {!fullscreen && (
         <Main.Root
           navigationSidebarOpen={context.sidebarOpen}
           onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
           complementarySidebarOpen={context.complementarySidebarOpen}
           onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
         >
-          {/* Notch */}
-          <Main.Notch classNames='z-[21]'>
-            <Surface role='notch-start' />
-            <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
-              <span className='sr-only'>{t('open navigation sidebar label')}</span>
-              <MenuIcon weight='light' className={getSize(5)} />
-            </Button>
-            <Surface role='notch-end' />
-          </Main.Notch>
-
           {/* Left sidebar. */}
           <Sidebar />
 
           {/* Right sidebar. */}
-          <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />
+          <ComplementarySidebar panels={panels} current={complementarySidebarPanel} />
 
           {/* Dialog overlay to dismiss dialogs. */}
           <Main.Overlay />
 
           {/* No content. */}
           {isEmpty && (
-            <Main.Content handlesFocus>
+            <Main.Content bounce handlesFocus classNames={mainPosition}>
               <ContentEmpty />
             </Main.Content>
           )}
@@ -188,7 +175,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           {!isEmpty && (
             <Main.Content
               bounce
-              classNames='grid block-end-[--statusbar-size]'
+              classNames={mainPosition}
               handlesFocus
               style={
                 {
@@ -196,53 +183,50 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                   '--dx-main-complementaryWidth': complementarySidebarOpen
                     ? 'var(--complementary-sidebar-size)'
                     : '0px',
-                  '--dx-main-contentFirstWidth': `${plankSizing[layoutParts.main?.[0]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-                  '--dx-main-contentLastWidth': `${plankSizing[layoutParts.main?.[(layoutParts.main?.length ?? 1) - 1]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                  '--dx-main-contentFirstWidth': `${plankSizing[deck[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                  '--dx-main-contentLastWidth': `${plankSizing[deck[(deck.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
                 } as MainProps['style']
               }
             >
               <div
                 role='none'
-                className={!isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
-                {...(isSoloModeLoaded && { inert: '' })}
+                className={!solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+                {...(solo && { inert: '' })}
               >
+                {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
                 <Stack
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   onScroll={handleScroll}
-                  itemsCount={2 * (layoutParts.main?.length ?? 0) - 1}
+                  itemsCount={2 * (deck.length ?? 0) - 1}
                   style={padding}
                   ref={deckRef}
                 >
-                  {layoutParts.main?.map((layoutEntry, index) => (
-                    <Fragment key={layoutEntry.id}>
+                  {deck.map((entryId, index) => (
+                    <Fragment key={entryId}>
                       <PlankSeparator index={index} />
-                      <Plank
-                        entry={layoutEntry}
-                        layoutParts={layoutParts}
-                        part='main'
-                        layoutMode={layoutMode}
-                        order={index * 2 + 1}
-                      />
+                      <Plank id={entryId} part='deck' order={index * 2 + 1} deck={deck} layoutMode={layoutMode} />
                     </Fragment>
                   ))}
                 </Stack>
               </div>
               <div
                 role='none'
-                className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
-                {...(!isSoloModeLoaded && { inert: '' })}
+                className={solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+                {...(!solo && { inert: '' })}
               >
+                {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
-                  <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
+                  <Plank id={solo} part='solo' layoutMode={layoutMode} />
                 </StackContext.Provider>
               </div>
             </Main.Content>
           )}
 
-          {/* Footer status. */}
-          <StatusBar showHints={showHints} />
+          {/* Status bar. */}
+          {topbar && <Topbar />}
+          {hoistStatusbar && <StatusBar showHints={showHints} />}
         </Main.Root>
       )}
 

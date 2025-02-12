@@ -25,7 +25,7 @@ import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
-import { Toolbar } from '../Toolbar';
+import { TableToolbar } from '../TableToolbar';
 import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
 // NOTE(ZaymonFC): We rely on this seed being 0 in the smoke tests.
@@ -130,6 +130,16 @@ const DefaultStory = () => {
     [table, model],
   );
 
+  const onTypenameChanged = useCallback(
+    (typename: string) => {
+      if (table?.view?.target) {
+        schema?.updateTypename(typename);
+        table.view.target.query.type = typename;
+      }
+    },
+    [table?.view?.target, schema],
+  );
+
   if (!schema || !table) {
     return <div />;
   }
@@ -137,11 +147,7 @@ const DefaultStory = () => {
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
-        <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
-          <Toolbar.Editing />
-          <Toolbar.Separator />
-          <Toolbar.Actions viewDirty={model?.isViewDirty} />
-        </Toolbar.Root>
+        <TableToolbar classNames='border-b border-separator' onAction={handleAction} />
         <Table.Root>
           <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
         </Table.Root>
@@ -152,6 +158,7 @@ const DefaultStory = () => {
             registry={space?.db.schemaRegistry}
             schema={schema}
             view={table.view.target!}
+            onTypenameChanged={onTypenameChanged}
             onDelete={handleDeleteColumn}
           />
         )}

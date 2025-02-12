@@ -38,13 +38,12 @@ test.describe('Basic tests', () => {
   });
 
   test('create document', async () => {
-    // NOTE: Document is automatically created when space is created.
     await host.createSpace();
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await expect(host.getObjectLinks()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
 

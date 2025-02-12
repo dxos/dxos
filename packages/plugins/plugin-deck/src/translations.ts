@@ -10,7 +10,9 @@ export default [
       [DECK_PLUGIN]: {
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar',
+        'close navigation sidebar label': 'Minimize navigation sidebar',
         'open complementary sidebar label': 'Open sidebar',
+        'close complementary sidebar label': 'Minimize sidebar',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':

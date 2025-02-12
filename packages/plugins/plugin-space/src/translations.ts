@@ -105,6 +105,7 @@ export default [
         'offline persisted label': 'Saved to disk (offline)',
         'remote synced label': 'Synced with peers',
         'open settings panel label': 'Show Settings',
+        'settings panel label': 'Settings',
         'open space settings label': 'Space Settings',
         'members tab label': 'Members',
         'settings tab label': 'Settings',

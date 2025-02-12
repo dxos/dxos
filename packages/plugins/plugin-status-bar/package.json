@@ -30,9 +30,9 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@effect/schema": "^0.75.5",
-    "@fluentui/react-tabster": "^9.19.0",
+    "@fluentui/react-tabster": "9.23.3",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-slot": "^1.0.1",
+    "@radix-ui/react-slot": "1.1.2",
     "effect": "^3.12.1",
     "react-resize-detector": "^11.0.1"
   },

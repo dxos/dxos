@@ -13,7 +13,8 @@ export type DialogStyleProps = {
   elevation?: Elevation;
 };
 
-const dialogLayoutFragment = 'overflow-auto grid place-items-center sm:p-2 md:p-4 lg:p-8';
+const dialogLayoutFragment =
+  'overflow-auto grid place-items-center pbs-[env(safe-area-inset-top)] sm:p-[calc(env(safe-area-inset-top)+.5rem)] md:p-[calc(env(safe-area-inset-top)+1rem)] lg:p-[calc(env(safe-area-inset-top)+2rem)] data-[block-align=start]:justify-center data-[block-align=start]:items-start data-[block-align=center]:place-content-center';
 
 export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('fixed z-50 inset-inline-0 block-start-0 bs-[100dvh] bg-scrim', dialogLayoutFragment, ...etc);

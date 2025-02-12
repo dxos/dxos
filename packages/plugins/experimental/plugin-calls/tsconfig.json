@@ -23,6 +23,12 @@
   ],
   "references": [
     {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/display-name"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {

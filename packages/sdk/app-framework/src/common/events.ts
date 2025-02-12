@@ -59,5 +59,4 @@ export namespace Events {
    */
   export const createStateEvent = (specifier: string) => defineEvent('dxos.org/app-framework/event/state', specifier);
   export const LayoutReady = createStateEvent(Capabilities.Layout.identifier);
-  export const LocationReady = createStateEvent(Capabilities.Location.identifier);
 }

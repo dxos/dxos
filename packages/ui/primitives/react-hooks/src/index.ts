@@ -15,4 +15,5 @@ export * from './useIsFocused';
 export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
+export * from './useResize';
 export * from './useTransitions';

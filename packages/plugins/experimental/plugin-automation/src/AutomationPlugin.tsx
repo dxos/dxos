@@ -45,12 +45,12 @@ export const AutomationPlugin = () =>
       activate: () => [
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'automation',
-          label: ['open automation panel label', { ns: AUTOMATION_PLUGIN }],
+          label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],
           icon: 'ph--magic-wand--regular',
         }),
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'assistant',
-          label: ['open assistant panel label', { ns: AUTOMATION_PLUGIN }],
+          label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
           icon: 'ph--atom--regular',
         }),
       ],

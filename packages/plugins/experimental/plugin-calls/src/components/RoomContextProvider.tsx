@@ -25,18 +25,15 @@ interface RoomData {
 }
 
 interface RoomProps extends RoomData {
-  username: string;
   roomId: PublicKey;
   children: ReactNode;
 }
 
 export const RoomContextProvider = ({
-  username,
   roomId,
   iceServers,
   children,
 }: {
-  username: string;
   roomId: PublicKey;
   iceServers: RTCIceServer[];
   children: ReactNode;
@@ -59,14 +56,13 @@ export const RoomContextProvider = ({
   }
 
   return (
-    <Room roomId={roomId!} {...roomData} username={username}>
+    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30}>
       {children}
     </Room>
   );
 };
 
 const Room = ({
-  username,
   roomId,
   iceServers,
   maxWebcamBitrate,
@@ -78,7 +74,7 @@ const Room = ({
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
   const userMedia = useUserMedia();
-  const room = useRoom({ roomId, username });
+  const room = useRoom({ roomId });
   const { peer, iceConnectionState } = usePeerConnection({
     // apiExtraParams,
     iceServers,

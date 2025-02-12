@@ -14,7 +14,7 @@ import { PresenterAction } from '../types';
 
 const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {
   const layout = useCapability(Capabilities.Layout);
-  const fullscreen = layout.layoutMode === 'fullscreen';
+  const fullscreen = layout.mode === 'fullscreen';
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (

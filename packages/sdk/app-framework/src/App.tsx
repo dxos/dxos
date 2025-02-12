@@ -3,8 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React from 'react';
-import { type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
@@ -16,7 +15,8 @@ import { ErrorBoundary, PluginManagerProvider } from './react';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
-export type HostPluginParams = {
+export type CreateAppOptions = {
+  pluginManager?: PluginManager;
   pluginLoader?: PluginManagerOptions['pluginLoader'];
   plugins?: Plugin[];
   core?: string[];
@@ -51,14 +51,15 @@ export type HostPluginParams = {
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  */
 export const createApp = ({
+  pluginManager,
   pluginLoader: _pluginLoader,
   plugins = [],
-  core = [],
+  core = plugins.map(({ meta }) => meta.id),
   defaults = [],
   placeholder = null,
   fallback = DefaultFallback,
   cacheEnabled = false,
-}: HostPluginParams) => {
+}: CreateAppOptions) => {
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader =
     _pluginLoader ??
@@ -71,7 +72,7 @@ export const createApp = ({
   const state = create({ ready: false, error: null });
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
   const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
-  const manager = new PluginManager({ pluginLoader, plugins, core, enabled });
+  const manager = pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {
     if (event === Events.Startup.id) {
@@ -104,7 +105,7 @@ export const createApp = ({
   );
 };
 
-type AppProps = Required<Pick<HostPluginParams, 'placeholder'>> & {
+type AppProps = Required<Pick<CreateAppOptions, 'placeholder'>> & {
   manager: PluginManager;
   state: { ready: boolean; error: unknown };
 };
@@ -147,6 +148,10 @@ const DefaultFallback = ({ error }: { error: Error }) => {
 };
 
 const composeContexts = (contexts: Capabilities.ReactContext[]) => {
+  if (contexts.length === 0) {
+    return ({ children }: PropsWithChildren) => <>{children}</>;
+  }
+
   return topologicalSort(contexts)
     .map(({ context }) => context)
     .reduce((Acc, Next) => ({ children }) => (

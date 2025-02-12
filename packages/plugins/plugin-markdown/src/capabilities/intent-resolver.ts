@@ -11,17 +11,23 @@ import { DocumentType, MarkdownAction } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
-    createResolver(MarkdownAction.Create, ({ name, content }) => {
-      const doc = create(DocumentType, {
-        name,
-        content: makeRef(create(TextType, { content: content ?? '' })),
-        threads: [],
-      });
+    createResolver({
+      intent: MarkdownAction.Create,
+      resolve: ({ name, content }) => {
+        const doc = create(DocumentType, {
+          name,
+          content: makeRef(create(TextType, { content: content ?? '' })),
+          threads: [],
+        });
 
-      return { data: { object: doc } };
+        return { data: { object: doc } };
+      },
     }),
-    createResolver(MarkdownAction.SetViewMode, ({ id, viewMode }) => {
-      const { state } = context.requestCapability(MarkdownCapabilities.State);
-      state.viewMode[id] = viewMode;
+    createResolver({
+      intent: MarkdownAction.SetViewMode,
+      resolve: ({ id, viewMode }) => {
+        const { state } = context.requestCapability(MarkdownCapabilities.State);
+        state.viewMode[id] = viewMode;
+      },
     }),
   ]);

@@ -35,6 +35,7 @@ export type ViewEditorProps = ThemedClassName<{
   registry?: SchemaRegistry;
   readonly?: boolean;
   showHeading?: boolean;
+  onTypenameChanged: (typename: string) => void;
   onDelete: (fieldId: string) => void;
 }>;
 
@@ -48,6 +49,7 @@ export const ViewEditor = ({
   registry,
   readonly,
   showHeading = false,
+  onTypenameChanged,
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
@@ -67,12 +69,15 @@ export const ViewEditor = ({
   const handleViewUpdate = useCallback(
     ({ name, typename }: ViewMetaType) => {
       requestAnimationFrame(() => {
-        view.name = name;
-        view.query.type = typename;
-        schema.updateTypename(typename);
+        if (view.name !== name) {
+          view.name = name;
+        }
+        if (view.query.type !== typename) {
+          onTypenameChanged(typename);
+        }
       });
     },
-    [view, schema],
+    [view, schema, onTypenameChanged],
   );
 
   const handleSelect = useCallback((field: FieldType) => {
