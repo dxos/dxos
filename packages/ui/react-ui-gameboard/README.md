@@ -5,9 +5,10 @@
 - [x] Board.
 - [x] Drag pieces without snapshot.
 - [x] Absolut position of pieces.
-- [ ] Move callback and validation.
-- [ ] Animation.
-- [ ] Drop indicators.
+- [ ] Move callback and validation (drop square).
+- [ ] Model.
+- [ ] Animation bug.
+- [ ] Animate when position changed.
 - [ ] Flip board.
 - [ ] Styles/light/dark mode.
 

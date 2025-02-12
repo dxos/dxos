@@ -15,6 +15,7 @@ export type BoardProps = {
   orientation?: Side;
   pieces?: PieceRecordMap;
   showLabels?: boolean;
+  debug?: boolean;
   isValidMove?: (move: Move) => boolean;
   onDrop?: (move: Move) => boolean;
 };

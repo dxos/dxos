@@ -8,7 +8,7 @@ import useResizeObserver from 'use-resize-observer';
 import { invariant } from '@dxos/invariant';
 import { type ClassNameValue } from '@dxos/react-ui';
 
-import { type ChessPiece, ChessPieces, locationToPos, getSquareColor, mapPieces } from './chess';
+import { type ChessPiece, ChessPieces, getSquareColor, locationToPos, mapPieces } from './chess';
 import {
   type DOMRectBounds,
   type Location,
@@ -25,16 +25,21 @@ export type ChessboardProps = PropsWithChildren<{
   cols?: number;
   pieces?: PieceRecordMap;
   showLabels?: boolean;
+  debug?: boolean;
 }>;
 
 /**
  * Chessboard layout.
  */
-export const Chessboard = ({ rows = 8, cols = 8, pieces: _pieces, showLabels = false }: ChessboardProps) => {
-  console.log('Chessboard');
-
+export const Chessboard = ({
+  rows = 8,
+  cols = 8,
+  pieces: _pieces,
+  showLabels = false,
+  debug = false,
+}: ChessboardProps) => {
   const { ref: containerRef, width, height } = useResizeObserver();
-  const ref = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const locations = useMemo<Location[]>(() => {
     return Array.from({ length: rows }, (_, i) => rows - 1 - i).flatMap((row) =>
@@ -58,18 +63,19 @@ export const Chessboard = ({ rows = 8, cols = 8, pieces: _pieces, showLabels = f
 
   // Update squares when resized.
   const squares = useMemo<{ location: Location; bounds: DOMRectBounds; classNames: ClassNameValue }[]>(() => {
-    if (!ref.current) {
+    if (!gridRef.current) {
       return [];
     }
 
     return locations.map((location) => {
-      invariant(ref.current);
-      const square = getSquareLocation(ref.current, location)!;
-      const bounds = getRelativeBounds(ref.current, square);
+      invariant(gridRef.current);
+      const square = getSquareLocation(gridRef.current, location)!;
+      const bounds = getRelativeBounds(gridRef.current, square);
       return { location, bounds, classNames: getSquareColor(location) };
     });
   }, [locations, width, height]);
 
+  // TODO(burdon): Detect new game and reset.
   const [pieces, setPieces] = useState<PieceRecordMap>({});
   useEffect(() => {
     setPieces(mapPieces(pieces, _pieces ?? {}));
@@ -77,22 +83,22 @@ export const Chessboard = ({ rows = 8, cols = 8, pieces: _pieces, showLabels = f
 
   // Get the bounds of each square and piece.
   const positions = useMemo<{ bounds: DOMRectBounds; piece: PieceRecord }[]>(() => {
-    if (!ref.current) {
+    if (!gridRef.current) {
       return [];
     }
 
     return Object.values(pieces).map((piece) => {
-      invariant(ref.current);
-      const square = getSquareLocation(ref.current, piece.location);
+      invariant(gridRef.current);
+      const square = getSquareLocation(gridRef.current, piece.location);
       invariant(square);
-      const bounds = getRelativeBounds(ref.current, square);
+      const bounds = getRelativeBounds(gridRef.current, square);
       return { bounds, piece };
     });
   }, [squares, pieces]);
 
   return (
     <div ref={containerRef} className='relative'>
-      <div ref={ref} className='grid grid-cols-8 grid-rows-8 aspect-square select-none'>
+      <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
         {layout}
       </div>
       <div>
@@ -113,7 +119,8 @@ export const Chessboard = ({ rows = 8, cols = 8, pieces: _pieces, showLabels = f
             bounds={bounds}
             location={piece.location}
             pieceType={piece.type}
-            label={piece.id}
+            label={debug ? piece.id : undefined}
+            transition={false}
             Component={ChessPieces[piece.type as ChessPiece]}
           />
         ))}

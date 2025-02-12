@@ -23,10 +23,11 @@ export type PieceProps = ThemedClassName<{
   pieceType: string;
   bounds: DOMRectBounds;
   label?: string;
+  transition?: boolean;
   Component: FC<SVGProps<SVGSVGElement>>;
 }>;
 
-export const Piece = ({ classNames, location, pieceType, bounds, label, Component }: PieceProps) => {
+export const Piece = ({ classNames, location, pieceType, bounds, label, transition, Component }: PieceProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<HTMLElement>();
   const [dragging, setDragging] = useState(false);
@@ -70,8 +71,9 @@ export const Piece = ({ classNames, location, pieceType, bounds, label, Componen
         ref={ref}
         style={bounds}
         className={mx(
-          'absolute flex justify-center items-center transition-[top,left] duration-500',
+          'absolute flex justify-center items-center',
           classNames,
+          transition && 'transition-[top,left] duration-500',
           dragging && 'opacity-20', // Must not unmount component while dragging.
           isDragging && 'pointer-events-none', // Don't block the square's drop target.
         )}
