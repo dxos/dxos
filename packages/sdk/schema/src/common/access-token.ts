@@ -6,6 +6,14 @@ import { Format, S, TypedObject } from '@dxos/echo-schema';
 
 export const AccessTokenSchema = S.Struct({
   /**
+   * User-provided note about the token.
+   */
+  note: S.String.annotations({
+    title: 'Note',
+    description: 'User-provided note about the token.',
+  }),
+
+  /**
    * The domain name of the service that issued the token.
    * @example `github.com`
    */
@@ -20,14 +28,6 @@ export const AccessTokenSchema = S.Struct({
   token: S.String.annotations({
     title: 'Token',
     description: 'The token provided by the service.',
-  }),
-
-  /**
-   * User-provided note about the token.
-   */
-  note: S.String.annotations({
-    title: 'Note',
-    description: 'User-provided note about the token.',
   }),
 });
 
