@@ -9,7 +9,6 @@ import {
   Capabilities,
   contributes,
   useCapability,
-  useIntentDispatcher,
   LayoutAction,
   createIntent,
 } from '@dxos/app-framework';
@@ -42,7 +41,7 @@ export default () =>
         typeof data.current === 'string',
       component: ({ data }) => {
         const { graph } = useCapability(Capabilities.AppGraph);
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
+        const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
         const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 
         const handleOpenChange = useCallback(

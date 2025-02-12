@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, type FileInfo, LayoutAction, useCapability, Capabilities } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorAction,
@@ -75,7 +75,7 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const toolbarState = useEditorToolbarState({ viewMode });
   const formattingObserver = useFormattingState(toolbarState);
 

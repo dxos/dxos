@@ -5,10 +5,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import {
+  Capabilities,
   createIntent,
   createResolver,
   LayoutAction,
-  useIntentDispatcher,
+  useCapability,
   useIntentResolver,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
@@ -73,7 +74,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
 
 export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   const threads = useMemo(
     () => model.sheet.threads?.filter((thread): thread is NonNullable<typeof thread> => !!thread) ?? [],

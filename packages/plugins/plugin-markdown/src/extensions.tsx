@@ -10,7 +10,8 @@ import {
   LayoutAction,
   type PromiseIntentDispatcher,
   useCapabilities,
-  useIntentDispatcher,
+  useCapability,
+  Capabilities,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
@@ -50,7 +51,7 @@ type ExtensionsOptions = {
 
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({ document, settings, viewMode, editorStateStore }: ExtensionsOptions): Extension[] => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const identity = useIdentity();
   const space = getSpace(document);
 

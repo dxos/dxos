@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { usePluginManager, useCapability, Capabilities } from '@dxos/app-framework';
@@ -57,18 +57,13 @@ const waitForTarget = async (step: Step) => {
   }
 };
 
-export type HelpContextProviderProps = PropsWithChildren<{
+export type WelcomeTourProps = {
   steps: Step[];
   running?: boolean;
   onRunningChanged?: (state: boolean) => any;
-}>;
+};
 
-export const HelpContextProvider = ({
-  children,
-  steps: initialSteps,
-  running: runningProp,
-  onRunningChanged,
-}: HelpContextProviderProps) => {
+export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
   const manager = usePluginManager();
   const layout = useCapability(Capabilities.Layout);
   const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
@@ -170,7 +165,6 @@ export const HelpContextProvider = ({
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}
       />
-      {children}
     </HelpContext.Provider>
   );
 };

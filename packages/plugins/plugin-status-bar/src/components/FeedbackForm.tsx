@@ -5,7 +5,7 @@
 import { PaperPlaneTilt, X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
 import { ObservabilityAction, UserFeedback } from '@dxos/plugin-observability/types';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { useForm } from '@dxos/react-ui-form';
@@ -19,7 +19,7 @@ const initialValues: UserFeedback = { name: '', email: '', message: '' };
 export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const translation = mkTranslation(t);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   const onSave = useCallback(
     (values: UserFeedback) => {

@@ -4,8 +4,8 @@
 
 import React, { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
-import { type Node, useGraph } from '@dxos/plugin-graph';
+import { Capabilities, createIntent, LayoutAction, Surface, useCapability } from '@dxos/app-framework';
+import { type Node } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
@@ -39,12 +39,12 @@ export const NodePlankHeading = memo(
     actions = [],
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
-    const { graph } = useGraph();
+    const { graph } = useCapability(Capabilities.AppGraph);
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
     useEffect(() => {

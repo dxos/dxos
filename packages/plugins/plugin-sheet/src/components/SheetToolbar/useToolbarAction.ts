@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { inRange } from '@dxos/compute';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import type { MenuAction, MenuActionHandler } from '@dxos/react-ui-menu';
@@ -21,7 +21,7 @@ export type ToolbarAction = StyleAction | AlignAction | CommentAction;
 
 export const useToolbarAction = (state: ToolbarState) => {
   const { model, cursorFallbackRange, cursor } = useSheetContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   return useCallback(

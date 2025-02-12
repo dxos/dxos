@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Surface, useIntentDispatcher, createIntent, Capabilities, useCapability } from '@dxos/app-framework';
+import { Surface, createIntent, Capabilities, useCapability } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Main } from '@dxos/react-ui';
 import {
@@ -26,7 +26,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const handleSetRunning = (running: boolean) => {
     void dispatch(createIntent(PresenterAction.TogglePresentation, { object: collection, state: running }));
   };

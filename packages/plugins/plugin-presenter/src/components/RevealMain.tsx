@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { useIntentDispatcher, createIntent, useCapability, Capabilities } from '@dxos/app-framework';
+import { createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { Main } from '@dxos/react-ui';
 import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ import { PresenterAction } from '../types';
 const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {
   const layout = useCapability(Capabilities.Layout);
   const fullscreen = layout.mode === 'fullscreen';
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   return (
     <Main.Content

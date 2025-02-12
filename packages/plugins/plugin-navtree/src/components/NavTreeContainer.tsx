@@ -7,9 +7,8 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher, Surface } from '@dxos/app-framework';
+import { Capabilities, createIntent, LayoutAction, useCapability, Surface } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
-import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
@@ -56,8 +55,8 @@ export const NavTreeContainer = memo(
   }: NavTreeContainerProps) => {
     const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
     const [isLg] = useMediaQuery('lg', { ssr: false });
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
-    const { graph } = useGraph();
+    const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+    const { graph } = useCapability(Capabilities.AppGraph);
 
     const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 

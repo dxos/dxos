@@ -5,7 +5,7 @@
 import { pipe } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, chain, createIntent, LayoutAction, useCapability } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import {
   getSpace,
@@ -40,7 +40,7 @@ export const CreateObjectDialog = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const spaces = useSpaces();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   const handleCreateObject = useCallback(
     async ({

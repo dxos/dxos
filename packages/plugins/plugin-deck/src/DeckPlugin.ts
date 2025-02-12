@@ -12,7 +12,6 @@ import {
   CheckAppScheme,
   DeckState,
   LayoutIntentResolver,
-  ReactContext,
   ReactRoot,
   DeckSettings,
   ReactSurface,
@@ -49,11 +48,6 @@ export const DeckPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

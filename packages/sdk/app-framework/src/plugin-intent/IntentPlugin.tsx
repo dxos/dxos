@@ -2,28 +2,59 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { Effect } from 'effect';
 
-import { IntentProvider } from './IntentContext';
+import { create } from '@dxos/live-object';
+
 import { INTENT_PLUGIN } from './actions';
-import { dispatcherModule } from './intent-dispatcher';
+import { type AnyIntentResolver, type IntentContext, createDispatcher } from './intent-dispatcher';
 import { Capabilities, Events } from '../common';
 import { contributes, defineModule, definePlugin } from '../core';
-import { useCapability } from '../react';
+
+const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
+const defaultPromise = () => Effect.runPromise(defaultEffect());
 
 export const IntentPlugin = () =>
   definePlugin({ id: INTENT_PLUGIN }, [
-    dispatcherModule,
     defineModule({
-      id: `${INTENT_PLUGIN}/module/react-context`,
+      id: `${INTENT_PLUGIN}/module/dispatcher`,
+      // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
+      //   This is fine for now because it's how it worked prior to capabilities api anyways.
+      //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
       activatesOn: Events.Startup,
-      activate: () =>
-        contributes(Capabilities.ReactContext, {
-          id: INTENT_PLUGIN,
-          context: ({ children }) => {
-            const value = useCapability(Capabilities.IntentDispatcher);
-            return <IntentProvider value={value}>{children}</IntentProvider>;
-          },
-        }),
+      activatesAfter: [Events.DispatcherReady],
+      activate: (context) => {
+        const state = create<IntentContext>({
+          dispatch: defaultEffect,
+          dispatchPromise: defaultPromise,
+          undo: defaultEffect,
+          undoPromise: defaultPromise,
+        });
+
+        // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
+        const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
+          context
+            .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
+              return module ? moduleId === module : true;
+            })
+            .flat(),
+        );
+
+        const manager = context.requestCapability(Capabilities.PluginManager);
+        state.dispatch = (intentChain, depth) => {
+          return Effect.gen(function* () {
+            yield* manager._activate(Events.SetupIntents);
+            return yield* dispatch(intentChain, depth);
+          });
+        };
+        state.dispatchPromise = async (intentChain) => {
+          await manager.activate(Events.SetupIntents);
+          return await dispatchPromise(intentChain);
+        };
+        state.undo = undo;
+        state.undoPromise = undoPromise;
+
+        return contributes(Capabilities.IntentDispatcher, state);
+      },
     }),
   ]);

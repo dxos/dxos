@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
 import { type S } from '@dxos/echo-schema';
 import { getSpaceDisplayName } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -28,7 +28,7 @@ type Form = S.Schema.Type<typeof AccessTokenSchema>;
 
 export const TokensContainer = () => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const client = useClient();
   const spaces = useSpaces();
   const [adding, setAdding] = useState(false);

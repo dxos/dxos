@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, LayoutAction, useCapabilities, useCapability } from '@dxos/app-framework';
 import { ThreadCapabilities } from '@dxos/plugin-space';
 import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';
@@ -17,7 +17,7 @@ import { CommentsContainer } from '../components';
 import { ThreadAction } from '../types';
 
 export const ThreadComplementary = ({ subject }: { subject: any }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const identity = useIdentity();
 
   const { state, getViewState } = useCapability(LocalThreadCapabilities.MutableState);

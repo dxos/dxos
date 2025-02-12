@@ -5,9 +5,8 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent, LayoutAction, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, LayoutAction, useCapability, useCapabilities } from '@dxos/app-framework';
 import { create, getType, fullyQualifiedId, isReactiveObject, makeRef } from '@dxos/client/echo';
-import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -33,8 +32,8 @@ type StackMainProps = {
 };
 
 const StackMain = ({ id, collection }: StackMainProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { graph } = useGraph();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
+  const { graph } = useCapability(Capabilities.AppGraph);
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
   const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);

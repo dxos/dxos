@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, useCapability } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
@@ -25,7 +25,7 @@ import { TableAction } from '../types';
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const space = getSpace(table);
 
   const schema = useMemo(

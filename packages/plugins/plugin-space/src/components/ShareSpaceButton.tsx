@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
@@ -12,7 +12,7 @@ import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction } from '../types';
 
 export const ShareSpaceButton = ({ space }: { space: Space }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   return <ShareSpaceButtonImpl onClick={() => dispatch(createIntent(SpaceAction.Share, { space }))} />;
 };

@@ -2,19 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionType } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { Markdown, Thread, ReactContext, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
+import { Markdown, Thread, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
 import { meta, SHEET_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -66,11 +58,6 @@ export const SheetPlugin = () =>
       id: `${meta.id}/module/thread`,
       activatesOn: Events.Startup,
       activate: Thread,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

@@ -4,9 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, LayoutAction, useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { useGraph } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -22,9 +21,9 @@ export type JoinDialogProps = JoinPanelProps & {
 };
 
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const client = useClient();
-  const { graph } = useGraph();
+  const { graph } = useCapability(Capabilities.AppGraph);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {

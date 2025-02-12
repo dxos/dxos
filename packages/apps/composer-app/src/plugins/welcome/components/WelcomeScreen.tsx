@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, LayoutAction, useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -21,7 +21,7 @@ export const WELCOME_SCREEN = 'WelcomeScreen';
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);

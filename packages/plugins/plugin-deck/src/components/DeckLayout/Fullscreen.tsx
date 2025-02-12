@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
-import { useGraph } from '@dxos/plugin-graph';
+import { Capabilities, Surface, useCapability } from '@dxos/app-framework';
 import { fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
@@ -13,7 +12,7 @@ import { SURFACE_PREFIX } from './constants';
 import { useNode } from '../../hooks';
 
 export const Fullscreen = ({ id }: { id?: string }) => {
-  const { graph } = useGraph();
+  const { graph } = useCapability(Capabilities.AppGraph);
   const fullScreenNode = useNode(graph, id);
 
   return (

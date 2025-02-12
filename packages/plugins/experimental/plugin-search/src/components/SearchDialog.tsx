@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { LayoutAction, useIntentDispatcher, createIntent, useCapability, Capabilities } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
@@ -54,7 +54,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
 
   const handleSelect = useCallback(
     async (nodeId: string) => {

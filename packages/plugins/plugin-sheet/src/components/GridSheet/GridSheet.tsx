@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { rangeToA1Notation, type CellRange } from '@dxos/compute';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -72,7 +72,7 @@ export const GridSheet = () => {
   // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useCapability(Capabilities.IntentDispatcher);
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
