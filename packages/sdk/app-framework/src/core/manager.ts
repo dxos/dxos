@@ -370,27 +370,26 @@ export class PluginManager {
       this.activation.emit({ event: key, state: 'activating' });
 
       log('activating modules', { key, modules: modules.map((module) => module.id) });
-      for (const module of modules) {
-        if (
-          isAllOf(module.activatesOn) &&
-          !module.activatesOn.events
-            .filter((event) => eventKey(event) !== key)
-            .every((event) => this._state.eventsFired.includes(eventKey(event)))
-        ) {
-          continue;
-        }
+      const result = yield* Effect.all(
+        modules
+          .filter(
+            (module) =>
+              !(
+                isAllOf(module.activatesOn) &&
+                !module.activatesOn.events
+                  .filter((event) => eventKey(event) !== key)
+                  .every((event) => this._state.eventsFired.includes(eventKey(event)))
+              ),
+          )
+          .map((module) => this._activateModule(module)),
+        {
+          concurrency: 'unbounded',
+        },
+      ).pipe(Effect.either);
 
-        yield* Effect.all(module.activatesBefore?.map((event) => this._activate(event)) ?? []);
-
-        log('activating module', { module: module.id });
-        const result = yield* this._activateModule(module).pipe(Effect.either);
-        if (Either.isLeft(result)) {
-          this.activation.emit({ event: key, state: 'error', error: result.left });
-          yield* Effect.fail(result.left);
-        }
-        log('activated module', { module: module.id });
-
-        yield* Effect.all(module.activatesAfter?.map((event) => this._activate(event)) ?? []);
+      if (Either.isLeft(result)) {
+        this.activation.emit({ event: key, state: 'error', error: result.left });
+        yield* Effect.fail(result.left);
       }
 
       if (!this._state.eventsFired.includes(key)) {
@@ -406,6 +405,11 @@ export class PluginManager {
 
   private _activateModule(module: PluginModule): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
+      yield* Effect.all(module.activatesBefore?.map((event) => this._activate(event)) ?? [], {
+        concurrency: 'unbounded',
+      });
+
+      log('activating module', { module: module.id });
       // TODO(wittjosiah): This is not handling errors thrown if this is synchronous.
       const program = module.activate(this.context);
       const maybeCapabilities = yield* Match.value(program).pipe(
@@ -427,6 +431,11 @@ export class PluginManager {
       });
       this._state.active.push(module.id);
       this._capabilities.set(module.id, capabilities);
+      log('activated module', { module: module.id });
+
+      yield* Effect.all(module.activatesAfter?.map((event) => this._activate(event)) ?? [], {
+        concurrency: 'unbounded',
+      });
     });
   }
 

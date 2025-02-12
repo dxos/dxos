@@ -131,7 +131,11 @@ export default (context: PluginsContext) => {
       id: SPACES,
       filter: (node): node is Node<null> => node.id === SPACES,
       connector: () => {
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const [client] = context.requestCapabilities(ClientCapabilities.Client);
+        if (!client) {
+          return;
+        }
+
         const spaces = toSignal(
           (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
           () => client.spaces.get(),
@@ -179,7 +183,11 @@ export default (context: PluginsContext) => {
           return;
         }
 
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const [client] = context.requestCapabilities(ClientCapabilities.Client);
+        if (!client) {
+          return;
+        }
+
         const spaces = toSignal(
           (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
           () => client.spaces.get(),
@@ -291,7 +299,11 @@ export default (context: PluginsContext) => {
           return;
         }
 
-        const client = context.requestCapability(ClientCapabilities.Client);
+        const [client] = context.requestCapabilities(ClientCapabilities.Client);
+        if (!client) {
+          return;
+        }
+
         const space = client.spaces.get().find((space) => space.id === spaceId);
         if (!space) {
           return;
