@@ -37,12 +37,8 @@ import {
 } from '../util';
 
 export default (context: PluginsContext) => {
-  const resolve = (typename: string) => {
-    const metadata =
-      context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-    // console.log('resolve', { typename, metadata });
-    return metadata;
-  };
+  const resolve = (typename: string) =>
+    context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   const spacesNode = {
     id: SPACES,

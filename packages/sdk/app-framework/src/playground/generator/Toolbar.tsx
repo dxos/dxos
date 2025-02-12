@@ -21,7 +21,7 @@ export const Toolbar = () => {
     await manager.add(id);
   }, [manager]);
 
-  const handleReset = useCallback(() => manager.resetAll(), [manager]);
+  const handleReset = useCallback(() => {}, []);
 
   const count = useCapabilities(Number).reduce((acc, curr) => acc + curr, 0);
 
