@@ -92,10 +92,10 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
         if (props.type !== type) {
-          return { ..._props, ...props, type };
+          return { ...props, ..._props, type };
         }
 
-        return props;
+        return _props as PropertyType;
       });
     },
     [schemas, props.format, props.referenceSchema],
