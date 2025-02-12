@@ -15,7 +15,7 @@ import { PullVideoTrack } from './PullVideoTrack';
 import { Transcription } from './Transcription';
 import { useRoomContext, useBroadcastStatus, useIsSpeaking } from '../../hooks';
 import { Participant } from '../Participant';
-import { CameraButton, MicButton, TranscriptionButton } from '../Video';
+import { CameraButton, MicButton, ScreenshareButton, TranscriptionButton } from '../Video';
 
 // TODO(burdon): Factor out.
 export const useDebugEnabled = () => {
@@ -82,6 +82,18 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
               />
             )}
 
+            {userMedia.screenShareEnabled && (
+              <Participant
+                isScreenShare
+                flipId={identity.id!}
+                user={identity}
+                videoTrack={userMedia.screenShareVideoTrack}
+                pinnedId={pinnedId}
+                setPinnedId={setPinnedId}
+                showDebugInfo={debugEnabled}
+              />
+            )}
+
             {otherUsers.map((user) => {
               return (
                 user.joined && (
@@ -123,11 +135,19 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
         </Flipper>
 
         <Toolbar.Root>
-          <Button variant='destructive' onClick={() => setJoined(false)}>
+          <Button
+            variant='destructive'
+            onClick={() => {
+              userMedia.turnScreenShareOff();
+              userMedia.turnMicOff();
+              setJoined(false);
+            }}
+          >
             <Icon icon={'ph--phone-x--regular'} />
           </Button>
           <div className='grow'></div>
           <TranscriptionButton />
+          <ScreenshareButton />
           <MicButton />
           <CameraButton />
         </Toolbar.Root>

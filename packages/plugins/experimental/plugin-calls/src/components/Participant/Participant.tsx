@@ -35,6 +35,7 @@ export type ParticipantProps = {
   user: UserState;
   audioTrack?: MediaStreamTrack;
   videoTrack?: MediaStreamTrack;
+  screenShareVideoTrack?: MediaStreamTrack;
   isScreenShare?: boolean;
   isSelf?: boolean;
   pinnedId?: string;
@@ -71,7 +72,7 @@ export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
       <div className='flex relative' ref={ref}>
         <Flipped flipId={flipId + pinned}>
           <div className={mx('flex w-full h-full overflow-hidden animate-fadeIn')}>
-            <VideoObject videoTrack={videoTrack} />
+            <VideoObject className={isSelf ? 'scale-x-[-1]' : ''} videoTrack={videoTrack} />
 
             {!isSelf && user.name && (
               <div className='absolute right-0 bottom-0 m-1 p-1 px-2 flex items-center bg-black text-white text-sm'>

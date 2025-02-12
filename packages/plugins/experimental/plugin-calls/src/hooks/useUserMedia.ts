@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { combineLatest, map, type Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 
 import { invariant } from '@dxos/invariant';
 
 import { useStateObservable, useSubscribedState } from './utils';
-import { getUserMediaTrack$ } from '../utils';
+import { getScreenshare$, getUserMediaTrack$ } from '../utils';
 
 export type UserMedia = {
   audioDeviceId: string | undefined;
@@ -22,7 +22,10 @@ export type UserMedia = {
   videoEnabled: boolean;
   videoTrack: MediaStreamTrack;
   videoTrack$: Observable<MediaStreamTrack>;
+
   screenShareEnabled: boolean;
+  screenShareVideoTrack: MediaStreamTrack | undefined;
+  screenShareVideoTrack$: Observable<MediaStreamTrack | undefined>;
 
   turnMicOn: () => void;
   turnMicOff: () => void;
@@ -35,14 +38,14 @@ export type UserMedia = {
 export const useUserMedia = (): UserMedia => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
-  const [screenShareEnabled, setScreenShareEnabled] = useState(false);
 
   const turnMicOn = () => setAudioEnabled(true);
   const turnMicOff = () => setAudioEnabled(false);
   const turnCameraOn = () => setVideoEnabled(true);
   const turnCameraOff = () => setVideoEnabled(false);
-  const turnScreenShareOn = () => setScreenShareEnabled(true);
-  const turnScreenShareOff = () => setScreenShareEnabled(false);
+  const [screenShareEnabled, setScreenShareEnabled] = useState(false);
+  const turnScreenShareOn = useCallback(() => setScreenShareEnabled(true), []);
+  const turnScreenShareOff = useCallback(() => setScreenShareEnabled(false), []);
 
   //
   // Audio
@@ -94,6 +97,29 @@ export const useUserMedia = (): UserMedia => {
   const videoTrack = useSubscribedState(videoTrack$);
   const videoDeviceId = videoTrack?.getSettings().deviceId;
 
+  //
+  // Screenshare
+  //
+
+  const screenShareVideoTrack$ = useMemo(
+    () =>
+      screenShareEnabled
+        ? getScreenshare$({ contentHint: 'text' }).pipe(
+            tap({
+              next: (ms) => {
+                if (ms === undefined) {
+                  setScreenShareEnabled(false);
+                }
+              },
+              finalize: () => setScreenShareEnabled(false),
+            }),
+            map((ms) => ms?.getVideoTracks()[0]),
+          )
+        : of(undefined),
+    [screenShareEnabled],
+  );
+  const screenShareVideoTrack = useSubscribedState(screenShareVideoTrack$);
+
   return {
     audioDeviceId,
     audioEnabled,
@@ -106,7 +132,10 @@ export const useUserMedia = (): UserMedia => {
     videoEnabled,
     videoTrack,
     videoTrack$,
+
     screenShareEnabled,
+    screenShareVideoTrack,
+    screenShareVideoTrack$,
 
     turnMicOn,
     turnMicOff,

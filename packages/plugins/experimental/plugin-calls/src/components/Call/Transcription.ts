@@ -41,8 +41,8 @@ export const Transcription = ({
 }) => {
   const transcription = useRef<TranscriptionHandler | null>(
     new TranscriptionHandler({
-      recordingInterval: 3_000,
-      overlap: 5,
+      recordingInterval: 5_000,
+      overlap: 0,
     }),
   );
 
