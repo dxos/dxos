@@ -45,10 +45,11 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5"
+    "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
     "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
