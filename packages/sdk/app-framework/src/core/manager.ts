@@ -172,7 +172,12 @@ export class PluginManager {
       });
 
       log('pending reset', { events: [...this.pendingReset] });
-      await Effect.runPromise(Effect.all(this.pendingReset.map((event) => this._activate(event))));
+      await Effect.runPromise(
+        Effect.all(
+          this.pendingReset.map((event) => this._activate(event)),
+          { concurrency: 'unbounded' },
+        ),
+      );
 
       return true;
     });
@@ -439,7 +444,10 @@ export class PluginManager {
       }
 
       const modules = plugin.modules;
-      const results = yield* Effect.all(modules.map((module) => this._deactivateModule(module)));
+      const results = yield* Effect.all(
+        modules.map((module) => this._deactivateModule(module)),
+        { concurrency: 'unbounded' },
+      );
       return results.every((result) => result);
     });
   }
@@ -483,7 +491,10 @@ export class PluginManager {
       const key = typeof event === 'string' ? event : eventKey(event);
       log('reset', { key });
       const modules = this._getActiveModulesByEvent(key);
-      const results = yield* Effect.all(modules.map((module) => this._deactivateModule(module)));
+      const results = yield* Effect.all(
+        modules.map((module) => this._deactivateModule(module)),
+        { concurrency: 'unbounded' },
+      );
 
       if (results.every((result) => result)) {
         return yield* this._activate(key);
