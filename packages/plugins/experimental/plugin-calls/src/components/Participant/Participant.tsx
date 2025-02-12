@@ -90,7 +90,6 @@ export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
               </span>
             )}
 
-            {/* TODO(burdon): How is this triggered? */}
             {(user.speaking || user.raisedHand) && (
               <div
                 className={mx('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}

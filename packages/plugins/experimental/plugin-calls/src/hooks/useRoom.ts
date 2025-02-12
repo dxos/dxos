@@ -40,7 +40,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
     if (!stream.current) {
       stream.current = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
       stream.current.subscribe((event) => {
-        log.info('roomState', {
+        log.info('>>> roomState', {
           users: event.peers?.map((peer) => codec.decode(peer.state!)) ?? [],
           meetingId: roomId.toHex(),
         });
@@ -52,7 +52,6 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
           (user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp,
         );
         if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState) {
-          log.info('>>> newTranscriptionState', { newTranscriptionState });
           ai.setTranscription(newTranscriptionState.transcription!);
         }
       });
@@ -67,8 +66,6 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
               id: peerKey,
               name: displayName,
               joined: false,
-              raisedHand: false,
-              speaking: false,
               tracks: {},
               transcription: ai.transcription,
             }),

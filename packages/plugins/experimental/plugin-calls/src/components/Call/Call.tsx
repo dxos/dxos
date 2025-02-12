@@ -13,7 +13,7 @@ import { nonNullable } from '@dxos/util';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
 import { Transcription } from './Transcription';
-import { useRoomContext, useBroadcastStatus } from '../../hooks';
+import { useRoomContext, useBroadcastStatus, useIsSpeaking } from '../../hooks';
 import { Participant } from '../Participant';
 import { CameraButton, MicButton, TranscriptionButton } from '../Video';
 
@@ -56,7 +56,9 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     }
   });
 
-  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai });
+  const speaking = useIsSpeaking(userMedia.audioTrack);
+
+  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking });
   const [pinnedId, setPinnedId] = useState<string>();
   const totalUsers = 1 + otherUsers.length;
 
