@@ -3,7 +3,7 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import { Effect, Either, Match } from 'effect';
+import { Array as A, Effect, Either, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/live-object';
@@ -344,7 +344,15 @@ export class PluginManager {
         this._state.pendingReset.splice(pendingIndex, 1);
       }
 
-      const modules = this._getInactiveModulesByEvent(key);
+      const modules = this._getInactiveModulesByEvent(key).filter((module) => {
+        const allOf = isAllOf(module.activatesOn);
+        if (!allOf) {
+          return true;
+        }
+
+        const events = module.activatesOn.events.filter((event) => eventKey(event) !== key);
+        return events.every((event) => this._state.eventsFired.includes(eventKey(event)));
+      });
       if (modules.length === 0) {
         log('no modules to activate', { key });
         if (!this._state.eventsFired.includes(key)) {
@@ -353,25 +361,29 @@ export class PluginManager {
         return false;
       }
 
+      log('activating modules', { key, modules: modules.map((module) => module.id) });
       this.activation.emit({ event: key, state: 'activating' });
 
-      log('activating modules', { key, modules: modules.map((module) => module.id) });
-      const result = yield* Effect.all(
-        modules
-          .filter(
-            (module) =>
-              !(
-                isAllOf(module.activatesOn) &&
-                !module.activatesOn.events
-                  .filter((event) => eventKey(event) !== key)
-                  .every((event) => this._state.eventsFired.includes(eventKey(event)))
-              ),
-          )
-          .map((module) => this._activateModule(module)),
-        {
-          concurrency: 'unbounded',
-        },
-      ).pipe(Effect.either);
+      // Concurrently triggers loading of lazy capabilities.
+      const getCapabilities = yield* Effect.all(
+        modules.map(({ activate }) =>
+          Effect.tryPromise({
+            try: async () => activate(this.context),
+            catch: (error) => error as Error,
+          }),
+        ),
+        { concurrency: 'unbounded' },
+      );
+
+      const result = yield* pipe(
+        modules,
+        A.zip(getCapabilities),
+        A.map(([module, getCapabilities]) => this._activateModule(module, getCapabilities)),
+        // TODO(wittjosiah): This currently can't be run in parallel.
+        //   Running this with concurrency causes races with `allOf` activation events.
+        Effect.all,
+        Effect.either,
+      );
 
       if (Either.isLeft(result)) {
         this.activation.emit({ event: key, state: 'error', error: result.left });
@@ -389,7 +401,10 @@ export class PluginManager {
     });
   }
 
-  private _activateModule(module: PluginModule): Effect.Effect<void, Error> {
+  private _activateModule(
+    module: PluginModule,
+    getCapabilities: AnyCapability | AnyCapability[] | (() => Promise<AnyCapability | AnyCapability[]>),
+  ): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
       yield* Effect.all(module.activatesBefore?.map((event) => this._activate(event)) ?? [], {
         concurrency: 'unbounded',
@@ -397,9 +412,10 @@ export class PluginManager {
 
       log('activating module', { module: module.id });
       // TODO(wittjosiah): This is not handling errors thrown if this is synchronous.
-      const program = module.activate(this.context);
-      const maybeCapabilities = yield* Match.value(program).pipe(
-        Match.when(Effect.isEffect, (effect) => effect),
+      const maybeCapabilities = typeof getCapabilities === 'function' ? getCapabilities() : getCapabilities;
+      const someCapabilities = yield* Match.value(maybeCapabilities).pipe(
+        // TODO(wittjosiah): Activate with an effect?
+        // Match.when(Effect.isEffect, (effect) => effect),
         Match.when(isPromise, (promise) =>
           Effect.tryPromise({
             try: () => promise,
@@ -408,7 +424,7 @@ export class PluginManager {
         ),
         Match.orElse((program) => Effect.succeed(program)),
       );
-      const capabilities = Match.value(maybeCapabilities).pipe(
+      const capabilities = Match.value(someCapabilities).pipe(
         Match.when(Array.isArray, (array) => array),
         Match.orElse((value) => [value]),
       );

@@ -2,17 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
-
-import { create } from '@dxos/live-object';
-
 import { INTENT_PLUGIN } from './actions';
-import { type AnyIntentResolver, type IntentContext, createDispatcher } from './intent-dispatcher';
-import { Capabilities, Events } from '../common';
-import { contributes, defineModule, definePlugin } from '../core';
-
-const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
-const defaultPromise = () => Effect.runPromise(defaultEffect());
+import { Events } from '../common';
+import { defineModule, definePlugin, lazy } from '../core';
 
 export const IntentPlugin = () =>
   definePlugin({ id: INTENT_PLUGIN }, [
@@ -23,38 +15,6 @@ export const IntentPlugin = () =>
       //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
       activatesOn: Events.Startup,
       activatesAfter: [Events.DispatcherReady],
-      activate: (context) => {
-        const state = create<IntentContext>({
-          dispatch: defaultEffect,
-          dispatchPromise: defaultPromise,
-          undo: defaultEffect,
-          undoPromise: defaultPromise,
-        });
-
-        // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
-        const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
-          context
-            .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
-              return module ? moduleId === module : true;
-            })
-            .flat(),
-        );
-
-        const manager = context.requestCapability(Capabilities.PluginManager);
-        state.dispatch = (intentChain, depth) => {
-          return Effect.gen(function* () {
-            yield* manager._activate(Events.SetupIntents);
-            return yield* dispatch(intentChain, depth);
-          });
-        };
-        state.dispatchPromise = async (intentChain) => {
-          await manager.activate(Events.SetupIntents);
-          return await dispatchPromise(intentChain);
-        };
-        state.undo = undo;
-        state.undoPromise = undoPromise;
-
-        return contributes(Capabilities.IntentDispatcher, state);
-      },
+      activate: lazy(() => import('./intent-dispatcher')),
     }),
   ]);
