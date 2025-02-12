@@ -1,4 +1,4 @@
-@layer base {
+@layer utilities {
   .ch-focus-ring, .ch-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {

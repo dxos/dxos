@@ -55,7 +55,7 @@
 
 }
 
-@layer components {
+@layer dx-components {
 
   .ch-main-sidebar {
     @apply fixed overscroll-contain overflow-x-hidden overflow-y-auto;

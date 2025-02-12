@@ -1,6 +1,5 @@
 /* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
-/* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
-@layer base {
+@layer dx-components {
   .ch-checkbox--switch,
   .ch-checkbox {
     &[aria-checked='true'],
@@ -29,7 +28,7 @@
   /* TODO(ZaymonFC): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
   /* NOTE: This isn't compatible with the Radix switch. */
   .ch-checkbox--switch {
-    @apply inline-block appearance-none relative shrink-0 bs-5 is-8  !bg-none;
+    @apply inline-block appearance-none relative shrink-0 bs-5 is-8;
     @apply shadow-inner transition-colors bg-unAccent;
     @apply cursor-pointer rounded-full;
 
@@ -41,6 +40,7 @@
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
+      background-image: none;
       &::before {
         @apply translate-x-[100%];
       }
