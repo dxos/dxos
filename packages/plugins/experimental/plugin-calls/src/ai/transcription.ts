@@ -25,12 +25,13 @@ type Segment = {
 type RecorderChunk = { data: Blob; timestamp: number };
 
 export class Transcription extends Resource {
-  private document?: ReactiveEchoObject<DocumentType> = undefined;
-  private recorder?: MediaRecorder = undefined;
-  private header?: Uint8Array = undefined;
-  private audioChunks: RecorderChunk[] = [];
-  private lastSegEndTimestamp = 0;
-  private identity?: UserState;
+  private _document?: ReactiveEchoObject<DocumentType> = undefined;
+  private _recorder?: MediaRecorder = undefined;
+  private _header?: Uint8Array = undefined;
+  private _audioChunks: RecorderChunk[] = [];
+  private _lastSegEndTimestamp = 0;
+  private _identity?: UserState;
+
   constructor(
     public readonly config: {
       /**
@@ -48,24 +49,24 @@ export class Transcription extends Resource {
   }
 
   protected override async _close() {
-    this.recorder?.stop();
-    this.recorder = undefined;
+    this._recorder?.stop();
+    this._recorder = undefined;
   }
 
   setAudioTrack(audioTrack: MediaStreamTrack) {
-    this.recorder?.stop();
-    this.recorder = new MediaRecorder(new MediaStream([audioTrack]));
+    this._recorder?.stop();
+    this._recorder = new MediaRecorder(new MediaStream([audioTrack]));
     this._resetHandler();
   }
 
   setDocument(document: ReactiveEchoObject<DocumentType>) {
-    invariant(this.recorder, 'Recorder not set');
-    this.document = document;
+    invariant(this._recorder, 'Recorder not set');
+    this._document = document;
     this._resetHandler();
   }
 
   setIdentity(identity: UserState) {
-    this.identity = identity;
+    this._identity = identity;
     this._resetHandler();
   }
 
@@ -73,35 +74,33 @@ export class Transcription extends Resource {
    * Resets the ondataavailable event handler to the default. Needed to prevent staled references.
    */
   private _resetHandler() {
-    this.recorder && (this.recorder.ondataavailable = (event) => this._ondataavailable(event));
+    this._recorder && (this._recorder.ondataavailable = (event) => this._ondataavailable(event));
   }
 
   startRecorder() {
-    invariant(this.recorder, 'Recorder not set');
-    if (this.recorder.state === 'recording') {
+    invariant(this._recorder, 'Recorder not set');
+    if (this._recorder.state === 'recording') {
       log.verbose('Recorder already recording');
       return;
     }
-    this.recorder.start(this.config.recordingInterval);
+    this._recorder.start(this.config.recordingInterval);
   }
 
   stopRecorder() {
-    invariant(this.recorder, 'Recorder not set');
-    this.recorder.stop();
-    this.audioChunks = [];
-    this.lastSegEndTimestamp = 0;
+    invariant(this._recorder, 'Recorder not set');
+    this._recorder.stop();
   }
 
   @synchronized
   private async _ondataavailable(event: BlobEvent) {
     try {
       await this._saveAudioBlob(event.data);
-      invariant(this.document, 'No document');
-      const chunksToUse = this.audioChunks;
+      invariant(this._document, 'No document');
+      const chunksToUse = this._audioChunks;
       const audio = this._mergeAudioChunks(chunksToUse);
       const segments = await this._fetchTranscription(audio);
       this._updateDocument(segments, chunksToUse);
-      this.audioChunks = chunksToUse.slice(-this.config.overlap);
+      this._audioChunks = chunksToUse.slice(-this.config.overlap);
     } catch (error) {
       log.error('Error in transcription', { error });
     }
@@ -109,21 +108,21 @@ export class Transcription extends Resource {
 
   private async _saveAudioBlob(blob: Blob) {
     const now = Date.now();
-    if (!this.header && blob.size >= 181) {
-      this.header = new Uint8Array((await blob.arrayBuffer()).slice(0, 181));
+    if (!this._header && blob.size >= 181) {
+      this._header = new Uint8Array((await blob.arrayBuffer()).slice(0, 181));
     }
     if (blob.size > 0) {
-      this.audioChunks.push({ data: blob, timestamp: now });
+      this._audioChunks.push({ data: blob, timestamp: now });
     }
   }
 
   private _mergeAudioChunks(chunks: RecorderChunk[]) {
-    return new Blob([this.header!, ...chunks.map(({ data }) => data)]);
+    return new Blob([this._header!, ...chunks.map(({ data }) => data)]);
   }
 
   private async _fetchTranscription(audio: Blob) {
     if (audio.size === 0) {
-      this.audioChunks = [];
+      this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
     }
 
@@ -134,7 +133,7 @@ export class Transcription extends Resource {
     });
 
     if (!response.ok) {
-      this.audioChunks = [];
+      this._audioChunks = [];
       throw new Error('Failed to transcribe');
     }
 
@@ -144,7 +143,7 @@ export class Transcription extends Resource {
       segments: Segment[];
     } = await response.json();
 
-    log.verbose('Transcription response', {
+    log.info('Transcription response', {
       segments,
       string: segments.map((segments) => segments.text).join(' '),
     });
@@ -155,11 +154,16 @@ export class Transcription extends Resource {
   private _updateDocument(segments: Segment[], originalChunks: RecorderChunk[]) {
     invariant(Array.isArray(segments), 'Invalid segments');
 
+    log.info('Updating document', {
+      segments,
+      originalStart: originalChunks.at(0)!.timestamp,
+      lastSegEndTimestamp: this._lastSegEndTimestamp,
+    });
     const segsToUse = segments.filter(
-      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this.lastSegEndTimestamp,
+      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this._lastSegEndTimestamp,
     );
 
-    this.lastSegEndTimestamp = (segsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
+    this._lastSegEndTimestamp = (segsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
     const textToUse = segsToUse?.map((segment) => segment.text).join(' ') + '';
     log.info('>>> textToUse', { textToUse });
     if (textToUse.length === 0) {
@@ -168,9 +172,9 @@ export class Transcription extends Resource {
 
     const time = getTimeStr(originalChunks.at(0)!.timestamp);
     updateText(
-      this.document!.content.target!,
+      this._document!.content.target!,
       ['content'],
-      this.document!.content.target!.content + `\n   _${time} ${this.identity!.name}_\n` + textToUse,
+      this._document!.content.target!.content + `\n   _${time} ${this._identity!.name}_\n` + textToUse,
     );
   }
 }
