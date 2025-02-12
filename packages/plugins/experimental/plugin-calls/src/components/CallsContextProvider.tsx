@@ -3,7 +3,7 @@
 //
 
 import React, { useState, useMemo, type ReactNode, useEffect, type FC, type PropsWithChildren } from 'react';
-import { of } from 'rxjs';
+import { from, of, switchMap } from 'rxjs';
 
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -115,6 +115,15 @@ const Room: FC<RoomProps> = ({
   );
   const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
 
+  const pushedScreenShareTrack$ = useMemo(
+    () =>
+      userMedia.screenShareVideoTrack$.pipe(
+        switchMap((track) => (track ? from(peer.pushTrack(of(track))) : of(undefined))),
+      ),
+    [peer, userMedia.screenShareVideoTrack$],
+  );
+  const pushedScreenShareTrack = useSubscribedState(pushedScreenShareTrack$);
+
   const context: RoomContextType = {
     space,
     joined,
@@ -128,6 +137,7 @@ const Room: FC<RoomProps> = ({
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),
       audio: trackObjectToString(pushedAudioTrack),
+      screenshare: trackObjectToString(pushedScreenShareTrack),
     },
   };
 

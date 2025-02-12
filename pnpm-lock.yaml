@@ -5899,9 +5899,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../../common/codec-protobuf
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug

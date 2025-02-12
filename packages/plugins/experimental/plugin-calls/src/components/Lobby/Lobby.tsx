@@ -23,7 +23,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <VideoObject videoTrack={videoTrack} muted />
+      <VideoObject className='scale-x-[-1]' videoTrack={videoTrack} muted />
 
       <div className='grow' />
       <div className='flex justify-between overflow-hidden'>

@@ -13,9 +13,9 @@ import { nonNullable } from '@dxos/util';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
 import { Transcription } from './Transcription';
-import { useRoomContext, useBroadcastStatus } from '../../hooks';
+import { useRoomContext, useBroadcastStatus, useIsSpeaking } from '../../hooks';
 import { Participant } from '../Participant';
-import { CameraButton, MicButton, TranscriptionButton } from '../Video';
+import { CameraButton, MicButton, ScreenshareButton, TranscriptionButton } from '../Video';
 
 // TODO(burdon): Factor out.
 export const useDebugEnabled = () => {
@@ -56,7 +56,9 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     }
   });
 
-  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai });
+  const speaking = useIsSpeaking(userMedia.audioTrack);
+
+  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking });
   const [pinnedId, setPinnedId] = useState<string>();
   const totalUsers = 1 + otherUsers.length;
 
@@ -74,6 +76,18 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
                 user={identity}
                 videoTrack={userMedia.videoTrack}
                 audioTrack={userMedia.audioTrack}
+                pinnedId={pinnedId}
+                setPinnedId={setPinnedId}
+                showDebugInfo={debugEnabled}
+              />
+            )}
+
+            {userMedia.screenShareEnabled && (
+              <Participant
+                isScreenShare
+                flipId={identity.id!}
+                user={identity}
+                videoTrack={userMedia.screenShareVideoTrack}
                 pinnedId={pinnedId}
                 setPinnedId={setPinnedId}
                 showDebugInfo={debugEnabled}
@@ -121,11 +135,19 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
         </Flipper>
 
         <Toolbar.Root>
-          <Button variant='destructive' onClick={() => setJoined(false)}>
+          <Button
+            variant='destructive'
+            onClick={() => {
+              userMedia.turnScreenShareOff();
+              userMedia.turnMicOff();
+              setJoined(false);
+            }}
+          >
             <Icon icon={'ph--phone-x--regular'} />
           </Button>
           <div className='grow'></div>
           <TranscriptionButton />
+          <ScreenshareButton />
           <MicButton />
           <CameraButton />
         </Toolbar.Root>
