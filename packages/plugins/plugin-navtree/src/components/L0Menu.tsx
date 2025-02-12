@@ -82,8 +82,10 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             <div
               role='none'
               className={mx(
-                'absolute -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors inset-inline-3 inset-block-2',
-                type === 'tab' || pinned ? 'rounded' : 'rounded-full',
+                'absolute -z-[1] group-hover/l0i:bg-input ch-focus-ring-group-indicator transition-colors',
+                type === 'tab' || pinned
+                  ? 'inset-inline-2 inset-block-1 rounded'
+                  : 'rounded-full inset-inline-3 inset-block-2',
                 pinned ? 'bg-transparent' : 'bg-input',
               )}
             />
