@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  createIntent,
-  Capabilities,
-  contributes,
-  Events,
-  defineModule,
-  definePlugin,
-  oneOf,
-} from '@dxos/app-framework';
+import { createIntent, Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { ReactSurface, IntentResolver } from './capabilities';

@@ -4,15 +4,7 @@
 
 import React from 'react';
 
-import {
-  Capabilities,
-  contributes,
-  createSurface,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CollectionType } from '@dxos/plugin-space/types';

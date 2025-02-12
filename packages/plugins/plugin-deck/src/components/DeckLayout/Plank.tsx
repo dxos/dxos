@@ -4,7 +4,14 @@
 
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { createIntent, LayoutAction, Surface, useCapability, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  createIntent,
+  LayoutAction,
+  Surface,
+  useCapability,
+  useAppGraph,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';

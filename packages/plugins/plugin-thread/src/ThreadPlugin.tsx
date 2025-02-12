@@ -10,7 +10,6 @@ import {
   defineModule,
   definePlugin,
   Events,
-  oneOf,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';

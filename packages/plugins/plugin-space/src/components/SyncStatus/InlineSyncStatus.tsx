@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework';
+import { useAppGraph } from '@dxos/app-framework';
 import { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';

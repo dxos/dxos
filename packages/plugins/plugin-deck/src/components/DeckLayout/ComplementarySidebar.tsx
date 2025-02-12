@@ -4,7 +4,14 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createIntent, LayoutAction, Surface, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  createIntent,
+  LayoutAction,
+  Surface,
+  useAppGraph,
+  useCapability,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { Main, ScrollArea, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { railGridHorizontal, StackContext, StackItem } from '@dxos/react-ui-stack';

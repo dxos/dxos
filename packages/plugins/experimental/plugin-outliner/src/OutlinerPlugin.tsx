@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  createIntent,
-  definePlugin,
-  contributes,
-  Capabilities,
-  Events,
-  defineModule,
-  oneOf,
-} from '@dxos/app-framework';
+import { createIntent, definePlugin, contributes, Capabilities, Events, defineModule } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, useLayout, useIntentDispatcher } from '@dxos/app-framework';
+import { Surface, useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';

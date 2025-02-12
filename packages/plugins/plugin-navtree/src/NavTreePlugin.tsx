@@ -9,7 +9,6 @@ import {
   contributes,
   Capabilities,
   allOf,
-  oneOf,
   createIntent,
   LayoutAction,
 } from '@dxos/app-framework';
