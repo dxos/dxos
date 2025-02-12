@@ -21,8 +21,6 @@ export const Toolbar = () => {
     await manager.add(id);
   }, [manager]);
 
-  const handleReset = useCallback(() => {}, []);
-
   const count = useCapabilities(Number).reduce((acc, curr) => acc + curr, 0);
 
   const generatorPlugins = manager.plugins.filter((plugin) => plugin.meta.id.startsWith('dxos.org/test/generator/'));
@@ -30,10 +28,6 @@ export const Toolbar = () => {
   return (
     <>
       <Button onClick={handleAdd}>Add</Button>
-      {/* NOTE: With the current plugins in the playground, this will never be enabled. */}
-      <Button disabled={manager.pendingReset.length === 0} onClick={handleReset}>
-        Reset
-      </Button>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
         <Button key={plugin.meta.id} onClick={() => dispatch(createIntent(createGeneratorIntent(plugin.meta.id)))}>
