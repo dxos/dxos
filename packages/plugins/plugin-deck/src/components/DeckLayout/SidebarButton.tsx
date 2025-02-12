@@ -22,7 +22,9 @@ export const ToggleSidebarButton = ({
       icon='ph--sidebar--regular'
       size={4}
       label={t('open navigation sidebar label')}
-      onClick={() => (layoutContext.sidebarOpen = !layoutContext.sidebarOpen)}
+      onClick={() =>
+        (layoutContext.sidebarState = layoutContext.sidebarState === 'expanded' ? 'collapsed' : 'expanded')
+      }
       classNames={['!pli-2 order-first', classNames]}
     />
   );
@@ -38,7 +40,7 @@ export const CloseSidebarButton = () => {
       icon='ph--caret-line-left--regular'
       size={4}
       label={t('close navigation sidebar label')}
-      onClick={() => (layoutContext.sidebarOpen = false)}
+      onClick={() => (layoutContext.sidebarState = 'collapsed')}
       classNames='!rounded-none !pli-1 ch-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
     />
   );

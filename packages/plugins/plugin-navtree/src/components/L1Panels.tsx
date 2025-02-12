@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Capabilities, Surface, useCapability } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
@@ -19,38 +19,35 @@ import { l0ItemType } from '../util';
 type L1PanelProps = { item: Node<any>; path: string[]; currentItemId: string };
 
 const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
+  const layout = useCapability(Capabilities.Layout);
   const navTreeContext = useNavTreeContext();
-  const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  // const { getProps } = useNavTreeContext();
-  // const { id, testId } = getProps?.(item, path) ?? {};
   return (
     <Tabs.Tabpanel
       key={item.id}
       value={item.id}
-      // data-testid={testId}
-      // data-itemid={id}
       classNames={[
-        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] grid-cols-1',
+        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1',
         item.id === currentItemId && 'grid',
         navTreeContext.hoistStatusbar
           ? 'grid-rows-[var(--rail-size)_1fr_min-content]'
           : 'grid-rows-[var(--rail-size)_1fr]',
       ]}
       tabIndex={-1}
+      {...(layout.sidebarState !== 'expanded' && { inert: 'true' })}
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-separator pis-4'>
-            <span className='flex-1 truncate'>{toLocalizedString(item.properties.label, t)}</span>
-            <NavTreeItemColumns path={itemPath} item={item} open />
+          <h2 className='flex items-center border-be border-separator pis-4 app-drag'>
+            <span className='flex-1 truncate cursor-default'>{toLocalizedString(item.properties.label, t)}</span>
+            <NavTreeItemColumns path={path} item={item} open />
           </h2>
           <div role='none' className='overflow-y-auto'>
             <Tree
               {...navTreeContext}
               id={item.id}
               root={item}
-              path={itemPath}
+              path={path}
               levelOffset={5}
               draggable
               gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'

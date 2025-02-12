@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Effect } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type S } from '@dxos/echo-schema';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -20,15 +21,16 @@ const initialValues: FormValues = { edgeReplication: true };
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(SPACE_PLUGIN);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatch } = useIntentDispatcher();
 
   const handleCreateSpace = useCallback(
     async (data: FormValues) => {
-      const result = await dispatch(createIntent(SpaceAction.Create, data));
-      const target = result.data?.space;
-      if (target) {
-        await dispatch(createIntent(SpaceAction.OpenCreateObject, { target }));
-      }
+      const program = Effect.gen(function* () {
+        const { space } = yield* dispatch(createIntent(SpaceAction.Create, data));
+        yield* dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+        yield* dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
+      });
+      await Effect.runPromise(program);
     },
     [dispatch],
   );

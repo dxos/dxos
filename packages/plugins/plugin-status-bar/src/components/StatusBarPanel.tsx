@@ -9,6 +9,7 @@ import { Icon, Popover } from '@dxos/react-ui';
 
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
+import { VersionNumber } from './VersionNumber';
 
 export const StatusBarPanel = ({ variant = 'main-footer' }: { variant?: 'main-footer' | 'sidebar-footer' }) => {
   const [open, setOpen] = useState(false);
@@ -28,6 +29,7 @@ export const StatusBarPanel = ({ variant = 'main-footer' }: { variant?: 'main-fo
           <StatusBar.Text classNames='hidden sm:block'>Discord</StatusBar.Text>
         </a>
       </StatusBar.Button>
+      <VersionNumber />
     </>
   );
 

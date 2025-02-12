@@ -16,7 +16,7 @@ export default (context: PluginsContext) =>
       id: DECK_PLUGIN,
       filter: (node): node is Node<null> => node.id === ROOT_ID,
       actions: () => {
-        const layout = context.requestCapability(DeckCapabilities.MutableDeckState);
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
 
         // NOTE(Zan): This is currently disabled.
         // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
@@ -60,7 +60,7 @@ export default (context: PluginsContext) =>
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             const attention = context.requestCapability(AttentionCapabilities.Attention);
             const attended = attention.current.at(-1);
-            const ids = layout.deck.filter((id) => id !== attended);
+            const ids = state.deck.active.filter((id) => id !== attended) ?? [];
             await dispatch(createIntent(LayoutAction.Close, { part: 'main', subject: ids, options: { state: false } }));
           },
           properties: {
@@ -74,7 +74,11 @@ export default (context: PluginsContext) =>
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             await dispatch(
-              createIntent(LayoutAction.Close, { part: 'main', subject: layout.deck, options: { state: false } }),
+              createIntent(LayoutAction.Close, {
+                part: 'main',
+                subject: state.deck.active,
+                options: { state: false },
+              }),
             );
           },
           properties: {
@@ -83,7 +87,23 @@ export default (context: PluginsContext) =>
           },
         };
 
-        return !layout.solo ? [closeCurrent, closeOthers, closeAll] : [];
+        const toggleSidebar = {
+          id: `${LayoutAction.UpdateSidebar._tag}/nav`,
+          data: async () => {
+            state.sidebarState = state.sidebarState === 'expanded' ? 'collapsed' : 'expanded';
+          },
+          properties: {
+            label: [
+              state.sidebarState === 'expanded' ? 'collapse navigation sidebar label' : 'open navigation sidebar label',
+              { ns: DECK_PLUGIN },
+            ],
+            icon: 'ph--sidebar--regular',
+            disposition: 'pin-end',
+            l0Breakpoint: 'lg',
+          },
+        };
+
+        return !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
       },
     }),
   );

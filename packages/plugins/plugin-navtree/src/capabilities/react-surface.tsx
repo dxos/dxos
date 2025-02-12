@@ -4,7 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { createSurface, Capabilities, contributes, useCapability } from '@dxos/app-framework';
+import {
+  createSurface,
+  Capabilities,
+  contributes,
+  useCapability,
+  useIntentDispatcher,
+  LayoutAction,
+  createIntent,
+} from '@dxos/app-framework';
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';
@@ -15,7 +23,6 @@ import {
   NotchStart,
   NavTreeContainer,
 } from '../components';
-import { NavTreeFooter } from '../components/NavTreeFooter';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import { expandChildrenAndActions } from '../util';
@@ -31,8 +38,11 @@ export default () =>
     createSurface({
       id: `${NAVTREE_PLUGIN}/navigation`,
       role: 'navigation',
+      filter: (data): data is { popoverAnchorId?: string; topbar: boolean; hoistStatusbar: boolean; current: string } =>
+        typeof data.current === 'string',
       component: ({ data }) => {
         const { graph } = useCapability(Capabilities.AppGraph);
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 
         const handleOpenChange = useCallback(
@@ -48,6 +58,11 @@ export default () =>
           [graph],
         );
 
+        const handleTabChange = useCallback(
+          (tab: string) => dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: tab })),
+          [dispatch],
+        );
+
         return (
           <NavTreeContainer
             isOpen={isOpen}
@@ -56,6 +71,8 @@ export default () =>
             popoverAnchorId={data.popoverAnchorId as string | undefined}
             topbar={data.topbar as boolean}
             hoistStatusbar={data.hoistStatusbar as boolean}
+            tab={data.current}
+            onTabChange={handleTabChange}
           />
         );
       },
@@ -71,14 +88,9 @@ export default () =>
       component: () => <NotchStart />,
     }),
     createSurface({
-      id: `${NAVTREE_PLUGIN}/header-end`,
-      role: 'header-end',
-      component: () => <NavTreeFooter />,
-    }),
-    createSurface({
       id: `${NAVTREE_PLUGIN}/search-input`,
       role: 'search-input',
-      disposition: 'fallback',
+      position: 'fallback',
       component: () => <CommandsTrigger />,
     }),
   ]);

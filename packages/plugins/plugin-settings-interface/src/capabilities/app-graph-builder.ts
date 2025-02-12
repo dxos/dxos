@@ -22,7 +22,9 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: ['open settings label', { ns: SETTINGS_INTERFACE_PLUGIN }],
+            testId: 'treeView.openSettings',
             icon: 'ph--gear--regular',
+            disposition: 'pin-end',
             keyBinding: {
               macos: 'meta+,',
               windows: 'alt+,',

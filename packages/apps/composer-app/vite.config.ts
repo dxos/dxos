@@ -75,7 +75,9 @@ export default defineConfig((env) => ({
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
-        'socket:process'
+        'socket:process',
+        'socket:window',
+        'socket:os',
       ],
     },
   },
@@ -85,7 +87,7 @@ export default defineConfig((env) => ({
     },
   },
   worker: {
-    format: 'es',
+    format: 'es' as const,
     plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [

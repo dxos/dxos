@@ -246,11 +246,10 @@ const useTest = (view?: EditorView) => {
 
 export const createUploadAction = () => ({
   nodes: [
-    createEditorAction(
-      { type: 'image', testId: 'editor.toolbar.image' },
-      'ph--image-square--regular',
+    createEditorAction({ type: 'image', testId: 'editor.toolbar.image' }, 'ph--image-square--regular', [
       'upload image label',
-    ),
+      { ns: MARKDOWN_PLUGIN },
+    ]),
   ],
   edges: [{ source: 'root', target: 'image' }],
 });

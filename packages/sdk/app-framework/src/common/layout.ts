@@ -59,7 +59,9 @@ export namespace LayoutAction {
       subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the sidebar.' })),
       options: S.optional(
         S.Struct({
-          state: S.Boolean.annotations({ description: 'Whether the sidebar is open or closed.' }),
+          state: S.Literal('closed', 'collapsed', 'expanded').annotations({
+            description: 'Whether the sidebar is closed, collapsed, or expanded.',
+          }),
         }),
       ),
     }),
@@ -140,6 +142,14 @@ export namespace LayoutAction {
     input: S.Struct({
       part: S.Literal('toast').annotations({ description: 'Adding a toast.' }),
       subject: Toast.annotations({ description: 'The toast to add.' }),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class SwitchWorkspace extends S.TaggedClass<SwitchWorkspace>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('workspace').annotations({ description: 'Switching the workspace.' }),
+      subject: S.String.annotations({ description: 'The id of the workspace to switch to.' }),
     }),
     output: S.Void,
   }) {}

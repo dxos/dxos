@@ -161,7 +161,6 @@ export default (context: PluginsContext) =>
                 properties: {
                   label: ['re-open label', { ns: FILES_PLUGIN }],
                   icon: 'ph--plugs--regular',
-                  disposition: 'default',
                 },
               },
             ]
