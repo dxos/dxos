@@ -111,7 +111,8 @@ describe('PluginManager', () => {
     const Fail = defineModule({
       id: 'dxos.org/test/fail',
       activatesOn: FailEvent,
-      activate: async () => raise(new Error('test')),
+      // TODO(wittjosiah): Test and catch more failure modes.
+      activate: async () => async () => raise(new Error('test')),
     });
     plugins = [definePlugin(testMeta, [Hello, Fail])];
 
@@ -287,7 +288,7 @@ describe('PluginManager', () => {
         id: 'dxos.org/test/count',
         activatesOn: Events.Startup,
         activatesBefore: [CountEvent],
-        activate: (context) => {
+        activate: async (context) => async () => {
           computeTotal(context);
           return contributes(Total, state);
         },
