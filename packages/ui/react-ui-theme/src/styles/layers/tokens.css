@@ -1,4 +1,4 @@
-@layer tokens {
+@layer dx-tokens {
   @tokens dx;
 
   :root {
@@ -25,5 +25,13 @@
     --safe-area-right: env(safe-area-inset-right);
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
+  }
+
+  .dark {
+    --surface-bg: var(--dx-base);
+    --surface-text: var(--dx-baseText);
+    --input-bg: var(--dx-input);
+    --input-bg-hover: var(--dx-hoverSurface);
+    --description-text: var(--dx-description);
   }
 }
