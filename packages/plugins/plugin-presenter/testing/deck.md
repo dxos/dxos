@@ -21,7 +21,7 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 -->
 
 ## Mission Statement
-<!-- .element: class="!text-center p-0" -->
+<!-- .element: class="!text-center !p-0" -->
 
 > To enable open source developers to build «&nbsp;commercially-competitive&nbsp;» privacy-preserving applications.
 
@@ -132,7 +132,7 @@ KUBE
 -->
 
 # Composer 
-<!-- .element: class="!text-center p-0" -->
+<!-- .element: class="!text-center !p-0" -->
 
 > *Super App*: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
 
