@@ -118,7 +118,7 @@ export const Chessboard = ({
         {positions.map(({ bounds, piece }) => (
           <Piece
             key={piece.id}
-            location={piece.location}
+            location={locationToString(piece.location)}
             pieceType={piece.type}
             label={debug ? piece.id : undefined}
             transition={true}

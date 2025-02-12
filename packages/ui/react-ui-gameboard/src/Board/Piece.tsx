@@ -11,15 +11,15 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useBoardContext } from './context';
-import { type Location } from './types';
+import { stringToLocation } from './types';
 import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
-  location: Location;
+  location: string; // TODO(burdon): Change back to location.
   pieceType: string;
   bounds: DOMRectBounds;
   label?: string;
@@ -28,66 +28,71 @@ export type PieceProps = ThemedClassName<{
 }>;
 
 export const Piece = ({ classNames, location, pieceType, bounds, label, transition, Component }: PieceProps) => {
+  useTrackProps({ classNames, location, pieceType, bounds, label, transition, Component }, 'Piece');
+
   const ref = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<HTMLElement>();
-  const [dragging, setDragging] = useState(false);
-  const { dragging: isDragging } = useBoardContext();
 
-  // useTrackProps({ classNames, location, pieceType, bounds, label, transition }, 'Piece');
+  if (false) {
+    const [dragging, setDragging] = useState(false);
+    const { dragging: isDragging } = useBoardContext();
+    useEffect(() => {
+      const el = ref.current;
+      invariant(el);
 
-  useEffect(() => {
-    const el = ref.current;
-    invariant(el);
-
-    return draggable({
-      element: el,
-      getInitialData: () => ({ location, pieceType }),
-      onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
-        log('onGenerateDragPreview', { source: source.data });
-        setCustomNativeDragPreview({
-          getOffset: centerUnderPointer,
-          // getOffset: preserveOffsetOnSource({
-          //   element: source.element,
-          //   input: location.current.input,
-          // }),
-          render: ({ container }) => {
-            setPreview(container);
-            const { width, height } = el.getBoundingClientRect();
-            container.style.width = width + 'px';
-            container.style.height = height + 'px';
-            return () => {
-              setPreview(undefined);
-            };
-          },
-          nativeSetDragImage,
-        });
-      },
-      // TODO(burdon): Check size.
-      canDrag: () => true,
-      onDragStart: () => setDragging(true),
-      onDrop: () => setDragging(false),
-    });
-  }, [location, pieceType]);
+      return draggable({
+        element: el,
+        getInitialData: () => ({ location: stringToLocation(location), pieceType }),
+        onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
+          log('onGenerateDragPreview', { source: source.data });
+          setCustomNativeDragPreview({
+            getOffset: centerUnderPointer,
+            // getOffset: preserveOffsetOnSource({
+            //   element: source.element,
+            //   input: location.current.input,
+            // }),
+            render: ({ container }) => {
+              setPreview(container);
+              const { width, height } = el.getBoundingClientRect();
+              container.style.width = width + 'px';
+              container.style.height = height + 'px';
+              return () => {
+                setPreview(undefined);
+              };
+            },
+            nativeSetDragImage,
+          });
+        },
+        // TODO(burdon): Check size.
+        canDrag: () => true,
+        onDragStart: () => setDragging(true),
+        onDrop: () => setDragging(false),
+      });
+    }, [location, pieceType]);
+  }
 
   // Make sure only applied once.
-  // TODO(burdon): Sometimes jumps without animation.
+  // TODO(burdon): Sometimes jumps without animation. Prevent re-render.
   useEffect(() => {
+    log.info('bounds update', { bounds });
     ref.current!.style.top = bounds.top + 'px';
     ref.current!.style.left = bounds.left + 'px';
-    ref.current!.style.width = bounds.width + 'px';
-    ref.current!.style.height = bounds.height + 'px';
   }, [bounds]);
 
   return (
     <>
       <div
         ref={ref}
+        style={{
+          width: bounds.width,
+          height: bounds.height,
+        }}
         className={mx(
           'absolute flex justify-center items-center',
           classNames,
           transition && 'transition-[top,left] duration-300 ease-in-out',
-          dragging && 'opacity-20', // Must not unmount component while dragging.
-          isDragging && 'pointer-events-none', // Don't block the square's drop target.
+          // dragging && 'opacity-20', // Must not unmount component while dragging.
+          // isDragging && 'pointer-events-none', // Don't block the square's drop target.
         )}
       >
         <Component className={mx('w-full h-full')} />
