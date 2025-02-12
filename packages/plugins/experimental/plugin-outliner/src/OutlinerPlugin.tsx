@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  createIntent,
-  definePlugin,
-  contributes,
-  Capabilities,
-  Events,
-  defineModule,
-  oneOf,
-} from '@dxos/app-framework';
+import { createIntent, definePlugin, contributes, Capabilities, Events, defineModule } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
@@ -28,7 +20,7 @@ export const OutlinerPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
           id: TreeType.typename,
@@ -51,7 +43,7 @@ export const OutlinerPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [TreeItemType]),
         contributes(ClientCapabilities.Schema, [TreeType]),
@@ -59,7 +51,7 @@ export const OutlinerPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

@@ -4,7 +4,7 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const WNFS_PLUGIN = 'dxos.org/plugin/WNFS';
+export const WNFS_PLUGIN = 'dxos.org/plugin/wnfs';
 
 export const meta = {
   id: WNFS_PLUGIN,

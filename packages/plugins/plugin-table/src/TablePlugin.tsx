@@ -2,15 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  createIntent,
-  definePlugin,
-  defineModule,
-  Events,
-  contributes,
-  Capabilities,
-  oneOf,
-} from '@dxos/app-framework';
+import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -33,7 +25,7 @@ export const TablePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
@@ -53,7 +45,7 @@ export const TablePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [ViewType]),
         contributes(ClientCapabilities.Schema, [TableType]),
@@ -61,7 +53,7 @@ export const TablePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

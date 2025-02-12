@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { LayoutAction, useIntentDispatcher, createIntent, useCapability, Capabilities } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
@@ -44,8 +44,8 @@ export type SearchDialogProps = {
 
 export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const layout = useCapability(Capabilities.Layout);
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const layout = useLayout();
+  const { graph } = useAppGraph();
   const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
     .map((id) => graph?.findNode(id))
     .filter(Boolean);

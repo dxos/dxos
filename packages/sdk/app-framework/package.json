@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@types/react": "~18.2.0",

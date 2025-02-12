@@ -30,7 +30,7 @@ export const WelcomePlugin = () =>
     }),
     defineModule({
       id: `${WELCOME_PLUGIN}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

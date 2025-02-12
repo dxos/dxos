@@ -4,16 +4,17 @@
 
 import React from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
+import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
-import { useLayout } from '../LayoutContext';
 
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
-  const layoutContext = useLayout();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
@@ -31,7 +32,7 @@ export const ToggleSidebarButton = ({
 };
 
 export const CloseSidebarButton = () => {
-  const layoutContext = useLayout();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
@@ -47,7 +48,7 @@ export const CloseSidebarButton = () => {
 };
 
 export const ToggleComplementarySidebarButton = () => {
-  const layoutContext = useLayout();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
@@ -63,7 +64,7 @@ export const ToggleComplementarySidebarButton = () => {
 };
 
 export const CloseComplementarySidebarButton = () => {
-  const layoutContext = useLayout();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton

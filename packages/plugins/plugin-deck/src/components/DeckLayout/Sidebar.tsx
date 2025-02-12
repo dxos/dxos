@@ -4,15 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 
+import { DeckCapabilities } from '../../capabilities';
 import { layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useHoistStatusbar } from '../../util/useHoistStatusbar';
-import { useLayout } from '../LayoutContext';
 
 export const Sidebar = () => {
-  const { popoverAnchorId, activeDeck: current } = useLayout();
+  const { popoverAnchorId, activeDeck: current } = useCapability(DeckCapabilities.DeckState);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);

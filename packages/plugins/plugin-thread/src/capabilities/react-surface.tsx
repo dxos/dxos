@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useLayout, useCapability } from '@dxos/app-framework';
 import { type Ref } from '@dxos/echo-schema';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ export default () =>
       filter: (data): data is { subject: ChannelType } =>
         data.subject instanceof ChannelType && !!data.subject.threads[0],
       component: ({ data, role }) => {
-        const layout = useCapability(Capabilities.Layout);
+        const layout = useLayout();
         const channel = data.subject;
         const thread = channel.threads[0].target!;
         const currentPosition = layout.active.findIndex((id) => id === channel.id);

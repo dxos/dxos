@@ -12,14 +12,14 @@ import { Capabilities, Events } from '../common';
 import { type AnyCapability, contributes, defineModule, definePlugin, PluginManager } from '../core';
 
 /**
- * Wraps a story with a plugin manager.
+ * @internal
  */
-export const withPluginManager = ({
+export const setupPluginManager = ({
   capabilities,
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   ...options
-}: CreateAppOptions & { capabilities?: AnyCapability[] } = {}): Decorator => {
+}: CreateAppOptions & { capabilities?: AnyCapability[] } = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin(), ...plugins],
@@ -37,6 +37,14 @@ export const withPluginManager = ({
     });
   }
 
+  return pluginManager;
+};
+
+/**
+ * Wraps a story with a plugin manager.
+ */
+export const withPluginManager = (options: CreateAppOptions & { capabilities?: AnyCapability[] } = {}): Decorator => {
+  const pluginManager = setupPluginManager(options);
   const App = createApp({ pluginManager });
 
   return (Story, context) => {

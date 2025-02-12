@@ -2,26 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
-
-import { IntentProvider } from './IntentContext';
 import { INTENT_PLUGIN } from './actions';
-import { dispatcherModule } from './intent-dispatcher';
-import { Capabilities, Events } from '../common';
-import { contributes, defineModule, definePlugin } from '../core';
+import { Events } from '../common';
+import { defineModule, definePlugin, lazy } from '../core';
 
 export const IntentPlugin = () =>
   definePlugin({ id: INTENT_PLUGIN }, [
-    dispatcherModule,
     defineModule({
-      id: `${INTENT_PLUGIN}/module/react-context`,
+      id: `${INTENT_PLUGIN}/module/dispatcher`,
+      // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
+      //   This is fine for now because it's how it worked prior to capabilities api anyways.
+      //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
       activatesOn: Events.Startup,
-      activate: (context) => {
-        const state = context.requestCapability(Capabilities.IntentDispatcher);
-        return contributes(Capabilities.ReactContext, {
-          id: INTENT_PLUGIN,
-          context: ({ children }) => <IntentProvider value={state}>{children}</IntentProvider>,
-        });
-      },
+      activatesAfter: [Events.DispatcherReady],
+      activate: lazy(() => import('./intent-dispatcher')),
     }),
   ]);
