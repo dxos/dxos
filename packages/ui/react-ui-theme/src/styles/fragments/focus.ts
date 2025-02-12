@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export const focusRing = 'ch-focus-ring';
+export const focusRing = 'dx-focus-ring';
 
 export const dropRing =
   'ring-1 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black';

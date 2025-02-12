@@ -28,7 +28,7 @@ const actionButtonProps = {
   size: 4 as const,
   variant: 'ghost' as const,
   density: 'fine' as const,
-  classNames: mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem),
+  classNames: mx('shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem),
 };
 
 export const NavTreeItemActionDropdownMenu = ({
