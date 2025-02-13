@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 import { signal } from '@preact/signals-core';
 
@@ -11,6 +11,12 @@ import { type ViewProjection } from '@dxos/schema';
 
 import { type KanbanType } from './kanban';
 import { computeArrangement } from '../util';
+
+export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
+export const UNCATEGORIZED_ATTRIBUTES = {
+  title: 'Uncategorized',
+  color: 'gray',
+} as const;
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
@@ -70,6 +76,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   /** Get the display attributes for a column by its ID. */
   public getPivotAttributes(id: string) {
+    if (id === UNCATEGORIZED_VALUE) {
+      return UNCATEGORIZED_ATTRIBUTES;
+    }
+
     invariant(this._kanban.columnField);
     const fieldId = this._projection.getFieldId(this._kanban.columnField);
     invariant(fieldId);
@@ -85,6 +95,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   public removeColumnFromArrangement(columnValue: string) {
+    if (columnValue === UNCATEGORIZED_VALUE) {
+      return;
+    }
     const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
     if (this._kanban.arrangement && columnIndex !== undefined && Number.isFinite(columnIndex) && columnIndex >= 0) {
       this._kanban.arrangement.splice(columnIndex, 1);
@@ -103,6 +116,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
     if (sourceColumn && targetColumn) {
       if (source.type === 'column' && target.type === 'column') {
+        if (source.id === UNCATEGORIZED_VALUE || target.id === UNCATEGORIZED_VALUE) {
+          return;
+        }
         // Reordering columns
         const sourceIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === source.id);
         const targetIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === target.id);
@@ -120,7 +136,8 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
         ) {
           const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
 
-          (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) = targetColumn.columnValue;
+          (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) =
+            targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
 
           let insertIndex;
           if (source.type === 'card' && target.type === 'column') {

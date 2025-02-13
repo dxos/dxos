@@ -38,9 +38,9 @@ export const initializeKanban = async ({
   });
 
   const stateOptions = [
-    { id: PublicKey.random().truncate(), title: 'Draft', color: 'rose' },
-    { id: PublicKey.random().truncate(), title: 'Active', color: 'emerald' },
-    { id: PublicKey.random().truncate(), title: 'Completed', color: 'amber' },
+    { id: PublicKey.random().truncate(), title: 'Draft', color: 'indigo' },
+    { id: PublicKey.random().truncate(), title: 'Active', color: 'cyan' },
+    { id: PublicKey.random().truncate(), title: 'Completed', color: 'emerald' },
   ];
 
   new ViewProjection(taskSchema, view).setFieldProjection({

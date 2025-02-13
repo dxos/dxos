@@ -162,7 +162,7 @@ const meta: Meta<StoryProps> = {
       onSpaceCreated: async ({ space }) => {
         const { taskSchema } = await initializeKanban({ space });
         // TODO(burdon): Replace with sdk/schema/testing.
-        Array.from({ length: 24 }).map(() => {
+        Array.from({ length: 8 }).map(() => {
           return space.db.add(
             create(taskSchema, {
               title: faker.commerce.productName(),
