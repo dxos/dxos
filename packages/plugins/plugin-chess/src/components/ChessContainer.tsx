@@ -3,10 +3,10 @@
 //
 
 import { Chess } from 'chess.js';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
-import { ChessModel, Board, Chessboard } from '@dxos/react-ui-gameboard';
+import { ChessModel, Board, Chessboard, type BoardRootProps } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { PlayerSelector } from './PlayerSelector';
@@ -30,14 +30,28 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
     return null;
   }
 
+  const handleDrop = useCallback<NonNullable<BoardRootProps['onDrop']>>(
+    (move) => {
+      if (model.makeMove(move)) {
+        game.pgn = model.game.pgn();
+        return true;
+      }
+
+      return false;
+    },
+    [model],
+  );
+
   return (
     <StackItem.Content toolbar={false}>
       <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
         <div />
 
-        <Board.Root classNames={'m-4'} model={model} onDrop={(move) => model.makeMove(move)}>
-          <Chessboard />
-        </Board.Root>
+        <div className='flex m-4 overflow-hidden'>
+          <Board.Root model={model} onDrop={handleDrop}>
+            <Chessboard />
+          </Board.Root>
+        </div>
 
         <PlayerSelector space={space} game={game} />
       </div>

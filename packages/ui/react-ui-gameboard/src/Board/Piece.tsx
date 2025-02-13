@@ -34,6 +34,9 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
 
+  // Current position.
+  const [current, setCurrent] = useState<{ location?: Location; bounds?: DOMRectBounds }>({});
+
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -76,7 +79,6 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
   }, [model, piece]);
 
   // Update position independently of render cycle (otherwise animation is interrupted).
-  const [current, setCurrent] = useState<{ location?: Location; bounds?: DOMRectBounds }>({});
   useEffect(() => {
     requestAnimationFrame(() => {
       if (!ref.current || !bounds) {
