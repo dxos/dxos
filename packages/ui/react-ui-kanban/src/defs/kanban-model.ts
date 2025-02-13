@@ -129,6 +129,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return option ?? ({ title: id, color: 'neutral' } as const);
   }
 
+  /**
+   * Handler for card and column rearrangement events. Supports both reordering columns and moving cards between columns.
+   */
   public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
     const nextArrangement = this.arrangement;
     const sourceColumn = this._findColumn(source.id, nextArrangement);
@@ -151,6 +154,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     }));
     this._arrangement.value = nextArrangement;
   };
+
+  /** Find a column by ID in the arrangement, checking both column values and card IDs. */
+  private _findColumn(id: string, arrangement: KanbanArrangement<T>) {
+    return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
+  }
 
   /**
    * Updates the field projection options to reorder columns. Updating the arrangement
@@ -181,6 +189,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._projection.setFieldProjection({ ...fieldProjection, props: { ...fieldProjection.props, options } });
   }
 
+  /**
+   * Handles moving a card between columns, or to a different position within the same column.
+   * Updates both the card's position and its column field value.
+   * Returns the updated source and target columns.
+   */
   private _handleCardMove(
     sourceColumn: KanbanArrangement<T>[number],
     targetColumn: KanbanArrangement<T>[number],
@@ -191,12 +204,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
     const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === target.id);
 
-    if (
-      typeof sourceCardIndex !== 'number' ||
-      typeof targetCardIndex !== 'number' ||
-      !sourceColumn.cards ||
-      !targetColumn.cards
-    ) {
+    const indicesAreNumeric = typeof sourceCardIndex === 'number' && typeof targetCardIndex === 'number';
+    const columnsHaveCards = sourceColumn.cards && targetColumn.cards;
+    if (!indicesAreNumeric || !columnsHaveCards) {
       return;
     }
 
@@ -214,9 +224,5 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     }
 
     targetColumn.cards.splice(insertIndex, 0, movedCard);
-  }
-
-  private _findColumn(id: string, arrangement: KanbanArrangement<T>) {
-    return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
   }
 }
