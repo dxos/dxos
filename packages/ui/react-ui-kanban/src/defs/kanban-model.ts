@@ -129,74 +129,94 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return option ?? ({ title: id, color: 'neutral' } as const);
   }
 
-  public addEmptyColumn(columnValue: string) {
-    this._kanban.arrangement ??= [];
-    this._kanban.arrangement.push({ columnValue, ids: [] });
-    this._arrangement.value = this._computeArrangement();
-  }
-
-  public removeColumnFromArrangement(columnValue: string) {
-    if (columnValue === UNCATEGORIZED_VALUE) {
-      return;
-    }
-    const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
-    if (this._kanban.arrangement && columnIndex !== undefined && Number.isFinite(columnIndex) && columnIndex >= 0) {
-      this._kanban.arrangement.splice(columnIndex, 1);
-      this._arrangement.value = this._computeArrangement();
-    }
-  }
-
   public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
     const nextArrangement = this.arrangement;
-    const sourceColumn = nextArrangement.find(
-      ({ columnValue, cards }) => columnValue === source.id || cards.some((card) => card.id === source.id),
-    );
-    const targetColumn = nextArrangement.find(
-      ({ columnValue, cards }) => columnValue === target.id || cards.some((card) => card.id === target.id),
-    );
+    const sourceColumn = this._findColumn(source.id, nextArrangement);
+    const targetColumn = this._findColumn(target.id, nextArrangement);
 
-    if (sourceColumn && targetColumn) {
-      if (source.type === 'column' && target.type === 'column') {
-        if (source.id === UNCATEGORIZED_VALUE || target.id === UNCATEGORIZED_VALUE) {
-          return;
-        }
-        // Reordering columns
-        const sourceIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === source.id);
-        const targetIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === target.id);
-        const [movedColumn] = nextArrangement.splice(sourceIndex, 1);
-        const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
-        nextArrangement.splice(insertIndex, 0, movedColumn);
-      } else {
-        const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
-        const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === target.id);
-        if (
-          typeof sourceCardIndex === 'number' &&
-          typeof targetCardIndex === 'number' &&
-          sourceColumn.cards &&
-          targetColumn.cards
-        ) {
-          const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
-
-          (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) =
-            targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
-
-          let insertIndex;
-          if (source.type === 'card' && target.type === 'column') {
-            insertIndex = 0;
-          } else if (sourceCardIndex < targetCardIndex) {
-            insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
-          } else {
-            insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
-          }
-          targetColumn.cards.splice(insertIndex, 0, movedCard);
-        }
-      }
-
-      this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => {
-        return { columnValue, ids: cards.map(({ id }) => id) };
-      });
-
-      this._arrangement.value = nextArrangement;
+    if (!sourceColumn || !targetColumn) {
+      return;
     }
+
+    if (source.type === 'column' && target.type === 'column') {
+      this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
+      return;
+    }
+
+    this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
+
+    this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+      columnValue,
+      ids: cards.map(({ id }) => id),
+    }));
+    this._arrangement.value = nextArrangement;
   };
+
+  /**
+   * Updates the field projection options to reorder columns. Updating the arrangement
+   * is not necessary as it's done automatically when the field projection updates.
+   */
+  private _handleColumnReorder(source: { id: string }, target: { id: string }, closestEdge: 'left' | 'right') {
+    if (source.id === UNCATEGORIZED_VALUE || target.id === UNCATEGORIZED_VALUE) {
+      return;
+    }
+
+    if (!this._kanban.columnField) {
+      return;
+    }
+
+    const fieldId = this._projection.getFieldId(this._kanban.columnField);
+    if (!fieldId) {
+      return;
+    }
+
+    const fieldProjection = this._projection.getFieldProjection(fieldId);
+    const options = [...(fieldProjection.props.options ?? [])];
+    const sourceIndex = options.findIndex((opt) => opt.id === source.id);
+    const targetIndex = options.findIndex((opt) => opt.id === target.id);
+    const [movedOption] = options.splice(sourceIndex, 1);
+    const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
+    options.splice(insertIndex, 0, movedOption);
+
+    this._projection.setFieldProjection({ ...fieldProjection, props: { ...fieldProjection.props, options } });
+  }
+
+  private _handleCardMove(
+    sourceColumn: KanbanArrangement<T>[number],
+    targetColumn: KanbanArrangement<T>[number],
+    source: { id: string; type: 'card' | 'column' },
+    target: { id: string; type: 'card' | 'column' },
+    closestEdge: 'top' | 'bottom',
+  ) {
+    const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
+    const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === target.id);
+
+    if (
+      typeof sourceCardIndex !== 'number' ||
+      typeof targetCardIndex !== 'number' ||
+      !sourceColumn.cards ||
+      !targetColumn.cards
+    ) {
+      return;
+    }
+
+    const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
+    (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) =
+      targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
+
+    let insertIndex;
+    if (source.type === 'card' && target.type === 'column') {
+      insertIndex = 0;
+    } else if (sourceCardIndex < targetCardIndex) {
+      insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
+    } else {
+      insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
+    }
+
+    targetColumn.cards.splice(insertIndex, 0, movedCard);
+  }
+
+  private _findColumn(id: string, arrangement: KanbanArrangement<T>) {
+    return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
+  }
 }
