@@ -13,7 +13,7 @@ import { PlayerSelector } from './PlayerSelector';
 import { type GameType } from '../types';
 
 const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
-  const [model, setModel] = useState<ChessModel>();
+  const [model, setModel] = useState<ChessModel>(new ChessModel());
   useEffect(() => {
     if (!model || game.pgn !== model?.game.pgn()) {
       const chess = new Chess();
@@ -34,13 +34,10 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
     <StackItem.Content toolbar={false}>
       <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
         <div />
-        <div className='flex grow justify-center overflow-hidden'>
-          <div className='flex grow max-w-[600px] items-center overflow-hidden'>
-            <Board.Root model={model} onDrop={model ? (move) => model.makeMove(move) : undefined}>
-              <Chessboard />
-            </Board.Root>
-          </div>
-        </div>
+
+        <Board.Root model={model} onDrop={(move) => model.makeMove(move)}>
+          <Chessboard />
+        </Board.Root>
 
         <PlayerSelector game={game} space={space} />
       </div>
