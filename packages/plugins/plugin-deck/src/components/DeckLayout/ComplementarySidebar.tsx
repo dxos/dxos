@@ -113,7 +113,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
           <Tabs.Tabpanel
             key={panel.id}
             value={panel.id}
-            classNames='absolute inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr]'
+            classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr]'
           >
             <h2 className='flex items-center pli-2 border-separator border-be'>{toLocalizedString(panel.label, t)}</h2>
             <ScrollArea.Root>
