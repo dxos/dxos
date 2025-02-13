@@ -54,10 +54,6 @@ export const systemSememes = {
     // light: ['neutral', surfaceCadence.light[0]],
     // dark: ['neutral', surfaceCadence.dark[5]],
   },
-  l0: {
-    light: ['neutral', `${surfaceCadence.light[1]}/.65`],
-    dark: ['neutral', `${surfaceCadence.dark[2]}/.65`],
-  },
   accentSurface: {
     light: ['primary', 500],
     dark: ['primary', 500],
