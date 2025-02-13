@@ -13,9 +13,9 @@ import { BoardContext } from './context';
 import { type BoardModel, isLocation, isPiece, type Move } from './types';
 
 type ContainerProps = PropsWithChildren &
-  ThemedClassName & {
+  ThemedClassName<{
     style?: React.CSSProperties;
-  };
+  }>;
 
 /**
  * Container centers the board.
