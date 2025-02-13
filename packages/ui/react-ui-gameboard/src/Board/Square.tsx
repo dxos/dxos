@@ -11,7 +11,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useBoardContext } from './context';
-import { isLocation, isPiece, type Location } from './types';
+import { isPiece, type Location } from './types';
 import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
@@ -39,14 +39,13 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
         return true;
       },
       onDragEnter: ({ source }) => {
-        log.info('onDragEnter', { source: source.data });
-        if (!isLocation(source.data.location) || !isPiece(source.data.pieceType)) {
+        log('onDragEnter', { source: source.data });
+        const piece = source.data.piece;
+        if (!isPiece(piece)) {
           return;
         }
 
-        const sourceLocation = source.data.location;
-        const pieceType = source.data.pieceType;
-        if (model?.isValidMove({ source: sourceLocation, target: location, piece: pieceType })) {
+        if (model?.isValidMove({ source: piece.location, target: location, piece: piece.type })) {
           setState('validMove');
         } else {
           setState('invalidMove');

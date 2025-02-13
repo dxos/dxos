@@ -34,14 +34,7 @@ export type ChessboardProps = PropsWithChildren<{
 export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols = 8 }: ChessboardProps) => {
   useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
-  const dimensions = useRef<{ width?: number; height?: number }>({ width, height });
-  const resized = dimensions.current.width !== width || dimensions.current.height !== height;
-  useEffect(() => {
-    dimensions.current = { width, height };
-  }, [width, height]);
-
   const { model } = useBoardContext();
-  const pieces = model?.pieces.value ?? {};
 
   const locations = useMemo<Location[]>(() => {
     return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
@@ -85,11 +78,11 @@ export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols
       return [];
     }
 
-    return Object.values(pieces ?? {}).map((piece) => {
+    return Object.values(model?.pieces.value ?? {}).map((piece) => {
       const bounds = grid[locationToString(piece.location)];
       return { bounds, piece };
     });
-  }, [grid, pieces]);
+  }, [grid, model?.pieces.value]);
 
   return (
     <div ref={containerRef} className='relative'>
@@ -107,16 +100,14 @@ export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols
           />
         ))}
       </div>
-      <div>
+      <div className='grow'>
         {positions.map(({ bounds, piece }) => (
           <Piece
             key={piece.id}
-            orientation={orientation}
-            location={piece.location}
-            pieceType={piece.type}
-            label={debug ? piece.id : undefined}
-            animate={!resized}
+            piece={piece}
             bounds={bounds}
+            label={debug ? piece.id : undefined}
+            orientation={orientation}
             Component={ChessPieces[piece.type as ChessPiece]}
           />
         ))}

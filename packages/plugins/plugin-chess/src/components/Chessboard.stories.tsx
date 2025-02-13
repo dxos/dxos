@@ -20,9 +20,7 @@ const Render = () => {
       <Board.Root model={model} onDrop={(move) => model.makeMove(move)}>
         <Chessboard />
       </Board.Root>
-      <div className='w-[200px]'>
-        <ChessPanel model={model} />
-      </div>
+      <ChessPanel model={model} classNames='w-[200px]' />
     </div>
   );
 };

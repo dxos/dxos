@@ -8,7 +8,15 @@ import { type FC, type SVGProps } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type Move, type Location, type PieceMap, locationToString, type PieceType, type BoardModel } from '../Board';
+import {
+  type Move,
+  type Location,
+  type PieceMap,
+  locationToString,
+  type PieceType,
+  type BoardModel,
+  type Player,
+} from '../Board';
 import * as Alpha from '../gen/pieces/chess/alpha';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
@@ -51,7 +59,7 @@ const makeMove = (game: Chess, { source, target }: Move): Chess | null => {
     game.move({ from: s, to: t }, { strict: false });
     return game;
   } catch (err) {
-    log.error('invalid move', { err });
+    // Ignore.
     return null;
   }
 };
@@ -67,16 +75,20 @@ export class ChessModel implements BoardModel<ChessPiece> {
     this.initialize(fen);
   }
 
-  get game() {
-    return this._game;
-  }
-
-  get fen() {
-    return this._game.fen();
+  get turn(): Player {
+    return this._game.turn() === 'w' ? 'white' : 'black';
   }
 
   get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
     return this._pieces;
+  }
+
+  get game(): Chess {
+    return this._game;
+  }
+
+  get fen(): string {
+    return this._game.fen();
   }
 
   initialize(fen?: string) {
@@ -129,6 +141,7 @@ export class ChessModel implements BoardModel<ChessPiece> {
         pieces[locationToString(location)] = {
           id: `${square}-${pieceType}`,
           type: pieceType,
+          side: color === 'w' ? 'white' : 'black',
           location,
         };
       }),

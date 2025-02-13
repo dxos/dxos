@@ -15,109 +15,110 @@ import { useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useBoardContext } from './context';
-import { type Location, type Player } from './types';
+import { isEqualLocation, type Location, type PieceRecord, type Player } from './types';
 import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
-  location: Location;
-  pieceType: string;
-  orientation?: Player;
+  piece: PieceRecord;
   bounds: DOMRectBounds;
   label?: string;
-  animate?: boolean;
+  orientation?: Player;
   Component: FC<SVGProps<SVGSVGElement>>;
 }>;
 
-export const Piece = memo(
-  ({ classNames, location, pieceType, orientation, bounds, label, animate, Component }: PieceProps) => {
-    useTrackProps(
-      { classNames, location, pieceType, orientation, bounds, label, animate, Component },
-      Piece.displayName,
-      false,
-    );
+export const Piece = memo(({ classNames, piece, orientation, bounds, label, Component }: PieceProps) => {
+  useTrackProps({ classNames, piece, orientation, bounds, label, Component }, Piece.displayName, false);
+  const { model } = useBoardContext();
 
-    const { dragging: isDragging } = useBoardContext();
-    const [dragging, setDragging] = useState(false);
-    const [preview, setPreview] = useState<HTMLElement>();
+  const { dragging: isDragging } = useBoardContext();
+  const [dragging, setDragging] = useState(false);
+  const [preview, setPreview] = useState<HTMLElement>();
 
-    const ref = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-      const el = ref.current;
-      invariant(el);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    invariant(el);
 
-      return draggable({
-        element: el,
-        getInitialData: () => ({ location, pieceType }),
-        onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
-          log('onGenerateDragPreview', { source: source.data });
-          setCustomNativeDragPreview({
-            getOffset: centerUnderPointer,
-            // getOffset: preserveOffsetOnSource({
-            //   element: source.element,
-            //   input: location.current.input,
-            // }),
-            render: ({ container }) => {
-              setPreview(container);
-              const { width, height } = el.getBoundingClientRect();
-              container.style.width = width + 'px';
-              container.style.height = height + 'px';
-              return () => {
-                setPreview(undefined);
-              };
-            },
-            nativeSetDragImage,
-          });
-        },
-        // TODO(burdon): Check side.
-        canDrag: () => true,
-        onDragStart: () => setDragging(true),
-        onDrop: () => setDragging(false),
-      });
-    }, [location, pieceType]);
+    return draggable({
+      element: el,
+      getInitialData: () => ({ piece }),
+      onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
+        log('onGenerateDragPreview', { source: source.data });
+        setCustomNativeDragPreview({
+          getOffset: centerUnderPointer,
+          // getOffset: preserveOffsetOnSource({
+          //   element: source.element,
+          //   input: location.current.input,
+          // }),
+          render: ({ container }) => {
+            setPreview(container);
+            const { width, height } = el.getBoundingClientRect();
+            container.style.width = width + 'px';
+            container.style.height = height + 'px';
+            return () => {
+              setPreview(undefined);
+            };
+          },
+          nativeSetDragImage,
+        });
+      },
+      canDrag: () => model?.turn === piece.side,
+      onDragStart: () => setDragging(true),
+      onDrop: () => setDragging(false),
+    });
+  }, [model, piece]);
 
-    // useEffect(() => {
-    //   console.log('bounds', { bounds });
-    //   ref.current!.style.width = bounds.width + 'px';
-    //   ref.current!.style.height = bounds.height + 'px';
-    //   ref.current!.style.transform = `translate3d(${bounds.left}px, ${bounds.top}px, 0)`;
-    //   ref.current!.style.transition = 'transform 0.5s ease-in-out';
-    // }, [bounds]);
+  const [current, setCurrent] = useState<{ location?: Location; bounds?: DOMRectBounds }>({});
+  useEffect(() => {
+    // Check if piece moved.
+    invariant(ref.current);
+    if (!current.location || !isEqualLocation(current.location, piece.location)) {
+      // transform creates problems with DND (and required container div to be absolute).
+      // ref.current.style.transform = `translate3d(${bounds.left}px, ${bounds.top}px, 0)`;
+      // ref.current.style.transition = 'transform 500ms ease-in-out';
+      ref.current.style.transition = 'top 400ms ease-out, left 400ms ease-out';
+      ref.current.style.top = bounds.top + 'px';
+      ref.current.style.left = bounds.left + 'px';
+      setCurrent({ location: piece.location, bounds });
+    } else if (current.bounds !== bounds) {
+      // ref.current.style.transform = `translate3d(${bounds.left}px, ${bounds.top}px, 0)`;
+      // ref.current.style.transition = 'none';
+      ref.current.style.top = bounds.top + 'px';
+      ref.current.style.left = bounds.left + 'px';
+      setCurrent({ location: piece.location, bounds });
+    }
+  }, [piece.location, bounds]);
 
-    return (
-      <>
-        <div
-          ref={ref}
-          // TODO(burdon): This break DND.
-          // style={{
-          //   width: bounds.width,
-          //   height: bounds.height,
-          //   transform: `translate3d(${bounds.left}px, ${bounds.top}px, 0)`,
-          // }}
-          style={bounds}
-          className={mx(
-            'absolute',
-            classNames,
-            // animate && 'transition-transform duration-500 ease-in-out',
-            animate && 'transition-[top,left] duration-500 ease-in-out',
-            // orientation === 'black' && '_rotate-180',
-            dragging && 'opacity-20', // Must not unmount component while dragging.
-            isDragging && 'pointer-events-none', // Don't block the square's drop target.
-          )}
-        >
-          <Component className='grow' />
-          {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}
-        </div>
+  return (
+    <>
+      <div
+        ref={ref}
+        style={{
+          width: bounds.width,
+          height: bounds.height,
+        }}
+        // style={bounds}
+        className={mx(
+          'absolute',
+          classNames,
+          // orientation === 'black' && '_rotate-180',
+          dragging && 'opacity-20', // Must not unmount component while dragging.
+          isDragging && 'pointer-events-none', // Don't block the square's drop target.
+        )}
+      >
+        <Component className='grow' />
+        {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}
+      </div>
 
-        {preview &&
-          createPortal(
-            <div className={mx(classNames)}>
-              <Component className='grow' />
-            </div>,
-            preview,
-          )}
-      </>
-    );
-  },
-);
+      {preview &&
+        createPortal(
+          <div className={mx(classNames)}>
+            <Component className='grow' />
+          </div>,
+          preview,
+        )}
+    </>
+  );
+});
 
 Piece.displayName = 'Piece';

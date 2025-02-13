@@ -13,6 +13,7 @@ export type PieceType = string;
 export type PieceRecord<T extends PieceType = PieceType> = {
   id: string;
   type: T;
+  side: Player;
   location: Location;
 };
 
@@ -32,7 +33,13 @@ export const locationToString = (location: Location): string => location.join('-
 export const stringToLocation = (str: string): Location => str.split('-').map(Number) as Location;
 
 // Type guard.
-export const isPiece = (piece: unknown): piece is PieceType => typeof piece === 'string';
+export const isPiece = (piece: unknown): piece is PieceRecord =>
+  piece != null &&
+  typeof piece === 'object' &&
+  'id' in piece &&
+  'type' in piece &&
+  'location' in piece &&
+  isLocation(piece.location);
 
 // Type guard.
 export const isLocation = (token: unknown): token is Location =>
@@ -41,6 +48,7 @@ export const isLocation = (token: unknown): token is Location =>
 export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] === l2[0] && l1[1] === l2[1];
 
 export interface BoardModel<T extends PieceType = PieceType> {
+  turn: Player;
   pieces: ReadonlySignal<PieceMap<T>>;
   isValidMove: (move: Move) => boolean;
 }

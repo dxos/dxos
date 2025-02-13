@@ -6,16 +6,18 @@ import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { type Color } from 'chess.js';
 import React, { type FC } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type ChessModel } from '@dxos/react-ui-gameboard';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-export type ChessPanelProps = {
+export type ChessPanelProps = ThemedClassName<{
   model: ChessModel;
   orientation?: Color;
   onFlip?: () => void;
-};
+}>;
 
-export const ChessPanel: FC<ChessPanelProps> = ({ model: { game }, orientation = 'w', onFlip }) => {
+export const ChessPanel: FC<ChessPanelProps> = ({ classNames, model, orientation = 'w', onFlip }) => {
+  const game = model.game;
   const history = game.history();
   const label = game.isGameOver()
     ? game.isCheckmate()
@@ -43,7 +45,7 @@ export const ChessPanel: FC<ChessPanelProps> = ({ model: { game }, orientation =
   };
 
   return (
-    <div className='flex flex-col'>
+    <div className={mx('flex flex-col', classNames)}>
       <div className='flex items-center justify-between pl-2 pr-2 border-b' style={{ height: 32 }}>
         <Player color={orientation === 'w' ? 'b' : 'w'} />
         {onFlip && (

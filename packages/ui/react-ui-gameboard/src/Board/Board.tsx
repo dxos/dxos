@@ -27,26 +27,27 @@ const Root = ({ children, classNames, model, onDrop }: RootProps) => {
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
+    // TODO(burdon): Should target specific container.
+    log.info('monitorForElements');
     return monitorForElements({
       onDragStart: ({ source }) => {
-        log('onDragStart', { source });
+        log.info('onDragStart', { source });
         setDragging(true);
       },
       onDrop: ({ source, location }) => {
-        log('onDrop', { source, location });
+        log.info('onDrop', { source, location });
         const target = location.current.dropTargets[0];
         if (!target) {
           return;
         }
 
         const targetLocation = target.data.location;
-        const sourceLocation = source.data.location;
-        const pieceType = source.data.pieceType;
-        if (!isLocation(targetLocation) || !isLocation(sourceLocation) || !isPiece(pieceType)) {
+        const piece = source.data.piece;
+        if (!isLocation(targetLocation) || !isPiece(piece)) {
           return;
         }
 
-        onDrop?.({ source: sourceLocation, target: targetLocation, piece: pieceType });
+        onDrop?.({ source: piece.location, target: targetLocation, piece: piece.type });
         setDragging(false);
       },
     });
