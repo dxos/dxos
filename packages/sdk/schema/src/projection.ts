@@ -115,6 +115,11 @@ export class ViewProjection {
     return { field, props };
   };
 
+  /** Get all field projections */
+  getFieldProjections(): FieldProjection[] {
+    return this._view.fields.map((field) => this.getFieldProjection(field.id));
+  }
+
   /**
    * Update JSON schema property annotations and view fields.
    * @param projection The field and props to update

@@ -1,14 +1,15 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { FormatEnum } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { ViewEditor, Form } from '@dxos/react-ui-form';
+import { ViewEditor, Form, SelectInput } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
-import { ViewType } from '@dxos/schema';
+import { ViewType, ViewProjection } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
@@ -62,6 +63,32 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [dispatch, kanban],
   );
 
+  const projection = useMemo(() => {
+    if (kanban?.cardView?.target && schema) {
+      return new ViewProjection(schema, kanban.cardView.target);
+    }
+  }, [kanban?.cardView?.target, schema]);
+
+  const selectFields = useMemo(() => {
+    if (!projection) {
+      return [];
+    }
+
+    return projection
+      .getFieldProjections()
+      .filter((field) => field.props.format === FormatEnum.SingleSelect)
+      .map(({ field }) => ({ value: field.path, label: field.path }));
+  }, [projection]);
+
+  const onSave = useCallback(
+    (values: any) => {
+      const { columnField } = values;
+      kanban.columnField = columnField;
+      kanban.arrangement = undefined;
+    },
+    [kanban],
+  );
+
   if (!space || !schema || !kanban.cardView?.target) {
     return null;
   }
@@ -71,9 +98,9 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
       <Form
         schema={KanbanPropsSchema}
         values={{ columnField: kanban.columnField }}
-        onSave={({ columnField }) => {
-          kanban.columnField = columnField;
-          kanban.arrangement = undefined;
+        onSave={onSave}
+        Custom={{
+          columnField: (props) => <SelectInput {...props} options={selectFields} />,
         }}
       />
       <ViewEditor
