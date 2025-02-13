@@ -14,13 +14,11 @@ import { translationKey } from '../translations';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
-  onAddColumn?: (columnValue: string) => void;
   onAddCard?: (columnValue: string) => void;
   onRemoveCard?: (card: T) => void;
-  onRemoveEmptyColumn?: (columnValue: string) => void;
 };
 
-export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEmptyColumn }: KanbanProps) => {
+export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   // const [namingColumn, setNamingColumn] = useState(false);
 
@@ -42,7 +40,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
       rail={false}
       classNames='pli-1'
       onRearrange={model.onRearrange}
-      itemsCount={model.arrangement.length + (onAddColumn ? 1 : 0)}
+      itemsCount={model.arrangement.length}
     >
       {model.arrangement.map(({ columnValue, cards }) => {
         const { color, title } = model.getPivotAttributes(columnValue);

@@ -64,8 +64,6 @@ const StorybookKanban = () => {
     items: filteredObjects,
   });
 
-  const handleAddColumn = useCallback((columnValue: string) => model?.addEmptyColumn(columnValue), [model]);
-
   const handleAddCard = useCallback(
     (columnValue: string) => {
       if (space && cardSchema) {
@@ -98,30 +96,13 @@ const StorybookKanban = () => {
     [kanban?.cardView?.target, cardSchema],
   );
 
-  const handleRemoveEmptyColumn = useCallback(
-    (columnValue: string) => {
-      model?.removeColumnFromArrangement(columnValue);
-    },
-    [model],
-  );
-
   if (!cardSchema || !kanban) {
     return null;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      {model ? (
-        <Kanban
-          model={model}
-          onAddCard={handleAddCard}
-          onAddColumn={handleAddColumn}
-          onRemoveCard={handleRemoveCard}
-          onRemoveEmptyColumn={handleRemoveEmptyColumn}
-        />
-      ) : (
-        <div />
-      )}
+      {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         {kanban.cardView && (
           <ViewEditor

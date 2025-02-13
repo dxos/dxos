@@ -16,16 +16,23 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const [cardSchema, setCardSchema] = useState<EchoSchema>();
   const [projection, setProjection] = useState<ViewProjection>();
   const space = getSpace(kanban);
+
   useEffect(() => {
     if (kanban.cardView?.target?.query?.type && space) {
       // TODO(ZaymonFC): We should use a subscription here.
       const [schema] = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type }).runSync();
       if (schema) {
         setCardSchema(schema);
-        setProjection(new ViewProjection(schema, kanban.cardView!.target!));
       }
     }
   }, [kanban.cardView?.target?.query, space]);
+
+  useEffect(() => {
+    if (kanban.cardView?.target && cardSchema) {
+      setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
+    }
+    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  }, [kanban.cardView?.target, cardSchema, JSON.stringify(cardSchema?.jsonSchema)]);
 
   const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -36,8 +43,6 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     projection,
     items: filteredObjects,
   });
-
-  const handleAddColumn = useCallback((columnValue: string) => model?.addEmptyColumn(columnValue), [model]);
 
   const handleAddCard = useCallback(
     (columnValue: string) => {
@@ -62,23 +67,10 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     [space],
   );
 
-  const handleRemoveEmptyColumn = useCallback(
-    (columnValue: string) => {
-      model?.removeColumnFromArrangement(columnValue);
-    },
-    [model],
-  );
-
   return (
     <StackItem.Content toolbar={false}>
       {model ? (
-        <Kanban
-          model={model}
-          onAddCard={handleAddCard}
-          onAddColumn={handleAddColumn}
-          onRemoveCard={handleRemoveCard}
-          onRemoveEmptyColumn={handleRemoveEmptyColumn}
-        />
+        <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />
       ) : (
         <span>Loading</span>
       )}
