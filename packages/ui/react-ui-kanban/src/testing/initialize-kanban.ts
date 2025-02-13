@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type EchoSchema, S, TypedObject } from '@dxos/echo-schema';
+import { AST, type EchoSchema, S, TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
-import { createView } from '@dxos/schema';
+import { createView, ViewProjection, createFieldId } from '@dxos/schema';
 
 import { KanbanType } from '../defs';
 
@@ -26,30 +26,46 @@ export const initializeKanban = async ({
     description: S.optional(S.String).annotations({
       [AST.TitleAnnotationId]: 'Description',
     }),
-    state: S.optional(S.String).annotations({
-      [AST.TitleAnnotationId]: 'State',
-    }), // TODO(burdon): Should default to prop name?
   });
 
   const [taskSchema] = await space.db.schemaRegistry.register([TaskSchema]);
 
+  const view = createView({
+    name: "Test kanban's card view",
+    typename: taskSchema.typename,
+    jsonSchema: taskSchema.jsonSchema,
+    fields: ['title', 'description'],
+  });
+
+  const stateOptions = [
+    { id: PublicKey.random().truncate(), title: 'Draft', color: 'rose' },
+    { id: PublicKey.random().truncate(), title: 'Active', color: 'emerald' },
+    { id: PublicKey.random().truncate(), title: 'Completed', color: 'amber' },
+  ];
+
+  new ViewProjection(taskSchema, view).setFieldProjection({
+    field: {
+      id: createFieldId(),
+      path: 'state' as JsonProp,
+      size: 150,
+    },
+    props: {
+      property: 'state' as JsonProp,
+      type: TypeEnum.String,
+      format: FormatEnum.SingleSelect,
+      title: 'State',
+      options: stateOptions,
+    },
+  });
+
   const kanban = space.db.add(
     create(KanbanType, {
-      cardView: makeRef(
-        createView({
-          name: 'Test kanban’s card view',
-          typename: taskSchema.typename,
-          jsonSchema: taskSchema.jsonSchema,
-          fields: ['title', 'description', 'state'],
-        }),
-      ),
+      cardView: makeRef(view),
       columnField: 'state',
-      arrangement: [
-        { columnValue: 'To do', ids: [] },
-        { columnValue: 'Doing', ids: [] },
-        { columnValue: 'Done', ids: [] },
-        { columnValue: 'Fridge', ids: [] },
-      ],
+      arrangement: stateOptions.map(({ id }) => ({
+        columnValue: id,
+        ids: [],
+      })),
     }),
   );
 

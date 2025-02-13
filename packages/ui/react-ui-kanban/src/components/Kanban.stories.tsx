@@ -8,7 +8,6 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type EchoSchema } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
@@ -159,7 +158,6 @@ const meta: Meta<StoryProps> = {
             create(taskSchema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
-              state: ['Pending', 'Active', 'Done'][faker.number.int(2)],
             }),
           );
         });
