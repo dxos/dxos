@@ -5,7 +5,9 @@ import { signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
+import { type ViewProjection } from '@dxos/schema';
 
 import { type KanbanType } from './kanban';
 import { computeArrangement } from '../util';
@@ -15,6 +17,7 @@ export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 export type KanbanModelProps = {
   kanban: KanbanType;
   cardSchema: EchoSchema;
+  projection: ViewProjection;
 };
 
 export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
@@ -22,6 +25,7 @@ export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { col
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
   private readonly _kanban: KanbanType;
   private readonly _cardSchema: EchoSchema;
+  private readonly _projection: ViewProjection;
   private _items = signal<T[]>([]);
   private _arrangement = signal<KanbanArrangement<T>>([]);
 
@@ -29,10 +33,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return computeArrangement<T>(this._kanban, this._items.value);
   }
 
-  constructor({ kanban, cardSchema }: KanbanModelProps) {
+  constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
     super();
     this._kanban = kanban;
     this._cardSchema = cardSchema;
+    this._projection = projection;
     this._arrangement.value = this._computeArrangement();
   }
 
@@ -61,6 +66,16 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    */
   get arrangement() {
     return this._arrangement.value;
+  }
+
+  /** Get the display attributes for a column by its ID. */
+  public getPivotAttributes(id: string) {
+    invariant(this._kanban.columnField);
+    const fieldId = this._projection.getFieldId(this._kanban.columnField);
+    invariant(fieldId);
+    const option = this._projection.getFieldProjection(fieldId).props.options?.find((option) => option.id === id);
+    invariant(option);
+    return option;
   }
 
   public addEmptyColumn(columnValue: string) {

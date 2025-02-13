@@ -44,81 +44,84 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
       onRearrange={model.onRearrange}
       itemsCount={model.arrangement.length + (onAddColumn ? 1 : 0)}
     >
-      {model.arrangement.map(({ columnValue, cards }) => (
-        <StackItem.Root key={columnValue} item={{ id: columnValue }} size={20} classNames='pli-1 plb-2'>
-          <div role='none' className={mx('bg-deck rounded-lg grid', railGridHorizontal)}>
-            <StackItem.Heading>
-              <StackItem.DragHandle asChild>
-                <IconButton
-                  iconOnly
-                  icon='ph--dots-six-vertical--regular'
-                  variant='ghost'
-                  label={t('column drag handle label')}
-                />
-              </StackItem.DragHandle>
-              <Tag className='flex-1'>{columnValue}</Tag>
-              {onRemoveEmptyColumn && cards.length < 1 && (
-                <IconButton
-                  iconOnly
-                  variant='ghost'
-                  icon='ph--x--regular'
-                  label={t('remove empty column label')}
-                  onClick={() => onRemoveEmptyColumn(columnValue)}
-                />
-              )}
-            </StackItem.Heading>
-            <Stack
-              id={columnValue}
-              orientation='vertical'
-              size='contain'
-              rail={false}
-              classNames='pbe-1'
-              onRearrange={model.onRearrange}
-              itemsCount={cards.length}
-            >
-              {cards.map((card) => (
-                <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2'>
-                  <div role='none' className='rounded bg-[--surface-bg]'>
-                    <div role='none' className='flex items-center'>
-                      <StackItem.DragHandle asChild>
-                        <IconButton
-                          iconOnly
-                          icon='ph--dots-six-vertical--regular'
-                          variant='ghost'
-                          label={t('card drag handle label')}
-                        />
-                      </StackItem.DragHandle>
-                      {onRemoveCard && (
-                        <>
-                          <span role='separator' className='grow' />
+      {model.arrangement.map(({ columnValue, cards }) => {
+        const { color, title } = model.getPivotAttributes(columnValue);
+        return (
+          <StackItem.Root key={columnValue} item={{ id: columnValue }} size={20} classNames='pli-1 plb-2'>
+            <div role='none' className={mx('bg-deck rounded-lg grid', railGridHorizontal)}>
+              <StackItem.Heading>
+                <StackItem.DragHandle asChild>
+                  <IconButton
+                    iconOnly
+                    icon='ph--dots-six-vertical--regular'
+                    variant='ghost'
+                    label={t('column drag handle label')}
+                  />
+                </StackItem.DragHandle>
+                <Tag palette={color as any}>{title}</Tag>
+                {onRemoveEmptyColumn && cards.length < 1 && (
+                  <IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--x--regular'
+                    label={t('remove empty column label')}
+                    onClick={() => onRemoveEmptyColumn(columnValue)}
+                  />
+                )}
+              </StackItem.Heading>
+              <Stack
+                id={columnValue}
+                orientation='vertical'
+                size='contain'
+                rail={false}
+                classNames='pbe-1'
+                onRearrange={model.onRearrange}
+                itemsCount={cards.length}
+              >
+                {cards.map((card) => (
+                  <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2'>
+                    <div role='none' className='rounded bg-[--surface-bg]'>
+                      <div role='none' className='flex items-center'>
+                        <StackItem.DragHandle asChild>
                           <IconButton
                             iconOnly
+                            icon='ph--dots-six-vertical--regular'
                             variant='ghost'
-                            icon='ph--x--regular'
-                            label={t('remove card label')}
-                            onClick={() => onRemoveCard(card)}
+                            label={t('card drag handle label')}
                           />
-                        </>
-                      )}
+                        </StackItem.DragHandle>
+                        {onRemoveCard && (
+                          <>
+                            <span role='separator' className='grow' />
+                            <IconButton
+                              iconOnly
+                              variant='ghost'
+                              icon='ph--x--regular'
+                              label={t('remove card label')}
+                              onClick={() => onRemoveCard(card)}
+                            />
+                          </>
+                        )}
+                      </div>
+                      <Form values={card} schema={model.cardSchema} Custom={Custom} readonly />
                     </div>
-                    <Form values={card} schema={model.cardSchema} Custom={Custom} readonly />
+                  </StackItem.Root>
+                ))}
+                {onAddCard && (
+                  <div role='none' className='plb-1 pli-2'>
+                    <IconButton
+                      icon='ph--plus--regular'
+                      label={t('add card label')}
+                      onClick={() => onAddCard(columnValue)}
+                      classNames='is-full'
+                    />
                   </div>
-                </StackItem.Root>
-              ))}
-              {onAddCard && (
-                <div role='none' className='plb-1 pli-2'>
-                  <IconButton
-                    icon='ph--plus--regular'
-                    label={t('add card label')}
-                    onClick={() => onAddCard(columnValue)}
-                    classNames='is-full'
-                  />
-                </div>
-              )}
-            </Stack>
-          </div>
-        </StackItem.Root>
-      ))}
+                )}
+              </Stack>
+            </div>
+          </StackItem.Root>
+        );
+      })}
       {onAddColumn && (
         <StackItem.Root item={{ id: 'new-column-cta' }} size={20} classNames='pli-1 plb-2'>
           <StackItem.Heading>

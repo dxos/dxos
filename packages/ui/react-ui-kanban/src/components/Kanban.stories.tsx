@@ -14,7 +14,7 @@ import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewType } from '@dxos/schema';
+import { ViewType, ViewProjection } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
@@ -34,6 +34,8 @@ const StorybookKanban = () => {
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [cardSchema, setCardSchema] = useState<EchoSchema>();
+  const [projection, setProjection] = useState<ViewProjection>();
+
   useEffect(() => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
@@ -45,12 +47,19 @@ const StorybookKanban = () => {
     }
   }, [kanbans]);
 
+  useEffect(() => {
+    if (kanban?.cardView?.target && cardSchema) {
+      setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
+    }
+  }, [kanban?.cardView?.target, cardSchema]);
+
   const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
     kanban,
     cardSchema,
+    projection,
     items: filteredObjects,
   });
 
