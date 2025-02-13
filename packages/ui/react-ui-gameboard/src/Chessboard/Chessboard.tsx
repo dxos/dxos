@@ -2,47 +2,46 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState } from 'react';
-import useResizeObserver from 'use-resize-observer';
+import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState, memo } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
-import { type ChessPiece, ChessPieces, getSquareColor, locationToPos, mapPieces } from './chess';
+import { useTrackProps } from '@dxos/react-ui';
+
+import { type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
 import {
   type DOMRectBounds,
   type Location,
   type PieceRecord,
-  type PieceMap,
   type Player,
   Piece,
   Square,
   getRelativeBounds,
   locationToString,
-  type Move,
 } from '../Board';
+import { useBoardContext } from '../Board';
 
 export type ChessboardProps = PropsWithChildren<{
   orientation?: Player;
-  pieces?: PieceMap;
   showLabels?: boolean;
   debug?: boolean;
   rows?: number;
   cols?: number;
-  isValidMove?: (move: Move) => boolean;
 }>;
 
 /**
  * Chessboard layout.
  */
-export const Chessboard = ({
-  orientation,
-  pieces: _pieces,
-  showLabels = false,
-  debug = false,
-  rows = 8,
-  cols = 8,
-  isValidMove,
-}: ChessboardProps) => {
-  const { ref: containerRef, width, height } = useResizeObserver();
-  const gridRef = useRef<HTMLDivElement>(null);
+export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols = 8 }: ChessboardProps) => {
+  useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+  const dimensions = useRef<{ width?: number; height?: number }>({ width, height });
+  const resized = dimensions.current.width !== width || dimensions.current.height !== height;
+  useEffect(() => {
+    dimensions.current = { width, height };
+  }, [width, height]);
+
+  const { model } = useBoardContext();
+  const pieces = model?.pieces.value ?? {};
 
   const locations = useMemo<Location[]>(() => {
     return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
@@ -66,6 +65,7 @@ export const Chessboard = ({
 
   // Build map of square locations to bounds.
   const [grid, setGrid] = useState<Record<string, DOMRectBounds>>({});
+  const gridRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     setGrid(
       locations.reduce(
@@ -79,19 +79,13 @@ export const Chessboard = ({
     );
   }, [locations, width, height]);
 
-  // TODO(burdon): Detect new game and reset.
-  const [pieces, setPieces] = useState<PieceMap>({});
-  useEffect(() => {
-    setPieces(mapPieces(pieces, _pieces ?? {}));
-  }, [_pieces]);
-
   // Get the bounds of each square and piece.
   const positions = useMemo<{ bounds: DOMRectBounds; piece: PieceRecord }[]>(() => {
     if (!gridRef.current) {
       return [];
     }
 
-    return Object.values(pieces).map((piece) => {
+    return Object.values(pieces ?? {}).map((piece) => {
       const bounds = grid[locationToString(piece.location)];
       return { bounds, piece };
     });
@@ -110,7 +104,6 @@ export const Chessboard = ({
             label={showLabels ? locationToPos(location) : undefined}
             bounds={grid[locationToString(location)]}
             classNames={getSquareColor(location)}
-            isValidMove={isValidMove}
           />
         ))}
       </div>
@@ -118,10 +111,11 @@ export const Chessboard = ({
         {positions.map(({ bounds, piece }) => (
           <Piece
             key={piece.id}
-            location={locationToString(piece.location)}
+            orientation={orientation}
+            location={piece.location}
             pieceType={piece.type}
             label={debug ? piece.id : undefined}
-            transition={true}
+            animate={!resized}
             bounds={bounds}
             Component={ChessPieces[piece.type as ChessPiece]}
           />
@@ -129,7 +123,9 @@ export const Chessboard = ({
       </div>
     </div>
   );
-};
+});
+
+Chessboard.displayName = 'Chessboard';
 
 const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
   return container.querySelector(`[data-location="${locationToString(location)}"]`);

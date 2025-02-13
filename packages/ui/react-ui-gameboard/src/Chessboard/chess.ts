@@ -2,30 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chess } from 'chess.js';
+import { type ReadonlySignal, signal } from '@preact/signals-core';
+import { Chess, validateFen } from 'chess.js';
 import { type FC, type SVGProps } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type Move, type Location, type PieceMap, locationToString } from '../Board';
-import { BB, BK, BQ, BN, BP, BR, WB, WK, WN, WP, WQ, WR } from '../gen/pieces/chess/alpha';
+import { type Move, type Location, type PieceMap, locationToString, type PieceType, type BoardModel } from '../Board';
+import * as Alpha from '../gen/pieces/chess/alpha';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
 
-export const ChessPieces: Record<ChessPiece, FC<SVGProps<SVGSVGElement>>> = {
-  BK,
-  BQ,
-  BR,
-  BB,
-  BN,
-  BP,
-  WK,
-  WQ,
-  WR,
-  WB,
-  WN,
-  WP,
-};
+export const ChessPieces: Record<ChessPiece, FC<SVGProps<SVGSVGElement>>> = Alpha;
 
 export const posToLocation = (pos: string): Location => {
   const col = pos.charCodeAt(0) - 'a'.charCodeAt(0);
@@ -37,7 +25,7 @@ export const locationToPos = ([row, col]: Location): string => {
   return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 };
 
-const styles = {
+export const styles = {
   neutral: {
     white: 'bg-neutral-200',
     black: 'bg-neutral-50',
@@ -49,13 +37,13 @@ const styles = {
 };
 
 export const getSquareColor = ([row, col]: Location) => {
-  return (col * 7 + row) % 2 === 0 ? styles.blue.white : styles.blue.black;
+  return (col + row) % 2 === 0 ? styles.blue.white : styles.blue.black;
 };
 
 /**
  * Attempt move.
  */
-export const makeMove = (game: Chess, { source, target }: Move): Chess | null => {
+const makeMove = (game: Chess, { source, target }: Move): Chess | null => {
   const s = locationToPos(source);
   const t = locationToPos(target);
   try {
@@ -68,33 +56,92 @@ export const makeMove = (game: Chess, { source, target }: Move): Chess | null =>
   }
 };
 
-export const getPieces = (game: Chess): PieceMap<ChessPiece> => {
-  const map: PieceMap<ChessPiece> = {};
+/**
+ * Chess model.
+ */
+export class ChessModel implements BoardModel<ChessPiece> {
+  private _game!: Chess;
+  private readonly _pieces = signal<PieceMap<ChessPiece>>({});
 
-  new Chess(game.fen()).board().flatMap((row) =>
-    row.forEach((record) => {
-      if (!record) {
-        return;
-      }
+  constructor(fen?: string) {
+    this.initialize(fen);
+  }
 
-      const { square, type, color } = record;
-      const pieceType = `${color.toUpperCase()}${type.toUpperCase()}` as ChessPiece;
-      const location = posToLocation(square);
-      map[locationToString(location)] = {
-        id: `${square}-${pieceType}`,
-        type: pieceType,
-        location,
-      };
-    }),
-  );
+  get game() {
+    return this._game;
+  }
 
-  return map;
-};
+  get fen() {
+    return this._game.fen();
+  }
+
+  get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
+    return this._pieces;
+  }
+
+  initialize(fen?: string) {
+    this._pieces.value = {};
+    this._game = new Chess(fen ? (validateFen(fen).ok ? fen : undefined) : undefined);
+    this._update();
+  }
+
+  isValidMove(move: Move): boolean {
+    return makeMove(new Chess(this._game.fen()), move) !== null;
+  }
+
+  makeMove(move: Move): boolean {
+    const game = makeMove(this._game, move);
+    if (!game) {
+      return false;
+    }
+
+    this._game = game;
+    this._update();
+    return true;
+  }
+
+  makeRandomMove(): boolean {
+    const moves = this._game.moves();
+    if (!moves.length) {
+      return false;
+    }
+
+    const move = moves[Math.floor(Math.random() * moves.length)];
+    this._game.move(move);
+    this._update();
+    return true;
+  }
+
+  /**
+   * Update pieces preserving identity.
+   */
+  private _update() {
+    const pieces: PieceMap<ChessPiece> = {};
+    this._game.board().flatMap((row) =>
+      row.forEach((record) => {
+        if (!record) {
+          return;
+        }
+
+        const { square, type, color } = record;
+        const pieceType = `${color.toUpperCase()}${type.toUpperCase()}` as ChessPiece;
+        const location = posToLocation(square);
+        pieces[locationToString(location)] = {
+          id: `${square}-${pieceType}`,
+          type: pieceType,
+          location,
+        };
+      }),
+    );
+
+    this._pieces.value = mapPieces(this._pieces.value, pieces);
+  }
+}
 
 /**
  * Preserve the original piece objects (and IDs).
  */
-export const mapPieces = (before: PieceMap, after: PieceMap): PieceMap => {
+export const mapPieces = <T extends PieceType>(before: PieceMap<T>, after: PieceMap<T>): PieceMap<T> => {
   const difference: { added: PieceMap; removed: PieceMap } = {
     removed: {},
     added: {},
@@ -117,12 +164,11 @@ export const mapPieces = (before: PieceMap, after: PieceMap): PieceMap => {
   for (const piece of Object.values(difference.added)) {
     const previous = Object.values(difference.removed).find((p) => p.type === piece.type);
     if (previous) {
-      // Preserve the original piece ID.
       piece.id = previous.id;
     }
   }
 
-  log.info('delta', {
+  log('delta', {
     before: Object.keys(before).length,
     after: Object.keys(after).length,
     removed: Object.keys(difference.removed).length,

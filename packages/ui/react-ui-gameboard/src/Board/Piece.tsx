@@ -6,7 +6,7 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 // import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { useState, useRef, useEffect, type FC, type SVGProps } from 'react';
+import React, { useState, useRef, useEffect, type FC, type SVGProps, memo } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
@@ -15,34 +15,39 @@ import { useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useBoardContext } from './context';
-import { stringToLocation } from './types';
+import { type Location, type Player } from './types';
 import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
-  location: string; // TODO(burdon): Change back to location.
+  location: Location;
   pieceType: string;
+  orientation?: Player;
   bounds: DOMRectBounds;
   label?: string;
-  transition?: boolean;
+  animate?: boolean;
   Component: FC<SVGProps<SVGSVGElement>>;
 }>;
 
-export const Piece = ({ classNames, location, pieceType, bounds, label, transition, Component }: PieceProps) => {
-  useTrackProps({ classNames, location, pieceType, bounds, label, transition, Component }, 'Piece');
+export const Piece = memo(
+  ({ classNames, location, pieceType, orientation, bounds, label, animate, Component }: PieceProps) => {
+    useTrackProps(
+      { classNames, location, pieceType, orientation, bounds, label, animate, Component },
+      Piece.displayName,
+      false,
+    );
 
-  const ref = useRef<HTMLDivElement>(null);
-  const [preview, setPreview] = useState<HTMLElement>();
-
-  if (false) {
-    const [dragging, setDragging] = useState(false);
     const { dragging: isDragging } = useBoardContext();
+    const [dragging, setDragging] = useState(false);
+    const [preview, setPreview] = useState<HTMLElement>();
+
+    const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
       const el = ref.current;
       invariant(el);
 
       return draggable({
         element: el,
-        getInitialData: () => ({ location: stringToLocation(location), pieceType }),
+        getInitialData: () => ({ location, pieceType }),
         onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
           log('onGenerateDragPreview', { source: source.data });
           setCustomNativeDragPreview({
@@ -63,49 +68,56 @@ export const Piece = ({ classNames, location, pieceType, bounds, label, transiti
             nativeSetDragImage,
           });
         },
-        // TODO(burdon): Check size.
+        // TODO(burdon): Check side.
         canDrag: () => true,
         onDragStart: () => setDragging(true),
         onDrop: () => setDragging(false),
       });
     }, [location, pieceType]);
-  }
 
-  // Make sure only applied once.
-  // TODO(burdon): Sometimes jumps without animation. Prevent re-render.
-  useEffect(() => {
-    log.info('bounds update', { bounds });
-    ref.current!.style.top = bounds.top + 'px';
-    ref.current!.style.left = bounds.left + 'px';
-  }, [bounds]);
+    // useEffect(() => {
+    //   console.log('bounds', { bounds });
+    //   ref.current!.style.width = bounds.width + 'px';
+    //   ref.current!.style.height = bounds.height + 'px';
+    //   ref.current!.style.transform = `translate3d(${bounds.left}px, ${bounds.top}px, 0)`;
+    //   ref.current!.style.transition = 'transform 0.5s ease-in-out';
+    // }, [bounds]);
 
-  return (
-    <>
-      <div
-        ref={ref}
-        style={{
-          width: bounds.width,
-          height: bounds.height,
-        }}
-        className={mx(
-          'absolute flex justify-center items-center',
-          classNames,
-          transition && 'transition-[top,left] duration-300 ease-in-out',
-          // dragging && 'opacity-20', // Must not unmount component while dragging.
-          // isDragging && 'pointer-events-none', // Don't block the square's drop target.
-        )}
-      >
-        <Component className={mx('w-full h-full')} />
-        {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}
-      </div>
+    return (
+      <>
+        <div
+          ref={ref}
+          // TODO(burdon): This break DND.
+          // style={{
+          //   width: bounds.width,
+          //   height: bounds.height,
+          //   transform: `translate3d(${bounds.left}px, ${bounds.top}px, 0)`,
+          // }}
+          style={bounds}
+          className={mx(
+            'absolute',
+            classNames,
+            // animate && 'transition-transform duration-500 ease-in-out',
+            animate && 'transition-[top,left] duration-500 ease-in-out',
+            // orientation === 'black' && '_rotate-180',
+            dragging && 'opacity-20', // Must not unmount component while dragging.
+            isDragging && 'pointer-events-none', // Don't block the square's drop target.
+          )}
+        >
+          <Component className='grow' />
+          {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}
+        </div>
 
-      {preview &&
-        createPortal(
-          <div className={mx('absolute flex justify-center items-center', classNames)}>
-            <Component className={mx('w-full h-full')} />
-          </div>,
-          preview,
-        )}
-    </>
-  );
-};
+        {preview &&
+          createPortal(
+            <div className={mx(classNames)}>
+              <Component className='grow' />
+            </div>,
+            preview,
+          )}
+      </>
+    );
+  },
+);
+
+Piece.displayName = 'Piece';

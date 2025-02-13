@@ -6,24 +6,37 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import React, { forwardRef, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { BoardContext } from './context';
-import { isLocation, isPiece, type Player, type Move, type PieceMap } from './types';
-import { Chessboard } from '../Chessboard';
+import { type BoardModel, isLocation, isPiece, type Move } from './types';
 
-export type BoardProps = {
-  orientation?: Player;
-  pieces?: PieceMap;
-  showLabels?: boolean;
-  debug?: boolean;
-  isValidMove?: (move: Move) => boolean;
+type ContainerProps = PropsWithChildren &
+  ThemedClassName & {
+    style?: React.CSSProperties;
+  };
+
+/**
+ * Container centers the board.
+ */
+const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children, classNames, style }, forwardedRef) => {
+  return (
+    <div ref={forwardedRef} style={style} className='flex w-full h-full justify-center overflow-hidden'>
+      <div className={mx('max-w-full max-h-full content-center', classNames)}>{children}</div>
+    </div>
+  );
+});
+
+type RootProps = PropsWithChildren<{
+  model?: BoardModel;
   onDrop?: (move: Move) => boolean;
-};
+}>;
 
 /**
  * Generic board container.
  */
-export const Board = ({ onDrop, ...props }: BoardProps) => {
+const Root = ({ children, model, onDrop }: RootProps) => {
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -53,21 +66,16 @@ export const Board = ({ onDrop, ...props }: BoardProps) => {
   }, []);
 
   return (
-    <BoardContext.Provider value={{ dragging }}>
-      <Container>
-        <Chessboard {...props} />
-      </Container>
+    <BoardContext.Provider value={{ model, dragging }}>
+      <Container classNames={mx('aspect-square')}>{children}</Container>
     </BoardContext.Provider>
   );
 };
 
-/**
- * Container centers the board.
- */
-const Container = forwardRef<HTMLDivElement, PropsWithChildren>(({ children }, forwardedRef) => {
-  return (
-    <div ref={forwardedRef} className='flex w-full h-full justify-center overflow-hidden'>
-      <div className='max-w-full max-h-full aspect-square content-center'>{children}</div>
-    </div>
-  );
-});
+Root.displayName = 'Board.Root';
+
+export const Board = {
+  Root,
+};
+
+export type { RootProps as BoardRootProps };

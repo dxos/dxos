@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ReadonlySignal } from '@preact/signals-core';
+
 export type Player = 'black' | 'white';
 
 export type Location = [number, number];
@@ -26,8 +28,8 @@ export type Move = {
   promotion?: PieceType;
 };
 
-export const locationToString = (location: Location): string => location.join(',');
-export const stringToLocation = (str: string): Location => str.split(',').map(Number) as Location;
+export const locationToString = (location: Location): string => location.join('-');
+export const stringToLocation = (str: string): Location => str.split('-').map(Number) as Location;
 
 // Type guard.
 export const isPiece = (piece: unknown): piece is PieceType => typeof piece === 'string';
@@ -37,3 +39,8 @@ export const isLocation = (token: unknown): token is Location =>
   Array.isArray(token) && token.length === 2 && token.every((val) => typeof val === 'number');
 
 export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] === l2[0] && l1[1] === l2[1];
+
+export interface BoardModel<T extends PieceType = PieceType> {
+  pieces: ReadonlySignal<PieceMap<T>>;
+  isValidMove: (move: Move) => boolean;
+}

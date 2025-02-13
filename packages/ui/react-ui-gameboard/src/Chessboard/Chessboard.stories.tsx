@@ -5,70 +5,45 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { Chess, validateFen } from 'chess.js';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { getPieces, makeMove } from './chess';
-import { Board, type Player, type PieceMap } from '../Board';
+import { Chessboard, type ChessboardProps } from './Chessboard';
+import { ChessModel } from './chess';
+import { Board, type BoardRootProps, type Player, type Move } from '../Board';
 
-// TODO(burdon): Wrap model.
-// TODO(burdon): Promotion.
-const Render = ({ fen }: { fen: string }) => {
-  const game = useMemo(() => new Chess(validateFen(fen).ok ? fen : undefined), [fen]);
-  const [pieces, setPieces] = useState<PieceMap>(getPieces(game));
-  const [orientation, setOrientation] = useState<Player>('white');
+type RenderProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
+  fen: string;
+};
 
-  const handleReset = () => {
-    game.reset();
-    setPieces(getPieces(game));
-  };
+const Render = ({ fen, orientation: _orientation, ...props }: RenderProps) => {
+  const model = useMemo(() => new ChessModel(fen), [fen]);
+  const [orientation, setOrientation] = useState<Player | undefined>(_orientation);
 
-  const handleMove = () => {
-    const moves = game.moves();
-    if (moves.length > 0) {
-      const move = moves[Math.floor(Math.random() * moves.length)];
-      game.move(move);
-      setPieces(getPieces(game));
-    }
-  };
+  const handleDrop = useCallback<NonNullable<BoardRootProps['onDrop']>>((move: Move) => model.makeMove(move), [model]);
 
   return (
     <div className='flex flex-col grow gap-2 overflow-hidden'>
       <Toolbar.Root>
-        <Button onClick={handleReset}>Reset</Button>
-        <Button onClick={handleMove}>Move</Button>
+        <Button onClick={() => model.initialize()}>Reset</Button>
+        <Button onClick={() => model.makeRandomMove()}>Move</Button>
         <div className='grow'></div>
         <Button onClick={() => setOrientation((orientation) => (orientation === 'white' ? 'black' : 'white'))}>
           Toggle
         </Button>
       </Toolbar.Root>
-      <Board
-        pieces={pieces}
-        orientation={orientation}
-        showLabels={false}
-        debug={false}
-        isValidMove={(move) => {
-          return makeMove(new Chess(game.fen()), move) !== null;
-        }}
-        onDrop={(move) => {
-          if (!makeMove(game, move)) {
-            return false;
-          }
-
-          setPieces(getPieces(game));
-          return true;
-        }}
-      />
+      <Board.Root model={model} onDrop={handleDrop}>
+        <Chessboard orientation={orientation} {...props} />
+      </Board.Root>
     </div>
   );
 };
 
 const meta: Meta<typeof Render> = {
   title: 'ui/react-ui-gameboard/Chessboard',
-  // component: Board,
+  component: Chessboard,
   render: Render,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
@@ -77,9 +52,13 @@ export default meta;
 
 type Story = StoryObj<typeof Render>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const Debug: Story = {
   args: {
-    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-    // fen: '8/7k/8/8/8/8/8/K7 w - - 0 1',
+    debug: true,
+    showLabels: true,
+    orientation: 'black',
+    fen: 'q3k1nr/1pp1nQpp/3p4/1P2p3/4P3/B1PP1b2/B5PP/5K2 b k - 0 17',
   },
 };
