@@ -70,23 +70,21 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
 
   const [current, setCurrent] = useState<{ location?: Location; bounds?: DOMRectBounds }>({});
   useEffect(() => {
-    // Check if piece moved.
-    invariant(ref.current);
-    if (!current.location || !isEqualLocation(current.location, piece.location)) {
-      // transform creates problems with DND (and required container div to be absolute).
-      // ref.current.style.transform = `translate3d(${bounds.left}px, ${bounds.top}px, 0)`;
-      // ref.current.style.transition = 'transform 500ms ease-in-out';
-      ref.current.style.transition = 'top 400ms ease-out, left 400ms ease-out';
-      ref.current.style.top = bounds.top + 'px';
-      ref.current.style.left = bounds.left + 'px';
-      setCurrent({ location: piece.location, bounds });
-    } else if (current.bounds !== bounds) {
-      // ref.current.style.transform = `translate3d(${bounds.left}px, ${bounds.top}px, 0)`;
-      // ref.current.style.transition = 'none';
-      ref.current.style.top = bounds.top + 'px';
-      ref.current.style.left = bounds.left + 'px';
-      setCurrent({ location: piece.location, bounds });
-    }
+    // Change position independently of render cycle.
+    requestAnimationFrame(() => {
+      // Check if piece moved.
+      invariant(ref.current);
+      if (!current.location || !isEqualLocation(current.location, piece.location)) {
+        ref.current.style.transition = 'top 400ms ease-out, left 400ms ease-out';
+        ref.current.style.top = bounds.top + 'px';
+        ref.current.style.left = bounds.left + 'px';
+        setCurrent({ location: piece.location, bounds });
+      } else if (current.bounds !== bounds) {
+        ref.current.style.top = bounds.top + 'px';
+        ref.current.style.left = bounds.left + 'px';
+        setCurrent({ location: piece.location, bounds });
+      }
+    });
   }, [piece.location, bounds]);
 
   return (
@@ -97,7 +95,6 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
           width: bounds.width,
           height: bounds.height,
         }}
-        // style={bounds}
         className={mx(
           'absolute',
           classNames,
