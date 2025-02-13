@@ -2,14 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps } from 'react';
+import { Chess } from 'chess.js';
+import React, { useEffect, useState } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
+import { ChessModel, Board, Chessboard } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Chess } from './Chess';
+import { PlayerSelector } from './PlayerSelector';
+import { type GameType } from '../types';
 
-const ChessContainer = ({ game, role }: Pick<ComponentProps<typeof Chess>, 'game'> & { role?: string }) => {
+const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
+  const [model, setModel] = useState<ChessModel>(new ChessModel());
+  useEffect(() => {
+    if (!model || game.pgn !== model?.game.pgn()) {
+      const chess = new Chess();
+      if (game.pgn) {
+        chess.loadPgn(game.pgn);
+      }
+
+      // TODO(burdon): Update current model.
+      setModel(new ChessModel(chess.fen()));
+    }
+  }, [game.pgn]);
+
   const space = getSpace(game);
   if (!space) {
     return null;
@@ -17,7 +33,15 @@ const ChessContainer = ({ game, role }: Pick<ComponentProps<typeof Chess>, 'game
 
   return (
     <StackItem.Content toolbar={false}>
-      <Chess game={game} space={space} playerSelector={role === 'article'} />
+      <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
+        <div />
+
+        <Board.Root classNames={'m-4'} model={model} onDrop={(move) => model.makeMove(move)}>
+          <Chessboard />
+        </Board.Root>
+
+        <PlayerSelector game={game} space={space} />
+      </div>
     </StackItem.Content>
   );
 };

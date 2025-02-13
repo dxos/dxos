@@ -50,6 +50,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-gameboard"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {

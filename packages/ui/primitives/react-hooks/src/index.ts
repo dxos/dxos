@@ -16,4 +16,5 @@ export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
 export * from './useResize';
+export * from './useTrackProps';
 export * from './useTransitions';
