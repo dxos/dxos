@@ -51,7 +51,8 @@ const StorybookKanban = () => {
     if (kanban?.cardView?.target && cardSchema) {
       setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
     }
-  }, [kanban?.cardView?.target, cardSchema]);
+    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  }, [kanban?.cardView?.target, cardSchema, JSON.stringify(cardSchema?.jsonSchema)]);
 
   const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);

@@ -36,16 +36,49 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private _items = signal<T[]>([]);
   private _arrangement = signal<KanbanArrangement<T>>([]);
 
-  private _pivotOptions() {
+  private _getSelectOptions() {
     invariant(this._kanban.columnField);
     const fieldId = this._projection.getFieldId(this._kanban.columnField);
     invariant(fieldId);
     return this._projection.getFieldProjection(fieldId).props.options;
   }
 
+  private _ensureValidColumns() {
+    if (!this._kanban.columnField) {
+      return;
+    }
+
+    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
+
+    for (const item of this._items.value) {
+      const itemColumn = item[this._kanban.columnField as keyof typeof item];
+      if (itemColumn && !validColumnValues.has(itemColumn as string)) {
+        // Set to undefined which will place it in uncategorized
+        item[this._kanban.columnField as keyof typeof item] = undefined as any;
+      }
+    }
+  }
+
+  private _cleanupArrangement() {
+    if (!this._kanban.arrangement) {
+      return;
+    }
+
+    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
+
+    for (let i = this._kanban.arrangement.length - 1; i >= 0; i--) {
+      const col = this._kanban.arrangement[i];
+      if (col.columnValue !== UNCATEGORIZED_VALUE && !validColumnValues.has(col.columnValue)) {
+        this._kanban.arrangement.splice(i, 1);
+      }
+    }
+  }
+
   private _computeArrangement(): KanbanArrangement<T> {
-    const options = this._pivotOptions();
+    const options = this._getSelectOptions();
     invariant(options);
+    this._ensureValidColumns();
+    this._cleanupArrangement();
     return computeArrangement<T>(this._kanban, this._items.value, options);
   }
 
@@ -90,11 +123,8 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return UNCATEGORIZED_ATTRIBUTES;
     }
 
-    const options = this._pivotOptions();
-    if (!options) {
-      return;
-    }
-
+    const options = this._getSelectOptions();
+    invariant(options);
     const option = options?.find((option) => option.id === id);
     invariant(option);
     return option;
