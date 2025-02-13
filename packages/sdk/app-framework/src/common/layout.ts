@@ -76,7 +76,9 @@ export namespace LayoutAction {
       ),
       options: S.optional(
         S.Struct({
-          state: S.Boolean.annotations({ description: 'Whether the complementary sidebar is open or closed.' }),
+          state: S.Literal('closed', 'collapsed', 'expanded').annotations({
+            description: 'Whether the complementary sidebar is closed, collapsed, or expanded.',
+          }),
         }),
       ),
     }),
