@@ -12,7 +12,10 @@ import { useCapabilities } from './useCapabilities';
 import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
 import { type PluginsContext } from '../core';
 
-const useSurfaces = () => {
+/**
+ * @internal
+ */
+export const useSurfaces = () => {
   const surfaces = useCapabilities(Capabilities.ReactSurface);
   return useMemo(() => surfaces.flat(), [surfaces]);
 };
@@ -68,3 +71,5 @@ export const Surface = memo(
     },
   ),
 );
+
+Surface.displayName = 'Surface';

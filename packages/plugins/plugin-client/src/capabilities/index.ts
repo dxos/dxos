@@ -9,5 +9,6 @@ export const Client = lazy(async () => import('./client'));
 export const IntentResolver = lazy(async () => import('./intent-resolver'));
 export const ReactContext = lazy(async () => import('./react-context'));
 export const ReactSurface = lazy(async () => import('./react-surface'));
+export const Schema = lazy(async () => import('./schema'));
 
 export * from './capabilities';

@@ -5,13 +5,14 @@
 import React, { useCallback } from 'react';
 
 import {
-  createSurface,
   Capabilities,
   contributes,
+  createIntent,
+  createSurface,
+  LayoutAction,
+  useAppGraph,
   useCapability,
   useIntentDispatcher,
-  LayoutAction,
-  createIntent,
 } from '@dxos/app-framework';
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
@@ -41,7 +42,7 @@ export default () =>
       filter: (data): data is { popoverAnchorId?: string; topbar: boolean; hoistStatusbar: boolean; current: string } =>
         typeof data.current === 'string',
       component: ({ data }) => {
-        const { graph } = useCapability(Capabilities.AppGraph);
+        const { graph } = useAppGraph();
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, createIntent, type PluginsContext, Capabilities } from '@dxos/app-framework';
+import { contributes, createIntent, type PluginsContext, Capabilities, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -10,6 +10,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { DeckCapabilities } from '@dxos/plugin-deck';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
 import { Filter, FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
@@ -29,12 +30,17 @@ export default async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);
   const layout = context.requestCapability(Capabilities.Layout);
+  const deck = context.requestCapability(DeckCapabilities.DeckState);
   const attention = context.requestCapability(AttentionCapabilities.Attention);
   const state = context.requestCapability(SpaceCapabilities.MutableState);
   const client = context.requestCapability(ClientCapabilities.Client);
 
   const defaultSpace = client.spaces.default;
   await defaultSpace.waitUntilReady();
+
+  if (deck.activeDeck === 'default') {
+    await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
+  }
 
   // Initialize space sharing lock in default space.
   if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {

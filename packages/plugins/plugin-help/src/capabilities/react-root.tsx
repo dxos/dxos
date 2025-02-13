@@ -7,17 +7,17 @@ import React from 'react';
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 
 import { HelpCapabilities } from './capabilities';
-import { HelpContextProvider } from '../components';
+import { WelcomeTour } from '../components';
 import { HELP_PLUGIN } from '../meta';
 import { type Step } from '../types';
 
 export default (steps: Step[]) =>
-  contributes(Capabilities.ReactContext, {
+  contributes(Capabilities.ReactRoot, {
     id: HELP_PLUGIN,
-    context: ({ children }) => {
+    root: () => {
       const state = useCapability(HelpCapabilities.MutableState);
       return (
-        <HelpContextProvider
+        <WelcomeTour
           steps={steps}
           running={state.running}
           onRunningChanged={(newState) => {
@@ -26,9 +26,7 @@ export default (steps: Step[]) =>
               state.showHints = false;
             }
           }}
-        >
-          {children}
-        </HelpContextProvider>
+        />
       );
     },
   });
