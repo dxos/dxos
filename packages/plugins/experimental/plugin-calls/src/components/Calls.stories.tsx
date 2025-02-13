@@ -7,17 +7,16 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { Config, PublicKey, useConfig } from '@dxos/react-client';
+import { Config, PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls, type CallsProps } from './Calls';
 
 const Story = (props: CallsProps) => {
-  const config = useConfig();
   return (
     <div className='flex h-full overflow-hidden w-96'>
-      <Calls {...props} iceServers={config.get('runtime.services.ice') ?? []} />
+      <Calls {...props} />
     </div>
   );
 };

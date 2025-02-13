@@ -4,6 +4,7 @@
 
 import React, { type FC } from 'react';
 
+import { type ThreadType } from '@dxos/plugin-space/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -20,15 +21,15 @@ const Content = () => {
 export type CallsProps = {
   space: Space;
   roomId: PublicKey;
-  iceServers: RTCIceServer[];
+  thread?: ThreadType;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ space, roomId, iceServers }) => {
+export const Calls: FC<CallsProps> = ({ space, roomId, thread }) => {
   return (
-    <CallsContextProvider space={space} roomId={roomId} iceServers={iceServers}>
+    <CallsContextProvider space={space} roomId={roomId} thread={thread}>
       <Content />
     </CallsContextProvider>
   );

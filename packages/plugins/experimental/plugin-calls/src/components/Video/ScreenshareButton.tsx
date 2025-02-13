@@ -39,7 +39,7 @@ export const ScreenshareButton: FC<ScreenshareButtonProps> = () => {
 
   return (
     <Button variant='default' disabled={otherUserIsSharing} onClick={sharing ? turnScreenShareOff : turnScreenShareOn}>
-      <Icon icon={sharing ? 'ph--monitor--regular' : 'ph--x-square--regular'} />
+      <Icon icon={sharing ? 'ph--selection--regular' : 'ph--selection-slash--regular'} />
     </Button>
   );
 };

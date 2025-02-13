@@ -5,7 +5,8 @@
 import React, { useState, useMemo, type ReactNode, useEffect, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { type PublicKey } from '@dxos/react-client';
+import { type ThreadType } from '@dxos/plugin-space/types';
+import { useConfig, type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
 import {
@@ -32,17 +33,18 @@ type RoomData = {
 
 type CallsContextProps = {
   space: Space;
-  iceServers: RTCIceServer[];
   roomId: PublicKey;
+  thread?: ThreadType;
   children: ReactNode;
 };
 
-export const CallsContextProvider: FC<CallsContextProps> = ({ space, iceServers, roomId, children }) => {
+export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thread, children }) => {
+  const config = useConfig();
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   useEffect(() => {
     setRoomData({
       space,
-      iceServers,
+      iceServers: config.get('runtime.services.ice') ?? [],
       feedbackEnabled: true,
       maxWebcamFramerate: 24,
       maxWebcamBitrate: 1200000,
@@ -61,7 +63,7 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ space, iceServers,
   );
 };
 
-type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey }>;
+type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey; thread: ThreadType }>;
 
 const Room: FC<RoomProps> = ({
   roomId,
@@ -70,6 +72,7 @@ const Room: FC<RoomProps> = ({
   maxWebcamFramerate,
   maxWebcamQualityLevel,
   space,
+  thread,
   children,
 }) => {
   const [joined, setJoined] = useState(false);
@@ -126,6 +129,7 @@ const Room: FC<RoomProps> = ({
 
   const context: RoomContextType = {
     space,
+    thread,
     joined,
     setJoined,
     dataSaverMode,
