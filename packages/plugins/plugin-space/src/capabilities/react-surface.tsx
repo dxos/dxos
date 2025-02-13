@@ -43,7 +43,6 @@ import {
   POPOVER_RENAME_SPACE,
   PopoverRenameObject,
   PopoverRenameSpace,
-  ShareSpaceButton,
   SmallPresenceLive,
   SPACE_SETTINGS_DIALOG,
   SpacePluginSettings,
@@ -56,7 +55,6 @@ import {
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
-import { COMPOSER_SPACE_LOCK } from '../util';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -197,12 +195,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
             : undefined
           : data.subject;
 
-        return space && object ? (
-          <>
-            <SpacePresence object={object} />
-            {space.properties[COMPOSER_SPACE_LOCK] ? null : <ShareSpaceButton space={space} />}
-          </>
-        ) : null;
+        return object ? <SpacePresence object={object} /> : null;
       },
     }),
     createSurface({
