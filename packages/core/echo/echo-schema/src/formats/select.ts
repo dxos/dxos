@@ -9,8 +9,7 @@ export const SelectOptionSchema = S.Struct({
   /** Stable identifier for the option. */
   id: S.NonEmptyString,
   title: S.String,
-  // TODO(ZaymonFC): How are we going to represent colors?
-  /** Color code (e.g., hex) used for visual styling. */
+  /** Color palette used for visual styling. */
   color: S.String,
 }).pipe(S.mutable);
 
