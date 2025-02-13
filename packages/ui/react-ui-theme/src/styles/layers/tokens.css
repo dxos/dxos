@@ -15,10 +15,11 @@
     --topbar-size: var(--rail-size);
     --statusbar-size: theme(spacing.8);
     --nav-sidebar-size: 22.5rem;
-    --complementary-sidebar-size: 22.5rem;
     --l0-size: 74px;
     --l1-size: calc(var(--nav-sidebar-size) - var(--l0-size));
-    --l01-size: calc(var(--l1-size) - var(--l0-size));
+    --complementary-sidebar-size: 22.5rem;
+    --r0-size: var(--rail-size);
+    --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
     /* NOTE(thure): DO NOT USE THESE VARIABLES, please just use `env(…)` directly. These variables are only defined to
          provide access to the JS runtime via `getPropertyValue`. */
     --safe-area-left: env(safe-area-inset-left);
