@@ -8,12 +8,12 @@ import { Button, Icon, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useSubscribedState, useRoomContext } from '../../hooks';
-import { CameraButton, MicButton, VideoObject } from '../Video';
+import { CameraButton, MicButton } from '../Video';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const {
     setJoined,
-    userMedia: { videoTrack },
+    // userMedia: { videoTrack, videoEnabled },
     room,
     peer,
   } = useRoomContext()!;
@@ -22,11 +22,8 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <VideoObject className='scale-x-[-1]' videoTrack={videoTrack} muted />
-
-      <div className='grow' />
-      <div className='flex justify-between overflow-hidden'>
+    <div className={mx('flex flex-col grow overflow-auto', classNames)}>
+      <div className='flex justify-between'>
         <Toolbar.Root>
           <Button variant='primary' onClick={() => setJoined(true)} disabled={!session?.sessionId}>
             <Icon icon={'ph--phone-incoming--regular'} />
@@ -38,6 +35,11 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
           <CameraButton />
         </Toolbar.Root>
       </div>
+      {/* {videoEnabled && (
+        <>
+          <VideoObject className='scale-x-[-1] overflow-auto' videoTrack={videoTrack} muted />
+        </>
+      )} */}
     </div>
   );
 };
