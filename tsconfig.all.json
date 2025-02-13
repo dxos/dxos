@@ -472,6 +472,9 @@
       "path": "packages/ui/react-ui-searchlist/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-sfx/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-stack/tsconfig.json"
     },
     {
