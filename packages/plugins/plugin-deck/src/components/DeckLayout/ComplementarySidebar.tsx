@@ -12,14 +12,14 @@ import {
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Main, ScrollArea, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Main, useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { railGridHorizontal, StackContext, StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
+import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
@@ -31,8 +31,10 @@ export type ComplementarySidebarProps = {
   current?: string;
 };
 
+const actionsContainer = 'grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto';
+
 export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarProps) => {
-  const { popoverAnchorId } = useCapability(DeckCapabilities.DeckState);
+  const layout = useCapability(DeckCapabilities.MutableDeckState);
   const attended = useAttended();
   const panelIds = useMemo(() => panels.map((p) => p.id), [panels]);
   const activePanelId = panelIds.find((p) => p === current) ?? panels[0].id;
@@ -54,6 +56,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const handleValueChange = useCallback(
     (nextValue: string) => {
       setInternalValue(nextValue);
+      layout.complementarySidebarState = 'expanded';
       void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
     },
     [dispatch],
@@ -64,58 +67,67 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
     <Main.ComplementarySidebar
       classNames={topbar ? 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]' : undefined}
     >
-      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
-        <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
-          <Tabs.Root
-            orientation='horizontal'
-            value={internalValue}
-            onValueChange={handleValueChange}
-            attendableId={attended[0]}
-            classNames='contents'
-          >
-            <StackItem.Heading classNames='grid items-stretch border-be border-separator'>
-              <ScrollArea.Root classNames='flex-1 min-is-0'>
-                <ScrollArea.Viewport>
-                  <Tabs.Tablist classNames='bs-[--rail-content] is-min items-stretch pis-[max(.5rem,env(safe-area-inset-left))] sm:pis-2'>
-                    {panels.map((panel) => (
-                      <Tabs.Tab key={panel.id} value={panel.id} classNames='!min-bs-0'>
-                        {toLocalizedString(panel.label, t)}
-                      </Tabs.Tab>
-                    ))}
-                  </Tabs.Tablist>
-                  <ScrollArea.Scrollbar orientation='horizontal'>
-                    <ScrollArea.Thumb />
-                  </ScrollArea.Scrollbar>
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </StackItem.Heading>
-            <ScrollArea.Root>
-              <ScrollArea.Viewport>
-                {panels.map((panel) => (
-                  <Tabs.Tabpanel key={panel.id} value={panel.id} classNames='pbe-[env(safe-area-inset-bottom)]'>
-                    {panel.id === activePanelId && node && (
-                      <Surface
-                        key={activeEntryId}
-                        role={`complementary--${activePanelId}`}
-                        data={{
-                          id: activeEntryId,
-                          subject: node.properties.object ?? node.properties.space,
-                          popoverAnchorId,
-                        }}
-                        fallback={PlankContentError}
-                        placeholder={<PlankLoading />}
-                      />
-                    )}
-                  </Tabs.Tabpanel>
-                ))}
-                <ScrollArea.Scrollbar orientation='vertical'>
-                  <ScrollArea.Thumb />
-                </ScrollArea.Scrollbar>
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Tabs.Root>
+      <Tabs.Root
+        orientation='vertical'
+        verticalVariant='stateless'
+        value={internalValue}
+        onValueChange={handleValueChange}
+        attendableId={attended[0]}
+        classNames='contents'
+      >
+        <div
+          role='none'
+          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-l0 backdrop-blur contain-layout app-drag'
+        >
+          <Tabs.Tablist classNames={actionsContainer}>
+            {panels.map((panel) => (
+              <Tabs.Tab key={panel.id} value={panel.id} asChild>
+                <IconButton
+                  label={toLocalizedString(panel.label, t)}
+                  icon={panel.icon}
+                  size={5}
+                  iconOnly
+                  tooltipSide='left'
+                  variant={
+                    activePanelId === panel.id
+                      ? layout.complementarySidebarState === 'expanded'
+                        ? 'primary'
+                        : 'default'
+                      : 'ghost'
+                  }
+                />
+              </Tabs.Tab>
+            ))}
+          </Tabs.Tablist>
+          <div role='none' className={mx(actionsContainer, 'hidden lg:grid')}>
+            <ToggleComplementarySidebarButton />
+          </div>
         </div>
-      </StackContext.Provider>
+        {panels.map((panel) => (
+          <Tabs.Tabpanel
+            key={panel.id}
+            value={panel.id}
+            classNames='absolute inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size]'
+          >
+            <h2 className='bs-[--rail-size] flex items-center pli-2 border-separator border-be'>
+              {toLocalizedString(panel.label, t)}
+            </h2>
+            {panel.id === activePanelId && node && (
+              <Surface
+                key={activeEntryId}
+                role={`complementary--${activePanelId}`}
+                data={{
+                  id: activeEntryId,
+                  subject: node.properties.object ?? node.properties.space,
+                  popoverAnchorId: layout.popoverAnchorId,
+                }}
+                fallback={PlankContentError}
+                placeholder={<PlankLoading />}
+              />
+            )}
+          </Tabs.Tabpanel>
+        ))}
+      </Tabs.Root>
     </Main.ComplementarySidebar>
   );
 };
