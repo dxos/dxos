@@ -2,57 +2,70 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SelectOption } from '@dxos/echo-schema';
+
 import { type BaseKanbanItem, type KanbanType } from './defs';
 import { UNCATEGORIZED_VALUE } from './defs';
 
-export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(kanban: KanbanType, items: T[]) => {
+export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(
+  kanban: KanbanType,
+  items: T[],
+  selectOptions: SelectOption[],
+) => {
   const pivotField = kanban.columnField;
-  const kanbanArrangement = kanban.arrangement;
+
   if (pivotField) {
-    // Start with uncategorized column
-    const baseArrangement = [{ columnValue: UNCATEGORIZED_VALUE, ids: [] }];
+    // Get valid column values from select options
+    const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
 
-    // Add other columns from arrangement or derive from items
-    const otherColumns = (
-      kanbanArrangement ??
-      Array.from(
-        items.reduce((acc, item) => {
-          const columnValue = item[pivotField as keyof typeof item];
-          if (columnValue) {
-            acc.add(`${columnValue}`);
-          }
-          return acc;
-        }, new Set<string>()),
-      ).map((columnValue) => ({ columnValue, ids: [] }))
-    ).filter(({ columnValue }) => columnValue !== UNCATEGORIZED_VALUE);
+    const genColumns = function* (): Generator<{ columnValue: string; ids: readonly string[] }> {
+      // Start with uncategorized, using existing item arrangement if present.
+      yield kanban.arrangement?.find((col) => col.columnValue === UNCATEGORIZED_VALUE) ?? {
+        columnValue: UNCATEGORIZED_VALUE,
+        ids: [] as const,
+      };
 
-    return [...baseArrangement, ...otherColumns].map(({ columnValue, ids }) => {
+      // Follow select options order, using existing item arrangement if present.
+      for (const option of selectOptions) {
+        if (option.id !== UNCATEGORIZED_VALUE) {
+          yield kanban.arrangement?.find((col) => col.columnValue === option.id) ?? {
+            columnValue: option.id,
+            ids: [] as const,
+          };
+        }
+      }
+    };
+
+    return Array.from(genColumns()).map(({ columnValue, ids }) => {
       const orderMap = new Map(ids.map((id, index) => [id, index]));
 
-      const prioritizedItems: T[] = [];
-      const remainingItems: T[] = [];
+      const cardsWithExistingOrder: T[] = [];
+      const newCards: T[] = [];
 
       // Categorize items
       for (const item of items) {
         const itemColumn = item[pivotField as keyof typeof item];
-        const belongsInColumn = columnValue === UNCATEGORIZED_VALUE ? !itemColumn : itemColumn === columnValue;
+
+        // TODO(ZaymonFC): Watch this cast. It's a hack.
+        const isValidColumn = itemColumn && validColumnValues.has(itemColumn as any as string);
+        const belongsInColumn = columnValue === UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
 
         if (belongsInColumn) {
           if (orderMap.has(item.id)) {
-            prioritizedItems.push(item);
+            cardsWithExistingOrder.push(item);
           } else {
-            remainingItems.push(item);
+            newCards.push(item);
           }
         }
       }
 
-      prioritizedItems.sort((a, b) => {
+      cardsWithExistingOrder.sort((a, b) => {
         const indexA = orderMap.get(a.id) ?? Infinity;
         const indexB = orderMap.get(b.id) ?? Infinity;
         return indexA - indexB;
       });
 
-      return { columnValue, cards: [...prioritizedItems, ...remainingItems] };
+      return { columnValue, cards: [...cardsWithExistingOrder, ...newCards] };
     });
   }
   return [];

@@ -14,8 +14,9 @@ import { computeArrangement } from '../util';
 
 export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
 export const UNCATEGORIZED_ATTRIBUTES = {
+  // TODO(ZaymonFC): Add translations for title.
   title: 'Uncategorized',
-  color: 'gray',
+  color: 'neutral',
 } as const;
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
@@ -35,8 +36,17 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private _items = signal<T[]>([]);
   private _arrangement = signal<KanbanArrangement<T>>([]);
 
+  private _pivotOptions() {
+    invariant(this._kanban.columnField);
+    const fieldId = this._projection.getFieldId(this._kanban.columnField);
+    invariant(fieldId);
+    return this._projection.getFieldProjection(fieldId).props.options;
+  }
+
   private _computeArrangement(): KanbanArrangement<T> {
-    return computeArrangement<T>(this._kanban, this._items.value);
+    const options = this._pivotOptions();
+    invariant(options);
+    return computeArrangement<T>(this._kanban, this._items.value, options);
   }
 
   constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
@@ -80,10 +90,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return UNCATEGORIZED_ATTRIBUTES;
     }
 
-    invariant(this._kanban.columnField);
-    const fieldId = this._projection.getFieldId(this._kanban.columnField);
-    invariant(fieldId);
-    const option = this._projection.getFieldProjection(fieldId).props.options?.find((option) => option.id === id);
+    const options = this._pivotOptions();
+    if (!options) {
+      return;
+    }
+
+    const option = options?.find((option) => option.id === id);
     invariant(option);
     return option;
   }

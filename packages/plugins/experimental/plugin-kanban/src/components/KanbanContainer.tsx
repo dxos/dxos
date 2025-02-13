@@ -10,15 +10,19 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useQuery, getSpace, create } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
+import { ViewProjection } from '@dxos/schema';
 
 export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }) => {
   const [cardSchema, setCardSchema] = useState<EchoSchema>();
+  const [projection, setProjection] = useState<ViewProjection>();
   const space = getSpace(kanban);
   useEffect(() => {
     if (kanban.cardView?.target?.query?.type && space) {
+      // TODO(ZaymonFC): We should use a subscription here.
       const [schema] = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type }).runSync();
       if (schema) {
         setCardSchema(schema);
+        setProjection(new ViewProjection(schema, kanban.cardView!.target!));
       }
     }
   }, [kanban.cardView?.target?.query, space]);
@@ -29,6 +33,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const model = useKanbanModel({
     kanban,
     cardSchema,
+    projection,
     items: filteredObjects,
   });
 
