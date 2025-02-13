@@ -81,7 +81,10 @@ export const NodePlankHeading = memo(
         } else if (eventType === 'close') {
           if (part === 'complementary') {
             return dispatch(
-              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: false } }),
+              createIntent(LayoutAction.UpdateComplementary, {
+                part: 'complementary',
+                options: { state: 'collapsed' },
+              }),
             );
           } else {
             return dispatch(

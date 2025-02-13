@@ -82,9 +82,9 @@ export default (context: PluginsContext) =>
           layout.complementarySidebarPanel = subject;
         }
 
-        const next = subject ? true : options?.state ?? !layout.complementarySidebarOpen;
-        if (next !== layout.complementarySidebarOpen) {
-          layout.complementarySidebarOpen = next;
+        const next = subject ? 'expanded' : options?.state ?? layout.complementarySidebarState;
+        if (next !== layout.complementarySidebarState) {
+          layout.complementarySidebarState = next;
         }
       },
     }),
