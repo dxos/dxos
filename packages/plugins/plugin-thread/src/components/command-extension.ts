@@ -27,11 +27,7 @@ const parser = StreamLanguage.define<{ count: number }>({
 });
 
 const styles = HighlightStyle.define([
-  {
-    tag: tags.tagName,
-    // TODO(ZaymonFC): Restore palette color.
-    class: mx('dx-tag text-baseText font-medium'),
-  },
+  { tag: tags.tagName, class: mx('[data-hue="indigo"] dx-tag text-baseText font-medium') },
 ]);
 
 export const command: Extension = [parser, syntaxHighlighting(styles)];
