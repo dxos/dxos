@@ -152,7 +152,7 @@ export const L0Menu = ({
   return (
     <div
       role='none'
-      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-l0 backdrop-blur border-ie border-separator app-drag'
+      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-base border-ie border-separator app-drag'
     >
       <Tabs.Tablist classNames='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'>
         {topLevelItems.map((item) => {
