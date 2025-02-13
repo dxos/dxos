@@ -18,3 +18,28 @@ export const codec = {
     buf.toBinary(UserStateSchema, buf.create(UserStateSchema, message)),
   decode: (message: Uint8Array): UserStateProto => buf.fromBinary(UserStateSchema, message),
 };
+
+export type SessionDescription = {
+  type: 'offer' | 'answer';
+  sdp: string;
+};
+
+export type TrackObject = {
+  location?: 'local' | 'remote';
+  trackName?: string;
+  sessionId?: string;
+  mid?: string | null;
+};
+
+export interface ErrorResponse {
+  errorCode?: string;
+  errorDescription?: string;
+}
+
+export interface TracksResponse extends ErrorResponse {
+  sessionDescription: SessionDescription;
+  requiresImmediateRenegotiation: boolean;
+  tracks?: (TrackObject & ErrorResponse)[];
+}
+
+export interface RenegotiationResponse extends ErrorResponse {}

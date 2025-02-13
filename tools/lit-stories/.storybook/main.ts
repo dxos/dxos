@@ -6,6 +6,7 @@ import { type StorybookConfig } from '@storybook/web-components-vite';
 import { resolve } from 'node:path';
 import { join } from 'path';
 import { mergeConfig } from 'vite';
+import Inspect from 'vite-plugin-inspect';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
@@ -14,6 +15,8 @@ export const packages = resolve(__dirname, '../../../packages');
 const phosphorIconsCore = resolve(__dirname, '../../../node_modules/@phosphor-icons/core/assets');
 
 const contentFiles = '*.{ts,tsx,js,jsx}';
+
+const isTrue = (str?: string) => str === 'true' || str === '1';
 
 export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>): StorybookConfig => ({
   framework: {
@@ -49,6 +52,9 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
           spriteFile: resolve(__dirname, '../static/icons.svg'),
           contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
         }),
+        // https://github.com/antfu-collective/vite-plugin-inspect#readme
+        // Open: http://localhost:5173/__inspect
+        isTrue(process.env.DX_INSPECT) && Inspect(),
       ],
     });
   },

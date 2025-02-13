@@ -9,10 +9,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { TestBuilder } from '@dxos/client/testing';
 import { getObjectCore } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
 import { FunctionDef, type FunctionManifest, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
-import { GameType } from '@dxos/plugin-chess/types';
+import { create } from '@dxos/live-object';
+import { ChessType } from '@dxos/plugin-chess/types';
 
 import { initFunctionsPlugin } from '../setup';
 
@@ -47,8 +47,8 @@ describe('Chess', () => {
     };
 
     const space = await functions.client.spaces.create();
-    functions.client.addTypes([GameType, FunctionDef, FunctionTrigger]);
-    const game = space.db.add(create(GameType, {}));
+    functions.client.addTypes([ChessType, FunctionDef, FunctionTrigger]);
+    const game = space.db.add(create(ChessType, {}));
     await space.db.flush();
 
     // Create trigger.
@@ -71,7 +71,7 @@ describe('Chess', () => {
   }); // TODO(burdon): Hangs after passing.
 });
 
-const doMove = async (game: GameType, turn: string) => {
+const doMove = async (game: ChessType, turn: string) => {
   // TODO(burdon): Error if import is removed.
   //  Uncaught Error: invariant violation: Recursive call to doc.change
   const { Chess } = await import('chess.js');

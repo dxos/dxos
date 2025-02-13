@@ -4,21 +4,9 @@
 
 import { type Reference } from '@dxos/echo-protocol';
 import type { BaseObject } from '@dxos/echo-schema';
-import { SchemaMetaSymbol } from '@dxos/echo-schema';
-import { type S } from '@dxos/effect';
+import { getSchema, SchemaMetaSymbol } from '@dxos/echo-schema';
 
 import { getProxyHandler, isReactiveObject } from './proxy';
-
-/**
- * Returns the schema for the given object if one is defined.
- */
-export const getSchema = <T extends BaseObject>(obj: T | undefined): S.Schema<any> | undefined => {
-  if (obj && isReactiveObject(obj)) {
-    return getProxyHandler(obj).getSchema(obj);
-  }
-
-  return undefined;
-};
 
 export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
   return getProxyHandler(obj).isDeleted(obj) ?? false;
@@ -36,7 +24,7 @@ export const getType = <T extends BaseObject>(obj: T | undefined): Reference | u
   return undefined;
 };
 
-// TODO(burdon): Reconcile functions.
+// TODO(burdon): Move to echo-schema.
 export const getTypename = <T extends BaseObject>(obj: T): string | undefined => {
   const schema = getSchema(obj);
   // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.

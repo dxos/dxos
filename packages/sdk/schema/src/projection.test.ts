@@ -65,6 +65,7 @@ describe('ViewProjection', () => {
       const { props } = projection.getFieldProjection(getFieldId(view, 'name'));
       expect(props).to.deep.eq({
         property: 'name',
+        description: 'a string',
         type: TypeEnum.String,
         format: FormatEnum.String,
         title: 'Name',

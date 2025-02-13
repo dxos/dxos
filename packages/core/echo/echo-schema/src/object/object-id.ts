@@ -18,6 +18,7 @@ export interface ObjectIdClass extends S.SchemaClass<ObjectId, string> {
   random(): ObjectId;
 }
 
+// TODO(dmaretskyi): Move to @dxos/keys.
 export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
   static isValid(id: string): id is ObjectId {
     try {

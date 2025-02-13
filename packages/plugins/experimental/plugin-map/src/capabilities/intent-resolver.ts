@@ -12,8 +12,8 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
-      resolve: ({ name }) => ({
-        data: { object: create(MapType, { name }) },
+      resolve: ({ name, coordinates }) => ({
+        data: { object: create(MapType, { name, coordinates }) },
       }),
     }),
     createResolver({

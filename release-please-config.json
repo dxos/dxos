@@ -79,6 +79,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/errors/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
           "jsonpath": "$.version"
         },
@@ -220,6 +225,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/conductor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -389,6 +399,16 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/artifact/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/artifact-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/assistant/package.json",
           "jsonpath": "$.version"
         },
@@ -489,11 +509,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-kanban/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-map/package.json",
           "jsonpath": "$.version"
         },
@@ -560,6 +575,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-help/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-kanban/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -709,6 +729,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/react-edge-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/schema/package.json",
           "jsonpath": "$.version"
         },
@@ -759,6 +784,16 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-canvas-compute/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-canvas-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-card/package.json",
           "jsonpath": "$.version"
         },
@@ -770,6 +805,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-form/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-gameboard/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -805,6 +845,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-searchlist/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-sfx/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -864,6 +909,11 @@
         },
         {
           "type": "json",
+          "path": "tools/codemorph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/executors/esbuild/package.json",
           "jsonpath": "$.version"
         },
@@ -880,6 +930,11 @@
         {
           "type": "json",
           "path": "tools/lit-stories/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/lockfile-explorer/package.json",
           "jsonpath": "$.version"
         },
         {

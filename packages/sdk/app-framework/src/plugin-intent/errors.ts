@@ -15,7 +15,7 @@ export class BaseError extends Error {
     readonly context?: Record<string, any>,
   ) {
     // TODO(dmaretskyi): Error.cause.
-    super(message ?? code);
+    super(message ?? code, { cause: context });
     this.name = code;
     // NOTE: Restores prototype chain (https://stackoverflow.com/a/48342359).
     Object.setPrototypeOf(this, new.target.prototype);

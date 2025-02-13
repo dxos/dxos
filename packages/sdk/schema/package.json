@@ -43,20 +43,20 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "date-fns": "^3.3.1",
-    "effect": "^3.12.1",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@types/jsonpath": "~0.2.4",
+    "@types/jsonpath": "^0.2.4",
+    "effect": "^3.12.3",
     "fast-check": "^3.19.0",
     "vite": "5.4.7"
   },
   "peerDependencies": {
     "@effect/schema": "^0.75.5",
-    "effect": "^3.9.2"
+    "effect": "^3.12.3"
   },
   "publishConfig": {
     "access": "public"
