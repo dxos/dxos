@@ -28,14 +28,13 @@ const Root = ({ children, classNames, model, onDrop }: RootProps) => {
 
   useEffect(() => {
     // TODO(burdon): Should target specific container.
-    log.info('monitorForElements');
     return monitorForElements({
       onDragStart: ({ source }) => {
-        log.info('onDragStart', { source });
+        log('onDragStart', { source });
         setDragging(true);
       },
       onDrop: ({ source, location }) => {
-        log.info('onDrop', { source, location });
+        log('onDrop', { source, location });
         const target = location.current.dropTargets[0];
         if (!target) {
           return;

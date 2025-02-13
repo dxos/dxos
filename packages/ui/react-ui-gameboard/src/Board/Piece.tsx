@@ -15,7 +15,7 @@ import { useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useBoardContext } from './context';
-import { isEqualLocation, type Location, type PieceRecord, type Player } from './types';
+import { isEqualLocation, isLocation, type Location, type PieceRecord, type Player } from './types';
 import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
@@ -64,36 +64,47 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
       },
       canDrag: () => model?.turn === piece.side,
       onDragStart: () => setDragging(true),
-      onDrop: () => setDragging(false),
+      onDrop: ({ location }) => {
+        const drop = location.current.dropTargets[0].data;
+        const loc = drop.location;
+        if (isLocation(loc)) {
+          setCurrent((current) => ({ ...current, location: loc }));
+        }
+        setDragging(false);
+      },
     });
   }, [model, piece]);
 
+  // Update position independently of render cycle (otherwise animation is interrupted).
   const [current, setCurrent] = useState<{ location?: Location; bounds?: DOMRectBounds }>({});
   useEffect(() => {
-    // Change position independently of render cycle.
     requestAnimationFrame(() => {
+      if (!ref.current || !bounds) {
+        return;
+      }
+
       // Check if piece moved.
-      invariant(ref.current);
       if (!current.location || !isEqualLocation(current.location, piece.location)) {
         ref.current.style.transition = 'top 400ms ease-out, left 400ms ease-out';
         ref.current.style.top = bounds.top + 'px';
         ref.current.style.left = bounds.left + 'px';
         setCurrent({ location: piece.location, bounds });
       } else if (current.bounds !== bounds) {
+        ref.current.style.transition = 'none';
         ref.current.style.top = bounds.top + 'px';
         ref.current.style.left = bounds.left + 'px';
         setCurrent({ location: piece.location, bounds });
       }
     });
-  }, [piece.location, bounds]);
+  }, [current, piece.location, bounds]);
 
   return (
     <>
       <div
         ref={ref}
         style={{
-          width: bounds.width,
-          height: bounds.height,
+          width: bounds?.width,
+          height: bounds?.height,
         }}
         className={mx(
           'absolute',

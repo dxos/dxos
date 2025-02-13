@@ -3,16 +3,17 @@
 //
 
 import { Chess } from 'chess.js';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
 import { ChessModel, Board, Chessboard } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
 
+import { PlayerSelector } from './PlayerSelector';
 import { type GameType } from '../types';
 
 const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
-  const [model, setModel] = useState<ChessModel>(new ChessModel());
+  const model = useMemo(() => new ChessModel(), []);
   useEffect(() => {
     if (!model || game.pgn !== model?.game.pgn()) {
       const chess = new Chess();
@@ -20,8 +21,7 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
         chess.loadPgn(game.pgn);
       }
 
-      // TODO(burdon): Update current model.
-      setModel(new ChessModel(chess.fen()));
+      model.initialize(chess.fen());
     }
   }, [game.pgn]);
 
@@ -30,7 +30,6 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
     return null;
   }
 
-  // const showPlayers = false;
   return (
     <StackItem.Content toolbar={false}>
       <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
@@ -40,7 +39,7 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
           <Chessboard />
         </Board.Root>
 
-        {/* {showPlayers && <PlayerSelector space={space} game={game} />} */}
+        <PlayerSelector space={space} game={game} />
       </div>
     </StackItem.Content>
   );

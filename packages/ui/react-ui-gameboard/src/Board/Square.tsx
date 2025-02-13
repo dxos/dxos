@@ -63,7 +63,7 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
       className={mx(
         'absolute flex justify-center items-center border-2 box-border select-none',
         classNames,
-        state === 'validMove' ? 'border-primary-500' : 'border-transparent',
+        state === 'validMove' ? 'border-neutral-800' : 'border-transparent',
       )}
     >
       {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}
