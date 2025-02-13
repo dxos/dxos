@@ -11,7 +11,6 @@ import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
-import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
 import { soloInlinePadding } from '../fragments';
@@ -82,7 +81,10 @@ export const NodePlankHeading = memo(
         } else if (eventType === 'close') {
           if (part === 'complementary') {
             return dispatch(
-              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: false } }),
+              createIntent(LayoutAction.UpdateComplementary, {
+                part: 'complementary',
+                options: { state: 'collapsed' },
+              }),
             );
           } else {
             return dispatch(
@@ -137,9 +139,7 @@ export const NodePlankHeading = memo(
           isSolo={part === 'solo'}
           onClick={handlePlankAction}
           close={part === 'complementary' ? 'minify-end' : true}
-        >
-          <ToggleComplementarySidebarButton />
-        </PlankControls>
+        />
       </StackItem.Heading>
     );
   },
