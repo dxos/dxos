@@ -68,7 +68,8 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
           }
 
           switch (props.format) {
-            case FormatEnum.Boolean: {
+            case FormatEnum.Boolean:
+            case FormatEnum.SingleSelect: {
               return '';
             }
             case FormatEnum.Ref: {
@@ -117,6 +118,17 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
           checked: value ?? false,
         });
         cell.readonly = true;
+      }
+
+      if (props.format === FormatEnum.SingleSelect) {
+        const value = getValue(obj, field.path);
+        const options = this.model.projection.getFieldProjection(field.id).props.options;
+        if (options) {
+          const option = options.find((o) => o.id === value);
+          if (option) {
+            cell.accessoryHtml = `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+          }
+        }
       }
 
       const idx = toPlaneCellIndex({ col: colIndex, row: displayIndex });

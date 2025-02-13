@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps, useMemo, useState } from 'react';
 
-import { IconButton, useTranslation, Input } from '@dxos/react-ui';
+import { IconButton, useTranslation, Input, Tag } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -56,7 +56,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                   label={t('column drag handle label')}
                 />
               </StackItem.DragHandle>
-              <h2 className='flex-1'>{columnValue}</h2>
+              <Tag className='flex-1'>{columnValue}</Tag>
               {onRemoveEmptyColumn && cards.length < 1 && (
                 <IconButton
                   iconOnly

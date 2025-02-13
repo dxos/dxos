@@ -34,7 +34,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   const { t } = useTranslation(translationKey);
   const { ast, name, type, title } = property;
   const values = useFormValues(path ?? []) as any[];
-  invariant(Array.isArray(values));
+  invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
   const label = title ?? pipe(name, capitalize);
 
   const tupleType = findNode(ast, AST.isTupleType);

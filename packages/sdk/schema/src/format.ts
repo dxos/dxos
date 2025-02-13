@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
+import {
+  AST,
+  DecimalPrecision,
+  TypeEnum,
+  FormatEnum,
+  S,
+  JsonProp,
+  SelectOptionSchema,
+  type SelectOption,
+} from '@dxos/echo-schema';
 
 /**
  * Base schema.
@@ -49,6 +58,7 @@ interface FormatSchemaCommon extends BaseProperty {
   currency?: string;
   referenceSchema?: string;
   referencePath?: string;
+  options?: SelectOption[];
 }
 
 /**
@@ -98,6 +108,19 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Regex]: extend(FormatEnum.Regex, TypeEnum.String),
   [FormatEnum.URL]: extend(FormatEnum.URL, TypeEnum.String),
   [FormatEnum.UUID]: extend(FormatEnum.UUID, TypeEnum.String),
+
+  //
+  // Select
+  //
+
+  [FormatEnum.SingleSelect]: extend(FormatEnum.SingleSelect, TypeEnum.String, {
+    options: S.Array(SelectOptionSchema).annotations({
+      [AST.TitleAnnotationId]: 'Options',
+      [AST.DescriptionAnnotationId]: 'Available choices',
+    }),
+  }),
+
+  // TODO(ZaymonFC): Add multi-select.
 
   //
   // Numbers
@@ -159,6 +182,7 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Regex],
   formatToSchema[FormatEnum.URL],
   formatToSchema[FormatEnum.UUID],
+  formatToSchema[FormatEnum.SingleSelect],
 
   //
   // Numbers

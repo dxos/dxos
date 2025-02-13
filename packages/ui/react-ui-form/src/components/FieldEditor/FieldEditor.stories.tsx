@@ -37,7 +37,7 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
   parameters: {
     translations,
   },
