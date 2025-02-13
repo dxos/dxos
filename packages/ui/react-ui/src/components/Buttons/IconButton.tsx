@@ -8,7 +8,7 @@ import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon, type IconProps } from '../Icon';
-import { Tooltip } from '../Tooltip';
+import { Tooltip, type TooltipContentProps } from '../Tooltip';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Pick<IconProps, 'icon' | 'size'> & {
@@ -19,14 +19,15 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipPortal?: boolean;
     tooltipZIndex?: string;
+    tooltipSide?: TooltipContentProps['side'];
     suppressNextTooltip?: MutableRefObject<boolean>;
   };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ tooltipPortal = true, tooltipZIndex: zIndex, suppressNextTooltip, ...props }, forwardedRef) => {
+  ({ tooltipPortal = true, tooltipZIndex: zIndex, tooltipSide, suppressNextTooltip, ...props }, forwardedRef) => {
     const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
     const content = (
-      <Tooltip.Content {...(zIndex && { style: { zIndex } })}>
+      <Tooltip.Content {...(zIndex && { style: { zIndex } })} side={tooltipSide}>
         {props.label}
         <Tooltip.Arrow />
       </Tooltip.Content>

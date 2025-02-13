@@ -17,7 +17,7 @@ export default () => {
     // TODO(Zan): Cap depth!
     modeHistory: [],
     sidebarState: 'expanded',
-    complementarySidebarOpen: false,
+    complementarySidebarState: 'collapsed',
     complementarySidebarPanel: undefined,
     dialogContent: null,
     dialogOpen: false,
@@ -48,7 +48,7 @@ export default () => {
 
   state
     .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
-    .prop({ key: 'complementarySidebarOpen', type: LocalStorageStore.bool() })
+    .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, Deck>>() })
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() });
 

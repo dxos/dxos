@@ -17,7 +17,7 @@ import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
 import { Sidebar } from './Sidebar';
-import { ToggleSidebarButton } from './SidebarButton';
+import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
@@ -25,7 +25,7 @@ import { DeckCapabilities } from '../../capabilities';
 import { getMode, type Overscroll } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useHoistStatusbar } from '../../util/useHoistStatusbar';
-import { fixedSidebarToggleStyles } from '../fragments';
+import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
   overscroll: Overscroll;
@@ -40,7 +40,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
     sidebarState,
-    complementarySidebarOpen,
+    complementarySidebarState,
     complementarySidebarPanel,
     dialogOpen,
     dialogContent,
@@ -150,8 +150,8 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
         <Main.Root
           navigationSidebarState={context.sidebarState}
           onNavigationSidebarStateChange={(next) => (context.sidebarState = next)}
-          complementarySidebarOpen={context.complementarySidebarOpen}
-          onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
+          complementarySidebarState={context.complementarySidebarState}
+          onComplementarySidebarStateChange={(next) => (context.complementarySidebarState = next)}
         >
           {/* Left sidebar. */}
           <Sidebar />
@@ -183,9 +183,12 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
                       : sidebarState === 'collapsed'
                         ? 'var(--l0-size)'
                         : '0',
-                  '--dx-main-complementaryWidth': complementarySidebarOpen
-                    ? 'var(--complementary-sidebar-size)'
-                    : '0px',
+                  '--dx-main-complementaryWidth':
+                    complementarySidebarState === 'expanded'
+                      ? 'var(--complementary-sidebar-size)'
+                      : complementarySidebarState === 'collapsed'
+                        ? 'var(--rail-size)'
+                        : '0',
                   '--dx-main-contentFirstWidth': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
                   '--dx-main-contentLastWidth': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
                 } as MainProps['style']
@@ -196,7 +199,8 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
                 className={!solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
                 {...(solo && { inert: '' })}
               >
-                {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
+                {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
+                {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <Stack
                   orientation='horizontal'
                   size='contain'
@@ -219,7 +223,8 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
                 className={solo ? 'relative bg-deck overflow-hidden' : 'sr-only'}
                 {...(!solo && { inert: '' })}
               >
-                {!topbar && <ToggleSidebarButton variant='default' classNames={fixedSidebarToggleStyles} />}
+                {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
+                {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
                   <Plank id={solo} part='solo' layoutMode={layoutMode} />
                 </StackContext.Provider>
