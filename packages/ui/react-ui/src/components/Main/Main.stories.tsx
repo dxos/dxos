@@ -24,7 +24,7 @@ const ComplementarySidebarToggle = () => {
 
 const StoryMain = (_args: StoryMainArgs) => {
   return (
-    <Main.Root defaultComplementarySidebarOpen>
+    <Main.Root>
       <Main.Overlay />
       <Main.NavigationSidebar classNames='p-4'>
         <p>Navigation sidebar content, hi!</p>

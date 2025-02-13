@@ -4,7 +4,7 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
-import { createIntent, type PluginMeta, useIntentDispatcher, usePluginManager } from '@dxos/app-framework';
+import { createIntent, type Plugin, useIntentDispatcher, usePluginManager } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
@@ -13,7 +13,7 @@ import { PluginList } from './PluginList';
 import { REGISTRY_PLUGIN } from '../meta';
 import { type RegistrySettings } from '../types';
 
-const sortPluginMeta = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMeta) => a.localeCompare(b);
+const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin, { meta: { name: b = '' } }: Plugin) => a.localeCompare(b);
 
 export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
@@ -26,35 +26,31 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => 
       manager.plugins
         .filter(({ meta }) => !manager.core.includes(meta.id))
         .filter(({ meta }) => manager.enabled.includes(meta.id))
-        .map(({ meta }) => meta)
-        .sort(sortPluginMeta),
+        .sort(sortByPluginMeta),
     [],
   );
-  const pluginIds = useMemo(() => installed.map((meta) => meta.id), [installed]);
+  const pluginIds = useMemo(() => installed.map(({ meta }) => meta.id), [installed]);
 
   const available = useMemo(
-    () =>
-      manager.plugins
-        .map(({ meta }) => meta)
-        .filter(({ id }) => !manager.enabled.includes(id))
-        .sort(sortPluginMeta),
+    () => manager.plugins.filter(({ meta }) => !manager.enabled.includes(meta.id)).sort(sortByPluginMeta),
     [],
   );
-  const recommended = available.filter((meta) => !meta.tags?.includes('experimental'));
-  const experimental = available.filter((meta) => meta.tags?.includes('experimental'));
+  const recommended = available.filter(({ meta }) => !meta.tags?.includes('experimental'));
+  const experimental = available.filter(({ meta }) => meta.tags?.includes('experimental'));
 
-  const handleChange = (id: string, enabled: boolean) => {
-    enabled ? manager.enable(id) : manager.disable(id);
-    void dispatch(
+  const handleChange = async (id: string, enabled: boolean) => {
+    if (enabled) {
+      await manager.enable(id);
+    } else {
+      await manager.disable(id);
+    }
+
+    await dispatch(
       createIntent(ObservabilityAction.SendEvent, {
         name: 'plugins.toggle',
         properties: { plugin: id, enabled },
       }),
     );
-  };
-
-  const handleReload = () => {
-    window.location.reload();
   };
 
   return (
@@ -68,34 +64,16 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => 
       </DeprecatedFormInput>
 
       <Section label={t('settings section installed label')}>
-        <PluginList
-          plugins={installed}
-          installed={pluginIds}
-          enabled={manager.enabled}
-          onChange={handleChange}
-          onReload={handleReload}
-        />
+        <PluginList plugins={installed} installed={pluginIds} enabled={manager.enabled} onChange={handleChange} />
       </Section>
 
       <Section label={t('settings section recommended label')}>
-        <PluginList
-          plugins={recommended}
-          installed={pluginIds}
-          enabled={manager.enabled}
-          onChange={handleChange}
-          onReload={handleReload}
-        />
+        <PluginList plugins={recommended} installed={pluginIds} enabled={manager.enabled} onChange={handleChange} />
       </Section>
 
       {settings.experimental && (
         <Section label={t('settings section experimental label')}>
-          <PluginList
-            plugins={experimental}
-            installed={pluginIds}
-            enabled={manager.enabled}
-            onChange={handleChange}
-            onReload={handleReload}
-          />
+          <PluginList plugins={experimental} installed={pluginIds} enabled={manager.enabled} onChange={handleChange} />
         </Section>
       )}
     </>

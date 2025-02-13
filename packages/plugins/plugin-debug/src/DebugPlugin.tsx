@@ -6,7 +6,7 @@ import { Capabilities, contributes, defineModule, definePlugin, Events } from '@
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
+import { AppGraphBuilder, DebugSettings, ReactSurface } from './capabilities';
 import { DEBUG_PLUGIN, meta } from './meta';
 import translations from './translations';
 
@@ -35,13 +35,8 @@ export const DebugPlugin = () => {
         }),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

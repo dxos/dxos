@@ -4,6 +4,5 @@
 
 export * from '@dxos/app-graph';
 
-export * from './GraphContext';
 export * from './GraphPlugin';
 export * from './meta';

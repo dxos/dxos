@@ -162,12 +162,15 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       return () => {
         log('clean up');
         clearTimeout(t);
-        void client
-          ?.destroy()
-          .then(() => {
-            log('destroyed');
-          })
-          .catch((err) => log.catch(err));
+        // Only destroy if the client is not provided by the parent.
+        if (!clientProvider) {
+          void client
+            ?.destroy()
+            .then(() => {
+              log('destroyed');
+            })
+            .catch((err) => log.catch(err));
+        }
       };
     }, [configProvider, clientProvider, servicesProvider, noBanner]);
 

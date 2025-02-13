@@ -96,7 +96,7 @@ export const MarkdownEditor = ({
       createIntent(LayoutAction.UpdateComplementary, {
         part: 'complementary',
         subject: 'comments',
-        options: { state: true },
+        options: { state: 'expanded' },
       }),
     );
   }, [dispatch]);

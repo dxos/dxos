@@ -4,16 +4,17 @@
 
 import React from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
+import { DeckCapabilities } from '../../capabilities';
 import { DECK_PLUGIN } from '../../meta';
-import { useLayout } from '../LayoutContext';
 
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
-  const layoutContext = useLayout();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
@@ -25,13 +26,13 @@ export const ToggleSidebarButton = ({
       onClick={() =>
         (layoutContext.sidebarState = layoutContext.sidebarState === 'expanded' ? 'collapsed' : 'expanded')
       }
-      classNames={['!pli-2 order-first', classNames]}
+      classNames={classNames}
     />
   );
 };
 
 export const CloseSidebarButton = () => {
-  const layoutContext = useLayout();
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
@@ -41,39 +42,27 @@ export const CloseSidebarButton = () => {
       size={4}
       label={t('close navigation sidebar label')}
       onClick={() => (layoutContext.sidebarState = 'collapsed')}
-      classNames='!rounded-none !pli-1 ch-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
+      classNames='rounded-none pli-1 dx-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
     />
   );
 };
 
-export const ToggleComplementarySidebarButton = () => {
-  const layoutContext = useLayout();
+export const ToggleComplementarySidebarButton = ({ inR0, classNames }: ThemedClassName<{ inR0?: boolean }>) => {
+  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
       iconOnly
-      onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
+      onClick={() =>
+        (layoutContext.complementarySidebarState =
+          layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded')
+      }
       variant='ghost'
       label={t('open complementary sidebar label')}
-      classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
+      classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'
-      size={4}
-    />
-  );
-};
-
-export const CloseComplementarySidebarButton = () => {
-  const layoutContext = useLayout();
-  const { t } = useTranslation(DECK_PLUGIN);
-  return (
-    <IconButton
-      iconOnly
-      variant='ghost'
-      size={4}
-      icon='ph--caret-line-right--regular'
-      label={t('close complementary sidebar label')}
-      classNames='!rounded-none border-is border-separator ch-focus-ring-inset pie-2 lg:pie-[max(.5rem,env(safe-area-inset-right))]'
-      onClick={() => (layoutContext.complementarySidebarOpen = false)}
+      size={inR0 ? 5 : 4}
+      tooltipSide={inR0 ? 'left' : undefined}
     />
   );
 };

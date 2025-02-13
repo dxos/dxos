@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { RangeList, SheetContainer } from '../components';
+import { SheetCapabilities } from './capabilities';
+import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../components';
 import { SHEET_PLUGIN } from '../meta';
 import { SheetType } from '../types';
 
@@ -17,9 +18,15 @@ export default () =>
       id: `${SHEET_PLUGIN}/sheet`,
       role: ['article', 'section'],
       filter: (data): data is { subject: SheetType } => data.subject instanceof SheetType && !!getSpace(data.subject),
-      component: ({ data, role }) => (
-        <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
-      ),
+      component: ({ data, role }) => {
+        const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
+
+        return (
+          <ComputeGraphContextProvider registry={computeGraphRegistry}>
+            <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
+          </ComputeGraphContextProvider>
+        );
+      },
     }),
     createSurface({
       id: `${SHEET_PLUGIN}/settings`,

@@ -4,14 +4,14 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities as AppCapabilities, contributes, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { RootAttentionProvider } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities } from './capabilities';
 import { ATTENTION_PLUGIN } from '../meta';
 
 export default () =>
-  contributes(AppCapabilities.ReactContext, {
+  contributes(Capabilities.ReactContext, {
     id: ATTENTION_PLUGIN,
     context: (props: PropsWithChildren) => {
       const attention = useCapability(AttentionCapabilities.Attention);

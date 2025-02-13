@@ -12,7 +12,7 @@ import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { HelpContextProvider, type HelpContextProviderProps } from './HelpContextProvider';
+import { WelcomeTour, type WelcomeTourProps } from './WelcomeTour';
 import { useHelp } from '../../hooks';
 
 const App = () => {
@@ -57,18 +57,19 @@ const App = () => {
   );
 };
 
-const DefaultStory = ({ steps = [] }: HelpContextProviderProps) => (
-  <HelpContextProvider steps={steps}>
+const DefaultStory = ({ steps = [] }: WelcomeTourProps) => (
+  <>
+    <WelcomeTour steps={steps} />
     <div className='fixed inset-0 overflow-hidden'>
       <App />
     </div>
-  </HelpContextProvider>
+  </>
 );
 
 // TODO(burdon): Tour should prompt user to create a Stack -- and respond to it being created.
 //  Use beacon to simulate click.
 
-export const Default: StoryObj<typeof HelpContextProvider> = {
+export const Default: StoryObj<typeof WelcomeTour> = {
   args: {
     // https://docs.react-joyride.com/step#options
     steps: [
@@ -103,9 +104,9 @@ export const Default: StoryObj<typeof HelpContextProvider> = {
 /**
  * IMPORTANT: Run in separate tab.
  */
-const meta: Meta<typeof HelpContextProvider> = {
-  title: 'plugins/plugin-help/Joyride',
-  component: HelpContextProvider,
+const meta: Meta<typeof WelcomeTour> = {
+  title: 'plugins/plugin-help/WelcomeTour',
+  component: WelcomeTour,
   render: DefaultStory,
   decorators: [withTheme],
 };

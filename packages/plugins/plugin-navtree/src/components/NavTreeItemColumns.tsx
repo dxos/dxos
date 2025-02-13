@@ -35,7 +35,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   useLoadDescendents(primaryAction && !isAction(primaryAction) ? primaryAction : undefined);
 
   return (
-    <>
+    <div role='none' className='contents app-no-drag'>
       {primaryAction?.properties?.disposition === 'toolbar' ? (
         <NavTreeItemAction
           testId={primaryAction.properties?.testId}
@@ -66,6 +66,6 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
         )}
       </ActionRoot>
       {ItemEnd && <ItemEnd node={item} open={open} />}
-    </>
+    </div>
   );
 });

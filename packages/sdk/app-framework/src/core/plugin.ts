@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Effect } from 'effect';
-
 import { type MaybePromise } from '@dxos/util';
 
 import { type AnyCapability, type PluginsContext } from './capabilities';
@@ -39,7 +37,7 @@ interface PluginModuleInterface {
    */
   activate: (
     context: PluginsContext,
-  ) => MaybePromise<AnyCapability | AnyCapability[]> | Effect.Effect<AnyCapability | AnyCapability[], Error>;
+  ) => MaybePromise<AnyCapability | AnyCapability[]> | Promise<() => Promise<AnyCapability | AnyCapability[]>>;
 }
 
 /**

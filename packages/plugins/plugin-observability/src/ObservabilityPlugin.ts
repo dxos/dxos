@@ -32,6 +32,7 @@ export const ObservabilityPlugin = (options: { namespace: string; observability:
     defineModule({
       id: `${meta.id}/module/state`,
       activatesOn: Events.Startup,
+      activatesAfter: [ObservabilityEvents.StateReady],
       activate: () => ObservabilityState({ namespace: options.namespace }),
     }),
     defineModule({
@@ -46,7 +47,7 @@ export const ObservabilityPlugin = (options: { namespace: string; observability:
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

@@ -51,14 +51,13 @@ export const TreeItemHeading = memo(
           asChild
           ref={forwardedRef}
         >
-          {/* TODO(wittjosiah): Class precedence. See #8149. */}
           <Button
             data-testid='treeItem.heading'
             variant='ghost'
             density='fine'
             classNames={mx(
-              'grow gap-2 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent',
-              'disabled:!cursor-default disabled:!opacity-100',
+              'grow gap-2 pis-0.5 hover:bg-transparent dark:hover:bg-transparent',
+              'disabled:cursor-default disabled:opacity-100',
               className,
             )}
             disabled={disabled}

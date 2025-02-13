@@ -39,7 +39,7 @@ const createButton = ({
     .join(' ');
 
   const positionClass = type === 'primary' ? 'inline-end-2' : 'inline-end-9';
-  return `<button ${attr} data-testid="${testId}" class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 ${positionClass}" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
+  return `<button ${attr} data-testid="${testId}" class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 ${positionClass}" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
 };
 
 const addColumnButton = {
