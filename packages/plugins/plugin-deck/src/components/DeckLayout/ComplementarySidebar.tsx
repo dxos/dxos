@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
 
 import {
   createIntent,
@@ -12,7 +12,7 @@ import {
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Main, useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
+import { Main, useTranslation, toLocalizedString, IconButton, ScrollArea } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
@@ -53,13 +53,18 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
     setInternalValue(activePanelId);
   }, [activePanelId]);
 
-  const handleValueChange = useCallback(
-    (nextValue: string) => {
-      setInternalValue(nextValue);
-      layout.complementarySidebarState = 'expanded';
-      void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
+  const handleTabClick = useCallback(
+    (event: MouseEvent) => {
+      const nextValue = event.currentTarget.getAttribute('data-value') as string;
+      if (nextValue === activePanelId) {
+        layout.complementarySidebarState = layout.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+      } else {
+        setInternalValue(nextValue);
+        layout.complementarySidebarState = 'expanded';
+        void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
+      }
     },
-    [dispatch],
+    [layout, activePanelId, dispatch],
   );
 
   // TODO(burdon): Scroll area should be controlled by surface.
@@ -71,13 +76,12 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
         orientation='vertical'
         verticalVariant='stateless'
         value={internalValue}
-        onValueChange={handleValueChange}
         attendableId={attended[0]}
         classNames='contents'
       >
         <div
           role='none'
-          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-l0 backdrop-blur contain-layout app-drag'
+          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-base contain-layout app-drag'
         >
           <Tabs.Tablist classNames={actionsContainer}>
             {panels.map((panel) => (
@@ -88,6 +92,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                   size={5}
                   iconOnly
                   tooltipSide='left'
+                  data-value={panel.id}
                   variant={
                     activePanelId === panel.id
                       ? layout.complementarySidebarState === 'expanded'
@@ -95,6 +100,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                         : 'default'
                       : 'ghost'
                   }
+                  onClick={handleTabClick}
                 />
               </Tabs.Tab>
             ))}
@@ -107,24 +113,29 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
           <Tabs.Tabpanel
             key={panel.id}
             value={panel.id}
-            classNames='absolute inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size]'
+            classNames='absolute inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr]'
           >
-            <h2 className='bs-[--rail-size] flex items-center pli-2 border-separator border-be'>
-              {toLocalizedString(panel.label, t)}
-            </h2>
-            {panel.id === activePanelId && node && (
-              <Surface
-                key={activeEntryId}
-                role={`complementary--${activePanelId}`}
-                data={{
-                  id: activeEntryId,
-                  subject: node.properties.object ?? node.properties.space,
-                  popoverAnchorId: layout.popoverAnchorId,
-                }}
-                fallback={PlankContentError}
-                placeholder={<PlankLoading />}
-              />
-            )}
+            <h2 className='flex items-center pli-2 border-separator border-be'>{toLocalizedString(panel.label, t)}</h2>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                {panel.id === activePanelId && node && (
+                  <Surface
+                    key={activeEntryId}
+                    role={`complementary--${activePanelId}`}
+                    data={{
+                      id: activeEntryId,
+                      subject: node.properties.object ?? node.properties.space,
+                      popoverAnchorId: layout.popoverAnchorId,
+                    }}
+                    fallback={PlankContentError}
+                    placeholder={<PlankLoading />}
+                  />
+                )}
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar orientation='vertical'>
+                <ScrollArea.Thumb />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root>
           </Tabs.Tabpanel>
         ))}
       </Tabs.Root>
