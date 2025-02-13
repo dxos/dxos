@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type SelectOption } from '@dxos/echo-schema';
@@ -41,12 +41,7 @@ export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(
     }
   };
 
-  const columns = Array.from(genColumns());
-
-  console.log('GENERATED COLUMNS', columns);
-
-  return columns.map(({ columnValue, ids }) => {
-    console.log('COLUMN VALUE', columnValue);
+  return Array.from(genColumns()).map(({ columnValue, ids }) => {
     const orderMap = new Map(ids.map((id, index) => [id, index]));
 
     const cardsWithExistingOrder: T[] = [];

@@ -6,7 +6,7 @@ import { StreamLanguage, HighlightStyle, syntaxHighlighting } from '@codemirror/
 import { type Extension } from '@codemirror/state';
 
 import { tags } from '@dxos/react-ui-editor';
-import { mx, tagRoot } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 /**
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
@@ -29,7 +29,8 @@ const parser = StreamLanguage.define<{ count: number }>({
 const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
-    class: mx(tagRoot({ palette: 'cyan' }), 'text-baseText font-medium'),
+    // TODO(ZaymonFC): Restore palette color.
+    class: mx('dx-tag text-baseText font-medium'),
   },
 ]);
 

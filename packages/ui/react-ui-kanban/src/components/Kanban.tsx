@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useMemo, useState } from 'react';
+import React, { type ComponentProps, useMemo } from 'react';
 
-import { IconButton, useTranslation, Input, Tag } from '@dxos/react-ui';
+import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -22,7 +22,7 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEmptyColumn }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const [namingColumn, setNamingColumn] = useState(false);
+  // const [namingColumn, setNamingColumn] = useState(false);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
@@ -59,7 +59,8 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                   />
                 </StackItem.DragHandle>
                 <Tag palette={color as any}>{title}</Tag>
-                {onRemoveEmptyColumn && cards.length < 1 && (
+                {/* NOTE(ZaymonFC): We're just going to manipulate status with the ViewEditor for now. */}
+                {/* {onRemoveEmptyColumn && cards.length < 1 && (
                   <IconButton
                     iconOnly
                     variant='ghost'
@@ -67,7 +68,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                     label={t('remove empty column label')}
                     onClick={() => onRemoveEmptyColumn(columnValue)}
                   />
-                )}
+                )} */}
               </StackItem.Heading>
               <Stack
                 id={columnValue}
@@ -122,7 +123,8 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
           </StackItem.Root>
         );
       })}
-      {onAddColumn && (
+      {/* NOTE(ZaymonFC): We're just going to manipulate status with the ViewEditor for now. */}
+      {/* {onAddColumn && (
         <StackItem.Root item={{ id: 'new-column-cta' }} size={20} classNames='pli-1 plb-2'>
           <StackItem.Heading>
             {namingColumn ? (
@@ -135,7 +137,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                   onKeyDown={(event) => {
                     switch (event.key) {
                       case 'Enter':
-                        onAddColumn((event.target as HTMLInputElement).value);
+                        onAddColumn?((event.target as HTMLInputElement).value);
                       // eslint-disable-next-line no-fallthrough
                       case 'Escape':
                         return setNamingColumn(false);
@@ -153,7 +155,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
             )}
           </StackItem.Heading>
         </StackItem.Root>
-      )}
+      )} */}
     </Stack>
   );
 };
