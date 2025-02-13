@@ -13,7 +13,7 @@ interface ScreenshareButtonProps {}
 
 export const ScreenshareButton: FC<ScreenshareButtonProps> = () => {
   const {
-    userMedia: { screenShareVideoTrack, turnScreenShareOn, turnScreenShareOff, screenShareEnabled },
+    userMedia: { screenShareVideoTrack, turnScreenShareOn, turnScreenShareOff },
     room: { otherUsers },
   } = useRoomContext();
 
