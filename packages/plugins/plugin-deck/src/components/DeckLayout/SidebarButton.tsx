@@ -26,7 +26,7 @@ export const ToggleSidebarButton = ({
       onClick={() =>
         (layoutContext.sidebarState = layoutContext.sidebarState === 'expanded' ? 'collapsed' : 'expanded')
       }
-      classNames={['pli-2 order-first', classNames]}
+      classNames={classNames}
     />
   );
 };
@@ -47,34 +47,22 @@ export const CloseSidebarButton = () => {
   );
 };
 
-export const ToggleComplementarySidebarButton = () => {
+export const ToggleComplementarySidebarButton = ({ inR0, classNames }: ThemedClassName<{ inR0?: boolean }>) => {
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(DECK_PLUGIN);
   return (
     <IconButton
       iconOnly
-      onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
+      onClick={() =>
+        (layoutContext.complementarySidebarState =
+          layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded')
+      }
       variant='ghost'
       label={t('open complementary sidebar label')}
-      classNames='pli-2 plb-3 [&>svg]:-scale-x-100'
+      classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'
-      size={4}
-    />
-  );
-};
-
-export const CloseComplementarySidebarButton = () => {
-  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
-  const { t } = useTranslation(DECK_PLUGIN);
-  return (
-    <IconButton
-      iconOnly
-      variant='ghost'
-      size={4}
-      icon='ph--caret-line-right--regular'
-      label={t('close complementary sidebar label')}
-      classNames='rounded-none border-is border-separator dx-focus-ring-inset pie-2 lg:pie-[max(.5rem,env(safe-area-inset-right))]'
-      onClick={() => (layoutContext.complementarySidebarOpen = false)}
+      size={inR0 ? 5 : 4}
+      tooltipSide={inR0 ? 'left' : undefined}
     />
   );
 };

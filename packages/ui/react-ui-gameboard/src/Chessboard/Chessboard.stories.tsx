@@ -30,7 +30,9 @@ const Render = ({ fen, orientation: _orientation, ...props }: RenderProps) => {
         <Button onClick={() => model.initialize()}>Reset</Button>
         <Button onClick={() => model.makeRandomMove()}>Move</Button>
         <div className='grow'></div>
-        <Button onClick={() => setOrientation((orientation) => (orientation === 'white' ? 'black' : 'white'))}>
+        <Button
+          onClick={() => setOrientation((orientation) => (!orientation || orientation === 'white' ? 'black' : 'white'))}
+        >
           Toggle
         </Button>
       </Toolbar.Root>
