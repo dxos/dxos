@@ -16,7 +16,7 @@
     "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
     "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
     "icons:mstile": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
-    "icons:pwa": "pwa-asset-generator --path=/ --icon-only --favicon --index=index.html --manifest=public/site.webmanifest ./public/icon.svg ./public"
+    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html --manifest=public/site.webmanifest ./public/icon.svg ./public"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -335,8 +335,7 @@ export class Client {
       return;
     }
 
-    log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
-
+    log.info('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
     this._ctx = new Context();
