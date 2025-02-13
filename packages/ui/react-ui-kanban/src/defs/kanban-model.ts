@@ -126,8 +126,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     const options = this._getSelectOptions();
     invariant(options);
     const option = options?.find((option) => option.id === id);
-    invariant(option);
-    return option;
+    return option ?? ({ title: id, color: 'neutral' } as const);
   }
 
   public addEmptyColumn(columnValue: string) {
