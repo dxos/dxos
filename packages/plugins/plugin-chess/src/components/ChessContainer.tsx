@@ -21,6 +21,7 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
         chess.loadPgn(game.pgn);
       }
 
+      // TODO(burdon): Update current model.
       setModel(new ChessModel(chess.fen()));
     }
   }, [game.pgn]);
@@ -35,7 +36,7 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
       <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
         <div />
 
-        <Board.Root model={model} onDrop={(move) => model.makeMove(move)}>
+        <Board.Root classNames={'m-4'} model={model} onDrop={(move) => model.makeMove(move)}>
           <Chessboard />
         </Board.Root>
 

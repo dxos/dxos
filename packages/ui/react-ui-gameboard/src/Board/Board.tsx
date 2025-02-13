@@ -3,40 +3,27 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { forwardRef, type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { Container } from './Container';
 import { BoardContext } from './context';
 import { type BoardModel, isLocation, isPiece, type Move } from './types';
 
-type ContainerProps = PropsWithChildren &
-  ThemedClassName<{
-    style?: React.CSSProperties;
-  }>;
-
-/**
- * Container centers the board.
- */
-const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children, classNames, style }, forwardedRef) => {
-  return (
-    <div ref={forwardedRef} style={style} className='flex w-full h-full justify-center overflow-hidden'>
-      <div className={mx('max-w-full max-h-full content-center', classNames)}>{children}</div>
-    </div>
-  );
-});
-
-type RootProps = PropsWithChildren<{
-  model?: BoardModel;
-  onDrop?: (move: Move) => boolean;
-}>;
+type RootProps = ThemedClassName<
+  PropsWithChildren<{
+    model?: BoardModel;
+    onDrop?: (move: Move) => boolean;
+  }>
+>;
 
 /**
  * Generic board container.
  */
-const Root = ({ children, model, onDrop }: RootProps) => {
+const Root = ({ children, classNames, model, onDrop }: RootProps) => {
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -67,7 +54,7 @@ const Root = ({ children, model, onDrop }: RootProps) => {
 
   return (
     <BoardContext.Provider value={{ model, dragging }}>
-      <Container classNames={mx('aspect-square')}>{children}</Container>
+      <Container classNames={mx('aspect-square', classNames)}>{children}</Container>
     </BoardContext.Provider>
   );
 };
