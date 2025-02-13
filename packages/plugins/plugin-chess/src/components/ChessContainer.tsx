@@ -9,7 +9,6 @@ import { getSpace } from '@dxos/react-client/echo';
 import { ChessModel, Board, Chessboard } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { PlayerSelector } from './PlayerSelector';
 import { type GameType } from '../types';
 
 const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
@@ -31,6 +30,7 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
     return null;
   }
 
+  // const showPlayers = false;
   return (
     <StackItem.Content toolbar={false}>
       <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
@@ -40,7 +40,7 @@ const ChessContainer = ({ game }: { game: GameType; role?: string }) => {
           <Chessboard />
         </Board.Root>
 
-        <PlayerSelector game={game} space={space} />
+        {/* {showPlayers && <PlayerSelector space={space} game={game} />} */}
       </div>
     </StackItem.Content>
   );
