@@ -38,9 +38,11 @@ const StorybookKanban = () => {
   useEffect(() => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
-      invariant(kanban.cardView);
       setKanban(kanban);
-      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView.target!.query.type));
+      const [schema] = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type }).runSync();
+      if (schema) {
+        setCardSchema(schema);
+      }
     }
   }, [kanbans]);
 
