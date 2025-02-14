@@ -19,6 +19,7 @@ const CallsContainer: FC<{ space: Space; role?: string }> = ({ space }) => {
   return (
     <StackItem.Content toolbar={false}>
       <Calls
+        space={space}
         // TODO(mykola): Conflicts with the space swarm topic. Derive key from space key?
         roomId={space.key}
         iceServers={config.get('runtime.services.ice') ?? []}

@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { toJsonSchema } from '@dxos/echo-schema';
+import { toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
 
 import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
 
@@ -24,7 +24,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
   return {
     name,
     description,
-    parameters: toFunctionParameterSchema(schema),
+    parameters: toFunctionParameterSchema(toJsonSchema(schema)),
     execute: (params: any, context?: any) => {
       const sanitized = S.decodeSync(schema)(params);
       return execute(sanitized, context ?? {});
@@ -33,10 +33,9 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
 };
 
 /**
- * Adapts schems to be able to pass to AI providers.
+ * Adapts schemas to be able to pass to AI providers.
  */
-const toFunctionParameterSchema = (schema: S.Schema.All) => {
-  const jsonSchema = toJsonSchema(schema);
+export const toFunctionParameterSchema = (jsonSchema: JsonSchemaType) => {
   delete jsonSchema.anyOf;
   delete jsonSchema.$id;
   jsonSchema.type = 'object';

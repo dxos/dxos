@@ -6,3 +6,4 @@ export * from './getUserMediaTrack';
 export * from './getDeviceListObservable';
 export * from './Peer';
 export * from './RxjsPeer';
+export * from './time';

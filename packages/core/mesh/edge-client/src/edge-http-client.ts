@@ -160,7 +160,7 @@ export class EdgeHttpClient {
     const shouldRetry = createRetryHandler(args);
     const url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
 
-    log.info('call', { method: args.method, path, request: args.body });
+    log('call', { method: args.method, path, request: args.body });
 
     let handledAuth = false;
     let authHeader = this._authHeader;
@@ -179,7 +179,7 @@ export class EdgeHttpClient {
             return body.data;
           }
 
-          log.info('unsuccessful edge response', { path, body });
+          log('unsuccessful edge response', { path, body });
 
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
@@ -198,7 +198,7 @@ export class EdgeHttpClient {
       }
 
       if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
-        log.info('retrying edge request', { path, processingError });
+        log('retrying edge request', { path, processingError });
       } else {
         throw processingError;
       }
