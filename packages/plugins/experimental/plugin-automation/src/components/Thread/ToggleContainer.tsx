@@ -4,10 +4,20 @@
 
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-const duration = 200;
+export type ToggleContainerProps = ThemedClassName<
+  PropsWithChildren<{
+    title?: string;
+    icon?: JSX.Element;
+    toggle?: boolean;
+    defaultOpen?: boolean;
+    duration?: number;
+    /** Should shrink the width when closed. */
+    shrinkX?: boolean;
+  }>
+>;
 
 // TODO(burdon): Externalize toggle state.
 export const ToggleContainer = ({
@@ -15,30 +25,41 @@ export const ToggleContainer = ({
   icon,
   toggle,
   defaultOpen,
+  duration = 400,
+  shrinkX = false,
   children,
-}: PropsWithChildren<{ title?: string; icon?: JSX.Element; defaultOpen?: boolean; toggle?: boolean }>) => {
+  classNames,
+}: ToggleContainerProps) => {
   const [expand, setExpand] = useState(defaultOpen || !toggle);
-  const [expandX, setExpandX] = useState(expand);
+  const [expandX, setExpandX] = useState(shrinkX ? expand : true);
   const [expandY, setExpandY] = useState(expand);
+
   useEffect(() => {
-    let t;
+    let t: NodeJS.Timeout;
     if (expand) {
-      setExpandX(true);
-      t = setTimeout(() => {
-        setExpandY(true);
-      }, duration);
+      if (shrinkX) {
+        setExpandX(true);
+      }
+      t = setTimeout(
+        () => {
+          setExpandY(true);
+        },
+        shrinkX ? duration : 0,
+      );
     } else {
       setExpandY(false);
-      t = setTimeout(() => {
-        setExpandX(false);
-      }, duration);
+      if (shrinkX) {
+        t = setTimeout(() => {
+          setExpandX(false);
+        }, duration);
+      }
     }
 
     return () => clearTimeout(t);
   }, [expand]);
 
   return (
-    <div>
+    <div className={mx(classNames)}>
       {title && (
         <div
           className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer select-none'
@@ -48,7 +69,7 @@ export const ToggleContainer = ({
             <Icon
               size={4}
               icon={'ph--caret-right--regular'}
-              style={{ transitionDuration: `${duration * 2}ms` }}
+              style={{ transitionDuration: `${shrinkX ? duration * 2 : duration}ms` }}
               classNames={['transition transition-transform ease-in-out', expand ? 'rotate-90' : 'transform-none']}
             />
           )}
