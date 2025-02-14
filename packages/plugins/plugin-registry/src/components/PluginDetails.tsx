@@ -6,6 +6,7 @@ import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { Button, Icon, Link, useTranslation } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { REGISTRY_PLUGIN } from '../meta';
 
@@ -19,7 +20,7 @@ export const PluginDetails = ({ plugin, enabled, onEnable }: PluginDetailsProps)
   const { t } = useTranslation(REGISTRY_PLUGIN);
   const { description, homePage, source } = plugin.meta;
   return (
-    <div role='none' className='flex p-4'>
+    <StackItem.Content role='article' toolbar={false} classNames='flex p-4'>
       <div role='none' className='grow'>
         <p>{description}</p>
         {homePage && (
@@ -38,6 +39,6 @@ export const PluginDetails = ({ plugin, enabled, onEnable }: PluginDetailsProps)
       <div role='none'>
         <Button onClick={onEnable}>{enabled ? t('disable plugin label') : t('enable plugin label')}</Button>
       </div>
-    </div>
+    </StackItem.Content>
   );
 };

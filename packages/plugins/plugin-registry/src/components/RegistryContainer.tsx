@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 
 import { createIntent, LayoutAction, type Plugin, useIntentDispatcher, usePluginManager } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { PluginList } from './PluginList';
 
@@ -43,8 +44,8 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
     );
 
   return (
-    <div className='overflow-y-auto'>
+    <StackItem.Content toolbar={false} role='article' classNames='overflow-y-auto'>
       <PluginList plugins={plugins} enabled={manager.enabled} onClick={handleClick} onChange={handleChange} />
-    </div>
+    </StackItem.Content>
   );
 };
