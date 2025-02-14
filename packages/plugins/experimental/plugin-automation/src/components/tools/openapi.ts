@@ -1,12 +1,10 @@
-import { createToolsFromOpenAPISpec } from '@cloudflare/ai-utils';
 import { ToolResult, type Tool } from '@dxos/artifact';
-import { log } from '@dxos/log';
-import { type OpenAPIV2 } from 'openapi-types';
-import JsonSchemaDereferencer from '@json-schema-tools/dereferencer';
 import { JsonSchemaType, S, toEffectSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 import jsonpointer from 'jsonpointer';
-import { invariant } from '@dxos/invariant';
+import { type OpenAPIV2 } from 'openapi-types';
 
 export type CreateToolsFromApiOptions = {
   authorization?: ApiAuthorization;
