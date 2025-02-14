@@ -12,6 +12,8 @@ import { createGenerationStream } from './stream';
 import { createTestSSEStream } from './testing';
 import { type GenerationStreamEvent } from './types';
 
+// TODO(burdon): Tool request/response.
+
 const TEST_BLOCKS = [
   [
     // Text
@@ -22,8 +24,6 @@ const TEST_BLOCKS = [
     '<select>',
     '  <option value="1" />',
     '</select>',
-
-    // 'Hello',
 
     // XML
     '<cot>',

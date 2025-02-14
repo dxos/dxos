@@ -49,6 +49,8 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop }: ThreadP
     [text],
   );
 
+  // TODO(burdon): Consolidate tool request/response: (O)=>(O)=>(O)=>...
+
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <ScrollContainer ref={scroller} classNames='py-2 gap-2 overflow-x-hidden'>
