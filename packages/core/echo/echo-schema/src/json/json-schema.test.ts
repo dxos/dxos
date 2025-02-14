@@ -319,23 +319,7 @@ describe('json-to-effect', () => {
     const schema = toEffectSchema(jsonSchema);
     // TODO(Zan): Workout where the annotations are going?
     const origSchema = S.Struct({
-      selectedOption: S.Union(
-        S.Literal('option-1-id'),
-        // .annotations({
-        //   [AST.TitleAnnotationId]: 'Small',
-        //   [AST.DescriptionAnnotationId]: 'Small size option',
-        // }),
-        S.Literal('option-2-id'),
-        // .annotations({
-        //   [AST.TitleAnnotationId]: 'Medium',
-        //   [AST.DescriptionAnnotationId]: 'Medium size option',
-        // }),
-        S.Literal('option-3-id'),
-        // .annotations({
-        //   [AST.TitleAnnotationId]: 'Large',
-        //   [AST.DescriptionAnnotationId]: 'Large size option',
-        // }),
-      ),
+      selectedOption: S.Union(S.Literal('option-1-id'), S.Literal('option-2-id'), S.Literal('option-3-id')),
     });
 
     expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(origSchema.ast));

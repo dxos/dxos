@@ -188,6 +188,20 @@ export class TableSorting<T extends BaseTableRow> {
       return value;
     }
 
+    /**
+     * For single select fields, the sort value is determined by the index of the option in the
+     * options array. This ensures sort order matches the configured option order.
+     */
+    if (format === FormatEnum.SingleSelect) {
+      const options = props.options;
+      if (!options) {
+        return undefined;
+      }
+
+      const option = options.find((option) => option.id === value);
+      return option ? options.indexOf(option) : undefined;
+    }
+
     // TODO(ZaymonFC): Should we format this returned value for display based on the referenced prop format?
     //   Right now we're going to be sorting based on the raw values.
     //   Maybe we need to recurse this function with the referenced prop format and field?

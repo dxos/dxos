@@ -99,6 +99,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         schema={KanbanPropsSchema}
         values={{ columnField: kanban.columnField }}
         onSave={onSave}
+        autoSave
         Custom={{
           columnField: (props) => <SelectInput {...props} options={selectFields} />,
         }}
