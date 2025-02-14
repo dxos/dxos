@@ -1,6 +1,20 @@
 import { createStatic } from '@dxos/echo-schema';
 import { ServiceType, type ApiAuthorization } from '../types';
 
+export type ServiceQuery = {
+  // TODO
+};
+
+export interface ServiceRegistry {
+  queryServices(query: ServiceQuery): Promise<ServiceType[]>;
+}
+
+export class MockServiceRegistry implements ServiceRegistry {
+  async queryServices(query: ServiceQuery): Promise<ServiceType[]> {
+    return [SERVICES.flightSearch, SERVICES.hotelSearch];
+  }
+}
+
 const AMADEUS_AUTH: ApiAuthorization = {
   type: 'oauth',
   clientId: 'BOEnpLd1sMyKjAPGKYeAPFFy60u53QEG',

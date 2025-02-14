@@ -21,7 +21,7 @@ import { type AIChatType } from '../types';
 import { Thread } from './Thread';
 import { covertFunctionToTool } from './tools/function';
 import { createToolsFromApi, createToolsFromService } from './tools/openapi';
-import { SERVICES } from './registry';
+import { SERVICES, type ServiceRegistry, MockServiceRegistry } from './registry';
 
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const config = useConfig();
@@ -31,15 +31,15 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const globalTools = useCapabilities(Capabilities.Tools);
   const functions = useQuery(space, Filter.schema(FunctionType));
+  const serviceRegistry: ServiceRegistry = useMemo(() => new MockServiceRegistry(), []);
 
   const [serviceTools, setServiceTools] = useState<Tool[]>([]);
   useEffect(() => {
-    Promise.all(
-      [
-        //
-        SERVICES.hotelSearch,
-      ].map((service) => createToolsFromService(service)),
-    ).then((tools) => setServiceTools(tools.flat()));
+    queueMicrotask(async () => {
+      const services = await serviceRegistry.queryServices({});
+      const tools = await Promise.all(services.map((service) => createToolsFromService(service)));
+      setServiceTools(tools.flat());
+    });
   }, []);
 
   const tools = useMemo(
