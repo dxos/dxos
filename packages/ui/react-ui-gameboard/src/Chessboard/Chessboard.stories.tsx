@@ -79,7 +79,7 @@ const meta: Meta<typeof Render> = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: Render,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'items-center' })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: '' })],
 };
 
 export default meta;
