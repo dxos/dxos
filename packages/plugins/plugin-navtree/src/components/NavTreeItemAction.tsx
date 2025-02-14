@@ -24,11 +24,8 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
 const fallbackIcon = 'ph--placeholder--regular';
 
 const actionButtonProps = {
-  iconOnly: true,
   size: 4 as const,
-  variant: 'ghost' as const,
   density: 'fine' as const,
-  classNames: mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem),
 };
 
 export const NavTreeItemActionDropdownMenu = ({
@@ -46,7 +43,10 @@ export const NavTreeItemActionDropdownMenu = ({
         <DropdownMenu.Trigger asChild>
           <IconButton
             {...actionButtonProps}
+            classNames={mx('shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem)}
+            variant='ghost'
             icon={icon ?? fallbackIcon}
+            iconOnly
             label={toLocalizedString(label, t)}
             data-testid={testId}
             suppressNextTooltip={suppressNextTooltip}
@@ -59,14 +59,22 @@ export const NavTreeItemActionDropdownMenu = ({
 
 export const NavTreeItemMonolithicAction = ({
   parent,
-  properties: { disabled, caller, testId, icon } = { label: 'never' },
+  properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
   data: invoke,
   baseLabel,
 }: Action & { parent: Node; onAction?: (action: Action) => void; baseLabel: string }) => {
   return (
     <IconButton
       {...actionButtonProps}
+      variant={variant}
+      classNames={mx(
+        'shrink-0',
+        hoverableControlItem,
+        hoverableOpenControlItem,
+        iconOnly ? 'pli-2 pointer-fine:pli-1' : 'p-2 pointer-fine:p-2 mie-1',
+      )}
       icon={icon ?? fallbackIcon}
+      iconOnly={iconOnly}
       label={baseLabel}
       disabled={disabled}
       onClick={(event) => {

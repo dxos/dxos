@@ -23,7 +23,7 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const classes = mx(
       'flex items-center gap-2 p-1 px-2 rounded-sm',
-      'select-none cursor-pointer ch-focus-ring',
+      'select-none cursor-pointer dx-focus-ring',
       'hover:bg-neutral-75 active:bg-neutral-150 dark:hover:bg-neutral-750 dark:active:bg-neutral-700',
       classNames,
     );
@@ -69,7 +69,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
         tabIndex={0}
         {...groupAttrs}
         className={mx(
-          'bs-[--statusbar-size] flex justify-end items-center gap-2 bg-base text-description text-lg pointer-fine:text-xs ch-focus-ring-inset',
+          'bs-[--statusbar-size] flex justify-end items-center gap-2 bg-base text-description text-lg pointer-fine:text-xs dx-focus-ring-inset',
           classNames,
         )}
         ref={forwardedRef}

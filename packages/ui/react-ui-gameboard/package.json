@@ -20,17 +20,21 @@
   ],
   "scripts": {
     "gen:pieces": "pnpm gen:pieces:chess",
-    "gen:pieces:chess": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/alpha ./assets/pieces/chess/alpha"
+    "gen:pieces:chess": "pnpm gen:pieces:chess:alpha && pnpm gen:pieces:chess:cburnett",
+    "gen:pieces:chess:alpha": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/alpha ./assets/pieces/chess/alpha",
+    "gen:pieces:chess:cburnett": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/cburnett ./assets/pieces/chess/cburnett"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+    "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "chess.js": "^1.0.0",
-    "use-resize-observer": "^9.0.0"
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

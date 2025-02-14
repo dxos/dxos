@@ -13,7 +13,6 @@ import {
   DeckSettings,
   DeckState,
   LayoutIntentResolver,
-  ReactContext,
   ReactRoot,
   ReactSurface,
   Tools,
@@ -52,18 +51,13 @@ export const DeckPlugin = () =>
       activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-root`,
       activatesOn: Events.Startup,
       activate: ReactRoot,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

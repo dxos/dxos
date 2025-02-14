@@ -2,13 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AUTOMATION_PLUGIN } from './meta';
 import { AIChatType } from './types';
 
 export default [
   {
     'en-US': {
       [AIChatType.typename]: {
-        'typename label': 'GPT Chat',
+        'typename label': 'AI Chat',
+      },
+      [AUTOMATION_PLUGIN]: {
         'plugin name': 'Automation',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',

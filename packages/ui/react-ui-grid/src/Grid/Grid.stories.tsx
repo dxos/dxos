@@ -25,7 +25,7 @@ const storybookInitialCells = (value?: string) => ({
   grid: {
     '1,1': {
       accessoryHtml:
-        '<button class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
+        '<button class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
       value: 'Weekly sales report',
     },
     '2,2': {

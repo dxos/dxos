@@ -3,6 +3,8 @@
 //
 
 import { contributes, type PluginsContext } from '@dxos/app-framework';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { log } from '@dxos/log';
 import { Client } from '@dxos/react-client';
 
 import { ClientCapabilities } from './capabilities';
@@ -14,14 +16,12 @@ type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationU
 };
 
 export default async ({ context, onClientInitialized, ...options }: ClientCapabilityOptions) => {
-  const client = new Client(options);
+  const config = new Config(await Storage(), Envs(), Local(), Defaults());
+  const client = new Client({ config, ...options });
+  log.info('initializing client...', { config });
   await client.initialize();
+  log.info('client initialized');
   await onClientInitialized?.(context, client);
-
-  const systemSchemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.SystemSchema).flat()));
-  const schemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.Schema).flat()));
-  client.addTypes(systemSchemas);
-  client.addTypes(schemas);
 
   // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
   client.reloaded.on(() => {

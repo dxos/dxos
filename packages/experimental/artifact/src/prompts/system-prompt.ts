@@ -33,7 +33,7 @@ export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts = [] }:
     .trim();
 
   // Replace template variables with values.
-  return template.replace(/{{(.*?)}}/g, (match, p1) => {
+  template = template.replace(/{{(.*?)}}/g, (match, p1) => {
     const provider = values[p1];
     if (!provider) {
       log.warn(`no provider for template variable: ${p1}`);
@@ -42,4 +42,9 @@ export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts = [] }:
 
     return provider();
   });
+
+  // TODO(dmaretskyi): Move to template.
+  template += `\n\nCurrent date and time is: ${new Date().toISOString()}`;
+
+  return template;
 };

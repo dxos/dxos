@@ -3,69 +3,84 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { forwardRef, type PropsWithChildren, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { type PieceRecord, isLocation, isEqualLocation, isValidMove, isPiece } from './types';
-import { Chessboard } from '../Chessboard';
+import { Container } from './Container';
+import { BoardContext, type BoardContextType } from './context';
+import { type BoardModel, isLocation, isPiece, type Move, type PieceRecord } from './types';
 
-export type BoardProps = {
-  pieces?: PieceRecord[];
-  orientation?: 'white' | 'black'; // TODO(burdon): Flip.
-};
-
-export const Board = ({ pieces: _pieces }: BoardProps) => {
-  const [pieces, setPieces] = useState<PieceRecord[]>(_pieces ?? []);
-
-  useEffect(() => {
-    return monitorForElements({
-      onDrop: ({ source, location }) => {
-        log.info('onDrop', { source, location });
-        const destination = location.current.dropTargets[0];
-        if (!destination) {
-          return;
-        }
-
-        const destinationLocation = destination.data.location;
-        const sourceLocation = source.data.location;
-        const pieceType = source.data.pieceType;
-        if (!isLocation(destinationLocation) || !isLocation(sourceLocation) || !isPiece(pieceType)) {
-          return;
-        }
-
-        const piece = pieces.find((p) => isEqualLocation(p.location, sourceLocation));
-        const restOfPieces = pieces.filter((p) => p !== piece);
-        if (isValidMove(sourceLocation, destinationLocation, pieceType) && piece !== undefined) {
-          setPieces([{ type: piece.type, location: destinationLocation }, ...restOfPieces]);
-        }
-      },
-    });
-  }, [pieces]);
-
-  return (
-    <Container>
-      <Chessboard pieces={pieces} showLabels={false} />
-    </Container>
-  );
-};
+type RootProps = ThemedClassName<
+  PropsWithChildren<{
+    model?: BoardModel;
+    onDrop?: (move: Move) => boolean;
+  }>
+>;
 
 /**
- * Container centers the board.
+ * Generic board container.
  */
-const Container = forwardRef<HTMLDivElement, PropsWithChildren>(({ children }, forwardedRef) => {
+const Root = ({ children, classNames, model, onDrop }: RootProps) => {
+  const [dragging, setDragging] = useState(false);
+  const [promoting, setPromoting] = useState<PieceRecord | undefined>();
+
+  // Handle promotion.
+  const onPromotion = useCallback<BoardContextType['onPromotion']>((move) => {
+    log('onPromotion', { move });
+    setPromoting(undefined);
+    onDrop?.(move);
+  }, []);
+
+  useEffect(() => {
+    if (!model) {
+      return;
+    }
+
+    // TODO(burdon): Should target specific container.
+    return monitorForElements({
+      onDragStart: ({ source }) => {
+        log('onDragStart', { source });
+        setDragging(true);
+      },
+      onDrop: ({ source, location }) => {
+        log('onDrop', { source, location });
+        const target = location.current.dropTargets[0];
+        if (!target) {
+          return;
+        }
+
+        const targetLocation = target.data.location;
+        const piece = source.data.piece;
+        if (!isLocation(targetLocation) || !isPiece(piece)) {
+          return;
+        }
+
+        const move: Move = { from: piece.location, to: targetLocation, piece: piece.type };
+        if (model.canPromote?.(move)) {
+          setPromoting({ ...piece, location: targetLocation });
+        } else {
+          onDrop?.(move);
+        }
+
+        setDragging(false);
+      },
+    });
+  }, [model]);
+
   return (
-    <div ref={forwardedRef} className='relative w-full h-full'>
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <div
-          style={{
-            width: 'min(100vw, 100vh)',
-            height: 'min(100vw, 100vh)',
-          }}
-        >
-          {children}
-        </div>
-      </div>
-    </div>
+    <BoardContext.Provider value={{ model, dragging, promoting, onPromotion }}>
+      <Container classNames={mx('aspect-square', classNames)}>{children}</Container>
+    </BoardContext.Provider>
   );
-});
+};
+
+Root.displayName = 'Board.Root';
+
+export const Board = {
+  Root,
+};
+
+export type { RootProps as BoardRootProps };

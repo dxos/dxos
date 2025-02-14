@@ -82,9 +82,9 @@ export default (context: PluginsContext) =>
           layout.complementarySidebarPanel = subject;
         }
 
-        const next = subject ? true : options?.state ?? !layout.complementarySidebarOpen;
-        if (next !== layout.complementarySidebarOpen) {
-          layout.complementarySidebarOpen = next;
+        const next = subject ? 'expanded' : options?.state ?? layout.complementarySidebarState;
+        if (next !== layout.complementarySidebarState) {
+          layout.complementarySidebarState = next;
         }
       },
     }),
@@ -317,7 +317,13 @@ export default (context: PluginsContext) =>
             if (!state.deck.solo) {
               // Solo the entry.
               return {
-                intents: [createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } })],
+                intents: [
+                  createIntent(LayoutAction.SetLayoutMode, {
+                    part: 'mode',
+                    subject: entryId,
+                    options: { mode: 'solo' },
+                  }),
+                ],
               };
             } else {
               // Un-solo the current entry.

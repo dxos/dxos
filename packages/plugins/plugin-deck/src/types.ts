@@ -52,7 +52,7 @@ export const DeckState = S.mutable(
     modeHistory: S.mutable(S.Array(LayoutMode)),
 
     sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
-    complementarySidebarOpen: S.Boolean,
+    complementarySidebarState: S.Literal('closed', 'collapsed', 'expanded'),
     complementarySidebarPanel: S.optional(S.String),
 
     dialogOpen: S.Boolean,

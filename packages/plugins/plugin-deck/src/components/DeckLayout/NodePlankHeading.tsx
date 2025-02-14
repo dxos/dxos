@@ -4,14 +4,13 @@
 
 import React, { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
-import { type Node, useGraph } from '@dxos/plugin-graph';
+import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { type Node } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
-import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
 import { soloInlinePadding } from '../fragments';
@@ -39,7 +38,7 @@ export const NodePlankHeading = memo(
     actions = [],
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
-    const { graph } = useGraph();
+    const { graph } = useAppGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
@@ -82,7 +81,10 @@ export const NodePlankHeading = memo(
         } else if (eventType === 'close') {
           if (part === 'complementary') {
             return dispatch(
-              createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: false } }),
+              createIntent(LayoutAction.UpdateComplementary, {
+                part: 'complementary',
+                options: { state: 'collapsed' },
+              }),
             );
           } else {
             return dispatch(
@@ -99,7 +101,7 @@ export const NodePlankHeading = memo(
     return (
       <StackItem.Heading
         classNames={[
-          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12',
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag',
           part === 'solo' ? soloInlinePadding : 'pli-1',
         ]}
       >
@@ -137,9 +139,7 @@ export const NodePlankHeading = memo(
           isSolo={part === 'solo'}
           onClick={handlePlankAction}
           close={part === 'complementary' ? 'minify-end' : true}
-        >
-          <ToggleComplementarySidebarButton />
-        </PlankControls>
+        />
       </StackItem.Heading>
     );
   },
