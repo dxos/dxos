@@ -40,8 +40,13 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
       return unusedHues[Math.floor(Math.random() * unusedHues.length)];
     }
 
-    // If they have all been used, pick a random one.
-    return hueKeys[Math.floor(Math.random() * hueKeys.length)];
+    // Pick a random one that hasn't been used in the last three options
+    const lastThree = new Set(options?.slice(-3).map((option) => option.color) ?? []);
+    const availableHues = hueKeys.filter((hue) => !lastThree.has(hue));
+    return (
+      availableHues[Math.floor(Math.random() * availableHues.length)] ??
+      hueKeys[Math.floor(Math.random() * hueKeys.length)]
+    );
   };
 
   const handleAdd = useCallback(() => {
@@ -87,16 +92,12 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
     [options, type, onValueChange],
   );
 
-  const handleKeyDown = useCallback(
-    (id: string) => (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        setSelectedId(null);
-      }
-    },
-    [],
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setSelectedId(null);
+    }
+  }, []);
 
-  // Color onChange
   const handleColorChange = useCallback(
     (id: string) => (hue: string) => {
       const newOptions = options?.map((o) => (o.id === id ? { ...o, color: hue } : o));
@@ -151,7 +152,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               ref={selected === item.id ? inputRef : undefined}
                               value={item.title}
                               onChange={handleTitleChange(item.id)}
-                              onKeyDown={handleKeyDown(item.id)}
+                              onKeyDown={handleKeyDown}
                               classNames='flex-1'
                             />
                             <Toolbar.Root classNames='p-0 m-0 !w-auto'>
