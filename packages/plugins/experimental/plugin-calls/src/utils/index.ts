@@ -9,3 +9,4 @@ export * from './getScreenshare';
 export * from './Peer';
 export * from './RxjsPeer';
 export * from './getTimeStr';
+export * from './calculateLayout';

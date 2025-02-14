@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useMemo } from 'react';
-import { Flipped } from 'react-flip-toolkit';
+import React, { forwardRef, useMemo } from 'react';
 import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
 import { mx } from '@dxos/react-ui-theme';
 
 import { useRoomContext, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
+import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
 import { VideoObject } from '../Video';
 
 const useMid = (track?: MediaStreamTrack) => {
@@ -31,76 +31,65 @@ const useMid = (track?: MediaStreamTrack) => {
 };
 
 export type ParticipantProps = {
-  flipId: string;
   user: UserState;
-  audioTrack?: MediaStreamTrack;
-  videoTrack?: MediaStreamTrack;
-  screenShareVideoTrack?: MediaStreamTrack;
-  isScreenShare?: boolean;
-  isSelf?: boolean;
-  pinnedId?: string;
-  setPinnedId: (id?: string) => void;
   showDebugInfo?: boolean;
 };
 
-export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
-  (
-    {
-      videoTrack,
-      audioTrack,
-      flipId,
-      user,
-      isScreenShare = false,
-      isSelf = false,
-      pinnedId,
-      setPinnedId,
-      showDebugInfo = false,
-    },
-    ref,
-  ) => {
-    const pinned = flipId === pinnedId;
-    useEffect(() => {
-      if (isScreenShare) {
-        setPinnedId(flipId);
-      }
-    }, [flipId, isScreenShare, setPinnedId]);
+export const screenshareSuffix = '_screenshare';
 
-    const audioMid = useMid(audioTrack);
-    const videoMid = useMid(videoTrack);
+export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(({ user, showDebugInfo = false }, ref) => {
+  const {
+    dataSaverMode,
+    userMedia,
+    room: { identity },
+  } = useRoomContext();
+  const id = user.id!;
+  const isSelf = identity && id.startsWith(identity.id!);
+  const isScreenShare = id.endsWith(screenshareSuffix);
+  const pulledAudioTrack = usePulledAudioTrack(isScreenShare ? undefined : user.tracks!.audio);
+  const pulledVideoTrack = usePulledVideoTrack(
+    isScreenShare || (!isSelf && !dataSaverMode) ? user.tracks!.video : undefined,
+  );
+  const audioTrack = isSelf ? userMedia.audioTrack : pulledAudioTrack;
+  const videoTrack = isSelf && !isScreenShare ? userMedia.videoTrack : pulledVideoTrack;
 
-    return (
-      <div className='flex relative' ref={ref}>
-        <Flipped flipId={flipId + pinned}>
-          <div className={mx('flex w-full h-full overflow-hidden animate-fadeIn')}>
-            <VideoObject className={isSelf ? 'scale-x-[-1]' : ''} videoTrack={videoTrack} />
+  const audioMid = useMid(audioTrack);
+  const videoMid = useMid(videoTrack);
 
-            {!isSelf && user.name && (
-              <div className='absolute right-0 bottom-0 m-1 p-1 px-2 flex items-center bg-black text-white text-sm'>
-                {user.name}
-              </div>
-            )}
+  return (
+    <div className='shrink text-base basis-[calc(var(--flex-container-width)_-_var(--gap)_*_3)]' ref={ref}>
+      <div className={mx('h-full mx-auto overflow-hidden', 'relative max-w-[--participant-max-width] rounded-xl')}>
+        <VideoObject
+          className={mx(
+            'absolute inset-0 h-full w-full object-contain bg-slate-500',
+            isSelf && !isScreenShare ? 'scale-x-[-1]' : '',
+          )}
+          videoTrack={videoTrack}
+        />
 
-            {showDebugInfo && (
-              <span className='m-2 absolute opacity-50'>
-                {[
-                  `video mid: ${videoMid}`,
-                  `audio mid: ${audioMid}`,
-                  `video settings: ${JSON.stringify(videoTrack?.getSettings(), null, 2)}`,
-                  `audio settings: ${JSON.stringify(audioTrack?.getSettings(), null, 2)}`,
-                ].join(' | ')}
-              </span>
-            )}
-
-            {(user.speaking || user.raisedHand) && (
-              <div
-                className={mx('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}
-              ></div>
-            )}
+        {user.name && (
+          <div className='absolute right-0 bottom-0 m-1 p-1 px-2 flex items-center bg-black/75 text-white text-sm rounded-lg'>
+            {user.name}
           </div>
-        </Flipped>
+        )}
+
+        {showDebugInfo && (
+          <span className='m-2 absolute opacity-50'>
+            {[
+              `video mid: ${videoMid}`,
+              `audio mid: ${audioMid}`,
+              `video settings: ${JSON.stringify(videoTrack?.getSettings(), null, 2)}`,
+              `audio settings: ${JSON.stringify(audioTrack?.getSettings(), null, 2)}`,
+            ].join(' | ')}
+          </span>
+        )}
+
+        {(user.speaking || user.raisedHand) && (
+          <div className={mx('pointer-events-none absolute inset-0 h-full w-full border-4 border-orange-400')}></div>
+        )}
       </div>
-    );
-  },
-);
+    </div>
+  );
+});
 
 Participant.displayName = 'Participant';
