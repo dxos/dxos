@@ -27,7 +27,7 @@ export default (context: PluginsContext) => {
           {
             id: themeEditorId,
             type: themeEditorId,
-            data: { id: themeEditorId },
+            data: themeEditorId,
             properties: {
               label: ['theme editor label', { ns: THEME_EDITOR_PLUGIN }],
               disposition: 'navigation',
