@@ -27,14 +27,115 @@ export type KanbanModelProps = {
   projection: ViewProjection;
 };
 
-export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
+  // Properties
   private readonly _kanban: KanbanType;
   private readonly _cardSchema: EchoSchema;
   private readonly _projection: ViewProjection;
   private _items = signal<T[]>([]);
-  private _arrangement = signal<KanbanArrangement<T>>([]);
+  private _cards = signal<ArrangedCards<T>>([]);
+
+  constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
+    super();
+    this._kanban = kanban;
+    this._cardSchema = cardSchema;
+    this._projection = projection;
+  }
+
+  // Main getters/setters
+  get columnField() {
+    return this._kanban.columnField;
+  }
+
+  /**
+   * @reactive Gets the current items.
+   */
+  get items() {
+    return this._items.value;
+  }
+
+  set items(items: T[]) {
+    this._items.value = items;
+    this._cards.value = this._computeArrangement();
+  }
+
+  get cardSchema() {
+    return this._cardSchema;
+  }
+
+  /**
+   * @reactive Gets the current arrangement of kanban items.
+   */
+  get arrangedCards() {
+    return this._cards.value;
+  }
+
+  //
+  // Lifecycle.
+  //
+
+  protected override async _open() {
+    this.initializeEffects();
+  }
+
+  private initializeEffects(): void {
+    // Effect to recompute arrangement when columnField changes
+    const arrangementWatcher = effect(() => {
+      // Touch the field to subscribe to changes
+      const _ = this._kanban.columnField;
+      this._cards.value = this._computeArrangement();
+    });
+
+    this._ctx.onDispose(arrangementWatcher);
+  }
+
+  //
+  // Public API.
+  //
+
+  /** Get the display attributes for a column by its ID. */
+  public getPivotAttributes(id: string) {
+    if (id === UNCATEGORIZED_VALUE) {
+      return UNCATEGORIZED_ATTRIBUTES;
+    }
+
+    const options = this._getSelectOptions();
+    invariant(options);
+    const option = options?.find((option) => option.id === id);
+    return option ?? ({ title: id, color: 'neutral' } as const);
+  }
+
+  /**
+   * Handler for card and column rearrangement events. Supports both reordering columns and moving cards between columns.
+   */
+  public handleRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
+    const nextArrangement = this.arrangedCards;
+    const sourceColumn = this._findColumn(source.id, nextArrangement);
+    const targetColumn = this._findColumn(target.id, nextArrangement);
+
+    if (!sourceColumn || !targetColumn) {
+      return;
+    }
+
+    if (source.type === 'column' && target.type === 'column') {
+      this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
+      return;
+    }
+
+    this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
+
+    this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+      columnValue,
+      ids: cards.map(({ id }) => id),
+    }));
+    this._cards.value = nextArrangement;
+  };
+
+  //
+  // Private logic.
+  //
 
   private _getSelectOptions() {
     invariant(this._kanban.columnField);
@@ -53,7 +154,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     for (const item of this._items.value) {
       const itemColumn = item[this._kanban.columnField as keyof typeof item];
       if (itemColumn && !validColumnValues.has(itemColumn as string)) {
-        // Set to undefined which will place it in uncategorized
+        // Set to undefined which will place it in uncategorized.
         item[this._kanban.columnField as keyof typeof item] = undefined as any;
       }
     }
@@ -74,7 +175,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     }
   }
 
-  private _computeArrangement(): KanbanArrangement<T> {
+  private _computeArrangement(): ArrangedCards<T> {
     const options = this._getSelectOptions();
     invariant(options);
     this._ensureValidColumns();
@@ -82,95 +183,8 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return computeArrangement<T>(this._kanban, this._items.value, options);
   }
 
-  constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
-    super();
-    this._kanban = kanban;
-    this._cardSchema = cardSchema;
-    this._projection = projection;
-  }
-
-  protected override async _open() {
-    this.initializeEffects();
-  }
-
-  private initializeEffects(): void {
-    // Effect to recompute arrangement when columnField changes
-    const arrangementWatcher = effect(() => {
-      // Touch the field to subscribe to changes
-      const _ = this._kanban.columnField;
-      this._arrangement.value = this._computeArrangement();
-    });
-
-    this._ctx.onDispose(arrangementWatcher);
-  }
-
-  get columnField() {
-    return this._kanban.columnField;
-  }
-
-  /**
-   * @reactive Gets the current items.
-   */
-  get items() {
-    return this._items.value;
-  }
-
-  set items(items: T[]) {
-    this._items.value = items;
-    this._arrangement.value = this._computeArrangement();
-  }
-
-  get cardSchema() {
-    return this._cardSchema;
-  }
-
-  /**
-   * @reactive Gets the current arrangement of kanban items.
-   */
-  get arrangement() {
-    return this._arrangement.value;
-  }
-
-  /** Get the display attributes for a column by its ID. */
-  public getPivotAttributes(id: string) {
-    if (id === UNCATEGORIZED_VALUE) {
-      return UNCATEGORIZED_ATTRIBUTES;
-    }
-
-    const options = this._getSelectOptions();
-    invariant(options);
-    const option = options?.find((option) => option.id === id);
-    return option ?? ({ title: id, color: 'neutral' } as const);
-  }
-
-  /**
-   * Handler for card and column rearrangement events. Supports both reordering columns and moving cards between columns.
-   */
-  public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
-    const nextArrangement = this.arrangement;
-    const sourceColumn = this._findColumn(source.id, nextArrangement);
-    const targetColumn = this._findColumn(target.id, nextArrangement);
-
-    if (!sourceColumn || !targetColumn) {
-      return;
-    }
-
-    if (source.type === 'column' && target.type === 'column') {
-      this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
-      return;
-    }
-
-    this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
-
-    this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
-      columnValue,
-      ids: cards.map(({ id }) => id),
-    }));
-    this._arrangement.value = nextArrangement;
-  };
-
   /** Find a column by ID in the arrangement, checking both column values and card IDs. */
-  private _findColumn(id: string, arrangement: KanbanArrangement<T>) {
+  private _findColumn(id: string, arrangement: ArrangedCards<T>) {
     return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
   }
 
@@ -204,13 +218,13 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   /**
-   * Handles moving a card between columns, or to a different position within the same column.
+   * Handles moving a card **between columns**, or to a different position within the **same column**.
    * Updates both the card's position and its column field value.
    * Returns the updated source and target columns.
    */
   private _handleCardMove(
-    sourceColumn: KanbanArrangement<T>[number],
-    targetColumn: KanbanArrangement<T>[number],
+    sourceColumn: ArrangedCards<T>[number],
+    targetColumn: ArrangedCards<T>[number],
     source: { id: string; type: 'card' | 'column' },
     target: { id: string; type: 'card' | 'column' },
     closestEdge: 'top' | 'bottom',

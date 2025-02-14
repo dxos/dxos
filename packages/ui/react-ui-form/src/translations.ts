@@ -42,7 +42,7 @@ export default [
         'format ref': 'Reference',
         'format regex': 'RegExp',
         'format string': 'String',
-        'format single-select': 'Single Select',
+        'format single-select': 'Select',
         'format text': 'Long text',
         'format time': 'Time',
         'format timestamp': 'Timestamp',

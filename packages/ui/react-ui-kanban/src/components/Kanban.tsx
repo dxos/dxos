@@ -39,10 +39,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       size='contain'
       rail={false}
       classNames='pli-1'
-      onRearrange={model.onRearrange}
-      itemsCount={model.arrangement.length}
+      onRearrange={model.handleRearrange}
+      itemsCount={model.arrangedCards.length}
     >
-      {model.arrangement.map(({ columnValue, cards }) => {
+      {model.arrangedCards.map(({ columnValue, cards }) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         return (
           <StackItem.Root key={columnValue} item={{ id: columnValue }} size={20} classNames='pli-1 plb-2'>
@@ -74,7 +74,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 size='contain'
                 rail={false}
                 classNames='pbe-1'
-                onRearrange={model.onRearrange}
+                onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
                 {cards.map((card) => (
