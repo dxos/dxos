@@ -18,11 +18,11 @@ import {
 } from '@dxos/react-ui-editor';
 
 import { themeEditorId } from '../defs';
-import { restore, save } from '../util';
+import { restore, saveAndRender } from '../util';
 
 export type JsonEditorProps = {};
 
-const handleUpdate = debounce((update) => save(update.state.doc.toString()), 500);
+const handleUpdate = debounce((update) => saveAndRender(update.state.doc.toString()), 400);
 
 export const JsonEditor = (_: JsonEditorProps) => {
   const { themeMode } = useThemeContext();

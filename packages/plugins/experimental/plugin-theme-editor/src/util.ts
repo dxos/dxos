@@ -34,21 +34,25 @@ export const restore = () => {
 
 const styleNodeId = `${themeEditorId}/style`;
 
-export const render = () => {
+export const saveAndRender = (value?: string) => {
   let tokens = '';
   try {
-    tokens = `@layer user-tokens { ${renderTokenSet(JSON.parse(restore()))} }`;
+    const nextTokens = JSON.parse(value ?? restore());
+    localStorage.setItem(themeEditorId, JSON.stringify(nextTokens));
+    tokens = `@layer user-tokens { ${renderTokenSet(nextTokens)} }`;
   } catch (err) {
-    log.warn('Failed to render', err);
+    return log.warn('Failed to render', err);
   }
-  const styleNode = document.getElementById(styleNodeId);
-  if (styleNode) {
-    styleNode.textContent = tokens;
-  } else {
-    const newStyleNode = document.createElement('style');
-    newStyleNode.id = styleNodeId;
-    newStyleNode.textContent = tokens;
-    document.head.appendChild(newStyleNode);
+  if (tokens) {
+    const styleNode = document.getElementById(styleNodeId);
+    if (styleNode) {
+      styleNode.textContent = tokens;
+    } else {
+      const newStyleNode = document.createElement('style');
+      newStyleNode.id = styleNodeId;
+      newStyleNode.textContent = tokens;
+      document.head.appendChild(newStyleNode);
+    }
   }
 };
 

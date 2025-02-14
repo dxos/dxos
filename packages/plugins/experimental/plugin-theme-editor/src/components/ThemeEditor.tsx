@@ -17,7 +17,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { JsonEditor } from './JsonEditor';
 import { themeEditorId } from '../defs';
 import { THEME_EDITOR_PLUGIN } from '../meta';
-import { render, reset } from '../util';
+import { saveAndRender, reset } from '../util';
 
 const toolbarCreator = () => {
   const renderAction = createMenuAction('render', {
@@ -50,7 +50,7 @@ export const ThemeEditor = () => {
   const handleAction = useCallback<MenuActionHandler>(({ id }) => {
     switch (id) {
       case 'render':
-        render();
+        saveAndRender();
         break;
       case 'reset':
         reset();
