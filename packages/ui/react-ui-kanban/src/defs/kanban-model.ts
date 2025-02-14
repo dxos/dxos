@@ -1,7 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
-import { signal } from '@preact/signals-core';
+import { effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
@@ -87,7 +87,21 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._kanban = kanban;
     this._cardSchema = cardSchema;
     this._projection = projection;
-    this._arrangement.value = this._computeArrangement();
+  }
+
+  protected override async _open() {
+    this.initializeEffects();
+  }
+
+  private initializeEffects(): void {
+    // Effect to recompute arrangement when columnField changes
+    const arrangementWatcher = effect(() => {
+      // Touch the field to subscribe to changes
+      const _ = this._kanban.columnField;
+      this._arrangement.value = this._computeArrangement();
+    });
+
+    this._ctx.onDispose(arrangementWatcher);
   }
 
   get columnField() {
