@@ -1,0 +1,46 @@
+{
+  "extends": [
+    "../../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/storybook-utils"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../plugin-graph"
+    }
+  ]
+}

@@ -524,6 +524,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-theme-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },

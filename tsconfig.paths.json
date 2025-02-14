@@ -79,6 +79,9 @@
       "@dxos/plugin-template/types": [
         "packages/plugins/experimental/plugin-template/src/types.ts"
       ],
+      "@dxos/plugin-theme-editor": [
+        "packages/plugins/experimental/plugin-theme-editor/src/index.ts"
+      ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
       ],
