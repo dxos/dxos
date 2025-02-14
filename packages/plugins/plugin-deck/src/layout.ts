@@ -6,7 +6,7 @@ import { produce } from 'immer';
 
 import { type DeckAction, type NewPlankPositioning } from './types';
 
-type OpenLayoutEntryOptions = { positioning?: NewPlankPositioning; pivotId?: string };
+type OpenLayoutEntryOptions = { key?: string; positioning?: NewPlankPositioning; pivotId?: string };
 
 export const openEntry = (deck: string[], entryId: string, options?: OpenLayoutEntryOptions): string[] => {
   return produce(deck, (draft) => {
@@ -15,8 +15,17 @@ export const openEntry = (deck: string[], entryId: string, options?: OpenLayoutE
       return;
     }
 
+    const key = options?.key;
     const plankPositioning = options?.positioning ?? 'start';
     const pivotId = options?.pivotId;
+
+    if (key) {
+      const index = draft.findIndex((id) => id.startsWith(key));
+      if (index !== -1) {
+        draft.splice(index, 1, entryId);
+        return;
+      }
+    }
 
     if (pivotId) {
       const pivotIndex = draft.findIndex((id) => id === pivotId);

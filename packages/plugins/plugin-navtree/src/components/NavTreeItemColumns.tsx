@@ -36,7 +36,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
 
   return (
     <div role='none' className='contents app-no-drag'>
-      {primaryAction?.properties?.disposition === 'toolbar' ? (
+      {primaryAction?.properties?.disposition === 'toolbar' && !primaryAction?.properties?.disabled ? (
         <NavTreeItemAction
           testId={primaryAction.properties?.testId}
           label={toLocalizedString(primaryAction.properties?.label, t)}
