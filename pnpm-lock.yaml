@@ -6888,6 +6888,12 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-menu
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
