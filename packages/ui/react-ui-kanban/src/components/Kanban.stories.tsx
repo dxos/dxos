@@ -66,25 +66,20 @@ const StorybookKanban = () => {
 
   const handleAddCard = useCallback(
     (columnValue: string) => {
-      if (space && cardSchema) {
+      if (space && cardSchema && kanban?.columnField) {
         space.db.add(
           create(cardSchema, {
             title: faker.commerce.productName(),
             description: faker.lorem.paragraph(),
-            state: columnValue,
+            [kanban.columnField]: columnValue,
           }),
         );
       }
     },
-    [space, cardSchema],
+    [space, cardSchema, kanban?.columnField],
   );
 
-  const handleRemoveCard = useCallback(
-    (card: { id: string }) => {
-      space.db.remove(card);
-    },
-    [space],
-  );
+  const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
 
   const onTypenameChanged = useCallback(
     (typename: string) => {
