@@ -13,6 +13,8 @@ import {
 } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 
+import { JsonEditor } from './JsonEditor';
+import { themeEditorId } from '../defs';
 import { THEME_EDITOR_PLUGIN } from '../meta';
 
 const toolbarCreator = () => {
@@ -40,10 +42,10 @@ export const ThemeEditor = () => {
   const menu = useMenuActions(toolbarCreator);
   return (
     <StackItem.Content toolbar>
-      <MenuProvider {...menu} onAction={handleAction} attendableId={`${THEME_EDITOR_PLUGIN}/theme-editor`}>
+      <MenuProvider {...menu} onAction={handleAction} attendableId={themeEditorId}>
         <ToolbarMenu />
       </MenuProvider>
-      <div>Theme editor</div>
+      <JsonEditor />
     </StackItem.Content>
   );
 };

@@ -22,7 +22,9 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/lang-json": "6.0.1",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

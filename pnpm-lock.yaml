@@ -6879,9 +6879,15 @@ importers:
 
   packages/plugins/experimental/plugin-theme-editor:
     dependencies:
+      '@codemirror/lang-json':
+        specifier: 6.0.1
+        version: 6.0.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph

@@ -5,9 +5,8 @@
 import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
+import { themeEditorId } from '../defs';
 import { THEME_EDITOR_PLUGIN } from '../meta';
-
-const themeEditorId = `${THEME_EDITOR_PLUGIN}/theme-editor`;
 
 export default (context: PluginsContext) => {
   return contributes(Capabilities.AppGraphBuilder, [
