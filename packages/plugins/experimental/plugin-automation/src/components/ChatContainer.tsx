@@ -20,12 +20,8 @@ import { ChatProcessor } from '../hooks';
 import { type AIChatType } from '../types';
 import { Thread } from './Thread';
 import { covertFunctionToTool } from './tools/function';
-import {
-  createToolsFromApi,
-  createToolsFromService,
-  type ApiAuthorization,
-  type ServiceDescriptor,
-} from './tools/openapi';
+import { createToolsFromApi, createToolsFromService } from './tools/openapi';
+import { SERVICES } from './registry';
 
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const config = useConfig();
@@ -41,7 +37,7 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
     Promise.all(
       [
         //
-        SERVICES.amadeus,
+        SERVICES.hotelSearch,
       ].map((service) => createToolsFromService(service)),
     ).then((tools) => setServiceTools(tools.flat()));
   }, []);
@@ -119,19 +115,5 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
     </StackItem.Content>
   );
 };
-
-// TODO(dmaretskyi): Extract.
-const SERVICES = {
-  amadeus: {
-    schemaUrl: 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json',
-    authorization: {
-      type: 'oauth',
-      clientId: 'BOEnpLd1sMyKjAPGKYeAPFFy60u53QEG',
-      clientSecret: 'n4qldSN7usvD57gm',
-      tokenUrl: 'https://test.api.amadeus.com/v1/security/oauth2/token',
-      grantType: 'client_credentials',
-    },
-  } satisfies ServiceDescriptor,
-} as const;
 
 export default ChatContainer;

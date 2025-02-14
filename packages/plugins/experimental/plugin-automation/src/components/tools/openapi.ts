@@ -5,32 +5,19 @@ import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2 } from 'openapi-types';
+import type { ApiAuthorization } from '../../types';
+import type { ServiceType } from '../../types';
 
 export type CreateToolsFromApiOptions = {
   authorization?: ApiAuthorization;
 };
 
-// TODO(dmaretskyi): effect schema.
-export type ApiAuthorization =
-  | {
-      type: 'bearerApiKey';
-      apiKey: string;
-    }
-  | {
-      type: 'oauth';
-      clientId: string;
-      clientSecret: string;
-      tokenUrl: string;
-      grantType: string;
-    };
-
-export type ServiceDescriptor = {
-  schemaUrl: string;
-  authorization?: ApiAuthorization;
-};
-
-export const createToolsFromService = async (service: ServiceDescriptor): Promise<Tool[]> => {
-  return createToolsFromApi(service.schemaUrl, { authorization: service.authorization });
+export const createToolsFromService = async (service: ServiceType): Promise<Tool[]> => {
+  invariant(service.interfaces?.length === 1 && service.interfaces[0].kind === 'api');
+  const iface = service.interfaces[0];
+  invariant(iface.schemaUrl);
+  invariant(iface.schemaUrl);
+  return createToolsFromApi(iface.schemaUrl, { authorization: iface.authorization });
 };
 
 export const createToolsFromApi = async (url: string, options?: CreateToolsFromApiOptions): Promise<Tool[]> => {
@@ -177,8 +164,8 @@ const getEndpointUrl = (endpoint: EndpointDescriptor) => {
 
 export const resolveAuthorization = async (authorization: ApiAuthorization): Promise<string> => {
   switch (authorization.type) {
-    case 'bearerApiKey': {
-      return `Bearer ${authorization.apiKey}`;
+    case 'api-key': {
+      return `Bearer ${authorization.key}`;
     }
     case 'oauth': {
       const response = await fetch(authorization.tokenUrl, {
