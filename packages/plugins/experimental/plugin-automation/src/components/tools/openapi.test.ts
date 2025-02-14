@@ -1,10 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
-import { createToolsFromApi, type ApiAuthorization, resolveAuthorization } from './openapi';
+
+import { AIServiceClientImpl } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
-import { AIServiceClientImpl, MixedStreamParser } from '@dxos/assistant';
-import { AI_SERVICE_ENDPOINT, ObjectId } from '@dxos/assistant/testing';
-import { createStatic } from '@dxos/echo-schema';
-import { Message } from '@dxos/artifact';
+
+import { createToolsFromApi, type ApiAuthorization, resolveAuthorization } from './openapi';
 import { ChatProcessor } from '../../hooks';
 
 const META_SCHEMA_URI = 'https://json-schema.org/draft/2020-12/schema';
@@ -17,7 +21,6 @@ describe('openapi', () => {
       );
 
       log.info('tools', { tools });
-
       // for (const tool of tools) {
       //   const schema = tool.parameters;
       //   // log.info('schema', { schema });

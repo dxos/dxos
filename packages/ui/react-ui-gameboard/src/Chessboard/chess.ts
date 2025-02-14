@@ -33,19 +33,23 @@ export const locationToPos = ([row, col]: Location): string => {
   return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 };
 
-export const styles = {
+const styles = {
   neutral: {
-    white: 'bg-neutral-200',
     black: 'bg-neutral-50',
+    white: 'bg-neutral-200',
+    promotion: 'bg-neutral-200 hover:bg-neutral-300',
   },
   blue: {
-    white: 'bg-[#ccd3db]',
     black: 'bg-[#6c95b9]',
+    white: 'bg-[#ccd3db]',
+    promotion: 'transition duration-500 bg-[#ccd3db] opacity-70 hover:opacity-100',
   },
 };
 
+export const boardStyles = styles.blue;
+
 export const getSquareColor = ([row, col]: Location) => {
-  return (col + row) % 2 === 0 ? styles.blue.white : styles.blue.black;
+  return (col + row) % 2 === 0 ? boardStyles.white : boardStyles.black;
 };
 
 /**
@@ -55,8 +59,9 @@ const makeMove = (game: Chess, move: Move): Chess | null => {
   const from = locationToPos(move.from);
   const to = locationToPos(move.to);
   try {
-    log.info('makeMove', { move });
-    game.move({ from, to, promotion: move.promotion ?? 'q' }, { strict: false });
+    log('makeMove', { move });
+    const promotion = move.promotion ? move.promotion[1].toLowerCase() : 'q';
+    game.move({ from, to, promotion }, { strict: false });
     return game;
   } catch (err) {
     // Ignore.
