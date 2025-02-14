@@ -8,10 +8,11 @@ import { AIServiceClientImpl } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
 
-import { createToolsFromApi, type ApiAuthorization, resolveAuthorization } from './openapi';
+import { createToolsFromApi, resolveAuthorization } from './openapi';
 import { ChatProcessor } from '../../hooks';
+import { type ApiAuthorization } from '../../types';
 
-const META_SCHEMA_URI = 'https://json-schema.org/draft/2020-12/schema';
+// const META_SCHEMA_URI = 'https://json-schema.org/draft/2020-12/schema';
 
 describe('openapi', () => {
   describe('mapping', () => {
