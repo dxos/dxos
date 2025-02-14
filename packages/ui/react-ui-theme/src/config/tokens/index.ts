@@ -32,10 +32,12 @@ export const userDefaultTokenSet = {
         neutral: physicalColors.series.neutral,
         primary: physicalColors.series.primary,
       },
+      namespace: physicalColors.namespace,
     },
     semantic: {
       conditions: semanticColors.conditions,
       sememes: systemSememes,
+      namespace: semanticColors.namespace,
     },
   },
 } satisfies TokenSet;

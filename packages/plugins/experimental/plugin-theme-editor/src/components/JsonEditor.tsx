@@ -3,9 +3,9 @@
 //
 
 import { json } from '@codemirror/lang-json';
+import debounce from 'lodash.debounce';
 import React, { useMemo } from 'react';
 
-import { log } from '@dxos/log';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -16,19 +16,17 @@ import {
   EditorView,
   folding,
 } from '@dxos/react-ui-editor';
-import { userDefaultTokenSet } from '@dxos/react-ui-theme';
 
 import { themeEditorId } from '../defs';
+import { restore, save } from '../util';
 
 export type JsonEditorProps = {};
 
+const handleUpdate = debounce((update) => save(update.state.doc.toString()), 500);
+
 export const JsonEditor = (_: JsonEditorProps) => {
   const { themeMode } = useThemeContext();
-  const initialValue = useMemo(
-    () =>
-      JSON.stringify(JSON.parse(localStorage.getItem(themeEditorId) ?? JSON.stringify(userDefaultTokenSet)), null, 2),
-    [],
-  );
+  const initialValue = useMemo(() => restore(), []);
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       id: themeEditorId,
@@ -57,21 +55,13 @@ export const JsonEditor = (_: JsonEditorProps) => {
           },
         }),
         [editorMonospace, json()],
-        EditorView.updateListener.of((update) => {
-          let nextValue = null;
-          try {
-            nextValue = JSON.stringify(JSON.parse(update.state.doc.toString()));
-          } catch (err) {
-            log.warn('Invalid JSON', err);
-          }
-          if (nextValue) {
-            localStorage.setItem(themeEditorId, nextValue);
-          }
-        }),
+        EditorView.updateListener.of(handleUpdate),
       ],
     }),
     [themeMode],
   );
 
-  return <div ref={parentRef} data-toolbar='enabled' className='min-bs-0' {...focusAttributes} />;
+  return (
+    <div ref={parentRef} data-toolbar='enabled' className='min-bs-0 border-bs border-separator' {...focusAttributes} />
+  );
 };

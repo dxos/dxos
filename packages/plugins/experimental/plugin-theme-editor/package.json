@@ -22,13 +22,16 @@
     "src"
   ],
   "dependencies": {
+    "@ch-ui/tokens": "1.1.0",
     "@codemirror/lang-json": "6.0.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*"
+    "@dxos/react-ui-stack": "workspace:*",
+    "@types/lodash.debounce": "^4.0.9",
+    "lodash.debounce": "^4.0.8"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
