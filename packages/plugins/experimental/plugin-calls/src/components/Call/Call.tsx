@@ -62,7 +62,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
       {ai.transcription.enabled && <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} />}
       <div className={mx('flex flex-col w-full', classNames)}>
         <div className='flex-1 overflow-hidden relative'>
-          <ParticipantsLayout self={identity} users={otherUsers} debugEnabled={debugEnabled} />
+          <ParticipantsLayout identity={identity} users={otherUsers} debugEnabled={debugEnabled} />
         </div>
 
         <Toolbar.Root>

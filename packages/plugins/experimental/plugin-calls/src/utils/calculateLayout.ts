@@ -48,7 +48,7 @@ export const calculateLayout = (config: { count: number; height: number; width: 
   let idealLayout: null | Layout = null;
   let largestArea = 0;
 
-  const targetTileAspectRatio = 4 / 3;
+  const targetTileAspectRatio = 16 / 9;
 
   for (const layout of possibleLayouts(count)) {
     const tileHeight = height / layout.rows;

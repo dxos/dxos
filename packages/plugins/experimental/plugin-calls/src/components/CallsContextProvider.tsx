@@ -57,13 +57,13 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thr
   }
 
   return (
-    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30}>
+    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30} thread={thread}>
       {children}
     </Room>
   );
 };
 
-type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey; thread: ThreadType }>;
+type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey; thread?: ThreadType }>;
 
 const Room: FC<RoomProps> = ({
   roomId,
@@ -128,6 +128,7 @@ const Room: FC<RoomProps> = ({
   const pushedScreenShareTrack = useSubscribedState(pushedScreenShareTrack$);
 
   const context: RoomContextType = {
+    roomId,
     space,
     thread,
     joined,

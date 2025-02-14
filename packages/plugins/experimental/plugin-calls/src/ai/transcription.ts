@@ -94,13 +94,14 @@ export class Transcription extends Resource {
   @synchronized
   private async _ondataavailable(event: BlobEvent) {
     try {
+      log.info('>>> transcription._ondataavailable', { event });
       await this._saveAudioBlob(event.data);
       invariant(this._document, 'No document');
       const chunksToUse = this._audioChunks;
       const audio = this._mergeAudioChunks(chunksToUse);
       const segments = await this._fetchTranscription(audio);
       this._updateDocument(segments, chunksToUse);
-      this._audioChunks = chunksToUse.slice(-this.config.overlap);
+      this._audioChunks = this.config.overlap > 0 ? chunksToUse.slice(-this.config.overlap) : [];
     } catch (error) {
       log.error('Error in transcription', { error });
     }

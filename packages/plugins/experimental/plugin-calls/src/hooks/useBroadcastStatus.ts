@@ -63,9 +63,17 @@ export const useBroadcastStatus = ({
 
     log.info('>>> useBroadcastStatus', { state });
     updateUserState(state);
+    const t = setTimeout(() => {
+      updateUserState(state);
+    }, 2_000);
+
+    return () => {
+      clearTimeout(t);
+    };
   }, [
     identity?.id,
     identity?.name,
+    identity?.joined,
     sessionId,
     audio,
     video,
