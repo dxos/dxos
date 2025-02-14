@@ -5,7 +5,7 @@
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
-import { Surface, usePluginManager } from '@dxos/app-framework';
+import { Surface, useCapability, usePluginManager } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AlertDialog, Dialog as NaturalDialog, Main, Popover, useOnTransition, type MainProps } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
@@ -21,10 +21,10 @@ import { ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
+import { DeckCapabilities } from '../../capabilities';
 import { getMode, type Overscroll } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
 import { useHoistStatusbar } from '../../util/useHoistStatusbar';
-import { useLayout } from '../LayoutContext';
 import { fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
@@ -37,7 +37,7 @@ const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
 
 export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
-  const context = useLayout();
+  const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
     sidebarState,
     complementarySidebarOpen,

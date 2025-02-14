@@ -9,7 +9,8 @@ import { Button } from '@dxos/react-ui';
 import { Log } from './schema';
 import { Capabilities, createSurface } from '../../common';
 import { contributes } from '../../core';
-import { createIntent, useIntentDispatcher } from '../../plugin-intent';
+import { createIntent } from '../../plugin-intent';
+import { useIntentDispatcher } from '../../react';
 
 export const Logger = () => {
   const { dispatchPromise } = useIntentDispatcher();

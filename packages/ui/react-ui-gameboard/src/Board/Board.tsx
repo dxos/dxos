@@ -6,66 +6,76 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import React, { forwardRef, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { type PieceRecord, isLocation, isEqualLocation, isValidMove, isPiece } from './types';
-import { Chessboard } from '../Chessboard';
+import { BoardContext } from './context';
+import { type BoardModel, isLocation, isPiece, type Move } from './types';
 
-export type BoardProps = {
-  pieces?: PieceRecord[];
-  orientation?: 'white' | 'black'; // TODO(burdon): Flip.
-};
-
-export const Board = ({ pieces: _pieces }: BoardProps) => {
-  const [pieces, setPieces] = useState<PieceRecord[]>(_pieces ?? []);
-
-  useEffect(() => {
-    return monitorForElements({
-      onDrop: ({ source, location }) => {
-        log.info('onDrop', { source, location });
-        const destination = location.current.dropTargets[0];
-        if (!destination) {
-          return;
-        }
-
-        const destinationLocation = destination.data.location;
-        const sourceLocation = source.data.location;
-        const pieceType = source.data.pieceType;
-        if (!isLocation(destinationLocation) || !isLocation(sourceLocation) || !isPiece(pieceType)) {
-          return;
-        }
-
-        const piece = pieces.find((p) => isEqualLocation(p.location, sourceLocation));
-        const restOfPieces = pieces.filter((p) => p !== piece);
-        if (isValidMove(sourceLocation, destinationLocation, pieceType) && piece !== undefined) {
-          setPieces([{ type: piece.type, location: destinationLocation }, ...restOfPieces]);
-        }
-      },
-    });
-  }, [pieces]);
-
-  return (
-    <Container>
-      <Chessboard pieces={pieces} showLabels={false} />
-    </Container>
-  );
-};
+type ContainerProps = PropsWithChildren &
+  ThemedClassName & {
+    style?: React.CSSProperties;
+  };
 
 /**
  * Container centers the board.
  */
-const Container = forwardRef<HTMLDivElement, PropsWithChildren>(({ children }, forwardedRef) => {
+const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children, classNames, style }, forwardedRef) => {
   return (
-    <div ref={forwardedRef} className='relative w-full h-full'>
-      <div className='absolute inset-0 flex items-center justify-center'>
-        <div
-          style={{
-            width: 'min(100vw, 100vh)',
-            height: 'min(100vw, 100vh)',
-          }}
-        >
-          {children}
-        </div>
-      </div>
+    <div ref={forwardedRef} style={style} className='flex w-full h-full justify-center overflow-hidden'>
+      <div className={mx('max-w-full max-h-full content-center', classNames)}>{children}</div>
     </div>
   );
 });
+
+type RootProps = PropsWithChildren<{
+  model?: BoardModel;
+  onDrop?: (move: Move) => boolean;
+}>;
+
+/**
+ * Generic board container.
+ */
+const Root = ({ children, model, onDrop }: RootProps) => {
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    return monitorForElements({
+      onDragStart: ({ source }) => {
+        log('onDragStart', { source });
+        setDragging(true);
+      },
+      onDrop: ({ source, location }) => {
+        log('onDrop', { source, location });
+        const target = location.current.dropTargets[0];
+        if (!target) {
+          return;
+        }
+
+        const targetLocation = target.data.location;
+        const sourceLocation = source.data.location;
+        const pieceType = source.data.pieceType;
+        if (!isLocation(targetLocation) || !isLocation(sourceLocation) || !isPiece(pieceType)) {
+          return;
+        }
+
+        onDrop?.({ source: sourceLocation, target: targetLocation, piece: pieceType });
+        setDragging(false);
+      },
+    });
+  }, []);
+
+  return (
+    <BoardContext.Provider value={{ model, dragging }}>
+      <Container classNames={mx('aspect-square')}>{children}</Container>
+    </BoardContext.Provider>
+  );
+};
+
+Root.displayName = 'Board.Root';
+
+export const Board = {
+  Root,
+};
+
+export type { RootProps as BoardRootProps };

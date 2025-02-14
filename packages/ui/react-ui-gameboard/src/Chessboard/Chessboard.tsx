@@ -2,138 +2,131 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-import React, { type PropsWithChildren, type FC, type SVGProps, useRef, useMemo, Fragment } from 'react';
-import useResizeObserver from 'use-resize-observer';
+import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState, memo } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
-import { invariant } from '@dxos/invariant';
-import { type ClassNameValue } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
+import { useTrackProps } from '@dxos/react-ui';
 
-import { type PieceRecord, type Location, Square, getSquareLocation, Piece, isEqualLocation } from '../Board';
-import { getRelativeBounds, type DOMRectBounds } from '../Board/util';
-import { BB, BK, BQ, BN, BP, BR, WB, WK, WN, WP, WQ, WR } from '../gen/pieces/chess/alpha';
+import { type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
+import {
+  type DOMRectBounds,
+  type Location,
+  type PieceRecord,
+  type Player,
+  Piece,
+  Square,
+  getRelativeBounds,
+  locationToString,
+} from '../Board';
+import { useBoardContext } from '../Board';
 
-export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
-
-export const ChessPieces: Record<ChessPiece, FC<SVGProps<SVGSVGElement>>> = {
-  BK,
-  BQ,
-  BR,
-  BB,
-  BN,
-  BP,
-  WK,
-  WQ,
-  WR,
-  WB,
-  WN,
-  WP,
-};
-
-export const posToLocation = (pos: string): Location => {
-  const col = pos.charCodeAt(0) - 'a'.charCodeAt(0);
-  const row = parseInt(pos[1]) - 1;
-  return [row, col];
-};
-
-export const locationToPos = ([row, col]: Location): string => {
-  return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
-};
-
-export const getPieces = (fen?: string): PieceRecord<ChessPiece>[] =>
-  new Chess(fen).board().flatMap((row) =>
-    row
-      .map((location) => {
-        if (!location) {
-          return null;
-        }
-        const { square, type, color } = location;
-        return { type: `${color.toUpperCase()}${type.toUpperCase()}` as ChessPiece, location: posToLocation(square) };
-      })
-      .filter(isNotFalsy),
-  );
-
-const getColor = ([row, col]: Location) => {
-  return (col * 7 + row) % 2 === 0 ? 'bg-neutral-200' : 'bg-neutral-50';
-};
-
-type ChessboardProps = PropsWithChildren<{
+export type ChessboardProps = PropsWithChildren<{
+  orientation?: Player;
+  showLabels?: boolean;
+  debug?: boolean;
   rows?: number;
   cols?: number;
-  pieces?: PieceRecord[];
-  showLabels?: boolean;
 }>;
 
 /**
  * Chessboard layout.
  */
-export const Chessboard = ({ rows = 8, cols = 8, pieces, showLabels = false }: ChessboardProps) => {
-  const { ref: containerRef, width, height } = useResizeObserver();
-  const ref = useRef<HTMLDivElement>(null);
+export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols = 8 }: ChessboardProps) => {
+  useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
+  const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+  const dimensions = useRef<{ width?: number; height?: number }>({ width, height });
+  const resized = dimensions.current.width !== width || dimensions.current.height !== height;
+  useEffect(() => {
+    dimensions.current = { width, height };
+  }, [width, height]);
+
+  const { model } = useBoardContext();
+  const pieces = model?.pieces.value ?? {};
 
   const locations = useMemo<Location[]>(() => {
-    return Array.from({ length: rows }, (_, i) => rows - 1 - i).flatMap((row) =>
+    return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
       Array.from({ length: cols }).map((_, col) => [row, col] as Location),
     );
-  }, [rows, cols]);
+  }, [orientation, rows, cols]);
 
-  // Use browser layout engine to position squares.
-  const layout = useMemo(
-    () =>
-      locations.map((location) => (
+  // Use DOM grid layout to position squares.
+  const layout = useMemo(() => {
+    return locations.map((location) => {
+      return (
         <div
-          key={location.join(',')}
+          key={locationToString(location)}
           {...{
-            ['data-location' as const]: location.join(','),
+            ['data-location' as const]: locationToString(location),
           }}
         />
-      )),
-    [locations],
-  );
+      );
+    });
+  }, [locations]);
 
-  // Calculate the bounds of each square.
-  const squares = useMemo<
-    { location: Location; bounds: DOMRectBounds; className: ClassNameValue; piece?: PieceRecord }[]
-  >(() => {
-    if (!ref.current) {
+  // Build map of square locations to bounds.
+  const [grid, setGrid] = useState<Record<string, DOMRectBounds>>({});
+  const gridRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    setGrid(
+      locations.reduce(
+        (acc, location) => {
+          const square = getSquareLocation(gridRef.current!, location)!;
+          const bounds = getRelativeBounds(gridRef.current!, square);
+          return { ...acc, [locationToString(location)]: bounds };
+        },
+        {} as Record<string, DOMRectBounds>,
+      ),
+    );
+  }, [locations, width, height]);
+
+  // Get the bounds of each square and piece.
+  const positions = useMemo<{ bounds: DOMRectBounds; piece: PieceRecord }[]>(() => {
+    if (!gridRef.current) {
       return [];
     }
 
-    return locations.map((location) => {
-      invariant(ref.current);
-      const square = getSquareLocation(ref.current, location)!;
-      const bounds = getRelativeBounds(ref.current, square);
-      const piece = pieces?.find((p) => isEqualLocation(p.location, location));
-      return { location, bounds, className: getColor(location), piece };
+    return Object.values(pieces ?? {}).map((piece) => {
+      const bounds = grid[locationToString(piece.location)];
+      return { bounds, piece };
     });
-  }, [pieces, width, height]);
+  }, [grid, pieces]);
 
   return (
     <div ref={containerRef} className='relative'>
-      <div ref={ref} className='grid grid-cols-8 grid-rows-8 aspect-square select-none'>
+      <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
         {layout}
       </div>
       <div>
-        {squares.map(({ location, bounds, className, piece }) => (
-          <Fragment key={location.join(',')}>
-            <Square
-              location={location}
-              label={showLabels ? locationToPos(location) : undefined}
-              bounds={bounds}
-              classNames={[className]}
-            />
-            {piece && (
-              <Piece
-                bounds={bounds}
-                location={location}
-                pieceType={piece.type}
-                Component={ChessPieces[piece.type as ChessPiece]}
-              />
-            )}
-          </Fragment>
+        {locations.map((location) => (
+          <Square
+            key={locationToString(location)}
+            location={location}
+            label={showLabels ? locationToPos(location) : undefined}
+            bounds={grid[locationToString(location)]}
+            classNames={getSquareColor(location)}
+          />
+        ))}
+      </div>
+      <div>
+        {positions.map(({ bounds, piece }) => (
+          <Piece
+            key={piece.id}
+            orientation={orientation}
+            location={piece.location}
+            pieceType={piece.type}
+            label={debug ? piece.id : undefined}
+            animate={!resized}
+            bounds={bounds}
+            Component={ChessPieces[piece.type as ChessPiece]}
+          />
         ))}
       </div>
     </div>
   );
+});
+
+Chessboard.displayName = 'Chessboard';
+
+const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
+  return container.querySelector(`[data-location="${locationToString(location)}"]`);
 };

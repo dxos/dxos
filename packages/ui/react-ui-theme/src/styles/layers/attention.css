@@ -8,7 +8,7 @@
 }
 
 /* Utilities below control _how_ an element becomes attended. */
-@layer components {
+@layer dx-base {
   /* If an element is attended this attribute will be set. */
   [data-is-attention-source] {
     --surface-bg: var(--dx-attention);

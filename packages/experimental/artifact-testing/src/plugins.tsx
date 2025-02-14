@@ -98,6 +98,7 @@ export const capabilities: AnyCapability[] = [
     createSurface({
       id: 'plugin-default',
       role: 'canvas-node',
+      position: 'fallback',
       component: ({ role, data }) => <JsonFilter data={data} />,
     }),
   ),

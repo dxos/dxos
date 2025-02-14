@@ -126,7 +126,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           tabIndex={0}
           {...focusGroupAttrs}
           className={mx(
-            'group/stack-item grid relative ch-focus-ring-inset-over-all',
+            'group/stack-item grid relative dx-focus-ring-inset-over-all',
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),

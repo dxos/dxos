@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  createIntent,
-  defineModule,
-  contributes,
-  Capabilities,
-  Events,
-  definePlugin,
-  oneOf,
-} from '@dxos/app-framework';
+import { createIntent, defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 
@@ -33,7 +25,7 @@ export const ExcalidrawPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
@@ -46,7 +38,7 @@ export const ExcalidrawPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [CanvasType]),
         contributes(ClientCapabilities.Schema, [DiagramType]),
@@ -54,7 +46,7 @@ export const ExcalidrawPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

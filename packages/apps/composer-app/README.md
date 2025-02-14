@@ -39,6 +39,31 @@ ssc build -r --port 5173
 
 To reset the app, inspect and delete local storage properties.
 
+## iOS Development
+
+- TODO(burdon): Create profile.
+- TODO(burdon): Create cert in keychain.
+- TODO(burdon): ini template for different profiles?
+
+- Install the App Configurator from the App Store.
+- Tether device via USB cable.
+
+```bash
+# Socket bug: need to create directory.
+mkdir -p /Users/burdon/Library/MobileDevice/Provisioning\ Profiles
+ssc build --platform=ios -p -c
+ssc list-devices --platform ios
+ssc install-app --platform ios
+```
+
+## Logos and image assets
+
+NOTE: We tried "@vite-pwa/assets-generator", but it isn't fully implemented, so using pwa-asset-generator.
+
+```bash
+pnpm run icons
+```
+
 ## Dependencies
 
 To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from

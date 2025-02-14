@@ -8,9 +8,10 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
 
+import { PresenterCapabilities } from './capabilities';
 import { MarkdownSlide, PresenterSettings, PresenterMain, RevealMain } from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
-import { type PresenterSettingsProps } from '../types';
+import { PresenterContext, type PresenterSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -26,7 +27,21 @@ export default () =>
       role: 'main',
       position: 'hoist',
       filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
-      component: ({ data }) => <PresenterMain collection={data.subject} />,
+      component: ({ data }) => {
+        const state = useCapability(PresenterCapabilities.MutableState);
+
+        return (
+          <PresenterContext.Provider
+            value={{
+              running: state.presenting,
+              start: () => (state.presenting = true),
+              stop: () => (state.presenting = false),
+            }}
+          >
+            <PresenterMain collection={data.subject} />
+          </PresenterContext.Provider>
+        );
+      },
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,

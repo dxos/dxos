@@ -4,9 +4,15 @@
 
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { createIntent, LayoutAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  createIntent,
+  LayoutAction,
+  Surface,
+  useCapability,
+  useAppGraph,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { useGraph } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
@@ -14,9 +20,9 @@ import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 import { NodePlankHeading, type NodePlankHeadingProps } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
+import { DeckCapabilities } from '../../capabilities';
 import { useNode, useMainSize } from '../../hooks';
 import { DeckAction, type LayoutMode } from '../../types';
-import { useLayout } from '../LayoutContext';
 
 const UNKNOWN_ID = 'unknown_id';
 
@@ -31,8 +37,8 @@ export type PlankProps = {
 
 export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { deck, popoverAnchorId, scrollIntoView } = useLayout();
-  const { graph } = useGraph();
+  const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
+  const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';

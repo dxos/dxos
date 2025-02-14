@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -31,7 +23,7 @@ export const CanvasPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: CanvasBoardType.typename,
@@ -44,7 +36,7 @@ export const CanvasPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [ComputeGraph, FunctionTrigger]),
         contributes(ClientCapabilities.Schema, [CanvasBoardType]),
@@ -52,7 +44,7 @@ export const CanvasPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

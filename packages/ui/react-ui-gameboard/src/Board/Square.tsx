@@ -3,14 +3,15 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, memo } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { isValidMove, isEqualLocation, isLocation, isPiece, type Location } from './types';
+import { useBoardContext } from './context';
+import { isLocation, isPiece, type Location } from './types';
 import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
@@ -21,9 +22,10 @@ export type SquareProps = ThemedClassName<{
   label?: string;
 }>;
 
-export const Square = ({ location, bounds, label, classNames }: SquareProps) => {
+export const Square = memo(({ location, bounds, label, classNames }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<HoveredState>('idle');
+  const { model } = useBoardContext();
 
   useEffect(() => {
     const el = ref.current;
@@ -33,11 +35,8 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
       element: el,
       getData: () => ({ location }),
       canDrop: ({ source }) => {
-        if (!isLocation(source.data.location)) {
-          return false;
-        }
-
-        return !isEqualLocation(source.data.location, location);
+        log('canDrop', { source: source.data });
+        return true;
       },
       onDragEnter: ({ source }) => {
         log.info('onDragEnter', { source: source.data });
@@ -45,7 +44,9 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
           return;
         }
 
-        if (isValidMove(source.data.location, location, source.data.pieceType)) {
+        const sourceLocation = source.data.location;
+        const pieceType = source.data.pieceType;
+        if (model?.isValidMove({ source: sourceLocation, target: location, piece: pieceType })) {
           setState('validMove');
         } else {
           setState('invalidMove');
@@ -54,23 +55,21 @@ export const Square = ({ location, bounds, label, classNames }: SquareProps) => 
       onDragLeave: () => setState('idle'),
       onDrop: () => setState('idle'),
     });
-  }, [location]);
+  }, [model, location]);
 
   return (
     <div
       ref={ref}
       style={bounds}
       className={mx(
-        'absolute flex justify-center items-center select-none',
+        'absolute flex justify-center items-center border-2 box-border select-none',
         classNames,
-        state === 'validMove' && 'border border-primary-500',
+        state === 'validMove' ? 'border-primary-500' : 'border-transparent',
       )}
     >
-      {label && <div className={mx('absolute top-1 left-1 text-xs text-neutral-500')}>{label}</div>}
+      {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}
     </div>
   );
-};
+});
 
-export const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
-  return container.querySelector(`[data-location="${location.join(',')}"]`);
-};
+Square.displayName = 'Square';

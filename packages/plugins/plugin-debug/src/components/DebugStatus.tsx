@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Capabilities, useCapability } from '@dxos/app-framework';
+import { useAppGraph, useLayout } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
 import { getActiveSpace } from '@dxos/plugin-space';
@@ -136,8 +136,8 @@ const SwarmIndicator = () => {
 // TODO(burdon): Merge with SaveStatus.
 const SavingIndicator = () => {
   const [state, _setState] = useState(0);
-  const layout = useCapability(Capabilities.Layout);
-  const { graph } = useCapability(Capabilities.AppGraph);
+  const layout = useLayout();
+  const { graph } = useAppGraph();
   const _space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
   // TODO(dmaretskyi): Fix this when we have save status for automerge.
   // useEffect(() => {
