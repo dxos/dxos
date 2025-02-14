@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -50,11 +50,36 @@ const Render = ({ fen, orientation: _orientation, ...props }: RenderProps) => {
   );
 };
 
+const Grid = (props: RenderProps) => {
+  const models = useMemo(() => Array.from({ length: 9 }).map(() => new ChessModel()), []);
+  useEffect(() => {
+    const i = setInterval(() => {
+      const model = models[Math.floor(Math.random() * models.length)];
+      model.makeRandomMove();
+    }, 100);
+    return () => clearInterval(i);
+  }, []);
+
+  return (
+    <div className='h-full aspect-square mx-auto'>
+      <div className='grid grid-cols-3 gap-2'>
+        {models.map((model, i) => (
+          <div key={i} className='aspect-square'>
+            <Board.Root model={model}>
+              <Chessboard />
+            </Board.Root>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const meta: Meta<typeof Render> = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: Render,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'items-center' })],
 };
 
 export default meta;
@@ -76,4 +101,8 @@ export const Debug: Story = {
     orientation: 'black',
     fen: 'q3k1nr/1pp1nQpp/3p4/1P2p3/4P3/B1PP1b2/B5PP/5K2 b k - 0 17',
   },
+};
+
+export const Nine: Story = {
+  render: Grid,
 };

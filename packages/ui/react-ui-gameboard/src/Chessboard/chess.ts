@@ -37,16 +37,26 @@ const styles = {
   neutral: {
     black: 'bg-neutral-50',
     white: 'bg-neutral-200',
-    promotion: 'bg-neutral-200 hover:bg-neutral-300',
+    promotion: 'bg-neutral-200 hover:bg-neutral-300 opacity-70 hover:opacity-100',
+  },
+  original: {
+    black: 'bg-[#6C95B9]',
+    white: 'bg-[#CCD3DB]',
+    promotion: 'duration-500 bg-[#CCD3DB] opacity-70 hover:opacity-100',
   },
   blue: {
-    black: 'bg-[#6c95b9]',
-    white: 'bg-[#ccd3db]',
-    promotion: 'transition duration-500 bg-[#ccd3db] opacity-70 hover:opacity-100',
+    black: 'bg-[#608BC1]',
+    white: 'bg-[#CBDCEB]',
+    promotion: 'duration-500 bg-[#CBDCEB] opacity-70 hover:opacity-100',
+  },
+  green: {
+    black: 'bg-[#8EB486]',
+    white: 'bg-[#FDF7F4]',
+    promotion: 'duration-500 bg-[#FDF7F4] opacity-70 hover:opacity-100',
   },
 };
 
-export const boardStyles = styles.blue;
+export const boardStyles = styles.original;
 
 export const getSquareColor = ([row, col]: Location) => {
   return (col + row) % 2 === 0 ? boardStyles.white : boardStyles.black;
