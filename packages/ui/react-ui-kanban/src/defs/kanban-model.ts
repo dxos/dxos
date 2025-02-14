@@ -45,8 +45,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   // Main getters/setters
-  get columnField() {
-    return this._kanban.columnField;
+  get columnFieldPath() {
+    const columnFieldId = this._kanban.columnFieldId;
+    invariant(columnFieldId);
+    const columnFieldProjection = this._projection.getFieldProjection(columnFieldId);
+    return columnFieldProjection?.props.property || '';
   }
 
   /**
@@ -84,7 +87,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     // Effect to recompute arrangement when columnField changes
     const arrangementWatcher = effect(() => {
       // Touch the field to subscribe to changes
-      const _ = this._kanban.columnField;
+      const _ = this._kanban.columnFieldId;
       this._cards.value = this._computeArrangement();
     });
 
@@ -138,17 +141,15 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   //
 
   private _getSelectOptions() {
-    invariant(this._kanban.columnField);
-    const fieldId = this._projection.getFieldId(this._kanban.columnField);
-    invariant(fieldId);
-    return this._projection.getFieldProjection(fieldId).props.options;
+    invariant(this._kanban.columnFieldId);
+    return this._projection.getFieldProjection(this._kanban.columnFieldId).props.options;
   }
 
   private _computeArrangement(): ArrangedCards<T> {
     const options = this._getSelectOptions();
     invariant(options);
     this._normalizeKanban();
-    return computeArrangement<T>(this._kanban, this._items.value, options);
+    return computeArrangement<T>(this._kanban, this._items.value, this.columnFieldPath, options);
   }
 
   private _normalizeKanban() {
@@ -161,15 +162,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * Moves items with invalid column values to uncategorized by setting their column field to undefined.
    */
   private _moveInvalidItemsToUncategorized(validColumnValues: Set<string>) {
-    if (!this._kanban.columnField) {
-      return;
-    }
-
+    const columnPath = this.columnFieldPath;
     for (const item of this._items.value) {
-      const itemColumn = item[this._kanban.columnField as keyof typeof item];
+      const itemColumn = item[columnPath as keyof typeof item];
       if (itemColumn && !validColumnValues.has(itemColumn as string)) {
         // Set to undefined which will place it in uncategorized.
-        item[this._kanban.columnField as keyof typeof item] = undefined as any;
+        item[columnPath as keyof typeof item] = undefined as any;
       }
     }
   }
@@ -204,16 +202,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return;
     }
 
-    if (!this._kanban.columnField) {
+    if (!this._kanban.columnFieldId) {
       return;
     }
 
-    const fieldId = this._projection.getFieldId(this._kanban.columnField);
-    if (!fieldId) {
-      return;
-    }
-
-    const fieldProjection = this._projection.getFieldProjection(fieldId);
+    const fieldProjection = this._projection.getFieldProjection(this._kanban.columnFieldId);
     const options = [...(fieldProjection.props.options ?? [])];
     const sourceIndex = options.findIndex((opt) => opt.id === source.id);
     const targetIndex = options.findIndex((opt) => opt.id === target.id);
@@ -245,8 +238,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return;
     }
 
+    const columnField = this.columnFieldPath;
     const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
-    (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) =
+    (movedCard[columnField as keyof typeof movedCard] as any) =
       targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
 
     let insertIndex;

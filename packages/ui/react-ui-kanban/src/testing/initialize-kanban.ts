@@ -3,9 +3,11 @@
 //
 
 import { AST, type EchoSchema, S, TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
 import { createView, ViewProjection, createFieldId } from '@dxos/schema';
+import { capitalize } from '@dxos/util';
 
 import { KanbanType } from '../defs';
 
@@ -43,29 +45,33 @@ export const initializeKanban = async ({
     { id: PublicKey.random().truncate(), title: 'Completed', color: 'emerald' },
   ];
 
-  new ViewProjection(taskSchema, view).setFieldProjection({
+  const initialPivotField = 'state';
+
+  const viewProjection = new ViewProjection(taskSchema, view);
+
+  viewProjection.setFieldProjection({
     field: {
       id: createFieldId(),
-      path: 'state' as JsonProp,
+      path: initialPivotField as JsonProp,
       size: 150,
     },
     props: {
-      property: 'state' as JsonProp,
+      property: initialPivotField as JsonProp,
       type: TypeEnum.String,
       format: FormatEnum.SingleSelect,
-      title: 'State',
+      title: capitalize(initialPivotField),
       options: stateOptions,
     },
   });
 
+  const fieldId = viewProjection.getFieldId(initialPivotField);
+  invariant(fieldId);
+
   const kanban = space.db.add(
     create(KanbanType, {
       cardView: makeRef(view),
-      columnField: 'state',
-      arrangement: stateOptions.map(({ id }) => ({
-        columnValue: id,
-        ids: [],
-      })),
+      columnFieldId: fieldId,
+      // NOTE(ZaymonFC): Kanban arrangement is computed automatically.
     }),
   );
 

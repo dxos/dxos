@@ -9,12 +9,12 @@ import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type BaseKanbanItem, type KanbanModel } from '../defs';
+import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
 import { translationKey } from '../translations';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
-  onAddCard?: (columnValue: string) => void;
+  onAddCard?: (columnValue: string | undefined) => void;
   onRemoveCard?: (card: T) => void;
 };
 
@@ -25,13 +25,13 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
   const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
-    if (!model.columnField) {
+    if (!model.columnFieldPath) {
       return undefined;
     }
     return {
-      [model.columnField]: () => <></>,
+      [model.columnFieldPath]: () => <></>,
     };
-  }, [model.columnField]);
+  }, [model.columnFieldPath]);
 
   return (
     <Stack
@@ -111,7 +111,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <IconButton
                       icon='ph--plus--regular'
                       label={t('add card label')}
-                      onClick={() => onAddCard(columnValue)}
+                      onClick={() => onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue)}
                       classNames='is-full'
                     />
                   </div>

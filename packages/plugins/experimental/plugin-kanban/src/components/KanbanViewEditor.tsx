@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FormatEnum } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { ViewEditor, Form, SelectInput } from '@dxos/react-ui-form';
+import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
 import { ViewType, ViewProjection } from '@dxos/schema';
 
@@ -77,16 +77,21 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     return projection
       .getFieldProjections()
       .filter((field) => field.props.format === FormatEnum.SingleSelect)
-      .map(({ field }) => ({ value: field.path, label: field.path }));
+      .map(({ field }) => ({ value: field.id, label: field.path }));
   }, [projection]);
 
   const onSave = useCallback(
-    (values: any) => {
-      const { columnField } = values;
-      kanban.columnField = columnField;
+    (values: Partial<{ columnFieldId: string }>) => {
+      kanban.columnFieldId = values.columnFieldId;
       kanban.arrangement = undefined;
     },
     [kanban],
+  );
+
+  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban]);
+  const custom: CustomInputMap = useMemo(
+    () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
+    [selectFields],
   );
 
   if (!space || !schema || !kanban.cardView?.target) {
@@ -95,15 +100,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form
-        schema={KanbanPropsSchema}
-        values={{ columnField: kanban.columnField }}
-        onSave={onSave}
-        autoSave
-        Custom={{
-          columnField: (props) => <SelectInput {...props} options={selectFields} />,
-        }}
-      />
+      <Form schema={KanbanPropsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}

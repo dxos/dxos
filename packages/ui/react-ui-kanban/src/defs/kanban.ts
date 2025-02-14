@@ -17,8 +17,7 @@ export const KanbanSchema = S.Struct({
    * The field the values by which to pivot into columns of the kanban. This should be an enum field on the referred
    * objects, can that be enforced?
    */
-  // TODO(thure): Surely this should be a JsonPath or something.
-  columnField: S.optional(S.String),
+  columnFieldId: S.optional(S.String),
   /**
    * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be
    * inferred here? Or is this a preference that should apply first, then kanban should continue rendering what it
@@ -34,8 +33,8 @@ export const KanbanSchema = S.Struct({
 });
 
 export const KanbanPropsSchema = S.Struct({
-  columnField: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Column field',
+  columnFieldId: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Column field identifier',
   }),
 });
 

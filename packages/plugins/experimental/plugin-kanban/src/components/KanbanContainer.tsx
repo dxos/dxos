@@ -45,12 +45,13 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   });
 
   const handleAddCard = useCallback(
-    (columnValue: string) => {
-      if (space && cardSchema && kanban.columnField) {
-        space.db.add(create(cardSchema, { [kanban.columnField]: columnValue }));
+    (columnValue: string | undefined) => {
+      const path = model?.columnFieldPath;
+      if (space && cardSchema && path) {
+        space.db.add(create(cardSchema, { [path]: columnValue }));
       }
     },
-    [space, cardSchema, kanban.columnField],
+    [space, cardSchema, model],
   );
 
   const handleRemoveCard = useCallback(

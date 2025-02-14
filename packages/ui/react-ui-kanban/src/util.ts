@@ -10,14 +10,9 @@ import { UNCATEGORIZED_VALUE } from './defs';
 export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(
   kanban: KanbanType,
   items: T[],
+  pivotPath: string,
   selectOptions: SelectOption[],
 ) => {
-  const pivotField = kanban.columnField;
-
-  if (!pivotField) {
-    return [];
-  }
-
   // Get valid column values from select options
   const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
 
@@ -49,7 +44,7 @@ export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(
 
     // Categorize items
     for (const item of items) {
-      const itemColumn = item[pivotField as keyof typeof item];
+      const itemColumn = item[pivotPath as keyof typeof item];
 
       // TODO(ZaymonFC): Watch this cast. It's a hack.
       const isValidColumn = itemColumn && validColumnValues.has(itemColumn as any as string);
