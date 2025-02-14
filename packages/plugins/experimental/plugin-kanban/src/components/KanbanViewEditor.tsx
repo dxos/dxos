@@ -67,7 +67,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     if (kanban?.cardView?.target && schema) {
       return new ViewProjection(schema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema?.jsonSchema)]);
 
   const selectFields = useMemo(() => {
     if (!projection) {
