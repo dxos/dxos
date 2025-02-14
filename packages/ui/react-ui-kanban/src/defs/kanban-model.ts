@@ -144,12 +144,26 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return this._projection.getFieldProjection(fieldId).props.options;
   }
 
-  private _ensureValidColumns() {
+  private _computeArrangement(): ArrangedCards<T> {
+    const options = this._getSelectOptions();
+    invariant(options);
+    this._normalizeKanban();
+    return computeArrangement<T>(this._kanban, this._items.value, options);
+  }
+
+  private _normalizeKanban() {
+    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
+    this._moveInvalidItemsToUncategorized(validColumnValues);
+    this._removeInvalidColumnsFromArrangement(validColumnValues);
+  }
+
+  /**
+   * Moves items with invalid column values to uncategorized by setting their column field to undefined.
+   */
+  private _moveInvalidItemsToUncategorized(validColumnValues: Set<string>) {
     if (!this._kanban.columnField) {
       return;
     }
-
-    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
 
     for (const item of this._items.value) {
       const itemColumn = item[this._kanban.columnField as keyof typeof item];
@@ -160,12 +174,13 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     }
   }
 
-  private _cleanupArrangement() {
+  /**
+   * Removes columns with invalid values from the arrangement, keeping uncategorized.
+   */
+  private _removeInvalidColumnsFromArrangement(validColumnValues: Set<string>) {
     if (!this._kanban.arrangement) {
       return;
     }
-
-    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
 
     for (let i = this._kanban.arrangement.length - 1; i >= 0; i--) {
       const col = this._kanban.arrangement[i];
@@ -173,14 +188,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
         this._kanban.arrangement.splice(i, 1);
       }
     }
-  }
-
-  private _computeArrangement(): ArrangedCards<T> {
-    const options = this._getSelectOptions();
-    invariant(options);
-    this._ensureValidColumns();
-    this._cleanupArrangement();
-    return computeArrangement<T>(this._kanban, this._items.value, options);
   }
 
   /** Find a column by ID in the arrangement, checking both column values and card IDs. */
