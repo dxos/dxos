@@ -113,11 +113,6 @@ export const useForm = <T extends BaseObject>({
 
       setErrors(flatMap(errors));
       const valid = errors.length === 0;
-
-      if (errors.length !== 0) {
-        console.log(errors);
-      }
-
       return valid;
     },
     [schema, onValidate],
