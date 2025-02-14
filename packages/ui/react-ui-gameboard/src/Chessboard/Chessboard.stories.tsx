@@ -64,3 +64,11 @@ export const Debug: Story = {
     fen: 'q3k1nr/1pp1nQpp/3p4/1P2p3/4P3/B1PP1b2/B5PP/5K2 b k - 0 17',
   },
 };
+
+export const Promotion: Story = {
+  args: {
+    debug: true,
+    showLabels: true,
+    fen: '4k3/7P/8/8/8/8/1p6/4K3 w - - 0 1',
+  },
+};

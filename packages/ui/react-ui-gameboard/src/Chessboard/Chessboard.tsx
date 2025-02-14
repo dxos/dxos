@@ -6,6 +6,7 @@ import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState, me
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useTrackProps } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
 
 import { type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
 import {
@@ -34,7 +35,7 @@ export type ChessboardProps = PropsWithChildren<{
 export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols = 8 }: ChessboardProps) => {
   useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
   const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
-  const { model } = useBoardContext();
+  const { model, promoting } = useBoardContext();
 
   const locations = useMemo<Location[]>(() => {
     return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
@@ -78,11 +79,17 @@ export const Chessboard = memo(({ orientation, showLabels, debug, rows = 8, cols
       return [];
     }
 
-    return Object.values(model?.pieces.value ?? {}).map((piece) => {
-      const bounds = grid[locationToString(piece.location)];
-      return { bounds, piece };
-    });
-  }, [grid, model?.pieces.value]);
+    return Object.values(model?.pieces.value ?? {})
+      .map((piece) => {
+        if (piece.id === promoting?.id) {
+          return null;
+        }
+
+        const bounds = grid[locationToString(piece.location)];
+        return { bounds, piece };
+      })
+      .filter(isNotFalsy);
+  }, [grid, model?.pieces.value, promoting]);
 
   return (
     <div ref={containerRef} className='relative'>
@@ -120,4 +127,8 @@ Chessboard.displayName = 'Chessboard';
 
 const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
   return container.querySelector(`[data-location="${locationToString(location)}"]`);
+};
+
+const PromotionSelector = () => {
+  return <div>PromotionSelector</div>;
 };

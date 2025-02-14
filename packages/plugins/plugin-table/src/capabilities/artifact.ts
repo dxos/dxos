@@ -13,8 +13,8 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
-import { TableAction } from '../types';
 import { schemaTools } from './schema-tool';
+import { TableAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -92,7 +92,6 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-
           const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
 
           const tableInfo = await Promise.all(
@@ -117,7 +116,6 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-
           const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
@@ -141,7 +139,6 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-
           const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
@@ -174,7 +171,6 @@ export default () => {
           const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
           const table = tables.find((table) => fullyQualifiedId(table) === id);
           invariant(isInstanceOf(TableType, table));
-
           const intent = createIntent(TableAction.AddRow, {
             table,
             data,

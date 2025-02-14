@@ -51,12 +51,12 @@ export const getSquareColor = ([row, col]: Location) => {
 /**
  * Attempt move.
  */
-const makeMove = (game: Chess, { source, target }: Move): Chess | null => {
-  const s = locationToPos(source);
-  const t = locationToPos(target);
+const makeMove = (game: Chess, move: Move): Chess | null => {
+  const from = locationToPos(move.from);
+  const to = locationToPos(move.to);
   try {
-    log('makeMove', { s, t });
-    game.move({ from: s, to: t }, { strict: false });
+    log.info('makeMove', { move });
+    game.move({ from, to, promotion: move.promotion ?? 'q' }, { strict: false });
     return game;
   } catch (err) {
     // Ignore.
@@ -99,6 +99,12 @@ export class ChessModel implements BoardModel<ChessPiece> {
 
   isValidMove(move: Move): boolean {
     return makeMove(new Chess(this._game.fen()), move) !== null;
+  }
+
+  canPromote(move: Move): boolean {
+    const isPawnMove = move.piece === 'BP' || move.piece === 'WP';
+    const isToLastRank = move.to[0] === 0 || move.to[0] === 7;
+    return isPawnMove && isToLastRank;
   }
 
   makeMove(move: Move): boolean {
