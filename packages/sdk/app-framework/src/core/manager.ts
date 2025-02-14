@@ -410,7 +410,7 @@ export class PluginManager {
         concurrency: 'unbounded',
       });
 
-      log('activating module', { module: module.id });
+      log('activating module...', { module: module.id });
       // TODO(wittjosiah): This is not handling errors thrown if this is synchronous.
       const maybeCapabilities = typeof getCapabilities === 'function' ? getCapabilities() : getCapabilities;
       const resolvedCapabilities = yield* Match.value(maybeCapabilities).pipe(
