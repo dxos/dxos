@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -42,7 +41,7 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 
 export default StatusBarButton;
 
-type StatusBarItemProps = ThemedClassName<{ children: ReactNode }> & HTMLAttributes<HTMLDivElement>;
+type StatusBarItemProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
 const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
@@ -57,30 +56,7 @@ const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ),
 );
 
-type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
-
-// TODO(zan): tabable group with tabster.
-const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
-  ({ classNames, children }, forwardedRef) => {
-    const groupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
-    return (
-      <div
-        role='menubar'
-        tabIndex={0}
-        {...groupAttrs}
-        className={mx(
-          'bs-[--statusbar-size] flex justify-end items-center gap-2 bg-base text-description text-lg pointer-fine:text-xs dx-focus-ring-inset',
-          classNames,
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </div>
-    );
-  },
-);
-
-type StartContentProps = ThemedClassName<{ children: ReactNode }>;
+type StartContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
   <div role='none' className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
@@ -88,7 +64,7 @@ const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames
   </div>
 ));
 
-type EndContentProps = ThemedClassName<{ children: ReactNode }>;
+type EndContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
   <div role='none' className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
@@ -97,7 +73,6 @@ const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, ch
 ));
 
 export const StatusBar = {
-  Container: StatusBarContainer,
   Text: StatusBarText,
   Item: StatusBarItem,
   Button: StatusBarButton,

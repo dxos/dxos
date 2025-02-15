@@ -24,7 +24,7 @@ import { DeckCapabilities } from '../../capabilities';
 import { useNode, useNodeActionExpander } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { SLUG_PATH_SEPARATOR, type Panel } from '../../types';
-import { layoutAppliesTopbar, useBreakpoints } from '../../util';
+import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 
 export type ComplementarySidebarProps = {
   panels: Panel[];
@@ -46,6 +46,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   useNodeActionExpander(node);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
+  const hoistStatusbar = useHoistStatusbar(breakpoint);
 
   const [internalValue, setInternalValue] = useState(activePanelId);
 
@@ -70,7 +71,10 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar
-      classNames={topbar ? 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]' : undefined}
+      classNames={[
+        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+        hoistStatusbar && 'block-end-[--statusbar-size]',
+      ]}
     >
       <Tabs.Root
         orientation='vertical'

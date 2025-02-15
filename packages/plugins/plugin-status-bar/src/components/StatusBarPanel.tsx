@@ -46,12 +46,11 @@ export const StatusBarPanel = ({ variant = 'main-footer' }: { variant?: 'main-fo
           </div>
         </div>
       ) : (
-        <StatusBar.Container>
-          <StatusBar.EndContent>
-            <Surface role='status' />
-            {statusbarButtons}
-          </StatusBar.EndContent>
-        </StatusBar.Container>
+        <>
+          <Surface role='status' />
+          <span role='separator' className='grow' />
+          {statusbarButtons}
+        </>
       )}
       <Popover.Content classNames='shadow-lg'>
         <FeedbackForm onClose={() => setOpen(false)} />
