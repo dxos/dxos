@@ -139,7 +139,13 @@ export const NavTreeContainer = memo(
 
         const current = isCurrent(path, node);
         if (!current) {
-          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [node.id] }));
+          void dispatch(
+            createIntent(LayoutAction.Open, {
+              part: 'main',
+              subject: [node.id],
+              options: { key: node.properties.key },
+            }),
+          );
         } else if (option) {
           void dispatch(
             createIntent(LayoutAction.Close, { part: 'main', subject: [node.id], options: { state: false } }),

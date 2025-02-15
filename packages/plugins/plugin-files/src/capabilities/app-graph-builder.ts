@@ -56,12 +56,14 @@ export default (context: PluginsContext) =>
         return settings?.openLocalFiles
           ? [
               {
-                id: FILES_PLUGIN,
+                // TODO(wittjosiah): Deck does not currently support `/` in ids.
+                id: 'dxos:plugin-files',
                 type: FILES_PLUGIN,
                 // TODO(burdon): Factor out palette constants.
                 properties: {
                   label: ['plugin name', { ns: FILES_PLUGIN }],
                   role: 'branch',
+                  disposition: 'workspace',
                 },
               },
             ]
