@@ -9,14 +9,16 @@ import { ChatProcessor } from '../../hooks';
 import type { ApiAuthorization } from '../../types';
 import { createToolsFromApi, resolveAuthorization } from './openapi';
 
-// const META_SCHEMA_URI = 'https://json-schema.org/draft/2020-12/schema';
+const FLIGHT_SEARCH_API =
+  'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json';
+const HOTEL_SEARCH_API = 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json';
+const HOTEL_NAME_AUTOCOMPLETE_API =
+  'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-name-autocomplete/1.0.3/swagger.json';
 
 describe('openapi', () => {
   describe('mapping', () => {
     test('amadeus flight availabilities', async () => {
-      const tools = await createToolsFromApi(
-        'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json',
-      );
+      const tools = await createToolsFromApi(FLIGHT_SEARCH_API);
 
       log.info('tools', { tools });
       // for (const tool of tools) {
@@ -25,23 +27,38 @@ describe('openapi', () => {
       // }
     });
 
-    test.only('amadeus hotel search', async () => {
-      const tools = await createToolsFromApi(
-        'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json',
-      );
+    test('amadeus hotel search', async () => {
+      const tools = await createToolsFromApi(HOTEL_SEARCH_API);
+
+      log.info('tools', { tools });
+    });
+
+    test('amadeus hotel name autocomplete', async () => {
+      const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API);
 
       log.info('tools', { tools });
     });
   });
 
-  describe('invoke', () => {
-    test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
-      const tools = await createToolsFromApi(
-        'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json',
-        {
-          authorization: AMADEUS_AUTH,
-        },
-      );
+  describe('invoke tools', () => {
+    test.only('amadeus hotel name autocomplete', async () => {
+      const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
+
+      const result = await tools[0].execute!({
+        keyword: 'William Vale Brooklyn',
+        subType: ['HOTEL_LEISURE', 'HOTEL_GDS'],
+        countryCode: 'US',
+      });
+
+      log.info('result', { result });
+    });
+  });
+
+  describe('AI uses tools', () => {
+    test.skip('amadeus flight availabilities', { timeout: 60_000 }, async () => {
+      const tools = await createToolsFromApi(FLIGHT_SEARCH_API, {
+        authorization: AMADEUS_AUTH,
+      });
 
       const client = new AIServiceClientImpl({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
@@ -50,6 +67,18 @@ describe('openapi', () => {
       const reply = await processor.request(
         `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,
       );
+
+      log.info('reply', { reply });
+    });
+
+    test('amadeus hotel name autocomplete', { timeout: 60_000 }, async () => {
+      const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
+
+      const client = new AIServiceClientImpl({
+        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
+      });
+      const processor = new ChatProcessor(client, tools);
+      const reply = await processor.request(`Find me the William Wale in Brooklyn New York`);
 
       log.info('reply', { reply });
     });

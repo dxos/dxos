@@ -24,7 +24,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
   const res = await fetch(url);
   const spec = (await res.json()) as OpenAPIV2.Document;
 
-  log.info('spec', { spec });
+  log('spec', { spec });
 
   const tools: Tool[] = [];
   for (const [path, pathItem] of Object.entries(spec.paths)) {
@@ -105,11 +105,14 @@ type EndpointDescriptor = {
 };
 
 const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
-  const url = getEndpointUrl(endpoint);
+  log.info('endpoint', { endpoint });
+
+  let url = getEndpointUrl(endpoint);
   const request: RequestInit = {
     method: endpoint.method,
     headers: {},
   };
+  const query = new URLSearchParams();
   let body: any = undefined;
   for (const parameter of endpoint.parameters) {
     switch (parameter.in) {
@@ -132,8 +135,17 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
         body = value;
         break;
       }
+      case 'query': {
+        query.set(parameter.name, input[parameter.name]);
+        break;
+      }
     }
   }
+
+  if (query.size > 0) {
+    url += `?${query.toString()}`;
+  }
+
   if (body) {
     request.body = JSON.stringify(body);
     (request.headers as any)['Content-Type'] = 'application/json';
