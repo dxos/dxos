@@ -221,6 +221,7 @@ export default (context: PluginsContext) =>
             : subject.reduce(
                 (acc, entryId) =>
                   openEntry(acc, entryId, {
+                    key: options?.key,
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
                   }),

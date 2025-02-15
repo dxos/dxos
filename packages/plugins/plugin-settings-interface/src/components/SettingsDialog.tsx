@@ -21,7 +21,6 @@ const core = [
   'dxos.org/plugin/files',
   'dxos.org/plugin/manager',
   'dxos.org/plugin/observability',
-  'dxos.org/plugin/registry',
   'dxos.org/plugin/space',
   'dxos.org/plugin/token-manager',
 ];

@@ -4,17 +4,12 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 
-import { ReactSurface, RegistrySettings } from './capabilities';
+import { AppGraphBuilder, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
 export const RegistryPlugin = () =>
   definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: RegistrySettings,
-    }),
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
@@ -24,5 +19,10 @@ export const RegistryPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
   ]);
