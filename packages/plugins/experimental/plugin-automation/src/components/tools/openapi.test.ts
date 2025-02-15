@@ -14,6 +14,7 @@ const FLIGHT_SEARCH_API =
 const HOTEL_SEARCH_API = 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json';
 const HOTEL_NAME_AUTOCOMPLETE_API =
   'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-name-autocomplete/1.0.3/swagger.json';
+const WEATHER_API = 'https://api.apis.guru/v2/specs/visualcrossing.com/weather/4.6/openapi.json';
 
 describe('openapi', () => {
   describe('mapping', () => {
@@ -38,6 +39,12 @@ describe('openapi', () => {
 
       log.info('tools', { tools });
     });
+
+    test.only('weather', async () => {
+      const tools = await createToolsFromApi(WEATHER_API);
+
+      log.info('tools', { tools: tools.map((t) => t.name) });
+    });
   });
 
   describe('invoke tools', () => {
@@ -54,7 +61,7 @@ describe('openapi', () => {
     });
   });
 
-  describe.skip('AI uses tools', () => {
+  describe('AI uses tools', () => {
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, {
         authorization: AMADEUS_AUTH,
@@ -71,6 +78,7 @@ describe('openapi', () => {
       log.info('reply', { reply });
     });
 
+    // TODO(dmaretskyi): Doesn't work.
     test('amadeus hotel name autocomplete', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
 
@@ -79,6 +87,18 @@ describe('openapi', () => {
       });
       const processor = new ChatProcessor(client, tools);
       const reply = await processor.request(`Find me the William Wale in Brooklyn New York`);
+
+      log.info('reply', { reply });
+    });
+
+    test.only('weather forecast', { timeout: 60_000 }, async () => {
+      const tools = await createToolsFromApi(WEATHER_API);
+
+      const client = new AIServiceClientImpl({
+        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
+      });
+      const processor = new ChatProcessor(client, tools);
+      const reply = await processor.request(`What is the weather in New York today?`);
 
       log.info('reply', { reply });
     });

@@ -24,7 +24,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
   const res = await fetch(url);
   const spec = (await res.json()) as OpenAPIV2.Document;
 
-  log('spec', { spec });
+  log.info('spec', { spec });
 
   const tools: Tool[] = [];
   for (const [path, pathItem] of Object.entries(spec.paths)) {
@@ -64,12 +64,9 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       log('inputSchema', { inputSchema });
       S.validateSync(JsonSchemaType)(inputSchema);
 
-      if (!methodItem.operationId) {
-        log.warn('no operationId', { path, method });
-        continue;
-      }
-      if (!methodItem.summary) {
-        log.warn('no summary', { path, method });
+      const description = methodItem.description ?? methodItem.summary;
+      if (!description) {
+        log.warn('no description', { path, method });
         continue;
       }
 
@@ -82,7 +79,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       };
 
       tools.push({
-        name: methodItem.operationId,
+        name: getToolName(path, method, methodItem),
         description: methodItem.summary,
         parameters: inputSchema,
         execute: async (input) => {
@@ -95,6 +92,54 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
 
   return tools;
 };
+
+const getToolName = (path: string, method: string, methodItem: OpenAPIV2.OperationObject) => {
+  if (methodItem.operationId) {
+    return methodItem.operationId;
+  }
+
+  // Generate a name from the path and method.
+  let name = `${method.toLowerCase()}_${path.replaceAll(/[{}\/]/g, '_')}`;
+  while (name.length > MAX_TOOL_NAME_LENGTH) {
+    const lengthBefore = name.length;
+
+    for (const word of GENERIC_WORDS) {
+      if (name.includes(word)) {
+        name = name.replace(word, '');
+        break;
+      }
+    }
+    name = name.replaceAll('__', '_').replace(/_$/, '');
+
+    const lengthAfter = name.length;
+    if (lengthBefore === lengthAfter) {
+      break;
+    }
+  }
+  name = name.replaceAll('__', '_').replace(/_$/, '').replace(/^_/, '');
+
+  return name.slice(0, MAX_TOOL_NAME_LENGTH);
+};
+
+const MAX_TOOL_NAME_LENGTH = 64;
+const GENERIC_WORDS = [
+  'services',
+  'service',
+  'api',
+  'rest',
+  'endpoint',
+  'get',
+  'post',
+  'put',
+  'delete',
+  'patch',
+  'head',
+  'options',
+  'trace',
+  'service',
+  'api',
+  'endpoint',
+];
 
 type EndpointDescriptor = {
   document: OpenAPIV2.Document;
