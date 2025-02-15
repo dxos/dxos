@@ -49,12 +49,6 @@
       "@dxos/plugin-kanban/types": [
         "packages/plugins/experimental/plugin-kanban/src/types.ts"
       ],
-      "@dxos/plugin-map": [
-        "packages/plugins/experimental/plugin-map/src/index.ts"
-      ],
-      "@dxos/plugin-map/types": [
-        "packages/plugins/experimental/plugin-map/src/types/index.ts"
-      ],
       "@dxos/plugin-native": [
         "packages/plugins/experimental/plugin-native/src/index.ts"
       ],
@@ -117,6 +111,12 @@
       ],
       "@dxos/plugin-help/types": [
         "packages/plugins/plugin-help/src/types.ts"
+      ],
+      "@dxos/plugin-map": [
+        "packages/plugins/plugin-map/src/index.ts"
+      ],
+      "@dxos/plugin-map/types": [
+        "packages/plugins/plugin-map/src/types/index.ts"
       ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
