@@ -25,6 +25,7 @@ export default (context: PluginsContext) =>
             testId: 'treeView.openSettings',
             icon: 'ph--gear--regular',
             disposition: 'pin-end',
+            position: 'fallback',
             keyBinding: {
               macos: 'meta+,',
               windows: 'alt+,',

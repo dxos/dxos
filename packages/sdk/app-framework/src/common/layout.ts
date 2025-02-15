@@ -163,6 +163,9 @@ export namespace LayoutAction {
       options: S.optional(
         S.Struct({
           state: S.optional(S.Literal(true).annotations({ description: 'The items are being added.' })),
+          key: S.optional(
+            S.String.annotations({ description: 'If provided, will replace item with a matching key (id prefix).' }),
+          ),
           scrollIntoView: S.optional(S.Boolean.annotations({ description: 'Scroll the items into view.' })),
           pivotId: S.optional(S.String.annotations({ description: 'The id of the item to place new items next to.' })),
           positioning: S.optional(
