@@ -31,6 +31,7 @@ export default () => {
     activeDeck: 'default',
     decks: {
       default: {
+        initialized: false,
         active: [],
         inactive: [],
         fullscreen: false,
