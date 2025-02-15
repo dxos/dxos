@@ -5,23 +5,17 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { mainPadding, mainPaddingTransitions, mx } from '@dxos/react-ui-theme';
-
-import { useMainSize } from '../../hooks';
+import { useLandmarkMover } from '@dxos/react-ui';
 
 export const StatusBar = ({ showHints }: { showHints?: boolean }) => {
-  const sizeAttrs = useMainSize();
+  const mover = useLandmarkMover(undefined, '3');
   return (
     <div
       role='contentinfo'
-      {...sizeAttrs}
-      className={mx(
-        'fixed block-end-0 inset-inline-0 flex justify-between items-center border-bs border-separator z-[2] pbe-[env(safe-area-inset-bottom)]',
-        mainPadding,
-        mainPaddingTransitions,
-      )}
+      className='fixed block-end-0 inset-inline-0 bs-[--statusbar-size] border-bs border-separator z-[2] flex text-description'
+      {...mover}
     >
-      <div role='none'>{showHints && <Surface role='hints' limit={1} />}</div>
+      {showHints && <Surface role='hints' limit={1} />}
       <Surface role='status-bar' limit={1} />
     </div>
   );

@@ -20,7 +20,9 @@ type StatusBarTranslationKeys =
   | 'learn more label'
   | 'released message'
   | 'see release label'
-  | 'powered by dxos message';
+  | 'powered by dxos message'
+  | 'discord label'
+  | 'feedback label';
 
 type RequiredTranslation = { [key in StatusBarTranslationKeys]: string };
 type TranslationEntry = { [STATUS_BAR_PLUGIN]: RequiredTranslation };
@@ -46,6 +48,8 @@ const translations: Record<Language, TranslationEntry> = {
     'released message': 'This version released {{released}}.',
     'see release label': 'See release on GitHub',
     'powered by dxos message': 'Powered by <dxos>DXOS</dxos>',
+    'discord label': 'Discord',
+    'feedback label': 'Feedback',
   }),
 };
 

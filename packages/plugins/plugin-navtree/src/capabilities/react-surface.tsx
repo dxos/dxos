@@ -39,7 +39,7 @@ export default () =>
     createSurface({
       id: `${NAVTREE_PLUGIN}/navigation`,
       role: 'navigation',
-      filter: (data): data is { popoverAnchorId?: string; topbar: boolean; hoistStatusbar: boolean; current: string } =>
+      filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
         typeof data.current === 'string',
       component: ({ data }) => {
         const { graph } = useAppGraph();
@@ -71,7 +71,6 @@ export default () =>
             onOpenChange={handleOpenChange}
             popoverAnchorId={data.popoverAnchorId as string | undefined}
             topbar={data.topbar as boolean}
-            hoistStatusbar={data.hoistStatusbar as boolean}
             tab={data.current}
             onTabChange={handleTabChange}
           />
