@@ -9,4 +9,5 @@ export const OBSERVABILITY_PLUGIN = 'dxos.org/plugin/observability';
 export const meta = {
   id: OBSERVABILITY_PLUGIN,
   name: 'Telemetry',
+  icon: 'ph--eye--regular',
 } satisfies PluginMeta;
