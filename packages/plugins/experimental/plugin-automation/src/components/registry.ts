@@ -11,7 +11,11 @@ export interface ServiceRegistry {
 
 export class MockServiceRegistry implements ServiceRegistry {
   async queryServices(query: ServiceQuery): Promise<ServiceType[]> {
-    return [SERVICES.flightSearch, SERVICES.hotelSearch];
+    return [
+      //
+      SERVICES.flightSearch,
+      // SERVICES.hotelSearch, // Doesn't work.
+    ];
   }
 }
 

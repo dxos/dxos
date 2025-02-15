@@ -41,7 +41,7 @@ describe('openapi', () => {
   });
 
   describe('invoke tools', () => {
-    test.only('amadeus hotel name autocomplete', async () => {
+    test('amadeus hotel name autocomplete', async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
 
       const result = await tools[0].execute!({
@@ -54,8 +54,8 @@ describe('openapi', () => {
     });
   });
 
-  describe('AI uses tools', () => {
-    test.skip('amadeus flight availabilities', { timeout: 60_000 }, async () => {
+  describe.skip('AI uses tools', () => {
+    test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, {
         authorization: AMADEUS_AUTH,
       });
@@ -115,6 +115,23 @@ describe('openapi', () => {
           ],
         }),
       });
+
+      log.info('response', { status: response.status, body: await response.json() });
+      expect(response.status).toBe(200);
+    });
+
+    test.only('amadeus hotel name autocomplete', async () => {
+      const response = await fetch(
+        'https://test.api.amadeus.com/v1/reference-data/locations/hotel?keyword=PARI&subtype=HOTEL_LEISURE,HOTEL_GDS',
+        {
+          method: 'GET',
+          headers: {
+            // accept: 'application/vnd.amadeus+json',
+            // 'X-HTTP-Method-Override': 'GET',
+            Authorization: await resolveAuthorization(AMADEUS_AUTH),
+          },
+        },
+      );
 
       log.info('response', { status: response.status, body: await response.json() });
       expect(response.status).toBe(200);
