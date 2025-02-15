@@ -37,6 +37,7 @@ export default (context: PluginsContext) =>
             label: ['plugin registry label', { ns: REGISTRY_PLUGIN }],
             icon: 'ph--squares-four--regular',
             disposition: 'pin-end',
+            testId: 'treeView.pluginRegistry',
           },
           nodes: [
             {
@@ -47,6 +48,7 @@ export default (context: PluginsContext) =>
                 label: ['installed plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--check--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.installed',
               },
             },
             {
@@ -57,6 +59,7 @@ export default (context: PluginsContext) =>
                 label: ['recommended plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--star--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.recommended',
               },
             },
             {
@@ -67,6 +70,7 @@ export default (context: PluginsContext) =>
                 label: ['experimental plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--flask--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.experimental',
               },
             },
             {
@@ -77,6 +81,7 @@ export default (context: PluginsContext) =>
                 label: ['community plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--users-three--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.community',
               },
             },
           ],
