@@ -137,7 +137,7 @@ export class AppManager {
   }
 
   async waitForSpaceReady(timeout = 30_000) {
-    await this.page.getByTestId('spacePlugin.shareSpaceButton').waitFor({ timeout });
+    await this.page.getByTestId('spacePlugin.shareSpace').waitFor({ timeout });
   }
 
   getSpacePresenceMembers() {
@@ -239,11 +239,15 @@ export class AppManager {
   //
 
   async openSettings() {
-    await this.page.getByTestId('treeView.openSettings').click();
+    await this.page.getByTestId('treeView.appSettings').click();
   }
 
-  async toggleExperimenalPlugins() {
-    await this.page.getByTestId('pluginSettings.experimental').click();
+  async openPluginRegistry() {
+    await this.page.getByTestId('treeView.pluginRegistry').click();
+  }
+
+  async openRegistryCategory(category: string) {
+    await this.page.getByTestId(`pluginRegistry.${category}`).click();
   }
 
   async enablePlugin(plugin: string) {

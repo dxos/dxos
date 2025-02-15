@@ -17,7 +17,8 @@ test.describe('Stack tests', () => {
     await host.init();
     // Sleep to allow first run to finish before reloading.
     await sleep(500);
-    await host.openSettings();
+    await host.openPluginRegistry();
+    await host.openRegistryCategory('recommended');
     await host.enablePlugin('dxos.org/plugin/stack');
   });
 

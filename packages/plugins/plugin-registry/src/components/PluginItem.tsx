@@ -26,7 +26,13 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
-  const handleChange = useCallback(() => onChange?.(id, !isEnabled), [id, isEnabled, onChange]);
+  const handleChange = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      onChange?.(id, !isEnabled);
+    },
+    [id, isEnabled, onChange],
+  );
 
   return (
     <Input.Root key={id} id={inputId}>

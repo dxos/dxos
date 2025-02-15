@@ -25,6 +25,7 @@ export default [
         'coming soon label': 'Coming soon!',
         'enable plugin label': 'Enable',
         'disable plugin label': 'Disable',
+        'open plugin registry label': 'Open plugin registry',
       },
     },
   },
