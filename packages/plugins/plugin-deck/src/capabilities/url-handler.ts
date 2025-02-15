@@ -18,6 +18,7 @@ export default async (context: PluginsContext) => {
       state.activeDeck = 'default';
       state.decks = {
         default: {
+          initialized: false,
           active: [],
           inactive: [],
           fullscreen: false,
