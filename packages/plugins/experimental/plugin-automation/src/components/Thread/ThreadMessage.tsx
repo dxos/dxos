@@ -43,7 +43,7 @@ const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentB
     <div
       className={mx(
         'p-1 px-2 overflow-hidden rounded-md',
-        block.type === 'text' && role === 'user' ? 'bg-blue-200 dark:bg-blue-800' : 'bg-base',
+        block.type === 'text' && role === 'user' && 'bg-blue-200 dark:bg-blue-800',
       )}
     >
       <Component block={block} />

@@ -8,7 +8,15 @@ import { type FC, type SVGProps } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type Move, type Location, type PieceMap, locationToString, type PieceType, type BoardModel } from '../Board';
+import {
+  type Move,
+  type Location,
+  type PieceMap,
+  locationToString,
+  type PieceType,
+  type BoardModel,
+  type Player,
+} from '../Board';
 import * as Alpha from '../gen/pieces/chess/alpha';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
@@ -25,33 +33,48 @@ export const locationToPos = ([row, col]: Location): string => {
   return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 };
 
-export const styles = {
+const styles = {
   neutral: {
-    white: 'bg-neutral-200',
     black: 'bg-neutral-50',
+    white: 'bg-neutral-200',
+    promotion: 'bg-neutral-200 hover:bg-neutral-300 opacity-70 hover:opacity-100',
+  },
+  original: {
+    black: 'bg-[#6C95B9]',
+    white: 'bg-[#CCD3DB]',
+    promotion: 'duration-500 bg-[#CCD3DB] opacity-70 hover:opacity-100',
   },
   blue: {
-    white: 'bg-[#ccd3db]',
-    black: 'bg-[#6c95b9]',
+    black: 'bg-[#608BC1]',
+    white: 'bg-[#CBDCEB]',
+    promotion: 'duration-500 bg-[#CBDCEB] opacity-70 hover:opacity-100',
+  },
+  green: {
+    black: 'bg-[#8EB486]',
+    white: 'bg-[#FDF7F4]',
+    promotion: 'duration-500 bg-[#FDF7F4] opacity-70 hover:opacity-100',
   },
 };
 
+export const boardStyles = styles.original;
+
 export const getSquareColor = ([row, col]: Location) => {
-  return (col + row) % 2 === 0 ? styles.blue.white : styles.blue.black;
+  return (col + row) % 2 === 0 ? boardStyles.white : boardStyles.black;
 };
 
 /**
  * Attempt move.
  */
-const makeMove = (game: Chess, { source, target }: Move): Chess | null => {
-  const s = locationToPos(source);
-  const t = locationToPos(target);
+const makeMove = (game: Chess, move: Move): Chess | null => {
+  const from = locationToPos(move.from);
+  const to = locationToPos(move.to);
   try {
-    log('makeMove', { s, t });
-    game.move({ from: s, to: t }, { strict: false });
+    log('makeMove', { move });
+    const promotion = move.promotion ? move.promotion[1].toLowerCase() : 'q';
+    game.move({ from, to, promotion }, { strict: false });
     return game;
   } catch (err) {
-    log.error('invalid move', { err });
+    // Ignore.
     return null;
   }
 };
@@ -67,16 +90,20 @@ export class ChessModel implements BoardModel<ChessPiece> {
     this.initialize(fen);
   }
 
-  get game() {
-    return this._game;
-  }
-
-  get fen() {
-    return this._game.fen();
+  get turn(): Player {
+    return this._game.turn() === 'w' ? 'white' : 'black';
   }
 
   get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
     return this._pieces;
+  }
+
+  get game(): Chess {
+    return this._game;
+  }
+
+  get fen(): string {
+    return this._game.fen();
   }
 
   initialize(fen?: string) {
@@ -87,6 +114,12 @@ export class ChessModel implements BoardModel<ChessPiece> {
 
   isValidMove(move: Move): boolean {
     return makeMove(new Chess(this._game.fen()), move) !== null;
+  }
+
+  canPromote(move: Move): boolean {
+    const isPawnMove = move.piece === 'BP' || move.piece === 'WP';
+    const isToLastRank = move.to[0] === 0 || move.to[0] === 7;
+    return isPawnMove && isToLastRank;
   }
 
   makeMove(move: Move): boolean {
@@ -129,6 +162,7 @@ export class ChessModel implements BoardModel<ChessPiece> {
         pieces[locationToString(location)] = {
           id: `${square}-${pieceType}`,
           type: pieceType,
+          side: color === 'w' ? 'white' : 'black',
           location,
         };
       }),
