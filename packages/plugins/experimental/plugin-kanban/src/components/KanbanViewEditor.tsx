@@ -83,7 +83,6 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const onSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
       kanban.columnFieldId = values.columnFieldId;
-      kanban.arrangement = undefined;
     },
     [kanban],
   );

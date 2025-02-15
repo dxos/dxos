@@ -147,7 +147,9 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   private _computeArrangement(): ArrangedCards<T> {
     const options = this._getSelectOptions();
-    invariant(options);
+    if (!options) {
+      return;
+    }
     this._normalizeKanban();
     return computeArrangement<T>(this._kanban, this._items.value, this.columnFieldPath, options);
   }
