@@ -1,5 +1,5 @@
 import { ToolResult, type Tool } from '@dxos/artifact';
-import { JsonSchemaType, S, toEffectSchema } from '@dxos/echo-schema';
+import { JsonSchemaType, normalizeSchema, S, toEffectSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -24,7 +24,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
   const res = await fetch(url);
   const spec = (await res.json()) as OpenAPIV2.Document;
 
-  log('spec', { spec });
+  log.info('spec', { spec });
 
   const tools: Tool[] = [];
   for (const [path, pathItem] of Object.entries(spec.paths)) {
@@ -50,12 +50,19 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       for (const parameter of parametersResolved) {
         log('parameter', { parameter });
         if (parameter.schema) {
-          inputSchema.properties![parameter.name] = parameter.schema as JsonSchemaType;
+          inputSchema.properties![parameter.name] = normalizeSchema(parameter.schema);
+        } else if (typeof parameter.type === 'string') {
+          const { name, in: _in, required, ...schema } = parameter;
+          inputSchema.properties![name] = normalizeSchema(schema);
+          if (required) {
+            inputSchema.required ??= [];
+            inputSchema.required!.push(name);
+          }
         }
       }
 
       log('inputSchema', { inputSchema });
-      invariant(S.is(JsonSchemaType)(inputSchema));
+      S.validateSync(JsonSchemaType)(inputSchema);
 
       if (!methodItem.operationId) {
         log.warn('no operationId', { path, method });

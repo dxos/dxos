@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { createToolsFromApi, type ApiAuthorization, resolveAuthorization } from './openapi';
+import { createToolsFromApi, resolveAuthorization } from './openapi';
 import { log } from '@dxos/log';
 import { AIServiceClientImpl, MixedStreamParser } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT, ObjectId } from '@dxos/assistant/testing';
 import { createStatic } from '@dxos/echo-schema';
 import { Message } from '@dxos/artifact';
 import { ChatProcessor } from '../../hooks';
+import type { ApiAuthorization } from '../../types';
 
 const META_SCHEMA_URI = 'https://json-schema.org/draft/2020-12/schema';
 
@@ -23,10 +24,18 @@ describe('openapi', () => {
       //   // log.info('schema', { schema });
       // }
     });
+
+    test.only('amadeus hotel search', async () => {
+      const tools = await createToolsFromApi(
+        'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json',
+      );
+
+      log.info('tools', { tools });
+    });
   });
 
   describe('invoke', () => {
-    test.only('amadeus flight availabilities', { timeout: 60_000 }, async () => {
+    test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(
         'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json',
         {
