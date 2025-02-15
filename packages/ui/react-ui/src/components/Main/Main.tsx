@@ -346,6 +346,6 @@ export const Main = {
   ComplementarySidebar: MainComplementarySidebar,
 };
 
-export { useMainContext, useSidebars };
+export { useMainContext, useSidebars, useLandmarkMover };
 
 export type { MainRootProps, MainProps, MainOverlayProps, MainNavigationSidebarProps, SidebarState };

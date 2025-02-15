@@ -72,11 +72,11 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </DeprecatedFormInput>
       )}
-      <DeprecatedFormInput label={t('settings custom slots')}>
-        <Input.Switch checked={settings.customSlots} onCheckedChange={(checked) => (settings.customSlots = checked)} />
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings flat deck')}>
-        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = checked)} />
+      <DeprecatedFormInput label={t('settings enable ide-style statusbar label')}>
+        <Input.Switch
+          checked={settings.enableIdeStyleStatusbar}
+          onCheckedChange={(checked) => (settings.enableIdeStyleStatusbar = checked)}
+        />
       </DeprecatedFormInput>
     </>
   );
