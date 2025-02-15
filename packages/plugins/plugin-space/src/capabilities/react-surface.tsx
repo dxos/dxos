@@ -13,6 +13,7 @@ import {
   useCapabilities,
   usePluginManager,
 } from '@dxos/app-framework';
+import { SettingsStore } from '@dxos/local-storage';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import {
   getSpace,
@@ -206,12 +207,10 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === SPACE_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<SpaceSettingsProps>(SPACE_PLUGIN)!.value;
-        return <SpacePluginSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,
+      component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/menu-footer`,

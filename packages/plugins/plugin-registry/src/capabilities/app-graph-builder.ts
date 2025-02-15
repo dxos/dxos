@@ -2,17 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, SettingsAction, type PluginsContext } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { REGISTRY_PLUGIN } from '../meta';
-
-// TODO(wittjosiah): Deck does not currently support `/` in ids.
-export const REGISTRY_ID = 'dxos:plugin-registry';
-export const REGISTRY_KEY = 'plugin-registry';
+import { REGISTRY_ID, REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: REGISTRY_PLUGIN,
+      filter: (node): node is Node<null> => node.id === 'root',
+      actions: () => [
+        {
+          id: REGISTRY_PLUGIN,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(SettingsAction.OpenPluginRegistry));
+          },
+          properties: {
+            label: ['open plugin registry label', { ns: REGISTRY_PLUGIN }],
+            icon: 'ph--squares-four--regular',
+          },
+        },
+      ],
+    }),
     createExtension({
       id: REGISTRY_PLUGIN,
       filter: (node): node is Node<null> => node.id === 'root',

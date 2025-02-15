@@ -13,7 +13,7 @@ import {
 } from '@dxos/app-framework';
 
 import { SettingsInterfaceCapabilities } from './capabilities';
-import { SETTINGS_DIALOG } from '../components';
+import { SETTINGS_ID } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(
@@ -27,15 +27,7 @@ export default (context: PluginsContext) =>
         }
 
         return {
-          intents: [
-            createIntent(LayoutAction.UpdateDialog, {
-              part: 'dialog',
-              subject: SETTINGS_DIALOG,
-              options: {
-                blockAlign: 'start',
-              },
-            }),
-          ],
+          intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: SETTINGS_ID })],
         };
       },
     }),

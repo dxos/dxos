@@ -7,6 +7,7 @@ import React from 'react';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/react-ui-editor';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';
@@ -16,7 +17,7 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
-    <>
+    <StackItem.Content toolbar={false} role='article' classNames='p-4 block overflow-y-auto'>
       <DeprecatedFormInput label={t('default view mode label')}>
         <Select.Root
           value={settings.defaultViewMode}
@@ -100,6 +101,6 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
       >
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
       </DeprecatedFormInput>
-    </>
+    </StackItem.Content>
   );
 };

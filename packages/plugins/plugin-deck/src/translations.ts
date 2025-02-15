@@ -8,6 +8,7 @@ export default [
   {
     'en-US': {
       [DECK_PLUGIN]: {
+        'plugin name': 'Deck',
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open sidebar',
         'collapse navigation sidebar label': 'Minimize sidebar',

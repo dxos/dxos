@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 
-import { AppGraphBuilder, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
@@ -19,6 +19,11 @@ export const RegistryPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

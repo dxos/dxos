@@ -14,4 +14,12 @@ export namespace SettingsAction {
     }),
     output: S.Void,
   }) {}
+
+  export class OpenPluginRegistry extends S.TaggedClass<OpenPluginRegistry>()(
+    `${SETTINGS_ACTION}/open-plugin-registry`,
+    {
+      input: S.Void,
+      output: S.Void,
+    },
+  ) {}
 }

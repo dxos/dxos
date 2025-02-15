@@ -7149,6 +7149,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -7889,6 +7892,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8616,6 +8622,9 @@ importers:
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
