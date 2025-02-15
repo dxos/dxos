@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { StatusBar } from './StatusBar';
 
 export const DefaultStory = () => (
-  <StatusBar.Container>
+  <div>
     <StatusBar.EndContent>
       <StatusBar.Button>
         <Icon icon='ph--mailbox--regular' size={4} />
@@ -30,7 +30,7 @@ export const DefaultStory = () => (
         <StatusBar.Text>Online</StatusBar.Text>
       </StatusBar.Item>
     </StatusBar.EndContent>
-  </StatusBar.Container>
+  </div>
 );
 
 export const Default = {};
