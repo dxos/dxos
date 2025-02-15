@@ -5,57 +5,46 @@
 import React, { useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Icon, Popover } from '@dxos/react-ui';
+import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
+import { STATUS_BAR_PLUGIN } from '../meta';
 
-export const StatusBarPanel = ({ variant = 'main-footer' }: { variant?: 'main-footer' | 'sidebar-footer' }) => {
+export const StatusBarCtas = () => {
+  const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const [open, setOpen] = useState(false);
-
-  const statusbarButtons = (
-    <>
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <StatusBar.Button aria-label='Give feedback about composer' data-joyride='welcome/feedback'>
+        <StatusBar.Button data-joyride='welcome/feedback'>
           <Icon icon='ph--paper-plane-tilt--regular' size={4} />
-          <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
+          <StatusBar.Text classNames='hidden sm:block'>{t('feedback label')}</StatusBar.Text>
         </StatusBar.Button>
       </Popover.Trigger>
       {/* TODO(zan): Configure this label? */}
-      <StatusBar.Button aria-label='Open DXOS Discord' asChild>
+      <StatusBar.Button asChild>
         <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--discord-logo--regular' size={4} />
-          <StatusBar.Text classNames='hidden sm:block'>Discord</StatusBar.Text>
+          <StatusBar.Text classNames='hidden sm:block'>{t('discord label')}</StatusBar.Text>
         </a>
       </StatusBar.Button>
       <VersionNumber />
-    </>
-  );
-
-  // TODO(wittjosiah): Factor out feedback and discord buttons.
-  return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      {variant === 'sidebar-footer' ? (
-        <div role='menubar' className='text-description bs-[--l0-size] flex flex-col justify-center'>
-          <div role='none' className='flex justify-center'>
-            {statusbarButtons}
-          </div>
-          <div role='none' className='flex justify-center mlb-1'>
-            <Surface role='status' />
-          </div>
-        </div>
-      ) : (
-        <>
-          <Surface role='status' />
-          <span role='separator' className='grow' />
-          {statusbarButtons}
-        </>
-      )}
       <Popover.Content classNames='shadow-lg'>
         <FeedbackForm onClose={() => setOpen(false)} />
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Root>
+  );
+};
+
+export const StatusBarPanel = () => {
+  return (
+    <>
+      <Surface role='status' />
+      <span role='separator' className='grow' />
+      <StatusBarCtas />
+    </>
   );
 };

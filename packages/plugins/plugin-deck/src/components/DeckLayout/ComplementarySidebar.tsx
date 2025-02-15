@@ -15,7 +15,6 @@ import {
 import { Main, useTranslation, toLocalizedString, IconButton, ScrollArea } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
@@ -30,8 +29,6 @@ export type ComplementarySidebarProps = {
   panels: Panel[];
   current?: string;
 };
-
-const actionsContainer = 'grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto';
 
 export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarProps) => {
   const layout = useCapability(DeckCapabilities.MutableDeckState);
@@ -87,7 +84,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
           role='none'
           className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-base contain-layout app-drag'
         >
-          <Tabs.Tablist classNames={actionsContainer}>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
             {panels.map((panel) => (
               <Tabs.Tab key={panel.id} value={panel.id} asChild>
                 <IconButton
@@ -109,7 +106,12 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
               </Tabs.Tab>
             ))}
           </Tabs.Tablist>
-          <div role='none' className={mx(actionsContainer, 'hidden lg:grid')}>
+          {!hoistStatusbar && (
+            <div role='none' className='grid grid-cols-1 auto-rows-[--rail-item] p-1 overflow-y-auto'>
+              <Surface role='status-bar--r0-footer' limit={1} />
+            </div>
+          )}
+          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-[--rail-action] p-1'>
             <ToggleComplementarySidebarButton />
           </div>
         </div>
@@ -117,29 +119,41 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
           <Tabs.Tabpanel
             key={panel.id}
             value={panel.id}
-            classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr]'
+            classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content]'
           >
-            <h2 className='flex items-center pli-2 border-separator border-be'>{toLocalizedString(panel.label, t)}</h2>
-            <ScrollArea.Root>
-              <ScrollArea.Viewport>
-                {panel.id === activePanelId && node && (
-                  <Surface
-                    key={activeEntryId}
-                    role={`complementary--${activePanelId}`}
-                    data={{
-                      id: activeEntryId,
-                      subject: node.properties.object ?? node.properties.space,
-                      popoverAnchorId: layout.popoverAnchorId,
-                    }}
-                    fallback={PlankContentError}
-                    placeholder={<PlankLoading />}
-                  />
+            {panel.id === activePanelId && node && (
+              <>
+                <h2 className='flex items-center pli-2 border-separator border-be'>
+                  {toLocalizedString(panel.label, t)}
+                </h2>
+                <ScrollArea.Root>
+                  <ScrollArea.Viewport>
+                    <Surface
+                      key={activeEntryId}
+                      role={`complementary--${activePanelId}`}
+                      data={{
+                        id: activeEntryId,
+                        subject: node.properties.object ?? node.properties.space,
+                        popoverAnchorId: layout.popoverAnchorId,
+                      }}
+                      fallback={PlankContentError}
+                      placeholder={<PlankLoading />}
+                    />
+                  </ScrollArea.Viewport>
+                  <ScrollArea.Scrollbar orientation='vertical'>
+                    <ScrollArea.Thumb />
+                  </ScrollArea.Scrollbar>
+                </ScrollArea.Root>
+                {!hoistStatusbar && (
+                  <div
+                    role='contentinfo'
+                    className='flex flex-wrap justify-center items-center border-bs border-separator plb-1'
+                  >
+                    <Surface role='status-bar--r1-footer' limit={1} />
+                  </div>
                 )}
-              </ScrollArea.Viewport>
-              <ScrollArea.Scrollbar orientation='vertical'>
-                <ScrollArea.Thumb />
-              </ScrollArea.Scrollbar>
-            </ScrollArea.Root>
+              </>
+            )}
           </Tabs.Tabpanel>
         ))}
       </Tabs.Root>
