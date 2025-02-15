@@ -346,9 +346,6 @@
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-settings-interface/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
