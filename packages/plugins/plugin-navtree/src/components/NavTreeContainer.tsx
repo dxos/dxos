@@ -39,20 +39,10 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
-  hoistStatusbar?: boolean;
 } & Pick<NavTreeContextValue, 'tab' | 'onTabChange' | 'isOpen' | 'isCurrent' | 'onOpenChange'>;
 
 export const NavTreeContainer = memo(
-  ({
-    tab,
-    onTabChange,
-    isCurrent,
-    isOpen,
-    onOpenChange,
-    popoverAnchorId,
-    topbar,
-    hoistStatusbar,
-  }: NavTreeContainerProps) => {
+  ({ tab, onTabChange, isCurrent, isOpen, onOpenChange, popoverAnchorId, topbar }: NavTreeContainerProps) => {
     const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -139,7 +129,13 @@ export const NavTreeContainer = memo(
 
         const current = isCurrent(path, node);
         if (!current) {
-          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [node.id] }));
+          void dispatch(
+            createIntent(LayoutAction.Open, {
+              part: 'main',
+              subject: [node.id],
+              options: { key: node.properties.key },
+            }),
+          );
         } else if (option) {
           void dispatch(
             createIntent(LayoutAction.Close, { part: 'main', subject: [node.id], options: { state: false } }),
@@ -228,7 +224,6 @@ export const NavTreeContainer = memo(
         renderItemEnd,
         popoverAnchorId,
         topbar,
-        hoistStatusbar,
         getItems,
         getProps,
         isCurrent,
@@ -245,7 +240,6 @@ export const NavTreeContainer = memo(
         renderItemEnd,
         popoverAnchorId,
         topbar,
-        hoistStatusbar,
         getItems,
         getProps,
         isCurrent,

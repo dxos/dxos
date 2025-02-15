@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
+import { Surface, useCapabilities } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Button, Clipboard, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsRootProps, type TabsActivePart } from '@dxos/react-ui-tabs';
 import { SpacePanel, type SpacePanelProps } from '@dxos/shell/react';
 
 import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSettingsPanel';
+import { SpaceCapabilities } from '../../capabilities';
 import { SPACE_PLUGIN } from '../../meta';
 import { COMPOSER_SPACE_LOCK, getSpaceDisplayName } from '../../util';
 
@@ -36,6 +38,8 @@ export const SpaceSettingsDialog = ({
   const [selected, setSelected] = useState<SpaceSettingsTab>(initialTab);
   const locked = space.properties[COMPOSER_SPACE_LOCK];
   const name = getSpaceDisplayName(space, { personal: client.spaces.default === space, namesCache });
+  const panels = useCapabilities(SpaceCapabilities.SettingsPanel);
+  const data = useMemo(() => ({ subject: space }), [space]);
 
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
@@ -84,6 +88,11 @@ export const SpaceSettingsDialog = ({
                 <Tabs.Tab value='members' disabled={locked}>
                   {t('members tab label')}
                 </Tabs.Tab>
+                {panels.map((panel) => (
+                  <Tabs.Tab key={panel.id} value={panel.id}>
+                    {toLocalizedString(panel.label, t)}
+                  </Tabs.Tab>
+                ))}
               </div>
             </Tabs.Tablist>
           </div>
@@ -98,6 +107,12 @@ export const SpaceSettingsDialog = ({
               <SpacePanel space={space} hideHeading target={target} createInvitationUrl={createInvitationUrl} />
             </Clipboard.Provider>
           </Tabs.Tabpanel>
+
+          {panels.map((panel) => (
+            <Tabs.Tabpanel key={panel.id} value={panel.id} classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
+              <Surface role={`space-settings--${panel.id}`} data={data} />
+            </Tabs.Tabpanel>
+          ))}
         </Tabs.Viewport>
       </Tabs.Root>
     </Dialog.Content>

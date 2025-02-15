@@ -29,7 +29,7 @@ export default (context: PluginsContext) =>
             }
           });
         } catch {
-          log.warn('Path to node not found', { subject });
+          log('Path to node not found', { subject });
         }
       },
     }),

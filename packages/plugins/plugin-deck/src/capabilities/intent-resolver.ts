@@ -221,6 +221,7 @@ export default (context: PluginsContext) =>
             : subject.reduce(
                 (acc, entryId) =>
                   openEntry(acc, entryId, {
+                    key: options?.key,
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
                   }),
@@ -317,7 +318,13 @@ export default (context: PluginsContext) =>
             if (!state.deck.solo) {
               // Solo the entry.
               return {
-                intents: [createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'solo' } })],
+                intents: [
+                  createIntent(LayoutAction.SetLayoutMode, {
+                    part: 'mode',
+                    subject: entryId,
+                    options: { mode: 'solo' },
+                  }),
+                ],
               };
             } else {
               // Un-solo the current entry.
