@@ -33,11 +33,10 @@ export const setActive = ({ next, state, attention }: SetActiveOptions) => {
       const [attendedId] = Array.from(attended);
       const isAttendedAvailable = !!attendedId && next.includes(attendedId);
       if (!isAttendedAvailable) {
-        const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const attendedIndex = active.indexOf(attendedId);
         // If outside of bounds, focus on the first/last plank, otherwise focus on the new plank in the same position.
-        const index = attendedIndex === -1 ? 0 : attendedIndex >= active.length ? active.length - 1 : attendedIndex;
-        return active[index];
+        const index = attendedIndex === -1 ? 0 : attendedIndex >= next.length ? next.length - 1 : attendedIndex;
+        return next[index];
       }
     }
   });

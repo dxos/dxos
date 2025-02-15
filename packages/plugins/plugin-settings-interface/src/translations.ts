@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [SETTINGS_INTERFACE_PLUGIN]: {
-        'open settings label': 'Show settings',
+        'open settings label': 'Open settings',
         'settings dialog title': 'Settings',
         'back label': 'Back',
         'click to return to tablist description': 'Click the title to return to the settings menu',
