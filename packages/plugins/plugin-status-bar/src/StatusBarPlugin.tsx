@@ -4,9 +4,17 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createSurface,
+  defineModule,
+  definePlugin,
+  Events,
+  Surface,
+} from '@dxos/app-framework';
 
-import { StatusBarPanel } from './components';
+import { StatusBarCtas, StatusBarPanel } from './components';
 import { VersionNumber } from './components/VersionNumber';
 import { meta, STATUS_BAR_PLUGIN } from './meta';
 import translations from './translations';
@@ -30,8 +38,13 @@ export const StatusBarPlugin = () =>
           }),
           createSurface({
             id: meta.id,
-            role: 'status-bar--sidebar-footer',
-            component: () => <StatusBarPanel variant='sidebar-footer' />,
+            role: 'status-bar--r0-footer',
+            component: () => <Surface role='status' />,
+          }),
+          createSurface({
+            id: meta.id,
+            role: 'status-bar--r1-footer',
+            component: () => <StatusBarCtas />,
           }),
           createSurface({
             id: `${STATUS_BAR_PLUGIN}/header-end`,

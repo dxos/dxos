@@ -30,5 +30,4 @@ export type NavTreeContextValue = Pick<
   renderItemEnd?: FC<{ node: Node; open: boolean }>;
   popoverAnchorId?: string;
   topbar?: boolean;
-  hoistStatusbar?: boolean;
 };
