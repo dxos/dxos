@@ -2,17 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, SettingsAction, type PluginsContext } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { REGISTRY_PLUGIN } from '../meta';
-
-// TODO(wittjosiah): Deck does not currently support `/` in ids.
-export const REGISTRY_ID = 'dxos:plugin-registry';
-export const REGISTRY_KEY = 'plugin-registry';
+import { REGISTRY_ID, REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: REGISTRY_PLUGIN,
+      filter: (node): node is Node<null> => node.id === 'root',
+      actions: () => [
+        {
+          id: REGISTRY_PLUGIN,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(SettingsAction.OpenPluginRegistry));
+          },
+          properties: {
+            label: ['open plugin registry label', { ns: REGISTRY_PLUGIN }],
+            icon: 'ph--squares-four--regular',
+          },
+        },
+      ],
+    }),
     createExtension({
       id: REGISTRY_PLUGIN,
       filter: (node): node is Node<null> => node.id === 'root',
@@ -24,6 +37,7 @@ export default (context: PluginsContext) =>
             label: ['plugin registry label', { ns: REGISTRY_PLUGIN }],
             icon: 'ph--squares-four--regular',
             disposition: 'pin-end',
+            testId: 'treeView.pluginRegistry',
           },
           nodes: [
             {
@@ -34,6 +48,7 @@ export default (context: PluginsContext) =>
                 label: ['installed plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--check--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.installed',
               },
             },
             {
@@ -44,6 +59,7 @@ export default (context: PluginsContext) =>
                 label: ['recommended plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--star--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.recommended',
               },
             },
             {
@@ -54,6 +70,7 @@ export default (context: PluginsContext) =>
                 label: ['experimental plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--flask--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.experimental',
               },
             },
             {
@@ -64,6 +81,7 @@ export default (context: PluginsContext) =>
                 label: ['community plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--users-three--regular',
                 key: REGISTRY_KEY,
+                testId: 'pluginRegistry.community',
               },
             },
           ],

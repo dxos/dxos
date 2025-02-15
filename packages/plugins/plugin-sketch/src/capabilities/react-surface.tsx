@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { SettingsStore } from '@dxos/local-storage';
 
 import { SketchContainer, SketchSettings } from '../components';
 import { SKETCH_PLUGIN } from '../meta';
@@ -23,11 +24,9 @@ export default () =>
     }),
     createSurface({
       id: `${SKETCH_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === SKETCH_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(SKETCH_PLUGIN)!.value;
-        return <SketchSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === SKETCH_PLUGIN,
+      component: ({ data: { subject } }) => <SketchSettings settings={subject.value} />,
     }),
   ]);

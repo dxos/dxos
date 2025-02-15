@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { SettingsStore } from '@dxos/local-storage';
 
 import { LayoutSettings } from '../components';
 import { Banner } from '../components/DeckLayout/Banner';
@@ -15,13 +16,10 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${DECK_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === DECK_PLUGIN,
-      component: () => {
-        const store = useCapability(Capabilities.SettingsStore);
-        const settings = store.getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
-        return <LayoutSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<DeckSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === DECK_PLUGIN,
+      component: ({ data: { subject } }) => <LayoutSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${DECK_PLUGIN}/banner`,
