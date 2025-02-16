@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { setDeep } from '@dxos/util';
 
@@ -79,7 +80,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   };
 
   return (
-    <>
+    <StackItem.Content toolbar={false} role='article' classNames='p-4 block overflow-y-auto'>
       <DeprecatedFormInput label={t('settings show debug panel')}>
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
       </DeprecatedFormInput>
@@ -145,7 +146,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           </Select.Portal>
         </Select.Root>
       </DeprecatedFormInput>
-    </>
+    </StackItem.Content>
   );
 };
 

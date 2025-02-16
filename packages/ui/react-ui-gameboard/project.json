@@ -10,6 +10,7 @@
     "build": {},
     "compile": {
       "dependsOn": [
+        "esbuild:compile",
         "gen"
       ],
       "options": {
