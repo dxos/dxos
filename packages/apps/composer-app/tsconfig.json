@@ -156,9 +156,6 @@
       "path": "../../plugins/plugin-registry"
     },
     {
-      "path": "../../plugins/plugin-settings-interface"
-    },
-    {
       "path": "../../plugins/plugin-sheet"
     },
     {

@@ -28,7 +28,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
-          return onTabChange?.(item.id);
+          return onTabChange?.(item);
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {

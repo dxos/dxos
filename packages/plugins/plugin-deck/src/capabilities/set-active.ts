@@ -22,7 +22,7 @@ export const setActive = ({ next, state, attention }: SetActiveOptions) => {
 
     state.deck.inactive = closed;
 
-    if (state.deck.solo) {
+    if (state.deck.solo || !state.deck.initialized) {
       state.deck.solo = next[0];
     } else {
       state.deck.active = next;

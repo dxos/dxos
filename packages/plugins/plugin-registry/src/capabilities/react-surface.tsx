@@ -7,9 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Capabilities, contributes, createSurface, Plugin, usePluginManager } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
 
-import { REGISTRY_KEY } from './app-graph-builder';
 import { PluginDetails, RegistryContainer } from '../components';
-import { REGISTRY_PLUGIN } from '../meta';
+import { REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

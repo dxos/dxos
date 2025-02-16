@@ -145,9 +145,6 @@
       "@dxos/plugin-registry": [
         "packages/plugins/plugin-registry/src/index.ts"
       ],
-      "@dxos/plugin-settings-interface": [
-        "packages/plugins/plugin-settings-interface/src/index.ts"
-      ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"
       ],
