@@ -11,7 +11,12 @@ export interface ServiceRegistry {
 
 export class MockServiceRegistry implements ServiceRegistry {
   async queryServices(query: ServiceQuery): Promise<ServiceType[]> {
-    return [SERVICES.flightSearch, SERVICES.hotelSearch];
+    return [
+      //
+      SERVICES.flightSearch,
+      // SERVICES.hotelSearch, // Doesn't work.
+      SERVICES.weather,
+    ];
   }
 }
 
@@ -21,6 +26,15 @@ const AMADEUS_AUTH: ApiAuthorization = {
   clientSecret: 'n4qldSN7usvD57gm',
   tokenUrl: 'https://test.api.amadeus.com/v1/security/oauth2/token',
   grantType: 'client_credentials',
+};
+
+const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
+  type: 'api-key',
+  key: 'FDPRVS953KB4GQQLD25GRT975',
+  placement: {
+    type: 'query',
+    name: 'key',
+  },
 };
 
 // TODO(dmaretskyi): Will be an actual registry.
@@ -44,6 +58,17 @@ export const SERVICES = {
         kind: 'api',
         schemaUrl: 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json',
         authorization: AMADEUS_AUTH,
+      },
+    ],
+  }),
+  weather: createStatic(ServiceType, {
+    name: 'Visual Crossing Weather',
+    description: 'Get weather forecast',
+    interfaces: [
+      {
+        kind: 'api',
+        schemaUrl: 'https://api.apis.guru/v2/specs/visualcrossing.com/weather/4.6/openapi.json',
+        authorization: VISUAL_CROSSING_CREDENTIALS,
       },
     ],
   }),
