@@ -93,10 +93,6 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
         start();
         break;
       }
-
-      default: {
-        handleZoomAction?.(action);
-      }
     }
   };
 
@@ -114,9 +110,15 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
 
   return (
     <Globe.Root classNames={classNames} center={center} scale={zoom}>
-      <Globe.Canvas ref={setController} topology={topology} projection='mercator' styles={styles} features={features} />
+      <Globe.Canvas
+        ref={setController}
+        topology={topology}
+        projection='orthographic'
+        styles={styles}
+        features={features}
+      />
       <Globe.Action onAction={handleAction} />
-      <Globe.Zoom />
+      <Globe.Zoom onAction={handleZoomAction} />
     </Globe.Root>
   );
 };
