@@ -15,7 +15,7 @@ export type PluginListProps = Omit<PluginItemProps, 'plugin'> & {
 
 export const PluginList = ({ plugins = [], ...props }: PluginListProps) => {
   return (
-    <List classNames='grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3 p-3'>
+    <List classNames='grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3 p-3 overflow-y-scroll scrollbar-thin'>
       {plugins.map((plugin) => (
         <PluginItem key={plugin.meta.id} plugin={plugin} {...props} />
       ))}

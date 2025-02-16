@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { definePlugin, type Plugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';
 
@@ -31,8 +31,8 @@ const DefaultStory = () => {
         definePlugin(
           {
             id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
-            name: `${faker.lorem.sentence(3)}`,
-            description: faker.datatype.boolean() ? `${faker.lorem.sentences()}` : undefined,
+            name: `${faker.commerce.productName()}`,
+            description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
             tags: faker.datatype.boolean({ probability: 0.6 })
               ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
               : undefined,
@@ -62,10 +62,7 @@ const meta: Meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'centered',
-  },
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
