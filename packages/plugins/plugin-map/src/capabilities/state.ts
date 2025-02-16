@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LatLngLiteral } from 'leaflet';
-
 import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapCapabilities } from './capabilities';
 import { type MapControlType } from '../components';

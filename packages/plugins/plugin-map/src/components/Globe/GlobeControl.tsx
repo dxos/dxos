@@ -4,21 +4,32 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Globe, type GlobeController, type GlobeControlsProps, loadTopology, useDrag, useTour } from '@dxos/react-ui-globe';
 import { type ThemeMode, useThemeContext, useAsyncState } from '@dxos/react-ui';
-
-import { type MapCanvasProps } from './Map';
+import {
+  type ControlProps,
+  Globe,
+  type GlobeController,
+  type MapCanvasProps,
+  loadTopology,
+  useDrag,
+  useGlobeZoomHandler,
+  useTour,
+} from '@dxos/react-ui-geo';
 
 const globeStyles = (themeMode: ThemeMode) =>
   themeMode === 'dark'
     ? {
         water: {
-          fillStyle: '#000',
+          fillStyle: '#191919',
         },
 
         land: {
-          fillStyle: '#050505',
-          strokeStyle: 'darkgreen',
+          fillStyle: '#444',
+          strokeStyle: '#222',
+        },
+
+        border: {
+          strokeStyle: '#111',
         },
 
         graticule: {
@@ -28,7 +39,7 @@ const globeStyles = (themeMode: ThemeMode) =>
         line: {
           lineWidth: 1.5,
           lineDash: [4, 16],
-          strokeStyle: 'yellow',
+          strokeStyle: '#333',
         },
 
         point: {
@@ -70,6 +81,25 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
   const styles = globeStyles(themeMode);
 
   const [controller, setController] = useState<GlobeController | null>();
+  const handleZoomAction = useGlobeZoomHandler(controller);
+  const handleAction: ControlProps['onAction'] = (action) => {
+    switch (action) {
+      case 'toggle': {
+        onToggle();
+        break;
+      }
+
+      case 'start': {
+        start();
+        break;
+      }
+
+      default: {
+        handleZoomAction?.(action);
+      }
+    }
+  };
+
   const features = useMemo(
     () => ({
       points: markers?.map(({ location: { lat, lng } }) => ({ lat, lng })),
@@ -82,24 +112,11 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
   useDrag(controller);
   const [start] = useTour(controller, features, { styles });
 
-  const handleAction: GlobeControlsProps['onAction'] = (action) => {
-    switch (action) {
-      case 'toggle': {
-        onToggle();
-        break;
-      }
-      case 'start': {
-        start();
-        break;
-      }
-    }
-  };
-
   return (
     <Globe.Root classNames={classNames} center={center} scale={zoom}>
       <Globe.Canvas ref={setController} topology={topology} projection='mercator' styles={styles} features={features} />
-      <Globe.ActionControls onAction={handleAction} />
-      <Globe.ZoomControls />
+      <Globe.Action onAction={handleAction} />
+      <Globe.Zoom />
     </Globe.Root>
   );
 };

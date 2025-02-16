@@ -4,6 +4,7 @@
 
 import * as d3 from 'd3';
 import { type GeoProjection } from 'd3';
+import { type ControlPosition } from 'leaflet';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -16,20 +17,26 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { Icon, type ThemedClassName, Toolbar, useDynamicRef } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { GlobeContextProvider, type GlobeContextProviderProps, type GlobeContextType, useGlobeContext } from '../hooks';
+import {
+  GlobeContextProvider,
+  type GlobeContextProviderProps,
+  type GlobeContextType,
+  useGlobeContext,
+} from '../../hooks';
 import {
   type Features,
   type Styles,
   type StyleSet,
   createLayers,
+  geoToPosition,
+  positionToRotation,
   renderLayers,
   timer,
-  positionToRotation,
-  geoToPosition,
-} from '../util';
+} from '../../util';
+import { ZoomControls, ActionControls, type ControlProps, controlPositions } from '../Toolbar';
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
 const defaultStyles: Styles = {
@@ -213,53 +220,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
   },
 );
 
-//
-// Controls
-//
-
-type GlobeControlsPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-
-const controlPositions: Record<GlobeControlsPosition, string> = {
-  'top-left': 'top-4 left-4',
-  'top-right': 'top-4 right-4',
-  'bottom-left': 'bottom-4 left-4',
-  'bottom-right': 'bottom-4 right-4',
-};
-
-type GlobeControlAction = 'toggle' | 'start' | 'zoom-in' | 'zoom-out';
-
-type GlobeControlsProps = ThemedClassName<{
-  position?: GlobeControlsPosition;
-  onAction?: (action: GlobeControlAction) => void;
-}>;
-
-const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => (
-  <Toolbar.Button classNames='min-bs-0 !p-1' variant='ghost' onClick={() => onAction?.()}>
-    <Icon icon={icon} size={5} />
-  </Toolbar.Button>
-);
-
-const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
-  // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
-  return (
-    <Toolbar.Root classNames={['z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames]}>
-      <Button icon='ph--plus--regular' onAction={() => onAction?.('zoom-in')} />
-      <Button icon='ph--minus--regular' onAction={() => onAction?.('zoom-out')} />
-    </Toolbar.Root>
-  );
-};
-
-const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
-  // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
-  return (
-    <Toolbar.Root classNames={['z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames]}>
-      <Button icon='ph--play--regular' onAction={() => onAction?.('start')} />
-      <Button icon='ph--globe-hemisphere-west--regular' onAction={() => onAction?.('toggle')} />
-    </Toolbar.Root>
-  );
-};
-
-const GlobeDebug = ({ position = 'top-left' }: { position?: GlobeControlsPosition }) => {
+const GlobeDebug = ({ position = 'topleft' }: { position?: ControlPosition }) => {
   const { size, scale, translation, rotation } = useGlobeContext();
   return (
     <div
@@ -279,17 +240,31 @@ const GlobePanel = ({
   position,
   classNames,
   children,
-}: ThemedClassName<PropsWithChildren & { position?: GlobeControlsPosition }>) => {
+}: ThemedClassName<PropsWithChildren & { position?: ControlPosition }>) => {
   return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>;
 };
+
+const CustomControl = ({ position, children }: PropsWithChildren<{ position: ControlPosition }>) => {
+  return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position])}>{children}</div>;
+};
+
+type GlobeControlProps = { position?: ControlPosition } & Pick<ControlProps, 'onAction'>;
 
 export const Globe = {
   Root: GlobeRoot,
   Canvas: GlobeCanvas,
-  ActionControls: GlobeActionControls,
-  ZoomControls: GlobeZoomControls,
+  Zoom: ({ onAction, position = 'bottomleft', ...props }: GlobeControlProps) => (
+    <CustomControl position={position} {...props}>
+      <ZoomControls onAction={onAction} />
+    </CustomControl>
+  ),
+  Action: ({ onAction, position = 'bottomright', ...props }: GlobeControlProps) => (
+    <CustomControl position={position} {...props}>
+      <ActionControls onAction={onAction} />
+    </CustomControl>
+  ),
   Debug: GlobeDebug,
   Panel: GlobePanel,
 };
 
-export type { GlobeRootProps, GlobeCanvasProps, GlobeControlsProps, GlobeControlAction };
+export type { GlobeRootProps, GlobeCanvasProps };

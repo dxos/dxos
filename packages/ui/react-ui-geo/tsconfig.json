@@ -30,9 +30,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../experimental/gem-core"
-    },
-    {
       "path": "../react-ui"
     },
     {

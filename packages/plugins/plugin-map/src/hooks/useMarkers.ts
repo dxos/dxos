@@ -13,7 +13,7 @@ import { type MapType, type MapMarker } from '../types';
 /**
  * @returns Table rows in the same space as the map with `latitude` and `longitude` fields
  */
-export const useMarkers = (map: MapType): MapMarker[] => {
+export const useMarkers = (map?: MapType): MapMarker[] => {
   const space = getSpace(map);
 
   // TODO(burdon): Configure to select type.

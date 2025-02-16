@@ -4,6 +4,10 @@
 
 import { Topology } from 'topojson-specification';
 
+/** 
+ * https://github.com/topojson/world-atlas
+ * https://www.naturalearthdata.com/downloads
+ */
 export default {
   type: 'Topology',
   objects: {

@@ -12,8 +12,10 @@ import { useState, useEffect } from 'react';
  * @param customEqual - Have this return false when you want the object to actually change.
  * @returns The stabilized object.
  *
- * TODO(seagreen): changes will lag one render behind because of the way this uses useEffect
+ * TODO(seagreen): changes will lag one render behind because of the way this uses useEffect.
+ * @deprecated
  */
+// TODO(burdon): Remove.
 export const useStabilizedObject = <T>(obj: T, customEqual: (oldObject: T, newObject: T) => boolean) => {
   const [stableObj, setStableObj] = useState(obj);
   useEffect(() => {

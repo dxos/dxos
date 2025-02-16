@@ -774,7 +774,7 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-globe/package.json",
+          "path": "packages/ui/react-ui-geo/package.json",
           "jsonpath": "$.version"
         },
         {

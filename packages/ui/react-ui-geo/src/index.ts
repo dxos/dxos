@@ -3,6 +3,7 @@
 //
 
 export * from './components';
-export * from './data.ts';
+export * from './data';
 export * from './hooks';
+export * from './types';
 export * from './util';

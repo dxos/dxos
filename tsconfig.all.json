@@ -451,7 +451,7 @@
       "path": "packages/ui/react-ui-gameboard/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-globe/tsconfig.json"
+      "path": "packages/ui/react-ui-geo/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"

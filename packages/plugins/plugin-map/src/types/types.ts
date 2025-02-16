@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type LatLngLiteral } from 'leaflet';
-
 import { S } from '@dxos/echo-schema';
+import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
@@ -27,6 +26,7 @@ export namespace MapAction {
   }) {}
 }
 
+// TODO(burdonn): Move to react-ui-geo
 export type MapMarker = {
   id: string;
   title?: string;
