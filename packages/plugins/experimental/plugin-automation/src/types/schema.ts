@@ -48,6 +48,15 @@ export class AIChatType extends TypedObject({ typename: 'dxos.org/type/AIChat', 
 const ApiAuthorizationKey = S.Struct({
   type: S.Literal('api-key'),
   key: S.String,
+  placement: S.Union(
+    S.Struct({
+      type: S.Literal('authorization-header'),
+    }),
+    S.Struct({
+      type: S.Literal('query'),
+      name: S.String,
+    }),
+  ),
 });
 
 const ApiAuthorizationOauth = S.Struct({

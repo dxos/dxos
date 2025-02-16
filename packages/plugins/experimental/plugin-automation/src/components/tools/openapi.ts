@@ -4,12 +4,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 import jsonpointer from 'jsonpointer';
-import { type OpenAPIV2 } from 'openapi-types';
+import { type OpenAPIV2, type OpenAPIV3, type OpenAPIV3_1 } from 'openapi-types';
 import type { ApiAuthorization } from '../../types';
 import type { ServiceType } from '../../types';
 
 export type CreateToolsFromApiOptions = {
   authorization?: ApiAuthorization;
+  instructions?: string;
 };
 
 export const createToolsFromService = async (service: ServiceType): Promise<Tool[]> => {
@@ -24,7 +25,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
   const res = await fetch(url);
   const spec = (await res.json()) as OpenAPIV2.Document;
 
-  log.info('spec', { spec });
+  log('spec', { spec });
 
   const tools: Tool[] = [];
   for (const [path, pathItem] of Object.entries(spec.paths)) {
@@ -47,8 +48,21 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
         properties: {},
       };
 
+      const endpointParameters: OpenAPIV2.ParameterObject[] = [];
       for (const parameter of parametersResolved) {
         log('parameter', { parameter });
+
+        if (
+          options?.authorization?.type === 'api-key' &&
+          options.authorization.placement.type === 'query' &&
+          parameter.in === 'query' &&
+          parameter.name === options.authorization.placement.name
+        ) {
+          continue;
+        }
+
+        endpointParameters.push(parameter);
+
         if (parameter.schema) {
           inputSchema.properties![parameter.name] = normalizeSchema(parameter.schema);
         } else if (typeof parameter.type === 'string') {
@@ -74,13 +88,13 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
         document: spec,
         path,
         method,
-        parameters: parametersResolved,
+        parameters: endpointParameters,
         authorization: options?.authorization,
       };
 
       tools.push({
         name: getToolName(path, method, methodItem),
-        description: methodItem.summary,
+        description: options?.instructions ? `${options.instructions}\n\n${description}` : description,
         parameters: inputSchema,
         execute: async (input) => {
           const response = await callApiEndpoint(endpoint, input);
@@ -142,7 +156,7 @@ const GENERIC_WORDS = [
 ];
 
 type EndpointDescriptor = {
-  document: OpenAPIV2.Document;
+  document: OpenAPIV3_1.Document | OpenAPIV2.Document;
   path: string;
   method: string;
   parameters: OpenAPIV2.ParameterObject[];
@@ -150,7 +164,7 @@ type EndpointDescriptor = {
 };
 
 const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
-  log.info('endpoint', { endpoint });
+  log.info('endpoint', { method: endpoint.method, name: endpoint.path, input });
 
   let url = getEndpointUrl(endpoint);
   const request: RequestInit = {
@@ -160,11 +174,19 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
   const query = new URLSearchParams();
   let body: any = undefined;
   for (const parameter of endpoint.parameters) {
+    if (input[parameter.name] === undefined) {
+      continue;
+    }
+
     switch (parameter.in) {
       case 'header': {
         if (parameter.example) {
           (request.headers as any)[parameter.name] = parameter.default;
         }
+        break;
+      }
+      case 'path': {
+        url = url.replace(`{${parameter.name}}`, encodeURIComponent(input[parameter.name]));
         break;
       }
       case 'body': {
@@ -187,6 +209,15 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
     }
   }
 
+  if (
+    (endpoint.authorization?.type === 'api-key' && endpoint.authorization.placement.type === 'authorization-header') ||
+    endpoint.authorization?.type === 'oauth'
+  ) {
+    (request.headers as any)['Authorization'] = await resolveAuthorization(endpoint.authorization);
+  } else if (endpoint.authorization?.type === 'api-key' && endpoint.authorization.placement.type === 'query') {
+    query.set(endpoint.authorization.placement.name, endpoint.authorization.key);
+  }
+
   if (query.size > 0) {
     url += `?${query.toString()}`;
   }
@@ -196,18 +227,27 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
     (request.headers as any)['Content-Type'] = 'application/json';
   }
 
-  if (endpoint.authorization) {
-    (request.headers as any)['Authorization'] = await resolveAuthorization(endpoint.authorization);
-  }
-
   log.info('request', { url, request });
   const response = await fetch(url, request);
 
+  log.info('response', { ok: response.ok, status: response.status, statusText: response.statusText });
+
   if (response.ok) {
-    return response.json();
+    const contentType = response.headers.get('Content-Type');
+    if (contentType?.includes('application/json')) {
+      return await response.json();
+    } else {
+      return await response.text();
+    }
   } else {
     if (response.headers.get('Content-Type')?.includes('application/json')) {
-      const error = await response.json();
+      const responseBody = await response.text();
+      let error: any;
+      try {
+        error = JSON.parse(responseBody);
+      } catch {
+        error = responseBody;
+      }
       log.error('error', { error });
       throw new Error(error.message);
     } else {
@@ -219,16 +259,27 @@ const callApiEndpoint = async (endpoint: EndpointDescriptor, input: any) => {
 };
 
 const getEndpointUrl = (endpoint: EndpointDescriptor) => {
-  if (endpoint.document.basePath) {
-    return `${endpoint.document.schemes?.[0] ?? 'https'}://${endpoint.document.host}${endpoint.document.basePath}${endpoint.path}`;
+  let url = '';
+  if (isV3_1(endpoint.document) && endpoint.document.servers && endpoint.document.servers.length > 0) {
+    url = endpoint.document.servers[0].url;
   } else {
-    return `${endpoint.document.schemes?.[0] ?? 'https'}://${endpoint.document.host}${endpoint.path}`;
+    invariant(!isV3_1(endpoint.document));
+    url = `${endpoint.document.schemes?.[0] ?? 'https'}://${endpoint.document.host}`;
   }
+
+  if (!isV3_1(endpoint.document) && endpoint.document.basePath) {
+    url += endpoint.document.basePath;
+  }
+
+  url += endpoint.path;
+
+  return url;
 };
 
 export const resolveAuthorization = async (authorization: ApiAuthorization): Promise<string> => {
   switch (authorization.type) {
     case 'api-key': {
+      invariant(authorization.placement.type === 'authorization-header');
       return `Bearer ${authorization.key}`;
     }
     case 'oauth': {
@@ -267,4 +318,8 @@ const resolveJsonSchema = (schema: any, base: any) => {
     }
     return recurse(value);
   });
+};
+
+const isV3_1 = (document: OpenAPIV3_1.Document | OpenAPIV2.Document): document is OpenAPIV3_1.Document => {
+  return (document as any).openapi === '3.0.1';
 };

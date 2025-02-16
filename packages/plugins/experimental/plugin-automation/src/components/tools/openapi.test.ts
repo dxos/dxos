@@ -9,13 +9,6 @@ import { ChatProcessor } from '../../hooks';
 import type { ApiAuthorization } from '../../types';
 import { createToolsFromApi, resolveAuthorization } from './openapi';
 
-const FLIGHT_SEARCH_API =
-  'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json';
-const HOTEL_SEARCH_API = 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json';
-const HOTEL_NAME_AUTOCOMPLETE_API =
-  'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-name-autocomplete/1.0.3/swagger.json';
-const WEATHER_API = 'https://api.apis.guru/v2/specs/visualcrossing.com/weather/4.6/openapi.json';
-
 describe('openapi', () => {
   describe('mapping', () => {
     test('amadeus flight availabilities', async () => {
@@ -41,13 +34,13 @@ describe('openapi', () => {
     });
 
     test.only('weather', async () => {
-      const tools = await createToolsFromApi(WEATHER_API);
+      const tools = await createToolsFromApi(WEATHER_API, { authorization: VISUAL_CROSSING_CREDENTIALS });
 
-      log.info('tools', { tools: tools.map((t) => t.name) });
+      log.info('tools', { tools: tools });
     });
   });
 
-  describe('invoke tools', () => {
+  describe.skip('invoke tools', () => {
     test('amadeus hotel name autocomplete', async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
 
@@ -59,9 +52,21 @@ describe('openapi', () => {
 
       log.info('result', { result });
     });
+
+    test('weather API', async () => {
+      const tools = await createToolsFromApi(WEATHER_API, { authorization: VISUAL_CROSSING_CREDENTIALS });
+      const forecastTool = tools.find((t) => t.name.includes('forecast'));
+
+      const result = await forecastTool?.execute!({
+        locations: 'Brooklyn, NY',
+        aggregateHours: '24',
+      });
+
+      log.info('result', { result });
+    });
   });
 
-  describe('AI uses tools', () => {
+  describe.skip('AI uses tools', () => {
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, {
         authorization: AMADEUS_AUTH,
@@ -92,13 +97,18 @@ describe('openapi', () => {
     });
 
     test.only('weather forecast', { timeout: 60_000 }, async () => {
-      const tools = await createToolsFromApi(WEATHER_API);
+      const tools = await createToolsFromApi(WEATHER_API, {
+        authorization: VISUAL_CROSSING_CREDENTIALS,
+        instructions: WEATHER_INSTRUCTIONS,
+      });
 
       const client = new AIServiceClientImpl({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });
       const processor = new ChatProcessor(client, tools);
-      const reply = await processor.request(`What is the weather in New York today?`);
+      const reply = await processor.request(
+        `Today's date is ${new Date().toISOString().split('T')[0]}. Give me weather forecast for Warsaw for next 5 days.`,
+      );
 
       log.info('reply', { reply });
     });
@@ -179,12 +189,34 @@ describe('openapi', () => {
   });
 });
 
+const FLIGHT_SEARCH_API =
+  'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json';
+const HOTEL_SEARCH_API = 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json';
+const HOTEL_NAME_AUTOCOMPLETE_API =
+  'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-name-autocomplete/1.0.3/swagger.json';
+const WEATHER_API = 'https://api.apis.guru/v2/specs/visualcrossing.com/weather/4.6/openapi.json';
+
+const WEATHER_INSTRUCTIONS = `
+  If the user doesn't provide a date, use today's date.
+  Make sure to provide the start and end dates when possible to reduce the amount of data returned.
+  Use the tool that accepts the date parameters.
+`;
+
 const AMADEUS_AUTH: ApiAuthorization = {
   type: 'oauth',
   clientId: 'BOEnpLd1sMyKjAPGKYeAPFFy60u53QEG',
   clientSecret: 'n4qldSN7usvD57gm',
   tokenUrl: 'https://test.api.amadeus.com/v1/security/oauth2/token',
   grantType: 'client_credentials',
+};
+
+const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
+  type: 'api-key',
+  key: 'FDPRVS953KB4GQQLD25GRT975',
+  placement: {
+    type: 'query',
+    name: 'key',
+  },
 };
 
 const RAPID_API_CREDENTIALS = {
