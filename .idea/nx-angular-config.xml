@@ -53,7 +53,7 @@
       <project name="feed-store" file="file://$PROJECT_DIR$/packages/common/feed-store/project.json" />
       <project name="functions" file="file://$PROJECT_DIR$/packages/core/functions/project.json" />
       <project name="gem-core" file="file://$PROJECT_DIR$/packages/experimental/gem-core/project.json" />
-      <project name="gem-globe" file="file://$PROJECT_DIR$/packages/experimental/gem-globe/project.json" />
+      <project name="react-ui-geo" file="file://$PROJECT_DIR$/packages/experimental/react-ui-geo/project.json" />
       <project name="gem-spore" file="file://$PROJECT_DIR$/packages/experimental/gem-spore/project.json" />
       <project name="go-credentials" file="file://$PROJECT_DIR$/packages/core/halo/go-credentials/project.json" />
       <project name="go-keys" file="file://$PROJECT_DIR$/packages/common/go-keys/project.json" />
