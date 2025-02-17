@@ -13,7 +13,10 @@ import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 import { Tabs } from './Tabbed';
 import { ToggleContainer } from './ToggleContainer';
 
-const content = Array.from({ length: 4 }, (_, i) => faker.lorem.paragraphs(3));
+const content = Array.from({ length: 4 }, (_, i) => ({
+  title: faker.lorem.paragraph(),
+  content: faker.lorem.paragraphs(3),
+}));
 
 const meta: Meta<typeof Tabs> = {
   title: 'plugins/plugin-automation/Tabbed',
@@ -31,7 +34,7 @@ export const Default: Story = {
     return (
       <div className='flex flex-col w-[500px] p-4 bg-attention'>
         <ToggleContainer
-          title='Thread'
+          title={content[selected].title}
           classNames='p-1 rounded-lg bg-base border border-neutral-500'
           toggle
           defaultOpen
@@ -39,7 +42,7 @@ export const Default: Story = {
           <div className='flex w-full overflow-hidden'>
             <Tabs length={content.length} selected={selected} onSelect={setSelected} />
             <div className='flex-1 pis-2 pie-2 overflow-y-auto'>
-              <div>{content[selected]}</div>
+              <div>{content[selected].content}</div>
             </div>
           </div>
         </ToggleContainer>
