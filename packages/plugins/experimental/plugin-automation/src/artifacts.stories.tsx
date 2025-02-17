@@ -5,11 +5,11 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Tool, type Message } from '@dxos/artifact';
+import { Message, type Tool } from '@dxos/artifact';
 import {
   capabilities,
   genericTools,
@@ -79,6 +79,24 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
   const queue = useQueue<Message>(edgeClient, DXN.tryParse(queueDxn));
 
+  useEffect(() => {
+    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
+      queue.append([
+        createStatic(Message, {
+          role: 'assistant',
+          content: prompts.map(
+            (prompt) =>
+              ({
+                type: 'json',
+                disposition: 'suggest',
+                json: JSON.stringify({ text: prompt }),
+              }) as const,
+          ),
+        }),
+      ]);
+    }
+  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
+
   // State.
   const artifactItems: any[] = []; // TODO(burdon): Query from space.
   const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
@@ -139,7 +157,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
-            {processor && prompts.length > 0 && <Button onClick={handleTest}>Test</Button>}
           </Input.Root>
         </Toolbar.Root>
 
@@ -212,7 +229,7 @@ type Story = StoryObj<typeof Render>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['hello', 'show me a chess puzzle'],
+    prompts: ['Ask me a question', 'Show me a chess puzzle'],
   },
 };
 
