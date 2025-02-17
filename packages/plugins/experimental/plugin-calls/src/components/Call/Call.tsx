@@ -60,8 +60,8 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       {ai.transcription.enabled && <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} />}
-      <div className={mx('flex flex-col w-full', classNames)}>
-        <div className='flex-1 overflow-hidden relative'>
+      <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+        <div className='flex flex-col h-full overflow-y-scroll'>
           <ParticipantsLayout identity={identity} users={otherUsers} debugEnabled={debugEnabled} />
         </div>
 
