@@ -182,15 +182,19 @@ export default () => {
             .query({ typename: (await table.view!.load()).query.type })
             .first();
 
-          const rows = rowsData.map((data) => createStatic(schema, data));
+          for (const data of rowsData) {
+            const intent = createIntent(TableAction.AddRow, {
+              table,
+              data,
+            });
 
-          return ToolResult.Success(
-            `Result included below ids=${rows.map((row) => row.id)}:`,
-            rows.map((row) => ({
-              type: 'object',
-              object: row,
-            })),
-          );
+            const { error } = await extensions.dispatch(intent);
+            if (error) {
+              return ToolResult.Error(error?.message ?? 'Failed to add row to table');
+            }
+          }
+
+          return ToolResult.Success(`${rowsData.length} rows added successfully`);
         },
       }),
     ],
