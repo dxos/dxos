@@ -4,13 +4,31 @@
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createExtension, toSignal } from '@dxos/plugin-graph';
-import { SpaceState, parseId } from '@dxos/react-client/echo';
+import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
+import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
 
 import { CALLS_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: `${CALLS_PLUGIN}/space`,
+      filter: (node): node is Node<Space> => isSpace(node.data),
+      connector: ({ node }) => {
+        const space = node.data;
+        return [
+          {
+            id: `${space.id}-calls`,
+            type: `${CALLS_PLUGIN}/space`,
+            data: { space, type: `${CALLS_PLUGIN}/space` },
+            properties: {
+              label: ['calls label', { ns: CALLS_PLUGIN }],
+              icon: 'ph--phone-call--regular',
+            },
+          },
+        ];
+      },
+    }),
     createExtension({
       id: `${CALLS_PLUGIN}/assistant-for-subject`,
       resolver: ({ id }) => {
