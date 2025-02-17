@@ -51,8 +51,9 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop }: ThreadP
 
   /**
    * Restructure messages.
+   * Reduce message blocks into collections of messages that contain related contiguous blocks.
+   * For example, collapse all tool request/response pairs into a single message.
    */
-  // TODO(burdon): Rename message.content.
   const { messages: lines = [] } = (messages ?? []).reduce<{ messages: Message[]; current: Message | null }>(
     ({ current, messages }, message) => {
       let i = 0;
@@ -77,7 +78,7 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop }: ThreadP
           default: {
             current = null;
             messages.push({
-              id: message.id,
+              id: [message.id, i].join('_'),
               role: message.role,
               content: [block],
             });
