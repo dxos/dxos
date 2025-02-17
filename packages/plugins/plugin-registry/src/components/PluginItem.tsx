@@ -40,7 +40,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames='grow grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
+      classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
       onClick={handleClick}
     >
       <Input.Root id={inputId}>
@@ -48,7 +48,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
           <Icon icon={icon} size={8} />
         </div>
         <div className='flex grow items-center'>
-          <Input.Label id={labelId} classNames='truncate text-md'>
+          <Input.Label id={labelId} classNames='truncate text-md w-full'>
             {name ?? id}
           </Input.Label>
         </div>
@@ -59,8 +59,8 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
 
       <div />
       {(description || homePage || source) && (
-        <div id={descriptionId} className='col-span-2 flex flex-col gap-2 pie-2 overflow-y-scroll'>
-          <p className={mx(descriptionText, 'line-clamp-4')}>{description}</p>
+        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pie-2 overflow-y-scroll'>
+          <p className={mx(descriptionText, 'line-clamp-4 min-w-0')}>{description}</p>
           {homePage && (
             <Link
               href={homePage}
