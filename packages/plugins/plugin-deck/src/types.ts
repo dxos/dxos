@@ -21,9 +21,8 @@ export type Panel = { id: string; label: Label; icon: string };
 export const DeckSettingsSchema = S.mutable(
   S.Struct({
     showHints: S.Boolean,
-    customSlots: S.Boolean,
-    flatDeck: S.Boolean,
     enableNativeRedirect: S.Boolean,
+    enableIdeStyleStatusbar: S.Boolean,
     newPlankPositioning: S.Literal(...NewPlankPositions),
     overscroll: S.Literal(...OverscrollOptions),
   }),
@@ -39,6 +38,9 @@ export const PlankSizing = S.Record({ key: S.String, value: S.Number });
 export type PlankSizing = S.Schema.Type<typeof PlankSizing>;
 
 export const Deck = S.Struct({
+  initialized: S.Boolean.annotations({
+    description: "If false, the deck has not yet left solo mode and new planks should be solo'd.",
+  }),
   active: S.mutable(S.Array(S.String)),
   inactive: S.mutable(S.Array(S.String)),
   solo: S.optional(S.String),

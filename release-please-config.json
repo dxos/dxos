@@ -409,11 +409,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/gem-globe/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/gem-spore/package.json",
           "jsonpath": "$.version"
         },
@@ -494,11 +489,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-map/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-native/package.json",
           "jsonpath": "$.version"
         },
@@ -569,6 +559,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-map/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
@@ -600,11 +595,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-settings-interface/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -780,6 +770,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-gameboard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-geo/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -8,6 +8,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
@@ -29,7 +30,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
-    <>
+    <StackItem.Content toolbar={false} role='article' classNames='p-4 block overflow-y-auto'>
       <DeprecatedFormInput
         label={t('observability enabled label')}
         secondary={
@@ -43,6 +44,6 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
           onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
         />
       </DeprecatedFormInput>
-    </>
+    </StackItem.Content>
   );
 };

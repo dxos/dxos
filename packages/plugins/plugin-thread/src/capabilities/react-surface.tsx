@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useLayout, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { type Ref } from '@dxos/echo-schema';
+import { SettingsStore } from '@dxos/local-storage';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -47,11 +48,9 @@ export default () =>
     }),
     createSurface({
       id: `${THREAD_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === THREAD_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ThreadSettingsProps>(THREAD_PLUGIN)!.value;
-        return <ThreadSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === THREAD_PLUGIN,
+      component: ({ data: { subject } }) => <ThreadSettings settings={subject.value} />,
     }),
   ]);

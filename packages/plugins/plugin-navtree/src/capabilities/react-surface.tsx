@@ -2,21 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  createSurface,
-  LayoutAction,
-  useAppGraph,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { isGraphNode, type Node } from '@dxos/plugin-graph';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { isGraphNode } from '@dxos/plugin-graph';
 
-import { NavTreeCapabilities } from './capabilities';
 import {
   CommandsDialogContent,
   CommandsTrigger,
@@ -25,8 +15,6 @@ import {
   NavTreeContainer,
 } from '../components';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
-import { type NavTreeItemGraphNode } from '../types';
-import { expandChildrenAndActions } from '../util';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -39,44 +27,15 @@ export default () =>
     createSurface({
       id: `${NAVTREE_PLUGIN}/navigation`,
       role: 'navigation',
-      filter: (data): data is { popoverAnchorId?: string; topbar: boolean; hoistStatusbar: boolean; current: string } =>
+      filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
         typeof data.current === 'string',
-      component: ({ data }) => {
-        const { graph } = useAppGraph();
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
-
-        const handleOpenChange = useCallback(
-          ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
-            // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
-            setItem(path, 'open', open);
-
-            if (graph) {
-              const node = graph.findNode(id);
-              return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
-            }
-          },
-          [graph],
-        );
-
-        const handleTabChange = useCallback(
-          (tab: string) => dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: tab })),
-          [dispatch],
-        );
-
-        return (
-          <NavTreeContainer
-            isOpen={isOpen}
-            isCurrent={isCurrent}
-            onOpenChange={handleOpenChange}
-            popoverAnchorId={data.popoverAnchorId as string | undefined}
-            topbar={data.topbar as boolean}
-            hoistStatusbar={data.hoistStatusbar as boolean}
-            tab={data.current}
-            onTabChange={handleTabChange}
-          />
-        );
-      },
+      component: ({ data }) => (
+        <NavTreeContainer
+          tab={data.current}
+          popoverAnchorId={data.popoverAnchorId as string | undefined}
+          topbar={data.topbar as boolean}
+        />
+      ),
     }),
     createSurface({
       id: `${NAVTREE_PLUGIN}/document-title`,

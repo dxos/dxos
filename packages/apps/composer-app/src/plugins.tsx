@@ -32,7 +32,6 @@ import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
 import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
-import { SettingsInterfacePlugin, SETTINGS_INTERFACE_PLUGIN } from '@dxos/plugin-settings-interface';
 import { SheetPlugin, SHEET_PLUGIN } from '@dxos/plugin-sheet';
 import { SketchPlugin, SKETCH_PLUGIN } from '@dxos/plugin-sketch';
 import { SpacePlugin, SPACE_PLUGIN } from '@dxos/plugin-space';
@@ -80,7 +79,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     !isSocket && isPwa && PWA_PLUGIN,
     REGISTRY_PLUGIN,
     SETTINGS_PLUGIN,
-    SETTINGS_INTERFACE_PLUGIN,
     SPACE_PLUGIN,
     STATUS_BAR_PLUGIN,
     THEME_PLUGIN,
@@ -160,7 +158,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     ScriptPlugin(),
     SearchPlugin(),
     SettingsPlugin(),
-    SettingsInterfacePlugin(),
     SheetPlugin(),
     SketchPlugin(),
     SpacePlugin(),

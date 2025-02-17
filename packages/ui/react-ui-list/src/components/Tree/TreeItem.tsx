@@ -244,7 +244,7 @@ export const RawTreeItem = <T = any,>({
         <Treegrid.Cell
           indent
           classNames='relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level - 1)}
+          style={paddingIndentation(level)}
         >
           <div role='none' className='flex items-center'>
             <TreeItemToggle open={open} isBranch={isBranch} onToggle={handleOpenChange} />

@@ -11,9 +11,8 @@ import { DeckSettingsSchema, type DeckSettingsProps } from '../types';
 export default () => {
   const settings = create<DeckSettingsProps>({
     showHints: false,
-    customSlots: false,
-    flatDeck: false,
     enableNativeRedirect: false,
+    enableIdeStyleStatusbar: true,
     newPlankPositioning: 'start',
     overscroll: 'none',
   });

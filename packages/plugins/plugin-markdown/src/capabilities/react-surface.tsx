@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { MarkdownCapabilities } from './capabilities';
@@ -62,12 +63,9 @@ export default () =>
     }),
     createSurface({
       id: `${MARKDOWN_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === MARKDOWN_PLUGIN,
-      component: () => {
-        const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
-        return <MarkdownSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<MarkdownSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === MARKDOWN_PLUGIN,
+      component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
     }),
   ]);
