@@ -10,8 +10,7 @@ import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { setDeep } from '@dxos/util';
 
@@ -80,73 +79,75 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   };
 
   return (
-    <StackItem.Content toolbar={false} role='article' classNames='p-4 block overflow-y-auto'>
-      <DeprecatedFormInput label={t('settings show debug panel')}>
-        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings show devtools panel')}>
-        <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings wireframe')}>
-        <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings download diagnostics')}>
-        <Button onClick={handleDownload}>
-          <DownloadSimple className={getSize(5)} />
-        </Button>
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings repair')}>
-        <Button onClick={handleRepair}>
-          <FirstAidKit className={getSize(5)} />
-        </Button>
-      </DeprecatedFormInput>
+    <DeprecatedFormContainer>
+      <DeprecatedFormContainer>
+        <DeprecatedFormInput label={t('settings show debug panel')}>
+          <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+        </DeprecatedFormInput>
+        <DeprecatedFormInput label={t('settings show devtools panel')}>
+          <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
+        </DeprecatedFormInput>
+        <DeprecatedFormInput label={t('settings wireframe')}>
+          <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
+        </DeprecatedFormInput>
+        <DeprecatedFormInput label={t('settings download diagnostics')}>
+          <Button onClick={handleDownload}>
+            <DownloadSimple className={getSize(5)} />
+          </Button>
+        </DeprecatedFormInput>
+        <DeprecatedFormInput label={t('settings repair')}>
+          <Button onClick={handleRepair}>
+            <FirstAidKit className={getSize(5)} />
+          </Button>
+        </DeprecatedFormInput>
 
-      {/* TODO(burdon): Move to layout? */}
-      {toast && (
-        <Toast.Root>
-          <Toast.Body>
-            <Toast.Title>
-              <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
-              <span>{toast.title}</span>
-            </Toast.Title>
-            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-          </Toast.Body>
-        </Toast.Root>
-      )}
+        {/* TODO(burdon): Move to layout? */}
+        {toast && (
+          <Toast.Root>
+            <Toast.Body>
+              <Toast.Title>
+                <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
+                <span>{toast.title}</span>
+              </Toast.Title>
+              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+            </Toast.Body>
+          </Toast.Root>
+        )}
 
-      <DeprecatedFormInput label={t('settings choose storage adaptor')}>
-        <Select.Root
-          value={
-            Object.entries(StorageAdapters).find(
-              ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-            )?.[0]
-          }
-          onValueChange={(value) => {
-            if (confirm(t('settings storage adapter changed alert'))) {
-              updateConfig(
-                storageConfig,
-                setStorageConfig,
-                ['runtime', 'client', 'storage', 'dataStore'],
-                StorageAdapters[value as keyof typeof StorageAdapters],
-              );
+        <DeprecatedFormInput label={t('settings choose storage adaptor')}>
+          <Select.Root
+            value={
+              Object.entries(StorageAdapters).find(
+                ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+              )?.[0]
             }
-          }}
-        >
-          <Select.TriggerButton placeholder={t('settings data store label')} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {Object.keys(StorageAdapters).map((key) => (
-                  <Select.Option key={key} value={key}>
-                    {t(`settings storage adaptor ${key} label`)}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </DeprecatedFormInput>
-    </StackItem.Content>
+            onValueChange={(value) => {
+              if (confirm(t('settings storage adapter changed alert'))) {
+                updateConfig(
+                  storageConfig,
+                  setStorageConfig,
+                  ['runtime', 'client', 'storage', 'dataStore'],
+                  StorageAdapters[value as keyof typeof StorageAdapters],
+                );
+              }
+            }}
+          >
+            <Select.TriggerButton placeholder={t('settings data store label')} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {Object.keys(StorageAdapters).map((key) => (
+                    <Select.Option key={key} value={key}>
+                      {t(`settings storage adaptor ${key} label`)}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </DeprecatedFormInput>
+      </DeprecatedFormContainer>
+    </DeprecatedFormContainer>
   );
 };
 
