@@ -90,6 +90,10 @@ export class SettingsStore<T extends SettingsValue> {
     this.load();
   }
 
+  get prefix(): string {
+    return this._prefix;
+  }
+
   get value(): T {
     return this._value;
   }

@@ -15,7 +15,7 @@ import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 import { Thread, type ThreadProps } from './Thread';
 import translations from '../../translations';
 
-faker.seed(2);
+faker.seed(1);
 
 const Render = ({ messages: _messages, ...props }: ThreadProps) => {
   const [messages, setMessages] = useState<Message[]>(_messages ?? []);
@@ -157,6 +157,7 @@ const TEST_MESSAGES: Message[] = [
 export const Default: Story = {
   args: {
     messages: TEST_MESSAGES,
+    debug: true,
   },
 };
 

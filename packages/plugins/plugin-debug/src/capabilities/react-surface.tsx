@@ -4,15 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  createSurface,
-  useCapability,
-  type PluginsContext,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, createSurface, type PluginsContext } from '@dxos/app-framework';
 import { Devtools } from '@dxos/devtools';
+import { SettingsStore } from '@dxos/local-storage';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
@@ -52,12 +46,10 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${DEBUG_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === DEBUG_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
-        return <DebugSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === DEBUG_PLUGIN,
+      component: ({ data: { subject } }) => <DebugSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/status`,

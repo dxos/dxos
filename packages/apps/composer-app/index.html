@@ -64,5 +64,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <style>
+      :root {
+        --safe-area-bottom: env(safe-area-inset-bottom);
+      }
+    </style>
+    <script>
+      function measureSafeArea() {
+        const safeAreaBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-bottom'));
+        document.body.setAttribute('data-safe-area-bottom', safeAreaBottom);
+      }
+      measureSafeArea();
+      window.addEventListener('resize', measureSafeArea);
+    </script>
   </body>
 </html>

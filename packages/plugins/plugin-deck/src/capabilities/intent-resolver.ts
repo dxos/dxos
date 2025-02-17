@@ -160,6 +160,7 @@ export default (context: PluginsContext) =>
             deck.solo = next[0];
           } else if (mode !== 'solo' && deck.solo) {
             deck.solo = undefined;
+            deck.initialized = true;
           }
 
           if (mode === 'fullscreen' && !deck.fullscreen) {
@@ -190,7 +191,7 @@ export default (context: PluginsContext) =>
         batch(() => {
           state.activeDeck = subject;
           if (!state.decks[subject]) {
-            state.decks[subject] = { active: [], inactive: [], fullscreen: false, plankSizing: {} };
+            state.decks[subject] = { initialized: false, active: [], inactive: [], fullscreen: false, plankSizing: {} };
           }
         });
 
@@ -221,6 +222,7 @@ export default (context: PluginsContext) =>
             : subject.reduce(
                 (acc, entryId) =>
                   openEntry(acc, entryId, {
+                    key: options?.key,
                     positioning: options?.positioning ?? settings?.newPlankPositioning,
                     pivotId: options?.pivotId,
                   }),

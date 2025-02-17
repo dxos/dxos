@@ -23,12 +23,11 @@ export type NavTreeContextValue = Pick<
   'getProps' | 'isCurrent' | 'isOpen' | 'onOpenChange' | 'canDrop' | 'onSelect'
 > & {
   tab: string;
-  onTabChange?: (tab: string) => void;
+  onTabChange?: (node: NavTreeItemGraphNode) => void;
   getItems: (node?: NavTreeItemGraphNode, disposition?: string) => NavTreeItemGraphNode[];
   getActions: (node: Node) => FlattenedActions;
   loadDescendents?: (node: Node) => MaybePromise<void>;
   renderItemEnd?: FC<{ node: Node; open: boolean }>;
   popoverAnchorId?: string;
   topbar?: boolean;
-  hoistStatusbar?: boolean;
 };

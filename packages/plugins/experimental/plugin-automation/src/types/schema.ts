@@ -3,7 +3,7 @@
 //
 
 import { ComputeGraph } from '@dxos/conductor';
-import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, S, TypedObject, type Ref$ } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/functions';
 
 // TODO(burdon): Change to S.Literal (and discriminated union).
@@ -72,12 +72,12 @@ export type ApiAuthorization = S.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = S.Struct({
   kind: S.Literal('function'),
-  fn: Ref(FunctionType),
+  fn: Ref(FunctionType) as Ref$<FunctionType>,
 });
 
 const ServiceInterfaceWorkflow = S.Struct({
   kind: S.Literal('workflow'),
-  workflow: Ref(ComputeGraph),
+  workflow: Ref(ComputeGraph) as Ref$<ComputeGraph>,
 });
 
 const ServiceInterfaceApi = S.Struct({

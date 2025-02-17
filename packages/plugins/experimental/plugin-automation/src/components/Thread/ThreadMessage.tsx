@@ -14,12 +14,13 @@ import { safeParseJson } from '@dxos/util';
 import { ToggleContainer } from './ToggleContainer';
 import { MarkdownViewer } from '../MarkdownViewer';
 
-export const ThreadMessage: FC<
-  ThemedClassName<{
-    message: Message;
-    debug?: boolean;
-  }>
-> = ({ classNames, message, debug }) => {
+export type ThreadMessageProps = ThemedClassName<{
+  message: Message;
+  collapse?: boolean;
+  debug?: boolean;
+}>;
+
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, collapse, debug }) => {
   if (typeof message !== 'object') {
     return <div className={mx(classNames)}>{message}</div>;
   }

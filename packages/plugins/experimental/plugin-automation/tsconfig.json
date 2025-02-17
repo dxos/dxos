@@ -133,6 +133,9 @@
       "path": "../../plugin-graph"
     },
     {
+      "path": "../../plugin-map"
+    },
+    {
       "path": "../../plugin-markdown"
     },
     {
@@ -149,9 +152,6 @@
     },
     {
       "path": "../plugin-inbox"
-    },
-    {
-      "path": "../plugin-map"
     },
     {
       "path": "../plugin-script"

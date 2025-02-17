@@ -28,7 +28,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
-          return onTabChange?.(item.id);
+          return onTabChange?.(item);
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {
@@ -84,7 +84,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
               className={mx(
                 'absolute -z-[1] group-hover/l0i:bg-input dx-focus-ring-group-indicator transition-colors',
                 type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-                pinned ? 'bg-transparent inset-inline-3 inset-block-1' : 'bg-input inset-inline-3 inset-block-2',
+                pinned ? 'bg-transparent inset-inline-3 inset-block-0' : 'bg-input inset-inline-3 inset-block-2',
               )}
             />
           )}
@@ -92,7 +92,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             role='none'
             className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
           />
-          {type === 'tab' ? (
+          {type === 'tab' && item.properties.disposition !== 'pin-end' ? (
             <span role='img' className='place-self-center text-3xl font-light'>
               {avatarValue}
             </span>
@@ -150,11 +150,11 @@ export const L0Menu = ({
   path: string[];
 }) => {
   return (
-    <div
-      role='none'
-      className='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-base border-ie border-separator app-drag'
-    >
-      <Tabs.Tablist classNames='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'>
+    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-base border-ie border-separator app-drag'>
+      <div
+        role='none'
+        className='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
+      >
         {topLevelItems.map((item) => {
           if (l0ItemType(item) === 'collection') {
             return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
@@ -162,7 +162,7 @@ export const L0Menu = ({
             return <L0Item key={item.id} item={item} parent={parent} path={path} />;
           }
         })}
-      </Tabs.Tablist>
+      </div>
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
@@ -178,6 +178,6 @@ export const L0Menu = ({
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
         style={{ background: 'linear-gradient(to bottom, var(--dx-base) 0%, var(--dx-base) 70%, transparent 100%)' }}
       />
-    </div>
+    </Tabs.Tablist>
   );
 };
