@@ -21,11 +21,6 @@ const TEST_BLOCKS = [
     'on multiple lines.',
 
     // XML
-    '<select>',
-    '  <option value="1" />',
-    '</select>',
-
-    // XML
     '<cot>',
     '  1. Analyze content.',
     '  2. Create plan.',
@@ -83,13 +78,14 @@ describe('GenerationStream', () => {
       await parser.parse(stream);
 
       for (const block of message?.content ?? []) {
-        log('block', { block });
+        log.info('block', { block });
       }
       expect(message?.content.map((block) => block.type)).to.deep.eq([
         //
         'text',
         'text',
         'text',
+        'json',
         'text',
         'json',
         'text',

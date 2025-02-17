@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
-import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -101,8 +101,20 @@ const componentMap: Record<string, BlockComponent> = {
 
     switch (block.disposition) {
       case 'suggest': {
-        const { text = '' } = safeParseJson(block.json ?? '{}') ?? ({} as any);
+        const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return <Button onClick={() => onSuggest(text)}>{text}</Button>;
+      }
+      case 'select': {
+        const { options = [] }: { options: string[] } = safeParseJson(block.json ?? '{}') ?? ({} as any);
+        return (
+          <ButtonGroup>
+            {options.map((option) => (
+              <Button key={option} onClick={() => onSuggest(option)}>
+                {option}
+              </Button>
+            ))}
+          </ButtonGroup>
+        );
       }
       default: {
         const title = block.disposition ? titles[block.disposition] : undefined;

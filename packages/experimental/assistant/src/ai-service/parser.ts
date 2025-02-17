@@ -72,6 +72,7 @@ export class MixedStreamParser {
      * Current partial block used to accumulate content.
      */
     let streamBlock: StreamBlock | undefined;
+    let stack: StreamBlock[] = [];
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
@@ -145,11 +146,18 @@ export class MixedStreamParser {
                       if (chunk.selfClosing) {
                         streamBlock.content.push(chunk);
                       } else if (chunk.closing) {
-                        this._emitBlock(contentBlock, streamBlock);
-                        streamBlock = undefined;
+                        if (stack.length > 0) {
+                          const top = stack.pop();
+                          invariant(top && top.type === 'tag');
+                          top.content.push(streamBlock);
+                          streamBlock = top;
+                        } else {
+                          this._emitBlock(contentBlock, streamBlock);
+                          streamBlock = undefined;
+                        }
                       } else {
-                        // TODO(burdon): Nested XML?
-                        log.warn('unhandled nested xml', { chunk });
+                        stack.push(streamBlock);
+                        streamBlock = chunk;
                       }
                     } else {
                       // Append text.
@@ -287,8 +295,26 @@ export const mergeMessageBlock = (
 
         case 'suggest': {
           if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
-            return { type: 'json', disposition: 'suggest', json: JSON.stringify({ text: streamBlock.content[0].content }) };
+            return {
+              type: 'json',
+              disposition: 'suggest',
+              json: JSON.stringify({ text: streamBlock.content[0].content }),
+            };
           }
+        }
+
+        case 'select': {
+          return {
+            type: 'json',
+            disposition: 'select',
+            json: JSON.stringify({
+              options: streamBlock.content.flatMap((c) =>
+                c.type === 'tag' && c.content.length === 1 && c.content[0].type === 'text'
+                  ? [c.content[0].content]
+                  : [],
+              ),
+            }),
+          };
         }
       }
       break;
