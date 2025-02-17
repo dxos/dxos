@@ -84,17 +84,6 @@ export default (context: PluginsContext) =>
                 testId: 'pluginRegistry.experimental',
               },
             },
-            // {
-            //   id: `${REGISTRY_KEY}:community`,
-            //   type: 'category',
-            //   data: `${REGISTRY_KEY}:community`,
-            //   properties: {
-            //     label: ['community plugins label', { ns: REGISTRY_PLUGIN }],
-            //     icon: 'ph--users-three--regular',
-            //     key: REGISTRY_KEY,
-            //     testId: 'pluginRegistry.community',
-            //   },
-            // },
           ],
         },
       ],

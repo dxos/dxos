@@ -67,19 +67,6 @@ export default () =>
         return <RegistryContainer id={`${REGISTRY_KEY}:experimental`} plugins={filtered} />;
       },
     }),
-    // createSurface({
-    //   id: `${REGISTRY_PLUGIN}/community`,
-    //   role: 'article',
-    //   filter: (data): data is any => data.subject === `${REGISTRY_KEY}:community`,
-    //   component: () => {
-    //     const { t } = useTranslation(REGISTRY_PLUGIN);
-    //     return (
-    //       <div className='h-full w-full flex items-center justify-center'>
-    //         {t('coming soon label', { ns: REGISTRY_PLUGIN })}
-    //       </div>
-    //     );
-    //   },
-    // }),
     createSurface({
       id: `${REGISTRY_PLUGIN}/plugin-details`,
       role: 'article',

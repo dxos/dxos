@@ -68,6 +68,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
               rel='noreferrer'
               aria-describedby={descriptionId}
               classNames='text-sm text-description line-clamp-4'
+              onClick={(ev) => ev.stopPropagation()}
             >
               {t('home page label')}
               <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
@@ -80,6 +81,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
               rel='noreferrer'
               aria-describedby={descriptionId}
               classNames='text-sm text-description line-clamp-4'
+              onClick={(ev) => ev.stopPropagation()}
             >
               {t('source label')}
               <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
