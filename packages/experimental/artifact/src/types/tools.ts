@@ -32,6 +32,7 @@ export type ToolExecutionContext = {
 };
 
 export type ToolResult =
+  // TODO(dmaretskyi): Rename `contentBlocks`
   | { kind: 'success'; result: unknown; extractContentBlocks?: MessageContentBlock[] }
   | { kind: 'error'; message: string }
   | { kind: 'break'; result: unknown };
@@ -41,6 +42,7 @@ export const ToolResult = Object.freeze({
    * The tool execution was successful.
    * Gives the result back to the LLM.
    */
+  // TODO(dmaretskyi): Rename `contentBlocks`
   Success: (result: unknown, extractContentBlocks?: MessageContentBlock[]): ToolResult => ({
     kind: 'success',
     result,
