@@ -15,8 +15,7 @@ import { DEFAULT_EXTRINSIC_SIZE } from './StackItem';
 
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-const MIN_WIDTH = 20;
-const MIN_HEIGHT = 3;
+const MIN_SIZE = 20;
 
 const measureStackItem = (element: HTMLButtonElement): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-stack-item]');
@@ -24,10 +23,7 @@ const measureStackItem = (element: HTMLButtonElement): { width: number; height: 
 };
 
 const getNextSize = (startSize: number, location: DragLocationHistory, client: 'clientX' | 'clientY') => {
-  return Math.max(
-    client === 'clientX' ? MIN_WIDTH : MIN_HEIGHT,
-    startSize + (location.current.input[client] - location.initial.input[client]) / REM,
-  );
+  return Math.max(MIN_SIZE, startSize + (location.current.input[client] - location.initial.input[client]) / REM);
 };
 
 export type StackItemResizeHandleProps = {};
@@ -85,36 +81,29 @@ export const StackItemResizeHandle = () => {
     <button
       ref={buttonRef}
       className={mx(
-        'group absolute',
-        orientation === 'horizontal'
-          ? 'cursor-col-resize is-3 bs-full inline-end-[-1px] !border-lb-0 before:inset-block-0 before:inline-end-0 before:is-1'
-          : 'cursor-row-resize bs-3 is-full block-end-[-1px] !border-li-0 before:inset-inline-0 before:block-end-0 before:bs-1',
+        orientation === 'horizontal' ? 'cursor-col-resize' : 'cursor-row-resize',
+        'group absolute is-3 bs-full inline-end-[-1px] !border-lb-0',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
-        'before:absolute before:block before:bg-accentFocusIndicator',
+        'before:absolute before:block before:inset-block-0 before:inline-end-0 before:is-1 before:bg-accentFocusIndicator',
       )}
     >
       <div
         role='none'
-        className={mx(
-          'absolute flex items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal'
-            ? 'block-start-0 inline-end-px bs-[--rail-size]'
-            : 'inline-start-0 block-end-px is-[--rail-size] flex justify-center',
-        )}
+        className='absolute block-start-0 inline-end-[1px] bs-[--rail-size] flex items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0'
       >
-        <DragHandleSignifier orientation={orientation} />
+        <DragHandleSignifier />
       </div>
     </button>
   );
 };
 
-const DragHandleSignifier = ({ orientation }: { orientation: 'horizontal' | 'vertical' }) => {
+const DragHandleSignifier = () => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       viewBox='0 0 256 256'
       fill='currentColor'
-      className={mx('shrink-0 bs-[1em] is-[1em] text-unAccent', orientation === 'vertical' && 'rotate-90')}
+      className='shrink-0 bs-[1em] is-[1em] text-unAccent'
     >
       {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />
       <path d='M256,232c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' /> */}

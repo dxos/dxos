@@ -21,15 +21,14 @@ const Content = () => {
 export type CallsProps = {
   space: Space;
   roomId: PublicKey;
-  thread?: ThreadType;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ space, roomId, thread }) => {
+export const Calls: FC<CallsProps> = ({ space, roomId }) => {
   return (
-    <CallsContextProvider space={space} roomId={roomId} thread={thread}>
+    <CallsContextProvider space={space} roomId={roomId}>
       <Content />
     </CallsContextProvider>
   );

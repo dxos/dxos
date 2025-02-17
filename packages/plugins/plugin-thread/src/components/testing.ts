@@ -3,10 +3,10 @@
 //
 
 import { Expando } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
-import { PublicKey } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
 export const createChatThread = (identity: Identity) => {

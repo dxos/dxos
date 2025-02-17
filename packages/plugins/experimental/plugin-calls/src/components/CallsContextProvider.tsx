@@ -57,13 +57,13 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thr
   }
 
   return (
-    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30} thread={thread}>
+    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30}>
       {children}
     </Room>
   );
 };
 
-type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey; thread?: ThreadType }>;
+type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey }>;
 
 const Room: FC<RoomProps> = ({
   roomId,
@@ -72,7 +72,6 @@ const Room: FC<RoomProps> = ({
   maxWebcamFramerate,
   maxWebcamQualityLevel,
   space,
-  thread,
   children,
 }) => {
   const [joined, setJoined] = useState(false);
@@ -130,7 +129,6 @@ const Room: FC<RoomProps> = ({
   const context: RoomContextType = {
     roomId,
     space,
-    thread,
     joined,
     setJoined,
     dataSaverMode,
