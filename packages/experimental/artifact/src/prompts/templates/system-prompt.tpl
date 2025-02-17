@@ -24,6 +24,8 @@ Include the following steps:
 - Evaluate the potential benefits of creating an artifact vs. normal processing for each identified element.
 - Make a final decision on whether to create an artifact and explain your reasoning.
 - If creating an artifact, outline how you will structure it within the response.
+- If you have asked a question, generate one or more suggested responses to the user.
+- Include the suggested responses in the <suggest> tags.
 
 {{! Artifacts }}
 
@@ -54,6 +56,13 @@ Include the following steps:
 
 {{ARTIFACT_PROVIDERS}}
 
+{{! Suggest }}
+
+You can suggest responses to the user using the `suggest` tag like this: <suggest>Yes, I'm in</suggest>
+You can also use the `suggest` tag to suggest actions to the user like this: <suggest>Create a new artifact</suggest>
+You can produce multiple suggestions. 
+Place each suggestion on a new line.
+
 {{! Output }}
 
 {{NUM}}. Output Formats:
@@ -63,6 +72,8 @@ Include the following steps:
 </cot>
 
 [Your response, using <artifact> tags where necessary.]
+
+[If you have asked a question, use the `suggest` tag to suggest responses to the user.]
 
 {{! Final }}
 

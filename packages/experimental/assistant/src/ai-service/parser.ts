@@ -284,6 +284,12 @@ export const mergeMessageBlock = (
           const { attributes } = streamBlock;
           return { type: 'json', disposition: 'artifact', json: JSON.stringify(attributes) };
         }
+
+        case 'suggest': {
+          if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
+            return { type: 'json', disposition: 'suggest', json: JSON.stringify({ text: streamBlock.content[0].content }) };
+          }
+        }
       }
       break;
     }

@@ -28,6 +28,7 @@ import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
 import { useQueue } from '@dxos/react-edge-client';
 import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
@@ -78,22 +79,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
   const queue = useQueue<Message>(edgeClient, DXN.tryParse(queueDxn));
 
-  // Artifacts.
-  // TODO(burdon): Factor out class.
-  const [artifactsContext] = useState(() =>
-    create<ArtifactsContext>({
-      items: _items ?? [],
-      getArtifacts() {
-        return this.items;
-      },
-      addArtifact(artifact) {
-        this.items.push(artifact);
-      },
-    }),
-  );
-
   // State.
-  const artifactItems = artifactsContext.items.toReversed();
+  const artifactItems: any[] = []; // TODO(burdon): Query from space.
   const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
 
   const handleSubmit = processor
@@ -119,6 +106,13 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
   }, [handleSubmit, prompt]);
 
+  const handleSuggest = useCallback(
+    (text: string) => {
+      void handleSubmit?.(text);
+    },
+    [handleSubmit],
+  );
+
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
       {/* Thread */}
@@ -129,7 +123,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               spellCheck={false}
               placeholder='Queue DXN'
               value={queueDxn}
-              onClick={() => setQueueDxn('')}
+              // onClick={() => setQueueDxn('')} Why?????
               onChange={(ev) => setQueueDxn(ev.target.value)}
             />
             <IconButton
@@ -153,6 +147,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
           messages={messages}
           streaming={processor?.streaming.value}
           onSubmit={processor ? handleSubmit : undefined}
+          onSuggest={processor ? handleSuggest : undefined}
           {...props}
         />
       </div>
@@ -198,6 +193,7 @@ const meta: Meta<typeof Render> = {
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
+        TablePlugin(),
       ],
       capabilities,
     }),

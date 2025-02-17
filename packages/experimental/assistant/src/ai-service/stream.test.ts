@@ -43,6 +43,10 @@ const TEST_BLOCKS = [
 
     // Text
     'and some more text.',
+
+    '<suggest>Plan me a trip to the Rio.</suggest>',
+    '<suggest>Show me steak recipes.</suggest>',
+    '<select><option>Yes</option><option>No</option></select>',
   ].join('\n'),
 
   // JSON
@@ -78,7 +82,9 @@ describe('GenerationStream', () => {
 
       await parser.parse(stream);
 
-      log('blocks', { message });
+      for (const block of message?.content ?? []) {
+        log('block', { block });
+      }
       expect(message?.content.map((block) => block.type)).to.deep.eq([
         //
         'text',
@@ -89,6 +95,9 @@ describe('GenerationStream', () => {
         'text',
         'json',
         'text',
+        'json',
+        'text',
+        'json',
         'json',
       ]);
     });

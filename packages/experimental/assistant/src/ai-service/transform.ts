@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import * as P from 'parsimmon';
 
 /**
