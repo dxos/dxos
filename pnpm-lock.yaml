@@ -6397,6 +6397,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -7841,6 +7844,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
