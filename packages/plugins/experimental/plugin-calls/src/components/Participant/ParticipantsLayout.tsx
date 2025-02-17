@@ -3,13 +3,11 @@
 //
 
 import React, { useEffect, useMemo, useState } from 'react';
-import useMeasure from 'react-use/lib/useMeasure';
 
 import { Button, Dialog, Icon } from '@dxos/react-ui';
 
 import { Participant, screenshareSuffix } from './Participant';
 import { type UserState } from '../../types';
-import { calculateLayout } from '../../utils';
 
 const usePinnedParticipant = (users: UserState[]) => {
   const [pinnedParticipant, setPinnedParticipant] = useState<UserState>();
@@ -68,20 +66,7 @@ export const ParticipantsLayout = ({
     [identity, users],
   ) as UserState[];
 
-  const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
-  const [firstFlexChildRef, { width: firstFlexChildWidth }] = useMeasure<HTMLDivElement>();
   const { pinnedParticipant, setPinnedParticipant } = usePinnedParticipant(usersAndScreenShares);
-  const flexContainerWidth = useMemo(
-    () =>
-      100 /
-        calculateLayout({
-          count: usersAndScreenShares.length,
-          height: containerHeight,
-          width: containerWidth,
-        }).cols +
-      '%',
-    [containerHeight, containerWidth, usersAndScreenShares.length],
-  );
 
   if (usersAndScreenShares.length === 0) {
     return null;
@@ -90,7 +75,7 @@ export const ParticipantsLayout = ({
   return pinnedParticipant ? (
     <Dialog.Root defaultOpen onOpenChange={() => setPinnedParticipant()}>
       <Dialog.Content classNames='!p-0 !rounded-none !border-0 !max-bs-[90vh] !max-is-[90vw] !h-full !w-full'>
-        <div role='none' className='flex h-full w-full relative'>
+        <div role='none' className='flex h-full w-full justify-center relative'>
           <div className='absolute top-2 right-2 z-10'>
             <Dialog.Close asChild>
               <Button variant='destructive' autoFocus onClick={() => setPinnedParticipant()}>
@@ -108,19 +93,7 @@ export const ParticipantsLayout = ({
       </Dialog.Content>
     </Dialog.Root>
   ) : (
-    <div
-      className='absolute inset-0 flex flex-wrap justify-around gap-[--gap] overflow-hidden'
-      style={
-        {
-          // the flex basis that is needed to achieve row layout
-          '--flex-container-width': flexContainerWidth,
-          // the size of the first user's flex container
-          '--participant-max-width': firstFlexChildWidth + 'px',
-          '--gap': '0.3rem',
-        } as any
-      }
-      ref={containerRef}
-    >
+    <div className='flex flex-col gap-1'>
       {usersAndScreenShares.map((user, i) => (
         <Participant
           key={user.id}
@@ -128,7 +101,6 @@ export const ParticipantsLayout = ({
           showDebugInfo={debugEnabled}
           pinnedParticipant={pinnedParticipant}
           setPinnedParticipant={setPinnedParticipant}
-          ref={i === 0 ? firstFlexChildRef : undefined}
         />
       ))}
     </div>

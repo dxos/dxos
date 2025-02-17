@@ -63,13 +63,10 @@ export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
     const videoMid = useMid(videoTrack);
 
     return (
-      <div className='shrink w-full basis-[calc(var(--flex-container-width)_-_var(--gap)_*_3)]' ref={ref}>
-        <div className={mx('h-full mx-auto overflow-hidden', 'relative max-w-[--participant-max-width]')}>
+      <div className='flex w-full h-full relative' ref={ref}>
+        <div className={mx('flex w-full h-full overflow-hidden animate-fadeIn')}>
           <VideoObject
-            className={mx(
-              'absolute inset-0 h-full w-full object-contain bg-slate-500',
-              isSelf && !isScreenShare ? 'scale-x-[-1]' : '',
-            )}
+            className={mx('object-contain', isSelf && !isScreenShare ? 'scale-x-[-1]' : '')}
             videoTrack={videoTrack}
           />
 
@@ -101,10 +98,7 @@ export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
 
           {(user.speaking || user.raisedHand) && (
             <div
-              className={mx(
-                'pointer-events-none absolute inset-0',
-                'h-full w-full border-4 border-orange-400 rounded-xl',
-              )}
+              className={mx('pointer-events-none absolute inset-0', 'h-full w-full border-4 border-orange-400')}
             ></div>
           )}
         </div>
