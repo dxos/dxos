@@ -9,6 +9,8 @@ import React, { useState } from 'react';
 
 import { definePlugin, type Plugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';
@@ -24,7 +26,7 @@ const icons = [
   'ph--github-logo--regular',
 ];
 
-const DefaultStory = () => {
+const Render = ({ classNames }: ThemedClassName<{}>) => {
   const [plugins] = useState<Plugin[]>(
     faker.helpers.multiple(
       () =>
@@ -50,19 +52,25 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className={'flex w-[400px] overflow-hidden'}>
+    <div className={mx('flex overflow-hidden', classNames)}>
       <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} />
     </div>
   );
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: Render,
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;
+
+export const Default = {};
+
+export const Column = {
+  args: {
+    classNames: 'w-[400px]',
+  },
+};

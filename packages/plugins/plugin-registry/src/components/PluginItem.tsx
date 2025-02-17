@@ -40,7 +40,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames='grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator '
+      classNames='grow grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
       onClick={handleClick}
     >
       <Input.Root id={inputId}>
