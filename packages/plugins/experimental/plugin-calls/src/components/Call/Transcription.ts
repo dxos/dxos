@@ -41,7 +41,7 @@ export const Transcription = ({
 }) => {
   const transcription = useRef<TranscriptionHandler | null>(
     new TranscriptionHandler({
-      recordingInterval: 5_000,
+      recordingInterval: 15_000,
       overlap: 0,
     }),
   );
@@ -80,6 +80,10 @@ export const Transcription = ({
 
   useUnmount(() => {
     transcription.current!.stopRecorder();
+    if (stopTimeout.current) {
+      clearTimeout(stopTimeout.current);
+      stopTimeout.current = null;
+    }
   });
 
   return null;
