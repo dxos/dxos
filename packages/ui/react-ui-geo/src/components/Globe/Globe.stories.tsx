@@ -162,7 +162,8 @@ const Story = ({
       objects: { dots: points },
     } as any as Topology;
   });
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  // const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
   const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
@@ -241,7 +242,8 @@ const meta: Meta = {
 export default meta;
 
 export const Earth1 = () => {
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  // const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -255,7 +257,8 @@ export const Earth1 = () => {
 };
 
 export const Earth2 = () => {
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  // const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -290,7 +293,8 @@ const monochrome: StyleSet = {
 };
 
 export const Mercator = () => {
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  // const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
