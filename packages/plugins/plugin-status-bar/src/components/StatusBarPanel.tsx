@@ -12,7 +12,7 @@ import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
 import { STATUS_BAR_PLUGIN } from '../meta';
 
-export const StatusBarCtas = () => {
+export const StatusBarActions = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const [open, setOpen] = useState(false);
   return (
@@ -42,9 +42,9 @@ export const StatusBarCtas = () => {
 export const StatusBarPanel = () => {
   return (
     <>
-      <Surface role='status' />
+      <StatusBarActions />
       <span role='separator' className='grow' />
-      <StatusBarCtas />
+      <Surface role='status' />
     </>
   );
 };
