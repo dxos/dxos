@@ -16,7 +16,7 @@ import { MarkdownViewer } from '../MarkdownViewer';
 
 export type ThreadMessageProps = ThemedClassName<{
   message: Message;
-  collapsed: boolean;
+  collapse?: boolean;
   debug?: boolean;
 }>;
 

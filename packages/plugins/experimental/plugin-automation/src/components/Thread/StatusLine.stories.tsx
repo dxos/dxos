@@ -30,7 +30,7 @@ export const Default: Story = {
   args: {
     classNames: 'w-96 px-2',
     lines: Array.from({ length: 5 }, (_, i) => `${i}. ${faker.lorem.paragraph()}`),
-    autoAdvance: 1_000,
+    autoAdvance: true,
   },
 };
 
