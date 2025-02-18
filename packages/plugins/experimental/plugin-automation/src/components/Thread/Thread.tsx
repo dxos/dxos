@@ -10,7 +10,7 @@ import { Spinner } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ScrollContainer, type ScrollController } from './ScrollContainer';
-import { ThreadMessage } from './ThreadMessage';
+import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type ThreadProps = {
