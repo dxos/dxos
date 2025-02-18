@@ -89,7 +89,7 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: 'text-end !pie-1 text-subdued',
+  className: 'text-end pie-1 text-subdued',
   resizeHandle: 'row',
 });
 

@@ -8,8 +8,8 @@ import {
   createIntent,
   createResolver,
   LayoutAction,
-  useIntentDispatcher,
   useIntentResolver,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';

@@ -73,7 +73,7 @@ class CheckboxWidget extends WidgetType {
 
   override toDOM(view: EditorView) {
     const input = document.createElement('input');
-    input.className = 'cm-task-checkbox ch-checkbox';
+    input.className = 'cm-task-checkbox dx-checkbox';
     input.type = 'checkbox';
     input.tabIndex = -1;
     input.checked = this._checked;

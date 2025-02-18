@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
 
-import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
+import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface, Schema } from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
@@ -25,10 +25,15 @@ export const ClientPlugin = ({
   return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/client`,
-      activatesOn: Events.Startup,
-      activatesBefore: [ClientEvents.SetupClient],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activatesAfter: [ClientEvents.ClientReady],
       activate: (context) => Client({ ...options, context }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.ClientReady,
+      activatesBefore: [ClientEvents.SetupSchema],
+      activate: Schema,
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,
@@ -37,7 +42,7 @@ export const ClientPlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({

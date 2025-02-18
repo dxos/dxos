@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useGraph } from '@dxos/plugin-graph';
+import { useAppGraph } from '@dxos/app-framework';
 import { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -38,7 +38,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   // TODO(wittjosiah): If the attended node is deep in the graph and the graph is not fully loaded
   //   this will result in an empty path until the graph is connected.
   // TODO(wittjosiah): Consider using this indicator for all open nodes instead of just attended.
-  const { graph } = useGraph();
+  const { graph } = useAppGraph();
   const attended = useAttended();
   const startOfAttention = attended.at(-1);
   const path = usePath(graph, startOfAttention);

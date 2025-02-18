@@ -307,7 +307,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     return (
       <input
         type='checkbox'
-        className='ch-checkbox--switch ch-focus-ring'
+        className='dx-checkbox--switch dx-focus-ring'
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);

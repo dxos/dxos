@@ -4,15 +4,7 @@
 
 import React from 'react';
 
-import {
-  Capabilities,
-  contributes,
-  createSurface,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -31,7 +23,7 @@ export const StackPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
           id: StackViewType.typename,
@@ -60,12 +52,12 @@ export const StackPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
+      activatesOn: ClientEvents.SetupSchema,
       activate: () => contributes(ClientCapabilities.SystemSchema, [StackViewType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: () =>
         contributes(
           Capabilities.ReactSurface,

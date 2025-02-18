@@ -4,14 +4,7 @@
 
 import { definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
 
-import {
-  AppGraphBuilder,
-  IntentResolver,
-  PresenterSettings,
-  PresenterState,
-  ReactContext,
-  ReactSurface,
-} from './capabilities';
+import { AppGraphBuilder, IntentResolver, PresenterSettings, PresenterState, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
@@ -36,13 +29,8 @@ export const PresenterPlugin = () =>
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSurfaces,
       activate: ReactSurface,
     }),
     defineModule({

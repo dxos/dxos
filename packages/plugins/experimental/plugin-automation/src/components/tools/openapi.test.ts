@@ -1,0 +1,121 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { AIServiceClientImpl } from '@dxos/assistant';
+import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
+import { log } from '@dxos/log';
+
+import { createToolsFromApi, resolveAuthorization } from './openapi';
+import { ChatProcessor } from '../../hooks';
+import { type ApiAuthorization } from '../../types';
+
+// const META_SCHEMA_URI = 'https://json-schema.org/draft/2020-12/schema';
+
+describe('openapi', () => {
+  describe('mapping', () => {
+    test('amadeus flight availabilities', async () => {
+      const tools = await createToolsFromApi(
+        'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json',
+      );
+
+      log.info('tools', { tools });
+      // for (const tool of tools) {
+      //   const schema = tool.parameters;
+      //   // log.info('schema', { schema });
+      // }
+    });
+  });
+
+  describe('invoke', () => {
+    test.only('amadeus flight availabilities', { timeout: 60_000 }, async () => {
+      const tools = await createToolsFromApi(
+        'https://api.apis.guru/v2/specs/amadeus.com/amadeus-flight-availabilities-search/1.0.2/swagger.json',
+        {
+          authorization: AMADEUS_AUTH,
+        },
+      );
+
+      const client = new AIServiceClientImpl({
+        endpoint: AI_SERVICE_ENDPOINT.LOCAL,
+      });
+      const processor = new ChatProcessor(client, tools);
+      const reply = await processor.request(
+        `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,
+      );
+
+      log.info('reply', { reply });
+    });
+  });
+
+  describe.skip('invoke api directly', { timeout: 10_000 }, () => {
+    test('amadeus flight availabilities', async () => {
+      const response = await fetch('https://test.api.amadeus.com/v1/shopping/availability/flight-availabilities', {
+        method: 'POST',
+        headers: {
+          accept: 'application/vnd.amadeus+json',
+          'X-HTTP-Method-Override': 'GET',
+          'Content-Type': 'application/vnd.amadeus+json',
+          Authorization: await resolveAuthorization(AMADEUS_AUTH),
+        },
+        body: JSON.stringify({
+          originDestinations: [
+            {
+              departureDateTime: {
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toTimeString().split(' ')[0],
+              },
+              destinationLocationCode: 'MAD',
+              id: '1',
+              originLocationCode: 'BOS',
+            },
+          ],
+          sources: ['GDS'],
+          travelers: [
+            {
+              id: '1',
+              travelerType: 'ADULT',
+            },
+          ],
+        }),
+      });
+
+      log.info('response', { status: response.status, body: await response.json() });
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe.skip('rapidapi', () => {
+    test('amadeus flight availabilities', async () => {
+      const departureDate = new Date().toISOString().split('T')[0];
+      const arrivalDate = new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      const url = `https://amadeus-api2.p.rapidapi.com/serpapi-flight-search?departure_id=PEK&arrival_id=AUS&outbound_date=${departureDate}&return_date=${arrivalDate}&currency=USD&hl=en`;
+      const options = {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-key': RAPID_API_CREDENTIALS.key,
+          'x-rapidapi-host': 'amadeus-api2.p.rapidapi.com',
+        },
+      };
+
+      const response = await fetch(url, options);
+      log.info('response', { status: response.status, body: await response.json() });
+      expect(response.status).toBe(200);
+    });
+  });
+});
+
+const AMADEUS_AUTH: ApiAuthorization = {
+  type: 'oauth',
+  clientId: 'BOEnpLd1sMyKjAPGKYeAPFFy60u53QEG',
+  clientSecret: 'n4qldSN7usvD57gm',
+  tokenUrl: 'https://test.api.amadeus.com/v1/security/oauth2/token',
+  grantType: 'client_credentials',
+};
+
+const RAPID_API_CREDENTIALS = {
+  key: '92271b6740msh32fd821d70f050dp16665bjsna69195c9e838',
+};

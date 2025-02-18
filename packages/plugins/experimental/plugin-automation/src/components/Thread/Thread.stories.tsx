@@ -124,6 +124,29 @@ const TEST_MESSAGES: Message[] = [
     role: 'assistant',
     content: [
       {
+        type: 'tool_use',
+        id: '4567',
+        name: 'create',
+        input: {},
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'user',
+    content: [
+      {
+        type: 'tool_result',
+        toolUseId: '4567',
+        content: 'This is a tool result.',
+      },
+    ],
+  },
+  {
+    id: ObjectId.random(),
+    role: 'assistant',
+    content: [
+      {
         type: 'text',
         text: faker.lorem.paragraphs(1),
       },

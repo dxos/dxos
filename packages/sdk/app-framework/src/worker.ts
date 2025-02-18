@@ -8,4 +8,4 @@
 export * from './core';
 // NOTE: Common includes browser capabilities but they are types only.
 export * from './common';
-export * from './plugin-intent/worker';
+export * from './plugin-intent';

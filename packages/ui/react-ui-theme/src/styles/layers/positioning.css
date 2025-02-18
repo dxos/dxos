@@ -13,7 +13,7 @@
   }
 }
 
-@layer components {
+@layer dx-components {
   .sticky-top-from-topbar-bottom {
     --sticky-top: var(--topbar-size);
   }

@@ -43,7 +43,8 @@ const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentB
     <div
       className={mx(
         'p-1 px-2 overflow-hidden rounded-md',
-        block.type === 'text' && role === 'user' ? 'bg-blue-200 dark:bg-blue-800' : 'bg-base',
+        (block.type !== 'text' || block.disposition) && 'w-full bg-base',
+        block.type === 'text' && role === 'user' && 'bg-blue-200 dark:bg-blue-800',
       )}
     >
       <Component block={block} />
@@ -96,7 +97,10 @@ const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
   },
 
   default: ({ block }) => {
-    const title = titles[block.type];
+    let title = titles[block.type];
+    if (block.type === 'tool_use') {
+      title = `Tool [${block.name}]`; // TODO(burdon): Get label from tool.
+    }
     return (
       <ToggleContainer title={title ?? 'JSON'} toggle>
         <Json data={block} classNames='text-sm' />

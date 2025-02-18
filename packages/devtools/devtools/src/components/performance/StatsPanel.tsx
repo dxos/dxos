@@ -105,7 +105,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
         info={
           <Toggle
             pressed={live}
-            classNames='!bg-transparent !p-0'
+            classNames='bg-transparent p-0'
             density='fine'
             value='ghost'
             onClick={handleToggleLive}

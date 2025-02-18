@@ -6,36 +6,46 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 // import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { useState, useRef, useEffect, type FC, type SVGProps } from 'react';
+import React, { useState, useRef, useEffect, type FC, type SVGProps, memo } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useDynamicRef, useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Location } from './types';
+import { useBoardContext } from './context';
+import { isEqualLocation, isLocation, type Location, type PieceRecord, type Player } from './types';
 import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
-  location: Location;
-  pieceType: string;
+  piece: PieceRecord;
   bounds: DOMRectBounds;
+  label?: string;
+  orientation?: Player;
   Component: FC<SVGProps<SVGSVGElement>>;
 }>;
 
-export const Piece = ({ classNames, location, pieceType, bounds, Component }: PieceProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState<boolean>(false);
+export const Piece = memo(({ classNames, piece, orientation, bounds, label, Component }: PieceProps) => {
+  useTrackProps({ classNames, piece, orientation, bounds, label, Component }, Piece.displayName, false);
+  const { model } = useBoardContext();
+
+  const { dragging: isDragging, promoting } = useBoardContext();
+  const promotingRef = useDynamicRef(promoting);
+  const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
 
+  // Current position.
+  const [current, setCurrent] = useState<{ location?: Location; bounds?: DOMRectBounds }>({});
+
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     invariant(el);
 
     return draggable({
       element: el,
-      getInitialData: () => ({ location, pieceType }),
+      getInitialData: () => ({ piece }),
       onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
         log('onGenerateDragPreview', { source: source.data });
         setCustomNativeDragPreview({
@@ -56,28 +66,70 @@ export const Piece = ({ classNames, location, pieceType, bounds, Component }: Pi
           nativeSetDragImage,
         });
       },
+      canDrag: () => !promotingRef.current && model?.turn === piece.side,
       onDragStart: () => setDragging(true),
-      onDrop: () => setDragging(false),
+      onDrop: ({ location: { current } }) => {
+        const location = current.dropTargets[0].data.location;
+        if (isLocation(location)) {
+          setCurrent((current) => ({ ...current, location }));
+        }
+
+        setDragging(false);
+      },
     });
-  }, [location, pieceType]);
+  }, [model, piece]);
+
+  // Must update position independently of render cycle (otherwise animation is interrupted).
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      if (!ref.current || !bounds) {
+        return;
+      }
+
+      // Check if piece moved.
+      if (!current.location || !isEqualLocation(current.location, piece.location)) {
+        ref.current.style.transition = 'top 400ms ease-out, left 400ms ease-out';
+        ref.current.style.top = bounds.top + 'px';
+        ref.current.style.left = bounds.left + 'px';
+        setCurrent({ location: piece.location, bounds });
+      } else if (current.bounds !== bounds) {
+        ref.current.style.transition = 'none';
+        ref.current.style.top = bounds.top + 'px';
+        ref.current.style.left = bounds.left + 'px';
+        setCurrent({ location: piece.location, bounds });
+      }
+    });
+  }, [current, piece.location, bounds]);
 
   return (
     <>
       <div
         ref={ref}
-        className={mx('absolute flex justify-center items-center aspect-square', classNames, dragging && 'opacity-0')}
-        style={bounds}
+        style={{
+          width: bounds?.width,
+          height: bounds?.height,
+        }}
+        className={mx(
+          'absolute',
+          classNames,
+          // orientation === 'black' && '_rotate-180',
+          dragging && 'opacity-20', // Must not unmount component while dragging.
+          isDragging && 'pointer-events-none', // Don't block the square's drop target.
+        )}
       >
-        <Component className={mx('w-full h-full')} />
+        <Component className='grow' />
+        {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}
       </div>
 
       {preview &&
         createPortal(
-          <div className={mx('absolute flex justify-center items-center aspect-square', classNames)}>
-            <Component className={mx('w-full h-full')} />
+          <div className={mx(classNames)}>
+            <Component className='grow' />
           </div>,
           preview,
         )}
     </>
   );
-};
+});
+
+Piece.displayName = 'Piece';

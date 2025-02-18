@@ -2,25 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { createSystemPrompt, defineTool, ToolResult, type Message, type Tool } from '@dxos/artifact';
+import { createSystemPrompt, type Message, type Tool } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
-import { DXN, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
-import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Thread } from './Thread';
+import { FunctionType } from '@dxos/functions';
+import { useConfig } from '@dxos/react-client';
+import { isNotNullOrUndefined } from '@dxos/util';
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { type AIChatType } from '../types';
-import { FunctionType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
-import { isNotNullOrUndefined } from '@dxos/util';
-import { toEffectSchema } from '@dxos/echo-schema';
-import { useConfig } from '@dxos/react-client';
-import { log } from '@dxos/log';
+import { Thread } from './Thread';
+import { covertFunctionToTool } from './tools/function';
+import { createToolsFromApi, createToolsFromService } from './tools/openapi';
+import { SERVICES, type ServiceRegistry, MockServiceRegistry } from './registry';
 
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const config = useConfig();
@@ -30,6 +31,16 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const globalTools = useCapabilities(Capabilities.Tools);
   const functions = useQuery(space, Filter.schema(FunctionType));
+  const serviceRegistry: ServiceRegistry = useMemo(() => new MockServiceRegistry(), []);
+
+  const [serviceTools, setServiceTools] = useState<Tool[]>([]);
+  useEffect(() => {
+    queueMicrotask(async () => {
+      const services = await serviceRegistry.queryServices({});
+      const tools = await Promise.all(services.map((service) => createToolsFromService(service)));
+      setServiceTools(tools.flat());
+    });
+  }, []);
 
   const tools = useMemo(
     () => [
@@ -38,8 +49,9 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
       ...functions
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNotNullOrUndefined),
+      ...serviceTools,
     ],
-    [globalTools, artifactDefinitions, functions, space?.id],
+    [globalTools, artifactDefinitions, functions, serviceTools, space?.id],
   );
   const systemPrompt = useMemo(
     () => createSystemPrompt({ artifacts: artifactDefinitions.map((definition) => definition.instructions) }),
@@ -105,30 +117,3 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
 };
 
 export default ChatContainer;
-
-const covertFunctionToTool = (fn: FunctionType, edgeUrl: string, spaceId?: SpaceId | undefined): Tool | undefined => {
-  if (!fn.description || !fn.inputSchema) return undefined;
-
-  const existingFunctionUrl = getUserFunctionUrlInMetadata(getMeta(fn));
-  if (!existingFunctionUrl) return undefined;
-  const url = getInvocationUrl(existingFunctionUrl, edgeUrl, {
-    spaceId: spaceId,
-  });
-
-  return defineTool({
-    name: fn.name,
-    description: fn.description,
-    schema: toEffectSchema(fn.inputSchema),
-    execute: async (input) => {
-      log.info('execute function tool', { name: fn.name, url, input });
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      });
-      return ToolResult.Success(await response.text());
-    },
-  });
-};
