@@ -4,7 +4,6 @@
 
 import React, { type FC } from 'react';
 
-import { type ThreadType } from '@dxos/plugin-space/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
