@@ -14,6 +14,8 @@ import { getMode, type Deck, type DeckState } from '../types';
 
 const boolean = /true|false/;
 
+// TODO(thure, 18 Feb 2025): Remove after the next release.
+
 const migrateSidebarStateDefaults = {
   [`${DECK_PLUGIN}/complementary-sidebar-state`]: 'expanded',
   [`${DECK_PLUGIN}/sidebar-state`]: 'collapsed',
