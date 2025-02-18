@@ -2,12 +2,14 @@
   @tokens dx;
 
   :root {
-    --surface-bg: var(--dx-base);
-    --input-bg: var(--dx-input);
-    --input-bg-hover: var(--dx-hoverSurface);
+    /* Recitations */
+    --surface-bg: var(--dx-baseSurface);
     --surface-text: var(--dx-baseText);
     --description-text: var(--dx-description);
     --sticky-top: 0;
+
+    /* Lengths / sizes */
+
     --rail-content: 3rem;
     --rail-size: calc(var(--rail-content) + 1px);
     --rail-action: calc(var(--rail-content) - .5rem);
@@ -20,13 +22,6 @@
     --complementary-sidebar-size: 22.5rem;
     --r0-size: var(--rail-size);
     --r1-size: calc(var(--complementary-sidebar-size) - var(--r0-size));
-  }
-
-  .dark {
-    --surface-bg: var(--dx-base);
-    --surface-text: var(--dx-baseText);
-    --input-bg: var(--dx-input);
-    --input-bg-hover: var(--dx-hoverSurface);
-    --description-text: var(--dx-description);
+    --text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
   }
 }

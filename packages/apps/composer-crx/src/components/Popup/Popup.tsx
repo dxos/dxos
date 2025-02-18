@@ -18,7 +18,7 @@ export const Popup = () => {
   };
 
   return (
-    <div className='flex flex-col w-[300px] p-2 gap-2 bg-base'>
+    <div className='flex flex-col w-[300px] p-2 gap-2 bg-baseSurface'>
       <div className='flex gap-2 items-center'>
         <Button onClick={handleLaunch}>
           <Icon icon='ph--copyright--thin' size={5} />

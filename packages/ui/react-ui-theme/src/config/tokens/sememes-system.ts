@@ -114,7 +114,7 @@ export const systemAliases = {
   'surface-0': ['attention', 'currentRelated'],
   'surface-10': ['deck'],
   'surface-10t': ['scrim'],
-  'surface-20': ['baseSurface'], // todo: rename uses of the `base` token to `baseSurface`
+  'surface-20': ['baseSurface'],
   'surface-20t': ['modalSurface'],
   'surface-30': ['input'],
   'surface-40': ['hoverSurface'],

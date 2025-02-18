@@ -150,7 +150,7 @@ export const L0Menu = ({
   path: string[];
 }) => {
   return (
-    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-base border-ie border-separator app-drag'>
+    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag'>
       <div
         role='none'
         className='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
@@ -176,7 +176,10 @@ export const L0Menu = ({
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
-        style={{ background: 'linear-gradient(to bottom, var(--dx-base) 0%, var(--dx-base) 70%, transparent 100%)' }}
+        style={{
+          background:
+            'linear-gradient(to bottom, var(--dx-baseSurface) 0%, var(--dx-baseSurface) 70%, transparent 100%)',
+        }}
       />
     </Tabs.Tablist>
   );

@@ -149,7 +149,7 @@ export const defaultTheme: ThemeStyles = {
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-base)',
+    background: 'var(--dx-baseSurface)',
   },
   '.cm-tooltip-below': {},
 
