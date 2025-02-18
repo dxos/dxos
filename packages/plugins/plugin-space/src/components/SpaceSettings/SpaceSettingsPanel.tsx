@@ -9,8 +9,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type ThemedClassName, Input, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
-import { mx } from '@dxos/react-ui-theme';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SPACE_PLUGIN } from '../../meta';
 
@@ -41,7 +40,7 @@ export const SpaceSettingsPanel = ({ classNames, space }: SpaceSettingsPanelProp
   );
 
   return (
-    <div role='form' className={mx('flex flex-col', classNames)}>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput label={t('name label')}>
         <Input.TextInput
           placeholder={t('unnamed space label')}
@@ -56,6 +55,6 @@ export const SpaceSettingsPanel = ({ classNames, space }: SpaceSettingsPanelProp
           <Input.Switch checked={edgeReplication} onCheckedChange={toggleEdgeReplication} />
         </DeprecatedFormInput>
       )}
-    </div>
+    </DeprecatedFormContainer>
   );
 };

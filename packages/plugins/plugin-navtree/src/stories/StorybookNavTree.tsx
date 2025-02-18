@@ -4,9 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { NavTree } from '../components';
-import { NavTreeContext } from '../components/NavTreeContext';
-import type { NavTreeContextValue, NavTreeProps } from '../components/types';
+import { NavTree, NavTreeContext, type NavTreeContextValue, type NavTreeProps } from '../components';
+import { type NavTreeItemGraphNode } from '../types';
 
 export const StorybookNavTree = ({
   getActions,
@@ -22,12 +21,12 @@ export const StorybookNavTree = ({
   onOpenChange,
   ...props
 }: NavTreeProps & NavTreeContextValue) => {
-  const [tab, onTabChange] = useState('never');
+  const [tab, setTab] = useState('never');
 
   const contextValue = useMemo(
     () => ({
       tab,
-      onTabChange,
+      onTabChange: (node: NavTreeItemGraphNode) => setTab(node.id),
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -42,7 +41,7 @@ export const StorybookNavTree = ({
     }),
     [
       tab,
-      onTabChange,
+      setTab,
       getActions,
       loadDescendents,
       renderItemEnd,

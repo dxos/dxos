@@ -26,7 +26,7 @@ import { DeckCapabilities } from './capabilities';
 import { setActive } from './set-active';
 import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
-import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode } from '../types';
+import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -160,6 +160,7 @@ export default (context: PluginsContext) =>
             deck.solo = next[0];
           } else if (mode !== 'solo' && deck.solo) {
             deck.solo = undefined;
+            deck.initialized = true;
           }
 
           if (mode === 'fullscreen' && !deck.fullscreen) {
@@ -171,10 +172,14 @@ export default (context: PluginsContext) =>
 
         return batch(() => {
           if ('mode' in options) {
-            state.modeHistory.push(options.mode as LayoutMode);
+            const current = getMode(state.deck);
+            if (current !== options.mode) {
+              state.previousMode[state.activeDeck] = current;
+            }
             setMode(options.mode as LayoutMode);
           } else if ('revert' in options) {
-            setMode(state.modeHistory.pop() ?? 'solo');
+            const last = state.previousMode[state.activeDeck];
+            setMode(last ?? 'solo');
           } else {
             log.warn('Invalid layout mode', options);
           }
@@ -190,7 +195,7 @@ export default (context: PluginsContext) =>
         batch(() => {
           state.activeDeck = subject;
           if (!state.decks[subject]) {
-            state.decks[subject] = { active: [], inactive: [], fullscreen: false, plankSizing: {} };
+            state.decks[subject] = { initialized: false, active: [], inactive: [], fullscreen: false, plankSizing: {} };
           }
         });
 

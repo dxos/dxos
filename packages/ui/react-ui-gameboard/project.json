@@ -10,8 +10,8 @@
     "build": {},
     "compile": {
       "dependsOn": [
-        "gen",
-        "esbuild:compile"
+        "esbuild:compile",
+        "gen"
       ],
       "options": {
         "entryPoints": [

@@ -28,7 +28,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
-          return onTabChange?.(item.id);
+          return onTabChange?.(item);
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
         case 'action': {
@@ -107,7 +107,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
         </Root>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side='right' classNames='text-md'>
+        <Tooltip.Content side='right'>
           {localizedString}
           <Tooltip.Arrow />
         </Tooltip.Content>

@@ -235,9 +235,6 @@
       "path": "packages/experimental/gem-core/tsconfig.json"
     },
     {
-      "path": "packages/experimental/gem-globe/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/gem-spore/tsconfig.json"
     },
     {
@@ -283,9 +280,6 @@
       "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-map/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-native/tsconfig.json"
     },
     {
@@ -299,6 +293,9 @@
     },
     {
       "path": "packages/plugins/experimental/plugin-template/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-theme-editor/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
@@ -323,6 +320,9 @@
     },
     {
       "path": "packages/plugins/plugin-help/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-map/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
@@ -449,6 +449,9 @@
     },
     {
       "path": "packages/ui/react-ui-gameboard/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-geo/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"

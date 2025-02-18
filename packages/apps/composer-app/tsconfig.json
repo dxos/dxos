@@ -93,9 +93,6 @@
       "path": "../../plugins/experimental/plugin-kanban"
     },
     {
-      "path": "../../plugins/experimental/plugin-map"
-    },
-    {
       "path": "../../plugins/experimental/plugin-native"
     },
     {
@@ -109,6 +106,9 @@
     },
     {
       "path": "../../plugins/experimental/plugin-template"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-theme-editor"
     },
     {
       "path": "../../plugins/plugin-attention"
@@ -133,6 +133,9 @@
     },
     {
       "path": "../../plugins/plugin-help"
+    },
+    {
+      "path": "../../plugins/plugin-map"
     },
     {
       "path": "../../plugins/plugin-markdown"
