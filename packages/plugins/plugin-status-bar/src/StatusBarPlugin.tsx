@@ -14,7 +14,7 @@ import {
   Surface,
 } from '@dxos/app-framework';
 
-import { StatusBarCtas, StatusBarPanel } from './components';
+import { StatusBarActions, StatusBarPanel } from './components';
 import { VersionNumber } from './components/VersionNumber';
 import { meta, STATUS_BAR_PLUGIN } from './meta';
 import translations from './translations';
@@ -44,7 +44,7 @@ export const StatusBarPlugin = () =>
           createSurface({
             id: meta.id,
             role: 'status-bar--r1-footer',
-            component: () => <StatusBarCtas />,
+            component: () => <StatusBarActions />,
           }),
           createSurface({
             id: `${STATUS_BAR_PLUGIN}/header-end`,

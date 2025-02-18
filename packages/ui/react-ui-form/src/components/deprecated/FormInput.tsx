@@ -26,8 +26,7 @@ export const DeprecatedFormInput = ({
     <div role='none' className='flex w-full gap-4 py-1'>
       <Input.Root>
         <div role='none' className='flex flex-col w-full'>
-          {/* TODO(burdon): Consistent height for controls (e.g., Select, Textbox, and Checkbox are all different). */}
-          <Input.Label classNames='flex min-h-[40px] items-center'>{label}</Input.Label>
+          <Input.Label classNames='flex min-bs-[--rail-action] items-center'>{label}</Input.Label>
           {description && (
             <Input.DescriptionAndValidation classNames='mbs-0.5'>
               <Input.Description>{description}</Input.Description>
@@ -36,7 +35,7 @@ export const DeprecatedFormInput = ({
         </div>
 
         <div role='none'>
-          <div role='none' className='flex min-h-[40px] items-center'>
+          <div role='none' className='flex min-bs-[--rail-action] items-center'>
             {children}
           </div>
         </div>
