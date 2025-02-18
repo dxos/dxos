@@ -692,6 +692,9 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../../plugins/plugin-theme
+      '@dxos/plugin-theme-editor':
+        specifier: workspace:*
+        version: link:../../plugins/experimental/plugin-theme-editor
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
