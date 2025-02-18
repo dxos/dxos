@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEventHandler, useCallback, useRef, useState } from 'react';
+import React, { type KeyboardEventHandler, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
@@ -50,48 +50,51 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop }: ThreadP
   );
 
   /**
-   * Restructure messages.
    * Reduce message blocks into collections of messages that contain related contiguous blocks.
    * For example, collapse all tool request/response pairs into a single message.
    */
-  const { messages: lines = [] } = (messages ?? []).reduce<{ messages: Message[]; current: Message | null }>(
-    ({ current, messages }, message) => {
-      let i = 0;
-      for (const block of message.content) {
-        switch (block.type) {
-          case 'tool_use':
-          case 'tool_result': {
-            if (current) {
-              current.content.push(block);
-            } else {
-              current = {
-                id: [message.id, i].join('_'),
-                role: message.role,
-                content: [block],
-              };
-              messages.push(current);
+  const { messages: lines = [] } = useMemo(
+    () =>
+      (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(
+        ({ current, messages }, message) => {
+          let i = 0;
+          for (const block of message.content) {
+            switch (block.type) {
+              case 'tool_use':
+              case 'tool_result': {
+                if (current) {
+                  current.content.push(block);
+                } else {
+                  current = {
+                    id: [message.id, i].join('_'),
+                    role: message.role,
+                    content: [block],
+                  };
+                  messages.push(current);
+                }
+                break;
+              }
+
+              case 'text':
+              default: {
+                current = undefined;
+                messages.push({
+                  id: [message.id, i].join('_'),
+                  role: message.role,
+                  content: [block],
+                });
+                break;
+              }
             }
-            break;
+
+            i++;
           }
 
-          case 'text':
-          default: {
-            current = null;
-            messages.push({
-              id: [message.id, i].join('_'),
-              role: message.role,
-              content: [block],
-            });
-            break;
-          }
-        }
-
-        i++;
-      }
-
-      return { current, messages };
-    },
-    { messages: [] as Message[], current: null as Message | null },
+          return { current, messages };
+        },
+        { messages: [] as Message[] },
+      ),
+    [messages],
   );
 
   return (
