@@ -61,6 +61,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   set items(items: T[]) {
     this._items.value = items;
+    this._moveInvalidItemsToUncategorized();
     this._cards.value = this._computeArrangement();
   }
 
@@ -150,42 +151,21 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     if (!options) {
       return [];
     }
-    this._normalizeKanban();
-    return computeArrangement<T>(this._kanban, this._items.value, this.columnFieldPath, options);
-  }
 
-  private _normalizeKanban() {
-    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
-    this._moveInvalidItemsToUncategorized(validColumnValues);
-    this._removeInvalidColumnsFromArrangement(validColumnValues);
+    return computeArrangement<T>(this._kanban, this._items.value, this.columnFieldPath, options);
   }
 
   /**
    * Moves items with invalid column values to uncategorized by setting their column field to undefined.
    */
-  private _moveInvalidItemsToUncategorized(validColumnValues: Set<string>) {
+  private _moveInvalidItemsToUncategorized() {
+    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
     const columnPath = this.columnFieldPath;
     for (const item of this._items.value) {
       const itemColumn = item[columnPath as keyof typeof item];
       if (itemColumn && !validColumnValues.has(itemColumn as string)) {
         // Set to undefined which will place it in uncategorized.
         item[columnPath as keyof typeof item] = undefined as any;
-      }
-    }
-  }
-
-  /**
-   * Removes columns with invalid values from the arrangement, keeping uncategorized.
-   */
-  private _removeInvalidColumnsFromArrangement(validColumnValues: Set<string>) {
-    if (!this._kanban.arrangement) {
-      return;
-    }
-
-    for (let i = this._kanban.arrangement.length - 1; i >= 0; i--) {
-      const col = this._kanban.arrangement[i];
-      if (col.columnValue !== UNCATEGORIZED_VALUE && !validColumnValues.has(col.columnValue)) {
-        this._kanban.arrangement.splice(i, 1);
       }
     }
   }
