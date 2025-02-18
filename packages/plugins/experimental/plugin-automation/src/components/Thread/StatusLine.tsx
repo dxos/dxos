@@ -56,16 +56,16 @@ export const StatusLine = ({
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.style.transition = `transform ${transition}ms ease-in-out`;
-      containerRef.current.style.transform = `translateY(-${currentLine * 32}px)`;
+      containerRef.current.style.transform = `translateY(-${currentLine * 24}px)`;
     }
   }, [currentLine]);
 
   return (
-    <div className={mx('relative h-[32px] overflow-hidden', classNames)}>
-      <div ref={containerRef} className='h-[32px]'>
+    <div className={mx('relative h-[24px] overflow-hidden', classNames)}>
+      <div ref={containerRef} className='h-[24px]'>
         <div className='flex flex-col'>
           {lines.map((line, i) => (
-            <div key={i} className={mx('flex h-[32px] items-center')}>
+            <div key={i} className={mx('flex h-[24px] items-center')}>
               <span className='truncate'>{line}</span>
             </div>
           ))}

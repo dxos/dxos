@@ -82,7 +82,7 @@ const TEST_MESSAGES: Message[] = [
     content: [
       {
         type: 'text',
-        text: 'hello',
+        text: faker.lorem.sentence(5),
       },
     ],
   },
