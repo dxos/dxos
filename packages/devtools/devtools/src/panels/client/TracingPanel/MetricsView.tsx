@@ -20,12 +20,12 @@ export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
       <ResourceName className='text-lg' resource={resource} />
 
       <div>
-        <h4 className='text-md border-b'>Info</h4>
+        <h4 className='border-b'>Info</h4>
         <JsonView data={resource.info} />
       </div>
 
       <div>
-        <h4 className='text-md border-b'>Metrics</h4>
+        <h4 className='border-b'>Metrics</h4>
         {resource.metrics?.map((metric, idx) => <MetricComponent key={idx} metric={metric} />)}
       </div>
     </div>

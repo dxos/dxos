@@ -38,7 +38,7 @@ export const toastActions: ComponentFunction<ToastStyleProps> = (_props, ...etc)
   mx('shrink-0 flex flex-col gap-1 justify-center', ...etc);
 
 export const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx('shrink-0 text-md font-medium', srOnly && 'sr-only', ...etc);
+  mx('shrink-0 font-medium', srOnly && 'sr-only', ...etc);
 
 export const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
   mx(descriptionText, 'shrink-0', srOnly && 'sr-only', ...etc);

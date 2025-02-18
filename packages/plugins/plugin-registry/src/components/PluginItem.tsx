@@ -48,7 +48,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
           <Icon icon={icon} size={8} />
         </div>
         <div className='flex grow items-center'>
-          <Input.Label id={labelId} classNames='truncate text-md w-full'>
+          <Input.Label id={labelId} classNames='truncate w-full'>
             {name ?? id}
           </Input.Label>
         </div>
