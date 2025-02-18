@@ -19,9 +19,17 @@ export type ThreadMessageProps = ThemedClassName<{
   collapse?: boolean;
   debug?: boolean;
   onSuggest?: (text: string) => void;
+  onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, collapse, debug, onSuggest }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({
+  classNames,
+  message,
+  collapse,
+  debug,
+  onSuggest,
+  onDelete,
+}) => {
   if (typeof message !== 'object') {
     return <div className={mx(classNames)}>{message}</div>;
   }
@@ -29,7 +37,16 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, col
   const { role, content = [] } = message;
   return (
     <div className={mx('flex flex-col shrink-0 gap-2')}>
-      {debug && <div className='text-xs text-subdued'>{message.id}</div>}
+      {debug && (
+        <div className='text-xs text-subdued'>
+          {message.id}{' '}
+          {onDelete && (
+            <span className='cursor-pointer underline' onClick={() => onDelete(message.id)}>
+              delete
+            </span>
+          )}
+        </div>
+      )}
       {content.map((block, idx) => (
         <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
           <Block role={role} block={block} onSuggest={onSuggest ?? (() => {})} />

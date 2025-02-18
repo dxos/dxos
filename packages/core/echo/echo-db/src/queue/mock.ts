@@ -1,4 +1,4 @@
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -57,6 +57,12 @@ export class QueueMock<T> implements Queue<T> {
    */
   async append(items: T[]): Promise<void> {
     this._items = [...this._items, ...items];
+    this._signal.notifyWrite();
+  }
+
+  delete(ids: ObjectId[]): void {
+    // TODO(dmaretskyi): Restrict types.
+    this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
     this._signal.notifyWrite();
   }
 }

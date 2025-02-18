@@ -58,11 +58,12 @@ Include the following steps:
 
 {{! Suggest }}
 
-You can suggest responses to the user using the `suggest` tag like this: <suggest>Yes, I'm in</suggest>
-You can also use the `suggest` tag to suggest actions to the user like this: <suggest>Create a new artifact</suggest>
-You can produce multiple suggestions. 
-Place each suggestion on a new line.
-If you have asked a multiple choice question, then present each of the possible answers as concise text inside <option> tags inside a well formed <select> tag: <select><option>Yes</option><option>No</option></select>
+- You can suggest responses to the user using the `suggest` tag like this: <suggest>Yes, I'm in</suggest>
+- You can also use the `suggest` tag to suggest actions to the user like this: <suggest>Create a new artifact</suggest>
+- You can produce multiple suggestions. 
+- Place each suggestion on a new line.
+- If you have asked a multiple choice question, then present each of the possible answers as concise text inside <option> tags inside a well formed <select> tag: <select><option>Yes</option><option>No</option></select>
+- Suggestions and answers must not have placeholders.
 
 {{! Output }}
 

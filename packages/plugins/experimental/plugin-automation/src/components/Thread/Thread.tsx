@@ -20,10 +20,11 @@ export type ThreadProps = {
   onSubmit?: (message: string) => void;
   onStop?: () => void;
   onSuggest?: (text: string) => void;
+  onDelete?: (id: string) => void;
 };
 
 // TODO(burdon): Factor out scroll logic.
-export const Thread = ({ messages, streaming, debug, onSubmit, onStop, onSuggest }: ThreadProps) => {
+export const Thread = ({ messages, streaming, debug, onSubmit, onStop, onSuggest, onDelete }: ThreadProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scroller = useRef<ScrollController>(null);
 
@@ -55,6 +56,7 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop, onSuggest
    * Reduce message blocks into collections of messages that contain related contiguous blocks.
    * For example, collapse all tool request/response pairs into a single message.
    */
+  // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
   const { messages: lines = [] } = (messages ?? []).reduce<{ messages: Message[]; current: Message | null }>(
     ({ current, messages }, message) => {
       let i = 0;
@@ -99,7 +101,14 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop, onSuggest
     <div className='flex flex-col grow overflow-hidden'>
       <ScrollContainer ref={scroller} classNames='py-2 gap-2 overflow-x-hidden'>
         {messages?.map((message) => (
-          <ThreadMessage key={message.id} classNames='px-4' message={message} debug={debug} onSuggest={onSuggest} />
+          <ThreadMessage
+            key={message.id}
+            classNames='px-4'
+            message={message}
+            debug={debug}
+            onSuggest={onSuggest}
+            onDelete={onDelete}
+          />
         ))}
       </ScrollContainer>
 

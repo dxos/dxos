@@ -3,7 +3,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import type { Queue } from './interface';
-
+import { type HasId } from '@dxos/echo-schema';
 /**
  * Client-side view onto an EDGE queue.
  */
@@ -58,6 +58,20 @@ export class QueueImpl<T> implements Queue<T> {
 
     try {
       await this._client.insertIntoQueue(this._subspaceTag, this._spaceId, this._queueId, items);
+    } catch (err) {
+      this._error = err as Error;
+      this._signal.notifyWrite();
+    }
+  }
+
+  async delete(ids: string[]): Promise<void> {
+    // Optimistic update.
+    // TODO(dmaretskyi): Restrict types.
+    this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
+    this._signal.notifyWrite();
+
+    try {
+      await this._client.deleteFromQueue(this._subspaceTag, this._spaceId, this._queueId, ids);
     } catch (err) {
       this._error = err as Error;
       this._signal.notifyWrite();

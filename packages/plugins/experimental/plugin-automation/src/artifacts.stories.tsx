@@ -131,6 +131,14 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     [handleSubmit],
   );
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      invariant(ObjectId.isValid(id), 'Invalid message id');
+      void queue?.delete([id]);
+    },
+    [queue],
+  );
+
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
       {/* Thread */}
@@ -165,6 +173,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
           streaming={processor?.streaming.value}
           onSubmit={processor ? handleSubmit : undefined}
           onSuggest={processor ? handleSuggest : undefined}
+          onDelete={processor ? handleDelete : undefined}
           {...props}
         />
       </div>

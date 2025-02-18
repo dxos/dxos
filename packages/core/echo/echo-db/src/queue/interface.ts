@@ -6,4 +6,5 @@ export type Queue<T> = {
   isLoading: boolean;
   error: Error | null;
   append(items: T[]): void;
+  delete(ids: string[]): void;
 };
