@@ -8,7 +8,7 @@ export default [
   {
     'en-US': {
       [THEME_EDITOR_PLUGIN]: {
-        'theme editor label': 'Theme editor'
+        'theme editor label': 'Theme editor',
       },
     },
   },
