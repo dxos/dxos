@@ -10,7 +10,6 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
-import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
@@ -91,7 +90,11 @@ export const ViewEditor = ({
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      arrayMove(view.fields, fromIndex, toIndex);
+      // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
+      const fields = [...view.fields];
+      const [moved] = fields.splice(fromIndex, 1);
+      fields.splice(toIndex, 0, moved);
+      view.fields = fields;
     },
     [view.fields],
   );
