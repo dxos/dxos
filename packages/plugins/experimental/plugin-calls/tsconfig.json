@@ -70,9 +70,6 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
-      "path": "../../plugin-attention"
-    },
-    {
       "path": "../../plugin-client"
     },
     {
