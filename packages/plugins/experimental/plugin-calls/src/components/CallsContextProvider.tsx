@@ -18,6 +18,7 @@ import {
   useSubscribedState,
   useRoom,
   useUserMedia,
+  useIsSpeaking,
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
@@ -79,6 +80,7 @@ const Room: FC<RoomProps> = ({
 
   const room = useRoom({ roomId });
   const userMedia = useUserMedia();
+  const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const scaleResolutionDownBy = useMemo(() => {
@@ -131,6 +133,7 @@ const Room: FC<RoomProps> = ({
     space,
     joined,
     setJoined,
+    isSpeaking,
     dataSaverMode,
     setDataSaverMode,
     iceConnectionState,

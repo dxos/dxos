@@ -11,7 +11,7 @@ import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
 import { Transcription } from './Transcription';
-import { useRoomContext, useBroadcastStatus, useIsSpeaking } from '../../hooks';
+import { useRoomContext, useBroadcastStatus } from '../../hooks';
 import { ParticipantsLayout } from '../Participant';
 import { CameraButton, MicButton, ScreenshareButton, TranscriptionButton } from '../Video';
 
@@ -41,6 +41,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     space,
     userMedia,
     peer,
+    isSpeaking,
     pushedTracks,
     setJoined,
     room: { otherUsers, updateUserState, identity, ai },
@@ -53,13 +54,13 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     }
   });
 
-  const speaking = useIsSpeaking(userMedia.audioTrack);
-
-  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking });
+  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
-      {ai.transcription.enabled && <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} />}
+      {ai.transcription.enabled && (
+        <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} isSpeaking={isSpeaking} />
+      )}
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         <div className='flex flex-col h-full overflow-y-scroll'>
           <ParticipantsLayout identity={identity} users={otherUsers} debugEnabled={debugEnabled} />

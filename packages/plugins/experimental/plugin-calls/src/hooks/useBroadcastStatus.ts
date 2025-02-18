@@ -63,12 +63,16 @@ export const useBroadcastStatus = ({
 
     log.info('>>> useBroadcastStatus', { state });
     updateUserState(state);
-    const t = setTimeout(() => {
-      updateUserState(state);
+    const t = setInterval(() => {
+      try {
+        updateUserState(state);
+      } catch (err) {
+        log.error('useBroadcastStatus', { err });
+      }
     }, 2_000);
 
     return () => {
-      clearTimeout(t);
+      clearInterval(t);
     };
   }, [
     identity?.id,

@@ -5950,9 +5950,6 @@ importers:
       effect:
         specifier: ^3.12.3
         version: 3.12.7
-      react-flip-toolkit:
-        specifier: ^7.2.4
-        version: 7.2.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-router-dom:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -25826,10 +25823,6 @@ packages:
   flatted@3.3.1:
     resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
 
-  flip-toolkit@7.2.4:
-    resolution: {integrity: sha512-NT81ikyHPk72riMe1U01x698YIMSypMF5mQBhRklWVgf2xgWH3EPfrrVRAkz/+TSCq0rLPsr/uKIYkwHrowKZQ==}
-    engines: {node: '>=8', npm: '>=5'}
-
   flow-parser@0.190.0:
     resolution: {integrity: sha512-9jxaqkeeARD//nhwDoN//j+EFcwzKJCGPtTQzUdKZdlZG3JmUdbV6XJFLD9sbWFPUmcCT1mblwILwdoq0mKWQw==}
     engines: {node: '>=0.4.0'}
@@ -30873,13 +30866,6 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
-  react-flip-toolkit@7.2.4:
-    resolution: {integrity: sha512-+aZBZwzHBDfJzMRLjAAOKiBkrk8PV0YFVE0k1x85+UsykApLwg8a0LlQ5H80uFltFZmGtrQ7EE1krhiZ1jI5ig==}
-    engines: {node: '>=8', npm: '>=5'}
-    peerDependencies:
-      react: ~18.2.0
-      react-dom: ~18.2.0
-
   react-floater@0.7.9:
     resolution: {integrity: sha512-NXqyp9o8FAXOATOEo0ZpyaQ2KPb4cmPMXGWkx377QtJkIXHlHRAGer7ai0r0C1kG5gf+KJ6Gy+gdNIiosvSicg==}
     peerDependencies:
@@ -31349,9 +31335,6 @@ packages:
 
   remark@14.0.2:
     resolution: {integrity: sha512-A3ARm2V4BgiRXaUo5K0dRvJ1lbogrbXnhkJRmD0yw092/Yl0kOCZt1k9ZeElEwkZsWGsMumz6qL5MfNJH9nOBA==}
-
-  rematrix@0.2.2:
-    resolution: {integrity: sha512-agFFS3RzrLXJl5LY5xg/xYyXvUuVAnkhgKO7RaO9J1Ssth6yvbO+PIiV67V59MB5NCdAK2flvGvNT4mdKVniFA==}
 
   remove-trailing-separator@1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
@@ -51358,10 +51341,6 @@ snapshots:
 
   flatted@3.3.1: {}
 
-  flip-toolkit@7.2.4:
-    dependencies:
-      rematrix: 0.2.2
-
   flow-parser@0.190.0: {}
 
   fn.name@1.1.0: {}
@@ -57444,13 +57423,6 @@ snapshots:
       '@babel/runtime': 7.24.5
       react: 18.2.0
 
-  react-flip-toolkit@7.2.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
-    dependencies:
-      flip-toolkit: 7.2.4
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-
   react-floater@0.7.9(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       deepmerge: 4.3.1
@@ -58116,8 +58088,6 @@ snapshots:
       unified: 10.1.2
     transitivePeerDependencies:
       - supports-color
-
-  rematrix@0.2.2: {}
 
   remove-trailing-separator@1.1.0: {}
 

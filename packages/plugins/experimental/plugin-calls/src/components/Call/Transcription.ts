@@ -32,19 +32,16 @@ export const Transcription = ({
   space,
   userMedia,
   identity,
+  isSpeaking,
   ai,
 }: {
   space: Space;
   userMedia: UserMedia;
   identity: UserState;
+  isSpeaking: boolean;
   ai: Ai;
 }) => {
-  const transcription = useRef<TranscriptionHandler | null>(
-    new TranscriptionHandler({
-      recordingInterval: 15_000,
-      overlap: 0,
-    }),
-  );
+  const transcription = useRef<TranscriptionHandler | null>(new TranscriptionHandler({}));
 
   const doc = useDocument({ space, ai });
 
@@ -63,11 +60,11 @@ export const Transcription = ({
   // if user is not speaking, stop recording after 5 seconds. if speaking, start recording.
   const stopTimeout = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (!identity.speaking) {
+    if (!isSpeaking) {
       stopTimeout.current = setTimeout(() => {
         log.info('stopping recorder');
         transcription.current!.stopRecorder();
-      }, 5_000);
+      }, 1_000);
     } else {
       log.info('starting recorder');
       transcription.current!.startRecorder();
@@ -76,7 +73,7 @@ export const Transcription = ({
         stopTimeout.current = null;
       }
     }
-  }, [identity.speaking]);
+  }, [isSpeaking]);
 
   useUnmount(() => {
     transcription.current!.stopRecorder();

@@ -17,6 +17,7 @@ export type RoomContextType = {
   space: Space;
   roomId: PublicKey;
   thread?: ThreadType;
+  isSpeaking: boolean;
   joined: boolean;
   setJoined: Dispatch<SetStateAction<boolean>>;
   dataSaverMode: boolean;
