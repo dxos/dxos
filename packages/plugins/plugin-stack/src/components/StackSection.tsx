@@ -107,7 +107,7 @@ export const StackSection = ({
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
           <StackItem.Content toolbar={false} classNames='attention-surface'>
-            <h2 className={mx('flex items-center p-4 font-medium is-full', textBlockWidth)}>{view.title}</h2>
+            <h2 className={mx('flex items-center p-4 font-medium', textBlockWidth)}>{view.title}</h2>
           </StackItem.Content>
         )}
       </StackItem.Root>

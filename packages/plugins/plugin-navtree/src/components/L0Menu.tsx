@@ -107,7 +107,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
         </Root>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side='right' classNames='text-md'>
+        <Tooltip.Content side='right'>
           {localizedString}
           <Tooltip.Arrow />
         </Tooltip.Content>
