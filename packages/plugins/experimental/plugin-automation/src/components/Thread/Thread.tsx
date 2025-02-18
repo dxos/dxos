@@ -16,15 +16,21 @@ import { AUTOMATION_PLUGIN } from '../../meta';
 export type ThreadProps = {
   messages?: Message[];
   streaming?: boolean;
-  debug?: boolean;
   onSubmit?: (message: string) => void;
   onStop?: () => void;
-  onSuggest?: (text: string) => void;
-  onDelete?: (id: string) => void;
-};
+} & Pick<ThreadMessageProps, 'collapse' | 'debug' | 'onSuggest' | 'onDelete'>;
 
 // TODO(burdon): Factor out scroll logic.
-export const Thread = ({ messages, streaming, debug, onSubmit, onStop, onSuggest, onDelete }: ThreadProps) => {
+export const Thread = ({
+  messages,
+  streaming,
+  collapse,
+  debug,
+  onSubmit,
+  onStop,
+  onSuggest,
+  onDelete,
+}: ThreadProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scroller = useRef<ScrollController>(null);
 
@@ -56,58 +62,61 @@ export const Thread = ({ messages, streaming, debug, onSubmit, onStop, onSuggest
    * For example, collapse all tool request/response pairs into a single message.
    */
   // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
-  const { messages: lines = [] } = useMemo(
-    () =>
-      (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(
-        ({ current, messages }, message) => {
-          let i = 0;
-          for (const block of message.content) {
-            switch (block.type) {
-              case 'tool_use':
-              case 'tool_result': {
-                if (current) {
-                  current.content.push(block);
-                } else {
-                  current = {
-                    id: [message.id, i].join('_'),
-                    role: message.role,
-                    content: [block],
-                  };
-                  messages.push(current);
-                }
-                break;
-              }
+  const { messages: lines = [] } = useMemo(() => {
+    if (!collapse) {
+      return { messages: messages ?? [] };
+    }
 
-              case 'text':
-              default: {
-                current = undefined;
-                messages.push({
+    return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(
+      ({ current, messages }, message) => {
+        let i = 0;
+        for (const block of message.content) {
+          switch (block.type) {
+            case 'tool_use':
+            case 'tool_result': {
+              if (current) {
+                current.content.push(block);
+              } else {
+                current = {
                   id: [message.id, i].join('_'),
                   role: message.role,
                   content: [block],
-                });
-                break;
+                };
+                messages.push(current);
               }
+              break;
             }
 
-            i++;
+            case 'text':
+            default: {
+              current = undefined;
+              messages.push({
+                id: [message.id, i].join('_'),
+                role: message.role,
+                content: [block],
+              });
+              break;
+            }
           }
 
-          return { current, messages };
-        },
-        { messages: [] as Message[] },
-      ),
-    [messages],
-  );
+          i++;
+        }
+
+        return { current, messages };
+      },
+      { messages: [] as Message[] },
+    );
+  }, [messages, collapse]);
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <ScrollContainer ref={scroller} classNames='py-2 gap-2 overflow-x-hidden'>
-        {messages?.map((message) => (
+        {lines.map((message) => (
           <ThreadMessage
             key={message.id}
             classNames='px-4'
             message={message}
+            collapse={collapse}
             debug={debug}
             onSuggest={onSuggest}
             onDelete={onDelete}

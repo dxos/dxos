@@ -3,9 +3,10 @@
 //
 
 import React, { useState, useMemo, type ReactNode, useEffect, type FC, type PropsWithChildren } from 'react';
-import { of } from 'rxjs';
+import { from, of, switchMap } from 'rxjs';
 
-import { type PublicKey } from '@dxos/react-client';
+import { type ThreadType } from '@dxos/plugin-space/types';
+import { useConfig, type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
 import {
@@ -17,6 +18,7 @@ import {
   useSubscribedState,
   useRoom,
   useUserMedia,
+  useIsSpeaking,
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
@@ -32,17 +34,18 @@ type RoomData = {
 
 type CallsContextProps = {
   space: Space;
-  iceServers: RTCIceServer[];
   roomId: PublicKey;
+  thread?: ThreadType;
   children: ReactNode;
 };
 
-export const CallsContextProvider: FC<CallsContextProps> = ({ space, iceServers, roomId, children }) => {
+export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thread, children }) => {
+  const config = useConfig();
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   useEffect(() => {
     setRoomData({
       space,
-      iceServers,
+      iceServers: config.get('runtime.services.ice') ?? [],
       feedbackEnabled: true,
       maxWebcamFramerate: 24,
       maxWebcamBitrate: 1200000,
@@ -77,6 +80,7 @@ const Room: FC<RoomProps> = ({
 
   const room = useRoom({ roomId });
   const userMedia = useUserMedia();
+  const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const scaleResolutionDownBy = useMemo(() => {
@@ -115,10 +119,21 @@ const Room: FC<RoomProps> = ({
   );
   const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
 
+  const pushedScreenShareTrack$ = useMemo(
+    () =>
+      userMedia.screenShareVideoTrack$.pipe(
+        switchMap((track) => (track ? from(peer.pushTrack(of(track))) : of(undefined))),
+      ),
+    [peer, userMedia.screenShareVideoTrack$],
+  );
+  const pushedScreenShareTrack = useSubscribedState(pushedScreenShareTrack$);
+
   const context: RoomContextType = {
+    roomId,
     space,
     joined,
     setJoined,
+    isSpeaking,
     dataSaverMode,
     setDataSaverMode,
     iceConnectionState,
@@ -128,6 +143,7 @@ const Room: FC<RoomProps> = ({
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),
       audio: trackObjectToString(pushedAudioTrack),
+      screenshare: trackObjectToString(pushedScreenShareTrack),
     },
   };
 

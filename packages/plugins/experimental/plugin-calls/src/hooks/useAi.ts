@@ -4,8 +4,6 @@
 
 import { useState } from 'react';
 
-import { log } from '@dxos/log';
-
 import { type Transcription } from '../types';
 
 export type Ai = {
@@ -22,13 +20,6 @@ export const useAi = (): Ai => {
   return {
     transcription,
     setTranscription: (newTranscription: Transcription) => {
-      log.info('>>> setTranscription', {
-        transcription: {
-          ...transcription,
-          ...newTranscription,
-          lamportTimestamp: newTranscription.lamportTimestamp ?? transcription.lamportTimestamp! + 1,
-        },
-      });
       setTranscription({
         ...transcription,
         ...newTranscription,

@@ -5,6 +5,8 @@
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 
 import { raise } from '@dxos/debug';
+import { type ThreadType } from '@dxos/plugin-space/types';
+import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
 import { type UseRoomState } from './useRoom';
@@ -13,6 +15,9 @@ import { type RxjsPeer } from '../utils';
 
 export type RoomContextType = {
   space: Space;
+  roomId: PublicKey;
+  thread?: ThreadType;
+  isSpeaking: boolean;
   joined: boolean;
   setJoined: Dispatch<SetStateAction<boolean>>;
   dataSaverMode: boolean;

@@ -2,22 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FC, type ReactElement, useMemo } from 'react';
+import { useMemo } from 'react';
 import { of, switchMap } from 'rxjs';
 
-import { usePulledAudioTrack } from './PullAudioTracks';
 import { useRoomContext, useStateObservable, useSubscribedState } from '../../hooks';
 import { type TrackObject } from '../../types';
 
-interface PullTracksProps {
-  video?: string;
-  audio?: string;
-  children: (props: { videoTrack?: MediaStreamTrack; audioTrack?: MediaStreamTrack }) => ReactElement;
-}
-
-export const PullVideoTrack: FC<PullTracksProps> = ({ video, audio, children }) => {
-  const { peer } = useRoomContext()!;
-  const audioTrack = usePulledAudioTrack(audio);
+export const usePulledVideoTrack = (video: string | undefined) => {
+  const { peer } = useRoomContext();
 
   const [sessionId, trackName] = video?.split('/') ?? [];
   const trackObject = useMemo(
@@ -37,7 +29,5 @@ export const PullVideoTrack: FC<PullTracksProps> = ({ video, audio, children }) 
     () => trackObject$.pipe(switchMap((track) => (track ? peer.pullTrack(of(track)) : of(undefined)))),
     [peer, trackObject$],
   );
-  const videoTrack = useSubscribedState(pulledTrack$);
-
-  return children({ videoTrack, audioTrack });
+  return useSubscribedState(pulledTrack$);
 };

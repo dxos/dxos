@@ -39,13 +39,22 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
 
   // TODO(burdon): Factor out tool blocks.
   const tools = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
-  if (tools.length > 0) {
+  if (collapse && tools.length > 0) {
+    let request: MessageContentBlock & { type: 'tool_use' };
     const lines = tools.map((tool) => {
       switch (tool.type) {
-        case 'tool_use':
+        case 'tool_use': {
+          request = tool;
+          // TODO(burdon): Get plugin name.
           return `Calling ${tool.name}...`;
-        case 'tool_result':
-          return 'Processing results...';
+        }
+        case 'tool_result': {
+          if (!request) {
+            return 'Error';
+          }
+
+          return `Processed ${request.name}`;
+        }
         default:
           return 'Error';
       }
