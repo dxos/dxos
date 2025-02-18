@@ -33,6 +33,8 @@ export class FunctionType extends TypedObject({
   name: S.NonEmptyString,
   version: S.String,
 
+  description: S.optional(S.String),
+
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
   source: S.optional(Ref(ScriptType)),

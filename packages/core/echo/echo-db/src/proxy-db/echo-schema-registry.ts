@@ -99,7 +99,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     const self = this;
 
     const filterOrderResults = (schemas: EchoSchema[]) => {
-      log.debug('Filtering schemas', { schemas, query });
+      log('Filtering schemas', { schemas, query });
       return (
         schemas
           .filter((schema) => validateStoredSchemaIntegrity(schema.storedSchema))
@@ -147,7 +147,17 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return new SchemaRegistryPreparedQueryImpl({
       changes,
       getResultsSync() {
-        return filterOrderResults([...self._schemaById.values()]);
+        const objects = self._db
+          .query(Filter.schema(StoredSchema))
+          .runSync()
+          .map((result) => result.object)
+          .filter((object) => object != null);
+        const results = filterOrderResults(
+          objects.map((stored) => {
+            return self._register(stored);
+          }),
+        );
+        return results;
       },
       async getResults() {
         const { objects } = await self._db.query(Filter.schema(StoredSchema)).run();

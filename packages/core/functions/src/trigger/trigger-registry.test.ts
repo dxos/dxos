@@ -236,7 +236,9 @@ describe('trigger registry', () => {
       const triggers = createTriggers(space, 3);
 
       const triggerLoaded = new Trigger();
-      registry.registered.on((fn) => triggerLoaded.wake());
+      registry.registered.on(() => {
+        triggerLoaded.wake();
+      });
 
       const triggerRemoved = new Trigger<FunctionTrigger>();
       registry.removed.on((fn) => {

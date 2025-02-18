@@ -3,7 +3,6 @@
 //
 
 import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -135,8 +134,8 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: LoadObjectParams) {
-    const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
+  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {
+    const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
     }

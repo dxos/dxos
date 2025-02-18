@@ -45,7 +45,7 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
           return;
         }
 
-        if (model?.isValidMove({ source: piece.location, target: location, piece: piece.type })) {
+        if (model?.isValidMove({ from: piece.location, to: location, piece: piece.type })) {
           setState('validMove');
         } else {
           setState('invalidMove');

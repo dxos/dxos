@@ -10,6 +10,7 @@ import { CurrencyAnnotationId } from './number';
 import * as ObjectUtil from './object';
 import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
+import { DescriptionAnnotationId } from '@effect/schema/AST';
 
 // TODO(burdon): Consider factoring out to separate `@dxos/json-schema`
 // TODO(burdon): Media encoding.
@@ -54,6 +55,7 @@ export namespace Format {
  * List of annotations for JSON encoding/decoding.
  */
 export const CustomAnnotations = {
+  description: DescriptionAnnotationId,
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
 };

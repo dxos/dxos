@@ -54,6 +54,14 @@ export namespace TableAction {
     }),
     output: S.Void,
   }) {}
+
+  export class AddRow extends S.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
+    input: S.Struct({
+      table: TableType,
+      data: S.Any,
+    }),
+    output: S.Void,
+  }) {}
 }
 
 export const isTable = (object: unknown): object is TableType => object != null && object instanceof TableType;

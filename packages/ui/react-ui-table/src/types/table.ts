@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, ObjectId, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { Ref, ObjectId, S, TypedObject, Expando } from '@dxos/echo-schema';
+// import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = S.Struct({
@@ -11,7 +11,7 @@ export const TableSchema = S.Struct({
   name: S.optional(S.String),
   view: S.optional(Ref(ViewType)),
   // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
-  threads: S.optional(S.Array(Ref(ThreadType))),
+  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))), // TODO(dmaretskyi): Breaks edge because plugin-space depends on react-client.
 });
 
 // type TableType = S.Schema.Type<typeof TableSchema>;

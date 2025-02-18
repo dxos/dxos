@@ -70,7 +70,11 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   const context = getContextFromEntry(entry);
   if (context) {
-    args.push(context);
+    if (Object.keys(context).length === 1 && 'error' in context) {
+      args.push(context.error);
+    } else {
+      args.push(context);
+    }
   }
 
   // https://github.com/cloudflare/workers-sdk/issues/5591

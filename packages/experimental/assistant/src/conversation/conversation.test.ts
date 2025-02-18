@@ -5,34 +5,35 @@
 import { Schema as S } from '@effect/schema';
 import { describe, test } from 'vitest';
 
+import { createUserMessage, defineTool, ToolResult } from '@dxos/artifact';
+import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { createUserMessage, defineTool, LLMToolResult } from './types';
-import { AIServiceClientImpl, ObjectId } from '../ai-service';
+import { AIServiceClientImpl } from '../ai-service';
+import { AI_SERVICE_ENDPOINT } from '../testing';
 
-const ENDPOINT = 'http://localhost:8787';
-
+// TODO(burdon): Local live LLM test.
 describe.skip('Conversation tests', () => {
   const client = new AIServiceClientImpl({
-    endpoint: ENDPOINT,
+    endpoint: AI_SERVICE_ENDPOINT.LOCAL,
   });
 
-  test('hello', async ({ expect }) => {
+  test('basic', async ({ expect }) => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([createUserMessage(spaceId, threadId, 'Hello, how are you?')]);
     const result = await runLLM({
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      spaceId,
-      threadId,
+      history: [createUserMessage(spaceId, threadId, 'Hello, how are you?')],
       tools: [],
       client,
       logger: messageLogger,
     });
-    log.info('result', { result });
+
+    log('result', { result });
+    expect(result.history.length).to.equal(2);
   });
 
   test('tool call', async ({ expect }) => {
@@ -44,9 +45,9 @@ describe.skip('Conversation tests', () => {
       }),
       execute: async ({ magicWord }) => {
         if (magicWord === 'pretty please') {
-          return LLMToolResult.Success('The password is: "The sky is gray"');
+          return ToolResult.Success('The password is: "The sky is gray"');
         } else {
-          return LLMToolResult.Error('Wrong magic word');
+          return ToolResult.Error('Wrong magic word');
         }
       },
     });
@@ -54,21 +55,19 @@ describe.skip('Conversation tests', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')]);
     const result = await runLLM({
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      spaceId,
-      threadId,
+      history: [createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')],
       tools: [custodian],
       client,
       logger: messageLogger,
     });
-    log.info('result', { result });
+    log('result', { result });
   });
 
   const messageLogger = (event: ConversationEvent) => {
     if (event.type === 'message') {
-      log.info('message', { message: event.message });
+      log('message', { message: event.message });
     }
   };
 });
