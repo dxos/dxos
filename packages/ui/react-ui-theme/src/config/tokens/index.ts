@@ -7,6 +7,7 @@ import adapter from '@ch-ui/tailwind-tokens';
 import { type TokenSet } from '@ch-ui/tokens';
 
 import { aliasColors } from './alias-colors';
+import { lengthsFacet } from './lengths';
 import { physicalColors } from './physical-colors';
 import { semanticColors } from './semantic-colors';
 import { systemAliases, systemSememes } from './sememes-system';
@@ -17,12 +18,25 @@ export const tokenSet = {
     semantic: semanticColors,
     alias: aliasColors,
   },
+  lengths: lengthsFacet,
 } satisfies TokenSet;
 
 const adapterConfig: TailwindAdapterConfig = {
   colors: {
     facet: 'colors',
     disposition: 'overwrite',
+  },
+  borderWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
+  },
+  ringWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
+  },
+  outlineWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
   },
 };
 

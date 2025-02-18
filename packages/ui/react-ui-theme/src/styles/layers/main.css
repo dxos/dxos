@@ -65,7 +65,7 @@
   }
 
   .dx-main-bounce-layout {
-    @apply fixed inset-0 z-0 overflow-auto overscroll-auto
+    @apply fixed inset-0 z-0 overflow-auto overscroll-auto;
   }
 
 }
