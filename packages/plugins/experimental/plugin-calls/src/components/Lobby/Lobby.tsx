@@ -4,11 +4,10 @@
 
 import React, { type FC } from 'react';
 
-import { Button, Icon, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Button, Icon, IconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useSubscribedState, useRoomContext } from '../../hooks';
-import { CameraButton, MicButton } from '../Video';
+import { useSubscribedState, useRoomContext, useHandleMic, useHandleCamera } from '../../hooks';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const {
@@ -21,6 +20,9 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const sessionError = useSubscribedState(peer.sessionError$);
   const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
+  const micProps = useHandleMic();
+  const cameraProps = useHandleCamera();
+
   return (
     <div className={mx('flex flex-col grow overflow-auto', classNames)}>
       <div className='flex justify-between'>
@@ -31,8 +33,8 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
           <div className='grow text-sm text-subdued'>
             {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
           </div>
-          <MicButton />
-          <CameraButton />
+          <IconButton {...micProps} iconOnly />
+          <IconButton {...cameraProps} iconOnly />
         </Toolbar.Root>
       </div>
       {/* {videoEnabled && (

@@ -10,3 +10,7 @@ export * from './useRoomContext';
 export * from './useUserMedia';
 export * from './useIsSpeaking';
 export * from './utils';
+export * from './useHandleScreenshare';
+export * from './useHandleTranscription';
+export * from './useHandleCamera';
+export * from './useHandleMic';

@@ -5,15 +5,21 @@
 import React, { type FC, useEffect, useState } from 'react';
 import { useMount } from 'react-use';
 
-import { Button, Icon, Toolbar, type ThemedClassName } from '@dxos/react-ui';
+import { Toolbar, type ThemedClassName, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { Transcription } from './Transcription';
-import { useRoomContext, useBroadcastStatus } from '../../hooks';
+import { Transcription as TranscriptionHook } from './Transcription';
+import {
+  useRoomContext,
+  useBroadcastStatus,
+  useHandleTranscription,
+  useHandleScreenshare,
+  useHandleCamera,
+  useHandleMic,
+} from '../../hooks';
 import { ParticipantsLayout } from '../Participant';
-import { CameraButton, MicButton, ScreenshareButton, TranscriptionButton } from '../Video';
 
 // TODO(burdon): Factor out.
 export const useDebugEnabled = () => {
@@ -56,10 +62,15 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
 
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
 
+  const transcriptionProps = useHandleTranscription();
+  const screenshareProps = useHandleScreenshare();
+  const micProps = useHandleMic();
+  const cameraProps = useHandleCamera();
+
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       {ai.transcription.enabled && (
-        <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} isSpeaking={isSpeaking} />
+        <TranscriptionHook space={space} userMedia={userMedia} identity={identity} ai={ai} isSpeaking={isSpeaking} />
       )}
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         <div className='flex flex-col h-full overflow-y-scroll'>
@@ -67,21 +78,21 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
         </div>
 
         <Toolbar.Root>
-          <Button
+          <IconButton
             variant='destructive'
+            label='Leave'
             onClick={() => {
               userMedia.turnScreenShareOff();
               userMedia.turnMicOff();
               setJoined(false);
             }}
-          >
-            <Icon icon={'ph--phone-x--regular'} />
-          </Button>
+            icon='ph--phone-x--regular'
+          />
           <div className='grow'></div>
-          <TranscriptionButton />
-          <ScreenshareButton />
-          <MicButton />
-          <CameraButton />
+          <IconButton {...transcriptionProps} iconOnly />
+          <IconButton {...screenshareProps} iconOnly />
+          <IconButton {...micProps} iconOnly />
+          <IconButton {...cameraProps} iconOnly />
         </Toolbar.Root>
       </div>
     </PullAudioTracks>

@@ -2,16 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
 import { useEffect, useState } from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
+import { useRoomContext } from './useRoomContext';
 
-import { useRoomContext } from '../../hooks';
-
-interface ScreenshareButtonProps {}
-
-export const ScreenshareButton: FC<ScreenshareButtonProps> = () => {
+export const useHandleScreenshare = () => {
   const {
     userMedia: { screenShareVideoTrack, turnScreenShareOn, turnScreenShareOff },
     room: { otherUsers },
@@ -33,13 +28,10 @@ export const ScreenshareButton: FC<ScreenshareButtonProps> = () => {
     );
   }, []);
 
-  if (!canShareScreen) {
-    return null;
-  }
-
-  return (
-    <Button variant='default' disabled={otherUserIsSharing} onClick={sharing ? turnScreenShareOff : turnScreenShareOn}>
-      <Icon icon={sharing ? 'ph--selection--regular' : 'ph--selection-slash--regular'} />
-    </Button>
-  );
+  return {
+    onClick: sharing ? turnScreenShareOff : turnScreenShareOn,
+    disabled: !canShareScreen || otherUserIsSharing,
+    icon: sharing ? 'ph--selection--regular' : 'ph--selection-slash--regular',
+    label: sharing ? 'Screenshare' : 'Screenshare Off',
+  };
 };
