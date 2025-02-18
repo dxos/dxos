@@ -4,7 +4,8 @@
 
 import { pipe } from 'effect';
 
-import { chain, useIntentDispatcher, createIntent, LayoutAction } from '@dxos/app-framework';
+import { LayoutAction, chain, useIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { MarkdownAction, type DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 
@@ -35,12 +36,14 @@ export const useHandleTranscription = () => {
           ),
         )
       ).data!.object as DocumentType;
-      await dispatchPromise(
-        createIntent(LayoutAction.Open, {
-          part: 'main',
-          subject: [`markdown:${document.id}`],
-        }),
-      );
+      log.info('open document', {
+        result: await dispatchPromise(
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [`${space.id}:${document.id}`],
+          }),
+        ),
+      });
       newTranscription.objectId = document.id;
     }
     ai.setTranscription(newTranscription);

@@ -13,18 +13,7 @@ const usePinnedParticipant = (users: UserState[]) => {
   const [pinnedParticipant, setPinnedParticipant] = useState<UserState>();
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setPinnedParticipant(undefined);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [setPinnedParticipant]);
-
-  useEffect(() => {
-    const participant = users.find((user) => user.id === pinnedParticipant?.id);
+    const participant = users.find((user) => user.id && pinnedParticipant?.id && pinnedParticipant.id === user.id);
     setPinnedParticipant(participant);
   }, [users]);
   return {
