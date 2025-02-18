@@ -44,7 +44,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
     );
 
   return (
-    <StackItem.Content toolbar={false} role='article' classNames='overflow-y-auto'>
+    <StackItem.Content toolbar={false} role='article' classNames='overflow-x-hidden overflow-y-auto'>
       <PluginList plugins={plugins} enabled={manager.enabled} onClick={handleClick} onChange={handleChange} />
     </StackItem.Content>
   );

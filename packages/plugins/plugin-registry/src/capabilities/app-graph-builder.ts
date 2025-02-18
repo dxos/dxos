@@ -41,6 +41,17 @@ export default (context: PluginsContext) =>
           },
           nodes: [
             {
+              id: `${REGISTRY_KEY}:all`,
+              type: 'category',
+              data: `${REGISTRY_KEY}:all`,
+              properties: {
+                label: ['all plugins label', { ns: REGISTRY_PLUGIN }],
+                icon: 'ph--squares-four--regular',
+                key: REGISTRY_KEY,
+                testId: 'pluginRegistry.all',
+              },
+            },
+            {
               id: `${REGISTRY_KEY}:installed`,
               type: 'category',
               data: `${REGISTRY_KEY}:installed`,
@@ -71,17 +82,6 @@ export default (context: PluginsContext) =>
                 icon: 'ph--flask--regular',
                 key: REGISTRY_KEY,
                 testId: 'pluginRegistry.experimental',
-              },
-            },
-            {
-              id: `${REGISTRY_KEY}:community`,
-              type: 'category',
-              data: `${REGISTRY_KEY}:community`,
-              properties: {
-                label: ['community plugins label', { ns: REGISTRY_PLUGIN }],
-                icon: 'ph--users-three--regular',
-                key: REGISTRY_KEY,
-                testId: 'pluginRegistry.community',
               },
             },
           ],

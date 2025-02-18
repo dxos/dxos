@@ -14,8 +14,6 @@ import { getMode, type Deck, type DeckState } from '../types';
 
 export default () => {
   const state = new LocalStorageStore<DeckState>(DECK_PLUGIN, {
-    // TODO(Zan): Cap depth!
-    modeHistory: [],
     sidebarState: 'expanded',
     complementarySidebarState: 'collapsed',
     complementarySidebarPanel: undefined,
@@ -44,6 +42,7 @@ export default () => {
       invariant(deck, `Deck not found: ${this.activeDeck}`);
       return deck;
     },
+    previousMode: {},
     scrollIntoView: undefined,
   });
 

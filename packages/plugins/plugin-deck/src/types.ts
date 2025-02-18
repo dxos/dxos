@@ -51,8 +51,6 @@ export type Deck = S.Schema.Type<typeof Deck>;
 
 export const DeckState = S.mutable(
   S.Struct({
-    modeHistory: S.mutable(S.Array(LayoutMode)),
-
     sidebarState: S.Literal('closed', 'collapsed', 'expanded'),
     complementarySidebarState: S.Literal('closed', 'collapsed', 'expanded'),
     complementarySidebarPanel: S.optional(S.String),
@@ -77,6 +75,7 @@ export const DeckState = S.mutable(
 
     activeDeck: S.String,
     decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
+    previousMode: S.mutable(S.Record({ key: S.String, value: LayoutMode })),
     deck: S.mutable(Deck),
 
     /**
