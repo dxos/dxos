@@ -14,11 +14,11 @@ export const staticDefaultButtonColors = 'bg-input';
 
 export const defaultButtonColors =
   staticDefaultButtonColors +
-  ' data-[state=open]:bg-input aria-pressed:text-accentText aria-pressed:bg-base aria-checked:text-accentText aria-checked:bg-base';
+  ' data-[state=open]:bg-input aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
 
 export const ghostButtonColors =
   ghostHover +
-  ' hover:text-inherit data-[state=open]:bg-input aria-pressed:text-accentText aria-pressed:bg-base aria-checked:text-accentText aria-checked:bg-base';
+  ' hover:text-inherit data-[state=open]:bg-input aria-pressed:text-accentText aria-pressed:bg-baseSurface aria-checked:text-accentText aria-checked:bg-baseSurface';
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
