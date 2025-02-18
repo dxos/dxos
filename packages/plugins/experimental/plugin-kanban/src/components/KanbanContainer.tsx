@@ -19,11 +19,17 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   useEffect(() => {
     if (kanban.cardView?.target?.query?.type && space) {
-      // TODO(ZaymonFC): We should use a subscription here.
-      const [schema] = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type }).runSync();
-      if (schema) {
-        setCardSchema(schema);
-      }
+      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
+      const unsubscribe = query.subscribe(
+        () => {
+          const [schema] = query.results;
+          if (schema) {
+            setCardSchema(schema);
+          }
+        },
+        { fire: true },
+      );
+      return unsubscribe;
     }
   }, [kanban.cardView?.target?.query, space]);
 

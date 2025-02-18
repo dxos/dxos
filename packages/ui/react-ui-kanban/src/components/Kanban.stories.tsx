@@ -40,10 +40,17 @@ const StorybookKanban = () => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
       setKanban(kanban);
-      const [schema] = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type }).runSync();
-      if (schema) {
-        setCardSchema(schema);
-      }
+      const query = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type });
+      const unsubscribe = query.subscribe(
+        () => {
+          const [schema] = query.results;
+          if (schema) {
+            setCardSchema(schema);
+          }
+        },
+        { fire: true },
+      );
+      return unsubscribe;
     }
   }, [kanbans]);
 
