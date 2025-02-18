@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions';
+import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
 
 import { ScriptCapabilities } from './capabilities';
@@ -17,12 +18,10 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${SCRIPT_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === SCRIPT_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)!.value;
-        return <ScriptSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === SCRIPT_PLUGIN,
+      component: ({ data: { subject } }) => <ScriptSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${SCRIPT_PLUGIN}/article`,
