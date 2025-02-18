@@ -108,6 +108,9 @@
       "path": "../../plugins/experimental/plugin-template"
     },
     {
+      "path": "../../plugins/experimental/plugin-theme-editor"
+    },
+    {
       "path": "../../plugins/plugin-attention"
     },
     {
