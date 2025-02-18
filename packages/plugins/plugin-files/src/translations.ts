@@ -24,7 +24,7 @@ export default [
         'trigger import label': 'Import from a previous export',
         'save files to directory label': 'Export directory',
         'save files to directory description':
-          'At this time, export is intended for backup and exit purposes only. The export action overwrites all content in the selected directory.',
+          'NOTE: Export is intended for backup and overwrites all content in the selected directory.',
         'auto export label': 'Enable auto export',
         'auto export interval label': 'Auto export interval (seconds)',
         'open local files label': 'Directly open local files (experimental)',
