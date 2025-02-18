@@ -7,7 +7,7 @@
       }
 
       &:focus-visible {
-        @apply ring-[length:var(--dx-focusLine)] ring-offset-[length:var(--dx-focusOffset)] z-[1] ring-accentFocusIndicator;
+        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-accentFocusIndicator;
 
         &:hover {
           @apply outline-none;
@@ -28,7 +28,7 @@
       }
 
       &:focus-visible .dx-focus-ring-group-indicator {
-        @apply ring-[length:var(--dx-focusLine)] ring-offset-[length:var(--dx-focusOffset)] ring-accentFocusIndicator;
+        @apply ring-focusLine ring-offset-focusOffset ring-accentFocusIndicator;
 
         &:hover {
           @apply outline-none;
@@ -64,7 +64,7 @@
 
       &:focus-visible {
         &::after {
-          @apply ring-[length:var(--dx-focusLine)] ring-offset-[length:var(--dx-focusOffset)] ring-inset z-[1] ring-accentFocusIndicator;
+          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-accentFocusIndicator;
         }
 
         &:hover {
