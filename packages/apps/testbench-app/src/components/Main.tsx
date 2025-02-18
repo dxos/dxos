@@ -193,7 +193,7 @@ export const Main = () => {
 
   return (
     <div className='flex flex-row grow justify-center overflow-hidden'>
-      <div className='flex flex-col grow bg-base'>
+      <div className='flex flex-col grow bg-baseSurface'>
         <AppToolbar
           onHome={() => window.open(defs.issueUrl, 'DXOS')}
           onProfile={() => {

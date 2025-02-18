@@ -24,11 +24,11 @@
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
-        @apply bg-base text-accentText;
+        @apply bg-baseSurface text-accentText;
       }
     }
     &[data-variant='outline'] {
-      @apply border border-base bg-transparent;
+      @apply border border-baseSurface bg-transparent;
       &:hover {
         @apply bg-hoverSurface;
       }
