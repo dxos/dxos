@@ -63,9 +63,21 @@ export const useBroadcastStatus = ({
 
     log.info('>>> useBroadcastStatus', { state });
     updateUserState(state);
+    const t = setInterval(() => {
+      try {
+        updateUserState(state);
+      } catch (err) {
+        log.error('useBroadcastStatus', { err });
+      }
+    }, 2_000);
+
+    return () => {
+      clearInterval(t);
+    };
   }, [
     identity?.id,
     identity?.name,
+    identity?.joined,
     sessionId,
     audio,
     video,

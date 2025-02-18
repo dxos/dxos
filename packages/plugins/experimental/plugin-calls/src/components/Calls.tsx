@@ -20,15 +20,14 @@ const Content = () => {
 export type CallsProps = {
   space: Space;
   roomId: PublicKey;
-  iceServers: RTCIceServer[];
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ space, roomId, iceServers }) => {
+export const Calls: FC<CallsProps> = ({ space, roomId }) => {
   return (
-    <CallsContextProvider space={space} roomId={roomId} iceServers={iceServers}>
+    <CallsContextProvider space={space} roomId={roomId}>
       <Content />
     </CallsContextProvider>
   );

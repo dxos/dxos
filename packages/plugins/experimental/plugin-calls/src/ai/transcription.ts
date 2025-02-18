@@ -24,29 +24,14 @@ type Segment = {
 
 type RecorderChunk = { data: Blob; timestamp: number };
 
+export const HEADER_LENGTH = 181;
+
 export class Transcription extends Resource {
   private _document?: ReactiveEchoObject<DocumentType> = undefined;
   private _recorder?: MediaRecorder = undefined;
-  private _header?: Uint8Array = undefined;
   private _audioChunks: RecorderChunk[] = [];
   private _lastSegEndTimestamp = 0;
   private _identity?: UserState;
-
-  constructor(
-    public readonly config: {
-      /**
-       * How much overlap between chunks.
-       */
-      recordingInterval: number;
-
-      /**
-       * How often to send the last `recordingLength` seconds of audio to the server.
-       */
-      overlap: number;
-    },
-  ) {
-    super();
-  }
 
   protected override async _close() {
     this._recorder?.stop();
@@ -83,7 +68,7 @@ export class Transcription extends Resource {
       log.verbose('Recorder already recording');
       return;
     }
-    this._recorder.start(this.config.recordingInterval);
+    this._recorder.start();
   }
 
   stopRecorder() {
@@ -94,13 +79,14 @@ export class Transcription extends Resource {
   @synchronized
   private async _ondataavailable(event: BlobEvent) {
     try {
+      log.info('>>> transcription._ondataavailable', { event });
       await this._saveAudioBlob(event.data);
       invariant(this._document, 'No document');
       const chunksToUse = this._audioChunks;
       const audio = this._mergeAudioChunks(chunksToUse);
       const segments = await this._fetchTranscription(audio);
       this._updateDocument(segments, chunksToUse);
-      this._audioChunks = chunksToUse.slice(-this.config.overlap);
+      this._audioChunks = [];
     } catch (error) {
       log.error('Error in transcription', { error });
     }
@@ -108,16 +94,17 @@ export class Transcription extends Resource {
 
   private async _saveAudioBlob(blob: Blob) {
     const now = Date.now();
-    if (!this._header && blob.size >= 181) {
-      this._header = new Uint8Array((await blob.arrayBuffer()).slice(0, 181));
+    if (blob.size === 0) {
+      return;
     }
-    if (blob.size > 0) {
-      this._audioChunks.push({ data: blob, timestamp: now });
-    }
+    this._audioChunks.push({
+      data: blob,
+      timestamp: now,
+    });
   }
 
   private _mergeAudioChunks(chunks: RecorderChunk[]) {
-    return new Blob([this._header!, ...chunks.map(({ data }) => data)]);
+    return new Blob([...chunks.map(({ data }) => data)], { type: chunks.at(0)!.data.type });
   }
 
   private async _fetchTranscription(audio: Blob) {
