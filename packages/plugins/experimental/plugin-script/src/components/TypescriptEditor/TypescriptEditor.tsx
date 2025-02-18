@@ -127,7 +127,7 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
 
   return (info: HoverInfo) => {
     const div = document.createElement('div');
-    div.className = 'p-1 rounded border border-separator bg-base xs:max-w-80 max-w-lg';
+    div.className = 'p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg';
 
     if (info.quickInfo?.displayParts) {
       for (const part of info.quickInfo.displayParts) {
