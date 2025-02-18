@@ -7,7 +7,7 @@ import { type AliasLayer } from '@ch-ui/tokens';
 import { systemAliases } from './sememes-system';
 
 export const aliasColors = {
-  statements: ['root:'],
+  statements: [':root'],
   aliases: {
     ...systemAliases,
   },
