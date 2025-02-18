@@ -36,7 +36,7 @@ export const StatusLine = ({
       return;
     }
 
-    const interval = setInterval(() => {
+    const next = () => {
       setCurrentLine((prev) => {
         if (prev === lines.length - 1) {
           clearInterval(interval);
@@ -45,7 +45,10 @@ export const StatusLine = ({
 
         return prev + 1;
       });
-    }, advance);
+    };
+
+    next();
+    const interval = setInterval(next, advance);
 
     return () => clearInterval(interval);
   }, [lines.length, autoAdvance, advance]);

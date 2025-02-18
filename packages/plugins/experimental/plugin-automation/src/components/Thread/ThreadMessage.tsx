@@ -11,6 +11,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
+import { StatusLine } from './StatusLine';
 import { ToggleContainer } from './ToggleContainer';
 import { MarkdownViewer } from '../MarkdownViewer';
 
@@ -26,6 +27,25 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, col
   }
 
   const { role, content = [] } = message;
+  const tools = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
+  if (tools.length > 0) {
+    const lines = tools.map((tool) => {
+      switch (tool.type) {
+        case 'tool_use':
+          return `Calling ${tool.name}...`;
+        case 'tool_result':
+          return 'Processing results...';
+        default:
+          return 'Error';
+      }
+    });
+    return (
+      <div className={mx(classNames)}>
+        <StatusLine classNames='p-1 px-2' lines={lines} autoAdvance />
+      </div>
+    );
+  }
+
   return (
     <div className={mx('flex flex-col shrink-0 gap-2')}>
       {debug && <div className='text-xs text-subdued'>{message.id}</div>}

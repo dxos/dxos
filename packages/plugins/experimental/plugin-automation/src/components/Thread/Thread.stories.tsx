@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
@@ -18,8 +18,11 @@ import translations from '../../translations';
 faker.seed(1);
 
 const Render = ({ messages: _messages, ...props }: ThreadProps) => {
-  const [messages, setMessages] = useState<Message[]>(_messages ?? []);
   const [streaming, setStreaming] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(_messages ?? []);
+  useEffect(() => {
+    setMessages(_messages ?? []);
+  }, [_messages]);
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -156,13 +159,32 @@ const TEST_MESSAGES: Message[] = [
 
 export const Default: Story = {
   args: {
-    messages: TEST_MESSAGES,
     debug: true,
+    messages: TEST_MESSAGES,
   },
 };
 
 export const Input: Story = {
   args: {
     streaming: true,
+  },
+};
+
+export const Incremental: Story = {
+  render: () => {
+    const [messages, setMessages] = useState<Message[]>([]);
+    useEffect(() => {
+      let i = 0;
+      const interval = setInterval(() => {
+        setMessages((messages) => [...messages, TEST_MESSAGES[i++]]);
+        if (i >= TEST_MESSAGES.length) {
+          clearInterval(interval);
+        }
+      }, 2_000);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    return <Render messages={messages} />;
   },
 };
