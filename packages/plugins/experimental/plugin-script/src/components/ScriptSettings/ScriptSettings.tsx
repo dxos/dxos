@@ -9,6 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { SCRIPT_PLUGIN } from '../../meta';
 import { type ScriptSettingsProps } from '../../types';
@@ -39,7 +40,7 @@ export const ScriptSettings = ({ settings }: { settings: ScriptSettingsProps }) 
   };
 
   return (
-    <>
+    <StackItem.Content toolbar={false} role='article' classNames='p-4 block overflow-y-auto'>
       {/* TODO(wittjosiah): Hide outside of dev environments. */}
       <DeprecatedFormInput label={t('authenticate action label')}>
         <Button onClick={handleAuthenticate}>{t('authenticate button label')}</Button>
@@ -66,6 +67,6 @@ export const ScriptSettings = ({ settings }: { settings: ScriptSettingsProps }) 
           </Select.Portal>
         </Select.Root>
       </DeprecatedFormInput>
-    </>
+    </StackItem.Content>
   );
 };
