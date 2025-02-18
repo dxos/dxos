@@ -136,6 +136,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     'additionalProperties',
 
     'anyOf',
+    'oneOf',
   ]);
 
   return jsonSchema;

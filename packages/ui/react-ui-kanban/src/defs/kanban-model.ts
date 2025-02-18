@@ -42,6 +42,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._kanban = kanban;
     this._cardSchema = cardSchema;
     this._projection = projection;
+    this._computeArrangement();
   }
 
   // Main getters/setters

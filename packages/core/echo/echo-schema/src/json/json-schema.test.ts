@@ -317,12 +317,29 @@ describe('json-to-effect', () => {
     };
 
     const schema = toEffectSchema(jsonSchema);
-    // TODO(Zan): Workout where the annotations are going?
     const origSchema = S.Struct({
       selectedOption: S.Union(S.Literal('option-1-id'), S.Literal('option-2-id'), S.Literal('option-3-id')),
     });
 
     expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(origSchema.ast));
+  });
+
+  test('single-select with oneOf round trip', () => {
+    const originalSchema = {
+      type: 'string',
+      format: 'single-select',
+      oneOf: [
+        { const: 'b590d58c', title: 'Draft', color: 'indigo' },
+        { const: '8185fe74', title: 'Active', color: 'cyan' },
+        { const: 'e8455752', title: 'Completed', color: 'emerald' },
+      ],
+      title: 'State',
+    } as any as JsonSchemaType;
+
+    const effectSchema = toEffectSchema(originalSchema);
+    const roundTrippedSchema = toJsonSchema(effectSchema);
+
+    expect(roundTrippedSchema).to.deep.equal(originalSchema);
   });
 
   const prepareAstForCompare = (obj: AST.AST): any =>

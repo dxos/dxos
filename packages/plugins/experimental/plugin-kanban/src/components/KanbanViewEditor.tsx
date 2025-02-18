@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type EchoSchema, FormatEnum } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
@@ -41,9 +42,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {
-      if (!schema) {
-        return;
-      }
+      invariant(schema);
       const matchingViews = views.filter((view) => view.query.type === currentTypename);
       for (const view of matchingViews) {
         view.query.type = newTypename;
@@ -62,7 +61,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     if (kanban?.cardView?.target && schema) {
       return new ViewProjection(schema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
 
   const selectFields = useMemo(() => {
     if (!projection) {
