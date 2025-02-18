@@ -31,7 +31,8 @@ export const lengthsFacet = {
     namespace: 'dx-',
     statements: [':root'],
     aliases: {
-      hairLine: ['modalLine', 'gridLine'],
+      noLine: ['focusOffset'],
+      hairLine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridLine'],
       thickLine: ['focusLine'],
     },
   },
