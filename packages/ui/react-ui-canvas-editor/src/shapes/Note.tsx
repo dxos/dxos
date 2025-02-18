@@ -20,7 +20,7 @@ export const createNote = ({ id, ...rest }: CreateNoteProps): NoteShape => ({
 
 export const NoteComponent = ({ shape }: ShapeComponentProps<NoteShape>) => {
   const { text } = shape;
-  return <TextBox value={text} />;
+  return <TextBox value={text} placeholder='Note...' />;
 };
 
 export const noteShape: ShapeDef<NoteShape> = {

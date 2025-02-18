@@ -22,7 +22,7 @@ export type ToolsProps = ThemedClassName<{
 // TODO(burdon): Toolbar/menu.
 export const Tools = ({ classNames, registry }: ToolsProps) => {
   return (
-    <div className={mx('flex gap-4', classNames)}>
+    <div className={mx('flex flex-wrap gap-2 max-w-[80%] justify-center', classNames)}>
       {registry.defs.map(({ shapes }, i) => (
         <div key={i} className='flex p-1 gap-2 items-center bg-base rounded-md border border-separator'>
           {shapes.map((shape) => (

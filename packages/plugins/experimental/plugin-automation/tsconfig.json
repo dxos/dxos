@@ -148,6 +148,9 @@
       "path": "../../plugin-stack"
     },
     {
+      "path": "../../plugin-table"
+    },
+    {
       "path": "../../plugin-wnfs"
     },
     {

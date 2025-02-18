@@ -5760,6 +5760,9 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../../plugin-map
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugin-table
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -10221,6 +10224,9 @@ importers:
 
   packages/sdk/react-edge-client:
     dependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals

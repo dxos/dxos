@@ -85,6 +85,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
+    "@dxos/plugin-table": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

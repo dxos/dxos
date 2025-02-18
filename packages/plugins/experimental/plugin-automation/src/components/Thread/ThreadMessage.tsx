@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -19,9 +19,18 @@ export type ThreadMessageProps = ThemedClassName<{
   message: Message;
   collapse?: boolean;
   debug?: boolean;
+  onSuggest?: (text: string) => void;
+  onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, collapse, debug }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({
+  classNames,
+  message,
+  collapse,
+  debug,
+  onSuggest,
+  onDelete,
+}) => {
   if (typeof message !== 'object') {
     return <div className={mx(classNames)}>{message}</div>;
   }
@@ -55,17 +64,30 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, col
 
   return (
     <div className={mx('flex flex-col shrink-0 gap-2')}>
-      {debug && <div className='text-xs text-subdued'>{message.id}</div>}
+      {debug && (
+        <div className='text-xs text-subdued'>
+          {message.id}{' '}
+          {onDelete && (
+            <span className='cursor-pointer underline' onClick={() => onDelete(message.id)}>
+              delete
+            </span>
+          )}
+        </div>
+      )}
       {content.map((block, idx) => (
         <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
-          <Block role={role} block={block} />
+          <Block role={role} block={block} onSuggest={onSuggest ?? (() => {})} />
         </div>
       ))}
     </div>
   );
 };
 
-const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentBlock }) => {
+const Block = ({
+  block,
+  role,
+  onSuggest,
+}: Pick<Message, 'role'> & { block: MessageContentBlock; onSuggest: (text: string) => void }) => {
   const Component = componentMap[block.type] ?? componentMap.default;
   return (
     <div
@@ -75,7 +97,7 @@ const Block = ({ block, role }: Pick<Message, 'role'> & { block: MessageContentB
         block.type === 'text' && role === 'user' && 'bg-blue-200 dark:bg-blue-800',
       )}
     >
-      <Component block={block} />
+      <Component block={block} onSuggest={onSuggest} />
     </div>
   );
 };
@@ -86,9 +108,13 @@ const titles: Record<string, string> = {
   // TODO(burdon): Only show if debugging.
   ['tool_use' as const]: 'Tool request',
   ['tool_result' as const]: 'Tool result',
+
+  ['artifact' as const]: 'Artifact',
 };
 
-const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
+type BlockComponent = FC<{ block: MessageContentBlock; onSuggest: (text: string) => void }>;
+
+const componentMap: Record<string, BlockComponent> = {
   text: ({ block }) => {
     invariant(block.type === 'text');
     const title = block.disposition ? titles[block.disposition] : undefined;
@@ -114,14 +140,35 @@ const componentMap: Record<string, FC<{ block: MessageContentBlock }>> = {
     );
   },
 
-  json: ({ block }) => {
+  json: ({ block, onSuggest }) => {
     invariant(block.type === 'json');
-    const title = block.disposition ? titles[block.disposition] : undefined;
-    return (
-      <ToggleContainer title={title ?? 'JSON'} toggle>
-        <Json data={safeParseJson(block.json ?? block)} classNames='!p-1 text-xs' />
-      </ToggleContainer>
-    );
+
+    switch (block.disposition) {
+      case 'suggest': {
+        const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
+        return <Button onClick={() => onSuggest(text)}>{text}</Button>;
+      }
+      case 'select': {
+        const { options = [] }: { options: string[] } = safeParseJson(block.json ?? '{}') ?? ({} as any);
+        return (
+          <ButtonGroup>
+            {options.map((option) => (
+              <Button key={option} onClick={() => onSuggest(option)}>
+                {option}
+              </Button>
+            ))}
+          </ButtonGroup>
+        );
+      }
+      default: {
+        const title = block.disposition ? titles[block.disposition] : undefined;
+        return (
+          <ToggleContainer title={title ?? 'JSON'} toggle>
+            <Json data={safeParseJson(block.json ?? block)} classNames='!p-1 text-xs' />
+          </ToggleContainer>
+        );
+      }
+    }
   },
 
   default: ({ block }) => {

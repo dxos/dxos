@@ -47,7 +47,7 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
  * Reference Schema.
  */
 //  Naming pattern (Ref$) is borrowed from effect-schema.
-export interface Ref$<T extends WithId> extends S.Schema<Ref<T>, EncodedReference> {}
+export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedReference> {}
 
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
@@ -134,7 +134,7 @@ export const createEchoReferenceSchema = (
   typename: string | undefined,
   version: string | undefined,
   schemaName?: string,
-): S.Schema<any> => {
+): S.SchemaClass<Ref<any>, EncodedReference> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');
   }
