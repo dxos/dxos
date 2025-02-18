@@ -4,15 +4,16 @@
 
 import React, { type FC } from 'react';
 
-import { Button, Icon, IconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useSubscribedState, useRoomContext, useHandleMic, useHandleCamera } from '../../hooks';
+import { VideoObject } from '../Video';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const {
     setJoined,
-    // userMedia: { videoTrack, videoEnabled },
+    userMedia: { videoTrack, videoEnabled },
     room,
     peer,
   } = useRoomContext()!;
@@ -25,11 +26,18 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
 
   return (
     <div className={mx('flex flex-col grow overflow-auto', classNames)}>
-      <div className='flex justify-between'>
+      <VideoObject className='scale-x-[-1] object-contain' videoTrack={videoTrack} muted />
+
+      <div className='grow' />
+      <div className='flex justify-between overflow-hidden'>
         <Toolbar.Root>
-          <Button variant='primary' onClick={() => setJoined(true)} disabled={!session?.sessionId}>
-            <Icon icon={'ph--phone-incoming--regular'} />
-          </Button>
+          <IconButton
+            variant='primary'
+            label='Join'
+            onClick={() => setJoined(true)}
+            disabled={!session?.sessionId}
+            icon='ph--phone-incoming--regular'
+          />
           <div className='grow text-sm text-subdued'>
             {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
           </div>
@@ -37,11 +45,6 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
           <IconButton {...cameraProps} iconOnly />
         </Toolbar.Root>
       </div>
-      {/* {videoEnabled && (
-        <>
-          <VideoObject className='scale-x-[-1] overflow-auto' videoTrack={videoTrack} muted />
-        </>
-      )} */}
     </div>
   );
 };
