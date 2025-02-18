@@ -59,21 +59,23 @@ export const ToggleContainer = ({
   }, [expand]);
 
   return (
-    <div className={mx(classNames)}>
+    <div className={mx('overflow-hidden', classNames)}>
       {title && (
         <div
           className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer select-none'
           onClick={toggle ? () => setExpand((open) => !open) : undefined}
         >
           {toggle && (
-            <Icon
-              size={4}
-              icon={'ph--caret-right--regular'}
-              style={{ transitionDuration: `${shrinkX ? duration * 2 : duration}ms` }}
-              classNames={['transition transition-transform ease-in-out', expand ? 'rotate-90' : 'transform-none']}
-            />
+            <div className='flex w-[24px] h-[24px] items-center justify-center'>
+              <Icon
+                size={4}
+                icon={'ph--caret-right--regular'}
+                style={{ transitionDuration: `${shrinkX ? duration * 2 : duration}ms` }}
+                classNames={['transition transition-transform ease-in-out', expand ? 'rotate-90' : 'transform-none']}
+              />
+            </div>
           )}
-          <div className='flex-1 truncate'>{title}</div>
+          <div className='flex-1 pis-1 pie-1 truncate'>{title}</div>
           {icon}
         </div>
       )}
@@ -92,7 +94,7 @@ export const ToggleContainer = ({
               expandY ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
             )}
           >
-            <div className={mx('overflow-hidden transition-opacity')}>{children}</div>
+            <div className={mx('flex overflow-hidden transition-opacity')}>{children}</div>
           </div>
         </div>
       </div>

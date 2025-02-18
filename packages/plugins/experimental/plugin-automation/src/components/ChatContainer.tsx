@@ -6,22 +6,21 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Message, type Tool } from '@dxos/artifact';
+import { FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { useConfig } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
-
-import { FunctionType } from '@dxos/functions';
-import { useConfig } from '@dxos/react-client';
 import { isNotNullOrUndefined } from '@dxos/util';
+
+import { Thread } from './Thread';
+import { type ServiceRegistry, MockServiceRegistry } from './registry';
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
+import { covertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType } from '../types';
-import { Thread } from './Thread';
-import { covertFunctionToTool } from './tools/function';
-import { createToolsFromApi, createToolsFromService } from './tools/openapi';
-import { SERVICES, type ServiceRegistry, MockServiceRegistry } from './registry';
 
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const config = useConfig();

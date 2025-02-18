@@ -155,10 +155,32 @@ export class EdgeHttpClient {
     });
   }
 
+  async deleteFromQueue(
+    subspaceTag: string,
+    spaceId: SpaceId,
+    queueId: ObjectId,
+    objectIds: ObjectId[],
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, {
+      ...args,
+      query: { ids: objectIds.join(',') },
+      method: 'DELETE',
+    });
+  }
+
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {
     const requestContext = args.context ?? new Context();
     const shouldRetry = createRetryHandler(args);
-    const url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
+    let url = `${this._baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
+
+    if (args.query) {
+      const queryParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(args.query)) {
+        queryParams.set(key, value.toString());
+      }
+      url += `?${queryParams.toString()}`;
+    }
 
     log('call', { method: args.method, path, request: args.body });
 
@@ -265,6 +287,7 @@ type EdgeHttpCallArgs = {
   body?: any;
   context?: Context;
   retry?: RetryConfig;
+  query?: Record<string, string>;
 };
 
 const createRequest = (args: EdgeHttpCallArgs, authHeader: string | undefined): RequestInit => {

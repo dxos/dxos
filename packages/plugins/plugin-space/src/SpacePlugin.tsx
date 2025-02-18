@@ -102,7 +102,7 @@ export const SpacePlugin = ({
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'settings',
           label: ['settings panel label', { ns: SPACE_PLUGIN }],
-          icon: 'ph--gear--regular',
+          icon: 'ph--sliders--regular',
         }),
     }),
     defineModule({

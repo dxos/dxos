@@ -24,15 +24,17 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
@@ -44,7 +46,6 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",

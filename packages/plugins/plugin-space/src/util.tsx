@@ -276,6 +276,7 @@ export const constructSpaceActions = ({
           disposition: 'toolbar',
           iconOnly: false,
           variant: 'default',
+          testId: 'spacePlugin.shareSpace',
           keyBinding: {
             macos: 'meta+.',
             windows: 'alt+.',

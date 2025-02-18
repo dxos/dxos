@@ -90,9 +90,6 @@
       "path": "../../plugins/experimental/plugin-inbox"
     },
     {
-      "path": "../../plugins/experimental/plugin-map"
-    },
-    {
       "path": "../../plugins/experimental/plugin-native"
     },
     {
@@ -135,6 +132,9 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-map"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
     },
     {
@@ -154,9 +154,6 @@
     },
     {
       "path": "../../plugins/plugin-registry"
-    },
-    {
-      "path": "../../plugins/plugin-settings-interface"
     },
     {
       "path": "../../plugins/plugin-sheet"

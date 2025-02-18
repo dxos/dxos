@@ -133,6 +133,9 @@
       "path": "../../plugin-graph"
     },
     {
+      "path": "../../plugin-map"
+    },
+    {
       "path": "../../plugin-markdown"
     },
     {
@@ -145,13 +148,13 @@
       "path": "../../plugin-stack"
     },
     {
+      "path": "../../plugin-table"
+    },
+    {
       "path": "../../plugin-wnfs"
     },
     {
       "path": "../plugin-inbox"
-    },
-    {
-      "path": "../plugin-map"
     },
     {
       "path": "../plugin-script"

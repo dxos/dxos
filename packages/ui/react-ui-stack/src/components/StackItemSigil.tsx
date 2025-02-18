@@ -61,6 +61,25 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
+    const hasActions = actionGroups && actionGroups.length > 0;
+
+    const button = (
+      <StackItemSigilButton
+        attendableId={attendableId}
+        related={related}
+        // TODO(wittjosiah): Better disabling of interactive styles when no action are available.
+        //   Remove underscore icon when no actions are available?
+        classNames={!hasActions && 'cursor-default'}
+      >
+        <span className='sr-only'>{triggerLabel}</span>
+        <Icon icon={icon} size={5} />
+      </StackItemSigilButton>
+    );
+
+    if (!hasActions) {
+      return button;
+    }
+
     return (
       <DropdownMenu.Root
         {...{
@@ -74,10 +93,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
         }}
       >
         <DropdownMenu.Trigger asChild ref={forwardedRef}>
-          <StackItemSigilButton attendableId={attendableId} related={related}>
-            <span className='sr-only'>{triggerLabel}</span>
-            <Icon icon={icon} size={5} />
-          </StackItemSigilButton>
+          {button}
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content classNames='z-[31]'>
