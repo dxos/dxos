@@ -41,7 +41,7 @@ export const Transcription = ({
   isSpeaking: boolean;
   ai: Ai;
 }) => {
-  const transcription = useRef<TranscriptionHandler | null>(new TranscriptionHandler({}));
+  const transcription = useRef<TranscriptionHandler | null>(new TranscriptionHandler());
 
   const doc = useDocument({ space, ai });
 

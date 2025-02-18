@@ -29,7 +29,6 @@ export const HEADER_LENGTH = 181;
 export class Transcription extends Resource {
   private _document?: ReactiveEchoObject<DocumentType> = undefined;
   private _recorder?: MediaRecorder = undefined;
-  private _header?: Uint8Array = undefined;
   private _audioChunks: RecorderChunk[] = [];
   private _lastSegEndTimestamp = 0;
   private _identity?: UserState;
