@@ -11,7 +11,7 @@ pnpm i @dxos/react-ui-theme
 To view the interactive Tailwind CSS configuration viewer, run the following command:
 
 ```bash
-pnpm nx run tailwind-config-viewer
+pnpm nx run react-ui-theme:tailwind-config-viewer
 ```
 
 ## Documentation
