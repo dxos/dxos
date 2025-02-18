@@ -25,25 +25,27 @@ const adapterConfig: TailwindAdapterConfig = {
   colors: {
     facet: 'colors',
     disposition: 'overwrite',
+    tokenization: 'recursive',
   },
-  // TODO(thure): All these length facet adapters should have the 'extend' disposition, but the resulting config is put
-  //  in the `extend` key already and moving it into the correct position finds the `colors` overrides lacking tokens
-  //  like `transparent`.
   borderWidth: {
     facet: 'lengths',
-    disposition: 'overwrite',
+    disposition: 'extend',
+    tokenization: 'omit-series',
   },
   ringWidth: {
     facet: 'lengths',
-    disposition: 'overwrite',
+    disposition: 'extend',
+    tokenization: 'omit-series',
   },
   ringOffsetWidth: {
     facet: 'lengths',
-    disposition: 'overwrite',
+    disposition: 'extend',
+    tokenization: 'omit-series',
   },
   outlineWidth: {
     facet: 'lengths',
-    disposition: 'overwrite',
+    disposition: 'extend',
+    tokenization: 'omit-series',
   },
 };
 
