@@ -13,6 +13,7 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
+import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
@@ -39,6 +40,7 @@ export const NodePlankHeading = memo(
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useAppGraph();
+    const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
@@ -59,11 +61,11 @@ export const NodePlankHeading = memo(
     const attendableId = id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        solo: part === 'solo' || part === 'deck',
+        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [part, canIncrementStart, canIncrementEnd],
+      [breakpoint, part, canIncrementStart, canIncrementEnd],
     );
 
     const sigilActions = useMemo(

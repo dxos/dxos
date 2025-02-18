@@ -56,6 +56,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-stack"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
