@@ -12,6 +12,18 @@ import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
 import { getMode, type Deck, type DeckState } from '../types';
 
+const boolean = /true|false/;
+
+const migrateLocalstorageStateKeys = [`${DECK_PLUGIN}/complementarySidebarState`, `${DECK_PLUGIN}/sidebarState`];
+
+const migrateLocalstorageState = () => {
+  migrateLocalstorageStateKeys.forEach((key) => {
+    if (boolean.test(localStorage.getItem(key) ?? 'never')) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+
 export default () => {
   const state = new LocalStorageStore<DeckState>(DECK_PLUGIN, {
     sidebarState: 'expanded',
@@ -46,6 +58,8 @@ export default () => {
     scrollIntoView: undefined,
   });
 
+  migrateLocalstorageState();
+
   state
     .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
@@ -59,8 +73,11 @@ export default () => {
     get dialogOpen() {
       return state.values.dialogOpen;
     },
-    get sidebarState() {
-      return state.values.sidebarState;
+    get sidebarOpen() {
+      return state.values.sidebarState !== 'closed';
+    },
+    get complementarySidebarOpen() {
+      return state.values.complementarySidebarState !== 'closed';
     },
     get active() {
       return state.values.deck.solo ? [state.values.deck.solo] : state.values.deck.active;
