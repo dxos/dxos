@@ -40,19 +40,26 @@ const StorybookKanban = () => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
       setKanban(kanban);
-      const query = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setCardSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
     }
   }, [kanbans]);
+
+  useEffect(() => {
+    if (!kanban) {
+      return;
+    }
+
+    const query = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type });
+    const unsubscribe = query.subscribe(
+      () => {
+        const [schema] = query.results;
+        if (schema) {
+          setCardSchema(schema);
+        }
+      },
+      { fire: true },
+    );
+    return unsubscribe;
+  }, [kanban, kanban?.cardView?.target?.query.type, space]);
 
   useEffect(() => {
     if (kanban?.cardView?.target && cardSchema) {
@@ -119,7 +126,7 @@ const StorybookKanban = () => {
           />
         )}
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: kanban.cardView, cardSchema }, null, 2)}
+          {JSON.stringify({ view: kanban.cardView?.target, cardSchema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>

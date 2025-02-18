@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FormatEnum } from '@dxos/echo-schema';
+import { type EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
@@ -19,13 +19,23 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
 
-  // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
-  // endure typename changes. We shouldn't need to manage a subscription at this layer.
-  const [schema, setSchema] = useState(
-    space && kanban?.cardView?.target?.query?.type
-      ? space.db.schemaRegistry.getSchema(kanban.cardView.target.query.type)
-      : undefined,
-  );
+  const [schema, setSchema] = useState<EchoSchema | undefined>();
+
+  useEffect(() => {
+    if (space && kanban?.cardView?.target?.query?.type) {
+      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
+      const unsub = query.subscribe(
+        () => {
+          const [schema] = query.results;
+          if (schema) {
+            setSchema(schema);
+          }
+        },
+        { fire: true },
+      );
+      return unsub;
+    }
+  }, [space, kanban?.cardView?.target?.query?.type]);
 
   const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
@@ -43,21 +53,6 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [views, schema],
   );
 
-  useEffect(() => {
-    if (space && kanban?.cardView?.target?.query?.type) {
-      const unsubscribe = space.db.schemaRegistry
-        .query({ typename: kanban?.cardView?.target?.query?.type })
-        .subscribe((query) => {
-          const [schema] = query.results;
-          if (schema) {
-            setSchema(schema);
-          }
-        });
-
-      return unsubscribe;
-    }
-  }, [space, kanban?.cardView?.target?.query?.type]);
-
   const handleDelete = useCallback(
     (fieldId: string) => dispatch?.(createIntent(KanbanAction.DeleteCardField, { kanban, fieldId })),
     [dispatch, kanban],
@@ -67,7 +62,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     if (kanban?.cardView?.target && schema) {
       return new ViewProjection(schema, kanban.cardView.target);
     }
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema?.jsonSchema)]);
+  }, [kanban?.cardView?.target, schema]);
 
   const selectFields = useMemo(() => {
     if (!projection) {
