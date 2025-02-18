@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Remve since has tensorflow dependency.
+// TODO(burdon): Remove since has tensorflow dependency.
+//  - e.g., https://gmousse.gitbooks.io/dataframe-js/content/doc/api/modules/stat.html
 import { type Series } from 'danfojs-node';
 
 import { log } from '@dxos/log';
