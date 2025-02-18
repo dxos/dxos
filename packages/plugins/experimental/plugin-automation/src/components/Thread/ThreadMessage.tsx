@@ -11,6 +11,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
+import { StatusLine } from './StatusLine';
 import { ToggleContainer } from './ToggleContainer';
 import { MarkdownViewer } from '../MarkdownViewer';
 
@@ -35,6 +36,41 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
   }
 
   const { role, content = [] } = message;
+
+  // TODO(burdon): Factor out tool blocks.
+  const tools = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
+  if (collapse && tools.length > 0) {
+    let request: MessageContentBlock & { type: 'tool_use' };
+    const lines = tools.map((tool) => {
+      switch (tool.type) {
+        case 'tool_use': {
+          request = tool;
+          // TODO(burdon): Get plugin name.
+          return `Calling ${tool.name}...`;
+        }
+        case 'tool_result': {
+          if (!request) {
+            return 'Error';
+          }
+
+          return `Processed ${request.name}`;
+        }
+        default:
+          return 'Error';
+      }
+    });
+
+    return (
+      <div className={mx('flex', classNames)}>
+        <div className='w-full p-1 px-2 overflow-hidden rounded-md bg-base'>
+          <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} toggle>
+            <Json data={content[content.length - 1]} classNames='!p-1 text-xs' />
+          </ToggleContainer>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={mx('flex flex-col shrink-0 gap-2')}>
       {debug && (
@@ -137,7 +173,7 @@ const componentMap: Record<string, BlockComponent> = {
         const title = block.disposition ? titles[block.disposition] : undefined;
         return (
           <ToggleContainer title={title ?? 'JSON'} toggle>
-            <Json data={safeParseJson(block.json ?? block)} classNames='text-sm' />
+            <Json data={safeParseJson(block.json ?? block)} classNames='!p-1 text-xs' />
           </ToggleContainer>
         );
       }
@@ -149,9 +185,10 @@ const componentMap: Record<string, BlockComponent> = {
     if (block.type === 'tool_use') {
       title = `Tool [${block.name}]`; // TODO(burdon): Get label from tool.
     }
+
     return (
       <ToggleContainer title={title ?? 'JSON'} toggle>
-        <Json data={block} classNames='text-sm' />
+        <Json data={block} classNames='!p-1 text-xs' />
       </ToggleContainer>
     );
   },

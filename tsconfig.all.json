@@ -304,6 +304,9 @@
       "path": "packages/plugins/experimental/plugin-template/tsconfig.json"
     },
     {
+      "path": "packages/plugins/experimental/plugin-theme-editor/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {

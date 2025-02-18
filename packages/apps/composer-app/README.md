@@ -56,14 +56,6 @@ ssc list-devices --platform ios
 ssc install-app --platform ios
 ```
 
-## Logos and image assets
-
-NOTE: We tried "@vite-pwa/assets-generator", but it isn't fully implemented, so using pwa-asset-generator.
-
-```bash
-pnpm run icons
-```
-
 ## Dependencies
 
 To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from

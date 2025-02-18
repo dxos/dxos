@@ -8,6 +8,7 @@ yarn-error.log*
 *.pid
 *.seed
 *.pid.lock
+*.*~lock~
 
 # Mocha
 test-results

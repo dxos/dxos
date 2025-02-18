@@ -7,6 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { type Ref } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 

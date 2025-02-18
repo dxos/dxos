@@ -68,7 +68,14 @@ export const CreateObjectPanel = ({
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
   const schema = schemas.find((schema) => getObjectAnnotation(schema)?.typename === typename);
-  const options = schemas.map(getObjectAnnotation).filter(nonNullable);
+  const options = schemas
+    .map(getObjectAnnotation)
+    .filter(nonNullable)
+    .sort((a, b) => {
+      const aName = t('typename label', { ns: a.typename, defaultValue: a.typename });
+      const bName = t('typename label', { ns: b.typename, defaultValue: b.typename });
+      return aName.localeCompare(bName);
+    });
 
   const handleClearSchema = useCallback(() => setTypename(undefined), []);
   const handleClearTarget = useCallback(() => setTarget(undefined), []);
@@ -126,18 +133,24 @@ export const CreateObjectPanel = ({
         classNames='px-1 my-2'
       />
       <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
-        {spaces.map((space) => (
-          <SearchList.Item
-            key={space.id}
-            value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-            onSelect={() => setTarget(space)}
-            classNames='flex items-center gap-2'
-          >
-            <span className='grow truncate'>
-              {toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-            </span>
-          </SearchList.Item>
-        ))}
+        {spaces
+          .sort((a, b) => {
+            const aName = toLocalizedString(getSpaceDisplayName(a, { personal: a.id === defaultSpaceId }), t);
+            const bName = toLocalizedString(getSpaceDisplayName(b, { personal: b.id === defaultSpaceId }), t);
+            return aName.localeCompare(bName);
+          })
+          .map((space) => (
+            <SearchList.Item
+              key={space.id}
+              value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              onSelect={() => setTarget(space)}
+              classNames='flex items-center gap-2'
+            >
+              <span className='grow truncate'>
+                {toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              </span>
+            </SearchList.Item>
+          ))}
       </SearchList.Content>
     </SearchList.Root>
   );

@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type ToggleContainerProps = ThemedClassName<
   PropsWithChildren<{
-    title?: string;
+    title?: string | JSX.Element;
     icon?: JSX.Element;
     toggle?: boolean;
     defaultOpen?: boolean;

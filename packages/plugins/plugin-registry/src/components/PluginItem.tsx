@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { Icon, Input, Link, ListItem, useTranslation } from '@dxos/react-ui';
-import { descriptionText, fineBlockSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
 
@@ -35,55 +35,60 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
   );
 
   return (
-    <Input.Root key={id} id={inputId}>
-      <ListItem.Root
-        labelId={labelId}
-        data-testid={`pluginList.${id}`}
-        aria-describedby={descriptionId}
-        classNames='flex gap-2 plb-2 pli-2 rounded border border-separator'
-        onClick={handleClick}
-      >
-        <Icon icon={icon} size={6} classNames='shrink-0 mbs-1' />
-        <div role='none' className={mx(fineBlockSize, 'grow pbs-1 pl-1')}>
-          <label id={labelId} className='truncate'>
-            {name ?? id}
-          </label>
-          {(description || homePage || source) && (
-            <>
-              <div id={descriptionId} className='space-b-1 pbs-1 pbe-1'>
-                <p className={descriptionText}>{description}</p>
-                {homePage && (
-                  <Link
-                    href={homePage}
-                    target='_blank'
-                    rel='noreferrer'
-                    aria-describedby={descriptionId}
-                    classNames='text-xs text-description'
-                  >
-                    {t('home page label')}
-                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-                  </Link>
-                )}
-                {source && (
-                  <Link
-                    href={source}
-                    target='_blank'
-                    rel='noreferrer'
-                    aria-describedby={descriptionId}
-                    classNames='text-xs text-description'
-                  >
-                    {t('source label')}
-                    <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-                  </Link>
-                )}
-              </div>
-            </>
-          )}
+    <ListItem.Root
+      key={id}
+      labelId={labelId}
+      data-testid={`pluginList.${id}`}
+      aria-describedby={descriptionId}
+      classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
+      onClick={handleClick}
+    >
+      <Input.Root id={inputId}>
+        <div className='flex grow justify-center items-center'>
+          <Icon icon={icon} size={8} />
         </div>
-        <div className='pbs-1'>
+        <div className='flex grow items-center'>
+          <Input.Label id={labelId} classNames='truncate w-full'>
+            {name ?? id}
+          </Input.Label>
+        </div>
+        <div className='flex grow justify-center items-center'>
           <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
         </div>
-      </ListItem.Root>
-    </Input.Root>
+      </Input.Root>
+
+      <div />
+      {(description || homePage || source) && (
+        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pie-2 overflow-y-scroll'>
+          <p className={mx(descriptionText, 'line-clamp-4 min-w-0')}>{description}</p>
+          {homePage && (
+            <Link
+              href={homePage}
+              target='_blank'
+              rel='noreferrer'
+              aria-describedby={descriptionId}
+              classNames='text-sm text-description line-clamp-4'
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              {t('home page label')}
+              <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+            </Link>
+          )}
+          {source && (
+            <Link
+              href={source}
+              target='_blank'
+              rel='noreferrer'
+              aria-describedby={descriptionId}
+              classNames='text-sm text-description line-clamp-4'
+              onClick={(ev) => ev.stopPropagation()}
+            >
+              {t('source label')}
+              <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+            </Link>
+          )}
+        </div>
+      )}
+    </ListItem.Root>
   );
 };
