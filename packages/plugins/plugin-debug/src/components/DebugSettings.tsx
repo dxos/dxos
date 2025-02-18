@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
+import { useTranslation, Button, Toast, Input, useFileDownload, Select, Icon } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
-import { getSize, mx } from '@dxos/react-ui-theme';
 import { setDeep } from '@dxos/util';
 
 import { DEBUG_PLUGIN } from '../meta';
@@ -92,12 +90,12 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
         </DeprecatedFormInput>
         <DeprecatedFormInput label={t('settings download diagnostics')}>
           <Button onClick={handleDownload}>
-            <DownloadSimple className={getSize(5)} />
+            <Icon icon='ph--download-simple--regular' size={5} />
           </Button>
         </DeprecatedFormInput>
         <DeprecatedFormInput label={t('settings repair')}>
           <Button onClick={handleRepair}>
-            <FirstAidKit className={getSize(5)} />
+            <Icon icon='ph--first-aid-kit--regular' size={5} />
           </Button>
         </DeprecatedFormInput>
 
@@ -106,7 +104,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           <Toast.Root>
             <Toast.Body>
               <Toast.Title>
-                <Gift className={mx(getSize(5), 'inline mr-1')} weight='duotone' />
+                <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
                 <span>{toast.title}</span>
               </Toast.Title>
               {toast.description && <Toast.Description>{toast.description}</Toast.Description>}

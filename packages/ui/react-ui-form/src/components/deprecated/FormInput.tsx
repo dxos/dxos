@@ -41,7 +41,7 @@ export const DeprecatedFormInput = ({
       <Input.Root>
         <div role='none' className='flex flex-col w-full'>
           {/* TODO(burdon): Consistent height for controls (e.g., Select, Textbox, and Checkbox are all different). */}
-          <Input.Label classNames='flex min-h-[40px] items-center' style={{ fontSize: 'unset' }}>
+          <Input.Label classNames='flex min-bs-[--rail-action] items-center' style={{ fontSize: 'unset' }}>
             {label}
           </Input.Label>
           {description && (
@@ -52,7 +52,7 @@ export const DeprecatedFormInput = ({
         </div>
 
         <div role='none'>
-          <div role='none' className='flex min-h-[40px] items-center'>
+          <div role='none' className='flex min-bs-[--rail-action] items-center'>
             {children}
           </div>
         </div>
@@ -65,11 +65,7 @@ export const DeprecatedFormInput = ({
     return (
       <div role='none' className='flex flex-col w-full'>
         {primary}
-        {secondary && (
-          <div role='none' className='max-w-[40rem]'>
-            {secondary}
-          </div>
-        )}
+        {secondary}
       </div>
     );
   }
