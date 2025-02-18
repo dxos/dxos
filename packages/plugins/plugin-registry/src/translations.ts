@@ -24,8 +24,6 @@ export default [
         'community plugins label': 'Community',
         'load by url label': 'Load by URL (soon)',
         'coming soon label': 'Coming soon!',
-        'enable plugin label': 'Enable',
-        'disable plugin label': 'Disable',
         'open plugin registry label': 'Open plugin registry',
       },
     },

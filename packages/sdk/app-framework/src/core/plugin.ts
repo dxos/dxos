@@ -97,6 +97,11 @@ export type PluginMeta = {
   source?: string;
 
   /**
+   * URL of screenshot.
+   */
+  screenshots?: string[];
+
+  /**
    * Tags to help categorize the plugin.
    */
   tags?: string[];
