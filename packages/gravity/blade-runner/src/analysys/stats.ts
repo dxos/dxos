@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Series } from 'danfojs-node';
+// TODO(burdon): Remve since has tensorflow dependency.
+import { type Series } from 'danfojs-node';
 
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
@@ -66,8 +67,8 @@ export const analyzeMessages = async (results: ReplicantsSummary) => {
     if (entry.message !== 'dxos.test.signal') {
       continue;
     }
-    const data: TraceEvent = entry.context;
 
+    const data: TraceEvent = entry.context;
     if (data.type !== 'SENT_MESSAGE' && data.type !== 'RECEIVE_MESSAGE') {
       continue;
     }
@@ -87,8 +88,8 @@ export const analyzeMessages = async (results: ReplicantsSummary) => {
 
   const failures = Array.from(messages.values()).filter((x) => !x.received || !x.sent).length;
   const lagTimes = Array.from(messages.values())
-    .filter((x) => !!x.sent && !!x.received)
-    .map((x) => x.received! - x.sent!);
+    .filter((message) => !!message.sent && !!message.received)
+    .map((message) => message.received! - message.sent!);
 
   return getStats(lagTimes, {
     failures,
@@ -102,6 +103,7 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
   const { Series } = require('danfojs-node');
 
   const start = Date.now();
+
   /**
    * topic -> peerId -> { join: time, left: time, seen: peerId -> ts}
    */

@@ -384,11 +384,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/agent-functions/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/assistant/package.json",
           "jsonpath": "$.version"
         },
