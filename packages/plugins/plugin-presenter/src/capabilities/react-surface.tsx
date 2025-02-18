@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
 
@@ -51,13 +52,9 @@ export default () =>
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === PRESENTER_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<PresenterSettingsProps>(
-          PRESENTER_PLUGIN,
-        )!.value;
-        return <PresenterSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === PRESENTER_PLUGIN,
+      component: ({ data: { subject } }) => <PresenterSettings settings={subject.value} />,
     }),
   ]);
