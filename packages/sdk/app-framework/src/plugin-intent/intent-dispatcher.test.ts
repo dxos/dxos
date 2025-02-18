@@ -5,7 +5,7 @@
 import { Effect, Fiber, pipe } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
 
 import { chain, createIntent } from './intent';
 import { type AnyIntentResolver, createDispatcher, createResolver } from './intent-dispatcher';

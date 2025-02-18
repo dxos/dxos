@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
 
 export const ResourceKey = S.Union(S.String, S.Record({ key: S.String, value: S.Any }));
 export type ResourceKey = S.Schema.Type<typeof ResourceKey>;
