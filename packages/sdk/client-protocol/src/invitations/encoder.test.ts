@@ -9,6 +9,8 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { InvitationEncoder } from './encoder';
 
+const CREATED = new Date(1739956589 * 1000);
+
 const baseInvitation: Invitation = {
   invitationId: PublicKey.random().toHex(),
   type: Invitation.Type.INTERACTIVE,
@@ -18,6 +20,8 @@ const baseInvitation: Invitation = {
   swarmKey: PublicKey.random(),
   spaceKey: PublicKey.random(),
   spaceId: SpaceId.random(),
+  created: CREATED,
+  lifetime: 86400,
 };
 
 describe('Invitation utils', () => {
