@@ -77,8 +77,6 @@ export default (context: PluginsContext) => {
         };
       },
     }),
-<<<<<<< Updated upstream
-=======
     createExtension({
       id: `${AUTOMATION_PLUGIN}/assistant-for-subject`,
       resolver: ({ id }) => {
@@ -111,7 +109,6 @@ export default (context: PluginsContext) => {
         }
 
         const [object] = memoizeQuery(space, { id: objectId });
-
         return {
           id,
           type: 'orphan-automation-for-subject',
@@ -124,6 +121,5 @@ export default (context: PluginsContext) => {
         };
       },
     }),
->>>>>>> Stashed changes
   ]);
 };
