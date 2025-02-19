@@ -11,6 +11,7 @@ import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import {
   type CreateIdentityRequest,
+  type CreateRecoveryCredentialRequest,
   type Identity as IdentityProto,
   type IdentityService,
   type QueryIdentityResponse,
@@ -76,6 +77,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     }
 
     return {
+      did: this._identityManager.identity.did,
       identityKey: this._identityManager.identity.identityKey,
       spaceKey: this._identityManager.identity.space.key,
       profile: this._identityManager.identity.profileDocument,
@@ -89,8 +91,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._getIdentity()!;
   }
 
-  async createRecoveryPhrase() {
-    return this._recoveryManager.createRecoveryPhrase();
+  async createRecoveryCredential(request: CreateRecoveryCredentialRequest) {
+    return this._recoveryManager.createRecoveryCredential(request);
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {

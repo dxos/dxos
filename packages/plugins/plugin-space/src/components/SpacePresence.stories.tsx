@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -17,7 +17,7 @@ import translations from '../translations';
 const nViewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({
     role: HaloSpaceMember.Role.ADMIN,
-    identity: { identityKey: PublicKey.random() },
+    identity: { did: IdentityDid.random(), identityKey: PublicKey.random() },
     presence: SpaceMember.PresenceState.ONLINE,
     lastSeen: Date.now(),
     currentlyAttended,
