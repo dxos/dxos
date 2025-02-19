@@ -12,7 +12,26 @@ import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
 import { getMode, type Deck, type DeckState } from '../types';
 
+const boolean = /true|false/;
+
+// TODO(thure, 18 Feb 2025): Remove after the next release.
+
+const migrateSidebarStateDefaults = {
+  [`${DECK_PLUGIN}/complementary-sidebar-state`]: 'expanded',
+  [`${DECK_PLUGIN}/sidebar-state`]: 'collapsed',
+};
+
+const migrateSidebarState = () => {
+  Object.entries(migrateSidebarStateDefaults).forEach(([key, defaultValue]) => {
+    if (boolean.test(localStorage.getItem(key) ?? 'never')) {
+      localStorage.setItem(key, defaultValue);
+    }
+  });
+};
+
 export default () => {
+  migrateSidebarState();
+
   const state = new LocalStorageStore<DeckState>(DECK_PLUGIN, {
     sidebarState: 'expanded',
     complementarySidebarState: 'collapsed',
@@ -59,8 +78,11 @@ export default () => {
     get dialogOpen() {
       return state.values.dialogOpen;
     },
-    get sidebarState() {
-      return state.values.sidebarState;
+    get sidebarOpen() {
+      return state.values.sidebarState === 'expanded';
+    },
+    get complementarySidebarOpen() {
+      return state.values.complementarySidebarState === 'expanded';
     },
     get active() {
       return state.values.deck.solo ? [state.values.deck.solo] : state.values.deck.active;

@@ -4,8 +4,9 @@
 
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Icon, toLocalizedString, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -23,11 +24,32 @@ type L0ItemProps = {
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { onTabChange, onSelect, isCurrent } = useNavTreeContext();
+  const { tab, onTabChange, onSelect, isCurrent } = useNavTreeContext();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
+  const [isLg] = useMediaQuery('lg', { ssr: false });
+
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
+          // TODO(thure): This dispatch should rightly be in `onTabChange`, but that callback wasn’t reacting to changes
+          //  to its dependencies.
+          void dispatch(
+            createIntent(LayoutAction.UpdateSidebar, {
+              part: 'sidebar',
+              options: {
+                state:
+                  item.id === tab
+                    ? navigationSidebarState === 'expanded'
+                      ? isLg
+                        ? 'collapsed'
+                        : 'closed'
+                      : 'expanded'
+                    : 'expanded',
+              },
+            }),
+          );
           return onTabChange?.(item);
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
@@ -40,7 +62,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         }
       }
     },
-    [item, type, onSelect, isCurrent, parent],
+    [item, type, onSelect, isCurrent, parent, tab, navigationSidebarState, isLg, dispatch],
   );
 };
 
