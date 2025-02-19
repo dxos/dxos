@@ -25,7 +25,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   useEffect(() => {
     if (space && kanban?.cardView?.target?.query?.type) {
       const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
-      const unsub = query.subscribe(
+      const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;
           if (schema) {
@@ -34,7 +34,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         },
         { fire: true },
       );
-      return unsub;
+      return unsubscribe;
     }
   }, [space, kanban?.cardView?.target?.query?.type]);
 
