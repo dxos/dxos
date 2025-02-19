@@ -44,7 +44,9 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       </div>
       {showTools && (
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
-          <Tools classNames={mx(eventsAuto)} registry={registry} />
+          <div className='p-1 bg-baseSurface rounded-md border border-separator'>
+            <Tools classNames={mx(eventsAuto)} registry={registry} />
+          </div>
         </div>
       )}
 
@@ -53,7 +55,9 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
           {debug && (
             <SyntaxHighlighter
               language='javascript'
-              classNames={mx('w-[300px] bg-base rounded-md bg-base border border-separator text-xs p-2 opacity-70')}
+              classNames={mx(
+                'w-[300px] bg-baseSurface rounded-md bg-base border border-separator text-xs p-2 opacity-70',
+              )}
             >
               {JSON.stringify(info, null, 2)}
             </SyntaxHighlighter>
@@ -61,7 +65,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
         </div>
         {showToolbar && (
           <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
-            <div className='p-1 bg-base rounded-md border border-separator'>
+            <div className='p-1 bg-baseSurface rounded-md border border-separator'>
               <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
             </div>
           </div>

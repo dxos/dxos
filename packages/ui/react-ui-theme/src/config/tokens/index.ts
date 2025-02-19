@@ -6,21 +6,46 @@ import { type TailwindAdapterConfig } from '@ch-ui/tailwind-tokens';
 import adapter from '@ch-ui/tailwind-tokens';
 import { type TokenSet } from '@ch-ui/tokens';
 
+import { aliasColors } from './alias-colors';
+import { lengthsFacet } from './lengths';
 import { physicalColors } from './physical-colors';
 import { semanticColors } from './semantic-colors';
-import { systemSememes } from './sememes-system';
+import { systemAliases, systemSememes } from './sememes-system';
 
 export const tokenSet = {
   colors: {
     physical: physicalColors,
     semantic: semanticColors,
+    alias: aliasColors,
   },
+  lengths: lengthsFacet,
 } satisfies TokenSet;
 
 const adapterConfig: TailwindAdapterConfig = {
   colors: {
     facet: 'colors',
     disposition: 'overwrite',
+    tokenization: 'recursive',
+  },
+  borderWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
+    tokenization: 'omit-series',
+  },
+  ringWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
+    tokenization: 'omit-series',
+  },
+  ringOffsetWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
+    tokenization: 'omit-series',
+  },
+  outlineWidth: {
+    facet: 'lengths',
+    disposition: 'extend',
+    tokenization: 'omit-series',
   },
 };
 
@@ -39,7 +64,13 @@ export const userDefaultTokenSet = {
       sememes: systemSememes,
       namespace: semanticColors.namespace,
     },
+    alias: {
+      statements: aliasColors.statements,
+      aliases: systemAliases,
+      namespace: aliasColors.namespace,
+    },
   },
+  lengths: lengthsFacet,
 } satisfies TokenSet;
 
 export const tokensTailwindConfig = adapter(tokenSet, adapterConfig);

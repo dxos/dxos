@@ -16,7 +16,7 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
   return (
     <div className='shrink-0 is-40 flex flex-col rounded overflow-hidden'>
       <dd className='aspect-video' style={{ background: `var(${variableName})` }}></dd>
-      <dt className='text-xs bg-base grow pli-2 plb-1'>
+      <dt className='text-xs bg-baseSurface grow pli-2 plb-1'>
         <p className='text-sm'>
           {luminosity}
           {typeof alpha !== 'undefined' && ` / ${alpha}`}
@@ -50,7 +50,7 @@ export const Tokens = () => {
         background-position: 0 0, 16px 16px;
       }`}</style>
       <div className='flex'>
-        <div className='p-2 bg-base rounded'>
+        <div className='p-2 bg-baseSurface rounded'>
           <h1 className='text-lg mbe-2'>Physical color token audit</h1>
           <pre className='text-xs'>
             Luminosity (/ alpha)?
@@ -67,7 +67,7 @@ export const Tokens = () => {
         return (
           <>
             <h2 className='mbs-12 mbe-4'>
-              <span className='pli-2 plb-1 bg-base rounded'>{seriesId}</span>
+              <span className='pli-2 plb-1 bg-baseSurface rounded'>{seriesId}</span>
             </h2>
             <dl className='flex flex-wrap gap-2'>
               {audits
