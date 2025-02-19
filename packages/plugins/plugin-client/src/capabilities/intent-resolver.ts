@@ -110,8 +110,8 @@ export default ({ context, onReset }: IntentResolverOptions) =>
       resolve: async () => {
         const client = context.requestCapability(ClientCapabilities.Client);
         invariant(client.services.services.IdentityService, 'IdentityService not available');
-        // TODO(wittjosiah): This needs a proper api. Rename property.
-        const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
+        // TODO(wittjosiah): This needs a proper api.
+        const { recoveryCode } = await client.services.services.IdentityService.createRecoveryCredential({});
         return {
           intents: [
             createIntent(LayoutAction.UpdateDialog, {
@@ -120,7 +120,7 @@ export default ({ context, onReset }: IntentResolverOptions) =>
               options: {
                 blockAlign: 'start',
                 type: 'alert',
-                props: { code: seedphrase },
+                props: { code: recoveryCode },
               },
             }),
           ],
