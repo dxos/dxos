@@ -22,7 +22,7 @@
     "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
     "new": "new",
     "nx": "nx",
-    "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
+    "prepare": "node scripts/prepare-husky.js",
     "serve": "serve",
     "test": "nx run-many --target=test",
     "toolbox": "tsx tools/executors/toolbox/src/main.ts",
