@@ -45,7 +45,8 @@ type CreateData<T> = T extends { id: string } ? Omit<T, 'id'> & { id?: string } 
 export const createStatic = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   data: CreateData<S.Schema.Type<Schema>>,
-) => {
+  // TODO(burdon): Return type.
+): CreateData<S.Schema.Type<Schema>> & { id: string } => {
   const annotation = getObjectAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an object schema');
@@ -58,6 +59,7 @@ export const createStatic = <Schema extends S.Schema.AnyNoContext>(
     id: data.id ?? ObjectId.random(),
     ...data,
   };
+
   setTypename(obj, getSchemaDXN(schema)?.toString() ?? failedInvariant('Failed to get schema DXN'));
   setSchema(obj, schema);
   attachTypedJsonSerializer(obj);

@@ -6,9 +6,7 @@ import { createStatic } from '@dxos/echo-schema';
 
 import { ServiceType, type ApiAuthorization } from '../types';
 
-export type ServiceQuery = {
-  // TODO
-};
+export type ServiceQuery = {};
 
 export interface ServiceRegistry {
   queryServices(query: ServiceQuery): Promise<ServiceType[]>;
@@ -16,14 +14,11 @@ export interface ServiceRegistry {
 
 export class MockServiceRegistry implements ServiceRegistry {
   async queryServices(query: ServiceQuery): Promise<ServiceType[]> {
-    return [
-      //
-      SERVICES.flightSearch,
-      // SERVICES.hotelSearch, // Doesn't work.
-      SERVICES.weather,
-    ];
+    return TEST_SERVICES;
   }
 }
+
+// TODO(burdon): Can we generalize credentials?
 
 const AMADEUS_AUTH: ApiAuthorization = {
   type: 'oauth',
@@ -42,9 +37,13 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
   },
 };
 
-// TODO(dmaretskyi): Will be an actual registry.
-export const SERVICES = {
-  flightSearch: createStatic(ServiceType, {
+// todo
+const TEST_SERVICES: ServiceType[] = [
+  /**
+   * dxn:service:example.com/service/FlightSearch
+   */
+  createStatic(ServiceType, {
+    serviceId: 'example.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
     description: 'Search for flights',
     interfaces: [
@@ -56,19 +55,28 @@ export const SERVICES = {
     ],
   }),
 
-  hotelSearch: createStatic(ServiceType, {
-    name: 'Amadeus Hotel Search',
-    description: 'Search for hotels',
-    interfaces: [
-      {
-        kind: 'api',
-        schemaUrl: 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json',
-        authorization: AMADEUS_AUTH,
-      },
-    ],
-  }),
+  /**
+   * dxn:service:example.com/service/HotelSearch
+   */
+  // TODO(burdon): Not working.
+  // createStatic(ServiceType, {
+  //   serviceId: 'example.com/service/HotelSearch',
+  //   name: 'Amadeus Hotel Search',
+  //   description: 'Search for hotels',
+  //   interfaces: [
+  //     {
+  //       kind: 'api',
+  //       schemaUrl: 'https://api.apis.guru/v2/specs/amadeus.com/amadeus-hotel-search/3.0.8/swagger.json',
+  //       authorization: AMADEUS_AUTH,
+  //     },
+  //   ],
+  // }),
 
-  weather: createStatic(ServiceType, {
+  /**
+   * dxn:service:example.com/service/Weather
+   */
+  createStatic(ServiceType, {
+    serviceId: 'example.com/service/Weather',
     name: 'Visual Crossing Weather',
     description: 'Get weather forecast',
     interfaces: [
@@ -79,4 +87,4 @@ export const SERVICES = {
       },
     ],
   }),
-} as const;
+] as const;
