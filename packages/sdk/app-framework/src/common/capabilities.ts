@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
 import { type Space } from '@dxos/client-protocol';
-import { type S } from '@dxos/echo-schema';
 import { type RootSettingsStore } from '@dxos/local-storage';
-import { type SidebarState } from '@dxos/react-ui';
 
 import { type FileInfo } from './file';
 import { type NodeSerializer } from './graph';
@@ -41,7 +40,8 @@ export namespace Capabilities {
   export type Layout = Readonly<{
     mode: string;
     dialogOpen: boolean;
-    sidebarState: SidebarState;
+    sidebarOpen: boolean;
+    complementarySidebarOpen: boolean;
     /**
      * Identifiers of items which are currently active in the application.
      */

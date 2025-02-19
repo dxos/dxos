@@ -120,6 +120,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             key={panel.id}
             value={panel.id}
             classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content]'
+            {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
           >
             {panel.id === activePanelId && node && (
               <>

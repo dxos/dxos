@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
