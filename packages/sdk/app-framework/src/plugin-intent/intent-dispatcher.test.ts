@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { Effect, Fiber, pipe } from 'effect';
 import { describe, expect, test } from 'vitest';
-
-import { S } from '@dxos/echo-schema';
 
 import { chain, createIntent } from './intent';
 import { type AnyIntentResolver, createDispatcher, createResolver } from './intent-dispatcher';

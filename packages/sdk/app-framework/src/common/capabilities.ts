@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
 import { type Space } from '@dxos/client-protocol';
-import { type S } from '@dxos/echo-schema';
 import { type RootSettingsStore } from '@dxos/local-storage';
 
 import { type FileInfo } from './file';
