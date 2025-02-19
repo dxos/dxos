@@ -7,16 +7,16 @@
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
-    "build": {},
-    "compile": {
+    "build-skip": {},
+    "compile-skip": {
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts"
         ]
       }
     },
-    "lint": {},
-    "test": {}
+    "lint-skip": {},
+    "test-skip": {}
   },
   "implicitDependencies": [
     "esbuild",
