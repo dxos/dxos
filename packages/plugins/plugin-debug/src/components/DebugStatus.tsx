@@ -192,7 +192,7 @@ const PerformanceIndicator = () => {
         </StatusBar.Button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content classNames='max-is-80 max-bs-[--radix-popover-content-available-height] overflow-y-auto'>
+        <Popover.Content classNames='max-is-[min(var(--radix-popover-content-available-width),300px)] max-bs-[--radix-popover-content-available-height]'>
           <StatsPanel stats={stats} onRefresh={refreshStats} />
           <Popover.Arrow />
         </Popover.Content>
