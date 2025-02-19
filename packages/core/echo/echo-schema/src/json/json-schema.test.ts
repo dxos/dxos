@@ -300,6 +300,49 @@ describe('json-to-effect', () => {
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
   });
 
+  test('object with oneOf const values and annotations', () => {
+    const jsonSchema: JsonSchemaType = {
+      type: 'object',
+      required: ['selectedOption'], // Add this if we want it required
+      properties: {
+        selectedOption: {
+          oneOf: [
+            { const: 'option-1-id', title: 'Small', description: 'Small size option' },
+            { const: 'option-2-id', title: 'Medium', description: 'Medium size option' },
+            { const: 'option-3-id', title: 'Large', description: 'Large size option' },
+          ],
+          type: 'string',
+        },
+      },
+    };
+
+    const schema = toEffectSchema(jsonSchema);
+    const origSchema = S.Struct({
+      selectedOption: S.Union(S.Literal('option-1-id'), S.Literal('option-2-id'), S.Literal('option-3-id')),
+    });
+
+    expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(origSchema.ast));
+  });
+
+  // TODO(ZaymonFC): We need to get this working for durable single-select.
+  test.skip('single-select with oneOf round trip', () => {
+    const originalSchema = {
+      type: 'string',
+      format: 'single-select',
+      oneOf: [
+        { const: 'b590d58c', title: 'Draft', color: 'indigo' },
+        { const: '8185fe74', title: 'Active', color: 'cyan' },
+        { const: 'e8455752', title: 'Completed', color: 'emerald' },
+      ],
+      title: 'State',
+    } as any as JsonSchemaType;
+
+    const effectSchema = toEffectSchema(originalSchema);
+    const roundTrippedSchema = toJsonSchema(effectSchema);
+
+    expect(roundTrippedSchema).to.deep.equal(originalSchema);
+  });
+
   const prepareAstForCompare = (obj: AST.AST): any =>
     deepMapValues(obj, (value: any, recurse, key) => {
       if (typeof value === 'function') {

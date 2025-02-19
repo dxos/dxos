@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
@@ -45,9 +46,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const currentTypename = useMemo(() => table?.view?.target?.query?.type, [table?.view?.target?.query?.type]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {
-      if (!schema) {
-        return;
-      }
+      invariant(schema);
 
       const matchingViews = views.filter((view) => view.query.type === currentTypename);
       for (const view of matchingViews) {
