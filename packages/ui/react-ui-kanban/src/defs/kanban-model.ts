@@ -1,43 +1,56 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
-import { signal } from '@preact/signals-core';
+import { effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
+import { type ViewProjection } from '@dxos/schema';
 
 import { type KanbanType } from './kanban';
 import { computeArrangement } from '../util';
+
+export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
+export const UNCATEGORIZED_ATTRIBUTES = {
+  // TODO(ZaymonFC): Add translations for title.
+  title: 'Uncategorized',
+  color: 'neutral',
+} as const;
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
 export type KanbanModelProps = {
   kanban: KanbanType;
   cardSchema: EchoSchema;
+  projection: ViewProjection;
 };
 
-export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
+  // Properties
   private readonly _kanban: KanbanType;
   private readonly _cardSchema: EchoSchema;
+  private readonly _projection: ViewProjection;
   private _items = signal<T[]>([]);
-  private _arrangement = signal<KanbanArrangement<T>>([]);
+  private _cards = signal<ArrangedCards<T>>([]);
 
-  private _computeArrangement(): KanbanArrangement<T> {
-    return computeArrangement<T>(this._kanban, this._items.value);
-  }
-
-  constructor({ kanban, cardSchema }: KanbanModelProps) {
+  constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
     super();
     this._kanban = kanban;
     this._cardSchema = cardSchema;
-    this._arrangement.value = this._computeArrangement();
+    this._projection = projection;
+    this._computeArrangement();
   }
 
-  get columnField() {
-    return this._kanban.columnField;
+  // Main getters/setters
+  get columnFieldPath() {
+    const columnFieldId = this._kanban.columnFieldId;
+    invariant(columnFieldId);
+    const columnFieldProjection = this._projection.getFieldProjection(columnFieldId);
+    return columnFieldProjection?.props.property || '';
   }
 
   /**
@@ -49,7 +62,8 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   set items(items: T[]) {
     this._items.value = items;
-    this._arrangement.value = this._computeArrangement();
+    this._moveInvalidItemsToUncategorized();
+    this._cards.value = this._computeArrangement();
   }
 
   get cardSchema() {
@@ -59,71 +73,168 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   /**
    * @reactive Gets the current arrangement of kanban items.
    */
-  get arrangement() {
-    return this._arrangement.value;
+  get arrangedCards() {
+    return this._cards.value;
   }
 
-  public addEmptyColumn(columnValue: string) {
-    this._kanban.arrangement ??= [];
-    this._kanban.arrangement.push({ columnValue, ids: [] });
-    this._arrangement.value = this._computeArrangement();
+  //
+  // Lifecycle.
+  //
+
+  protected override async _open() {
+    this.initializeEffects();
   }
 
-  public removeColumnFromArrangement(columnValue: string) {
-    const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
-    if (this._kanban.arrangement && columnIndex !== undefined && Number.isFinite(columnIndex) && columnIndex >= 0) {
-      this._kanban.arrangement.splice(columnIndex, 1);
-      this._arrangement.value = this._computeArrangement();
+  private initializeEffects(): void {
+    // Effect to recompute arrangement when columnField changes
+    const arrangementWatcher = effect(() => {
+      // Touch the field to subscribe to changes
+      const _ = this._kanban.columnFieldId;
+      this._cards.value = this._computeArrangement();
+    });
+
+    this._ctx.onDispose(arrangementWatcher);
+  }
+
+  //
+  // Public API.
+  //
+
+  /** Get the display attributes for a column by its ID. */
+  public getPivotAttributes(id: string) {
+    if (id === UNCATEGORIZED_VALUE) {
+      return UNCATEGORIZED_ATTRIBUTES;
     }
+
+    const options = this._getSelectOptions();
+    invariant(options);
+    const option = options?.find((option) => option.id === id);
+    return option ?? ({ title: id, color: 'neutral' } as const);
   }
 
-  public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
-    const nextArrangement = this.arrangement;
-    const sourceColumn = nextArrangement.find(
-      ({ columnValue, cards }) => columnValue === source.id || cards.some((card) => card.id === source.id),
-    );
-    const targetColumn = nextArrangement.find(
-      ({ columnValue, cards }) => columnValue === target.id || cards.some((card) => card.id === target.id),
-    );
+  /**
+   * Handler for card and column rearrangement events. Supports both reordering columns and moving cards between columns.
+   */
+  public handleRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
+    const nextArrangement = this.arrangedCards;
+    const sourceColumn = this._findColumn(source.id, nextArrangement);
+    const targetColumn = this._findColumn(target.id, nextArrangement);
 
-    if (sourceColumn && targetColumn) {
-      if (source.type === 'column' && target.type === 'column') {
-        // Reordering columns
-        const sourceIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === source.id);
-        const targetIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === target.id);
-        const [movedColumn] = nextArrangement.splice(sourceIndex, 1);
-        const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
-        nextArrangement.splice(insertIndex, 0, movedColumn);
-      } else {
-        const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
-        const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === target.id);
-        if (
-          typeof sourceCardIndex === 'number' &&
-          typeof targetCardIndex === 'number' &&
-          sourceColumn.cards &&
-          targetColumn.cards
-        ) {
-          const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
-
-          (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) = targetColumn.columnValue;
-
-          let insertIndex;
-          if (source.type === 'card' && target.type === 'column') {
-            insertIndex = 0;
-          } else if (sourceCardIndex < targetCardIndex) {
-            insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
-          } else {
-            insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
-          }
-          targetColumn.cards.splice(insertIndex, 0, movedCard);
-        }
-      }
-
-      this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => {
-        return { columnValue, ids: cards.map(({ id }) => id) };
-      });
-
-      this._arrangement.value = nextArrangement;
+    if (!sourceColumn || !targetColumn) {
+      return;
     }
+
+    if (source.type === 'column' && target.type === 'column') {
+      this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
+      return;
+    }
+
+    this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
+
+    this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+      columnValue,
+      ids: cards.map(({ id }) => id),
+    }));
+    this._cards.value = nextArrangement;
   };
+
+  //
+  // Private logic.
+  //
+
+  private _getSelectOptions() {
+    invariant(this._kanban.columnFieldId);
+    return this._projection.getFieldProjection(this._kanban.columnFieldId).props.options;
+  }
+
+  private _computeArrangement(): ArrangedCards<T> {
+    const options = this._getSelectOptions();
+    if (!options) {
+      return [];
+    }
+
+    return computeArrangement<T>(this._kanban, this._items.value, this.columnFieldPath, options);
+  }
+
+  /**
+   * Moves items with invalid column values to uncategorized by setting their column field to undefined.
+   */
+  private _moveInvalidItemsToUncategorized() {
+    const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
+    const columnPath = this.columnFieldPath;
+    for (const item of this._items.value) {
+      const itemColumn = item[columnPath as keyof typeof item];
+      if (itemColumn && !validColumnValues.has(itemColumn as string)) {
+        // Set to undefined which will place it in uncategorized.
+        item[columnPath as keyof typeof item] = undefined as any;
+      }
+    }
+  }
+
+  /** Find a column by ID in the arrangement, checking both column values and card IDs. */
+  private _findColumn(id: string, arrangement: ArrangedCards<T>) {
+    return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
+  }
+
+  /**
+   * Updates the field projection options to reorder columns. Updating the arrangement
+   * is not necessary as it's done automatically when the field projection updates.
+   */
+  private _handleColumnReorder(source: { id: string }, target: { id: string }, closestEdge: 'left' | 'right') {
+    if (source.id === UNCATEGORIZED_VALUE || target.id === UNCATEGORIZED_VALUE) {
+      return;
+    }
+
+    if (!this._kanban.columnFieldId) {
+      return;
+    }
+
+    const fieldProjection = this._projection.getFieldProjection(this._kanban.columnFieldId);
+    const options = [...(fieldProjection.props.options ?? [])];
+    const sourceIndex = options.findIndex((opt) => opt.id === source.id);
+    const targetIndex = options.findIndex((opt) => opt.id === target.id);
+    const [movedOption] = options.splice(sourceIndex, 1);
+    const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
+    options.splice(insertIndex, 0, movedOption);
+
+    this._projection.setFieldProjection({ ...fieldProjection, props: { ...fieldProjection.props, options } });
+  }
+
+  /**
+   * Handles moving a card **between columns**, or to a different position within the **same column**.
+   * Updates both the card's position and its column field value.
+   * Returns the updated source and target columns.
+   */
+  private _handleCardMove(
+    sourceColumn: ArrangedCards<T>[number],
+    targetColumn: ArrangedCards<T>[number],
+    source: { id: string; type: 'card' | 'column' },
+    target: { id: string; type: 'card' | 'column' },
+    closestEdge: 'top' | 'bottom',
+  ) {
+    const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
+    const targetCardIndex = targetColumn.cards.findIndex((card) => card.id === target.id);
+
+    const indicesAreNumeric = typeof sourceCardIndex === 'number' && typeof targetCardIndex === 'number';
+    const columnsHaveCards = sourceColumn.cards && targetColumn.cards;
+    if (!indicesAreNumeric || !columnsHaveCards) {
+      return;
+    }
+
+    const columnField = this.columnFieldPath;
+    const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
+    (movedCard[columnField as keyof typeof movedCard] as any) =
+      targetColumn.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumn.columnValue;
+
+    let insertIndex;
+    if (source.type === 'card' && target.type === 'column') {
+      insertIndex = 0;
+    } else if (sourceCardIndex < targetCardIndex) {
+      insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
+    } else {
+      insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
+    }
+
+    targetColumn.cards.splice(insertIndex, 0, movedCard);
+  }
 }

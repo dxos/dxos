@@ -10779,6 +10779,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-pickers':
+        specifier: workspace:*
+        version: link:../react-ui-pickers
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -11095,6 +11098,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11120,9 +11126,6 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
     devDependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/plugin-search':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-search
