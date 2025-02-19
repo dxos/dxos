@@ -20,7 +20,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormProps, type InputComponent, SelectInput } from '../Form';
+import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
   view: ViewType;
@@ -95,7 +95,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
           return { ...props, ..._props, type };
         }
 
-        return props;
+        return _props as PropertyType;
       });
     },
     [schemas, props.format, props.referenceSchema],
@@ -160,6 +160,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
           }
         />
       ),
+      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionInput {...props} />,
     }),
     [t, schemas, referenceSchema],
   );

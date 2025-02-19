@@ -23,6 +23,8 @@ export type ComponentLookup = (args: {
   inputProps: InputProps;
 }) => ReactElement | undefined;
 
+export type CustomInputMap = Partial<Record<string, InputComponent>>;
+
 export type FormProps<T extends BaseObject> = ThemedClassName<
   {
     values: Partial<T>;
@@ -44,7 +46,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
      * Map of custom renderers for specific properties.
      * Prefer lookupComponent for plugin specific input surfaces.
      */
-    Custom?: Partial<Record<string, InputComponent>>;
+    Custom?: CustomInputMap;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
