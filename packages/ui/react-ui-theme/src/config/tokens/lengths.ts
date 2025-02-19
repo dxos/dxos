@@ -32,7 +32,7 @@ export const lengthsFacet = {
     statements: [':root'],
     aliases: {
       noLine: ['focusOffset'],
-      hairLine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridLine'],
+      hairLine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'],
       thickLine: ['focusLine'],
     },
   },
