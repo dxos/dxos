@@ -72,9 +72,9 @@ export class ViewProjection {
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
-  getFieldProjection = (fieldId: string): FieldProjection => {
+  getFieldProjection(fieldId: string): FieldProjection {
     invariant(this._schema.jsonSchema.properties);
-    const field = this._view.fields.find((f) => f.id === fieldId);
+    const field = this._view.fields.find((field) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
@@ -113,7 +113,7 @@ export class ViewProjection {
     const props = values.type ? this._decode(values) : values;
     log('getFieldProjection', { field, props });
     return { field, props };
-  };
+  }
 
   /** Get all field projections */
   getFieldProjections(): FieldProjection[] {

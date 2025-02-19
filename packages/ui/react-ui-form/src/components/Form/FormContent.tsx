@@ -63,14 +63,14 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   });
 
   if (FoundComponent) {
-    return <div>{FoundComponent}</div>;
+    return <div role='none'>{FoundComponent}</div>;
   }
 
   const jsonPath = createJsonPath(path ?? []);
   const CustomComponent = Custom?.[jsonPath];
   if (CustomComponent) {
     return (
-      <div>
+      <div role='none'>
         <CustomComponent
           type={type}
           format={format}
@@ -91,7 +91,7 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
     return (
-      <div>
+      <div role='none'>
         <InputComponent
           type={type}
           format={format}
@@ -130,7 +130,7 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
 
     if (typeLiteral) {
       return (
-        <div>
+        <div role='none'>
           {!inline && <div>{label}</div>}
           <FormFields schema={S.make(typeLiteral)} path={path} readonly={readonly} Custom={Custom} />
         </div>

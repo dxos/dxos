@@ -335,7 +335,7 @@ describe('ViewProjection', () => {
     const fieldId = projection.getFieldId('status');
     invariant(fieldId);
 
-    // Set single select format with options
+    // Set single select format with options.
     projection.setFieldProjection({
       field: { id: fieldId, path: 'status' as JsonPath },
       props: {
@@ -349,7 +349,7 @@ describe('ViewProjection', () => {
       },
     });
 
-    // Verify JSON Schema
+    // Verify JSON Schema.
     expect(mutable.jsonSchema.properties?.status).to.deep.include({
       type: 'string',
       format: FormatEnum.SingleSelect,
@@ -359,7 +359,7 @@ describe('ViewProjection', () => {
       ],
     });
 
-    // Verify projection
+    // Verify projection.
     const { props } = projection.getFieldProjection(fieldId);
     expect(props.format).to.equal(FormatEnum.SingleSelect);
     expect(props.options).to.deep.equal([
@@ -367,24 +367,24 @@ describe('ViewProjection', () => {
       { id: 'published', title: 'Published', color: '#green' },
     ]);
 
-    // Update options
+    // Update options.
     projection.setFieldProjection({
       field: { id: fieldId, path: 'status' as JsonPath },
       props: {
         ...props,
         options: [
-          { id: 'draft', title: 'Draft', color: '#gray' },
-          { id: 'published', title: 'Published', color: '#green' },
-          { id: 'archived', title: 'Archived', color: '#red' },
+          { id: 'draft', title: 'Draft', color: 'indigo' },
+          { id: 'published', title: 'Published', color: 'blue' },
+          { id: 'archived', title: 'Archived', color: 'amber' },
         ],
       },
     });
 
-    // Verify updated JSON Schema
+    // Verify updated JSON Schema.
     expect(mutable.jsonSchema.properties?.status?.oneOf).to.deep.equal([
-      { const: 'draft', title: 'Draft', color: '#gray' },
-      { const: 'published', title: 'Published', color: '#green' },
-      { const: 'archived', title: 'Archived', color: '#red' },
+      { const: 'draft', title: 'Draft', color: 'indigo' },
+      { const: 'published', title: 'Published', color: 'blue' },
+      { const: 'archived', title: 'Archived', color: 'amber' },
     ]);
 
     const effectSchema = mutable.getSchemaSnapshot();
@@ -392,7 +392,6 @@ describe('ViewProjection', () => {
     expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
     expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
     expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
-
     expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
   });
 

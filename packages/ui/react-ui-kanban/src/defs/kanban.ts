@@ -32,7 +32,7 @@ export const KanbanSchema = S.Struct({
   threads: S.optional(S.Array(Ref(ThreadType))),
 });
 
-export const KanbanPropsSchema = S.Struct({
+export const KanbanSettingsSchema = S.Struct({
   columnFieldId: S.String.annotations({
     [AST.TitleAnnotationId]: 'Column field identifier',
   }),

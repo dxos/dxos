@@ -9,7 +9,7 @@ import { type EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
-import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
+import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
 import { ViewType, ViewProjection } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
@@ -93,7 +93,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form schema={KanbanPropsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
+      <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
