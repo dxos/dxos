@@ -1,14 +1,16 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { type EchoSchema, FormatEnum } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { ViewEditor, Form } from '@dxos/react-ui-form';
-import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
-import { ViewType } from '@dxos/schema';
+import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
+import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
+import { ViewType, ViewProjection } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
@@ -18,21 +20,29 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
 
-  // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
-  // endure typename changes. We shouldn't need to manage a subscription at this layer.
-  const [schema, setSchema] = useState(
-    space && kanban?.cardView?.target?.query?.type
-      ? space.db.schemaRegistry.getSchema(kanban.cardView.target.query.type)
-      : undefined,
-  );
+  const [schema, setSchema] = useState<EchoSchema | undefined>();
+
+  useEffect(() => {
+    if (space && kanban?.cardView?.target?.query?.type) {
+      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
+      const unsubscribe = query.subscribe(
+        () => {
+          const [schema] = query.results;
+          if (schema) {
+            setSchema(schema);
+          }
+        },
+        { fire: true },
+      );
+      return unsubscribe;
+    }
+  }, [space, kanban?.cardView?.target?.query?.type]);
 
   const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {
-      if (!schema) {
-        return;
-      }
+      invariant(schema);
       const matchingViews = views.filter((view) => view.query.type === currentTypename);
       for (const view of matchingViews) {
         view.query.type = newTypename;
@@ -42,24 +52,39 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [views, schema],
   );
 
-  useEffect(() => {
-    if (space && kanban?.cardView?.target?.query?.type) {
-      const unsubscribe = space.db.schemaRegistry
-        .query({ typename: kanban?.cardView?.target?.query?.type })
-        .subscribe((query) => {
-          const [schema] = query.results;
-          if (schema) {
-            setSchema(schema);
-          }
-        });
-
-      return unsubscribe;
-    }
-  }, [space, kanban?.cardView?.target?.query?.type]);
-
   const handleDelete = useCallback(
     (fieldId: string) => dispatch?.(createIntent(KanbanAction.DeleteCardField, { kanban, fieldId })),
     [dispatch, kanban],
+  );
+
+  const projection = useMemo(() => {
+    if (kanban?.cardView?.target && schema) {
+      return new ViewProjection(schema, kanban.cardView.target);
+    }
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
+
+  const selectFields = useMemo(() => {
+    if (!projection) {
+      return [];
+    }
+
+    return projection
+      .getFieldProjections()
+      .filter((field) => field.props.format === FormatEnum.SingleSelect)
+      .map(({ field }) => ({ value: field.id, label: field.path }));
+  }, [projection]);
+
+  const onSave = useCallback(
+    (values: Partial<{ columnFieldId: string }>) => {
+      kanban.columnFieldId = values.columnFieldId;
+    },
+    [kanban],
+  );
+
+  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban]);
+  const custom: CustomInputMap = useMemo(
+    () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
+    [selectFields],
   );
 
   if (!space || !schema || !kanban.cardView?.target) {
@@ -68,14 +93,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   return (
     <>
-      <Form
-        schema={KanbanPropsSchema}
-        values={{ columnField: kanban.columnField }}
-        onSave={({ columnField }) => {
-          kanban.columnField = columnField;
-          kanban.arrangement = undefined;
-        }}
-      />
+      <Form schema={KanbanSettingsSchema} values={initialValues} onSave={onSave} autoSave Custom={custom} />
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
