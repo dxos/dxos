@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
-import { useMediaQuery, useSidebars } from '@dxos/react-ui';
+import { useMediaQuery } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -27,7 +27,6 @@ import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
 import { type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
-import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import {
   expandActions,
@@ -52,7 +51,6 @@ export type NavTreeContainerProps = {
 } & Pick<NavTreeContextValue, 'tab'>;
 
 export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeContainerProps) => {
-  const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
@@ -129,7 +127,6 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const onTabChange = useCallback(
     async (node: NavTreeItemGraphNode) => {
       await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: node.id }));
-
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(node).filter((node) => !isActionLike(node));
@@ -189,10 +186,10 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       }
 
       if (!isLg) {
-        closeNavigationSidebar();
+        void dispatch(createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', options: { state: 'closed' } }));
       }
     },
-    [graph, dispatch, isCurrent, isLg, closeNavigationSidebar],
+    [graph, dispatch, isCurrent, isLg],
   );
 
   // TODO(wittjosiah): Factor out hook.
