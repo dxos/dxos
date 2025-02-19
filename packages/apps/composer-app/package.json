@@ -14,9 +14,9 @@
     "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
+    "icons:": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
     "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
-    "icons:mstile": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
-    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html --manifest=public/site.webmanifest ./public/icon.svg ./public"
+    "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -65,6 +65,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-template": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/plugin-theme-editor": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-wildcard": "workspace:*",

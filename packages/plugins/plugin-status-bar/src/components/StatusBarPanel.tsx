@@ -12,7 +12,7 @@ import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
 import { STATUS_BAR_PLUGIN } from '../meta';
 
-export const StatusBarCtas = () => {
+export const StatusBarActions = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const [open, setOpen] = useState(false);
   return (
@@ -31,10 +31,12 @@ export const StatusBarCtas = () => {
         </a>
       </StatusBar.Button>
       <VersionNumber />
-      <Popover.Content classNames='shadow-lg'>
-        <FeedbackForm onClose={() => setOpen(false)} />
-        <Popover.Arrow />
-      </Popover.Content>
+      <Popover.Portal>
+        <Popover.Content classNames='shadow-lg'>
+          <FeedbackForm onClose={() => setOpen(false)} />
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };
@@ -42,9 +44,9 @@ export const StatusBarCtas = () => {
 export const StatusBarPanel = () => {
   return (
     <>
-      <Surface role='status' />
+      <StatusBarActions />
       <span role='separator' className='grow' />
-      <StatusBarCtas />
+      <Surface role='status' />
     </>
   );
 };

@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { SettingsStore } from '@dxos/local-storage';
 import { EXCALIDRAW_SCHEMA, type DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
@@ -35,13 +36,9 @@ export default () =>
     }),
     createSurface({
       id: `${EXCALIDRAW_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === EXCALIDRAW_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(
-          EXCALIDRAW_PLUGIN,
-        )!.value;
-        return <SketchSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === EXCALIDRAW_PLUGIN,
+      component: ({ data: { subject } }) => <SketchSettings settings={subject.value} />,
     }),
   ]);

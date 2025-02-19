@@ -5,9 +5,24 @@
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
-import { Surface, useCapability, usePluginManager } from '@dxos/app-framework';
+import {
+  LayoutAction,
+  createIntent,
+  Surface,
+  useCapability,
+  useIntentDispatcher,
+  usePluginManager,
+} from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { AlertDialog, Dialog as NaturalDialog, Main, Popover, useOnTransition, type MainProps } from '@dxos/react-ui';
+import {
+  AlertDialog,
+  Dialog as NaturalDialog,
+  Main,
+  Popover,
+  useOnTransition,
+  type MainProps,
+  useMediaQuery,
+} from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
@@ -23,8 +38,7 @@ import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
 import { getMode, type Overscroll } from '../../types';
-import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
-import { useHoistStatusbar } from '../../util/useHoistStatusbar';
+import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
@@ -37,6 +51,7 @@ const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
 
 export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
     sidebarState,
@@ -75,6 +90,27 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
       document.querySelector<HTMLElement>(`article[data-attendable-id="${firstId}"] button`)?.focus();
     }
   }, []);
+
+  // Not using `breakpoint` to avoid firing when breakpoint changes between tablet and desktop.
+  // `ssr: false` to avoid using fallback values and flashing into solo mode on startup.
+  const [isNotMobile] = useMediaQuery('md', { ssr: false });
+  const shouldRevert = useRef(false);
+  useEffect(() => {
+    if (!isNotMobile && getMode(deck) === 'deck') {
+      // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
+      const attended = untracked(() => {
+        const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+        return attention.current;
+      });
+
+      shouldRevert.current = true;
+      void dispatch(
+        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: attended[0], options: { mode: 'solo' } }),
+      );
+    } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
+      void dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
+    }
+  }, [isNotMobile, deck, dispatch]);
 
   /**
    * Clear scroll restoration state if the window is resized

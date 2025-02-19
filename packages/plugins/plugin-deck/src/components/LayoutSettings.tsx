@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { DECK_PLUGIN } from '../meta';
 import {
@@ -23,7 +22,7 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
   const { t } = useTranslation(DECK_PLUGIN);
 
   return (
-    <StackItem.Content toolbar={false} role='article' classNames='p-4 block overflow-y-auto'>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput label={t('select new plank positioning label')}>
         <Select.Root
           value={settings.newPlankPositioning ?? 'start'}
@@ -79,6 +78,6 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           onCheckedChange={(checked) => (settings.enableIdeStyleStatusbar = checked)}
         />
       </DeprecatedFormInput>
-    </StackItem.Content>
+    </DeprecatedFormContainer>
   );
 };

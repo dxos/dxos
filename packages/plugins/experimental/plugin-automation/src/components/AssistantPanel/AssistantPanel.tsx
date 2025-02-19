@@ -179,10 +179,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
               <div
                 key={i}
                 role='none'
-                className={mx(
-                  styleContainer,
-                  role === 'user' ? 'bg-primary-400 dark:bg-primary-600' : 'bg-hoverSurface',
-                )}
+                className={mx(styleContainer, role === 'user' ? 'bg-accentSurface' : 'bg-input')}
               >
                 {cot && <div className='p-2 whitespace-pre-wrap text-xs text-subdued'>{cot}</div>}
                 <div className='p-2 whitespace-pre-wrap'>{message}</div>
