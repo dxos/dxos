@@ -11,8 +11,7 @@ import { getActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Icon, Popover } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -186,22 +185,19 @@ const PerformanceIndicator = () => {
   const [stats, refreshStats] = useStats();
 
   return (
-    <>
-      <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
-        <Icon icon='ph--chart-bar--regular' size={4} />
-      </StatusBar.Button>
-      {visible && (
-        <div
-          className={mx(
-            'z-20 absolute bottom-[--statusbar-size] right-4 w-[450px]',
-            'overflow-x-hidden overflow-y-auto scrollbar-thin',
-            'border-x border-y border-separator',
-          )}
-        >
+    <Popover.Root open={visible} onOpenChange={setVisible}>
+      <Popover.Trigger asChild>
+        <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
+          <Icon icon='ph--chart-bar--regular' size={4} />
+        </StatusBar.Button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content classNames='max-is-80 max-bs-[--radix-popover-content-available-height] overflow-y-auto'>
           <StatsPanel stats={stats} onRefresh={refreshStats} />
-        </div>
-      )}
-    </>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 };
 

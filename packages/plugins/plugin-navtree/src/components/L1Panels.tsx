@@ -31,7 +31,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
-      {...(layout.sidebarState !== 'expanded' && { inert: 'true' })}
+      {...(!layout.sidebarOpen && { inert: 'true' })}
     >
       {item.id === currentItemId && (
         <>
