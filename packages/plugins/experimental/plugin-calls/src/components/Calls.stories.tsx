@@ -7,16 +7,29 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { log } from '@dxos/log';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { CollectionType } from '@dxos/plugin-space/types';
 import { Config, PublicKey } from '@dxos/react-client';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { create, makeRef, useSpaces, SpaceState } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls, type CallsProps } from './Calls';
 
-const Story = (props: CallsProps) => {
+const Render = (props: CallsProps) => {
+  const space = useSpaces({ all: true }).at(-1);
+
+  if (!space || space.state.get() !== SpaceState.SPACE_READY) {
+    return <div />;
+  }
+
   return (
-    <div className='flex h-full overflow-hidden w-96'>
-      <Calls {...props} />
+    <div className='flex h-full overflow-hidden w-96 outline outline-red-500'>
+      <Calls {...props} space={space} />
     </div>
   );
 };
@@ -24,22 +37,34 @@ const Story = (props: CallsProps) => {
 const meta: Meta<typeof Calls> = {
   title: 'plugins/plugin-calls/Calls',
   component: Calls,
-  render: Story,
+  render: Render,
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      config: new Config({
-        runtime: {
-          client: { edgeFeatures: { signaling: true } },
-          services: {
-            edge: { url: 'https://edge.dxos.workers.dev/' },
-            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+    withPluginManager({
+      plugins: [
+        ClientPlugin({
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+            const space = await client.spaces.create();
+            await space.waitUntilReady();
+            space.properties[CollectionType.typename] = makeRef(create(CollectionType, { objects: [], views: {} }));
+            log.info('>>> onClientInitialized ', { space, folder: space.properties[CollectionType.typename].target });
           },
-        },
-      }),
+          config: new Config({
+            runtime: {
+              client: { edgeFeatures: { signaling: true } },
+              services: {
+                edge: { url: 'https://edge.dxos.workers.dev/' },
+                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+              },
+            },
+          }),
+        }),
+        SpacePlugin({ observability: false }),
+        IntentPlugin(),
+        MarkdownPlugin(),
+      ],
     }),
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'justify-center' }),
     withTheme,
   ],
 };

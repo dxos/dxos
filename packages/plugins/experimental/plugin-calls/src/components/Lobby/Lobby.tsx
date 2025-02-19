@@ -4,42 +4,37 @@
 
 import React, { type FC } from 'react';
 
-import { Button, Icon, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useSubscribedState, useRoomContext } from '../../hooks';
-import { CameraButton, MicButton } from '../Video';
+import { MediaButtons, VideoObject } from '../Media';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
-  const {
-    setJoined,
-    // userMedia: { videoTrack, videoEnabled },
-    room,
-    peer,
-  } = useRoomContext()!;
+  const { setJoined, userMedia, room, peer } = useRoomContext()!;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
   const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
     <div className={mx('flex flex-col grow overflow-auto', classNames)}>
-      <div className='flex justify-between'>
+      <VideoObject className='scale-x-[-1] object-contain' videoTrack={userMedia.videoTrack} muted />
+      <div className='grow' />
+      <div className='flex justify-between overflow-hidden'>
         <Toolbar.Root>
-          <Button variant='primary' onClick={() => setJoined(true)} disabled={!session?.sessionId}>
-            <Icon icon={'ph--phone-incoming--regular'} />
-          </Button>
+          <IconButton
+            variant='primary'
+            label='Join'
+            onClick={() => setJoined(true)}
+            disabled={!session?.sessionId}
+            icon='ph--phone-incoming--regular'
+          />
           <div className='grow text-sm text-subdued'>
             {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
           </div>
-          <MicButton />
-          <CameraButton />
+          <MediaButtons userMedia={userMedia} />
         </Toolbar.Root>
       </div>
-      {/* {videoEnabled && (
-        <>
-          <VideoObject className='scale-x-[-1] overflow-auto' videoTrack={videoTrack} muted />
-        </>
-      )} */}
     </div>
   );
 };
