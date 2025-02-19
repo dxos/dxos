@@ -609,7 +609,7 @@ export class DataSpaceManager extends Resource {
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,
         guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
-        lifetime: invitation.expiresOn ? invitation.expiresOn.getTime() - Date.now() : undefined,
+        lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
         persistent: false,

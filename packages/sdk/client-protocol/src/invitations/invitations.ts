@@ -41,20 +41,12 @@ export class CancellableInvitation extends MulticastObservable<Invitation> {
   }
 
   get expired() {
-    const invitation = this.get();
-    return (
-      invitation.created &&
-      invitation.lifetime &&
-      invitation.lifetime !== 0 &&
-      invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()
-    );
+    const expiration = getExpirationTime(this.get());
+    return expiration && expiration.getTime() < Date.now();
   }
 
   get expiry() {
-    const invitation = this.get();
-    return invitation.created && invitation.lifetime && invitation.lifetime !== 0
-      ? new Date(invitation.created.getTime() + invitation.lifetime * 1000)
-      : undefined;
+    return getExpirationTime(this.get());
   }
 }
 
@@ -105,4 +97,11 @@ export const wrapObservable = async (observable: CancellableInvitation): Promise
       },
     );
   });
+};
+
+export const getExpirationTime = (invitation: Partial<Invitation>): Date | undefined => {
+  if (!(invitation.created && invitation.lifetime)) {
+    return;
+  }
+  return new Date(invitation.created.getTime() + invitation.lifetime * 1000);
 };
