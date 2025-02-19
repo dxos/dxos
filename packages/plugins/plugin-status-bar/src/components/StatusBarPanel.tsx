@@ -31,10 +31,12 @@ export const StatusBarActions = () => {
         </a>
       </StatusBar.Button>
       <VersionNumber />
-      <Popover.Content classNames='shadow-lg'>
-        <FeedbackForm onClose={() => setOpen(false)} />
-        <Popover.Arrow />
-      </Popover.Content>
+      <Popover.Portal>
+        <Popover.Content classNames='shadow-lg'>
+          <FeedbackForm onClose={() => setOpen(false)} />
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };
