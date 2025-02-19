@@ -155,7 +155,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               onKeyDown={handleKeyDown}
                               classNames='flex-1'
                             />
-                            <Toolbar.Root classNames='p-0 m-0 !w-auto'>
+                            <Toolbar.Root classNames='p-0 m-0 !is-auto'>
                               <HuePickerToolbarButton hue={item.color} onChangeHue={handleColorChange(item.id)} />
                             </Toolbar.Root>
                             <IconButton

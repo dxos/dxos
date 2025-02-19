@@ -24,7 +24,7 @@ export default {
 
 export const Default = {
   render: () => (
-    <div className='grid grid-cols-5 gap-2 max-w-screen-md'>
+    <div role='grid' className='grid grid-cols-5 gap-2 max-is-screen-md'>
       {palettes.map((palette) => (
         <Tag key={palette} palette={palette}>
           {palette}
