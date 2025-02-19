@@ -143,7 +143,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                         />
                       </div>
                       {selected === item.id && (
-                        <div className='ml-[16px] mt-2 flex flex-col gap-1'>
+                        <div className='mis-4 mbs-2 flex flex-col gap-1'>
                           {/* 16px to match drag handle width. */}
                           <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
                           <div className='flex flex-row items-center gap-1'>
