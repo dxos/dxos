@@ -33,6 +33,8 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
+          // TODO(thure): This dispatch should rightly be in `onTabChange`, but that callback wasn’t reacting to changes
+          //  to its dependencies.
           void dispatch(
             createIntent(LayoutAction.UpdateSidebar, {
               part: 'sidebar',
