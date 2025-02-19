@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { createStatic } from '@dxos/echo-schema';
+
 import { ServiceType, type ApiAuthorization } from '../types';
 
 export type ServiceQuery = {
@@ -50,6 +55,7 @@ export const SERVICES = {
       },
     ],
   }),
+
   hotelSearch: createStatic(ServiceType, {
     name: 'Amadeus Hotel Search',
     description: 'Search for hotels',
@@ -61,6 +67,7 @@ export const SERVICES = {
       },
     ],
   }),
+
   weather: createStatic(ServiceType, {
     name: 'Visual Crossing Weather',
     description: 'Get weather forecast',
@@ -73,10 +80,3 @@ export const SERVICES = {
     ],
   }),
 } as const;
-
-/*
-
-- Search service: serp
-
-
-*/
