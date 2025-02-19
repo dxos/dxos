@@ -39,7 +39,11 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
 
 // TODO(dmaretskyi): Will be an actual registry.
 export const SERVICES = {
+  
+  // dxn:service:example.com/service/FlightSearch
   flightSearch: createStatic(ServiceType, {
+    serviceId: 'example.com/service/FlightSearch',
+
     name: 'Amadeus Flight Search',
     description: 'Search for flights',
     interfaces: [
@@ -50,7 +54,11 @@ export const SERVICES = {
       },
     ],
   }),
+
+  // dxn:service:example.com/service/HotelSearch
   hotelSearch: createStatic(ServiceType, {
+    serviceId: 'example.com/service/HotelSearch',
+
     name: 'Amadeus Hotel Search',
     description: 'Search for hotels',
     interfaces: [
@@ -61,7 +69,11 @@ export const SERVICES = {
       },
     ],
   }),
+
+  // dxn:service:example.com/service/Weather
   weather: createStatic(ServiceType, {
+    serviceId: 'example.com/service/Weather',
+
     name: 'Visual Crossing Weather',
     description: 'Get weather forecast',
     interfaces: [
