@@ -3,3 +3,4 @@
 //
 
 export * from './transcription';
+export * from './recorder';
