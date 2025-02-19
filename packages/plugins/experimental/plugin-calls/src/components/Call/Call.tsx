@@ -2,70 +2,89 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useState } from 'react';
+import { pipe } from 'effect';
+import React, { type FC } from 'react';
 import { useMount } from 'react-use';
 
+import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { type ReactiveEchoObject, type Space } from '@dxos/client/echo';
+import { invariant } from '@dxos/invariant';
+import { MarkdownAction } from '@dxos/plugin-markdown/types';
+import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { Toolbar, type ThemedClassName, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
 import { Transcription as TranscriptionHook } from './Transcription';
-import {
-  useRoomContext,
-  useBroadcastStatus,
-  useHandleTranscription,
-  useHandleScreenshare,
-  useHandleCamera,
-  useHandleMic,
-} from '../../hooks';
+import { useRoomContext, useBroadcastStatus, useDebugMode } from '../../hooks';
+import { type Transcription } from '../../types';
+import { getTimeStr } from '../../utils';
+import { MediaButtons } from '../Media';
 import { ParticipantsLayout } from '../Participant';
 
-// TODO(burdon): Factor out.
-export const useDebugEnabled = () => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const handler = (ev: KeyboardEvent) => {
-      if (ev.key.toLowerCase() === 'd' && ev.ctrlKey) {
-        ev.preventDefault();
-        setEnabled(!enabled);
-      }
-    };
-
-    document.addEventListener('keypress', handler);
-    return () => {
-      document.removeEventListener('keypress', handler);
-    };
-  }, [enabled]);
-
-  return enabled;
-};
-
+// TODO(burdon): Translations.
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
-  const debugEnabled = useDebugEnabled();
+  const debugEnabled = useDebugMode();
   const {
     space,
     userMedia,
     peer,
     isSpeaking,
     pushedTracks,
+    room: { ai, identity, otherUsers, updateUserState },
     setJoined,
-    room: { otherUsers, updateUserState, identity, ai },
   } = useRoomContext()!;
 
+  // Mute if a large group.
   useMount(() => {
-    // TODO(burdon): ???
     if (otherUsers.length > 5) {
       userMedia.turnMicOff();
     }
   });
 
+  // Broadcast status over swarm.
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
 
-  const transcriptionProps = useHandleTranscription();
-  const screenshareProps = useHandleScreenshare();
-  const micProps = useHandleMic();
-  const cameraProps = useHandleCamera();
+  // Create document.
+  // TODO(burdon): Change to queue.
+  const { dispatchPromise } = useIntentDispatcher();
+  const transcriptionFolder = space.properties[CollectionType.typename]?.target;
+  const createTranscriptionDocument = async (space: Space): Promise<ReactiveEchoObject<DocumentType>> => {
+    const result = await dispatchPromise(
+      pipe(
+        createIntent(MarkdownAction.Create, { name: 'Transcription ' + getTimeStr() }),
+        chain(SpaceAction.AddObject, { target: transcriptionFolder }),
+      ),
+    );
+
+    invariant(result.data, 'Failed to create document');
+    const { object } = result.data;
+    return object as ReactiveEchoObject<DocumentType>; // TODO(burdon): Is this right?
+  };
+
+  // Transcription.
+  const handleToggleTranscription = async () => {
+    const transcription: Transcription = {
+      ...ai.transcription,
+      enabled: !ai.transcription.enabled,
+      lamportTimestamp: ai.transcription.lamportTimestamp! + 1,
+    };
+
+    // Check not already running.
+    if (!ai.transcription.enabled && !ai.transcription.objectId) {
+      const document = await createTranscriptionDocument(space);
+      ai.transcription.objectId = document.id;
+    }
+
+    ai.setTranscription(transcription);
+  };
+
+  // Screen sharing.
+  const otherUserIsSharing = otherUsers.some((user) => user.tracks?.screenshare);
+  const sharing = userMedia.screenShareVideoTrack !== undefined;
+  const canShareScreen =
+    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
@@ -89,10 +108,21 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
             icon='ph--phone-x--regular'
           />
           <div className='grow'></div>
-          <IconButton {...transcriptionProps} iconOnly />
-          <IconButton {...screenshareProps} iconOnly />
-          <IconButton {...micProps} iconOnly />
-          <IconButton {...cameraProps} iconOnly />
+          <IconButton
+            disabled={!transcriptionFolder}
+            icon={ai.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
+            label={ai.transcription.enabled ? 'Start transcription' : 'Stop transcription'}
+            onClick={handleToggleTranscription}
+            iconOnly
+          />
+          <IconButton
+            disabled={!canShareScreen || otherUserIsSharing}
+            icon={sharing ? 'ph--selection--regular' : 'ph--selection-slash--regular'}
+            label={sharing ? 'Screenshare' : 'Screenshare Off'}
+            onClick={sharing ? userMedia.turnScreenShareOff : userMedia.turnScreenShareOn}
+            iconOnly
+          />
+          <MediaButtons userMedia={userMedia} />
         </Toolbar.Root>
       </div>
     </PullAudioTracks>

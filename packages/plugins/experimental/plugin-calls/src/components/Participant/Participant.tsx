@@ -12,7 +12,7 @@ import { HoverFade } from './HoverFade';
 import { useRoomContext, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
 import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
-import { VideoObject } from '../Video';
+import { VideoObject } from '../Media';
 
 const useMid = (track?: MediaStreamTrack) => {
   const { peer } = useRoomContext();
