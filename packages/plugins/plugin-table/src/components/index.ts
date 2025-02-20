@@ -6,3 +6,4 @@ import { lazy } from 'react';
 
 export const TableContainer = lazy(() => import('./TableContainer'));
 export const TableViewEditor = lazy(() => import('./TableViewEditor'));
+export const RowDetailsPanel = lazy(() => import('./RowDetailsPanel'));

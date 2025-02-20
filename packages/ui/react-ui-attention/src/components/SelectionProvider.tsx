@@ -28,9 +28,9 @@ export const SelectionProvider = ({
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
-export const useSelectedItems = (contextId: string): string[] => {
+export const useSelectedItems = (contextId: string): Set<string> => {
   const { selection } = useSelectionContext(SELECTION_NAME);
-  return Array.from(selection.getSelection(contextId) ?? new Set());
+  return selection.getSelection(contextId);
 };
 
 export const useSelectionActions = (contextId: string) => {

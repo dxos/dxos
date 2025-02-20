@@ -4,6 +4,7 @@
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { DeckCapabilities } from '@dxos/plugin-deck';
 import { type Space } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
@@ -60,5 +61,15 @@ export const TablePlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/complementary-panel`,
+      activatesOn: Events.Startup,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'properties',
+          label: ['Properties', { ns: TABLE_PLUGIN }],
+          icon: 'ph--list--regular',
+        }),
     }),
   ]);

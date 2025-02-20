@@ -35,14 +35,12 @@ export class SelectionManager {
   }
 
   updateSelection(contextId: string, selectedIds: Set<string> | string[]) {
-    console.log('updateSelection', contextId, selectedIds);
     untracked(() => {
       this._state.selections[contextId] = selectedIds instanceof Set ? selectedIds : new Set(selectedIds);
     });
   }
 
   clearSelection(contextId: string) {
-    console.log('clearSelection', contextId);
     untracked(() => {
       this._state.selections[contextId] = new Set();
     });
