@@ -129,6 +129,7 @@
     "rollup-plugin-sourcemaps": "^0.6.3",
     "semver": "^7.3.8",
     "serve": "^14.1.2",
+    "shx": "^0.3.3",
     "syncpack": "^8.2.4",
     "ts-node": "10.9.1",
     "tsx": "^4.6.2",
