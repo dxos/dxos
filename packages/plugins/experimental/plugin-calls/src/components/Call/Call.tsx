@@ -3,7 +3,7 @@
 //
 
 import { pipe } from 'effect';
-import React, { useEffect, type FC } from 'react';
+import React, { type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type ReactiveEchoObject, type Space } from '@dxos/client/echo';
@@ -55,16 +55,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   };
 
   // Transcription.
-  const { turnTranscriptionOn, turnTranscriptionOff } = useTranscription({
-    space,
-    userMedia,
-    identity,
-    isSpeaking,
-    ai,
-  });
-  useEffect(() => {
-    ai.transcription.enabled ? turnTranscriptionOn() : turnTranscriptionOff();
-  }, [ai.transcription.enabled]);
+  useTranscription({ space, userMedia, identity, isSpeaking, ai });
   const handleToggleTranscription = async () => {
     const transcription: Transcription = {
       ...ai.transcription,

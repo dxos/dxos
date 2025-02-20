@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -16,9 +16,8 @@ import { type UserState } from '../types';
 import { getTimeStr } from '../utils';
 
 /**
- * Sends last `recordingLength` seconds of audio to the server each `recordingInterval` milliseconds.
+ * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-// TODO(mykola): Make a hook.
 export const useTranscription = ({
   space,
   userMedia,
@@ -32,7 +31,6 @@ export const useTranscription = ({
   isSpeaking: boolean;
   ai: Ai;
 }) => {
-  const [enabledTranscription, setEnabledTranscription] = useState(false);
   const recorder = useRef<AudioRecorder | null>(null);
   const transcription = useRef<Transcription | null>();
 
@@ -101,7 +99,7 @@ export const useTranscription = ({
   // if user is not speaking, stop transcription after 1 second. if speaking, start transcription.
   const stopTimeout = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (!enabledTranscription) {
+    if (!ai.transcription.enabled) {
       return;
     }
 
@@ -125,11 +123,10 @@ export const useTranscription = ({
         stopTimeout.current = null;
       }
     };
-  }, [isSpeaking, enabledTranscription]);
+  }, [isSpeaking, ai.transcription.enabled]);
 
   useEffect(() => {
-    log.info('useTranscription useEffect', { enabledTranscription });
-    if (enabledTranscription) {
+    if (ai.transcription.enabled) {
       void transcription.current?.open();
       void recorder.current?.start();
     } else {
@@ -137,10 +134,5 @@ export const useTranscription = ({
       transcription.current?.stopChunksRecording();
       void transcription.current?.close();
     }
-  }, [enabledTranscription, recorder.current, transcription.current]);
-
-  return {
-    turnTranscriptionOn: () => setEnabledTranscription(true),
-    turnTranscriptionOff: () => setEnabledTranscription(false),
-  };
+  }, [ai.transcription.enabled, recorder.current, transcription.current]);
 };
