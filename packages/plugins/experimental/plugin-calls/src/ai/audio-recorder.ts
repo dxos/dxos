@@ -38,8 +38,6 @@ export abstract class AudioRecorder {
     protected readonly _onChunk: (chunk: AudioChunk) => void,
   ) {}
 
-  abstract sampleRate: number;
-
   /**
    * Starts the recorder.
    */
