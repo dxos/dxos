@@ -4,13 +4,14 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { WaveFile } from 'wavefile';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type AudioChunk, AudioRecorder, Transcription } from '../ai';
+import { type AudioChunk, AudioRecorder, type TranscribedText, Transcription } from '../ai';
 import { mergeFloat64Arrays } from '../utils';
 
 describe('transcription', () => {
@@ -49,15 +50,6 @@ describe('transcription', () => {
     await writeOutputFile('half.wav', halfWav.toBuffer());
   });
 
-  test('reencode wav file', async () => {
-    const fileBuffer = await readFile('test.wav');
-    const wav = new WaveFile(fileBuffer);
-    const newWav = new WaveFile();
-    newWav.fromScratch(1, (wav.fmt as any).sampleRate, '16', wav.getSamples());
-
-    await writeOutputFile('test-reencoded.wav', wav.toBuffer());
-  });
-
   test('merge audio chunks', async () => {
     const chunks: AudioChunk[] = [];
     const trigger = new Trigger({ autoReset: true });
@@ -94,12 +86,12 @@ describe('transcription', () => {
     await reader.stop();
   });
 
-  test('transcribe file', async () => {
-    const trigger = new Trigger();
+  test('transcription of audio recording', { timeout: 10_000 }, async () => {
+    const trigger = new Trigger<TranscribedText>({ autoReset: true });
     const transcription = new Transcription(
       async (transcription) => {
         log.info('transcription', { transcription });
-        trigger.wake();
+        trigger.wake(transcription);
       },
       {
         prefixedChunksAmount: 1,
@@ -121,10 +113,48 @@ describe('transcription', () => {
     recorder.emitChunk();
 
     transcription.stopChunksRecording();
-    await trigger.wait();
+    // Could fail, not critical.
+    expect((await trigger.wait()).text.includes('I will tell you some information about myself'));
+  });
+
+  test('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
+    const trigger = new Trigger<TranscribedText>({ autoReset: true });
+    const transcription = new Transcription(
+      async (transcription) => {
+        trigger.wake(transcription);
+      },
+      {
+        prefixedChunksAmount: 1,
+      },
+    );
+
+    const recorder = new MockAudioRecorder(
+      (chunk) => transcription.onChunk(chunk), //
+      await readFile('test.wav'),
+      3_000,
+    );
+
+    transcription.setSampleRate(recorder.sampleRate);
+
+    await recorder.start();
+
+    transcription.startChunksRecording();
+    recorder.emitChunk();
+    recorder.emitChunk();
+    transcription.stopChunksRecording();
+    expect((await trigger.wait()).text.includes("Hello, I'm"));
+
+    transcription.startChunksRecording();
+    recorder.emitChunk();
+    recorder.emitChunk();
+    transcription.stopChunksRecording();
+    expect((await trigger.wait()).text.includes('I will tell you some information about myself'));
+
+    log.info('Done', { trace: TRACE_PROCESSOR.getDiagnostics() });
   });
 });
 
+@trace.resource()
 class MockAudioRecorder extends AudioRecorder {
   private readonly _chunks: AudioChunk[] = [];
   private readonly _wav: WaveFile;
@@ -157,6 +187,7 @@ class MockAudioRecorder extends AudioRecorder {
     this._onChunk(chunk);
   }
 
+  @trace.span()
   async start() {
     log.info('start mock audio recorder', { wavParams: this._wav.fmt });
     const now = Date.now();

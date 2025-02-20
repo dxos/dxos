@@ -47,6 +47,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "^3.12.3",
     "extendable-media-recorder": "^9.2.19",

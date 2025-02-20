@@ -5847,6 +5847,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util

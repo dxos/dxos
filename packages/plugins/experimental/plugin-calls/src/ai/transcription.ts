@@ -5,24 +5,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import fs from 'node:fs';
-import path from 'node:path';
 import { WaveFile } from 'wavefile';
 
 import { DeferredTask, synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 
-import { type AudioChunk } from './recorder';
+import { type AudioChunk } from './audio-recorder';
 import { CALLS_URL } from '../types';
 import { mergeFloat64Arrays } from '../utils';
+
+type Word = {
+  word: string;
+  start: number;
+  end: number;
+};
 
 type Segment = {
   text: string;
   start: number;
   end: number;
   no_speech_prob: number;
+  words: Word[];
+};
+
+export type TranscribedText = {
+  timestamp: number;
+  text: string;
 };
 
 /**
@@ -32,13 +43,13 @@ type Segment = {
  */
 export class Transcription extends Resource {
   private _audioChunks: AudioChunk[] = [];
-  private _lastSegEndTimestamp = 0;
+  private _lastWordEndTimestamp = 0;
 
   private _recording = false;
   private readonly _transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
 
   constructor(
-    private readonly _onTranscription: ({ timestamp, text }: { timestamp: number; text: string }) => Promise<void>,
+    private readonly _onTranscription: ({ timestamp, text }: TranscribedText) => Promise<void>,
     private readonly _config: {
       /**
        * Number of chunks to buffer before transcribing.
@@ -48,7 +59,7 @@ export class Transcription extends Resource {
       /**
        * The sample rate of the audio chunks.
        */
-      sampleRate: number;
+      sampleRate?: number;
     },
   ) {
     super();
@@ -93,31 +104,34 @@ export class Transcription extends Resource {
   private async _transcribe() {
     const chunks = this._audioChunks;
 
-    const audio = this._mergeAudioChunks(chunks);
+    const audio = await this._mergeAudioChunks(chunks);
     const segments = await this._fetchTranscription(audio);
-    const text = this._getText(segments, chunks);
+    const text = this._getText(
+      segments.flatMap((segment) => segment.words),
+      chunks,
+    );
     if (text) {
       await this._onTranscription(text);
     }
   }
 
-  private _mergeAudioChunks(chunks: AudioChunk[]) {
+  @trace.span({ showInBrowserTimeline: true })
+  private async _mergeAudioChunks(chunks: AudioChunk[]) {
     const file = new WaveFile();
+    invariant(this._config.sampleRate, 'Sample rate is not set');
 
     file.fromScratch(1, this._config.sampleRate, '16', mergeFloat64Arrays(chunks.map(({ data }) => data)));
-
-    fs.writeFileSync(path.join(__dirname, 'audio.wav'), file.toBuffer());
 
     return file.toBase64();
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _fetchTranscription(audio: string) {
     if (audio.length === 0) {
       this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
     }
 
-    log.verbose('Sending chunks to transcribe', { audio });
     const response = await fetch(`${CALLS_URL}/transcribe`, {
       method: 'POST',
       body: JSON.stringify({ audio }),
@@ -137,7 +151,7 @@ export class Transcription extends Resource {
       segments: Segment[];
     } = await response.json();
 
-    log.info('Transcription response', {
+    log.verbose('Transcription response', {
       segments,
       string: segments.map((segments) => segments.text).join(' '),
     });
@@ -145,20 +159,14 @@ export class Transcription extends Resource {
     return segments;
   }
 
-  private _getText(segments: Segment[], originalChunks: AudioChunk[]) {
-    invariant(Array.isArray(segments), 'Invalid segments');
-
-    log.info('Updating document', {
-      segments,
-      originalStart: originalChunks.at(0)!.timestamp,
-      lastSegEndTimestamp: this._lastSegEndTimestamp,
-    });
-    const segsToUse = segments.filter(
-      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this._lastSegEndTimestamp,
+  private _getText(words: Word[], originalChunks: AudioChunk[]) {
+    invariant(Array.isArray(words), 'Invalid words');
+    const wordsToUse = words.filter(
+      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this._lastWordEndTimestamp,
     );
 
-    this._lastSegEndTimestamp = (segsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
-    const textToUse = segsToUse?.map((segment) => segment.text).join(' ') + '';
+    this._lastWordEndTimestamp = (wordsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
+    const textToUse = wordsToUse?.map((segment) => segment.word).join(' ');
     if (textToUse.length === 0) {
       return;
     }

@@ -6,7 +6,10 @@ import { type IBlobEvent, type IMediaRecorder, MediaRecorder, register } from 'e
 import { connect } from 'extendable-media-recorder-wav-encoder';
 import { WaveFile } from 'wavefile';
 
-import { type AudioChunk, AudioRecorder } from './recorder';
+import { synchronized } from '@dxos/async';
+import { trace } from '@dxos/tracing';
+
+import { type AudioChunk, AudioRecorder } from './audio-recorder';
 
 await register(await connect());
 
@@ -17,6 +20,7 @@ export type WavMediaRecorderConfig = {
 /**
  * Recorder that uses the MediaContext API and AudioNode API to record audio.
  */
+@trace.resource()
 export class MediaStreamRecorder extends AudioRecorder {
   private readonly _mediaStreamTrack: MediaStreamTrack;
   /**
@@ -37,6 +41,7 @@ export class MediaStreamRecorder extends AudioRecorder {
     this._config = config;
   }
 
+  @synchronized
   private async _ondataavailable(event: IBlobEvent) {
     const blob = event.data;
     const arrayBuffer = await blob.arrayBuffer();
