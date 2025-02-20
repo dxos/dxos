@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 
-import { type ServiceType, MockServiceRegistry, type ServiceQuery } from '../types';
+import { MockServiceRegistry } from '../testing';
+import { type ServiceType, type ServiceQuery } from '../types';
 
 /**
  * Retrieves matching services from the registry.
