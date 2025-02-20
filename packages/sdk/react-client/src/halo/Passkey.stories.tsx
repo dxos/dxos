@@ -38,7 +38,7 @@ const Test = () => {
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge: new TextEncoder().encode(challenge),
-        rp: { id: 'localhost', name: 'Test' },
+        rp: { id: location.hostname, name: 'Test' },
         user: {
           id: new TextEncoder().encode(identity.did),
           name: identity.did,
@@ -48,6 +48,11 @@ const Test = () => {
           { type: 'public-key', alg: -8 }, // Ed25519 (not yet supported across all browsers)
           { type: 'public-key', alg: -7 }, // ES256
         ],
+        // https://web.dev/articles/webauthn-discoverable-credentials#resident-key
+        authenticatorSelection: {
+          residentKey: 'required',
+          requireResidentKey: true,
+        },
       },
     });
 
@@ -70,7 +75,7 @@ const Test = () => {
     const credential = await navigator.credentials.get({
       publicKey: {
         challenge: new TextEncoder().encode(challenge),
-        rpId: 'localhost',
+        rpId: location.hostname,
         // NOTE: Don't prompt for password in storybook for test purposes.
         //   In practice, this should be set to 'required' for identity recovery.
         userVerification: 'discouraged',
