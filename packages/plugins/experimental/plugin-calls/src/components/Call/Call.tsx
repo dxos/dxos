@@ -3,8 +3,7 @@
 //
 
 import { pipe } from 'effect';
-import React, { type FC } from 'react';
-import { useMount } from 'react-use';
+import React, { useEffect, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type ReactiveEchoObject, type Space } from '@dxos/client/echo';
@@ -16,8 +15,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { Transcription as TranscriptionHook } from './Transcription';
-import { useRoomContext, useBroadcastStatus, useDebugMode } from '../../hooks';
+import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
 import { type Transcription } from '../../types';
 import { getTimeStr } from '../../utils';
 import { MediaButtons } from '../Media';
@@ -35,13 +33,6 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     room: { ai, identity, otherUsers, updateUserState },
     setJoined,
   } = useRoomContext()!;
-
-  // Mute if a large group.
-  useMount(() => {
-    if (otherUsers.length > 5) {
-      userMedia.turnMicOff();
-    }
-  });
 
   // Broadcast status over swarm.
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
@@ -64,6 +55,16 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   };
 
   // Transcription.
+  const { turnTranscriptionOn, turnTranscriptionOff } = useTranscription({
+    space,
+    userMedia,
+    identity,
+    isSpeaking,
+    ai,
+  });
+  useEffect(() => {
+    ai.transcription.enabled ? turnTranscriptionOn() : turnTranscriptionOff();
+  }, [ai.transcription.enabled]);
   const handleToggleTranscription = async () => {
     const transcription: Transcription = {
       ...ai.transcription,
@@ -88,9 +89,6 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
-      {ai.transcription.enabled && (
-        <TranscriptionHook space={space} userMedia={userMedia} identity={identity} ai={ai} isSpeaking={isSpeaking} />
-      )}
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         <div className='flex flex-col h-full overflow-y-scroll'>
           <ParticipantsLayout identity={identity} users={otherUsers} debugEnabled={debugEnabled} />

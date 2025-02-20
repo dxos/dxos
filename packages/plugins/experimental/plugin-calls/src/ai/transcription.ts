@@ -36,6 +36,12 @@ export type TranscribedText = {
   text: string;
 };
 
+type WavConfig = {
+  channels: number;
+  sampleRate: number;
+  bitDepthCode: string;
+};
+
 /**
  * Handles transcription of audio chunks.
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
@@ -47,30 +53,25 @@ export class Transcription extends Resource {
 
   private _recording = false;
   private readonly _transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
+  private _config: WavConfig = { channels: 1, sampleRate: 16000, bitDepthCode: '16' };
+  private _onTranscription?: (params: TranscribedText) => Promise<void>;
+  private readonly _prefixedChunksAmount: number;
 
-  constructor(
-    private readonly _onTranscription: ({ timestamp, text }: TranscribedText) => Promise<void>,
-    private readonly _config: {
-      /**
-       * Number of chunks to buffer before transcribing.
-       */
-      prefixedChunksAmount: number;
-
-      /**
-       * The sample rate of the audio chunks.
-       */
-      sampleRate?: number;
-    },
-  ) {
+  constructor({ prefixedChunksAmount }: { prefixedChunksAmount: number }) {
     super();
+    this._prefixedChunksAmount = prefixedChunksAmount;
   }
 
   protected override async _close() {
     this._recording = false;
   }
 
-  setSampleRate(sampleRate: number) {
-    this._config.sampleRate = sampleRate;
+  setWavConfig(config: Partial<WavConfig>) {
+    this._config = { ...this._config, ...config };
+  }
+
+  setOnTranscription(onTranscription: (params: TranscribedText) => Promise<void>) {
+    this._onTranscription = onTranscription;
   }
 
   startChunksRecording() {
@@ -78,6 +79,9 @@ export class Transcription extends Resource {
   }
 
   stopChunksRecording() {
+    if (!this._recording) {
+      return;
+    }
     this._recording = false;
     this._transcribeTask.schedule();
   }
@@ -91,13 +95,8 @@ export class Transcription extends Resource {
     this._audioChunks.push(chunk);
 
     // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
-    if (
-      !this._recording &&
-      !this._transcribeTask.scheduled &&
-      this._audioChunks.length >= this._config.prefixedChunksAmount
-    ) {
-      this._audioChunks =
-        this._config.prefixedChunksAmount > 0 ? this._audioChunks.slice(-this._config.prefixedChunksAmount) : [];
+    if (!this._recording && !this._transcribeTask.scheduled && this._audioChunks.length >= this._prefixedChunksAmount) {
+      this._audioChunks = this._prefixedChunksAmount > 0 ? this._audioChunks.slice(-this._prefixedChunksAmount) : [];
     }
   }
 
@@ -111,7 +110,7 @@ export class Transcription extends Resource {
       chunks,
     );
     if (text) {
-      await this._onTranscription(text);
+      await this._onTranscription?.(text);
     }
   }
 
@@ -120,7 +119,12 @@ export class Transcription extends Resource {
     const file = new WaveFile();
     invariant(this._config.sampleRate, 'Sample rate is not set');
 
-    file.fromScratch(1, this._config.sampleRate, '16', mergeFloat64Arrays(chunks.map(({ data }) => data)));
+    file.fromScratch(
+      this._config.channels,
+      this._config.sampleRate,
+      this._config.bitDepthCode,
+      mergeFloat64Arrays(chunks.map(({ data }) => data)),
+    );
 
     return file.toBase64();
   }
@@ -151,7 +155,7 @@ export class Transcription extends Resource {
       segments: Segment[];
     } = await response.json();
 
-    log.verbose('Transcription response', {
+    log.info('Transcription response', {
       segments,
       string: segments.map((segments) => segments.text).join(' '),
     });

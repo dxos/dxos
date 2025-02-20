@@ -43,7 +43,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
     if (!stream.current) {
       stream.current = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
       stream.current.subscribe((event) => {
-        log.info('room state', {
+        log('room state', {
           users: event.peers?.map((peer) => codec.decode(peer.state!)) ?? [],
           meetingId: roomId.toHex(),
         });
