@@ -61,7 +61,6 @@ export const useBroadcastStatus = ({
       transcription: buf.create(TranscriptionSchema, ai.transcription),
     };
 
-    log.info('>>> useBroadcastStatus', { state });
     updateUserState(state);
     const t = setInterval(() => {
       try {

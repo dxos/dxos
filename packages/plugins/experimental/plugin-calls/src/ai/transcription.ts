@@ -5,118 +5,143 @@
 // Copyright 2025 DXOS.org
 //
 
-import { synchronized } from '@dxos/async';
+import { WaveFile } from 'wavefile';
+
+import { DeferredTask, synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type DocumentType } from '@dxos/plugin-markdown/types';
-import { type ReactiveEchoObject, updateText } from '@dxos/react-client/echo';
+import { trace } from '@dxos/tracing';
 
-import { CALLS_URL, type UserState } from '../types';
-import { getTimeStr } from '../utils';
+import { type AudioChunk } from './audio-recorder';
+import { CALLS_URL } from '../types';
+import { mergeFloat64Arrays } from '../utils';
+
+type Word = {
+  word: string;
+  start: number;
+  end: number;
+};
 
 type Segment = {
   text: string;
   start: number;
   end: number;
   no_speech_prob: number;
+  words: Word[];
 };
 
-type RecorderChunk = { data: Blob; timestamp: number };
+export type TranscribedText = {
+  timestamp: number;
+  text: string;
+};
 
-export const HEADER_LENGTH = 181;
+type WavConfig = {
+  channels: number;
+  sampleRate: number;
+  bitDepthCode: string;
+};
 
+/**
+ * Handles transcription of audio chunks.
+ * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
+ * If user is speaking, the chunks are added to the buffer until the user is done talking.
+ */
 export class Transcription extends Resource {
-  private _document?: ReactiveEchoObject<DocumentType> = undefined;
-  private _recorder?: MediaRecorder = undefined;
-  private _audioChunks: RecorderChunk[] = [];
-  private _lastSegEndTimestamp = 0;
-  private _identity?: UserState;
+  private _audioChunks: AudioChunk[] = [];
+  private _lastWordEndTimestamp = 0;
+
+  private _recording = false;
+  private readonly _transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
+  private _config: WavConfig = { channels: 1, sampleRate: 16000, bitDepthCode: '16' };
+  private _onTranscription?: (params: TranscribedText) => Promise<void>;
+  private readonly _prefixedChunksAmount: number;
+
+  constructor({ prefixedChunksAmount }: { prefixedChunksAmount: number }) {
+    super();
+    this._prefixedChunksAmount = prefixedChunksAmount;
+  }
 
   protected override async _close() {
-    this._recorder?.stop();
-    this._recorder = undefined;
+    this._recording = false;
   }
 
-  setAudioTrack(audioTrack: MediaStreamTrack) {
-    this._recorder?.stop();
-    this._recorder = new MediaRecorder(new MediaStream([audioTrack]));
-    this._resetHandler();
+  setWavConfig(config: Partial<WavConfig>) {
+    this._config = { ...this._config, ...config };
   }
 
-  setDocument(document: ReactiveEchoObject<DocumentType>) {
-    invariant(this._recorder, 'Recorder not set');
-    this._document = document;
-    this._resetHandler();
+  setOnTranscription(onTranscription: (params: TranscribedText) => Promise<void>) {
+    this._onTranscription = onTranscription;
   }
 
-  setIdentity(identity: UserState) {
-    this._identity = identity;
-    this._resetHandler();
+  startChunksRecording() {
+    this._recording = true;
   }
 
-  /**
-   * Resets the ondataavailable event handler to the default. Needed to prevent staled references.
-   */
-  private _resetHandler() {
-    this._recorder && (this._recorder.ondataavailable = (event) => this._ondataavailable(event));
-  }
-
-  startRecorder() {
-    invariant(this._recorder, 'Recorder not set');
-    if (this._recorder.state === 'recording') {
-      log.verbose('Recorder already recording');
+  stopChunksRecording() {
+    if (!this._recording) {
       return;
     }
-    this._recorder.start();
-  }
-
-  stopRecorder() {
-    invariant(this._recorder, 'Recorder not set');
-    this._recorder.stop();
+    this._recording = false;
+    this._transcribeTask.schedule();
   }
 
   @synchronized
-  private async _ondataavailable(event: BlobEvent) {
-    try {
-      log.info('>>> transcription._ondataavailable', { event });
-      await this._saveAudioBlob(event.data);
-      invariant(this._document, 'No document');
-      const chunksToUse = this._audioChunks;
-      const audio = this._mergeAudioChunks(chunksToUse);
-      const segments = await this._fetchTranscription(audio);
-      this._updateDocument(segments, chunksToUse);
-      this._audioChunks = [];
-    } catch (error) {
-      log.error('Error in transcription', { error });
+  onChunk(chunk: AudioChunk) {
+    this._saveAudioChunk(chunk);
+  }
+
+  private _saveAudioChunk(chunk: AudioChunk) {
+    this._audioChunks.push(chunk);
+
+    // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
+    if (!this._recording && !this._transcribeTask.scheduled && this._audioChunks.length >= this._prefixedChunksAmount) {
+      this._audioChunks = this._prefixedChunksAmount > 0 ? this._audioChunks.slice(-this._prefixedChunksAmount) : [];
     }
   }
 
-  private async _saveAudioBlob(blob: Blob) {
-    const now = Date.now();
-    if (blob.size === 0) {
-      return;
+  private async _transcribe() {
+    const chunks = this._audioChunks;
+
+    const audio = await this._mergeAudioChunks(chunks);
+    const segments = await this._fetchTranscription(audio);
+    const text = this._getText(
+      segments.flatMap((segment) => segment.words),
+      chunks,
+    );
+    if (text) {
+      await this._onTranscription?.(text);
     }
-    this._audioChunks.push({
-      data: blob,
-      timestamp: now,
-    });
   }
 
-  private _mergeAudioChunks(chunks: RecorderChunk[]) {
-    return new Blob([...chunks.map(({ data }) => data)], { type: chunks.at(0)!.data.type });
+  @trace.span({ showInBrowserTimeline: true })
+  private async _mergeAudioChunks(chunks: AudioChunk[]) {
+    const file = new WaveFile();
+    invariant(this._config.sampleRate, 'Sample rate is not set');
+
+    file.fromScratch(
+      this._config.channels,
+      this._config.sampleRate,
+      this._config.bitDepthCode,
+      mergeFloat64Arrays(chunks.map(({ data }) => data)),
+    );
+
+    return file.toBase64();
   }
 
-  private async _fetchTranscription(audio: Blob) {
-    if (audio.size === 0) {
+  @trace.span({ showInBrowserTimeline: true })
+  private async _fetchTranscription(audio: string) {
+    if (audio.length === 0) {
       this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
     }
 
-    log.verbose('Sending chunks to transcribe', { audio });
     const response = await fetch(`${CALLS_URL}/transcribe`, {
       method: 'POST',
-      body: audio,
+      body: JSON.stringify({ audio }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
@@ -138,30 +163,18 @@ export class Transcription extends Resource {
     return segments;
   }
 
-  private _updateDocument(segments: Segment[], originalChunks: RecorderChunk[]) {
-    invariant(Array.isArray(segments), 'Invalid segments');
-
-    log.info('Updating document', {
-      segments,
-      originalStart: originalChunks.at(0)!.timestamp,
-      lastSegEndTimestamp: this._lastSegEndTimestamp,
-    });
-    const segsToUse = segments.filter(
-      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this._lastSegEndTimestamp,
+  private _getText(words: Word[], originalChunks: AudioChunk[]) {
+    invariant(Array.isArray(words), 'Invalid words');
+    const wordsToUse = words.filter(
+      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this._lastWordEndTimestamp,
     );
 
-    this._lastSegEndTimestamp = (segsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
-    const textToUse = segsToUse?.map((segment) => segment.text).join(' ') + '';
-    log.info('>>> textToUse', { textToUse });
+    this._lastWordEndTimestamp = (wordsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
+    const textToUse = wordsToUse?.map((segment) => segment.word).join(' ');
     if (textToUse.length === 0) {
       return;
     }
 
-    const time = getTimeStr(originalChunks.at(0)!.timestamp);
-    updateText(
-      this._document!.content.target!,
-      ['content'],
-      this._document!.content.target!.content + `\n   _${time} ${this._identity!.name}_\n` + textToUse,
-    );
+    return { timestamp: originalChunks.at(0)!.timestamp, text: textToUse };
   }
 }
