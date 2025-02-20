@@ -90,7 +90,7 @@ const meta: Meta<typeof ToggleContainer> = {
   title: 'plugins/plugin-automation/ToggleContainer',
   component: ToggleContainer,
   render: Render,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-base' })],
+  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
 };
 
 export default meta;

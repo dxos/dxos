@@ -17,13 +17,13 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
   const handleSubmit = useCallback(
-    async (message: string) => {
+    async (text: string) => {
       if (processor.streaming.value) {
         await processor.cancel();
       }
 
       invariant(messageQueue);
-      await processor.request(message, {
+      await processor.request(text, {
         history: messageQueue.items,
         onComplete: (messages) => messageQueue.append(messages),
       });
@@ -39,7 +39,13 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
 
   return (
     <StackItem.Content toolbar={false} role={role}>
-      <Thread messages={messages} streaming={processor.streaming.value} onSubmit={handleSubmit} onStop={handleStop} />
+      <Thread
+        messages={messages}
+        streaming={processor.streaming.value}
+        onSubmit={handleSubmit}
+        onSuggest={handleSubmit}
+        onStop={handleStop}
+      />
     </StackItem.Content>
   );
 };

@@ -4,7 +4,13 @@
 
 import { createStatic } from '@dxos/echo-schema';
 
-import { type BaseServiceRegistry, type ServiceQuery, type ApiAuthorization, ServiceType } from '../types';
+import {
+  type BaseServiceRegistry,
+  type ServiceQuery,
+  type ApiAuthorization,
+  ServiceType,
+  categoryIcons,
+} from '../types';
 
 export class MockServiceRegistry implements BaseServiceRegistry {
   async queryServices(query?: ServiceQuery): Promise<ServiceType[]> {
@@ -31,14 +37,12 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
   },
 };
 
-// TODO(burdon): Find/deploy chess API.
-
 const TEST_SERVICES: ServiceType[] = [
   /**
    * dxn:service:example.com/service/FlightSearch
    */
   createStatic(ServiceType, {
-    serviceId: 'example.com/service/FlightSearch',
+    serviceId: 'amadeus.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
     description: 'Search for local and international flights.',
     category: 'travel',
@@ -51,12 +55,26 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
+  // Registries:
+  //  - https://apis.guru
+  //  - https://rapidapi.com
+  //  - https://publicapis.io/?utm_source=chatgpt.com
+
+  // https://lichess.org/api
+
+  // https://petstore.swagger.io/v2/swagger.json (testing)
+
+  // https://api.coindesk.com/v1/bpi/currentprice.json
+  // https://api.apis.guru/v2/specs/abstractapi.com/geolocation/1.0.0/openapi.json
+  // https://api.coindesk.com/v1/bpi/currentprice.json
+  // https://www.coingecko.com/en/api/documentation
+
   /**
    * dxn:service:example.com/service/HotelSearch
    */
   // TODO(burdon): Not working.
   createStatic(ServiceType, {
-    serviceId: 'example.com/service/HotelSearch',
+    serviceId: 'amadeus.com/service/HotelSearch',
     name: 'Amadeus Hotel Search',
     description: 'Search for local and international hotels.',
     category: 'travel',
@@ -73,7 +91,7 @@ const TEST_SERVICES: ServiceType[] = [
    * dxn:service:example.com/service/Weather
    */
   createStatic(ServiceType, {
-    serviceId: 'example.com/service/Weather',
+    serviceId: 'visualcrossing.com/service/Weather',
     name: 'Visual Crossing Weather',
     description: 'Search for global weather forecasts.',
     category: 'weather',
@@ -85,8 +103,23 @@ const TEST_SERVICES: ServiceType[] = [
       },
     ],
   }),
-] as const;
 
-// https://api.apis.guru/v2/specs/abstractapi.com/geolocation/1.0.0/openapi.json
-// https://api.coindesk.com/v1/bpi/currentprice.json
-// https://www.coingecko.com/en/api/documentation
+  //
+  // Testing
+  //
+
+  ...Array.from({ length: 20 }, (_, i) =>
+    createStatic(ServiceType, {
+      serviceId: `example.com/service/test-${i}`,
+      name: `Test ${i}`,
+      description: `Test ${i}`,
+      category: Object.keys(categoryIcons)[Math.floor(Math.random() * Object.keys(categoryIcons).length)],
+      interfaces: [
+        {
+          kind: 'api',
+          schemaUrl: 'https://petstore.swagger.io/v2/swagger.json',
+        },
+      ],
+    }),
+  ),
+] as const;
