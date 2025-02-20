@@ -20,6 +20,7 @@ export * from './scroll-area';
 export * from './select';
 export * from './separator';
 export * from './status';
+export * from './tag';
 export * from './toast';
 export * from './toolbar';
 export * from './tooltip';
