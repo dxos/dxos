@@ -109,6 +109,10 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           },
           onDragStart: () => {
             document.body.removeAttribute('data-drag-preview');
+            itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
+          },
+          onDrop: () => {
+            itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
           },
         }),
         dropTargetForElements({

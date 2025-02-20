@@ -1,7 +1,9 @@
 //
 // Copyright 2024 DXOS.org
 //
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
@@ -62,33 +64,36 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         return;
       }
       const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
-      return dropTargetForElements({
-        element: stackElement,
-        getData: ({ input, element }) => {
-          return attachClosestEdge(
-            { id: props.id, type: orientation === 'horizontal' ? 'card' : 'column' },
-            { input, element, allowedEdges: [orientation === 'horizontal' ? 'left' : 'top'] },
-          );
-        },
-        onDragEnter: ({ source }) => {
-          if (source.data.type === acceptSourceType) {
-            setDropping(true);
-          }
-        },
-        onDrag: ({ source }) => {
-          if (source.data.type === acceptSourceType) {
-            setDropping(true);
-          }
-        },
-        onDragLeave: () => setDropping(false),
-        onDrop: ({ self, source }) => {
-          setDropping(false);
-          if (source.data.type === acceptSourceType && selfDroppable) {
-            onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
-          }
-        },
-      });
-    }, [stackElement, selfDroppable]);
+      return combine(
+        dropTargetForElements({
+          element: stackElement,
+          getData: ({ input, element }) => {
+            return attachClosestEdge(
+              { id: props.id, type: orientation === 'horizontal' ? 'card' : 'column' },
+              { input, element, allowedEdges: [orientation === 'horizontal' ? 'left' : 'top'] },
+            );
+          },
+          onDragEnter: ({ source }) => {
+            if (source.data.type === acceptSourceType) {
+              setDropping(true);
+            }
+          },
+          onDrag: ({ source }) => {
+            if (source.data.type === acceptSourceType) {
+              setDropping(true);
+            }
+          },
+          onDragLeave: () => setDropping(false),
+          onDrop: ({ self, source }) => {
+            setDropping(false);
+            if (source.data.type === acceptSourceType && selfDroppable) {
+              onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
+            }
+          },
+        }),
+        autoScrollForElements({ element: stackElement, getAllowedAxis: () => orientation }),
+      );
+    }, [stackElement, selfDroppable, orientation]);
 
     return (
       <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
@@ -110,6 +115,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'overflow-y-auto min-is-0 is-full max-is-full'),
             classNames,
           )}
+          data-drag-autoscroll='idle'
+          data-rail={rail}
           aria-orientation={orientation}
           style={styles}
           ref={composedItemRef}
