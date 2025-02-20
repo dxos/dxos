@@ -42,19 +42,17 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
       aria-describedby={descriptionId}
       classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
     >
-      <Input.Root id={inputId}>
-        <div className='flex grow justify-center items-center'>
-          <Icon icon={icon} size={8} onClick={handleClick} classNames='cursor-pointer' />
-        </div>
-        <div className='flex grow items-center'>
-          <Input.Label id={labelId} classNames='truncate w-full' style={{ fontSize: 'unset' }}>
-            {name ?? id}
-          </Input.Label>
-        </div>
-        <div className='flex grow justify-center items-center'>
+      <div className='flex grow justify-center items-center'>
+        <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
+      </div>
+      <div className='flex grow items-center truncate cursor-pointer' onClick={handleClick}>
+        {name ?? id}
+      </div>
+      <div className='flex grow justify-center items-center'>
+        <Input.Root id={inputId}>
           <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-        </div>
-      </Input.Root>
+        </Input.Root>
+      </div>
 
       <div />
       {(description || homePage || source) && (
