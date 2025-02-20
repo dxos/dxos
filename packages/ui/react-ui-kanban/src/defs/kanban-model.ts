@@ -8,6 +8,7 @@ import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ViewProjection } from '@dxos/schema';
+import { arrayMove } from '@dxos/util';
 
 import { type KanbanType } from './kanban';
 import { computeArrangement } from '../util';
@@ -193,9 +194,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     const options = [...(fieldProjection.props.options ?? [])];
     const sourceIndex = options.findIndex((opt) => opt.id === source.id);
     const targetIndex = options.findIndex((opt) => opt.id === target.id);
-    const [movedOption] = options.splice(sourceIndex, 1);
-    const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
-    options.splice(insertIndex, 0, movedOption);
+    const insertIndex =
+      source.id === target.id
+        ? sourceIndex
+        : targetIndex +
+          (targetIndex > sourceIndex ? (closestEdge === 'right' ? 0 : -1) : closestEdge === 'right' ? 1 : 0);
+    arrayMove(options, sourceIndex, insertIndex);
 
     this._projection.setFieldProjection({ ...fieldProjection, props: { ...fieldProjection.props, options } });
   }
