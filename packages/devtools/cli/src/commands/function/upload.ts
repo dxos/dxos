@@ -165,6 +165,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
       const { objects } = await space.db.query(Filter.schema(FunctionType, { id: functionId })).run();
       return incrementSemverPatch(objects[0]?.version ?? '0.0.0');
     }
+
     return '0.0.1';
   }
 }

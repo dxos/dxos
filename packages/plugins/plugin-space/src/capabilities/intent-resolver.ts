@@ -42,9 +42,10 @@ const SPACE_MAX_OBJECTS = 500;
 type IntentResolverOptions = {
   createInvitationUrl: (invitationCode: string) => string;
   context: PluginsContext;
+  observability?: boolean;
 };
 
-export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
+export default ({ createInvitationUrl, context, observability }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
     context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -86,12 +87,16 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
             space,
           },
           intents: [
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'space.create',
-              properties: {
-                spaceId: space.id,
-              },
-            }),
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.create',
+                    properties: {
+                      spaceId: space.id,
+                    },
+                  }),
+                ]
+              : []),
           ],
         };
       },
@@ -136,12 +141,16 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
                 } satisfies Partial<SpaceSettingsDialogProps>,
               },
             }),
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'space.share',
-              properties: {
-                space: space.id,
-              },
-            }),
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.share',
+                    properties: {
+                      space: space.id,
+                    },
+                  }),
+                ]
+              : []),
           ],
         };
       },
@@ -152,12 +161,16 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
         space.properties[COMPOSER_SPACE_LOCK] = true;
         return {
           intents: [
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'space.lock',
-              properties: {
-                spaceId: space.id,
-              },
-            }),
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.lock',
+                    properties: {
+                      spaceId: space.id,
+                    },
+                  }),
+                ]
+              : []),
           ],
         };
       },
@@ -168,12 +181,16 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
         space.properties[COMPOSER_SPACE_LOCK] = false;
         return {
           intents: [
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'space.unlock',
-              properties: {
-                spaceId: space.id,
-              },
-            }),
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.unlock',
+                    properties: {
+                      spaceId: space.id,
+                    },
+                  }),
+                ]
+              : []),
           ],
         };
       },
@@ -242,13 +259,17 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
         return {
           data: result,
           intents: [
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'space.migrate',
-              properties: {
-                spaceId: space.id,
-                version,
-              },
-            }),
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.migrate',
+                    properties: {
+                      spaceId: space.id,
+                      version,
+                    },
+                  }),
+                ]
+              : []),
           ],
         };
       },
@@ -301,12 +322,16 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
                   onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
                 },
               }),
-              createIntent(ObservabilityAction.SendEvent, {
-                name: 'space.limit',
-                properties: {
-                  spaceId: space.id,
-                },
-              }),
+              ...(observability
+                ? [
+                    createIntent(ObservabilityAction.SendEvent, {
+                      name: 'space.limit',
+                      properties: {
+                        spaceId: space.id,
+                      },
+                    }),
+                  ]
+                : []),
             ],
           };
         }
@@ -331,14 +356,18 @@ export default ({ createInvitationUrl, context }: IntentResolverOptions) => {
             object: object as HasId,
           },
           intents: [
-            createIntent(ObservabilityAction.SendEvent, {
-              name: 'space.object.add',
-              properties: {
-                spaceId: space.id,
-                objectId: object.id,
-                typename: getTypename(object),
-              },
-            }),
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.object.add',
+                    properties: {
+                      spaceId: space.id,
+                      objectId: object.id,
+                      typename: getTypename(object),
+                    },
+                  }),
+                ]
+              : []),
           ],
         };
       },

@@ -12,6 +12,8 @@ import echo from './echo.ts?raw';
 import email from './email.ts?raw';
 // @ts-ignore
 import forex from './forex.ts?raw';
+// @ts-ignore
+import forexEffect from './forex-effect.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
@@ -32,6 +34,11 @@ export const templates: Template[] = [
     id: 'dxos.org/script/forex',
     name: 'Forex',
     source: removeHeader(forex),
+  },
+  {
+    id: 'dxos.org/script/forex-effect',
+    name: 'Forex (Effect)',
+    source: removeHeader(forexEffect),
   },
   {
     id: 'dxos.org/script/gpt',

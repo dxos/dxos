@@ -9,10 +9,12 @@ import { log } from '@dxos/log';
 import { createExecutionPlan } from './execution-plan';
 import { parseCypherQuery } from './parser';
 
+// log.config({ filter: 'debug' });
+
 describe('Execution Plan', () => {
   test('trivial', ({ expect }) => {
     const plan = createExecutionPlan(parseCypherQuery('MATCH (n:Person) RETURN n'));
-    log.info('', { plan });
+    log('', { plan });
     expect(plan.steps.map((step) => step.type)).toEqual(['NodeScan', 'ProduceResults']);
   });
 
@@ -22,9 +24,9 @@ describe('Execution Plan', () => {
         "MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name",
       ),
     );
-    log.info('', { plan });
+    log('', { plan });
     for (const step of plan.steps) {
-      log.info('', { step });
+      log('step', { step });
     }
     expect(plan.steps.map((step) => step.type)).toEqual([
       'NodeScan',

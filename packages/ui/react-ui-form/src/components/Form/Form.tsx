@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactElement, useMemo } from 'react';
+import React, { type ReactElement, useEffect, useMemo } from 'react';
 
 import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -55,6 +55,7 @@ export const Form = <T extends BaseObject>({
   schema,
   values: initialValues,
   path = [],
+  autoFocus,
   readonly,
   filter,
   sort,
@@ -68,6 +69,16 @@ export const Form = <T extends BaseObject>({
   Custom,
 }: FormProps<T>) => {
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+
+  // TODO(burdon): Hack to select first input.
+  useEffect(() => {
+    if (autoFocus) {
+      const input = document.querySelector('input');
+      if (input) {
+        input.focus();
+      }
+    }
+  }, [autoFocus]);
 
   return (
     <FormProvider

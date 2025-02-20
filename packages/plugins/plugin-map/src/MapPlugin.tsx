@@ -5,7 +5,7 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, MapState, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, MapState, IntentResolver, ReactSurface, Artifact } from './capabilities';
 import { MAP_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { MapType, MapAction } from './types';
@@ -54,5 +54,10 @@ export const MapPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact`,
+      activatesOn: Events.Startup,
+      activate: Artifact,
     }),
   ]);

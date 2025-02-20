@@ -9,7 +9,6 @@ import { AST, S } from '@dxos/effect';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
-import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
 
@@ -79,7 +78,8 @@ export const EchoObject = (typename: string, version: string) => {
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
 
-    checkIdNotPresentOnSchema(self);
+    // TODO(dmaretskyi): Allow id on schema.
+    // checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
@@ -92,6 +92,7 @@ export const EchoObject = (typename: string, version: string) => {
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).
+ * For user-defined annotations.
  */
 export const PropertyMetaAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyMeta');
 

@@ -10,6 +10,7 @@ export default [
       [CALLS_PLUGIN]: {
         'plugin name': 'Calls',
         'calls label': 'Call room',
+        'calls panel label': 'Call',
         'create calls label': 'Create calls room',
         'delete calls label': 'Delete',
       },

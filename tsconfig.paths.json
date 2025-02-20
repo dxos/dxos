@@ -23,7 +23,7 @@
         "packages/plugins/experimental/plugin-canvas/src/index.ts"
       ],
       "@dxos/plugin-canvas/types": [
-        "packages/plugins/experimental/plugin-canvas/src/types/index.ts"
+        "packages/plugins/experimental/plugin-canvas/src/types.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
@@ -42,12 +42,6 @@
       ],
       "@dxos/plugin-inbox/types": [
         "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
-      ],
-      "@dxos/plugin-kanban": [
-        "packages/plugins/experimental/plugin-kanban/src/index.ts"
-      ],
-      "@dxos/plugin-kanban/types": [
-        "packages/plugins/experimental/plugin-kanban/src/types.ts"
       ],
       "@dxos/plugin-native": [
         "packages/plugins/experimental/plugin-native/src/index.ts"
@@ -114,6 +108,12 @@
       ],
       "@dxos/plugin-help/types": [
         "packages/plugins/plugin-help/src/types.ts"
+      ],
+      "@dxos/plugin-kanban": [
+        "packages/plugins/plugin-kanban/src/index.ts"
+      ],
+      "@dxos/plugin-kanban/types": [
+        "packages/plugins/plugin-kanban/src/types.ts"
       ],
       "@dxos/plugin-map": [
         "packages/plugins/plugin-map/src/index.ts"

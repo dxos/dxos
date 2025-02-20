@@ -2,34 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 
-import { JoinedRoom } from './JoinedRoom';
+import { Call } from './Call';
+import { CallsContextProvider } from './CallsContextProvider';
 import { Lobby } from './Lobby';
-import { RoomContextProvider } from './RoomContextProvider';
-import { useRoomContext } from './hooks/useRoomContext';
+import { useRoomContext } from '../hooks';
 
-export type CallsProps = {
-  roomId: PublicKey;
-  iceServers: RTCIceServer[];
-  noRouter?: boolean;
+const Content = () => {
+  const { joined } = useRoomContext();
+  return joined ? <Call /> : <Lobby />;
 };
 
-// TODO(mykola): Better name for this component.
-const Room = () => {
-  const { joined } = useRoomContext();
-  return joined ? <JoinedRoom /> : <Lobby />;
+export type CallsProps = {
+  space: Space;
+  roomId: PublicKey;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls = ({ roomId, iceServers }: CallsProps) => {
+export const Calls: FC<CallsProps> = ({ space, roomId }) => {
   return (
-    <RoomContextProvider roomId={roomId} iceServers={iceServers}>
-      <Room />
-    </RoomContextProvider>
+    <CallsContextProvider space={space} roomId={roomId}>
+      <Content />
+    </CallsContextProvider>
   );
 };

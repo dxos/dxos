@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { GeoPoint, S } from '@dxos/echo-schema';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapType } from './map';
@@ -14,6 +14,7 @@ export namespace MapAction {
   export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
+      coordinates: S.optional(GeoPoint),
     }),
     output: S.Struct({
       object: MapType,

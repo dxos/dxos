@@ -331,7 +331,6 @@ export default (context: PluginsContext) => {
     createExtension({
       id: `${SPACE_PLUGIN}/settings-for-subject`,
       resolver: ({ id }) => {
-        // TODO(Zan): Find util (or make one).
         if (!id.endsWith('~settings')) {
           return;
         }

@@ -24,7 +24,6 @@ export default (context: PluginsContext) => {
     createExtension({
       id: `${THREAD_PLUGIN}/comments-for-subject`,
       resolver: ({ id }) => {
-        // TODO(Zan): Find util (or make one).
         if (!id.endsWith('~comments')) {
           return;
         }

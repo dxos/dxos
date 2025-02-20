@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
-import { type SimpleType, type S, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
+import { AST, type S, type SimpleType, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
@@ -41,9 +41,8 @@ export type FormHandler<T extends BaseObject> = {
  */
 export interface FormOptions<T extends BaseObject> {
   /**
-   * Effect schema.
+   * Effect schema (Type literal).
    */
-  // TODO(burdon): Change to S.Struct<T>?
   schema: S.Schema<T>;
 
   /**
@@ -89,6 +88,8 @@ export const useForm = <T extends BaseObject>({
   onValid,
   onSave,
 }: FormOptions<T>): FormHandler<T> => {
+  invariant(AST.isTypeLiteral(schema.ast));
+
   const [values, setValues] = useState<Partial<T>>(initialValues);
   useEffect(() => {
     setValues(initialValues);

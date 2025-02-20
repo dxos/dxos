@@ -18,6 +18,7 @@ export {
 } from '@dxos/live-object';
 export {
   createDocAccessor,
+  updateText,
   createObject,
   createSubscription,
   fromCursor,

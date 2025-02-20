@@ -118,7 +118,6 @@ export default (context: PluginsContext) => {
     createExtension({
       id: `${DEBUG_PLUGIN}/debug-for-subject`,
       resolver: ({ id }) => {
-        // TODO(Zan): Find util (or make one).
         if (!id.endsWith('~debug')) {
           return;
         }
@@ -149,7 +148,6 @@ export default (context: PluginsContext) => {
             properties: {
               icon,
               label,
-              showResolvedThreads: false,
               object: null,
               space,
             },
