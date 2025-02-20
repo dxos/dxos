@@ -48,7 +48,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
           <Icon icon={icon} size={8} />
         </div>
         <div className='flex grow items-center'>
-          <Input.Label id={labelId} classNames='truncate w-full'>
+          <Input.Label id={labelId} classNames='truncate w-full' style={{ fontSize: 'unset' }}>
             {name ?? id}
           </Input.Label>
         </div>
@@ -59,34 +59,40 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
 
       <div />
       {(description || homePage || source) && (
-        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pie-2 overflow-y-scroll'>
-          <p className={mx(descriptionText, 'line-clamp-4 min-w-0')}>{description}</p>
-          {homePage && (
-            <Link
-              href={homePage}
-              target='_blank'
-              rel='noreferrer'
-              aria-describedby={descriptionId}
-              classNames='text-sm text-description line-clamp-4'
-              onClick={(ev) => ev.stopPropagation()}
-            >
-              {t('home page label')}
-              <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-            </Link>
-          )}
-          {source && (
-            <Link
-              href={source}
-              target='_blank'
-              rel='noreferrer'
-              aria-describedby={descriptionId}
-              classNames='text-sm text-description line-clamp-4'
-              onClick={(ev) => ev.stopPropagation()}
-            >
-              {t('source label')}
-              <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-            </Link>
-          )}
+        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pb-3 overflow-y-scroll'>
+          <div className='grow'>
+            <p className={mx(descriptionText, 'line-clamp-3 min-w-0')}>{description}</p>
+          </div>
+
+          <div className='flex gap-2 items-center'>
+            {homePage && (
+              <Link
+                href={homePage}
+                target='_blank'
+                rel='noreferrer'
+                aria-describedby={descriptionId}
+                classNames='text-sm text-description'
+                onClick={(ev) => ev.stopPropagation()}
+              >
+                {t('home page label')}
+                <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+              </Link>
+            )}
+
+            {source && (
+              <Link
+                href={source}
+                target='_blank'
+                rel='noreferrer'
+                aria-describedby={descriptionId}
+                classNames='text-sm text-description'
+                onClick={(ev) => ev.stopPropagation()}
+              >
+                {t('source label')}
+                <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </ListItem.Root>

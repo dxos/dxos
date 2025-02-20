@@ -20,6 +20,13 @@ export default () =>
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
+      id: `${AUTOMATION_PLUGIN}/service-registry`,
+      role: 'complementary--service-registry',
+      // filter: (data): data is { subject: ReactiveEchoObject<any> } =>
+      //   isEchoObject(data.subject) && !!getSpace(data.subject),
+      component: ({ data }) => <div className='p-2'>Service Registry</div>,
+    }),
+    createSurface({
       id: `${AUTOMATION_PLUGIN}/automation`,
       role: 'complementary--automation',
       filter: (data): data is { subject: ReactiveEchoObject<any> } =>

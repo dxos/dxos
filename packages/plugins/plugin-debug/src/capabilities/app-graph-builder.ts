@@ -148,7 +148,6 @@ export default (context: PluginsContext) => {
             properties: {
               icon,
               label,
-              showResolvedThreads: false,
               object: null,
               space,
             },
