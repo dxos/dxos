@@ -130,7 +130,7 @@ export const Thread = ({
           <Input.Root>
             <Input.TextInput
               autoFocus
-              classNames='px-2 bg-base rounded'
+              classNames='px-2 baseSurface rounded'
               placeholder={t('chat input placeholder')}
               value={text}
               onChange={(ev) => setText(ev.target.value)}

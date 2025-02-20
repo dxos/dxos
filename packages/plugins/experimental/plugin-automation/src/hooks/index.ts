@@ -4,5 +4,7 @@
 
 export * from './processor';
 
-export * from './useServiceRegistry';
+export * from './useChatProcessor';
 export * from './useLocalTriggerManager';
+export * from './useMessageQueue';
+export * from './useServices';
