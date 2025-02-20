@@ -5,9 +5,9 @@
 import { createStatic } from '@dxos/echo-schema';
 
 import {
+  type ApiAuthorization,
   type BaseServiceRegistry,
   type ServiceQuery,
-  type ApiAuthorization,
   ServiceType,
   categoryIcons,
 } from '../types';
@@ -37,10 +37,23 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
   },
 };
 
+// Registries:
+//  - https://apis.guru
+//  - https://rapidapi.com
+//  - https://github.com/konfig-sdks/openapi-examples
+//  - https://publicapis.io/?utm_source=chatgpt.com
+
+// Examples:
+//  - https://petstore.swagger.io/v2/swagger.json (testing)
+//  - https://lichess.org/api
+//  - https://github.com/konfig-sdks/openapi-examples/tree/main/xkcd
+//  - https://api.coindesk.com/v1/bpi/currentprice.json
+//  - https://www.coingecko.com/en/api/documentation
+
+// TODO(burdon): Support yaml endpoints.
+//  - e.g., https://github.com/konfig-sdks/openapi-examples/blob/main/xkcd/openapi.yaml
+
 const TEST_SERVICES: ServiceType[] = [
-  /**
-   * dxn:service:example.com/service/FlightSearch
-   */
   createStatic(ServiceType, {
     serviceId: 'amadeus.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
@@ -55,24 +68,6 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
-  // Registries:
-  //  - https://apis.guru
-  //  - https://rapidapi.com
-  //  - https://publicapis.io/?utm_source=chatgpt.com
-
-  // https://lichess.org/api
-
-  // https://petstore.swagger.io/v2/swagger.json (testing)
-
-  // https://api.coindesk.com/v1/bpi/currentprice.json
-  // https://api.apis.guru/v2/specs/abstractapi.com/geolocation/1.0.0/openapi.json
-  // https://api.coindesk.com/v1/bpi/currentprice.json
-  // https://www.coingecko.com/en/api/documentation
-
-  /**
-   * dxn:service:example.com/service/HotelSearch
-   */
-  // TODO(burdon): Not working.
   createStatic(ServiceType, {
     serviceId: 'amadeus.com/service/HotelSearch',
     name: 'Amadeus Hotel Search',
@@ -87,9 +82,6 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 
-  /**
-   * dxn:service:example.com/service/Weather
-   */
   createStatic(ServiceType, {
     serviceId: 'visualcrossing.com/service/Weather',
     name: 'Visual Crossing Weather',
@@ -100,6 +92,20 @@ const TEST_SERVICES: ServiceType[] = [
         kind: 'api',
         schemaUrl: 'https://api.apis.guru/v2/specs/visualcrossing.com/weather/4.6/openapi.json',
         authorization: VISUAL_CROSSING_CREDENTIALS,
+      },
+    ],
+  }),
+
+  // TODO(burdon): Needs auth.
+  createStatic(ServiceType, {
+    serviceId: 'abstractapi.com/service/GeoLocation',
+    name: 'Abstract GeoLocation',
+    description: 'Get the location of any IP address.',
+    category: 'geolocation',
+    interfaces: [
+      {
+        kind: 'api',
+        schemaUrl: 'https://api.apis.guru/v2/specs/abstractapi.com/geolocation/1.0.0/openapi.json',
       },
     ],
   }),

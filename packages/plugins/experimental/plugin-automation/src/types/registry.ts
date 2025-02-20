@@ -15,11 +15,12 @@ export interface BaseServiceRegistry {
 
 export const categoryIcons: Record<string, string> = {
   finance: 'ph--bank--regular',
-  travel: 'ph--airplane-takeoff--regular',
   health: 'ph--heart--regular',
+  geolocation: 'ph--globe-simple--regular',
   education: 'ph--books--regular',
   entertainment: 'ph--music-notes--regular',
   shopping: 'ph--shopping-cart--regular',
+  travel: 'ph--airplane-takeoff--regular',
   utilities: 'ph--lightning--regular',
   weather: 'ph--cloud-rain--regular',
 } as const;
