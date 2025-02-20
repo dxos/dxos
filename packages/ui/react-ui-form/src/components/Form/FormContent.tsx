@@ -49,10 +49,6 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
     [examples, description],
   );
 
-  if (array) {
-    return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
-  }
-
   const FoundComponent = lookupComponent?.({
     prop: name,
     schema: S.make(ast),
@@ -67,14 +63,36 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   });
 
   if (FoundComponent) {
-    return <div>{FoundComponent}</div>;
+    return <div role='none'>{FoundComponent}</div>;
   }
 
   const jsonPath = createJsonPath(path ?? []);
-  const InputComponent = Custom?.[jsonPath] || getInputComponent(type, format);
+  const CustomComponent = Custom?.[jsonPath];
+  if (CustomComponent) {
+    return (
+      // TODO(ZaymonFC): We should try to remove this div wrapper.
+      <div role='none'>
+        <CustomComponent
+          type={type}
+          format={format}
+          label={label}
+          inputOnly={inline}
+          placeholder={placeholder}
+          disabled={readonly}
+          {...inputProps}
+        />
+      </div>
+    );
+  }
+
+  if (array) {
+    return <ArrayField property={property} path={path} inputProps={inputProps} readonly={readonly} Custom={Custom} />;
+  }
+
+  const InputComponent = getInputComponent(type, format);
   if (InputComponent) {
     return (
-      <div>
+      <div role='none'>
         <InputComponent
           type={type}
           format={format}
@@ -113,7 +131,7 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
 
     if (typeLiteral) {
       return (
-        <div>
+        <div role='none'>
           {!inline && <div>{label}</div>}
           <FormFields schema={S.make(typeLiteral)} path={path} readonly={readonly} Custom={Custom} />
         </div>

@@ -8,14 +8,13 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type EchoSchema } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewType } from '@dxos/schema';
+import { ViewType, ViewProjection } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Kanban } from './Kanban';
@@ -35,14 +34,39 @@ const StorybookKanban = () => {
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [cardSchema, setCardSchema] = useState<EchoSchema>();
+  const [projection, setProjection] = useState<ViewProjection>();
+
   useEffect(() => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
-      invariant(kanban.cardView);
       setKanban(kanban);
-      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView.target!.query.type));
     }
   }, [kanbans]);
+
+  useEffect(() => {
+    if (!kanban) {
+      return;
+    }
+
+    const query = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type });
+    const unsubscribe = query.subscribe(
+      () => {
+        const [schema] = query.results;
+        if (schema) {
+          setCardSchema(schema);
+        }
+      },
+      { fire: true },
+    );
+    return unsubscribe;
+  }, [kanban, kanban?.cardView?.target?.query.type, space]);
+
+  useEffect(() => {
+    if (kanban?.cardView?.target && cardSchema) {
+      setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
+    }
+    // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
+  }, [kanban?.cardView?.target, cardSchema, JSON.stringify(cardSchema?.jsonSchema)]);
 
   const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -50,32 +74,27 @@ const StorybookKanban = () => {
   const model = useKanbanModel({
     kanban,
     cardSchema,
+    projection,
     items: filteredObjects,
   });
 
-  const handleAddColumn = useCallback((columnValue: string) => model?.addEmptyColumn(columnValue), [model]);
-
   const handleAddCard = useCallback(
-    (columnValue: string) => {
-      if (space && cardSchema) {
+    (columnValue: string | undefined) => {
+      const path = model?.columnFieldPath;
+      if (space && cardSchema && path) {
         space.db.add(
           create(cardSchema, {
             title: faker.commerce.productName(),
             description: faker.lorem.paragraph(),
-            state: columnValue,
+            [path]: columnValue,
           }),
         );
       }
     },
-    [space, cardSchema],
+    [space, cardSchema, model],
   );
 
-  const handleRemoveCard = useCallback(
-    (card: { id: string }) => {
-      space.db.remove(card);
-    },
-    [space],
-  );
+  const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
 
   const onTypenameChanged = useCallback(
     (typename: string) => {
@@ -87,30 +106,13 @@ const StorybookKanban = () => {
     [kanban?.cardView?.target, cardSchema],
   );
 
-  const handleRemoveEmptyColumn = useCallback(
-    (columnValue: string) => {
-      model?.removeColumnFromArrangement(columnValue);
-    },
-    [model],
-  );
-
   if (!cardSchema || !kanban) {
     return null;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      {model ? (
-        <Kanban
-          model={model}
-          onAddCard={handleAddCard}
-          onAddColumn={handleAddColumn}
-          onRemoveCard={handleRemoveCard}
-          onRemoveEmptyColumn={handleRemoveEmptyColumn}
-        />
-      ) : (
-        <div />
-      )}
+      {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         {kanban.cardView && (
           <ViewEditor
@@ -124,7 +126,7 @@ const StorybookKanban = () => {
           />
         )}
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: kanban.cardView, cardSchema }, null, 2)}
+          {JSON.stringify({ view: kanban.cardView?.target, cardSchema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -152,12 +154,11 @@ const meta: Meta<StoryProps> = {
       onSpaceCreated: async ({ space }) => {
         const { taskSchema } = await initializeKanban({ space });
         // TODO(burdon): Replace with sdk/schema/testing.
-        Array.from({ length: 24 }).map(() => {
+        Array.from({ length: 8 }).map(() => {
           return space.db.add(
             create(taskSchema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
-              state: ['Pending', 'Active', 'Done'][faker.number.int(2)],
             }),
           );
         });
