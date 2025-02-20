@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type EchoSchema } from '@dxos/echo-schema';
@@ -175,7 +175,7 @@ type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
 
-const TablePerformanceStory = (props: StoryProps) => {
+const _TablePerformanceStory = (props: StoryProps) => {
   const getDefaultRows = useCallback(() => 10, []);
   const rows = useDefaultValue(props.rows, getDefaultRows);
   const table = useMemo(() => createTable(), []);
@@ -248,22 +248,22 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
-
 export const Default = {};
 
-export const Mutations: Story = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 1000,
-    updateInterval: 1,
-  },
-};
+// TODO(ZaymonFC): Restore the performance stories.
+// type Story = StoryObj<StoryProps>;
+// export const Mutations: Story = {
+//   render: TablePerformanceStory,
+//   args: {
+//     rows: 1000,
+//     updateInterval: 1,
+//   },
+// };
 
-export const RapidInsertions: Story = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 0,
-    insertInterval: 100,
-  },
-};
+// export const RapidInsertions: Story = {
+//   render: TablePerformanceStory,
+//   args: {
+//     rows: 0,
+//     insertInterval: 100,
+//   },
+// };
