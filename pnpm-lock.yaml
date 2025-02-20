@@ -5400,6 +5400,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../../core/compute
