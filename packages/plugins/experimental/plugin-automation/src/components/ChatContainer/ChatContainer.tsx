@@ -132,5 +132,3 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
     </StackItem.Content>
   );
 };
-
-export default ChatContainer;
