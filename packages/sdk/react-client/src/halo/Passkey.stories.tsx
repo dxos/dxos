@@ -24,11 +24,17 @@ const Test = () => {
   const identity = useIdentity();
   const credentials = useCredentials();
 
-  const handleCreateIdentity = useCallback(() => client.halo.createIdentity(), [client]);
+  const handleCreateIdentity = useCallback(async () => {
+    await client.halo.createIdentity();
+    invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+    await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
+  }, [client]);
+
   // TODO(wittjosiah): Consider factoring out passkey creation to the halo api.
   const handleCreatePassKey = useCallback(async () => {
     invariant(identity, 'Identity not available');
     const challenge = getNewChallenge();
+    // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge: new TextEncoder().encode(challenge),
@@ -58,8 +64,9 @@ const Test = () => {
   }, [client, identity]);
 
   const handleAuthenticate = useCallback(async () => {
-    // TODO(wittjosiah): This should come from edge.
-    const challenge = getNewChallenge();
+    invariant(client.services.services.IdentityService, 'IdentityService not available');
+    const { deviceKey, controlFeedKey, challenge } =
+      await client.services.services.IdentityService.requestRecoveryChallenge();
     const credential = await navigator.credentials.get({
       publicKey: {
         challenge: new TextEncoder().encode(challenge),
@@ -69,9 +76,15 @@ const Test = () => {
         userVerification: 'discouraged',
       },
     });
-    const did = new TextDecoder().decode((credential as any).response.userHandle);
-    console.log({ credential, did });
-    // TODO(wittjosiah): Send signature to edge for verification and admission.
+    const identityDid = new TextDecoder().decode((credential as any).response.userHandle);
+    await client.services.services.IdentityService.recoverIdentity({
+      external: {
+        identityDid,
+        deviceKey,
+        controlFeedKey,
+        signature: Buffer.from((credential as any).response.signature).toString('base64'),
+      },
+    });
   }, []);
 
   return (
@@ -113,9 +126,10 @@ const config = new Config({
     },
     services: {
       edge: {
-        url: 'wss://edge.dxos.workers.dev/',
+        // url: 'wss://edge.dxos.workers.dev/',
+        url: 'ws://localhost:8787',
       },
-      iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+      iceProviders: [{ urls: 'https://edge-production.dxos.workers.dev/ice' }],
     },
   },
 });

@@ -124,8 +124,24 @@ message Identity {
   optional halo.credentials.ProfileDocument profile = 3;
 }
 
+message RequestRecoveryChallengeResponse {
+  dxos.keys.PublicKey device_key = 1;
+  dxos.keys.PublicKey control_feed_key = 2;
+  string challenge = 3;
+}
+
 message RecoverIdentityRequest {
-  string recovery_code = 1;
+  message ExternalSignature {
+    string identity_did = 1;
+    dxos.keys.PublicKey device_key = 2;
+    dxos.keys.PublicKey control_feed_key = 3;
+    string signature = 4;
+  }
+
+  oneof request {
+    string recovery_code = 1;
+    ExternalSignature external = 2;
+  }
 }
 
 message CreateRecoveryCredentialRequest {
@@ -159,6 +175,7 @@ message CreateIdentityRequest {
 // TODO(wittjosiah): Align pluralization with other services.
 service IdentityService {
   rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
+  rpc RequestRecoveryChallenge(google.protobuf.Empty) returns (RequestRecoveryChallengeResponse);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
   rpc CreateRecoveryCredential(CreateRecoveryCredentialRequest) returns (CreateRecoveryCredentialResponse);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
