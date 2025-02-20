@@ -12,6 +12,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ServiceRegistry } from './ServiceRegistry';
+import { ServiceType } from '../../types';
 
 const meta: Meta<typeof ServiceRegistry> = {
   title: 'plugins/plugin-automation/ServiceRegistry',
@@ -32,7 +33,7 @@ const meta: Meta<typeof ServiceRegistry> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      // types: [ServiceType], // TODO(burdon): Doesn't fit type constraint???
+      types: [ServiceType],
     }),
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center' }),
     withTheme,

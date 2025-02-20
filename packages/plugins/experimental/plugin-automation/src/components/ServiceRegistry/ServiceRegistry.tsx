@@ -8,13 +8,13 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Icon, Input, List, ListItem } from '@dxos/react-ui';
 
-import { useServiceRegistry } from '../../hooks';
+import { useServices } from '../../hooks';
 import { categoryIcons, ServiceType } from '../../types';
 
 // TODO(burdon): Option to show all/enabled.
 // TODO(burdon): Search.
 export const ServiceRegistry = ({ space }: { space: Space }) => {
-  const matchingServices = useServiceRegistry(space);
+  const matchingServices = useServices(space);
   const enabledServices = useQuery(space, Filter.schema(ServiceType));
 
   // Join matching services with enabled services.

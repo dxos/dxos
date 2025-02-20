@@ -12,11 +12,11 @@ export type ServiceQuery = {
 };
 
 export interface BaseServiceRegistry {
-  queryServices(query: ServiceQuery): Promise<ServiceType[]>;
+  queryServices(query?: ServiceQuery): Promise<ServiceType[]>;
 }
 
 export class MockServiceRegistry implements BaseServiceRegistry {
-  async queryServices(query: ServiceQuery): Promise<ServiceType[]> {
+  async queryServices(query?: ServiceQuery): Promise<ServiceType[]> {
     return TEST_SERVICES;
   }
 }

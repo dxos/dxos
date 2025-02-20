@@ -29,8 +29,8 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const globalTools = useCapabilities(Capabilities.Tools);
   const functions = useQuery(space, Filter.schema(FunctionType));
-  const serviceRegistry = useMemo(() => new MockServiceRegistry(), []);
 
+  const serviceRegistry = useMemo(() => new MockServiceRegistry(), []);
   const [serviceTools, setServiceTools] = useState<Tool[]>([]);
   useEffect(() => {
     queueMicrotask(async () => {
