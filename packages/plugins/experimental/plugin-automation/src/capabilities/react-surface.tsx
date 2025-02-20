@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { getSpace, isEchoObject, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AutomationPanel, ChatContainer } from '../components';
+import { AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
 import { AUTOMATION_PLUGIN } from '../meta';
 import { AIChatType } from '../types';
 
@@ -22,9 +22,7 @@ export default () =>
     createSurface({
       id: `${AUTOMATION_PLUGIN}/service-registry`,
       role: 'complementary--service-registry',
-      // filter: (data): data is { subject: ReactiveEchoObject<any> } =>
-      //   isEchoObject(data.subject) && !!getSpace(data.subject),
-      component: ({ data }) => <div className='p-2'>Service Registry</div>,
+      component: ({ data }) => <ServiceRegistry space={getSpace(data.subject)!} />,
     }),
     createSurface({
       id: `${AUTOMATION_PLUGIN}/automation`,

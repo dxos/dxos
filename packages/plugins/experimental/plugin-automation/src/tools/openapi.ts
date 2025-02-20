@@ -28,7 +28,7 @@ export const createToolsFromService = async (service: ServiceType): Promise<Tool
 
 export const createToolsFromApi = async (url: string, options?: CreateToolsFromApiOptions): Promise<Tool[]> => {
   const res = await fetch(url);
-  const spec = (await res.json()) as OpenAPIV2.Document;
+  const spec = (await res.json()) as OpenAPIV2.Document<OpenAPIV2.PathItemObject>;
   log('spec', { spec });
 
   const tools: Tool[] = [];
@@ -37,12 +37,14 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       continue;
     }
 
+    // TODO(burdon): ???
     const { ...methods } = pathItem;
-    for (const [method, methodItem] of Object.entries(methods)) {
+    for (const [method, m] of Object.entries(methods)) {
+      const methodItem: OpenAPIV2.OperationObject = m as OpenAPIV2.OperationObject;
       log('methodItem', { path, method, methodItem });
 
       const parametersResolved: OpenAPIV2.ParameterObject[] =
-        methodItem.parameters?.map((parameter) => {
+        methodItem.parameters?.map((parameter: any) => {
           const resolved = resolveJsonSchema(parameter, spec);
           return resolved;
         }) ?? [];
