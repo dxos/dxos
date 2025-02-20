@@ -12,3 +12,4 @@ export * from './usePeerConnection';
 export * from './useRoom';
 export * from './useRoomContext';
 export * from './useUserMedia';
+export * from './useTranscription';
