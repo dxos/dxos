@@ -2,36 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useSyncExternalStore } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
+import { type JsonPath, type EchoSchema, setValue, getValue } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { getSpace, Filter, type Space } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSelectedItems } from '@dxos/react-ui-attention';
-import { type TableType } from '@dxos/react-ui-table';
 import { Form } from '@dxos/react-ui-form';
-import { Select } from '@dxos/react-ui';
+import { type TableType } from '@dxos/react-ui-table';
 
-export const useSchema = (space: Space | undefined, typename: string | undefined) => {
-  const [schema, setSchema] = useState<EchoSchema>();
-
-  useEffect(() => {
-    if (typename && space) {
-      const query = space.db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
+export const useSchema = (space: Space | undefined, typename: string | undefined): EchoSchema | undefined => {
+  const { subscribe, getSchema } = useMemo(() => {
+    if (!typename || !space) {
+      return {
+        subscribe: () => () => {},
+        getSchema: () => undefined,
+      };
     }
+
+    const query = space.db.schemaRegistry.query({ typename });
+    const initialResult = query.runSync()[0];
+    let currentSchema = initialResult;
+
+    return {
+      subscribe: (onStoreChange: () => void) => {
+        const unsubscribe = query.subscribe(() => {
+          currentSchema = query.results[0];
+          onStoreChange();
+        });
+        return unsubscribe;
+      },
+      getSchema: () => currentSchema,
+    };
   }, [typename, space]);
 
-  return schema;
+  return useSyncExternalStore(subscribe, getSchema);
 };
 
 type RowDetailsPanelProps = {
@@ -47,12 +53,29 @@ const RowDetailsPanel = ({ table }: RowDetailsPanelProps) => {
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const selectedObjects = queriedObjects.filter((obj) => selectedRows.has(obj.id));
 
+  // TODO(ZaymonFC): This is a bit unsophisticated.
+  const handleSave = (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+    const id = values.id;
+    invariant(typeof id === 'string');
+    const object = queriedObjects.find((obj) => obj.id === id);
+    invariant(object);
+
+    const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+    for (const path of changedPaths) {
+      const value = values[path];
+      console.log(`Saving ${value} to ${path}`);
+      console.log('Initial value:', getValue(object, path));
+      setValue(object, path, value);
+      console.log('Updated value:', getValue(object, path));
+    }
+  };
+
   return (
     <div role='none'>
       {effectSchema &&
         selectedObjects.map((object) => (
           <div key={object.id} className='border-b border-separator'>
-            <Form schema={effectSchema} values={object} autoSave />
+            <Form schema={effectSchema} values={object} onSave={handleSave} autoSave />
           </div>
         ))}
     </div>
