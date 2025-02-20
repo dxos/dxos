@@ -22,6 +22,8 @@ export type WavMediaRecorderConfig = {};
 
 /**
  * Recorder that uses the MediaContext API and AudioNode API to record audio.
+ *
+ * It records MediaStream using https://www.npmjs.com/package/extendable-media-recorder.
  */
 @trace.resource()
 export class MediaStreamRecorder extends AudioRecorder {
@@ -53,6 +55,7 @@ export class MediaStreamRecorder extends AudioRecorder {
   private async _ondataavailable(event: IBlobEvent) {
     const blob = event.data;
     const uint8Array = new Uint8Array(await blob.arrayBuffer());
+    // First chunk from the MediaRecorder has a header.
     const isHeader =
       uint8Array[0] === 0x52 && // R
       uint8Array[1] === 0x49 && // I
@@ -62,7 +65,6 @@ export class MediaStreamRecorder extends AudioRecorder {
     if (isHeader) {
       wav = new WaveFile(uint8Array);
       this._header = uint8Array.slice(0, 44);
-      await saveFile(wav.toBuffer());
     } else {
       wav = new WaveFile(new Uint8Array([...this._header!, ...uint8Array]));
     }
@@ -88,13 +90,3 @@ export class MediaStreamRecorder extends AudioRecorder {
     this._mediaRecorder.stop();
   }
 }
-
-const saveFile = async (blob: Uint8Array) => {
-  const a = document.createElement('a');
-  a.download = 'my-file.wav';
-  a.href = URL.createObjectURL(new Blob([blob], { type: 'audio/wav' }));
-  a.addEventListener('click', (e) => {
-    setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
-  });
-  a.click();
-};
