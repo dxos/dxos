@@ -18,48 +18,49 @@ import { isNotNullOrUndefined } from '@dxos/util';
 import { AutomationCapabilities } from '../../capabilities';
 import { ChatProcessor } from '../../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../../tools';
-import { MockServiceRegistry, type AIChatType } from '../../types';
+import { ServiceType, type AIChatType } from '../../types';
 import { Thread } from '../Thread';
 
-export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
-  const config = useConfig();
-  const space = getSpace(chat);
+// TOOD(burdon): Factor out?
+const useChatProcessor = (chat: AIChatType) => {
   const aiClient = useCapability(AutomationCapabilities.AiClient);
-
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const globalTools = useCapabilities(Capabilities.Tools);
-  const functions = useQuery(space, Filter.schema(FunctionType));
+  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const space = getSpace(chat);
 
-  const serviceRegistry = useMemo(() => new MockServiceRegistry(), []);
+  // Services.
+  const services = useQuery(space, Filter.schema(ServiceType));
   const [serviceTools, setServiceTools] = useState<Tool[]>([]);
   useEffect(() => {
     queueMicrotask(async () => {
-      const services = await serviceRegistry.queryServices({});
       const tools = await Promise.all(services.map((service) => createToolsFromService(service)));
       setServiceTools(tools.flat());
     });
-  }, []);
+  }, [services]);
 
+  // Tools.
+  const config = useConfig();
+  const functions = useQuery(space, Filter.schema(FunctionType));
   const tools = useMemo(
     () => [
       ...globalTools.flat(),
       ...artifactDefinitions.flatMap((definition) => definition.tools),
+      ...serviceTools,
       ...functions
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNotNullOrUndefined),
-      ...serviceTools,
     ],
-    [globalTools, artifactDefinitions, functions, serviceTools, space?.id],
+    [globalTools, artifactDefinitions, serviceTools, functions, space?.id],
   );
+
+  // Prompt.
   const systemPrompt = useMemo(
     () => createSystemPrompt({ artifacts: artifactDefinitions.map((definition) => definition.instructions) }),
     [artifactDefinitions],
   );
 
-  // TODO(burdon): Create hook.
-  // TODO(wittjosiah): Should these be created in the component?
-  // TODO(zan): Combine with ai service client?
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  // Create processor.
   const processor = useMemo(
     () =>
       new ChatProcessor(
@@ -77,13 +78,31 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
     [aiClient, tools, space, dispatch, systemPrompt],
   );
 
-  // TODO(wittjosiah): Remove transformation.
+  // Update processor.
+  useEffect(() => {
+    if (processor) {
+      processor.setTools(tools.flat());
+    }
+  }, [processor, tools]);
+
+  return processor;
+};
+
+// TOOD(burdon): Factor out?
+const useMessageQueue = (chat: AIChatType) => {
+  const edgeClient = useEdgeClient();
+  const space = getSpace(chat);
   const queueDxn = useMemo(
     () => new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space!.id, chat.queue.dxn.parts.at(-1)!]),
     [chat.queue.dxn],
   );
-  const edgeClient = useEdgeClient();
-  const messageQueue = useQueue<Message>(edgeClient, queueDxn);
+
+  return useQueue<Message>(edgeClient, queueDxn);
+};
+
+export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
+  const processor = useChatProcessor(chat);
+  const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
   const handleSubmit = useCallback(

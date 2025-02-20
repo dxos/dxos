@@ -11,8 +11,7 @@ import { Icon, Input, List, ListItem } from '@dxos/react-ui';
 import { useServices } from '../../hooks';
 import { categoryIcons, ServiceType } from '../../types';
 
-// TODO(burdon): Option to show all/enabled.
-// TODO(burdon): Search.
+// TODO(burdon): Option to show all/enabled/filter.
 export const ServiceRegistry = ({ space }: { space: Space }) => {
   const matchingServices = useServices(space);
   const enabledServices = useQuery(space, Filter.schema(ServiceType));
