@@ -4,6 +4,7 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -80,8 +81,9 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           element: itemElement,
           ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
           getInitialData: () => ({ id: item.id, type }),
-          onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          onGenerateDragPreview: ({ source }) => {
             document.body.setAttribute('data-drag-preview', 'true');
+            scrollJustEnoughIntoView({ element: source.element });
           },
           onDragStart: () => {
             document.body.removeAttribute('data-drag-preview');

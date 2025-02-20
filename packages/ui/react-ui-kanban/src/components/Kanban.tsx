@@ -45,7 +45,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       {model.arrangedCards.map(({ columnValue, cards }) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         return (
-          <StackItem.Root key={columnValue} item={{ id: columnValue }} size={20} classNames='pli-1 plb-2'>
+          <StackItem.Root
+            key={columnValue}
+            item={{ id: columnValue }}
+            size={20}
+            classNames='pli-1 plb-2 drag-preview:p-0'
+          >
             <div role='none' className={mx('bg-deck rounded-lg grid', railGridHorizontal)}>
               <StackItem.Heading>
                 <StackItem.DragHandle asChild>
@@ -73,12 +78,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='pbe-1'
+                classNames='pbe-1 drag-preview:p-0'
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
                 {cards.map((card) => (
-                  <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2'>
+                  <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2 drag-preview:p-0'>
                     <div role='none' className='rounded bg-[--surface-bg]'>
                       <div role='none' className='flex items-center'>
                         <StackItem.DragHandle asChild>
