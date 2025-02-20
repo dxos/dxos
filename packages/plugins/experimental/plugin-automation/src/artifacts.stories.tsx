@@ -10,15 +10,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import {
-  capabilities,
-  genericTools,
-  localServiceEndpoints,
-  type ArtifactsContext,
-  type IsObject,
-} from '@dxos/artifact-testing';
+import { capabilities, genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
-import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -31,7 +24,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
 import { useQueue } from '@dxos/react-edge-client';
-import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
@@ -117,12 +110,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         });
       }
     : undefined;
-
-  const [prompt, setPrompt] = useState(0);
-  const handleTest = useCallback(() => {
-    void handleSubmit?.(prompts[prompt]);
-    setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
-  }, [handleSubmit, prompt]);
 
   const handleSuggest = useCallback(
     (text: string) => {

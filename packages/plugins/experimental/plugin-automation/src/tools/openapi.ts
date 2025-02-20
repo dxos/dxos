@@ -29,7 +29,6 @@ export const createToolsFromService = async (service: ServiceType): Promise<Tool
 export const createToolsFromApi = async (url: string, options?: CreateToolsFromApiOptions): Promise<Tool[]> => {
   const res = await fetch(url);
   const spec = (await res.json()) as OpenAPIV2.Document;
-
   log('spec', { spec });
 
   const tools: Tool[] = [];
@@ -38,7 +37,7 @@ export const createToolsFromApi = async (url: string, options?: CreateToolsFromA
       continue;
     }
 
-    const { $ref, parameters, ...methods } = pathItem;
+    const { ...methods } = pathItem;
     for (const [method, methodItem] of Object.entries(methods)) {
       log('methodItem', { path, method, methodItem });
 
@@ -118,7 +117,7 @@ const getToolName = (path: string, method: string, methodItem: OpenAPIV2.Operati
   }
 
   // Generate a name from the path and method.
-  let name = `${method.toLowerCase()}_${path.replaceAll(/[{}\/]/g, '_')}`;
+  let name = `${method.toLowerCase()}_${path.replaceAll(/[{}/]/g, '_')}`;
   while (name.length > MAX_TOOL_NAME_LENGTH) {
     const lengthBefore = name.length;
 
