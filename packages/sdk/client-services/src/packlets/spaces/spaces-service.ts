@@ -4,7 +4,12 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { createAdmissionCredentials, type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import {
+  createAdmissionCredentials,
+  createDidFromIdentityKey,
+  type CredentialProcessor,
+  getCredentialAssertion,
+} from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
@@ -115,7 +120,9 @@ export class SpacesServiceImpl implements SpacesService {
         ctx,
         async () => {
           const dataSpaceManager = await this._getDataSpaceManager();
-          const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
+          const spaces = await Promise.all(
+            Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space)),
+          );
           log('update', () => ({ ids: spaces.map((space) => space.id) }));
           await this._updateMetrics();
           next({ spaces });
@@ -265,10 +272,10 @@ export class SpacesServiceImpl implements SpacesService {
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
 
-    return { space: this._serializeSpace(dataSpace) };
+    return { space: await this._serializeSpace(dataSpace) };
   }
 
-  private _serializeSpace(space: DataSpace): Space {
+  private async _serializeSpace(space: DataSpace): Promise<Space> {
     return {
       id: space.id,
       spaceKey: space.key,
@@ -291,24 +298,27 @@ export class SpacesServiceImpl implements SpacesService {
 
         spaceRootUrl: space.databaseRoot?.url,
       },
-      members: Array.from(space.inner.spaceState.members.values()).map((member) => {
-        const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
-        const isMe = this._identityManager.identity?.identityKey.equals(member.key);
+      members: await Promise.all(
+        Array.from(space.inner.spaceState.members.values()).map(async (member) => {
+          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+          const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
-        if (isMe) {
-          peers.push(space.presence.getLocalState());
-        }
+          if (isMe) {
+            peers.push(space.presence.getLocalState());
+          }
 
-        return {
-          identity: {
-            identityKey: member.key,
-            profile: member.profile ?? {},
-          },
-          role: member.role,
-          presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
-          peerStates: peers,
-        };
-      }),
+          return {
+            identity: {
+              did: await createDidFromIdentityKey(member.key),
+              identityKey: member.key,
+              profile: member.profile ?? {},
+            },
+            role: member.role,
+            presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
+            peerStates: peers,
+          };
+        }),
+      ),
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,

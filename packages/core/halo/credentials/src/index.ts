@@ -2,6 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
+export * from './did';
 export * from './invitations';
 export * from './seedphrase';
 export * from './passcode';
