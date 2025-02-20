@@ -45,10 +45,14 @@ export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
+  disableRearrange?: boolean;
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
-  ({ item, children, classNames, size: propsSize, onSizeChange, role, order, style, ...props }, forwardedRef) => {
+  (
+    { item, children, classNames, size: propsSize, onSizeChange, role, order, style, disableRearrange, ...props },
+    forwardedRef,
+  ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -73,7 +77,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const type = orientation === 'horizontal' ? 'column' : 'card';
 
     useLayoutEffect(() => {
-      if (!itemElement || !onRearrange) {
+      if (!itemElement || !onRearrange || disableRearrange) {
         return;
       }
       return combine(
