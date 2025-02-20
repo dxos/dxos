@@ -64,7 +64,14 @@ export type JoinSpaceResponseBody = {
 };
 
 export type RecoverIdentityRequest = {
-  recoveryKey: string;
+  /**
+   * Required if recoveryKey is not provided.
+   */
+  identityDid?: string;
+  /**
+   * Required if identityDid is not provided.
+   */
+  recoveryKey?: string;
   deviceKey: string;
   controlFeedKey: string;
   signature?: string;
