@@ -3,4 +3,6 @@
 //
 
 export * from './processor';
+
+export * from './useServiceRegistry';
 export * from './useLocalTriggerManager';

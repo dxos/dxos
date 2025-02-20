@@ -38,8 +38,7 @@ import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 import { DeckCapabilities } from '../../capabilities';
 import { getMode, type Overscroll } from '../../types';
-import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints } from '../../util';
-import { useHoistStatusbar } from '../../util/useHoistStatusbar';
+import { calculateOverscroll, layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
@@ -97,7 +96,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
   const [isNotMobile] = useMediaQuery('md', { ssr: false });
   const shouldRevert = useRef(false);
   useEffect(() => {
-    if (isNotMobile === false && getMode(deck) === 'deck') {
+    if (!isNotMobile && getMode(deck) === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attended = untracked(() => {
         const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
@@ -108,7 +107,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
       void dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: attended[0], options: { mode: 'solo' } }),
       );
-    } else if (isNotMobile === true && getMode(deck) === 'solo' && shouldRevert.current) {
+    } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
       void dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
     }
   }, [isNotMobile, deck, dispatch]);

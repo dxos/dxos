@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactElement, useMemo } from 'react';
+import React, { type ReactElement, useEffect, useMemo } from 'react';
 
 import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -22,6 +22,8 @@ export type ComponentLookup = (args: {
   schema: S.Schema<any>;
   inputProps: InputProps;
 }) => ReactElement | undefined;
+
+export type CustomInputMap = Partial<Record<string, InputComponent>>;
 
 export type FormProps<T extends BaseObject> = ThemedClassName<
   {
@@ -44,7 +46,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
      * Map of custom renderers for specific properties.
      * Prefer lookupComponent for plugin specific input surfaces.
      */
-    Custom?: Partial<Record<string, InputComponent>>;
+    Custom?: CustomInputMap;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
@@ -53,6 +55,7 @@ export const Form = <T extends BaseObject>({
   schema,
   values: initialValues,
   path = [],
+  autoFocus,
   readonly,
   filter,
   sort,
@@ -66,6 +69,16 @@ export const Form = <T extends BaseObject>({
   Custom,
 }: FormProps<T>) => {
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+
+  // TODO(burdon): Hack to select first input.
+  useEffect(() => {
+    if (autoFocus) {
+      const input = document.querySelector('input');
+      if (input) {
+        input.focus();
+      }
+    }
+  }, [autoFocus]);
 
   return (
     <FormProvider

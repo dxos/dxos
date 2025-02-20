@@ -15,12 +15,11 @@ import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import { Thread } from './Thread';
-import { type ServiceRegistry, MockServiceRegistry } from './registry';
-import { AutomationCapabilities } from '../capabilities';
-import { ChatProcessor } from '../hooks';
-import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { type AIChatType } from '../types';
+import { AutomationCapabilities } from '../../capabilities';
+import { ChatProcessor } from '../../hooks';
+import { covertFunctionToTool, createToolsFromService } from '../../tools';
+import { MockServiceRegistry, type AIChatType } from '../../types';
+import { Thread } from '../Thread';
 
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const config = useConfig();
@@ -30,7 +29,7 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const globalTools = useCapabilities(Capabilities.Tools);
   const functions = useQuery(space, Filter.schema(FunctionType));
-  const serviceRegistry: ServiceRegistry = useMemo(() => new MockServiceRegistry(), []);
+  const serviceRegistry = useMemo(() => new MockServiceRegistry(), []);
 
   const [serviceTools, setServiceTools] = useState<Tool[]>([]);
   useEffect(() => {

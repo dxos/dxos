@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { Primitive } from '@radix-ui/react-primitive';
@@ -16,8 +16,17 @@ export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.sp
   asChild?: boolean;
 };
 
-export const Tag = forwardRef<HTMLSpanElement, TagProps>(({ asChild, palette, classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  const Root = asChild ? Slot : Primitive.span;
-  return <Root {...props} className={tx('tag.root', 'tag', { palette }, classNames)} ref={forwardedRef} />;
-});
+export const Tag = forwardRef<HTMLSpanElement, TagProps>(
+  ({ asChild, palette = 'neutral', classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Root = asChild ? Slot : Primitive.span;
+    return (
+      <Root
+        {...props}
+        className={tx('tag.root', 'dx-tag', { palette }, classNames)}
+        data-hue={palette}
+        ref={forwardedRef}
+      />
+    );
+  },
+);

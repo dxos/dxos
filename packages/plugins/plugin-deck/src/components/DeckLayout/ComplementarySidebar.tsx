@@ -33,8 +33,8 @@ export type ComplementarySidebarProps = {
 export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarProps) => {
   const layout = useCapability(DeckCapabilities.MutableDeckState);
   const attended = useAttended();
-  const panelIds = useMemo(() => panels.map((p) => p.id), [panels]);
-  const activePanelId = panelIds.find((p) => p === current) ?? panels[0].id;
+  const panelIds = useMemo(() => panels.map((panel) => panel.id), [panels]);
+  const activePanelId = panelIds.find((panelId) => panelId === current) ?? panels[0].id;
   const activeEntryId = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${activePanelId}` : undefined;
   const { graph } = useAppGraph();
   const node = useNode(graph, activeEntryId);
@@ -82,7 +82,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
       >
         <div
           role='none'
-          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-base contain-layout app-drag'
+          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
             {panels.map((panel) => (
@@ -120,6 +120,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             key={panel.id}
             value={panel.id}
             classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content]'
+            {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
           >
             {panel.id === activePanelId && node && (
               <>

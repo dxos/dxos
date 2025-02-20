@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type EchoSchema, S, TypedObject } from '@dxos/echo-schema';
+import { AST, type EchoSchema, S, TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
-import { createView } from '@dxos/schema';
+import { createView, ViewProjection, createFieldId } from '@dxos/schema';
+import { capitalize } from '@dxos/util';
 
 import { KanbanType } from '../defs';
 
@@ -26,30 +28,50 @@ export const initializeKanban = async ({
     description: S.optional(S.String).annotations({
       [AST.TitleAnnotationId]: 'Description',
     }),
-    state: S.optional(S.String).annotations({
-      [AST.TitleAnnotationId]: 'State',
-    }), // TODO(burdon): Should default to prop name?
   });
 
   const [taskSchema] = await space.db.schemaRegistry.register([TaskSchema]);
 
+  const view = createView({
+    name: "Test kanban's card view",
+    typename: taskSchema.typename,
+    jsonSchema: taskSchema.jsonSchema,
+    fields: ['title', 'description'],
+  });
+
+  const stateOptions = [
+    { id: PublicKey.random().truncate(), title: 'Draft', color: 'indigo' },
+    { id: PublicKey.random().truncate(), title: 'Active', color: 'cyan' },
+    { id: PublicKey.random().truncate(), title: 'Completed', color: 'emerald' },
+  ];
+
+  const initialPivotField = 'state';
+
+  const viewProjection = new ViewProjection(taskSchema, view);
+
+  viewProjection.setFieldProjection({
+    field: {
+      id: createFieldId(),
+      path: initialPivotField as JsonProp,
+      size: 150,
+    },
+    props: {
+      property: initialPivotField as JsonProp,
+      type: TypeEnum.String,
+      format: FormatEnum.SingleSelect,
+      title: capitalize(initialPivotField),
+      options: stateOptions,
+    },
+  });
+
+  const fieldId = viewProjection.getFieldId(initialPivotField);
+  invariant(fieldId);
+
   const kanban = space.db.add(
     create(KanbanType, {
-      cardView: makeRef(
-        createView({
-          name: 'Test kanban’s card view',
-          typename: taskSchema.typename,
-          jsonSchema: taskSchema.jsonSchema,
-          fields: ['title', 'description', 'state'],
-        }),
-      ),
-      columnField: 'state',
-      arrangement: [
-        { columnValue: 'To do', ids: [] },
-        { columnValue: 'Doing', ids: [] },
-        { columnValue: 'Done', ids: [] },
-        { columnValue: 'Fridge', ids: [] },
-      ],
+      cardView: makeRef(view),
+      columnFieldId: fieldId,
+      // NOTE(ZaymonFC): Kanban arrangement is computed automatically.
     }),
   );
 

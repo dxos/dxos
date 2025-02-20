@@ -62,6 +62,11 @@ export const AutomationPlugin = () =>
       activatesOn: Events.Startup,
       activate: () => [
         contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'service-registry',
+          label: ['service registry label', { ns: AUTOMATION_PLUGIN }],
+          icon: 'ph--plugs--regular',
+        }),
+        contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'automation',
           label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],
           icon: 'ph--magic-wand--regular',

@@ -4,8 +4,9 @@
 
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Icon, toLocalizedString, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -23,11 +24,32 @@ type L0ItemProps = {
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
-  const { onTabChange, onSelect, isCurrent } = useNavTreeContext();
+  const { tab, onTabChange, onSelect, isCurrent } = useNavTreeContext();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
+  const [isLg] = useMediaQuery('lg', { ssr: false });
+
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
         case 'tab':
+          // TODO(thure): This dispatch should rightly be in `onTabChange`, but that callback wasn’t reacting to changes
+          //  to its dependencies.
+          void dispatch(
+            createIntent(LayoutAction.UpdateSidebar, {
+              part: 'sidebar',
+              options: {
+                state:
+                  item.id === tab
+                    ? navigationSidebarState === 'expanded'
+                      ? isLg
+                        ? 'collapsed'
+                        : 'closed'
+                      : 'expanded'
+                    : 'expanded',
+              },
+            }),
+          );
           return onTabChange?.(item);
         case 'link':
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
@@ -40,7 +62,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
         }
       }
     },
-    [item, type, onSelect, isCurrent, parent],
+    [item, type, onSelect, isCurrent, parent, tab, navigationSidebarState, isLg, dispatch],
   );
 };
 
@@ -67,6 +89,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('') : []),
     [type, item.properties.label, t],
   );
+
   return (
     <Tooltip.Root delayDuration={0}>
       <Tooltip.Trigger asChild>
@@ -130,7 +153,8 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
       data-itemid={id}
       data-testid={testId}
     >
-      <L0Item item={item} parent={parent} path={groupPath} />
+      {/* TODO(burdon): Option. */}
+      {/* <L0Item item={item} parent={parent} path={groupPath} /> */}
       {collectionItems.map((collectionItem) => (
         <L0Item key={collectionItem.id} item={collectionItem} parent={item} path={groupPath} />
       ))}
@@ -150,7 +174,7 @@ export const L0Menu = ({
   path: string[];
 }) => {
   return (
-    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-base border-ie border-separator app-drag'>
+    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag'>
       <div
         role='none'
         className='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
@@ -176,7 +200,10 @@ export const L0Menu = ({
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
-        style={{ background: 'linear-gradient(to bottom, var(--dx-base) 0%, var(--dx-base) 70%, transparent 100%)' }}
+        style={{
+          background:
+            'linear-gradient(to bottom, var(--dx-baseSurface) 0%, var(--dx-baseSurface) 70%, transparent 100%)',
+        }}
       />
     </Tabs.Tablist>
   );

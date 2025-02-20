@@ -74,22 +74,31 @@ export class ViewProjection {
    */
   getFieldProjection(fieldId: string): FieldProjection {
     invariant(this._schema.jsonSchema.properties);
-    const field = this._view.fields.find((f) => f.id === fieldId);
+    const field = this._view.fields.find((field) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
     const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, ...rest } = jsonProperty;
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, oneOf, ...rest } = jsonProperty;
 
-    let type: TypeEnum = schemaType as TypeEnum;
-    let format: FormatEnum = schemaFormat as FormatEnum;
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
-    if (referenceSchema) {
-      type = TypeEnum.Ref;
-      format = FormatEnum.Ref;
-    } else if (format === FormatEnum.None) {
-      format = typeToFormat[type as TypeEnum]!;
-    }
+    const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
+    const format = referenceSchema
+      ? FormatEnum.Ref
+      : schemaFormat === FormatEnum.None
+        ? typeToFormat[type]!
+        : (schemaFormat as FormatEnum);
+
+    const options =
+      format === FormatEnum.SingleSelect && oneOf
+        ? {
+            options: oneOf.map((opt) => ({
+              id: opt.const as string,
+              title: opt.title ?? (opt.const as string),
+              color: (opt as any).color,
+            })),
+          }
+        : {};
 
     const values = {
       type,
@@ -97,13 +106,18 @@ export class ViewProjection {
       property: field.path as JsonProp,
       referenceSchema,
       referencePath: field.referencePath,
+      ...options,
       ...rest,
     };
 
     const props = values.type ? this._decode(values) : values;
-
     log('getFieldProjection', { field, props });
     return { field, props };
+  }
+
+  /** Get all field projections */
+  getFieldProjections(): FieldProjection[] {
+    return this._view.fields.map((field) => this.getFieldProjection(field.id));
   }
 
   /**
@@ -136,7 +150,7 @@ export class ViewProjection {
     }
 
     if (props) {
-      let { property, type, format, referenceSchema, ...rest }: Partial<PropertyType> = this._encode(
+      let { property, type, format, referenceSchema, options, ...rest }: Partial<PropertyType> = this._encode(
         omit(props, ['referencePath']),
       );
       invariant(property);
@@ -149,6 +163,10 @@ export class ViewProjection {
         format = undefined;
       } else if (format) {
         type = formatToType[format];
+      }
+
+      if (format === FormatEnum.SingleSelect && options) {
+        jsonProperty.oneOf = options.map(({ id, title, color }) => ({ const: id, title, color }));
       }
 
       invariant(type !== TypeEnum.Ref);

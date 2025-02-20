@@ -316,5 +316,85 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
   });
 
+  test('single select format', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = S.Struct({
+      status: S.String,
+    }).annotations({
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Task',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    const projection = new ViewProjection(mutable, view);
+    const fieldId = projection.getFieldId('status');
+    invariant(fieldId);
+
+    // Set single select format with options.
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'status' as JsonPath },
+      props: {
+        property: 'status' as JsonProp,
+        type: TypeEnum.String,
+        format: FormatEnum.SingleSelect,
+        options: [
+          { id: 'draft', title: 'Draft', color: '#gray' },
+          { id: 'published', title: 'Published', color: '#green' },
+        ],
+      },
+    });
+
+    // Verify JSON Schema.
+    expect(mutable.jsonSchema.properties?.status).to.deep.include({
+      type: 'string',
+      format: FormatEnum.SingleSelect,
+      oneOf: [
+        { const: 'draft', title: 'Draft', color: '#gray' },
+        { const: 'published', title: 'Published', color: '#green' },
+      ],
+    });
+
+    // Verify projection.
+    const { props } = projection.getFieldProjection(fieldId);
+    expect(props.format).to.equal(FormatEnum.SingleSelect);
+    expect(props.options).to.deep.equal([
+      { id: 'draft', title: 'Draft', color: '#gray' },
+      { id: 'published', title: 'Published', color: '#green' },
+    ]);
+
+    // Update options.
+    projection.setFieldProjection({
+      field: { id: fieldId, path: 'status' as JsonPath },
+      props: {
+        ...props,
+        options: [
+          { id: 'draft', title: 'Draft', color: 'indigo' },
+          { id: 'published', title: 'Published', color: 'blue' },
+          { id: 'archived', title: 'Archived', color: 'amber' },
+        ],
+      },
+    });
+
+    // Verify updated JSON Schema.
+    expect(mutable.jsonSchema.properties?.status?.oneOf).to.deep.equal([
+      { const: 'draft', title: 'Draft', color: 'indigo' },
+      { const: 'published', title: 'Published', color: 'blue' },
+      { const: 'archived', title: 'Archived', color: 'amber' },
+    ]);
+
+    const effectSchema = mutable.getSchemaSnapshot();
+
+    expect(() => S.validateSync(effectSchema)({ status: 'draft' })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
+    expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
+  });
+
   // TODO(burdon): Test changing format.
 });

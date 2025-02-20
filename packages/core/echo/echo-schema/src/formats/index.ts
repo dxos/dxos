@@ -1,10 +1,11 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export type { SimpleTime, SimpleDate, SimpleDateTime } from './date';
+export type { SimpleDate, SimpleDateTime, SimpleTime } from './date';
 export { DecimalPrecision } from './number';
 export { GeoPoint } from './object';
+export * from './select';
 
 export * from './format';
 export * from './string';

@@ -97,7 +97,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
 
   // TODO(burdon): Add Surface debug.
   return (
-    <div className='flex flex-col w-full h-full divide-y divide-separator'>
+    <div className='flex flex-col w-full h-full max-bs-[calc(var(--radix-popover-content-available-height)-2*var(--dx-modalLine))] overflow-y-auto divide-y divide-separator rounded-lg'>
       <Panel
         id='main'
         icon='ph--chart-bar--regular'
