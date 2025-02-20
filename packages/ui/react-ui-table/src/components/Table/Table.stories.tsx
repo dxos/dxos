@@ -248,22 +248,22 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
-
 export const Default = {};
 
-export const Mutations: Story = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 1000,
-    updateInterval: 1,
-  },
-};
+// TODO(ZaymonFC): Restore the performance stories.
+// type Story = StoryObj<StoryProps>;
+// export const Mutations: Story = {
+//   render: TablePerformanceStory,
+//   args: {
+//     rows: 1000,
+//     updateInterval: 1,
+//   },
+// };
 
-export const RapidInsertions: Story = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 0,
-    insertInterval: 100,
-  },
-};
+// export const RapidInsertions: Story = {
+//   render: TablePerformanceStory,
+//   args: {
+//     rows: 0,
+//     insertInterval: 100,
+//   },
+// };
