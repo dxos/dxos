@@ -12,6 +12,7 @@ import { useServiceRegistry } from '../../hooks';
 import { categoryIcons, ServiceType } from '../../types';
 
 // TODO(burdon): Option to show all/enabled.
+// TODO(burdon): Search.
 export const ServiceRegistry = ({ space }: { space: Space }) => {
   const matchingServices = useServiceRegistry(space);
   const enabledServices = useQuery(space, Filter.schema(ServiceType));
@@ -68,7 +69,7 @@ const ServiceItem = ({
       </div>
       <div className='grid grid-cols-[40px_1fr]'>
         <div />
-        <div className='text-sm text-subdued line-clamp-2'>{service.description}</div>
+        <div className='text-sm text-subdued line-clamp-2 mie-1'>{service.description}</div>
       </div>
     </ListItem.Root>
   );

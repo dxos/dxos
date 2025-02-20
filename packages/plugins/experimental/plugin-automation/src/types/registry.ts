@@ -6,7 +6,10 @@ import { createStatic } from '@dxos/echo-schema';
 
 import { type ApiAuthorization, ServiceType } from './schema';
 
-export type ServiceQuery = {};
+export type ServiceQuery = {
+  name?: string;
+  category?: string;
+};
 
 export interface BaseServiceRegistry {
   queryServices(query: ServiceQuery): Promise<ServiceType[]>;
