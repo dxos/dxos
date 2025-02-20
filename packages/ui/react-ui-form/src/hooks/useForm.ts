@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
+import { cond } from 'effect/STM';
 
 /**
  * Return type from `useForm` hook.
@@ -113,6 +114,9 @@ export const useForm = <T extends BaseObject>({
 
       setErrors(flatMap(errors));
       const valid = errors.length === 0;
+      if (!valid) {
+        console.error('Validation failed:', errors);
+      }
       return valid;
     },
     [schema, onValidate],

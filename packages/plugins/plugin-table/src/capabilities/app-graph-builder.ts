@@ -22,7 +22,7 @@ export const AppGraphBuilder = () =>
           data: null,
           properties: {
             icon: 'ph--list--regular',
-            label: ['Properties', { ns: TABLE_PLUGIN }],
+            label: ['Inspector', { ns: TABLE_PLUGIN }],
           },
         };
       },
