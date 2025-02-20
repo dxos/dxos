@@ -37,6 +37,8 @@ const VISUAL_CROSSING_CREDENTIALS: ApiAuthorization = {
   },
 };
 
+// TODO(burdon): Find/deploy chess API.
+
 const TEST_SERVICES: ServiceType[] = [
   /**
    * dxn:service:example.com/service/FlightSearch
@@ -45,6 +47,7 @@ const TEST_SERVICES: ServiceType[] = [
     serviceId: 'example.com/service/FlightSearch',
     name: 'Amadeus Flight Search',
     description: 'Search for local and international flights.',
+    category: 'travel',
     interfaces: [
       {
         kind: 'api',
@@ -62,6 +65,7 @@ const TEST_SERVICES: ServiceType[] = [
     serviceId: 'example.com/service/HotelSearch',
     name: 'Amadeus Hotel Search',
     description: 'Search for local and international hotels.',
+    category: 'travel',
     interfaces: [
       {
         kind: 'api',
@@ -78,6 +82,7 @@ const TEST_SERVICES: ServiceType[] = [
     serviceId: 'example.com/service/Weather',
     name: 'Visual Crossing Weather',
     description: 'Search for global weather forecasts.',
+    category: 'weather',
     interfaces: [
       {
         kind: 'api',
@@ -87,3 +92,14 @@ const TEST_SERVICES: ServiceType[] = [
     ],
   }),
 ] as const;
+
+export const categoryIcons: Record<string, string> = {
+  finance: 'ph--bank--regular',
+  travel: 'ph--airplane-takeoff--regular',
+  health: 'ph--heart--regular',
+  education: 'ph--books--regular',
+  entertainment: 'ph--music-notes--regular',
+  shopping: 'ph--shopping-cart--regular',
+  utilities: 'ph--lightning--regular',
+  weather: 'ph--cloud-rain--regular',
+} as const;

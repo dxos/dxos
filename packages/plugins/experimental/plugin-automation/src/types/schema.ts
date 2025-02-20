@@ -107,6 +107,7 @@ export const ServiceType = S.Struct({
 
   name: S.optional(S.String),
   description: S.optional(S.String),
+  category: S.optional(S.String),
 
   enabled: S.optional(S.Boolean),
 
