@@ -73,6 +73,7 @@ export const useTranscription = ({
     transcription.current?.setOnTranscription(handleTranscriptionText);
   }, [handleTranscriptionText, transcription.current]);
 
+  // Initialize audio recorder.
   useEffect(() => {
     if (!recorder.current && userMedia.audioTrack && transcription.current) {
       recorder.current = new MediaStreamRecorder({
@@ -125,6 +126,7 @@ export const useTranscription = ({
     };
   }, [isSpeaking, ai.transcription.enabled]);
 
+  // Turn transcription on and off.
   useEffect(() => {
     if (ai.transcription.enabled) {
       void transcription.current?.open();
