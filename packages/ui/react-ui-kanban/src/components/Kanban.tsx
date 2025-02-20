@@ -44,19 +44,35 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
     >
       {model.arrangedCards.map(({ columnValue, cards }) => {
         const { color, title } = model.getPivotAttributes(columnValue);
+        const uncategorized = columnValue === UNCATEGORIZED_VALUE;
         return (
-          <StackItem.Root key={columnValue} item={{ id: columnValue }} size={20} classNames='pli-1 plb-2'>
+          <StackItem.Root
+            key={columnValue}
+            item={{ id: columnValue }}
+            size={20}
+            classNames='pli-1 plb-2 drag-preview-p-0'
+            disableRearrange={uncategorized}
+          >
             <div role='none' className={mx('bg-deck rounded-lg grid', railGridHorizontal)}>
-              <StackItem.Heading>
-                <StackItem.DragHandle asChild>
-                  <IconButton
-                    iconOnly
-                    icon='ph--dots-six-vertical--regular'
-                    variant='ghost'
-                    label={t('column drag handle label')}
-                  />
-                </StackItem.DragHandle>
-                <Tag palette={color as any}>{title}</Tag>
+              <StackItem.Heading classNames='pli-2'>
+                {!uncategorized && (
+                  <StackItem.DragHandle asChild>
+                    <IconButton
+                      iconOnly
+                      icon='ph--dots-six-vertical--regular'
+                      variant='ghost'
+                      label={t('column drag handle label')}
+                      classNames='pli-2'
+                    />
+                  </StackItem.DragHandle>
+                )}
+                <Tag
+                  palette={color as any}
+                  data-uncategorized={uncategorized}
+                  classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                >
+                  {title}
+                </Tag>
                 {/* NOTE(ZaymonFC): We're just going to manipulate status with the ViewEditor for now. */}
                 {/* {onRemoveEmptyColumn && cards.length < 1 && (
                   <IconButton
@@ -73,12 +89,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='pbe-1'
+                classNames='pbe-1 drag-preview-p-0'
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
                 {cards.map((card) => (
-                  <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2'>
+                  <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2 drag-preview-p-0'>
                     <div role='none' className='rounded bg-[--surface-bg]'>
                       <div role='none' className='flex items-center'>
                         <StackItem.DragHandle asChild>
