@@ -28,6 +28,7 @@ const useDocument = ({ space, ai }: { space: Space; ai: Ai }) => {
 /**
  * Sends last `recordingLength` seconds of audio to the server each `recordingInterval` milliseconds.
  */
+// TODO(mykola): Make a hook.
 export const Transcription = ({
   space,
   userMedia,

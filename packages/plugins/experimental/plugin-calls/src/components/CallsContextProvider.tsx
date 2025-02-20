@@ -39,7 +39,10 @@ type CallsContextProps = {
   children: ReactNode;
 };
 
-export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thread, children }) => {
+// TODO(burdon): Need to provide global state for plugin and provider.
+// - First create simple plugin context that tracks the current space and roomId.
+
+export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, children }) => {
   const config = useConfig();
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   useEffect(() => {
@@ -48,8 +51,8 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thr
       iceServers: config.get('runtime.services.ice') ?? [],
       feedbackEnabled: true,
       maxWebcamFramerate: 24,
-      maxWebcamBitrate: 1200000,
-      maxWebcamQualityLevel: 1080,
+      maxWebcamBitrate: 120_0000,
+      maxWebcamQualityLevel: 1_080,
     });
   }, []);
 
@@ -66,6 +69,7 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, thr
 
 type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey }>;
 
+// TODO(burdon): Reconcile with CallsContextProvider.
 const Room: FC<RoomProps> = ({
   roomId,
   iceServers,
@@ -75,13 +79,13 @@ const Room: FC<RoomProps> = ({
   space,
   children,
 }) => {
-  const [joined, setJoined] = useState(false);
-  const [dataSaverMode, setDataSaverMode] = useState(false);
-
   const room = useRoom({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
+
+  const [joined, setJoined] = useState(false);
+  const [dataSaverMode, setDataSaverMode] = useState(false);
 
   const scaleResolutionDownBy = useMemo(() => {
     const videoStreamTrack = userMedia.videoTrack;
@@ -128,18 +132,22 @@ const Room: FC<RoomProps> = ({
   );
   const pushedScreenShareTrack = useSubscribedState(pushedScreenShareTrack$);
 
+  // TODO(burdon): Can we simplify?
   const context: RoomContextType = {
-    roomId,
     space,
+    roomId,
+    room,
+    peer,
+    userMedia,
+    isSpeaking,
+
     joined,
     setJoined,
-    isSpeaking,
     dataSaverMode,
     setDataSaverMode,
     iceConnectionState,
-    userMedia,
-    peer,
-    room,
+
+    // TODO(burdon): Comment.
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),
       audio: trackObjectToString(pushedAudioTrack),

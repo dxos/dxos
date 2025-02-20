@@ -22,6 +22,9 @@ export type UseRoomState = {
   updateUserState: (user: UserState) => void;
 };
 
+/**
+ * Call session state.
+ */
 export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
   const [roomState, setRoomState] = useState<RoomState>({
     meetingId: roomId.toHex(),
@@ -40,10 +43,11 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
     if (!stream.current) {
       stream.current = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
       stream.current.subscribe((event) => {
-        log.info('>>> roomState', {
+        log.info('room state', {
           users: event.peers?.map((peer) => codec.decode(peer.state!)) ?? [],
           meetingId: roomId.toHex(),
         });
+
         const users = event.peers?.map((p) => codec.decode(p.state!)) ?? [];
         setRoomState({ users, meetingId: roomId.toHex() });
         // Note: Small CRDT for merging transcription states.
@@ -51,6 +55,7 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
         const newTranscriptionState = users.find(
           (user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp,
         );
+
         if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState) {
           ai.setTranscription(newTranscriptionState.transcription!);
         }

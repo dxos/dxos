@@ -12,7 +12,7 @@ import { HoverFade } from './HoverFade';
 import { useRoomContext, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
 import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
-import { VideoObject } from '../Video';
+import { VideoObject } from '../Media';
 
 const useMid = (track?: MediaStreamTrack) => {
   const { peer } = useRoomContext();
@@ -48,12 +48,12 @@ export const Participant = forwardRef<HTMLDivElement, ParticipantProps>(
       userMedia,
       room: { identity },
     } = useRoomContext();
-    const id = user.id!;
-    const isSelf = identity.id && id.startsWith(identity.id);
-    const isScreenShare = id.endsWith(screenshareSuffix);
-    const pulledAudioTrack = usePulledAudioTrack(isScreenShare ? undefined : user.tracks!.audio);
+    const id = user.id;
+    const isSelf = identity.id && id?.startsWith(identity.id);
+    const isScreenShare = id?.endsWith(screenshareSuffix);
+    const pulledAudioTrack = usePulledAudioTrack(isScreenShare ? undefined : user.tracks?.audio);
     const pulledVideoTrack = usePulledVideoTrack(
-      isScreenShare || (!isSelf && !dataSaverMode) ? user.tracks!.video : undefined,
+      isScreenShare || (!isSelf && !dataSaverMode) ? user.tracks?.video : undefined,
     );
     const audioTrack = isSelf ? userMedia.audioTrack : pulledAudioTrack;
     const videoTrack = isSelf && !isScreenShare ? userMedia.videoTrack : pulledVideoTrack;

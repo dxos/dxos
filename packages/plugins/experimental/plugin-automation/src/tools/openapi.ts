@@ -28,7 +28,7 @@ export const createToolsFromService = async (service: ServiceType): Promise<Tool
 
 export const createToolsFromApi = async (url: string, options?: CreateToolsFromApiOptions): Promise<Tool[]> => {
   const res = await fetch(url);
-  const spec = (await res.json()) as OpenAPIV2.Document<OpenAPIV2.PathItemObject>;
+  const spec = (await res.json()) as OpenAPIV2.Document;
   log('spec', { spec });
 
   const tools: Tool[] = [];
