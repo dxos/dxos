@@ -11,11 +11,14 @@ import { trace } from '@dxos/tracing';
 
 import { type AudioChunk, AudioRecorder } from './audio-recorder';
 
-await register(await connect());
-
-export type WavMediaRecorderConfig = {
-  interval: number;
+/**
+ * Initialize the media recorder by registering the WAV encoder.
+ */
+export const initializeMediaRecorder = async () => {
+  await register(await connect());
 };
+
+export type WavMediaRecorderConfig = {};
 
 /**
  * Recorder that uses the MediaContext API and AudioNode API to record audio.
@@ -27,44 +30,55 @@ export class MediaStreamRecorder extends AudioRecorder {
    * Default MediaRecorder implementation do not support wav encoding.
    */
   private readonly _mediaRecorder: IMediaRecorder;
-  private readonly _config: WavMediaRecorderConfig;
+  private readonly _interval: number;
+  private _header?: Uint8Array;
 
-  constructor(
-    onChunk: (chunk: AudioChunk) => void,
-    mediaStreamTrack: MediaStreamTrack,
-    config: WavMediaRecorderConfig,
-  ) {
+  constructor({
+    onChunk,
+    mediaStreamTrack,
+    interval,
+  }: {
+    onChunk: (chunk: AudioChunk) => void;
+    mediaStreamTrack: MediaStreamTrack;
+    interval: number;
+  }) {
     super(onChunk);
     this._mediaStreamTrack = mediaStreamTrack;
     const stream = new MediaStream([mediaStreamTrack]);
     this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
-    this._config = config;
+    this._interval = interval;
   }
 
   @synchronized
   private async _ondataavailable(event: IBlobEvent) {
     const blob = event.data;
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const wavFile = new WaveFile();
-    wavFile.fromScratch(1, this._mediaStreamTrack.getSettings().sampleRate!, '16', uint8Array);
+    const uint8Array = new Uint8Array(await blob.arrayBuffer());
+    const isHeader =
+      uint8Array[0] === 0x52 && // R
+      uint8Array[1] === 0x49 && // I
+      uint8Array[2] === 0x46 && // F
+      uint8Array[3] === 0x46; // F
+    let wav: WaveFile;
+    if (isHeader) {
+      wav = new WaveFile(uint8Array);
+      this._header = uint8Array.slice(0, 44);
+      await saveFile(wav.toBuffer());
+    } else {
+      wav = new WaveFile(new Uint8Array([...this._header!, ...uint8Array]));
+    }
 
     this._onChunk({
       timestamp: event.timeStamp,
-      data: wavFile.getSamples(),
+      data: wav.getSamples(),
     });
-  }
-
-  get sampleRate() {
-    return this._mediaStreamTrack.getSettings().sampleRate!;
   }
 
   async start() {
     if (this._mediaRecorder.state === 'recording') {
       return;
     }
-    this._mediaRecorder.start(this._config.interval);
     this._mediaRecorder.ondataavailable = (event) => this._ondataavailable(event);
+    this._mediaRecorder.start(this._interval);
   }
 
   async stop() {
@@ -74,3 +88,13 @@ export class MediaStreamRecorder extends AudioRecorder {
     this._mediaRecorder.stop();
   }
 }
+
+const saveFile = async (blob: Uint8Array) => {
+  const a = document.createElement('a');
+  a.download = 'my-file.wav';
+  a.href = URL.createObjectURL(new Blob([blob], { type: 'audio/wav' }));
+  a.addEventListener('click', (e) => {
+    setTimeout(() => URL.revokeObjectURL(a.href), 30 * 1000);
+  });
+  a.click();
+};
