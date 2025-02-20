@@ -4,8 +4,8 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
-import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -46,10 +46,14 @@ export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
+  disableRearrange?: boolean;
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
-  ({ item, children, classNames, size: propsSize, onSizeChange, role, order, style, ...props }, forwardedRef) => {
+  (
+    { item, children, classNames, size: propsSize, onSizeChange, role, order, style, disableRearrange, ...props },
+    forwardedRef,
+  ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -74,7 +78,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const type = orientation === 'horizontal' ? 'column' : 'card';
 
     useLayoutEffect(() => {
-      if (!itemElement || !onRearrange) {
+      if (!itemElement || !onRearrange || disableRearrange) {
         return;
       }
       return combine(
@@ -82,10 +86,16 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           element: itemElement,
           ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
           getInitialData: () => ({ id: item.id, type }),
-          // TODO(thure): tabster focus honeypots are causing the preview to render with the wrong dimensions; what do?
-          onGenerateDragPreview: ({ nativeSetDragImage }) => {
-            disableNativeDragPreview({ nativeSetDragImage });
-            preventUnhandled.start();
+          onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
+            document.body.setAttribute('data-drag-preview', 'true');
+            scrollJustEnoughIntoView({ element: source.element });
+            const { x, y } = preserveOffsetOnSource({ element: source.element, input: location.current.input })({
+              container: (source.element.offsetParent ?? document.body) as HTMLElement,
+            });
+            nativeSetDragImage?.(source.element, x, y);
+          },
+          onDragStart: () => {
+            document.body.removeAttribute('data-drag-preview');
           },
         }),
         dropTargetForElements({
