@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
+
 import type { Queue } from './interface';
-import { type HasId } from '@dxos/echo-schema';
+
 /**
  * Client-side view onto an EDGE queue.
  */
