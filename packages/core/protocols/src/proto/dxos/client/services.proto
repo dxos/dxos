@@ -135,7 +135,9 @@ message RecoverIdentityRequest {
     string identity_did = 1;
     dxos.keys.PublicKey device_key = 2;
     dxos.keys.PublicKey control_feed_key = 3;
-    string signature = 4;
+    bytes signature = 4;
+    optional bytes client_data_json = 5;
+    optional bytes authenticator_data = 6;
   }
 
   oneof request {

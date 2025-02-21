@@ -92,6 +92,8 @@ export class EdgeIdentityRecoveryManager {
     deviceKey,
     controlFeedKey,
     signature,
+    clientDataJson,
+    authenticatorData,
   }: RecoverIdentityRequest.ExternalSignature) {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
@@ -99,7 +101,14 @@ export class EdgeIdentityRecoveryManager {
       identityDid,
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
-      signature,
+      signature:
+        clientDataJson && authenticatorData
+          ? {
+              signature: Buffer.from(signature).toString('base64'),
+              clientDataJson: Buffer.from(clientDataJson).toString('base64'),
+              authenticatorData: Buffer.from(authenticatorData).toString('base64'),
+            }
+          : Buffer.from(signature).toString('base64'),
     };
 
     const response = await this._edgeClient.recoverIdentity(request);

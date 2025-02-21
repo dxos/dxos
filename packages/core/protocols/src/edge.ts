@@ -74,7 +74,13 @@ export type RecoverIdentityRequest = {
   recoveryKey?: string;
   deviceKey: string;
   controlFeedKey: string;
-  signature?: string;
+  signature?:
+    | string
+    | {
+        signature: string;
+        clientDataJson: string;
+        authenticatorData: string;
+      };
 };
 
 export type RecoverIdentityResponseBody = {
