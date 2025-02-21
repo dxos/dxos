@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import {

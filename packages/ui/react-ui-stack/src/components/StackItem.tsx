@@ -47,11 +47,24 @@ export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
   disableRearrange?: boolean;
+  focusIndicatorVariant?: 'over-all' | 'group';
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   (
-    { item, children, classNames, size: propsSize, onSizeChange, role, order, style, disableRearrange, ...props },
+    {
+      item,
+      children,
+      classNames,
+      size: propsSize,
+      onSizeChange,
+      role,
+      order,
+      style,
+      disableRearrange,
+      focusIndicatorVariant = 'over-all',
+      ...props
+    },
     forwardedRef,
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
@@ -136,7 +149,12 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           tabIndex={0}
           {...focusGroupAttrs}
           className={mx(
-            'group/stack-item grid relative dx-focus-ring-inset-over-all',
+            'group/stack-item grid relative',
+            focusIndicatorVariant === 'over-all'
+              ? 'dx-focus-ring-inset-over-all'
+              : orientation === 'horizontal'
+                ? 'dx-focus-ring-group-x'
+                : 'dx-focus-ring-group-y',
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
