@@ -30,9 +30,9 @@ message Transcription {
   int32 lamport_timestamp = 2;
 
   /**
-   * Object ID of where the transcription should be stored.
+   * Object DXN of where the transcription should be stored.
    */
-  string object_id = 3;
+  string object_dxn = 3;
 }
 
 message UserState {
