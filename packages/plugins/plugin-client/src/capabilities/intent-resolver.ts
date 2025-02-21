@@ -160,7 +160,7 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
 
         invariant(credential, 'Credential not available');
         const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
-        const algorithm: number = (credential as any).response.getPublicKeyAlgorithm();
+        const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
 
         invariant(client.services.services.IdentityService, 'IdentityService not available');
         // TODO(wittjosiah): This needs a proper api.
