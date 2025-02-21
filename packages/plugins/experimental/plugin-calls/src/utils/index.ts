@@ -10,3 +10,4 @@ export * from './peer';
 export * from './rxjs-peer';
 export * from './get-time-str';
 export * from './merge-float-64-array';
+export * from './random-queue-dxn';

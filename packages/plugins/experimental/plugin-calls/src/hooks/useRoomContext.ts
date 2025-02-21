@@ -31,6 +31,11 @@ export type RoomContextType = {
     video?: string;
     audio?: string;
   };
+
+  /**
+   * DXN of the storybook queue.
+   */
+  storybookQueueDxn?: string;
 };
 
 export const RoomContext = createContext<RoomContextType | undefined>(undefined);

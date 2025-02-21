@@ -4,16 +4,17 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
+import { createStatic } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { Filter, updateText, useQuery, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
+import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type AudioRecorder, Transcription, type TranscribedText } from '../ai';
+import { type AudioRecorder, Transcription } from '../ai';
 import { initializeMediaRecorder, MediaStreamRecorder } from '../ai/media-stream-recorder';
 import { type Ai, type UserMedia } from '../hooks';
-import { type UserState } from '../types';
-import { getTimeStr } from '../utils';
+import { Block, type Segment, type UserState } from '../types';
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
@@ -34,25 +35,23 @@ export const useTranscription = ({
   const recorder = useRef<AudioRecorder | null>(null);
   const transcription = useRef<Transcription | null>();
 
-  // Get document.
-  const doc = useQuery(space, Filter.schema(DocumentType, { id: ai.transcription.objectId }))[0];
-  useEffect(() => {
-    if (doc) {
-      doc.content.load().catch((err) => log.catch(err));
-    }
-  }, [doc]);
+  // Get queue.
+  const edgeClient = useEdgeClient();
+  const queue = useQueue<Block>(
+    edgeClient,
+    ai.transcription.objectDxn ? DXN.parse(ai.transcription.objectDxn) : undefined,
+  );
 
   // Handle transcription text.
-  const handleTranscriptionText = useCallback(
-    async (text: TranscribedText) => {
-      const time = getTimeStr(text.timestamp);
-      updateText(
-        doc!.content.target!,
-        ['content'],
-        doc!.content.target!.content + `\n   _${time} ${identity!.name}_\n` + text.text,
-      );
+  const handleSegments = useCallback(
+    async (segments: Segment[]) => {
+      const block = createStatic(Block, {
+        author: identity.name || 'Unknown',
+        segments,
+      });
+      queue?.append([block]);
     },
-    [doc],
+    [queue, identity.name],
   );
 
   // Initialize audio transcription.
@@ -70,8 +69,8 @@ export const useTranscription = ({
 
   // Set the transcription callback.
   useEffect(() => {
-    transcription.current?.setOnTranscription(handleTranscriptionText);
-  }, [handleTranscriptionText, transcription.current]);
+    transcription.current?.setOnTranscription(handleSegments);
+  }, [handleSegments, transcription.current]);
 
   // Initialize audio recorder.
   useEffect(() => {

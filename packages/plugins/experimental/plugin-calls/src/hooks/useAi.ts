@@ -4,22 +4,23 @@
 
 import { useState } from 'react';
 
-import { type Transcription } from '../types';
+import { type TranscriptionState } from '../types';
 
 export type Ai = {
-  transcription: Transcription;
-  setTranscription: (transcription: Transcription) => void;
+  transcription: TranscriptionState;
+  setTranscription: (transcription: TranscriptionState) => void;
 };
 
 export const useAi = (): Ai => {
-  const [transcription, setTranscription] = useState<Transcription>({
+  const [transcription, setTranscription] = useState<TranscriptionState>({
     enabled: false,
     lamportTimestamp: 0,
+    objectDxn: undefined,
   });
 
   return {
     transcription,
-    setTranscription: (newTranscription: Transcription) => {
+    setTranscription: (newTranscription: TranscriptionState) => {
       setTranscription({
         ...transcription,
         ...newTranscription,

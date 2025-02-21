@@ -11,7 +11,8 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type AudioChunk, AudioRecorder, type TranscribedText, Transcription } from '../ai';
+import { type AudioChunk, AudioRecorder, Transcription } from '../ai';
+import { type Segment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
 // This is a playground for testing the transcription, requires `calls-service` to be running.
@@ -88,7 +89,7 @@ describe.skip('transcription', () => {
   });
 
   test('transcription of audio recording', { timeout: 10_000 }, async () => {
-    const trigger = new Trigger<TranscribedText>({ autoReset: true });
+    const trigger = new Trigger<Segment[]>({ autoReset: true });
     const transcription = new Transcription({
       prefixedChunksAmount: 1,
     });
@@ -97,9 +98,9 @@ describe.skip('transcription', () => {
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
     });
-    transcription.setOnTranscription(async (transcription) => {
-      log.info('transcription', { transcription });
-      trigger.wake(transcription);
+    transcription.setOnTranscription(async (segments) => {
+      log.info('transcription', { segments });
+      trigger.wake(segments);
     });
     transcription.setWavConfig({
       sampleRate: 24000,
@@ -116,11 +117,13 @@ describe.skip('transcription', () => {
 
     transcription.stopChunksRecording();
     // Could fail, not critical.
-    expect((await trigger.wait()).text.includes('I will tell you some information about myself'));
+    expect(
+      (await trigger.wait()).some((segment) => segment.text.includes('I will tell you some information about myself')),
+    );
   });
 
   test('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
-    const trigger = new Trigger<TranscribedText>({ autoReset: true });
+    const trigger = new Trigger<Segment[]>({ autoReset: true });
     const transcription = new Transcription({
       prefixedChunksAmount: 1,
     });
@@ -129,9 +132,9 @@ describe.skip('transcription', () => {
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
     });
-    transcription.setOnTranscription(async (transcription) => {
-      log.info('transcription', { transcription });
-      trigger.wake(transcription);
+    transcription.setOnTranscription(async (segments) => {
+      log.info('transcription', { segments });
+      trigger.wake(segments);
     });
     transcription.setWavConfig({
       sampleRate: recorder.sampleRate,
@@ -143,13 +146,15 @@ describe.skip('transcription', () => {
     recorder.emitChunk();
     recorder.emitChunk();
     transcription.stopChunksRecording();
-    expect((await trigger.wait()).text.includes("Hello, I'm"));
+    expect((await trigger.wait()).some((segment) => segment.text.includes("Hello, I'm")));
 
     transcription.startChunksRecording();
     recorder.emitChunk();
     recorder.emitChunk();
     transcription.stopChunksRecording();
-    expect((await trigger.wait()).text.includes('I will tell you some information about myself'));
+    expect(
+      (await trigger.wait()).some((segment) => segment.text.includes('I will tell you some information about myself')),
+    );
 
     log.info('Done', { trace: TRACE_PROCESSOR.getDiagnostics() });
   });
