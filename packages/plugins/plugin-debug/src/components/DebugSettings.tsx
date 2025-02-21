@@ -78,73 +78,71 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   return (
     <DeprecatedFormContainer>
-      <DeprecatedFormContainer>
-        <DeprecatedFormInput label={t('settings show debug panel')}>
-          <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('settings show devtools panel')}>
-          <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('settings wireframe')}>
-          <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('settings download diagnostics')}>
-          <Button onClick={handleDownload}>
-            <Icon icon='ph--download-simple--regular' size={5} />
-          </Button>
-        </DeprecatedFormInput>
-        <DeprecatedFormInput label={t('settings repair')}>
-          <Button onClick={handleRepair}>
-            <Icon icon='ph--first-aid-kit--regular' size={5} />
-          </Button>
-        </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings show debug panel')}>
+        <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings show devtools panel')}>
+        <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings wireframe')}>
+        <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings download diagnostics')}>
+        <Button onClick={handleDownload}>
+          <Icon icon='ph--download-simple--regular' size={5} />
+        </Button>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('settings repair')}>
+        <Button onClick={handleRepair}>
+          <Icon icon='ph--first-aid-kit--regular' size={5} />
+        </Button>
+      </DeprecatedFormInput>
 
-        {/* TODO(burdon): Move to layout? */}
-        {toast && (
-          <Toast.Root>
-            <Toast.Body>
-              <Toast.Title>
-                <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
-                <span>{toast.title}</span>
-              </Toast.Title>
-              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-            </Toast.Body>
-          </Toast.Root>
-        )}
+      {/* TODO(burdon): Move to layout? */}
+      {toast && (
+        <Toast.Root>
+          <Toast.Body>
+            <Toast.Title>
+              <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
+              <span>{toast.title}</span>
+            </Toast.Title>
+            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+          </Toast.Body>
+        </Toast.Root>
+      )}
 
-        <DeprecatedFormInput label={t('settings choose storage adaptor')}>
-          <Select.Root
-            value={
-              Object.entries(StorageAdapters).find(
-                ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-              )?.[0]
+      <DeprecatedFormInput label={t('settings choose storage adaptor')}>
+        <Select.Root
+          value={
+            Object.entries(StorageAdapters).find(
+              ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+            )?.[0]
+          }
+          onValueChange={(value) => {
+            if (confirm(t('settings storage adapter changed alert'))) {
+              updateConfig(
+                storageConfig,
+                setStorageConfig,
+                ['runtime', 'client', 'storage', 'dataStore'],
+                StorageAdapters[value as keyof typeof StorageAdapters],
+              );
             }
-            onValueChange={(value) => {
-              if (confirm(t('settings storage adapter changed alert'))) {
-                updateConfig(
-                  storageConfig,
-                  setStorageConfig,
-                  ['runtime', 'client', 'storage', 'dataStore'],
-                  StorageAdapters[value as keyof typeof StorageAdapters],
-                );
-              }
-            }}
-          >
-            <Select.TriggerButton placeholder={t('settings data store label')} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {Object.keys(StorageAdapters).map((key) => (
-                    <Select.Option key={key} value={key}>
-                      {t(`settings storage adaptor ${key} label`)}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </DeprecatedFormInput>
-      </DeprecatedFormContainer>
+          }}
+        >
+          <Select.TriggerButton placeholder={t('settings data store label')} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {Object.keys(StorageAdapters).map((key) => (
+                  <Select.Option key={key} value={key}>
+                    {t(`settings storage adaptor ${key} label`)}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </DeprecatedFormInput>
     </DeprecatedFormContainer>
   );
 };
