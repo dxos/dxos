@@ -10,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
-import { cond } from 'effect/STM';
 
 /**
  * Return type from `useForm` hook.

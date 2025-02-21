@@ -68,7 +68,7 @@ export const TablePlugin = () =>
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'selected-objects',
-          label: ['Objects', { ns: TABLE_PLUGIN }],
+          label: ['object label', { ns: TABLE_PLUGIN }],
           icon: 'ph--list--regular',
         }),
     }),
