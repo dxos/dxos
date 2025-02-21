@@ -14,7 +14,7 @@ export type RecoveryCodeDialogProps = {
   code: string;
 };
 
-// TODO(wittjosiah): Factor out to @dxos/shell.
+// TODO(wittjosiah): Factor panel out to @dxos/shell.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
   const [confirmation, setConfirmation] = useState(false);

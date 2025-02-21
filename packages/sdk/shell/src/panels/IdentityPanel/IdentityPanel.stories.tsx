@@ -36,6 +36,7 @@ const noOpProps: IdentityPanelImplProps = {
   },
   devices: [],
   connectionState: ConnectionState.ONLINE,
+  onManageCredentials: async () => console.log('manage credentials'),
 };
 
 export default {
