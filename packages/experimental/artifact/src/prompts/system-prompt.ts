@@ -28,7 +28,7 @@ export const createSystemPrompt = ({ template = SYSTEM_PROMPT, artifacts = [] }:
 
   // Remove comments and trim.
   template = template
-    .replace(/^\{\{!.*\}\}$/gm, '')
+    .replace(/^\{\{![^}]*\}\}$/gm, '')
     .replace(/\n\n\n/gm, '\n')
     .trim();
 

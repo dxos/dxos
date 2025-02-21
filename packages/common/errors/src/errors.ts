@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { BaseError } from './base';
 
 export class TimeoutError extends BaseError.extend('TIMEOUT') {}

@@ -142,24 +142,26 @@ describe('Gpt pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-        const { tokenStream, text }: { tokenStream: Stream.Stream<GenerationStreamEvent>; text: Effect.Effect<string> } =
-          yield* runtime
-            .runGraph(
-              'dxn:compute:gpt2',
-              makeValueBag({
-                prompt: 'What is the meaning of life?',
+        const {
+          tokenStream,
+          text,
+        }: { tokenStream: Stream.Stream<GenerationStreamEvent>; text: Effect.Effect<string> } = yield* runtime
+          .runGraph(
+            'dxn:compute:gpt2',
+            makeValueBag({
+              prompt: 'What is the meaning of life?',
+            }),
+          )
+          .pipe(
+            Effect.flatMap(unwrapValueBag),
+            Effect.provide(
+              testServices({
+                enableLogging: ENABLE_LOGGING,
+                gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
               }),
-            )
-            .pipe(
-              Effect.flatMap(unwrapValueBag),
-              Effect.provide(
-                testServices({
-                  enableLogging: ENABLE_LOGGING,
-                  gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
-                }),
-              ),
-              Scope.extend(scope),
-            );
+            ),
+            Scope.extend(scope),
+          );
 
         // log.info('text in test', { text: getDebugName(text) });
 

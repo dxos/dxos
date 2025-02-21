@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 export type BaseErrorOptions = {
   /**
    * The cause of the error.

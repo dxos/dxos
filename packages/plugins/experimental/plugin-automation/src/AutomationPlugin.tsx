@@ -11,7 +11,7 @@ import { RefArray } from '@dxos/react-client/echo';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { AutomationAction, ChainPromptType, ChainType, AIChatType } from './types';
+import { AutomationAction, ChainPromptType, ChainType, AIChatType, ServiceType } from './types';
 
 // TODO(wittjosiah): Rename to AssistantPlugin?
 export const AutomationPlugin = () =>
@@ -53,7 +53,7 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger]),
+        contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger, ServiceType]),
         contributes(ClientCapabilities.Schema, [AIChatType]),
       ],
     }),
