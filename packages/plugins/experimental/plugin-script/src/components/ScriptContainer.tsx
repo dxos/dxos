@@ -20,12 +20,18 @@ import { type ScriptSettingsProps } from '../types';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
-  settings: ScriptSettingsProps;
+  settings?: ScriptSettingsProps;
   role?: string;
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptContainer = ({ role, classNames, script, settings, env }: ScriptEditorProps) => {
+export const ScriptContainer = ({
+  role,
+  classNames,
+  script,
+  settings = { editorInputMode: 'vscode' },
+  env,
+}: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
 
