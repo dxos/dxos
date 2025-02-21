@@ -41,9 +41,9 @@ export abstract class AudioRecorder {
   /**
    * Starts the recorder.
    */
-  abstract start(): void;
+  abstract start(): Promise<void>;
   /**
    * Stops the recorder.
    */
-  abstract stop(): void;
+  abstract stop(): Promise<void>;
 }

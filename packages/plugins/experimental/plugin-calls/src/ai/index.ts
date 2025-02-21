@@ -3,4 +3,5 @@
 //
 
 export * from './audio-recorder';
-export * from './transcription';
+export * from './media-stream-recorder';
+export * from './transcriber';

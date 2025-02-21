@@ -17,12 +17,12 @@ export default () =>
       id: `${CALLS_PLUGIN}/article`,
       role: 'article',
       filter: (data): data is { subject: Call } => isCall(data.subject),
-      component: ({ data, role }) => <CallsContainer space={data.subject.space} roomId={data.subject.space.key} />,
+      component: ({ data, role }) => <CallsContainer roomId={data.subject.space.key} />,
     }),
     createSurface({
       id: `${CALLS_PLUGIN}/assistant`,
       role: 'complementary--calls',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => <CallsContainer space={data.subject} roomId={data.subject.key} />,
+      component: ({ data }) => <CallsContainer roomId={data.subject.key} />,
     }),
   ]);

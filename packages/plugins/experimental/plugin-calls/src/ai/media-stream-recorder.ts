@@ -11,12 +11,7 @@ import { trace } from '@dxos/tracing';
 
 import { type AudioChunk, AudioRecorder } from './audio-recorder';
 
-/**
- * Initialize the media recorder by registering the WAV encoder.
- */
-export const initializeMediaRecorder = async () => {
-  await register(await connect());
-};
+let wavEncoderInitialized = false;
 
 export type WavMediaRecorderConfig = {};
 
@@ -31,9 +26,9 @@ export class MediaStreamRecorder extends AudioRecorder {
   /**
    * Default MediaRecorder implementation do not support wav encoding.
    */
-  private readonly _mediaRecorder: IMediaRecorder;
   private readonly _interval: number;
-  private _header?: Uint8Array;
+  private _mediaRecorder?: IMediaRecorder = undefined;
+  private _header?: Uint8Array = undefined;
 
   constructor({
     onChunk,
@@ -46,8 +41,6 @@ export class MediaStreamRecorder extends AudioRecorder {
   }) {
     super(onChunk);
     this._mediaStreamTrack = mediaStreamTrack;
-    const stream = new MediaStream([mediaStreamTrack]);
-    this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
     this._interval = interval;
   }
 
@@ -76,6 +69,16 @@ export class MediaStreamRecorder extends AudioRecorder {
   }
 
   async start() {
+    if (!wavEncoderInitialized) {
+      await register(await connect());
+      wavEncoderInitialized = true;
+    }
+
+    if (!this._mediaRecorder) {
+      const stream = new MediaStream([this._mediaStreamTrack]);
+      this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
+    }
+
     if (this._mediaRecorder.state === 'recording') {
       return;
     }
@@ -84,7 +87,7 @@ export class MediaStreamRecorder extends AudioRecorder {
   }
 
   async stop() {
-    if (this._mediaRecorder.state !== 'recording') {
+    if (this._mediaRecorder?.state !== 'recording') {
       return;
     }
     this._mediaRecorder.stop();

@@ -5,7 +5,6 @@
 import React, { type FC } from 'react';
 
 import { type PublicKey } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
 
 import { Call } from './Call';
 import { CallsContextProvider } from './CallsContextProvider';
@@ -18,16 +17,20 @@ const Content = () => {
 };
 
 export type CallsProps = {
-  space: Space;
   roomId: PublicKey;
+
+  /**
+   * DXN of the storybook queue.
+   */
+  storybookQueueDxn?: string;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ space, roomId }) => {
+export const Calls: FC<CallsProps> = ({ roomId, storybookQueueDxn }) => {
   return (
-    <CallsContextProvider space={space} roomId={roomId}>
+    <CallsContextProvider roomId={roomId} storybookQueueDxn={storybookQueueDxn}>
       <Content />
     </CallsContextProvider>
   );

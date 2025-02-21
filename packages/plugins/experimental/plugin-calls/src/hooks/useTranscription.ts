@@ -4,62 +4,49 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
+import { createStatic } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { Filter, updateText, useQuery, type Space } from '@dxos/react-client/echo';
+import { type EdgeHttpClient } from '@dxos/react-edge-client';
+import { useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type AudioRecorder, Transcription, type TranscribedText } from '../ai';
-import { initializeMediaRecorder, MediaStreamRecorder } from '../ai/media-stream-recorder';
+import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
 import { type Ai, type UserMedia } from '../hooks';
-import { type UserState } from '../types';
-import { getTimeStr } from '../utils';
+import { Block, type Segment, type UserState } from '../types';
+
+const PREFIXED_CHUNKS_AMOUNT = 5;
+const RECORD_INTERVAL = 200;
+const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
 export const useTranscription = ({
-  space,
+  edgeClient,
   userMedia,
   identity,
   isSpeaking,
   ai,
 }: {
-  space: Space;
+  edgeClient: EdgeHttpClient;
   userMedia: UserMedia;
   identity: UserState;
   isSpeaking: boolean;
   ai: Ai;
 }) => {
-  const recorder = useRef<AudioRecorder | null>(null);
-  const transcription = useRef<Transcription | null>();
-
-  // Get document.
-  const doc = useQuery(space, Filter.schema(DocumentType, { id: ai.transcription.objectId }))[0];
-  useEffect(() => {
-    if (doc) {
-      doc.content.load().catch((err) => log.catch(err));
-    }
-  }, [doc]);
-
-  // Handle transcription text.
-  const handleTranscriptionText = useCallback(
-    async (text: TranscribedText) => {
-      const time = getTimeStr(text.timestamp);
-      updateText(
-        doc!.content.target!,
-        ['content'],
-        doc!.content.target!.content + `\n   _${time} ${identity!.name}_\n` + text.text,
-      );
-    },
-    [doc],
-  );
-
   // Initialize audio transcription.
-  useAsyncEffect(async () => {
+  const transcription = useRef<Transcriber | null>();
+  const firstRun = useRef(false);
+
+  // Initialize transcription.
+  useEffect(() => {
+    if (!firstRun.current) {
+      firstRun.current = true;
+    }
+
     if (!transcription.current) {
-      await initializeMediaRecorder();
-      transcription.current = new Transcription({ prefixedChunksAmount: 3 });
+      transcription.current = new Transcriber({ prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT });
     }
 
     return () => {
@@ -68,31 +55,48 @@ export const useTranscription = ({
     };
   }, []);
 
+  // Get queue.
+  const queue = useQueue<Block>(
+    edgeClient,
+    ai.transcription.objectDxn ? DXN.parse(ai.transcription.objectDxn) : undefined,
+  );
+
+  // Handle transcription text.
+  const handleSegments = useCallback(
+    async (segments: Segment[]) => {
+      const block = createStatic(Block, {
+        author: identity.name || 'Unknown',
+        segments,
+      });
+      queue?.append([block]);
+    },
+    [queue, identity.name],
+  );
+
   // Set the transcription callback.
   useEffect(() => {
-    transcription.current?.setOnTranscription(handleTranscriptionText);
-  }, [handleTranscriptionText, transcription.current]);
+    transcription.current?.setOnTranscription(handleSegments);
+  }, [handleSegments, transcription.current]);
 
   // Initialize audio recorder.
+  const recorder = useRef<AudioRecorder | null>(null);
   useEffect(() => {
     if (!recorder.current && userMedia.audioTrack && transcription.current) {
       recorder.current = new MediaStreamRecorder({
-        onChunk: (chunk) => transcription.current!.onChunk(chunk),
+        onChunk: (chunk) => transcription.current?.onChunk(chunk),
         mediaStreamTrack: userMedia.audioTrack,
-        interval: 3_00,
+        interval: RECORD_INTERVAL,
       });
-      log.info('setting config', {
-        settings: userMedia.audioTrack.getSettings(),
-      });
-      transcription.current!.setWavConfig({
-        sampleRate: userMedia.audioTrack.getSettings().sampleRate!,
-        bitDepthCode: userMedia.audioTrack.getSettings().sampleSize!.toString(),
-        channels: userMedia.audioTrack.getSettings().channelCount,
+      const settings = userMedia.audioTrack.getSettings();
+      transcription.current.setWavConfig({
+        sampleRate: settings.sampleRate,
+        bitDepthCode: settings.sampleSize ? String(settings.sampleSize) : '16',
+        channels: settings.channelCount,
       });
     }
 
     return () => {
-      recorder.current?.stop();
+      void recorder.current?.stop();
       recorder.current = null;
     };
   }, [userMedia.audioTrack, transcription.current]);
@@ -106,11 +110,11 @@ export const useTranscription = ({
 
     if (!isSpeaking) {
       stopTimeout.current = setTimeout(() => {
-        log.info('stopping recorder');
+        log.info('stopping transcription');
         transcription.current?.stopChunksRecording();
-      }, 1_000);
+      }, STOP_TRANSCRIPTION_TIMEOUT);
     } else {
-      log.info('starting recorder');
+      log.info('starting transcription');
       transcription.current?.startChunksRecording();
       if (stopTimeout.current) {
         clearTimeout(stopTimeout.current);
@@ -127,14 +131,13 @@ export const useTranscription = ({
   }, [isSpeaking, ai.transcription.enabled]);
 
   // Turn transcription on and off.
-  useEffect(() => {
-    if (ai.transcription.enabled) {
-      void transcription.current?.open();
-      void recorder.current?.start();
-    } else {
-      void recorder.current?.stop();
-      transcription.current?.stopChunksRecording();
-      void transcription.current?.close();
+  useAsyncEffect(async () => {
+    if (ai.transcription.enabled && transcription.current && recorder.current) {
+      await transcription.current.open();
+      await recorder.current.start();
+    } else if (!ai.transcription.enabled) {
+      await recorder.current?.stop();
+      await transcription.current?.close();
     }
   }, [ai.transcription.enabled, recorder.current, transcription.current]);
 };

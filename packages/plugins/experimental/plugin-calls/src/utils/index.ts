@@ -7,5 +7,6 @@ export * from './get-screenshare';
 export * from './get-time-str';
 export * from './get-user-media';
 export * from './merge-float-64-array';
+export * from './random-queue-dxn';
 export * from './monitor-audio-level';
 export * from './rxjs-peer';

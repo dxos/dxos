@@ -14,7 +14,7 @@ export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
 
 export type RoomState = buf.MessageInitShape<typeof RoomStateSchema>;
 
-export type Transcription = buf.MessageInitShape<typeof TranscriptionSchema>;
+export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
 
 export const codec = {
   encode: (message: buf.MessageInitShape<typeof UserStateSchema>): Uint8Array =>
