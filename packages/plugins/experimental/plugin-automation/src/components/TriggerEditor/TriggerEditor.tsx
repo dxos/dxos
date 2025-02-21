@@ -61,10 +61,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         ),
         ['meta' as const]: (props) => {
           const meta = props.getValue()!;
-
+          useEffect(() => props.onValueChange('object', { ...meta }), []);
           const [newMetaFieldName, setNewMetaFieldName] = useState('');
-
-          React.useEffect(() => props.onValueChange('object', { ...meta }), []);
 
           return (
             <>

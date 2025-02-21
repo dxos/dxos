@@ -89,6 +89,7 @@ export const Form = <T extends BaseObject>({
       onValid={onValid}
       onSave={onSave}
     >
+      {/* TODO(burdon): Remove padding. */}
       <div role='none' className={mx('p-2', classNames)} data-testid={testId}>
         <FormFields
           schema={schema}

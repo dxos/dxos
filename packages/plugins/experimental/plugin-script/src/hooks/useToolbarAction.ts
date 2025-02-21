@@ -10,7 +10,7 @@ import { type MenuAction, type MenuActionHandler } from '@dxos/react-ui-menu';
 
 import { type DeployActionProperties, useDeployHandler, useCopyHandler } from './deploy';
 import { type FormatActionProperties, useFormatHandler } from './format';
-import { type TemplateActionProperties, useTemplateSelectHandler } from './templateSelect';
+import { type TemplateActionProperties, useTemplateSelectHandler } from './template';
 import { type ScriptToolbarState } from './useToolbarState';
 import { type ViewActionProperties } from './view';
 
