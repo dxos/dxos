@@ -39,7 +39,7 @@ export default async (context: PluginsContext) => {
     (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
   if (identity && !recoveryCredential) {
-    await dispatch(createIntent(ClientAction.CreateRecoveryCode));
+    await manager.setupRecovery();
   }
 
   const devices = client.halo.devices.get();
