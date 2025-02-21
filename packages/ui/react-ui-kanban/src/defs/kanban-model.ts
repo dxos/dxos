@@ -46,7 +46,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._computeArrangement();
   }
 
-  // Main getters/setters
+  get id() {
+    return this._kanban.id;
+  }
+
   get columnFieldPath() {
     const columnFieldId = this._kanban.columnFieldId;
     invariant(columnFieldId);

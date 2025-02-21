@@ -5,6 +5,7 @@
 import React, { type ComponentProps, useMemo } from 'react';
 
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
+import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -20,6 +21,8 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
+  const { select } = useSelectionActions(model.id);
+  const selectedItems = useSelectedItems(model.id);
   // const [namingColumn, setNamingColumn] = useState(false);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
@@ -72,10 +75,17 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames='plb-1 pli-2 drag-preview-p-0'
+                    classNames={'plb-1 pli-2 drag-preview-p-0'}
                     focusIndicatorVariant='group'
+                    onClick={() => select([card.id])}
                   >
-                    <div role='none' className='rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator'>
+                    <div
+                      role='none'
+                      className={mx(
+                        'rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator',
+                        selectedItems.has(card.id) && 'dx-focus-ring',
+                      )}
+                    >
                       <div role='none' className='flex items-center'>
                         <StackItem.DragHandle asChild>
                           <IconButton
@@ -85,6 +95,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             label={t('card drag handle label')}
                           />
                         </StackItem.DragHandle>
+                        <AttentionGlyph attended={selectedItems.has(card.id)} />
                         {onRemoveCard && (
                           <>
                             <span role='separator' className='grow' />
