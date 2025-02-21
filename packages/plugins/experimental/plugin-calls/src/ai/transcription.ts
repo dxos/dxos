@@ -14,26 +14,36 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type AudioChunk } from './audio-recorder';
-import { CALLS_URL } from '../types';
+import { CALLS_URL, type Segment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
-type Word = {
+type WhisperWord = {
   word: string;
+  /**
+   * Time in seconds from the start of the audio.
+   */
   start: number;
+  /**
+   * Time in seconds from the start of the audio.
+   */
   end: number;
 };
 
-type Segment = {
+type WhisperSegment = {
   text: string;
+  /**
+   * Time in seconds from the start of the audio.
+   */
   start: number;
+  /**
+   * Time in seconds from the start of the audio.
+   */
   end: number;
+  /**
+   * Probability of no speech in the segment.
+   */
   no_speech_prob: number;
-  words: Word[];
-};
-
-export type TranscribedText = {
-  timestamp: number;
-  text: string;
+  words: WhisperWord[];
 };
 
 type WavConfig = {
@@ -49,12 +59,12 @@ type WavConfig = {
  */
 export class Transcription extends Resource {
   private _audioChunks: AudioChunk[] = [];
-  private _lastWordEndTimestamp = 0;
+  private _lastUsedTimestamp = 0;
 
   private _recording = false;
   private readonly _transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
   private _config: WavConfig = { channels: 1, sampleRate: 16000, bitDepthCode: '16' };
-  private _onTranscription?: (params: TranscribedText) => Promise<void>;
+  private _onTranscription?: (params: Segment[]) => Promise<void>;
   private readonly _prefixedChunksAmount: number;
 
   constructor({ prefixedChunksAmount }: { prefixedChunksAmount: number }) {
@@ -70,7 +80,7 @@ export class Transcription extends Resource {
     this._config = { ...this._config, ...config };
   }
 
-  setOnTranscription(onTranscription: (params: TranscribedText) => Promise<void>) {
+  setOnTranscription(onTranscription: (params: Segment[]) => Promise<void>) {
     this._onTranscription = onTranscription;
   }
 
@@ -105,12 +115,13 @@ export class Transcription extends Resource {
 
     const audio = await this._mergeAudioChunks(chunks);
     const segments = await this._fetchTranscription(audio);
-    const text = this._getText(
-      segments.flatMap((segment) => segment.words),
-      chunks,
-    );
-    if (text) {
-      await this._onTranscription?.(text);
+    if (!Array.isArray(segments) || segments.length === 0) {
+      return;
+    }
+
+    const alignedSegments = this._alignSegments(segments, chunks);
+    if (alignedSegments.length > 0) {
+      await this._onTranscription?.(alignedSegments);
     }
   }
 
@@ -152,7 +163,7 @@ export class Transcription extends Resource {
     const {
       segments,
     }: {
-      segments: Segment[];
+      segments: WhisperSegment[];
     } = await response.json();
 
     log.info('Transcription response', {
@@ -163,18 +174,28 @@ export class Transcription extends Resource {
     return segments;
   }
 
-  private _getText(words: Word[], originalChunks: AudioChunk[]) {
-    invariant(Array.isArray(words), 'Invalid words');
-    const wordsToUse = words.filter(
-      (segment) => segment.start * 1000 + originalChunks.at(0)!.timestamp > this._lastWordEndTimestamp,
-    );
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): Segment[] {
+    // Absolute zero for all relative timestamps in the segments.
+    const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
-    this._lastWordEndTimestamp = (wordsToUse.at(-1)?.end ?? 0) * 1000 + originalChunks.at(0)!.timestamp;
-    const textToUse = wordsToUse?.map((segment) => segment.word).join(' ');
-    if (textToUse.length === 0) {
-      return;
-    }
+    // Drop segments that end before the last segment end timestamp.
+    const filteredSegments = segments.filter((segment) => zeroTimestamp + segment.end * 1000 > this._lastUsedTimestamp);
 
-    return { timestamp: originalChunks.at(0)!.timestamp, text: textToUse };
+    // Filter words of first segment to use.
+    const firstSegment = {
+      ...filteredSegments.at(0)!,
+      words: filteredSegments
+        .at(0)!
+        .words.filter((word) => zeroTimestamp + word.start * 1000 > this._lastUsedTimestamp),
+    };
+
+    // Update last timestamp.
+    this._lastUsedTimestamp = filteredSegments.at(-1)?.end ?? this._lastUsedTimestamp;
+
+    // Add absolute timestamp to each segment.
+    return [firstSegment, ...filteredSegments.slice(1)].map((segment) => ({
+      text: segment.text,
+      timestamp: new Date(zeroTimestamp + segment.start * 1000),
+    }));
   }
 }
