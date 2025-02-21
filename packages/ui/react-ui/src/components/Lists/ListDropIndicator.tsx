@@ -15,8 +15,10 @@ const edgeToOrientationMap: Record<Edge, Orientation> = {
 };
 
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
-  horizontal: 'h-[--line-thickness] left-[--terminal-radius] right-0 before:left-[--negative-terminal-size]',
-  vertical: 'w-[--line-thickness] top-[--terminal-radius] bottom-0 before:top-[--negative-terminal-size]',
+  horizontal:
+    'h-[--line-thickness] left-[calc(var(--line-inset)+var(--terminal-radius))] right-[--line-inset] before:left-[--terminal-inset]',
+  vertical:
+    'w-[--line-thickness] top-[calc(var(--line-inset)+var(--terminal-radius))] bottom-[--line-inset] before:top-[--terminal-inset]',
 };
 
 const edgeStyles: Record<Edge, HTMLAttributes<HTMLElement>['className']> = {
@@ -33,14 +35,19 @@ const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 export type DropIndicatorProps = {
   edge: Edge;
   gap?: number;
+  terminalInset?: number;
+  lineInset?: number;
 };
 
 /**
  * This is a tailwind port of `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box`
  */
-export const ListDropIndicator = ({ edge, gap = 0 }: DropIndicatorProps) => {
-  const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
-
+export const ListDropIndicator = ({
+  edge,
+  gap = 0,
+  lineInset = 0,
+  terminalInset = lineInset - terminalSize,
+}: DropIndicatorProps) => {
   const orientation = edgeToOrientationMap[edge];
 
   return (
@@ -49,10 +56,11 @@ export const ListDropIndicator = ({ edge, gap = 0 }: DropIndicatorProps) => {
       style={
         {
           '--line-thickness': `${strokeSize}px`,
-          '--line-offset': `${lineOffset}`,
+          '--line-offset': `calc(-0.5 * (${gap}px + ${strokeSize}px))`,
+          '--line-inset': `${lineInset}px`,
           '--terminal-size': `${terminalSize}px`,
           '--terminal-radius': `${terminalSize / 2}px`,
-          '--negative-terminal-size': `-${terminalSize}px`,
+          '--terminal-inset': `${terminalInset}px`,
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
         } as CSSProperties
       }
