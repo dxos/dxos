@@ -11,6 +11,7 @@ import { useConfig } from '@dxos/react-client';
 /**
  * Client for edge services.
  */
+// TODO(mykola): This should be done through client-service RPC.
 export const useEdgeClient = () => {
   const config = useConfig();
   const edgeUrl = config.values.runtime?.services?.edge?.url;
