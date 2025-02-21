@@ -12,7 +12,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Mosaic } from '../../mosaic';
 import { ComplexCard, SimpleCard } from '../../testing';
 import { DemoGrid } from '../Grid/testing';
-import { DemoKanban } from '../Kanban/testing';
 import { DemoStack } from '../Stack/testing';
 import { DemoTree } from '../Tree/testing';
 
@@ -58,23 +57,6 @@ export const Tree = () => (
       </div>
       <div className='flex shrink-0 w-[280px] overflow-hidden bg-neutral-900'>
         <DemoStack id='stack-2' Component={ComplexCard} types={types} debug={debug} />
-      </div>
-    </div>
-  </Mosaic.Root>
-);
-
-export const Kanban = () => (
-  <Mosaic.Root debug={debug}>
-    <Mosaic.DragOverlay />
-    <div className='flex grow overflow-hidden'>
-      <div className='flex shrink-0 w-[280px] overflow-hidden'>
-        <DemoTree id='tree-1' types={types} debug={debug} />
-      </div>
-      <div className='flex grow overflow-hidden'>
-        <DemoKanban id='kanban-1' Component={SimpleCard} debug={debug} classNames='p-4' />
-      </div>
-      <div className='flex shrink-0 w-[280px] overflow-hidden bg-neutral-900 pl-2'>
-        <DemoStack id='stack-1' Component={ComplexCard} types={types} debug={debug} />
       </div>
     </div>
   </Mosaic.Root>

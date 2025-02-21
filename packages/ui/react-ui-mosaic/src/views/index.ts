@@ -3,6 +3,5 @@
 //
 
 export * from './Grid';
-export * from './Kanban';
 export * from './Stack';
 export * from './Tree';
