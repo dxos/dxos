@@ -7,7 +7,7 @@ import { Observable, combineLatest, concat, distinctUntilChanged, map, of, switc
 
 import { log } from '@dxos/log';
 
-import { getDeviceListObservable } from './getDeviceListObservable';
+import { getDeviceListObservable } from './get-device-list-observable';
 
 class DevicesExhaustedError extends Error {
   constructor(message?: string) {

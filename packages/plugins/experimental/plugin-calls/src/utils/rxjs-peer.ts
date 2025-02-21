@@ -24,7 +24,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { BulkRequestDispatcher, FIFOScheduler } from './Peer';
+import { BulkRequestDispatcher, FIFOScheduler } from './util';
 import { type RenegotiationResponse, type TrackObject, type TracksResponse } from '../types';
 
 export type PeerConfig = {

@@ -1,7 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { ObjectId, type HasId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
+
 import type { Queue } from './interface';
 
 type MakeOptions<T> = {

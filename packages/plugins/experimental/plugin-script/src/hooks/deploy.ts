@@ -20,8 +20,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
 import { type ViewState } from './view';
-import { Bundler } from '../../bundler';
-import { SCRIPT_PLUGIN } from '../../meta';
+import { Bundler } from '../bundler';
+import { SCRIPT_PLUGIN } from '../meta';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
 

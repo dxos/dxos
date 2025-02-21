@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 /**
  * Client-side view onto an EDGE queue.
  */

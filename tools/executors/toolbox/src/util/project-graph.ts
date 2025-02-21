@@ -1,6 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { execSync } from 'node:child_process';
-import { loadJson } from './file';
 import { join } from 'node:path';
+
+import { loadJson } from './file';
 
 export type Project = {
   name: string;

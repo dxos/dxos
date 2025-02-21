@@ -72,7 +72,7 @@ export class MixedStreamParser {
      * Current partial block used to accumulate content.
      */
     let streamBlock: StreamBlock | undefined;
-    let stack: StreamBlock[] = [];
+    const stack: StreamBlock[] = [];
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
@@ -301,6 +301,7 @@ export const mergeMessageBlock = (
               json: JSON.stringify({ text: streamBlock.content[0].content }),
             };
           }
+          break;
         }
 
         case 'select': {
@@ -308,15 +309,16 @@ export const mergeMessageBlock = (
             type: 'json',
             disposition: 'select',
             json: JSON.stringify({
-              options: streamBlock.content.flatMap((c) =>
-                c.type === 'tag' && c.content.length === 1 && c.content[0].type === 'text'
-                  ? [c.content[0].content]
+              options: streamBlock.content.flatMap((content) =>
+                content.type === 'tag' && content.content.length === 1 && content.content[0].type === 'text'
+                  ? [content.content[0].content]
                   : [],
               ),
             }),
           };
         }
       }
+
       break;
     }
 
@@ -326,7 +328,7 @@ export const mergeMessageBlock = (
     case 'json': {
       switch (contentBlock.type) {
         case 'tool_use': {
-          return { ...contentBlock, input: safeParseJson(streamBlock.content) ?? '{}' };
+          return { ...contentBlock, input: safeParseJson(streamBlock.content) ?? {} };
         }
       }
 

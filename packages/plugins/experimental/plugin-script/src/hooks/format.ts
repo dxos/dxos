@@ -11,7 +11,7 @@ import { type ScriptType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
-import { SCRIPT_PLUGIN } from '../../meta';
+import { SCRIPT_PLUGIN } from '../meta';
 
 export type FormatActionProperties = { type: 'format' };
 
