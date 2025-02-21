@@ -80,7 +80,9 @@ Include the following steps:
 
 [Your response, using <artifact> tags where necessary.]
 
+{{! 
 [If you have asked a question, use the `suggest`, `option` and `select` tags to suggest responses to the user.]
+}}
 
 {{! Final }}
 
