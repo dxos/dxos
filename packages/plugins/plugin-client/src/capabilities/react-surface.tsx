@@ -18,6 +18,7 @@ import {
   RecoverySetupDialog,
   type RecoveryCodeDialogProps,
 } from '../components';
+import { MANAGE_CREDENTIALS_DIALOG, ManageCredentialsDialog } from '../components/ManageCredentialsDialog';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -47,6 +48,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: RECOVER_SETUP_DIALOG,
       role: 'dialog',
       filter: (data): data is any => data.component === RECOVER_SETUP_DIALOG,
-      component: ({ data }) => <RecoverySetupDialog />,
+      component: () => <RecoverySetupDialog />,
+    }),
+    createSurface({
+      id: MANAGE_CREDENTIALS_DIALOG,
+      role: 'dialog',
+      filter: (data): data is any => data.component === MANAGE_CREDENTIALS_DIALOG,
+      component: () => <ManageCredentialsDialog />,
     }),
   ]);

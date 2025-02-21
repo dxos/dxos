@@ -9,6 +9,7 @@ export default [
     'en-US': {
       [CLIENT_PLUGIN]: {
         'open shell label': 'Open HALO',
+        'manage credentials dialog title': 'Manage Account Recovery',
         'recovery setup dialog title': 'Account Recovery',
         'recovery setup dialog description':
           'In order to recover your account you need to register a recovery credential. Passkeys are the recommended way to do this, they can be stored in your browser or in a password manager.',

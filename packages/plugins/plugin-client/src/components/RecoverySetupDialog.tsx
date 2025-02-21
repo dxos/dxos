@@ -14,7 +14,7 @@ import { ClientAction } from '../types';
 
 export const RECOVER_SETUP_DIALOG = `${CLIENT_PLUGIN}/RecoverySetupDialog`;
 
-// TODO(wittjosiah): Factor out to @dxos/shell.
+// TODO(wittjosiah): Factor panel out to @dxos/shell.
 export const RecoverySetupDialog = () => {
   const { t } = useTranslation(CLIENT_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
