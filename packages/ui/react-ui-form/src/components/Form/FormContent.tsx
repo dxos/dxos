@@ -153,7 +153,7 @@ export const FormFields = ({ schema, path, filter, sort, readonly, lookupCompone
   }, [schema, values, filter, sort]);
 
   return (
-    <div role='form' className={mx('flex flex-col w-full gap-2 py-2')}>
+    <div role='form' className={mx('flex flex-col w-full gap-2')}>
       {properties
         .map((property) => {
           return (
