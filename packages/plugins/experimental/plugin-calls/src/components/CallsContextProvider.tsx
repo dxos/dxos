@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useMemo, type ReactNode, useEffect, type FC, type PropsWithChildren } from 'react';
+import React, { useState, useMemo, type ReactNode, type FC } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { type ThreadType } from '@dxos/plugin-space/types';
 import { useConfig, type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -22,67 +21,30 @@ import {
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
-// Types for loader function response.
-type RoomData = {
-  space: Space;
-  iceServers: RTCIceServer[];
-  feedbackEnabled: boolean;
-  maxWebcamFramerate: number;
-  maxWebcamBitrate: number;
-  maxWebcamQualityLevel: number;
-};
-
 type CallsContextProps = {
   space: Space;
   roomId: PublicKey;
-  thread?: ThreadType;
+  storybookQueueDxn?: string;
   children: ReactNode;
 };
 
 // TODO(burdon): Need to provide global state for plugin and provider.
 // - First create simple plugin context that tracks the current space and roomId.
 
-export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, children }) => {
+export const CallsContextProvider: FC<CallsContextProps> = ({ space, roomId, storybookQueueDxn, children }) => {
   const config = useConfig();
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
-  useEffect(() => {
-    setRoomData({
-      space,
-      iceServers: config.get('runtime.services.ice') ?? [],
-      feedbackEnabled: true,
-      maxWebcamFramerate: 24,
-      maxWebcamBitrate: 120_0000,
-      maxWebcamQualityLevel: 1_080,
-    });
-  }, []);
+  const iceServers = config.get('runtime.services.ice') ?? [];
+  const maxWebcamFramerate = 24;
+  const maxWebcamBitrate = 120_0000;
+  const maxWebcamQualityLevel = 1_080;
 
-  if (!roomData) {
-    return null;
-  }
-
-  return (
-    <Room roomId={roomId!} {...roomData} maxWebcamQualityLevel={720} maxWebcamFramerate={30}>
-      {children}
-    </Room>
-  );
-};
-
-type RoomProps = RoomData & PropsWithChildren<{ roomId: PublicKey }>;
-
-// TODO(burdon): Reconcile with CallsContextProvider.
-const Room: FC<RoomProps> = ({
-  roomId,
-  iceServers,
-  maxWebcamBitrate,
-  maxWebcamFramerate,
-  maxWebcamQualityLevel,
-  space,
-  children,
-}) => {
   const room = useRoom({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
-  const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
+  const { peer, iceConnectionState } = usePeerConnection({
+    iceServers,
+    apiBase: `${CALLS_URL}/api/calls`,
+  });
 
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);
@@ -153,6 +115,8 @@ const Room: FC<RoomProps> = ({
       audio: trackObjectToString(pushedAudioTrack),
       screenshare: trackObjectToString(pushedScreenShareTrack),
     },
+
+    storybookQueueDxn,
   };
 
   return <RoomContext.Provider value={context}>{children}</RoomContext.Provider>;

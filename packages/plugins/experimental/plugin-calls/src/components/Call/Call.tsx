@@ -2,22 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
 import React, { type FC } from 'react';
 
-import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { type ReactiveEchoObject, type Space } from '@dxos/client/echo';
-import { invariant } from '@dxos/invariant';
-import { MarkdownAction } from '@dxos/plugin-markdown/types';
-import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
+import { ObjectId } from '@dxos/echo-schema';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { Toolbar, type ThemedClassName, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
 import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
-import { type Transcription } from '../../types';
-import { getTimeStr } from '../../utils';
+import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 import { ParticipantsLayout } from '../Participant';
 
@@ -32,41 +27,28 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     pushedTracks,
     room: { ai, identity, otherUsers, updateUserState },
     setJoined,
+    storybookQueueDxn,
   } = useRoomContext()!;
 
   // Broadcast status over swarm.
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
 
-  // Create document.
-  // TODO(burdon): Change to queue.
-  const { dispatchPromise } = useIntentDispatcher();
-  const transcriptionFolder = space.properties[CollectionType.typename]?.target;
-  const createTranscriptionDocument = async (space: Space): Promise<ReactiveEchoObject<DocumentType>> => {
-    const result = await dispatchPromise(
-      pipe(
-        createIntent(MarkdownAction.Create, { name: 'Transcription ' + getTimeStr() }),
-        chain(SpaceAction.AddObject, { target: transcriptionFolder }),
-      ),
-    );
-
-    invariant(result.data, 'Failed to create document');
-    const { object } = result.data;
-    return object as ReactiveEchoObject<DocumentType>; // TODO(burdon): Is this right?
-  };
-
   // Transcription.
   useTranscription({ space, userMedia, identity, isSpeaking, ai });
   const handleToggleTranscription = async () => {
-    const transcription: Transcription = {
+    const transcription: TranscriptionState = {
       ...ai.transcription,
       enabled: !ai.transcription.enabled,
       lamportTimestamp: ai.transcription.lamportTimestamp! + 1,
     };
 
     // Check not already running.
-    if (!ai.transcription.enabled && !ai.transcription.objectId) {
-      const document = await createTranscriptionDocument(space);
-      ai.transcription.objectId = document.id;
+    if (!ai.transcription.enabled && !ai.transcription.objectDxn) {
+      // Create queue DXN.
+      const dxn = storybookQueueDxn
+        ? DXN.parse(storybookQueueDxn)
+        : new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space!.id, ObjectId.random()]);
+      ai.transcription.objectDxn = dxn.toString();
     }
 
     ai.setTranscription(transcription);
@@ -98,7 +80,6 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
           />
           <div className='grow'></div>
           <IconButton
-            disabled={!transcriptionFolder}
             icon={ai.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
             label={ai.transcription.enabled ? 'Start transcription' : 'Stop transcription'}
             onClick={handleToggleTranscription}

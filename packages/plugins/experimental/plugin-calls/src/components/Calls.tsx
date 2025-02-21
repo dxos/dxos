@@ -20,14 +20,19 @@ const Content = () => {
 export type CallsProps = {
   space: Space;
   roomId: PublicKey;
+
+  /**
+   * DXN of the storybook queue.
+   */
+  storybookQueueDxn?: string;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ space, roomId }) => {
+export const Calls: FC<CallsProps> = ({ space, roomId, storybookQueueDxn }) => {
   return (
-    <CallsContextProvider space={space} roomId={roomId}>
+    <CallsContextProvider space={space} roomId={roomId} storybookQueueDxn={storybookQueueDxn}>
       <Content />
     </CallsContextProvider>
   );
