@@ -1,0 +1,125 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import '@dxos-theme';
+
+import React, { useCallback } from 'react';
+
+import { Config, PublicKey } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
+import { Button } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/storybook-utils';
+
+import { useCredentials } from './useCredentials';
+import { useIdentity } from './useIdentity';
+import { useClient } from '../client';
+import { withClientProvider } from '../testing';
+
+const getNewChallenge = () => Math.random().toString(36).substring(2);
+
+const Test = () => {
+  const client = useClient();
+  const identity = useIdentity();
+  const credentials = useCredentials();
+
+  const handleCreateIdentity = useCallback(() => client.halo.createIdentity(), [client]);
+  // TODO(wittjosiah): Consider factoring out passkey creation to the halo api.
+  const handleCreatePassKey = useCallback(async () => {
+    invariant(identity, 'Identity not available');
+    const challenge = getNewChallenge();
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: new TextEncoder().encode(challenge),
+        rp: { id: 'localhost', name: 'Test' },
+        user: {
+          id: new TextEncoder().encode(identity.did),
+          name: identity.did,
+          displayName: identity.profile?.displayName ?? '',
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -8 }, // Ed25519 (not yet supported across all browsers)
+          { type: 'public-key', alg: -7 }, // ES256
+        ],
+      },
+    });
+
+    invariant(credential, 'Credential not available');
+    const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
+    const algorithm: number = (credential as any).response.getPublicKeyAlgorithm();
+
+    invariant(client.services.services.IdentityService, 'IdentityService not available');
+    // TODO(wittjosiah): This needs a proper api.
+    await client.services.services.IdentityService.createRecoveryCredential({
+      recoveryKey,
+      algorithm,
+    });
+  }, [client, identity]);
+
+  const handleAuthenticate = useCallback(async () => {
+    // TODO(wittjosiah): This should come from edge.
+    const challenge = getNewChallenge();
+    const credential = await navigator.credentials.get({
+      publicKey: {
+        challenge: new TextEncoder().encode(challenge),
+        rpId: 'localhost',
+        // NOTE: Don't prompt for password in storybook for test purposes.
+        //   In practice, this should be set to 'required' for identity recovery.
+        userVerification: 'discouraged',
+      },
+    });
+    const did = new TextDecoder().decode((credential as any).response.userHandle);
+    console.log({ credential, did });
+    // TODO(wittjosiah): Send signature to edge for verification and admission.
+  }, []);
+
+  return (
+    <>
+      <div className='mbe-4 flex gap-2'>
+        <Button disabled={!!identity} onClick={handleCreateIdentity}>
+          Create Identity
+        </Button>
+        <Button disabled={!identity} onClick={handleCreatePassKey}>
+          Create Passkey
+        </Button>
+        <Button disabled={!!identity} onClick={handleAuthenticate}>
+          Authenticate with Passkey
+        </Button>
+      </div>
+      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded'>
+        <SyntaxHighlighter language='json'>
+          {JSON.stringify({ identity, credentials: credentials.length }, null, 2)}
+        </SyntaxHighlighter>
+      </div>
+    </>
+  );
+};
+
+export default {
+  title: 'sdk/react-client/Passkeys',
+  render: Test,
+};
+
+const config = new Config({
+  runtime: {
+    client: {
+      edgeFeatures: {
+        agents: true,
+        echoReplicator: true,
+        feedReplicator: true,
+        signaling: true,
+      },
+    },
+    services: {
+      edge: {
+        url: 'wss://edge.dxos.workers.dev/',
+      },
+      iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+    },
+  },
+});
+
+export const Default = {
+  decorators: [withClientProvider({ config }), withTheme],
+};

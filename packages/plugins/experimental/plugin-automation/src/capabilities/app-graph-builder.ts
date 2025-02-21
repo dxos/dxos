@@ -16,6 +16,37 @@ export default (context: PluginsContext) => {
 
   return contributes(Capabilities.AppGraphBuilder, [
     createExtension({
+      id: `${AUTOMATION_PLUGIN}/service-registry`,
+      resolver: ({ id }) => {
+        if (!id.endsWith('~service-registry')) {
+          return;
+        }
+
+        const type = 'orphan-settings-for-subject';
+        const icon = 'ph--plugs--regular';
+
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const [subjectId] = id.split('~');
+        const { spaceId } = parseId(subjectId);
+        const spaces = toSignal(
+          (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+          () => client.spaces.get(),
+        );
+        const space = spaces?.find((space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY);
+        return {
+          id,
+          type,
+          data: null,
+          properties: {
+            icon,
+            label: ['service registry label', { ns: AUTOMATION_PLUGIN }],
+            object: null,
+            space,
+          },
+        };
+      },
+    }),
+    createExtension({
       id: `${AUTOMATION_PLUGIN}/automation-for-subject`,
       resolver: ({ id }) => {
         if (!id.endsWith('~automation')) {
@@ -72,6 +103,50 @@ export default (context: PluginsContext) => {
           properties: {
             icon,
             label,
+            object,
+          },
+        };
+      },
+    }),
+    createExtension({
+      id: `${AUTOMATION_PLUGIN}/assistant-for-subject`,
+      resolver: ({ id }) => {
+        if (!id.endsWith('~assistant')) {
+          return;
+        }
+
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const [subjectId] = id.split('~');
+        const { spaceId, objectId } = parseId(subjectId);
+        const spaces = toSignal(
+          (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+          () => client.spaces.get(),
+        );
+        const space = spaces?.find((space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY);
+        if (!objectId) {
+          // TODO(wittjosiah): Support assistant for arbitrary subjects.
+          //   This is to ensure that the assistant panel is not stuck on an old object.
+          return {
+            id,
+            type: 'orphan-automation-for-subject',
+            data: null,
+            properties: {
+              icon: 'ph--atom--regular',
+              label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
+              object: null,
+              space,
+            },
+          };
+        }
+
+        const [object] = memoizeQuery(space, { id: objectId });
+        return {
+          id,
+          type: 'orphan-automation-for-subject',
+          data: null,
+          properties: {
+            icon: 'ph--atom--regular',
+            label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
             object,
           },
         };

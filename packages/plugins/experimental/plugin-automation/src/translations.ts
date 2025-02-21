@@ -23,6 +23,7 @@ export default [
         'select preset template placeholder': 'Select preset',
         'open automation panel label': 'Show Automations',
         'automation panel label': 'Automations',
+        'service registry label': 'Service Registry',
 
         'chat input placeholder': 'Ask a question...',
         'chat stop': 'Cancel request.',

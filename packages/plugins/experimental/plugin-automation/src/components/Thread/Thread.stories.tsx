@@ -185,6 +185,6 @@ export const Incremental: Story = {
       return () => clearInterval(interval);
     }, []);
 
-    return <Render messages={messages} />;
+    return <Render messages={messages} collapse />;
   },
 };

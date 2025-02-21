@@ -4,31 +4,23 @@
 
 import { useState } from 'react';
 
-import { log } from '@dxos/log';
-
-import { type Transcription } from '../types';
+import { type TranscriptionState } from '../types';
 
 export type Ai = {
-  transcription: Transcription;
-  setTranscription: (transcription: Transcription) => void;
+  transcription: TranscriptionState;
+  setTranscription: (transcription: TranscriptionState) => void;
 };
 
-export const useAi = (): Ai => {
-  const [transcription, setTranscription] = useState<Transcription>({
+export const useAi = ({ storybookQueueDxn }: { storybookQueueDxn?: string }): Ai => {
+  const [transcription, setTranscription] = useState<TranscriptionState>({
     enabled: false,
     lamportTimestamp: 0,
+    objectDxn: storybookQueueDxn,
   });
 
   return {
     transcription,
-    setTranscription: (newTranscription: Transcription) => {
-      log.info('>>> setTranscription', {
-        transcription: {
-          ...transcription,
-          ...newTranscription,
-          lamportTimestamp: newTranscription.lamportTimestamp ?? transcription.lamportTimestamp! + 1,
-        },
-      });
+    setTranscription: (newTranscription: TranscriptionState) => {
       setTranscription({
         ...transcription,
         ...newTranscription,

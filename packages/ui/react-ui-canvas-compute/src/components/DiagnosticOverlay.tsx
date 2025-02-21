@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import React from 'react';
 
 import type { GraphDiagnostic } from '@dxos/conductor';

@@ -226,9 +226,6 @@
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
     },
     {
-      "path": "packages/experimental/agent-functions/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/artifact/tsconfig.json"
     },
     {

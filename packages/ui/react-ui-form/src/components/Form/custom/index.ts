@@ -3,4 +3,5 @@
 //
 
 export * from './GeoPointInput';
+export * from './SelectOptionsInput';
 export * from './TupleInput';

@@ -16,12 +16,12 @@ export default () =>
       intent: CanvasAction.Create,
       resolve: ({ name }) => ({
         data: {
-        object: create(CanvasBoardType, {
-          name,
-          computeGraph: makeRef(create(ComputeGraph, { graph: { nodes: [], edges: [] } })),
-          layout: { nodes: [], edges: [] },
-        }),
-      },
+          object: create(CanvasBoardType, {
+            name,
+            computeGraph: makeRef(create(ComputeGraph, { graph: { nodes: [], edges: [] } })),
+            layout: { nodes: [], edges: [] },
+          }),
+        },
       }),
     }),
   );

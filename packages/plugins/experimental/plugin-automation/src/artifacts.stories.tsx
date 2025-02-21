@@ -5,20 +5,13 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Tool, type Message } from '@dxos/artifact';
-import {
-  capabilities,
-  genericTools,
-  localServiceEndpoints,
-  type ArtifactsContext,
-  type IsObject,
-} from '@dxos/artifact-testing';
+import { Message, type Tool } from '@dxos/artifact';
+import { capabilities, genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
-import { create } from '@dxos/client/echo';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -28,9 +21,10 @@ import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
 import { useQueue } from '@dxos/react-edge-client';
-import { Button, IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
@@ -78,22 +72,26 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
   const queue = useQueue<Message>(edgeClient, DXN.tryParse(queueDxn));
 
-  // Artifacts.
-  // TODO(burdon): Factor out class.
-  const [artifactsContext] = useState(() =>
-    create<ArtifactsContext>({
-      items: _items ?? [],
-      getArtifacts() {
-        return this.items;
-      },
-      addArtifact(artifact) {
-        this.items.push(artifact);
-      },
-    }),
-  );
+  useEffect(() => {
+    if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
+      queue.append([
+        createStatic(Message, {
+          role: 'assistant',
+          content: prompts.map(
+            (prompt) =>
+              ({
+                type: 'json',
+                disposition: 'suggest',
+                json: JSON.stringify({ text: prompt }),
+              }) as const,
+          ),
+        }),
+      ]);
+    }
+  }, [queueDxn, prompts, queue?.items.length, queue?.isLoading]);
 
   // State.
-  const artifactItems = artifactsContext.items.toReversed();
+  const artifactItems: any[] = []; // TODO(burdon): Query from space.
   const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
 
   const handleSubmit = processor
@@ -113,11 +111,20 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
       }
     : undefined;
 
-  const [prompt, setPrompt] = useState(0);
-  const handleTest = useCallback(() => {
-    void handleSubmit?.(prompts[prompt]);
-    setPrompt((prormpt) => (prormpt < prompts.length - 1 ? prormpt + 1 : 0));
-  }, [handleSubmit, prompt]);
+  const handleSuggest = useCallback(
+    (text: string) => {
+      void handleSubmit?.(text);
+    },
+    [handleSubmit],
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      invariant(ObjectId.isValid(id), 'Invalid message id');
+      void queue?.delete([id]);
+    },
+    [queue],
+  );
 
   return (
     <div className='grid grid-cols-2 w-full h-full divide-x divide-separator overflow-hidden'>
@@ -129,7 +136,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               spellCheck={false}
               placeholder='Queue DXN'
               value={queueDxn}
-              onClick={() => setQueueDxn('')}
+              // onClick={() => setQueueDxn('')} Why?????
               onChange={(ev) => setQueueDxn(ev.target.value)}
             />
             <IconButton
@@ -145,7 +152,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               onClick={() => setQueueDxn(randomQueueDxn())}
             />
             <IconButton iconOnly label='Stop' icon='ph--stop--regular' onClick={() => processor?.cancel()} />
-            {processor && prompts.length > 0 && <Button onClick={handleTest}>Test</Button>}
           </Input.Root>
         </Toolbar.Root>
 
@@ -153,6 +159,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
           messages={messages}
           streaming={processor?.streaming.value}
           onSubmit={processor ? handleSubmit : undefined}
+          onSuggest={processor ? handleSuggest : undefined}
+          onDelete={processor ? handleDelete : undefined}
           {...props}
         />
       </div>
@@ -198,6 +206,7 @@ const meta: Meta<typeof Render> = {
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
+        TablePlugin(),
       ],
       capabilities,
     }),
@@ -216,7 +225,7 @@ type Story = StoryObj<typeof Render>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['hello', 'show me a chess puzzle'],
+    prompts: ['Ask me a question', 'Show me a chess puzzle'],
   },
 };
 

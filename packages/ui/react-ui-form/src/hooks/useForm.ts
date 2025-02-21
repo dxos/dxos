@@ -104,7 +104,6 @@ export const useForm = <T extends BaseObject>({
   // Validation.
   //
 
-  // TODO(burdon): Validate each property separately.
   const validate = useCallback(
     (values: Partial<T>): values is T => {
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];

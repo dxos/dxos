@@ -2,132 +2,91 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, Fragment, useEffect, useState } from 'react';
-import { Flipper } from 'react-flip-toolkit';
-import { useMount } from 'react-use';
+import React, { type FC } from 'react';
 
-import { Button, Icon, Toolbar, type ThemedClassName } from '@dxos/react-ui';
+import { useEdgeClient } from '@dxos/react-edge-client';
+import { Toolbar, type ThemedClassName, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { PullVideoTrack } from './PullVideoTrack';
-import { Transcription } from './Transcription';
-import { useRoomContext, useBroadcastStatus } from '../../hooks';
-import { Participant } from '../Participant';
-import { CameraButton, MicButton, TranscriptionButton } from '../Video';
+import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
+import { type TranscriptionState } from '../../types';
+import { randomQueueDxn } from '../../utils';
+import { MediaButtons } from '../Media';
+import { ParticipantsLayout } from '../Participant';
 
-// TODO(burdon): Factor out.
-export const useDebugEnabled = () => {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const handler = (ev: KeyboardEvent) => {
-      if (ev.key.toLowerCase() === 'd' && ev.ctrlKey) {
-        ev.preventDefault();
-        setEnabled(!enabled);
-      }
-    };
-
-    document.addEventListener('keypress', handler);
-    return () => {
-      document.removeEventListener('keypress', handler);
-    };
-  }, [enabled]);
-
-  return enabled;
-};
-
+// TODO(burdon): Translations.
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
-  const debugEnabled = useDebugEnabled();
+  const debugEnabled = useDebugMode();
   const {
-    space,
     userMedia,
     peer,
-    dataSaverMode,
+    isSpeaking,
     pushedTracks,
+    room: { ai, identity, otherUsers, updateUserState },
     setJoined,
-    room: { otherUsers, updateUserState, identity, ai },
   } = useRoomContext()!;
 
-  useMount(() => {
-    // TODO(burdon): ???
-    if (otherUsers.length > 5) {
-      userMedia.turnMicOff();
-    }
-  });
+  // Broadcast status over swarm.
+  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
 
-  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai });
-  const [pinnedId, setPinnedId] = useState<string>();
-  const totalUsers = 1 + otherUsers.length;
+  // Transcription.
+  const edgeClient = useEdgeClient();
+  useTranscription({ userMedia, identity, isSpeaking, ai, edgeClient });
+  const handleToggleTranscription = async () => {
+    const transcription: TranscriptionState = {
+      enabled: !ai.transcription.enabled,
+      lamportTimestamp: ai.transcription.lamportTimestamp! + 1,
+    };
+
+    // Check not already running.
+    if (!ai.transcription.enabled && !ai.transcription.objectDxn) {
+      // Create queue DXN.
+      ai.transcription.objectDxn = randomQueueDxn().toString();
+    }
+
+    ai.setTranscription(transcription);
+  };
+
+  // Screen sharing.
+  const otherUserIsSharing = otherUsers.some((user) => user.tracks?.screenshare);
+  const sharing = userMedia.screenShareVideoTrack !== undefined;
+  const canShareScreen =
+    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
-      {ai.transcription.enabled && <Transcription space={space} userMedia={userMedia} identity={identity} ai={ai} />}
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-        {/* https://github.com/aholachek/react-flip-toolkit */}
-        <Flipper flipKey={totalUsers} className='flex flex-col h-full overflow-y-scroll'>
-          <div className='flex flex-col gap-1'>
-            {identity && userMedia.audioTrack && (
-              <Participant
-                isSelf
-                flipId={identity.id!}
-                user={identity}
-                videoTrack={userMedia.videoTrack}
-                audioTrack={userMedia.audioTrack}
-                pinnedId={pinnedId}
-                setPinnedId={setPinnedId}
-                showDebugInfo={debugEnabled}
-              />
-            )}
-
-            {otherUsers.map((user) => {
-              return (
-                user.joined && (
-                  <Fragment key={user.id}>
-                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks?.video} audio={user.tracks?.audio}>
-                      {({ videoTrack, audioTrack }) => (
-                        <Participant
-                          flipId={user.id!}
-                          user={user}
-                          videoTrack={videoTrack}
-                          audioTrack={audioTrack}
-                          pinnedId={pinnedId}
-                          setPinnedId={setPinnedId}
-                          showDebugInfo={debugEnabled}
-                        />
-                      )}
-                    </PullVideoTrack>
-
-                    {user.tracks?.screenShareEnabled && user.tracks?.screenshare && (
-                      <PullVideoTrack video={user.tracks?.screenshare}>
-                        {({ videoTrack }) => (
-                          <Participant
-                            isScreenShare
-                            flipId={user.id! + '_screenshare'}
-                            user={user}
-                            videoTrack={videoTrack}
-                            pinnedId={pinnedId}
-                            setPinnedId={setPinnedId}
-                            showDebugInfo={debugEnabled}
-                          />
-                        )}
-                      </PullVideoTrack>
-                    )}
-                  </Fragment>
-                )
-              );
-            })}
-          </div>
-        </Flipper>
+        <div className='flex flex-col h-full overflow-y-scroll'>
+          <ParticipantsLayout identity={identity} users={otherUsers} debugEnabled={debugEnabled} />
+        </div>
 
         <Toolbar.Root>
-          <Button variant='destructive' onClick={() => setJoined(false)}>
-            <Icon icon={'ph--phone-x--regular'} />
-          </Button>
+          <IconButton
+            variant='destructive'
+            label='Leave'
+            onClick={() => {
+              userMedia.turnScreenShareOff();
+              setJoined(false);
+            }}
+            icon='ph--phone-x--regular'
+          />
           <div className='grow'></div>
-          <TranscriptionButton />
-          <MicButton />
-          <CameraButton />
+          <IconButton
+            icon={ai.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
+            label={ai.transcription.enabled ? 'Start transcription' : 'Stop transcription'}
+            onClick={handleToggleTranscription}
+            iconOnly
+          />
+          <IconButton
+            disabled={!canShareScreen || otherUserIsSharing}
+            icon={sharing ? 'ph--selection--regular' : 'ph--selection-slash--regular'}
+            label={sharing ? 'Screenshare' : 'Screenshare Off'}
+            onClick={sharing ? userMedia.turnScreenShareOff : userMedia.turnScreenShareOn}
+            iconOnly
+          />
+          <MediaButtons userMedia={userMedia} />
         </Toolbar.Root>
       </div>
     </PullAudioTracks>

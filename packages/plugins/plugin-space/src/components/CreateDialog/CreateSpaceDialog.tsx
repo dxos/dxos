@@ -38,7 +38,7 @@ export const CreateSpaceDialog = () => {
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
-    <Dialog.Content classNames='p-0 bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
+    <Dialog.Content classNames='p-0 bs-content min-bs-[16rem] max-bs-full md:max-is-[32rem] overflow-hidden'>
       <div role='none' className='flex justify-between pbs-2 pis-2 pie-2 @md:pbs-4 @md:pis-4 @md:pie-4'>
         <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
@@ -48,7 +48,14 @@ export const CreateSpaceDialog = () => {
         </Dialog.Close>
       </div>
       <div className='p-4'>
-        <Form testId='create-space-form' values={initialValues} schema={SpaceForm} onSave={handleCreateSpace} />
+        <Form
+          testId='create-space-form'
+          classNames='!p-0'
+          autoFocus
+          values={initialValues}
+          schema={SpaceForm}
+          onSave={handleCreateSpace}
+        />
       </div>
     </Dialog.Content>
   );

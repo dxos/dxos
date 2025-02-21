@@ -17,11 +17,7 @@
 
   /* Used to style elements which are _related_ to the currently attended element. */
   .current-related[aria-current] {
-    /*
-      NOTE(wittjosiah): Current these colors are the same, but they could be different.
-        If they are different, a background transition is likely required to avoid flashing.
-    */
-    --surface-bg: var(--dx-currentRelated);
+    --surface-bg: var(--dx-attention);
     &:focus-within {
       --surface-bg: var(--dx-attention);
     }

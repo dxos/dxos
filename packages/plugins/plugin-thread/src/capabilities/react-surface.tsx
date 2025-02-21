@@ -7,6 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { type Ref } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
+import { log } from '@dxos/log';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -24,7 +25,12 @@ export default () =>
       component: ({ data, role }) => {
         const layout = useLayout();
         const channel = data.subject;
-        const thread = channel.threads[0].target!;
+        void channel.threads[0].load();
+        const thread = channel.threads[0].target;
+        if (!thread) {
+          return null;
+        }
+        log.info('thread', { thread });
         const currentPosition = layout.active.findIndex((id) => id === channel.id);
         if (currentPosition > 0) {
           const objectToTheLeft = layout.active[currentPosition - 1];

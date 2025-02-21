@@ -11,7 +11,7 @@ import { RefArray } from '@dxos/react-client/echo';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { AutomationAction, ChainPromptType, ChainType, AIChatType } from './types';
+import { AutomationAction, ChainPromptType, ChainType, AIChatType, ServiceType } from './types';
 
 // TODO(wittjosiah): Rename to AssistantPlugin?
 export const AutomationPlugin = () =>
@@ -53,7 +53,7 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger]),
+        contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger, ServiceType]),
         contributes(ClientCapabilities.Schema, [AIChatType]),
       ],
     }),
@@ -61,6 +61,11 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/complementary-panels`,
       activatesOn: Events.Startup,
       activate: () => [
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'service-registry',
+          label: ['service registry label', { ns: AUTOMATION_PLUGIN }],
+          icon: 'ph--plugs--regular',
+        }),
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'automation',
           label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],

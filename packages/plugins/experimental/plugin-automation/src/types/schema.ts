@@ -102,9 +102,28 @@ const ServiceInterfaceApi = S.Struct({
 const ServiceInterface = S.Union(ServiceInterfaceFunction, ServiceInterfaceWorkflow, ServiceInterfaceApi);
 export type ServiceInterface = S.Schema.Type<typeof ServiceInterface>;
 
-export class ServiceType extends TypedObject({ typename: 'dxos.org/type/Service', version: '0.1.0' })({
+// export const ServiceType = S.Struct({
+//   serviceId: S.String,
+//   name: S.optional(S.String),
+//   description: S.optional(S.String),
+//   category: S.optional(S.String),
+//   enabled: S.optional(S.Boolean),
+
+//   /**
+//    * Entries exposed: functions, workflows, and APIs.
+//    */
+//   interfaces: S.optional(S.Array(ServiceInterface)),
+// }).pipe(EchoObject('dxos.org/type/Service', '0.1.0'));
+// dxn:type:dxos.org/type/Service
+
+// export type ServiceType = S.Schema.Type<typeof ServiceType>;
+
+export class ServiceType extends TypedObject({ typename: 'dxos.org/type/ServiceType', version: '0.1.0' })({
+  serviceId: S.String,
   name: S.optional(S.String),
   description: S.optional(S.String),
+  category: S.optional(S.String),
+  enabled: S.optional(S.Boolean),
 
   /**
    * Entries exposed: functions, workflows, and APIs.

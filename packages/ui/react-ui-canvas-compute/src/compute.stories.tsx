@@ -19,6 +19,7 @@ import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
 import { type ComputeGraphController } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
@@ -36,7 +37,6 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
-import { DiagnosticOverlay } from './components';
 
 // const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 
@@ -175,7 +175,7 @@ const Render = ({
             {...props}
           >
             <Editor.Canvas>{children}</Editor.Canvas>
-            <Editor.UI />
+            <Editor.UI showTools />
           </Editor.Root>
           <DiagnosticOverlay diagnostics={diagnostics} />
         </Container>

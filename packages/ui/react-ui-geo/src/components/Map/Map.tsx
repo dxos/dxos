@@ -39,7 +39,7 @@ type MapRootProps = ThemedClassName<MapContainerProps>;
 const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
   return (
     <MapContainer
-      className={mx('relative flex w-full h-full grow bg-base', classNames)}
+      className={mx('relative flex w-full h-full grow bg-baseSurface', classNames)}
       attributionControl={false}
       // TODO(burdon): Only if attention.
       scrollWheelZoom={true}
@@ -119,7 +119,7 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(
     }, [markers]);
 
     return (
-      <div ref={ref} className='flex w-full h-full overflow-hidden bg-base'>
+      <div ref={ref} className='flex w-full h-full overflow-hidden bg-baseSurface'>
         {/* Map tiles. */}
         <TileLayer
           className='dark:filter dark:grayscale dark:invert'

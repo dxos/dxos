@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { createStatic } from './create';
 import { getTypename } from './typename';
 import { getSchema } from '../ast';
-import { Contact } from '../testing/schema';
+import { Contact } from '../testing';
 import { getSchemaDXN, isInstanceOf } from '../types';
 
 describe('create (static version)', () => {

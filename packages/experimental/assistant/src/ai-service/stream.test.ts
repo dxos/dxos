@@ -21,11 +21,6 @@ const TEST_BLOCKS = [
     'on multiple lines.',
 
     // XML
-    '<select>',
-    '  <option value="1" />',
-    '</select>',
-
-    // XML
     '<cot>',
     '  1. Analyze content.',
     '  2. Create plan.',
@@ -43,6 +38,10 @@ const TEST_BLOCKS = [
 
     // Text
     'and some more text.',
+
+    '<suggest>Plan me a trip to the Rio.</suggest>',
+    '<suggest>Show me steak recipes.</suggest>',
+    '<select><option>Yes</option><option>No</option></select>',
   ].join('\n'),
 
   // JSON
@@ -78,17 +77,23 @@ describe('GenerationStream', () => {
 
       await parser.parse(stream);
 
-      log('blocks', { message });
+      for (const block of message?.content ?? []) {
+        log.info('block', { block });
+      }
       expect(message?.content.map((block) => block.type)).to.deep.eq([
         //
         'text',
         'text',
         'text',
+        'json',
+        'text',
+        'json',
         'text',
         'json',
         'text',
         'json',
         'text',
+        'json',
         'json',
       ]);
     });

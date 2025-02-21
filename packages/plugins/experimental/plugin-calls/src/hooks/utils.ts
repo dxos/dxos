@@ -5,6 +5,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BehaviorSubject, type Observable } from 'rxjs';
 
+// TODO(burdon): Replace rxjs with preact?
+
 /**
  * Returns a stable reference to a POJO that might be created on every new render.
  */

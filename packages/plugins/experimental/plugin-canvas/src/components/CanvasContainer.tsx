@@ -104,13 +104,13 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
           <Editor.Root
             id={id}
             ref={editorRef}
-            registry={registry}
             graph={graph}
             graphMonitor={graphMonitor as any}
+            registry={registry}
             layout={layout}
           >
             <Editor.Canvas />
-            <Editor.UI />
+            <Editor.UI showTools />
           </Editor.Root>
         </KeyboardContainer>
       </StackItem.Content>

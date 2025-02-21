@@ -19,6 +19,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",

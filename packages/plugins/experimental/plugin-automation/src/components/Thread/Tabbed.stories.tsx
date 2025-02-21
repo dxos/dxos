@@ -35,7 +35,7 @@ export const Default: Story = {
       <div className='flex flex-col w-[500px] p-4 bg-attention'>
         <ToggleContainer
           title={content[selected].title}
-          classNames='p-1 rounded-lg bg-base border border-neutral-500'
+          classNames='p-1 rounded-lg bg-baseSurface border border-neutral-500'
           toggle
           defaultOpen
         >

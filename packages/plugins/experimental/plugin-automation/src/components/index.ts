@@ -4,8 +4,11 @@
 
 import { lazy } from 'react';
 
+export * from './AutomationPanel';
+export * from './ChatContainer';
 export * from './MarkdownViewer';
 export * from './PromptEditor';
+export * from './ServiceRegistry';
 export * from './Thread';
 export * from './TriggerEditor';
 

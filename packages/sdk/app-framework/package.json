@@ -40,32 +40,29 @@
     "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
-    "@phosphor-icons/react": "^2.1.5",
     "@preact/signals-core": "^1.6.0",
     "effect": "^3.12.3"
   },
   "devDependencies": {
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "react": "~18.2.0"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0"
   },
   "publishConfig": {

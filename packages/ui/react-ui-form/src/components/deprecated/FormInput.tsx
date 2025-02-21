@@ -4,16 +4,16 @@
 
 import React, { type JSX, type PropsWithChildren } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 
 /**
  * @deprecated
  */
-export const DeprecatedFormContainer = ({ children }: PropsWithChildren) => {
+export const DeprecatedFormContainer = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => {
   return (
-    <div role='none' className='p-4 justify-center overflow-x-hidden overflow-y-auto'>
-      <div role='form' className={mx(textBlockWidth)}>
+    <div role='none' className='w-full p-4 justify-center overflow-x-hidden overflow-y-auto'>
+      <div role='form' className={mx('flex flex-col', textBlockWidth, classNames)}>
         {children}
       </div>
     </div>

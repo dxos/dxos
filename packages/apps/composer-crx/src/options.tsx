@@ -15,7 +15,7 @@ import { Options } from './components';
 const Root = () => {
   return (
     <ThemeProvider tx={defaultTx} themeMode='dark'>
-      <div className='absolute inset-0 flex justify-center overflow-hidden dark bg-base'>
+      <div className='absolute inset-0 flex justify-center overflow-hidden dark bg-baseSurface'>
         <div className='flex flex-col overflow-y-auto max-w-[640px] w-full'>
           <Options />
         </div>

@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,10 +14,15 @@ import { Tools, Toolbar } from '../Toolbar';
 import { type TestId } from '../defs';
 import { eventsAuto, eventsNone } from '../styles';
 
+export type UIProps = ThemedClassName<{
+  showTools?: boolean;
+  showToolbar?: boolean;
+}>;
+
 /**
  * UI components.
  */
-export const UI = () => {
+export const UI = ({ showTools, showToolbar }: UIProps) => {
   const { debug, registry, dragMonitor, graph, showGrid, snapToGrid, selection, actionHandler } = useEditorContext();
   const dragging = dragMonitor.state().value;
   const info = {
@@ -36,27 +42,32 @@ export const UI = () => {
       <div>
         <div className='absolute top-2 left-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
       </div>
-      <div>
+      {showTools && (
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
           <Tools classNames={mx(eventsAuto)} registry={registry} />
         </div>
-      </div>
+      )}
+
       <div>
         <div className='absolute bottom-2 left-2'>
           {debug && (
             <SyntaxHighlighter
               language='javascript'
-              classNames={mx('w-[300px] bg-base rounded-md bg-base border border-separator text-xs p-2 opacity-70')}
+              classNames={mx(
+                'w-[300px] bg-baseSurface rounded-md bg-base border border-separator text-xs p-2 opacity-70',
+              )}
             >
               {JSON.stringify(info, null, 2)}
             </SyntaxHighlighter>
           )}
         </div>
-        <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
-          <div className='p-1 bg-base rounded-md border border-separator'>
-            <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
+        {showToolbar && (
+          <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
+            <div className='p-1 bg-baseSurface rounded-md border border-separator'>
+              <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
