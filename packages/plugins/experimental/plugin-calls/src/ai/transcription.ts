@@ -57,7 +57,7 @@ type WavConfig = {
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
  * If user is speaking, the chunks are added to the buffer until the user is done talking.
  */
-export class Transcription extends Resource {
+export class Transcriber extends Resource {
   private _audioChunks: AudioChunk[] = [];
   private _lastUsedTimestamp = 0;
 
@@ -73,7 +73,6 @@ export class Transcription extends Resource {
   }
 
   protected override async _open(ctx: Context) {
-    log.info('Opening transcription');
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
   }
 

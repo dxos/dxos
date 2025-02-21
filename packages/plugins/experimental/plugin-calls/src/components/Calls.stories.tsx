@@ -9,11 +9,8 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { CollectionType } from '@dxos/plugin-space/types';
 import { Config, PublicKey } from '@dxos/react-client';
-import { create, makeRef } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -47,10 +44,6 @@ const meta: Meta<typeof Calls> = {
         ClientPlugin({
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
-            space.properties[CollectionType.typename] = makeRef(create(CollectionType, { objects: [], views: {} }));
-            log.info('>>> onClientInitialized ', { space, folder: space.properties[CollectionType.typename].target });
           },
           config: new Config({
             runtime: {

@@ -11,7 +11,7 @@ import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type AudioRecorder, Transcription, MediaStreamRecorder } from '../ai';
+import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
 import { type Ai, type UserMedia } from '../hooks';
 import { Block, type Segment, type UserState } from '../types';
 
@@ -36,7 +36,7 @@ export const useTranscription = ({
   ai: Ai;
 }) => {
   // Initialize audio transcription.
-  const transcription = useRef<Transcription | null>();
+  const transcription = useRef<Transcriber | null>();
   const firstRun = useRef(false);
 
   // Initialize transcription.
@@ -46,7 +46,7 @@ export const useTranscription = ({
     }
 
     if (!transcription.current) {
-      transcription.current = new Transcription({ prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT });
+      transcription.current = new Transcriber({ prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT });
     }
 
     return () => {
@@ -64,7 +64,6 @@ export const useTranscription = ({
   // Handle transcription text.
   const handleSegments = useCallback(
     async (segments: Segment[]) => {
-      log.info('handleSegments', { segments });
       const block = createStatic(Block, {
         author: identity.name || 'Unknown',
         segments,

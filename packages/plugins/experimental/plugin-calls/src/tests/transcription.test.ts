@@ -11,7 +11,7 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type AudioChunk, AudioRecorder, Transcription } from '../ai';
+import { type AudioChunk, AudioRecorder, Transcriber } from '../ai';
 import { type Segment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
@@ -90,7 +90,7 @@ describe.skip('transcription', () => {
 
   test('transcription of audio recording', { timeout: 10_000 }, async () => {
     const trigger = new Trigger<Segment[]>({ autoReset: true });
-    const transcription = new Transcription({
+    const transcription = new Transcriber({
       prefixedChunksAmount: 1,
     });
     const recorder = new MockAudioRecorder({
@@ -124,7 +124,7 @@ describe.skip('transcription', () => {
 
   test('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
     const trigger = new Trigger<Segment[]>({ autoReset: true });
-    const transcription = new Transcription({
+    const transcription = new Transcriber({
       prefixedChunksAmount: 1,
     });
     const recorder = new MockAudioRecorder({
