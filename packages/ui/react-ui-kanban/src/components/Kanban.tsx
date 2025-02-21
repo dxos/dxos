@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useMemo } from 'react';
+import React, { type ComponentProps, useEffect, useMemo } from 'react';
 
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
@@ -21,8 +21,9 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select } = useSelectionActions(model.id);
+  const { select, clear } = useSelectionActions(model.id);
   const selectedItems = useSelectedItems(model.id);
+  useEffect(() => () => clear(), []);
   // const [namingColumn, setNamingColumn] = useState(false);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
