@@ -31,6 +31,8 @@ export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[con
 
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
+export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
+
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (
     {
@@ -115,7 +117,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'overflow-y-auto min-is-0 is-full max-is-full'),
             classNames,
           )}
-          data-drag-autoscroll='idle'
           data-rail={rail}
           aria-orientation={orientation}
           style={styles}
