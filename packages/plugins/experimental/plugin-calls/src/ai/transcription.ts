@@ -8,7 +8,7 @@
 import { WaveFile } from 'wavefile';
 
 import { DeferredTask, synchronized } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -72,9 +72,9 @@ export class Transcription extends Resource {
     this._prefixedChunksAmount = prefixedChunksAmount;
   }
 
-  protected override async _open() {
-    this._recording = false;
-    this._transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
+  protected override async _open(ctx: Context) {
+    log.info('Opening transcription');
+    this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
   }
 
   protected override async _close() {
@@ -121,6 +121,7 @@ export class Transcription extends Resource {
   }
 
   private async _transcribe() {
+    log.info('Transcribing audio chunks');
     const chunks = this._audioChunks;
 
     const audio = await this._mergeAudioChunks(chunks);

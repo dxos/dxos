@@ -11,10 +11,13 @@ import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type AudioRecorder, Transcription } from '../ai';
-import { initializeMediaRecorder, MediaStreamRecorder } from '../ai/media-stream-recorder';
+import { type AudioRecorder, Transcription, MediaStreamRecorder } from '../ai';
 import { type Ai, type UserMedia } from '../hooks';
 import { Block, type Segment, type UserState } from '../types';
+
+const PREFIXED_CHUNKS_AMOUNT = 5;
+const RECORD_INTERVAL = 200;
+const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
@@ -34,10 +37,16 @@ export const useTranscription = ({
 }) => {
   // Initialize audio transcription.
   const transcription = useRef<Transcription | null>();
-  useAsyncEffect(async () => {
+  const firstRun = useRef(false);
+
+  // Initialize transcription.
+  useEffect(() => {
+    if (!firstRun.current) {
+      firstRun.current = true;
+    }
+
     if (!transcription.current) {
-      await initializeMediaRecorder();
-      transcription.current = new Transcription({ prefixedChunksAmount: 3 });
+      transcription.current = new Transcription({ prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT });
     }
 
     return () => {
@@ -75,19 +84,20 @@ export const useTranscription = ({
   useEffect(() => {
     if (!recorder.current && userMedia.audioTrack && transcription.current) {
       recorder.current = new MediaStreamRecorder({
-        onChunk: (chunk) => transcription.current!.onChunk(chunk),
+        onChunk: (chunk) => transcription.current?.onChunk(chunk),
         mediaStreamTrack: userMedia.audioTrack,
-        interval: 200,
+        interval: RECORD_INTERVAL,
       });
-      transcription.current!.setWavConfig({
-        sampleRate: userMedia.audioTrack.getSettings().sampleRate!,
-        bitDepthCode: userMedia.audioTrack.getSettings().sampleSize!.toString(),
-        channels: userMedia.audioTrack.getSettings().channelCount,
+      const settings = userMedia.audioTrack.getSettings();
+      transcription.current.setWavConfig({
+        sampleRate: settings.sampleRate,
+        bitDepthCode: settings.sampleSize ? String(settings.sampleSize) : '16',
+        channels: settings.channelCount,
       });
     }
 
     return () => {
-      recorder.current?.stop();
+      void recorder.current?.stop();
       recorder.current = null;
     };
   }, [userMedia.audioTrack, transcription.current]);
@@ -103,7 +113,7 @@ export const useTranscription = ({
       stopTimeout.current = setTimeout(() => {
         log.info('stopping transcription');
         transcription.current?.stopChunksRecording();
-      }, 250);
+      }, STOP_TRANSCRIPTION_TIMEOUT);
     } else {
       log.info('starting transcription');
       transcription.current?.startChunksRecording();
@@ -122,14 +132,13 @@ export const useTranscription = ({
   }, [isSpeaking, ai.transcription.enabled]);
 
   // Turn transcription on and off.
-  useEffect(() => {
-    if (ai.transcription.enabled) {
-      void transcription.current?.open();
-      void recorder.current?.start();
-    } else {
-      void recorder.current?.stop();
-      transcription.current?.stopChunksRecording();
-      void transcription.current?.close();
+  useAsyncEffect(async () => {
+    if (ai.transcription.enabled && transcription.current && recorder.current) {
+      await transcription.current.open();
+      await recorder.current.start();
+    } else if (!ai.transcription.enabled) {
+      await recorder.current?.stop();
+      await transcription.current?.close();
     }
   }, [ai.transcription.enabled, recorder.current, transcription.current]);
 };
