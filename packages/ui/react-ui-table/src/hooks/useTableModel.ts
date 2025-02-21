@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import { useEffect, useState } from 'react';
 
 import { type ReactiveObject } from '@dxos/react-client/echo';
+import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 
 import { type BaseTableRow, TableModel, type TableModelProps } from '../model';
@@ -47,6 +49,23 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
       model?.setRows(objects);
     }
   }, [model, objects]);
+
+  const { select, clear } = useSelectionActions(table?.id);
+
+  useEffect(() => {
+    if (!model) {
+      return;
+    }
+    const unsubscribe = effect(() => {
+      select([...model.selection.selection.value]);
+    });
+
+    // Maybe clear the selection here?
+    return () => {
+      clear();
+      unsubscribe();
+    };
+  }, [model]);
 
   return model;
 };
