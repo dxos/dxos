@@ -78,7 +78,7 @@ const Test = () => {
     const credential = await navigator.credentials
       .get({
         publicKey: {
-          challenge: new TextEncoder().encode(challenge),
+          challenge: Buffer.from(challenge, 'base64'),
           rpId: location.hostname,
           // NOTE: Don't prompt for password in storybook for test purposes.
           //   In practice, this should be set to 'required' for identity recovery.
