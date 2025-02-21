@@ -20,7 +20,7 @@ export const FormActions = ({ onCancel, readonly }: FormActionsProps) => {
   const { canSave, handleSave } = useFormContext();
 
   return (
-    <div role='none' className='flex justify-center'>
+    <div role='none' className='mt-2 flex justify-center'>
       <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
         {onCancel && !readonly && (
           <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />

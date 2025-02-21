@@ -3,7 +3,7 @@
 //
 
 import { defineModule, definePlugin, Events, contributes, allOf } from '@dxos/app-framework';
-import { AttentionManager } from '@dxos/react-ui-attention';
+import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities, Keyboard, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
@@ -17,8 +17,12 @@ export const AttentionPlugin = () =>
       activatesAfter: [AttentionEvents.AttentionReady],
       activate: () => {
         const attention = new AttentionManager();
+        const selection = new SelectionManager();
         setupDevtools(attention);
-        return contributes(AttentionCapabilities.Attention, attention);
+        return [
+          contributes(AttentionCapabilities.Attention, attention),
+          contributes(AttentionCapabilities.Selection, selection),
+        ];
       },
     }),
     defineModule({
