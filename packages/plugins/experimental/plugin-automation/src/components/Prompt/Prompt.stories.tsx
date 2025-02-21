@@ -25,7 +25,7 @@ type Story = StoryObj<typeof Prompt>;
 
 export const Default: Story = {
   args: {
-    classNames: 'w-96 p-4 outline outline-gray-200',
+    classNames: 'w-96 p-4 rounded outline outline-gray-200',
     autoFocus: true,
     onEnter: (text) => {
       console.log('onEnter', text);
