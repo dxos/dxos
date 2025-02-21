@@ -44,9 +44,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       </div>
       {showTools && (
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
-          <div className='p-1 bg-baseSurface rounded-md border border-separator'>
-            <Tools classNames={mx(eventsAuto)} registry={registry} />
-          </div>
+          <Tools classNames={mx(eventsAuto)} registry={registry} />
         </div>
       )}
 
