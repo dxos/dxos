@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useSelectedItems } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { type TableType } from '@dxos/react-ui-table';
+import { type ViewType } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
@@ -44,14 +44,15 @@ export const useSchema = (space: Space | undefined, typename: string | undefined
 };
 
 type RowDetailsPanelProps = {
-  table: TableType;
+  objectId: string;
+  view: ViewType;
 };
 
-const ObjectDetailsPanel = ({ table }: RowDetailsPanelProps) => {
+const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
-  const selectedRows = useSelectedItems(table.id);
-  const space = getSpace(table);
-  const schema = useSchema(space, table.view?.target?.query?.type);
+  const selectedRows = useSelectedItems(objectId);
+  const space = getSpace(view);
+  const schema = useSchema(space, view.query?.type);
   const effectSchema = useMemo(() => schema?.getSchemaSnapshot(), [JSON.stringify(schema?.jsonSchema)]);
 
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());

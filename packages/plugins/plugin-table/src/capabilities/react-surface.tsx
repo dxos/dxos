@@ -5,12 +5,13 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { type S } from '@dxos/echo-schema';
+import { type Ref, type S } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { TableType } from '@dxos/react-ui-table';
+import { ViewType } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { TABLE_PLUGIN } from '../meta';
@@ -56,10 +57,29 @@ export default () =>
     createSurface({
       id: `${TABLE_PLUGIN}/complementary`,
       role: 'complementary--selected-objects',
-      filter: (data): data is { subject: TableType } => {
-        // Check data.subject.view instance of ViewType or data.subject.cardView
-        return data.subject instanceof TableType;
+      filter: (
+        data,
+      ): data is {
+        subject: ReactiveEchoObject<{ view: Ref<ViewType> } | { cardView: Ref<ViewType> }>;
+      } => {
+        if (!data.subject || !isEchoObject(data.subject)) {
+          return false;
+        }
+
+        const subject = data.subject;
+        // TODO(ZaymonFC): Unify the path of view between table and kanban.
+        const hasValidView = subject.view?.target instanceof ViewType;
+        const hasValidCardView = subject.cardView?.target instanceof ViewType;
+
+        return hasValidView || hasValidCardView;
       },
-      component: ({ data }) => <ObjectDetailsPanel table={data.subject} />,
+      component: ({ data }) => {
+        const view = 'view' in data.subject ? data.subject.view : data.subject.cardView;
+        const viewTarget = view?.target;
+        if (!viewTarget) {
+          return null;
+        }
+        return <ObjectDetailsPanel objectId={data.subject.id} view={viewTarget} />;
+      },
     }),
   ]);
