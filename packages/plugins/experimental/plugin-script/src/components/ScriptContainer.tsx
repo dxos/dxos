@@ -14,19 +14,24 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
 import { ScriptToolbar } from './ScriptToolbar';
-import { useDeployState } from './ScriptToolbar/deploy';
-import { useToolbarState } from './ScriptToolbar/useToolbarState';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
+import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettingsProps } from '../types';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
-  settings: ScriptSettingsProps;
+  settings?: ScriptSettingsProps;
   role?: string;
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptContainer = ({ role, classNames, script, settings, env }: ScriptEditorProps) => {
+export const ScriptContainer = ({
+  role,
+  classNames,
+  script,
+  settings = { editorInputMode: 'vscode' },
+  env,
+}: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
 
@@ -49,7 +54,7 @@ export const ScriptContainer = ({ role, classNames, script, settings, env }: Scr
     [script, script.source.target, space, identity],
   );
 
-  const state = useToolbarState({ view: 'split' });
+  const state = useToolbarState({ view: 'editor' });
   useDeployState({ state, script });
 
   return (

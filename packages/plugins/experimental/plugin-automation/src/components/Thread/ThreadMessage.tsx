@@ -6,6 +6,7 @@ import React, { type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -38,33 +39,41 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
   const { role, content = [] } = message;
 
   // TODO(burdon): Factor out tool blocks.
-  const tools = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
-  if (collapse && tools.length > 0) {
-    let request: MessageContentBlock & { type: 'tool_use' };
-    const lines = tools.map((tool) => {
-      switch (tool.type) {
+  const toolBlocks = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
+  if (collapse && toolBlocks.length > 0) {
+    let request: (MessageContentBlock & { type: 'tool_use' }) | undefined;
+    const json: any[] = [];
+    const lines = toolBlocks.map((block) => {
+      switch (block.type) {
         case 'tool_use': {
-          request = tool;
+          request = block;
+          json.push(block);
           // TODO(burdon): Get plugin name.
-          return `Calling ${tool.name}...`;
+          return `Calling ${block.name}...`;
         }
+
         case 'tool_result': {
           if (!request) {
+            log.warn('unexpected message', { tool: block });
             return 'Error';
           }
 
+          json.push(block);
           return `Processed ${request.name}`;
         }
-        default:
+
+        default: {
+          request = undefined;
           return 'Error';
+        }
       }
     });
 
     return (
       <div className={mx('flex', classNames)}>
-        <div className='w-full p-1 px-2 overflow-hidden rounded-md bg-base'>
+        <div className='w-full p-1 px-2 overflow-hidden rounded-md bg-baseSurface'>
           <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} toggle>
-            <Json data={content[content.length - 1]} classNames='!p-1 text-xs' />
+            <Json data={json} classNames='!p-1 text-xs' />
           </ToggleContainer>
         </div>
       </div>
@@ -102,8 +111,8 @@ const Block = ({
     <div
       className={mx(
         'p-1 px-2 overflow-hidden rounded-md',
-        (block.type !== 'text' || block.disposition) && 'w-full bg-base',
-        block.type === 'text' && role === 'user' && 'bg-blue-200 dark:bg-blue-800',
+        (block.type !== 'text' || block.disposition) && 'w-full bg-baseSurface',
+        block.type === 'text' && role === 'user' && 'bg-primary-200 dark:bg-primary-500',
       )}
     >
       <Component block={block} onSuggest={onSuggest} />
@@ -113,12 +122,9 @@ const Block = ({
 
 const titles: Record<string, string> = {
   ['cot' as const]: 'Chain of thought',
-
-  // TODO(burdon): Only show if debugging.
+  ['artifact' as const]: 'Artifact',
   ['tool_use' as const]: 'Tool request',
   ['tool_result' as const]: 'Tool result',
-
-  ['artifact' as const]: 'Artifact',
 };
 
 type BlockComponent = FC<{ block: MessageContentBlock; onSuggest: (text: string) => void }>;
@@ -157,6 +163,7 @@ const componentMap: Record<string, BlockComponent> = {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return <Button onClick={() => onSuggest(text)}>{text}</Button>;
       }
+
       case 'select': {
         const { options = [] }: { options: string[] } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return (
@@ -169,6 +176,7 @@ const componentMap: Record<string, BlockComponent> = {
           </ButtonGroup>
         );
       }
+
       default: {
         const title = block.disposition ? titles[block.disposition] : undefined;
         return (

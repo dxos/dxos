@@ -14,6 +14,7 @@ export default [
         'settings section installed label': 'Enabled',
         'settings section recommended label': 'Recommended',
         'settings section experimental label': 'Experimental',
+        'details label': 'Details',
         'home page label': 'Website',
         'source label': 'Source',
         'plugin registry label': 'Plugin Registry',

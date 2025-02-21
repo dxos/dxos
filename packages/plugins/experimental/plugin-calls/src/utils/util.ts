@@ -37,14 +37,16 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
     this.#batchSizeLimit = batchSizeLimit;
   }
 
-  // doBulkRequest will return a bulk response promise.
-  // At the event loop iteration end, the accumulated entries will be dispatched as a bulk request.
+  /**
+   * Returns a bulk response promise.
+   * At the event loop iteration end, the accumulated entries will be dispatched as a bulk request.
+   */
   doBulkRequest(
     params: RequestEntryParams,
     bulkRequestFunc: (bulkCopy: RequestEntryParams[]) => Promise<BulkResponse>,
   ): Promise<BulkResponse> {
     if (this.#currentBatch.length >= this.#batchSizeLimit) {
-      // if it reaches the batch size limit, we make another bulk request
+      // If it reaches the batch size limit, we make another bulk request.
       this.#currentBatch = [];
       this.#currentBulkResponse = null;
     }
@@ -65,7 +67,7 @@ export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
       //     V
       // macrotasks (setTimeout)
       //
-      // macrotasks are run in the event loop iteration end, so we use that moment to make the bulkRequestFunc call
+      // macrotasks are run in the event loop iteration end, so we use that moment to make the bulkRequestFunc call.
       setTimeout(() => {
         // When the bulk request happens, the batch list and the response is reset to start another batch.
         // Coming callers will wait for a new response promise.

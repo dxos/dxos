@@ -16,7 +16,7 @@ import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
-import { PackageJson, Project, ProjectGraph } from './util/project-graph';
+import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
 
 const raise = (err: Error) => {
   throw err;

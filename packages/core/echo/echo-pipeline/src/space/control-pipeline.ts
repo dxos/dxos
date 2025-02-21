@@ -20,7 +20,7 @@ import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/me
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
-import { type AsyncCallback, Callback, ComplexSet, tracer } from '@dxos/util';
+import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { type MetadataStore } from '../metadata';
 import { Pipeline, type PipelineAccessor } from '../pipeline';

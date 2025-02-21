@@ -1,4 +1,8 @@
-import { JsonSchemaFields, JsonSchemaType } from './json-schema-type';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { JsonSchemaFields, type JsonSchemaType } from './json-schema-type';
 
 /**
  * Normalize schema to to draft-07 format.

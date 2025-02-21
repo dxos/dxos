@@ -9,7 +9,8 @@ export const AUTOMATION_PLUGIN = 'dxos.org/plugin/automation';
 export const meta = {
   id: AUTOMATION_PLUGIN,
   name: 'Automation',
-  description: 'Automation workflows.',
+  description:
+    'The Automation tab allows you to trigger pre-defined workflows related to the element you are interacting with inside of Composer.',
   icon: 'ph--magic-wand--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-automation',
   tags: ['experimental'],

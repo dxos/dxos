@@ -19,11 +19,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
-const defaultOptions: Pick<GenerateRequest, 'model' | 'systemPrompt'> = {
-  model: '@anthropic/claude-3-5-sonnet-20241022',
-  systemPrompt: '',
-};
-
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
@@ -35,6 +30,13 @@ declare global {
 type RequestOptions = {
   history?: Message[];
   onComplete?: (messages: Message[]) => void;
+};
+
+export type ChatProcessorOptions = Pick<GenerateRequest, 'model' | 'systemPrompt'>;
+
+const defaultOptions: ChatProcessorOptions = {
+  model: '@anthropic/claude-3-5-sonnet-20241022',
+  systemPrompt: 'you are a helpful assistant',
 };
 
 /**
@@ -84,9 +86,9 @@ export class ChatProcessor {
 
   constructor(
     private readonly _client: AIServiceClientImpl,
-    private readonly _tools?: Tool[],
+    private _tools?: Tool[],
     private readonly _extensions?: ToolContextExtensions,
-    private readonly _options: Pick<GenerateRequest, 'model' | 'systemPrompt'> = defaultOptions,
+    private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {
     // Message complete.
     this._parser.message.on((message) => {
@@ -102,6 +104,13 @@ export class ChatProcessor {
         this._block.value = block;
       });
     });
+  }
+
+  /**
+   * Update tools.
+   */
+  setTools(tools: Tool[]) {
+    this._tools = tools;
   }
 
   /**

@@ -4,7 +4,7 @@
 
 import { createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
-import { SCRIPT_PLUGIN } from '../../meta';
+import { SCRIPT_PLUGIN } from '../meta';
 
 export type ViewType = 'editor' | 'split' | 'debug';
 

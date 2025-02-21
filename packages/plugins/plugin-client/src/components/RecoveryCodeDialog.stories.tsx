@@ -19,8 +19,8 @@ const Render = () => {
   const client = useClient();
   const [seedphrase, setSeedphrase] = useState<string>();
   useAsyncEffect(async () => {
-    const { seedphrase } = (await client.services.services.IdentityService?.createRecoveryPhrase()) ?? {};
-    setSeedphrase(seedphrase);
+    const { recoveryCode } = (await client.services.services.IdentityService?.createRecoveryCredential({})) ?? {};
+    setSeedphrase(recoveryCode);
   }, [client]);
 
   return (

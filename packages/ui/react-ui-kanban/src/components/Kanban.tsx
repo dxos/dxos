@@ -6,7 +6,7 @@ import React, { type ComponentProps, useMemo } from 'react';
 
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Stack, StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
+import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -41,6 +41,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       classNames='pli-1'
       onRearrange={model.handleRearrange}
       itemsCount={model.arrangedCards.length}
+      {...autoScrollRootAttributes}
     >
       {model.arrangedCards.map(({ columnValue, cards }) => {
         const { color, title } = model.getPivotAttributes(columnValue);
@@ -52,38 +53,12 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             size={20}
             classNames='pli-1 plb-2 drag-preview-p-0'
             disableRearrange={uncategorized}
+            focusIndicatorVariant='group'
           >
-            <div role='none' className={mx('bg-deck rounded-lg grid', railGridHorizontal)}>
-              <StackItem.Heading classNames='pli-2'>
-                {!uncategorized && (
-                  <StackItem.DragHandle asChild>
-                    <IconButton
-                      iconOnly
-                      icon='ph--dots-six-vertical--regular'
-                      variant='ghost'
-                      label={t('column drag handle label')}
-                      classNames='pli-2'
-                    />
-                  </StackItem.DragHandle>
-                )}
-                <Tag
-                  palette={color as any}
-                  data-uncategorized={uncategorized}
-                  classNames='mis-1 data-[uncategorized="true"]:mis-2'
-                >
-                  {title}
-                </Tag>
-                {/* NOTE(ZaymonFC): We're just going to manipulate status with the ViewEditor for now. */}
-                {/* {onRemoveEmptyColumn && cards.length < 1 && (
-                  <IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--x--regular'
-                    label={t('remove empty column label')}
-                    onClick={() => onRemoveEmptyColumn(columnValue)}
-                  />
-                )} */}
-              </StackItem.Heading>
+            <div
+              role='none'
+              className={mx('bg-deck rounded-lg grid dx-focus-ring-group-x-indicator', railGridHorizontal)}
+            >
               <Stack
                 id={columnValue}
                 orientation='vertical'
@@ -94,8 +69,13 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 itemsCount={cards.length}
               >
                 {cards.map((card) => (
-                  <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2 drag-preview-p-0'>
-                    <div role='none' className='rounded bg-[--surface-bg]'>
+                  <StackItem.Root
+                    key={card.id}
+                    item={card}
+                    classNames='plb-1 pli-2 drag-preview-p-0'
+                    focusIndicatorVariant='group'
+                  >
+                    <div role='none' className='rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator'>
                       <div role='none' className='flex items-center'>
                         <StackItem.DragHandle asChild>
                           <IconButton
@@ -133,6 +113,36 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   </div>
                 )}
               </Stack>
+              <StackItem.Heading classNames='pli-2 order-first'>
+                {!uncategorized && (
+                  <StackItem.DragHandle asChild>
+                    <IconButton
+                      iconOnly
+                      icon='ph--dots-six-vertical--regular'
+                      variant='ghost'
+                      label={t('column drag handle label')}
+                      classNames='pli-2'
+                    />
+                  </StackItem.DragHandle>
+                )}
+                <Tag
+                  palette={color as any}
+                  data-uncategorized={uncategorized}
+                  classNames='mis-1 data-[uncategorized="true"]:mis-2'
+                >
+                  {title}
+                </Tag>
+                {/* NOTE(ZaymonFC): We're just going to manipulate status with the ViewEditor for now. */}
+                {/* {onRemoveEmptyColumn && cards.length < 1 && (
+                  <IconButton
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--x--regular'
+                    label={t('remove empty column label')}
+                    onClick={() => onRemoveEmptyColumn(columnValue)}
+                  />
+                )} */}
+              </StackItem.Heading>
             </div>
           </StackItem.Root>
         );

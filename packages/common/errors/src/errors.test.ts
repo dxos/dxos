@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
+
 import { SystemError } from './errors';
 
 describe('errors', () => {
@@ -19,21 +24,21 @@ describe('errors', () => {
       expect.fail('Expected error to be thrown');
     } catch (error: any) {
       expect(error).toBeInstanceOf(SystemError);
-      expect(String(error)).toEqual(`SYSTEM_ERROR: Test message`);
+      expect(String(error)).toEqual('SYSTEM_ERROR: Test message');
       const stackLines = error.stack!.split('\n');
-      expect(stackLines?.[0]).toEqual(`SYSTEM_ERROR: Test message`);
-      expect(stackLines?.[1]).toMatch(/^    at two \(.*$/);
-      expect(stackLines?.[2]).toMatch(/^    at one \(.*$/);
+      expect(stackLines?.[0]).toEqual('SYSTEM_ERROR: Test message');
+      expect(stackLines?.[1]).toMatch(/^ {4}at two \(.*$/);
+      expect(stackLines?.[2]).toMatch(/^ {4}at one \(.*$/);
     }
   });
 });
 
-function throwError() {
-  function one() {
-    function two() {
+const throwError = () => {
+  const one = () => {
+    const two = () => {
       throw new SystemError('Test message');
-    }
+    };
     two();
-  }
+  };
   one();
-}
+};
