@@ -75,11 +75,11 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   );
 
   return (
-    <div role='none'>
-      {selectedObjects.length === 0 && <div className='p-2 text-sm'>{t('row details no selection label')}</div>}
+    <div role='none' className='p-1 flex flex-col gap-1'>
+      {selectedObjects.length === 0 && <div className='text-sm'>{t('row details no selection label')}</div>}
       {effectSchema &&
         selectedObjects.map((object) => (
-          <div key={object.id} className='border-b border-separator'>
+          <div key={object.id} className='border border-separator rounded-sm'>
             <Form schema={effectSchema} values={object} onSave={handleSave} autoSave />
           </div>
         ))}
