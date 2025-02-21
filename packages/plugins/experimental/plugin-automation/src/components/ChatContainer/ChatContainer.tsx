@@ -42,6 +42,7 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
       <Thread
         messages={messages}
         streaming={processor.streaming.value}
+        collapse={true}
         onSubmit={handleSubmit}
         onSuggest={handleSubmit}
         onStop={handleStop}

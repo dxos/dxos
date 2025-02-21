@@ -38,7 +38,7 @@ export const StatusLine = ({
 
     const next = () => {
       setCurrentLine((prev) => {
-        if (prev === lines.length - 1) {
+        if (prev >= lines.length - 1) {
           clearInterval(interval);
           return prev;
         }

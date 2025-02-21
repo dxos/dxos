@@ -6,6 +6,7 @@ import React, { type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -38,25 +39,33 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
   const { role, content = [] } = message;
 
   // TODO(burdon): Factor out tool blocks.
-  const tools = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
-  if (collapse && tools.length > 0) {
-    let request: MessageContentBlock & { type: 'tool_use' };
-    const lines = tools.map((tool) => {
-      switch (tool.type) {
+  const toolBlocks = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
+  if (collapse && toolBlocks.length > 0) {
+    let request: (MessageContentBlock & { type: 'tool_use' }) | undefined;
+    const json: any[] = [];
+    const lines = toolBlocks.map((block) => {
+      switch (block.type) {
         case 'tool_use': {
-          request = tool;
+          request = block;
+          json.push(block);
           // TODO(burdon): Get plugin name.
-          return `Calling ${tool.name}...`;
+          return `Calling ${block.name}...`;
         }
+
         case 'tool_result': {
           if (!request) {
+            log.warn('unexpected message', { tool: block });
             return 'Error';
           }
 
+          json.push(block);
           return `Processed ${request.name}`;
         }
-        default:
+
+        default: {
+          request = undefined;
           return 'Error';
+        }
       }
     });
 
@@ -64,7 +73,7 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
       <div className={mx('flex', classNames)}>
         <div className='w-full p-1 px-2 overflow-hidden rounded-md bg-baseSurface'>
           <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} toggle>
-            <Json data={content[content.length - 1]} classNames='!p-1 text-xs' />
+            <Json data={json} classNames='!p-1 text-xs' />
           </ToggleContainer>
         </div>
       </div>
