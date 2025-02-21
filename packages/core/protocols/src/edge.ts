@@ -82,6 +82,7 @@ export type RecoverIdentityRequest = {
   controlFeedKey: string;
   signature?:
     | string
+    // This is the format of the signature from the WebAuthn authenticator.
     | {
         signature: string;
         clientDataJson: string;
