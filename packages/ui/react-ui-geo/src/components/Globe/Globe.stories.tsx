@@ -18,19 +18,9 @@ import { useDrag, useGlobeZoomHandler, useSpinner, useTour, type Vector } from '
 import { closestPoint, type LatLng, type StyleSet } from '../../util';
 import { type ControlProps } from '../Toolbar';
 
-// TODO(burdon): Local script (e.g., plot on chart) vs. remote functions.
-// TODO(burdon): Add charts to sheet.
-// TODO(burdon): Able to script (e.g., list of cities from named range).
-// TODO(burdon): Search flight information. Calendar (itinerary).
-// TODO(burdon): Show MANY packets flowing across the network.
-
-const useImportJson = (filename: string) => {
-  return useAsyncState(
-    // TODO(burdon): Configure vite plugins for experimental syntax.
-    //  @babel/plugin-syntax-import-assertions
-    //  @babel/plugin-syntax-import-attributes
-    async () => await import(filename), // { assert: { type: 'json' } }),
-  );
+// TODO(burdon): Load from JSON at runtime?
+const useTopology = () => {
+  return useAsyncState(async () => (await import('../../../data/countries-110m.ts')).default);
 };
 
 const defaultStyles: StyleSet = {
@@ -162,7 +152,7 @@ const Story = ({
       objects: { dots: points },
     } as any as Topology;
   });
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useTopology();
   const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
@@ -241,7 +231,7 @@ const meta: Meta = {
 export default meta;
 
 export const Earth1 = () => {
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -255,7 +245,7 @@ export const Earth1 = () => {
 };
 
 export const Earth2 = () => {
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -290,7 +280,7 @@ const monochrome: StyleSet = {
 };
 
 export const Mercator = () => {
-  const [topology] = useImportJson('../../../data/raw/countries-110m.json');
+  const [topology] = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
