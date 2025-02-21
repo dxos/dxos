@@ -6,14 +6,14 @@ import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
 
-import { withTheme, withSignals } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Prompt } from './Prompt';
 
 const meta: Meta<typeof Prompt> = {
   title: 'plugins/plugin-automation/Prompt',
   component: Prompt,
-  decorators: [withSignals, withTheme],
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
@@ -37,9 +37,9 @@ export const Default: Story = {
       }
 
       const suggestions = [
-        'Find flights to Tokyo',
         'Create a CRM',
         'Create a new project',
+        'Find flights to Tokyo',
         "Let's play chess",
         'Show me Paris on a map',
       ];

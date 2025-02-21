@@ -177,7 +177,6 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
                 insert: '\n',
               },
             });
-
             return true;
           },
         },
@@ -192,7 +191,6 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
                 insert: '',
               },
             });
-
             return true;
           },
         },
