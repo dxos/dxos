@@ -6,7 +6,7 @@ import React, { type ComponentProps, useMemo } from 'react';
 
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { Stack, StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
+import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -41,6 +41,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       classNames='pli-1'
       onRearrange={model.handleRearrange}
       itemsCount={model.arrangedCards.length}
+      {...autoScrollRootAttributes}
     >
       {model.arrangedCards.map(({ columnValue, cards }) => {
         const { color, title } = model.getPivotAttributes(columnValue);
