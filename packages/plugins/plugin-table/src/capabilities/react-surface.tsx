@@ -12,7 +12,7 @@ import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { TableType } from '@dxos/react-ui-table';
 
-import { RowDetailsPanel, TableContainer, TableViewEditor } from '../components';
+import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { TABLE_PLUGIN } from '../meta';
 import { InitialSchemaAnnotationId } from '../types';
 
@@ -55,8 +55,11 @@ export default () =>
     }),
     createSurface({
       id: `${TABLE_PLUGIN}/complementary`,
-      role: 'complementary--properties',
-      filter: (data): data is { subject: TableType } => data.subject instanceof TableType,
-      component: ({ data }) => <RowDetailsPanel table={data.subject} />,
+      role: 'complementary--selected-objects',
+      filter: (data): data is { subject: TableType } => {
+        // Check data.subject.view instance of ViewType or data.subject.cardView
+        return data.subject instanceof TableType;
+      },
+      component: ({ data }) => <ObjectDetailsPanel table={data.subject} />,
     }),
   ]);

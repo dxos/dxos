@@ -47,7 +47,7 @@ type RowDetailsPanelProps = {
   table: TableType;
 };
 
-const RowDetailsPanel = ({ table }: RowDetailsPanelProps) => {
+const ObjectDetailsPanel = ({ table }: RowDetailsPanelProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
   const selectedRows = useSelectedItems(table.id);
   const space = getSpace(table);
@@ -84,4 +84,4 @@ const RowDetailsPanel = ({ table }: RowDetailsPanelProps) => {
   );
 };
 
-export default RowDetailsPanel;
+export default ObjectDetailsPanel;

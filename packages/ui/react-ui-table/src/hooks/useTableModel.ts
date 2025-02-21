@@ -13,7 +13,7 @@ import { type BaseTableRow, TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
 
 export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
-  table: TableType;
+  table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
 } & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
@@ -50,7 +50,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
     }
   }, [model, objects]);
 
-  const { select, clear } = useSelectionActions(table.id);
+  const { select, clear } = useSelectionActions(table?.id);
 
   useEffect(() => {
     if (!model) {

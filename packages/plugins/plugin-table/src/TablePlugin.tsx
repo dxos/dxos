@@ -10,7 +10,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -67,9 +67,14 @@ export const TablePlugin = () =>
       activatesOn: Events.Startup,
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'properties',
-          label: ['Properties', { ns: TABLE_PLUGIN }],
+          id: 'selected-objects',
+          label: ['Objects', { ns: TABLE_PLUGIN }],
           icon: 'ph--list--regular',
         }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
   ]);

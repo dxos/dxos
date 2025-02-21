@@ -34,7 +34,9 @@ export const useNode = <T = any>(graph: Graph, id?: string, timeout?: number): N
         if (node) {
           setNodeState(node);
         }
-      } catch {}
+      } catch {
+        // TODO(ZaymonFC): This leaves the resolved node in an invalid state in the case of a timeout.
+      }
     });
 
     return () => cancelAnimationFrame(frame);
