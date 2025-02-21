@@ -4,8 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { useEdgeClient } from '@dxos/react-edge-client';
 import { Toolbar, type ThemedClassName, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
@@ -13,6 +12,7 @@ import { nonNullable } from '@dxos/util';
 import { PullAudioTracks } from './PullAudioTracks';
 import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
 import { type TranscriptionState } from '../../types';
+import { randomQueueDxn } from '../../utils';
 import { MediaButtons } from '../Media';
 import { ParticipantsLayout } from '../Participant';
 
@@ -20,24 +20,22 @@ import { ParticipantsLayout } from '../Participant';
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const debugEnabled = useDebugMode();
   const {
-    space,
     userMedia,
     peer,
     isSpeaking,
     pushedTracks,
     room: { ai, identity, otherUsers, updateUserState },
     setJoined,
-    storybookQueueDxn,
   } = useRoomContext()!;
 
   // Broadcast status over swarm.
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
 
   // Transcription.
-  useTranscription({ space, userMedia, identity, isSpeaking, ai });
+  const edgeClient = useEdgeClient();
+  useTranscription({ userMedia, identity, isSpeaking, ai, edgeClient });
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
-      ...ai.transcription,
       enabled: !ai.transcription.enabled,
       lamportTimestamp: ai.transcription.lamportTimestamp! + 1,
     };
@@ -45,10 +43,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     // Check not already running.
     if (!ai.transcription.enabled && !ai.transcription.objectDxn) {
       // Create queue DXN.
-      const dxn = storybookQueueDxn
-        ? DXN.parse(storybookQueueDxn)
-        : new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space!.id, ObjectId.random()]);
-      ai.transcription.objectDxn = dxn.toString();
+      ai.transcription.objectDxn = randomQueueDxn().toString();
     }
 
     ai.setTranscription(transcription);
@@ -73,7 +68,6 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
             label='Leave'
             onClick={() => {
               userMedia.turnScreenShareOff();
-              userMedia.turnMicOff();
               setJoined(false);
             }}
             icon='ph--phone-x--regular'

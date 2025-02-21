@@ -25,13 +25,19 @@ export type UseRoomState = {
 /**
  * Call session state.
  */
-export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
+export const useRoom = ({
+  roomId,
+  storybookQueueDxn,
+}: {
+  roomId: PublicKey;
+  storybookQueueDxn?: string;
+}): UseRoomState => {
   const [roomState, setRoomState] = useState<RoomState>({
     meetingId: roomId.toHex(),
     users: [],
   });
 
-  const ai = useAi();
+  const ai = useAi({ storybookQueueDxn });
   const haloIdentity = useIdentity();
   const client = useClient();
   const identityKey = haloIdentity!.identityKey.toHex();

@@ -11,11 +11,11 @@ export type Ai = {
   setTranscription: (transcription: TranscriptionState) => void;
 };
 
-export const useAi = (): Ai => {
+export const useAi = ({ storybookQueueDxn }: { storybookQueueDxn?: string }): Ai => {
   const [transcription, setTranscription] = useState<TranscriptionState>({
     enabled: false,
     lamportTimestamp: 0,
-    objectDxn: undefined,
+    objectDxn: storybookQueueDxn,
   });
 
   return {

@@ -62,7 +62,7 @@ export class Transcription extends Resource {
   private _lastUsedTimestamp = 0;
 
   private _recording = false;
-  private readonly _transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
+  private _transcribeTask?: DeferredTask = undefined;
   private _config: WavConfig = { channels: 1, sampleRate: 16000, bitDepthCode: '16' };
   private _onTranscription?: (params: Segment[]) => Promise<void>;
   private readonly _prefixedChunksAmount: number;
@@ -72,8 +72,14 @@ export class Transcription extends Resource {
     this._prefixedChunksAmount = prefixedChunksAmount;
   }
 
+  protected override async _open() {
+    this._recording = false;
+    this._transcribeTask = new DeferredTask(this._ctx, async () => this._transcribe());
+  }
+
   protected override async _close() {
     this._recording = false;
+    this._transcribeTask = undefined;
   }
 
   setWavConfig(config: Partial<WavConfig>) {
@@ -93,7 +99,7 @@ export class Transcription extends Resource {
       return;
     }
     this._recording = false;
-    this._transcribeTask.schedule();
+    this._transcribeTask?.schedule();
   }
 
   @synchronized
@@ -105,7 +111,11 @@ export class Transcription extends Resource {
     this._audioChunks.push(chunk);
 
     // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
-    if (!this._recording && !this._transcribeTask.scheduled && this._audioChunks.length >= this._prefixedChunksAmount) {
+    if (
+      !this._recording &&
+      (!this._transcribeTask || !this._transcribeTask.scheduled) &&
+      this._audioChunks.length >= this._prefixedChunksAmount
+    ) {
       this._audioChunks = this._prefixedChunksAmount > 0 ? this._audioChunks.slice(-this._prefixedChunksAmount) : [];
     }
   }

@@ -7,14 +7,12 @@ import { createContext, useContext, type Dispatch, type SetStateAction } from 'r
 import { raise } from '@dxos/debug';
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { type PublicKey } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
 
 import { type UseRoomState } from './useRoom';
 import { type UserMedia } from './useUserMedia';
 import { type RxjsPeer } from '../utils';
 
 export type RoomContextType = {
-  space: Space;
   roomId: PublicKey;
   thread?: ThreadType;
   isSpeaking: boolean;
@@ -31,11 +29,6 @@ export type RoomContextType = {
     video?: string;
     audio?: string;
   };
-
-  /**
-   * DXN of the storybook queue.
-   */
-  storybookQueueDxn?: string;
 };
 
 export const RoomContext = createContext<RoomContextType | undefined>(undefined);

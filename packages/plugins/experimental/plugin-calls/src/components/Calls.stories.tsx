@@ -7,29 +7,32 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Config, PublicKey } from '@dxos/react-client';
-import { create, makeRef, useSpaces, SpaceState } from '@dxos/react-client/echo';
+import { create, makeRef } from '@dxos/react-client/echo';
+import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls, type CallsProps } from './Calls';
+import { randomQueueDxn } from '../utils';
 
 const Render = (props: CallsProps) => {
-  const space = useSpaces({ all: true }).at(-1);
-
-  if (!space || space.state.get() !== SpaceState.SPACE_READY) {
-    return <div />;
-  }
+  const client = useEdgeClient();
+  const queue = useQueue(client, DXN.parse(props.storybookQueueDxn!), { pollInterval: 500 });
 
   return (
-    <div className='flex h-full overflow-hidden w-96 outline outline-red-500'>
-      <Calls {...props} space={space} />
+    <div className='flex flex-row h-full w-full justify-center'>
+      <div className='flex h-full overflow-hidden w-96 outline outline-red-500'>
+        <Calls {...props} />
+      </div>
+      <div className='flex h-full overflow-hidden w-96 outline outline-blue-500'>
+        <Json data={queue?.items} />
+      </div>
     </div>
   );
 };
@@ -59,12 +62,9 @@ const meta: Meta<typeof Calls> = {
             },
           }),
         }),
-        SpacePlugin({ observability: false }),
-        IntentPlugin(),
-        MarkdownPlugin(),
       ],
     }),
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'justify-center' }),
+    withLayout({ fullscreen: true, tooltips: true }),
     withTheme,
   ],
 };
@@ -78,5 +78,6 @@ export const Default: Story = {
     roomId: PublicKey.fromHex(
       '04a1d1911703b8e929d0649021a965767483e9be254b488809946dfa1eb4a3b939a5d78a56495077b00f5c88e8cf8b8ec76ca9c77f19c138b5132c7b325c27e1a8',
     ),
+    storybookQueueDxn: randomQueueDxn().toString(),
   },
 };
