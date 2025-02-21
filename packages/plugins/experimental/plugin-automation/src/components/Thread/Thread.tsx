@@ -9,9 +9,9 @@ import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ScrollContainer, type ScrollController } from './ScrollContainer';
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { AUTOMATION_PLUGIN } from '../../meta';
+import { ScrollContainer, type ScrollController } from '../ScrollContainer';
 
 export type ThreadProps = {
   messages?: Message[];

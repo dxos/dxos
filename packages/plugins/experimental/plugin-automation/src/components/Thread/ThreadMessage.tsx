@@ -12,8 +12,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { StatusLine } from './StatusLine';
-import { ToggleContainer } from './ToggleContainer';
+import { ToggleContainer, StatusLine } from '../Box';
 import { MarkdownViewer } from '../MarkdownViewer';
 
 export type ThreadMessageProps = ThemedClassName<{

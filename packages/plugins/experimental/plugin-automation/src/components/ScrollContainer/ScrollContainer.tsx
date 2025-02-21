@@ -31,6 +31,8 @@ export type ScrollContainerProps = ThemedClassName<PropsWithChildren>;
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
   ({ children, classNames }, forwardedRef) => {
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Determines if user scrolled.
     const autoScrollRef = useRef(false);
 
     // Controller.
@@ -39,7 +41,8 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       () => ({
         scrollToBottom: () => {
           invariant(containerRef.current);
-          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+          // NOTE: Should be instant otherwise scrollHeight might be out of date.
+          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'instant' });
           autoScrollRef.current = false;
         },
       }),
@@ -57,7 +60,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
     }, [children]);
 
-    // Detect scroll end.
+    // Detect scroll to end.
     useEffect(() => {
       invariant(containerRef.current);
       const handleScrollEnd = () => {
@@ -68,7 +71,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       return () => containerRef.current?.removeEventListener('scrollend', handleScrollEnd);
     }, []);
 
-    // Scrolling.
+    // User scrolling.
     const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>((ev) => {
       if (autoScrollRef.current) {
         return;
