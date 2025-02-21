@@ -151,7 +151,7 @@ message CreateRecoveryCredentialRequest {
   optional dxos.keys.PublicKey recovery_key = 1;
 
   /// Algorithm used to generate the recovery key.
-  optional int32 algorithm = 2;
+  optional string algorithm = 2;
 }
 
 message CreateRecoveryCredentialResponse {

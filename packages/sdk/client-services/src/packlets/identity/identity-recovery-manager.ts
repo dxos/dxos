@@ -41,7 +41,7 @@ export class EdgeIdentityRecoveryManager {
       recoveryCode = generateSeedPhrase();
       const keypair = keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
-      algorithm = -8; // Ed25519
+      algorithm = 'ED25519';
     }
 
     invariant(algorithm, 'Algorithm is required.');
