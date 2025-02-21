@@ -79,7 +79,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
       {selectedObjects.length === 0 && <div className='text-sm'>{t('row details no selection label')}</div>}
       {effectSchema &&
         selectedObjects.map((object) => (
-          <div key={object.id} className='border border-separator rounded-sm'>
+          <div key={object.id} className='border border-separator rounded'>
             <Form schema={effectSchema} values={object} onSave={handleSave} autoSave />
           </div>
         ))}
