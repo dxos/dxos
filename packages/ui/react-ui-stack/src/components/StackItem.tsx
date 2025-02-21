@@ -177,7 +177,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+          {closestEdge && <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />}
         </Root>
       </StackItemContext.Provider>
     );

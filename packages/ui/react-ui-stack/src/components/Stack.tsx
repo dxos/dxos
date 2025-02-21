@@ -107,8 +107,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 ? railGridHorizontal
                 : railGridVertical
               : orientation === 'horizontal'
-                ? 'grid-rows-1'
-                : 'grid-cols-1',
+                ? 'grid-rows-1 pli-1'
+                : 'grid-cols-1 plb-1',
             size === 'contain' &&
               (orientation === 'horizontal'
                 ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
@@ -122,7 +122,14 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           ref={composedItemRef}
         >
           {children}
-          {selfDroppable && dropping && <ListItem.DropIndicator edge={orientation === 'horizontal' ? 'left' : 'top'} />}
+          {selfDroppable && dropping && (
+            <ListItem.DropIndicator
+              lineInset={8}
+              terminalInset={-8}
+              gap={-8}
+              edge={orientation === 'horizontal' ? 'left' : 'top'}
+            />
+          )}
         </div>
       </StackContext.Provider>
     );
