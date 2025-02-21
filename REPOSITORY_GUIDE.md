@@ -124,6 +124,12 @@ pnpm nx serve halo-app
 Packages may also declare scripts in their `package.json` `scripts` field as is traditional for an npm package.
 This is appropriate when `nx` caching is not suitable or necessary for the task, and when that script does not partake in the `nx` task dependency tree.
 
+To help maintain cross-platform support use [shx](https://www.npmjs.com/package/shx) to execute shell commands in a script. See the supported commands [here](https://github.com/shelljs/shelljs#command-reference).
+
+Example:  
+Prefer `"build": "shx rm -rf ./dist && tsc"`  
+over `"build": "rm -rf ./dist && tsc"`
+
 ## Folders
 
 | Folder                  | Description                                                                                    |
