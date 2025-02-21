@@ -13,7 +13,9 @@ import {
   JOIN_DIALOG,
   JoinDialog,
   RECOVER_CODE_DIALOG,
+  RECOVER_SETUP_DIALOG,
   RecoveryCodeDialog,
+  RecoverySetupDialog,
   type RecoveryCodeDialogProps,
 } from '../components';
 
@@ -40,5 +42,11 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'dialog',
       filter: (data): data is { props: RecoveryCodeDialogProps } => data.component === RECOVER_CODE_DIALOG,
       component: ({ data }) => <RecoveryCodeDialog {...data.props} />,
+    }),
+    createSurface({
+      id: RECOVER_SETUP_DIALOG,
+      role: 'dialog',
+      filter: (data): data is any => data.component === RECOVER_SETUP_DIALOG,
+      component: ({ data }) => <RecoverySetupDialog />,
     }),
   ]);
