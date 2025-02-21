@@ -8,6 +8,7 @@ import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
@@ -24,26 +25,39 @@ const Test = () => {
   const identity = useIdentity();
   const credentials = useCredentials();
 
-  const handleCreateIdentity = useCallback(() => client.halo.createIdentity(), [client]);
+  const handleCreateIdentity = useCallback(async () => {
+    await client.halo.createIdentity();
+    invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+    await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
+  }, [client]);
+
   // TODO(wittjosiah): Consider factoring out passkey creation to the halo api.
   const handleCreatePassKey = useCallback(async () => {
     invariant(identity, 'Identity not available');
     const challenge = getNewChallenge();
-    const credential = await navigator.credentials.create({
-      publicKey: {
-        challenge: new TextEncoder().encode(challenge),
-        rp: { id: 'localhost', name: 'Test' },
-        user: {
-          id: new TextEncoder().encode(identity.did),
-          name: identity.did,
-          displayName: identity.profile?.displayName ?? '',
+    // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
+    const credential = await navigator.credentials
+      .create({
+        publicKey: {
+          challenge: new TextEncoder().encode(challenge),
+          rp: { id: location.hostname, name: 'Test' },
+          user: {
+            id: new TextEncoder().encode(identity.did),
+            name: identity.did,
+            displayName: identity.profile?.displayName ?? '',
+          },
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -8 }, // Ed25519 (not yet supported across all browsers)
+            { type: 'public-key', alg: -7 }, // ES256
+          ],
+          // https://web.dev/articles/webauthn-discoverable-credentials#resident-key
+          authenticatorSelection: {
+            residentKey: 'required',
+            requireResidentKey: true,
+          },
         },
-        pubKeyCredParams: [
-          { type: 'public-key', alg: -8 }, // Ed25519 (not yet supported across all browsers)
-          { type: 'public-key', alg: -7 }, // ES256
-        ],
-      },
-    });
+      })
+      .catch(log.error);
 
     invariant(credential, 'Credential not available');
     const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
@@ -58,20 +72,31 @@ const Test = () => {
   }, [client, identity]);
 
   const handleAuthenticate = useCallback(async () => {
-    // TODO(wittjosiah): This should come from edge.
-    const challenge = getNewChallenge();
-    const credential = await navigator.credentials.get({
-      publicKey: {
-        challenge: new TextEncoder().encode(challenge),
-        rpId: 'localhost',
-        // NOTE: Don't prompt for password in storybook for test purposes.
-        //   In practice, this should be set to 'required' for identity recovery.
-        userVerification: 'discouraged',
+    invariant(client.services.services.IdentityService, 'IdentityService not available');
+    const { deviceKey, controlFeedKey, challenge } =
+      await client.services.services.IdentityService.requestRecoveryChallenge();
+    const credential = await navigator.credentials
+      .get({
+        publicKey: {
+          challenge: new TextEncoder().encode(challenge),
+          rpId: location.hostname,
+          // NOTE: Don't prompt for password in storybook for test purposes.
+          //   In practice, this should be set to 'required' for identity recovery.
+          userVerification: 'discouraged',
+        },
+      })
+      .catch(log.error);
+    const identityDid = new TextDecoder().decode((credential as any).response.userHandle);
+    await client.services.services.IdentityService.recoverIdentity({
+      external: {
+        identityDid,
+        deviceKey,
+        controlFeedKey,
+        signature: Buffer.from((credential as any).response.signature),
+        clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
+        authenticatorData: Buffer.from((credential as any).response.authenticatorData),
       },
     });
-    const did = new TextDecoder().decode((credential as any).response.userHandle);
-    console.log({ credential, did });
-    // TODO(wittjosiah): Send signature to edge for verification and admission.
   }, []);
 
   return (
@@ -113,9 +138,10 @@ const config = new Config({
     },
     services: {
       edge: {
-        url: 'wss://edge.dxos.workers.dev/',
+        // url: 'wss://edge.dxos.workers.dev/',
+        url: 'ws://localhost:8787',
       },
-      iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+      iceProviders: [{ urls: 'https://edge-production.dxos.workers.dev/ice' }],
     },
   },
 });

@@ -95,8 +95,19 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._recoveryManager.createRecoveryCredential(request);
   }
 
+  async requestRecoveryChallenge() {
+    return this._recoveryManager.requestRecoveryChallenge();
+  }
+
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
-    await this._recoveryManager.recoverIdentity(request);
+    if (request.recoveryCode) {
+      await this._recoveryManager.recoverIdentity({ recoveryCode: request.recoveryCode });
+    } else if (request.external) {
+      await this._recoveryManager.recoverIdentityWithExternalSignature(request.external);
+    } else {
+      throw new Error('Invalid request.');
+    }
+
     return this._getIdentity()!;
   }
 
