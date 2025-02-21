@@ -3,7 +3,6 @@
 //
 
 import { contributes, type PluginsContext } from '@dxos/app-framework';
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { Client } from '@dxos/react-client';
 
 import { ClientCapabilities } from './capabilities';
@@ -15,8 +14,7 @@ type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationU
 };
 
 export default async ({ context, onClientInitialized, ...options }: ClientCapabilityOptions) => {
-  const config = new Config(await Storage(), Envs(), Local(), Defaults());
-  const client = new Client({ config, ...options });
+  const client = new Client(options);
   await client.initialize();
   await onClientInitialized?.(context, client);
 

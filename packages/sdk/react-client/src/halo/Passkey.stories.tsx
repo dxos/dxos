@@ -61,7 +61,7 @@ const Test = () => {
 
     invariant(credential, 'Credential not available');
     const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
-    const algorithm: number = (credential as any).response.getPublicKeyAlgorithm();
+    const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
 
     invariant(client.services.services.IdentityService, 'IdentityService not available');
     // TODO(wittjosiah): This needs a proper api.
@@ -78,7 +78,7 @@ const Test = () => {
     const credential = await navigator.credentials
       .get({
         publicKey: {
-          challenge: new TextEncoder().encode(challenge),
+          challenge: Buffer.from(challenge, 'base64'),
           rpId: location.hostname,
           // NOTE: Don't prompt for password in storybook for test purposes.
           //   In practice, this should be set to 'required' for identity recovery.

@@ -11,7 +11,7 @@ export type SegmentTelemetryOptions = {
 
 type CommonOptions = {
   installationId?: string;
-  identityId?: string;
+  did?: string;
   properties?: object;
   timestamp?: Date;
 };
