@@ -109,6 +109,10 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           },
           onDragStart: () => {
             document.body.removeAttribute('data-drag-preview');
+            itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
+          },
+          onDrop: () => {
+            itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
           },
         }),
         dropTargetForElements({
@@ -173,7 +177,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+          {closestEdge && <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />}
         </Root>
       </StackItemContext.Provider>
     );
