@@ -14,8 +14,8 @@
     "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
-    "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
     "icons:": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
+    "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
     "icons:pwa": "pwa-asset-generator --icon-only --favicon --index=index.html ./public/icon.svg ./public"
   },
   "dependencies": {
