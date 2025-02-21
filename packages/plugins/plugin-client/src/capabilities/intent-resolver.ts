@@ -162,9 +162,37 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
         const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
         const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
 
-        invariant(client.services.services.IdentityService, 'IdentityService not available');
         // TODO(wittjosiah): This needs a proper api.
+        invariant(client.services.services.IdentityService, 'IdentityService not available');
         await client.services.services.IdentityService.createRecoveryCredential({ recoveryKey, algorithm });
+      },
+    }),
+    createResolver({
+      intent: ClientAction.RedeemPasskey,
+      resolve: async () => {
+        const client = context.requestCapability(ClientCapabilities.Client);
+        // TODO(wittjosiah): This needs a proper api.
+        invariant(client.services.services.IdentityService, 'IdentityService not available');
+        const { deviceKey, controlFeedKey, challenge } =
+          await client.services.services.IdentityService.requestRecoveryChallenge();
+        const credential = await navigator.credentials.get({
+          publicKey: {
+            challenge: Buffer.from(challenge, 'base64'),
+            rpId: location.hostname,
+            userVerification: 'required',
+          },
+        });
+        const identityDid = new TextDecoder().decode((credential as any).response.userHandle);
+        await client.services.services.IdentityService.recoverIdentity({
+          external: {
+            identityDid,
+            deviceKey,
+            controlFeedKey,
+            signature: Buffer.from((credential as any).response.signature),
+            clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
+            authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+          },
+        });
       },
     }),
   ]);
