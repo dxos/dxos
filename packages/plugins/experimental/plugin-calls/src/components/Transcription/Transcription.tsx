@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type FC } from 'react';
 

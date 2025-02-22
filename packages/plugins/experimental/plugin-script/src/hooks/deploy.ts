@@ -130,12 +130,23 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
         fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
 
       script.changed = false;
-      deployedFunction.description = script.description;
+      if (script.description !== undefined && script.description.trim() !== '') {
+        deployedFunction.description = script.description;
+      } else if (meta.description) {
+        deployedFunction.description = meta.description;
+      } else {
+        log.verbose('no description in function metadata', { functionId });
+      }
 
       if (meta.inputSchema) {
         deployedFunction.inputSchema = meta.inputSchema;
       } else {
         log.verbose('no input schema in function metadata', { functionId });
+      }
+      if (meta.outputSchema) {
+        deployedFunction.outputSchema = meta.outputSchema;
+      } else {
+        log.verbose('no output schema in function metadata', { functionId });
       }
 
       setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${space.id}/${functionId}`);

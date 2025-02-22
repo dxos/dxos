@@ -34,18 +34,18 @@ export const useQueue = <T>(
   }, [queue]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
     if (options.pollInterval) {
       const poll = () => {
         void queue?.refresh().finally(() => {
-          interval = setTimeout(poll, Math.max(options.pollInterval ?? 0, MIN_POLL_INTERVAL));
+          timeout = setTimeout(poll, Math.max(options.pollInterval ?? 0, MIN_POLL_INTERVAL));
         });
       };
 
       poll();
     }
 
-    return () => clearInterval(interval);
+    return () => clearTimeout(timeout);
   }, [queue, options.pollInterval]);
 
   return queue;
