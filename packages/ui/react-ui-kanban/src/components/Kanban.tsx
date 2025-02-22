@@ -2,16 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
+import { getValue } from '@dxos/echo-schema';
+import { getValencePropertyOf } from '@dxos/live-object';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
 import { translationKey } from '../translations';
+
+const FallbackCard = <T extends BaseKanbanItem = { id: string }>({ card }: { card: T }) => {
+  const title = useMemo(() => {
+    const path = getValencePropertyOf(card, 'primary');
+    if (!path) {
+      return 'Untitled';
+    }
+    const value = getValue(card, path);
+    return value ? value.toString() : 'Untitled';
+  }, [card]);
+
+  return <div className={mx('p-2 text-sm')}>{title}</div>;
+};
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
@@ -26,16 +40,16 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   useEffect(() => () => clear(), []);
   // const [namingColumn, setNamingColumn] = useState(false);
 
-  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
-  //   omit fields from the form?
-  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
-    if (!model.columnFieldPath) {
-      return undefined;
-    }
-    return {
-      [model.columnFieldPath]: () => <></>,
-    };
-  }, [model.columnFieldPath]);
+  // // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
+  // //   omit fields from the form?
+  // const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
+  //   if (!model.columnFieldPath) {
+  //     return undefined;
+  //   }
+  //   return {
+  //     [model.columnFieldPath]: () => <></>,
+  //   };
+  // }, [model.columnFieldPath]);
 
   return (
     <Stack
@@ -110,7 +124,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} readonly />
+                      <FallbackCard card={card} />
                     </div>
                   </StackItem.Root>
                 ))}

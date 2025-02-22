@@ -6,18 +6,18 @@ import { test } from 'vitest';
 
 import { S } from '@dxos/effect';
 
-import { PropertyValenceId, getValencePropertyOf } from './getter';
+import { PropertyValenceAnnotationId, getValencePropertyOf } from './getter';
 import { create } from '../object';
 
 test('getValencePropertyOf', ({ expect }) => {
   const schema = S.Struct({
     title: S.String.annotations({
-      [PropertyValenceId]: 'primary',
+      [PropertyValenceAnnotationId]: 'primary',
     }),
     nested: S.Struct({
       property: S.optional(
         S.String.annotations({
-          [PropertyValenceId]: 'secondary',
+          [PropertyValenceAnnotationId]: 'secondary',
         }),
       ),
     }),

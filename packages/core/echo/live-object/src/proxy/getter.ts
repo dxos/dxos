@@ -46,8 +46,7 @@ export const getTypename = <T extends BaseObject>(obj: T): string | undefined =>
   return getType(obj)?.objectId;
 };
 
-export const PropertyValenceId = Symbol.for('@dxos/schema/annotation/PropertyValence');
-
+export const PropertyValenceAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyValence');
 export type Valence = 'primary' | 'secondary' | (string & {});
 
 export const getValencePropertyOf = <T extends BaseObject>(object: T, valence: Valence): JsonPath | undefined => {
@@ -59,7 +58,7 @@ export const getValencePropertyOf = <T extends BaseObject>(object: T, valence: V
   let result: string | undefined;
 
   visit(schema.ast, (node, path) => {
-    const nodeValence = findAnnotation<Valence>(node, PropertyValenceId);
+    const nodeValence = findAnnotation<Valence>(node, PropertyValenceAnnotationId);
     if (nodeValence === valence) {
       result = path.join('.');
       return VisitResult.EXIT;
