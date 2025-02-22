@@ -15,35 +15,6 @@ import { type ViewType } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
-// TODO(ZaymonFC): Factor this out and use it where we query for schemas with typename.
-const useSchema = (space: Space | undefined, typename: string | undefined): EchoSchema | undefined => {
-  const { subscribe, getSchema } = useMemo(() => {
-    if (!typename || !space) {
-      return {
-        subscribe: () => () => {},
-        getSchema: () => undefined,
-      };
-    }
-
-    const query = space.db.schemaRegistry.query({ typename });
-    const initialResult = query.runSync()[0];
-    let currentSchema = initialResult;
-
-    return {
-      subscribe: (onStoreChange: () => void) => {
-        const unsubscribe = query.subscribe(() => {
-          currentSchema = query.results[0];
-          onStoreChange();
-        });
-        return unsubscribe;
-      },
-      getSchema: () => currentSchema,
-    };
-  }, [typename, space]);
-
-  return useSyncExternalStore(subscribe, getSchema);
-};
-
 type RowDetailsPanelProps = { objectId: string; view: ViewType };
 
 const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {

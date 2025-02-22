@@ -58,7 +58,7 @@ export const useSelectionActions = (contextId?: string) => {
 
   const clear = useCallback(() => {
     if (!contextId) {
-      return new Set();
+      return;
     }
     selection.clearSelection(contextId);
   }, [selection, contextId]);
