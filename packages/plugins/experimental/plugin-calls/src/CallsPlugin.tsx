@@ -36,7 +36,7 @@ export const CallsPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [])],
+      activate: () => [contributes(ClientCapabilities.Schema, [TranscriptType])],
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

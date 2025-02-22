@@ -189,14 +189,16 @@ export class Transcriber extends Resource {
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
     // Drop segments that end before the last segment end timestamp.
-    const filteredSegments = segments.filter((segment) => zeroTimestamp + segment.end * 1000 > this._lastUsedTimestamp);
+    const filteredSegments = segments.filter(
+      (segment) => zeroTimestamp + segment.end * 1_000 > this._lastUsedTimestamp,
+    );
 
     // Filter words of first segment to use.
     const firstSegment = {
       ...filteredSegments.at(0)!,
       words: filteredSegments
         .at(0)!
-        .words.filter((word) => zeroTimestamp + word.start * 1000 > this._lastUsedTimestamp),
+        .words.filter((word) => zeroTimestamp + word.start * 1_000 > this._lastUsedTimestamp),
     };
 
     // Update last timestamp.
@@ -204,7 +206,7 @@ export class Transcriber extends Resource {
 
     // Add absolute timestamp to each segment.
     return [firstSegment, ...filteredSegments.slice(1)].map((segment) => ({
-      started: new Date(zeroTimestamp + segment.start * 1000),
+      started: new Date(zeroTimestamp + segment.start * 1_000),
       text: segment.text,
     }));
   }
