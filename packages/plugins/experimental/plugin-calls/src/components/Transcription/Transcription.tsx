@@ -21,7 +21,7 @@ export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
 
   return (
-    <div role='list' className='flex flex-col grow gap-2'>
+    <div role='list' className='flex flex-col grow gap-2 m-1'>
       {blocks?.map((block) => (
         <div
           role='listitem'
