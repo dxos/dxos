@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type FC } from 'react';
 
 import { type TranscriptionBlock } from '../../types';
@@ -16,10 +17,16 @@ export const TranscriptionList: FC<{ blocks?: TranscriptionBlock[] }> = ({ block
   return (
     <div role='list' className='flex flex-col grow gap-2'>
       {blocks?.map((block) => (
-        <div role='listitem' key={block.id} className='flex flex-col p-2 gap-2 border border-separator rounded'>
+        <div
+          role='listitem'
+          key={block.id}
+          className='flex flex-col border border-separator divide-y divide-separator rounded'
+        >
           {block.segments.map((segment, i) => (
-            <div key={i}>
-              <div className='truncate text-xs text-subdued'>{String(segment.timestamp)}</div>
+            <div key={i} className='flex flex-col p-2 gap-1'>
+              <div className='truncate text-xs text-subdued'>
+                {formatDistanceToNow(segment.timestamp, { addSuffix: true })}
+              </div>
               <div>{segment.text}</div>
             </div>
           ))}

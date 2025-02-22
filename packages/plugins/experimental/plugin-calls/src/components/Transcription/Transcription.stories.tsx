@@ -38,7 +38,7 @@ type Story = StoryObj<typeof TranscriptionList>;
 
 let start = new Date();
 const next = () => {
-  start = new Date(start.getTime() + Math.random() * 5_000);
+  start = new Date(start.getTime() - Math.random() * 30_000);
   return start;
 };
 
@@ -51,6 +51,6 @@ export const Default: Story = {
         timestamp: next(),
         text: faker.lorem.paragraph(),
       })),
-    })),
+    })).reverse(),
   },
 };
