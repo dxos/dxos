@@ -26,6 +26,7 @@ const meta: Meta<typeof TranscriptionList> = {
   decorators: [
     withTheme,
     withLayout({
+      tooltips: true,
       fullscreen: true,
       classNames: 'justify-center',
     }),
