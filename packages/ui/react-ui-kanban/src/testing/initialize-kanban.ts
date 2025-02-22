@@ -2,9 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type EchoSchema, S, TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
+import {
+  AST,
+  type EchoSchema,
+  S,
+  TypedObject,
+  FormatEnum,
+  TypeEnum,
+  type JsonProp,
+  PropertyValenceAnnotationId,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PropertyValenceAnnotationId } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
 import { createView, ViewProjection, createFieldId } from '@dxos/schema';

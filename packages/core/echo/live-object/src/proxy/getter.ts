@@ -4,7 +4,7 @@
 
 import { type Reference } from '@dxos/echo-protocol';
 import type { BaseObject, JsonPath } from '@dxos/echo-schema';
-import { SchemaMetaSymbol } from '@dxos/echo-schema';
+import { PropertyValenceAnnotationId, SchemaMetaSymbol } from '@dxos/echo-schema';
 import { findAnnotation, visit, VisitResult, type S } from '@dxos/effect';
 
 import { getProxyHandler, isReactiveObject } from './proxy';
@@ -46,7 +46,6 @@ export const getTypename = <T extends BaseObject>(obj: T): string | undefined =>
   return getType(obj)?.objectId;
 };
 
-export const PropertyValenceAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyValence');
 export type Valence = 'primary' | 'secondary' | (string & {});
 
 export const getValencePropertyOf = <T extends BaseObject>(object: T, valence: Valence): JsonPath | undefined => {
