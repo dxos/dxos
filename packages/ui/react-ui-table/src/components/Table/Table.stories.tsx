@@ -7,11 +7,10 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -41,13 +40,13 @@ const DefaultStory = () => {
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
-  const [schema, setSchema] = useState<EchoSchema>();
+  const schema = useSchema(space, table?.view?.target?.query.type);
+
   useEffect(() => {
     if (space && tables.length && !table) {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
   }, [space, tables]);
 

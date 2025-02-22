@@ -36,12 +36,11 @@ export const useSelectedItems = (contextId: string): Set<string> => {
 export const useSelectionActions = (contextId?: string) => {
   const { selection } = useSelectionContext(SELECTION_NAME);
 
-  if (!contextId) {
-    return { select: () => {}, toggle: () => {}, clear: () => {} };
-  }
-
   const select = useCallback(
     (ids: string[]) => {
+      if (!contextId) {
+        return new Set();
+      }
       selection.updateSelection(contextId, ids);
     },
     [selection, contextId],
@@ -49,12 +48,18 @@ export const useSelectionActions = (contextId?: string) => {
 
   const toggle = useCallback(
     (id: string) => {
+      if (!contextId) {
+        return new Set();
+      }
       selection.toggleSelection(contextId, id);
     },
     [selection, contextId],
   );
 
   const clear = useCallback(() => {
+    if (!contextId) {
+      return;
+    }
     selection.clearSelection(contextId);
   }, [selection, contextId]);
 
