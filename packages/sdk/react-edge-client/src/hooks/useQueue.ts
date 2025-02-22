@@ -32,19 +32,19 @@ export const useQueue = <T>(
   }, [queue]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
     if (options.pollInterval) {
       const poll = () => {
         void queue?.refresh().finally(() => {
-          interval = setTimeout(poll, options.pollInterval);
+          timeout = setTimeout(poll, options.pollInterval);
         });
       };
 
       poll();
     }
 
-    return () => clearInterval(interval);
-  }, [options.pollInterval]);
+    return () => clearTimeout(timeout);
+  }, [queue, options.pollInterval]);
 
   return queue;
 };

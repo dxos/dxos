@@ -8,14 +8,16 @@ import { EchoObject, ObjectId, S, TypedObject } from '@dxos/echo-schema';
  * Root transcript object created when the user starts a transcription.
  */
 export const TranscriptSchema = S.Struct({
+  name: S.String,
+
   // TODO(burdon): Use string for dates?
   started: S.optional(S.Date),
   ended: S.optional(S.Date),
 
   /**
-   * Queues containing TranscriptBlock objects.
+   * Queue containing TranscriptBlock objects.
    */
-  queues: S.optional(S.Array(S.String)),
+  queue: S.optional(S.String),
 });
 
 export class TranscriptType extends TypedObject({

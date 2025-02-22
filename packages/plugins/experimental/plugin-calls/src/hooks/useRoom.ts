@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Stream } from '@dxos/codec-protobuf';
 import { generateName } from '@dxos/display-name';
-import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
@@ -26,13 +25,13 @@ export type UseRoomState = {
 /**
  * Call session state.
  */
-export const useRoom = ({ roomId, queue }: { roomId: PublicKey; queue?: DXN }): UseRoomState => {
+export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
   const [roomState, setRoomState] = useState<RoomState>({
     meetingId: roomId.toHex(),
     users: [],
   });
 
-  const ai = useAi({ queue });
+  const ai = useAi();
   const haloIdentity = useIdentity();
   const client = useClient();
   const identityKey = haloIdentity!.identityKey.toHex();

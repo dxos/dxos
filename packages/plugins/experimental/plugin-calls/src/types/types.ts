@@ -3,7 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
-import { type Space, SpaceSchema, isSpace } from '@dxos/react-client/echo';
+import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { TranscriptSchema } from './transcript';
 import { CALLS_PLUGIN } from '../meta';
@@ -19,7 +19,6 @@ export namespace CallsAction {
   export class Create extends S.TaggedClass<Create>()(`${CALLS_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
-      space: SpaceSchema,
     }),
     output: S.Struct({
       object: TranscriptSchema,

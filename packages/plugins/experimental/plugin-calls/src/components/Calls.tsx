@@ -4,31 +4,25 @@
 
 import React, { type FC } from 'react';
 
-import { type DXN } from '@dxos/keys';
-import { type PublicKey } from '@dxos/react-client';
-
 import { Call } from './Call';
 import { CallsContextProvider } from './CallsContextProvider';
 import { Lobby } from './Lobby';
-import { useRoomContext } from '../hooks';
+import { useRoomContext, type RoomContextType } from '../hooks';
 
-const Content = () => {
-  const { joined } = useRoomContext();
-  return joined ? <Call /> : <Lobby />;
-};
-
-export type CallsProps = {
-  roomId: PublicKey;
-  queue?: DXN;
-};
+export type CallsProps = Pick<RoomContextType, 'roomId' | 'onTranscription'>;
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls: FC<CallsProps> = ({ roomId, queue }) => {
+export const Calls: FC<CallsProps> = (props) => {
   return (
-    <CallsContextProvider roomId={roomId} queue={queue}>
+    <CallsContextProvider {...props}>
       <Content />
     </CallsContextProvider>
   );
+};
+
+const Content = () => {
+  const { joined } = useRoomContext();
+  return joined ? <Call /> : <Lobby />;
 };

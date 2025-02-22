@@ -7,7 +7,7 @@ import { type Space } from '@dxos/client/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 
-import { AppGraphBuilder, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { CALLS_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { CallsAction, TranscriptType } from './types';
@@ -37,6 +37,11 @@ export const CallsPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () => [contributes(ClientCapabilities.Schema, [TranscriptType])],
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,

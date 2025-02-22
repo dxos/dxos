@@ -12,7 +12,6 @@ import { nonNullable } from '@dxos/util';
 import { PullAudioTracks } from './PullAudioTracks';
 import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
 import { type TranscriptionState } from '../../types';
-import { randomQueueDxn } from '../../utils';
 import { MediaButtons } from '../Media';
 import { ParticipantsLayout } from '../Participant';
 
@@ -26,6 +25,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     pushedTracks,
     room: { ai, identity, otherUsers, updateUserState },
     setJoined,
+    onTranscription,
   } = useRoomContext()!;
 
   // Broadcast status over swarm.
@@ -42,8 +42,11 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
 
     // Check not already running.
     if (!ai.transcription.enabled && !ai.transcription.objectDxn) {
-      // Create queue DXN.
-      ai.transcription.objectDxn = randomQueueDxn().toString();
+      const object = await onTranscription?.();
+
+      if (object) {
+        transcription.objectDxn = object.queue;
+      }
     }
 
     ai.setTranscription(transcription);

@@ -5,12 +5,10 @@
 import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { type DXN } from '@dxos/keys';
-import { useConfig, type PublicKey } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
 
 import {
   RoomContext,
-  type RoomContextType,
   usePeerConnection,
   useStablePojo,
   useStateObservable,
@@ -18,27 +16,25 @@ import {
   useRoom,
   useUserMedia,
   useIsSpeaking,
+  type RoomContextType,
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
-type CallsContextProps = PropsWithChildren<{
-  roomId: PublicKey;
-  queue?: DXN;
-}>;
+export type CallsContextProviderProps = PropsWithChildren<Pick<RoomContextType, 'roomId' | 'onTranscription'>>;
 
 /**
  * Global context provider for calls.
  */
 // TODO(burdon): Need to provide global state for plugin and provider.
 // - First create simple plugin context that tracks the current roomId.
-export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, queue, children }) => {
+export const CallsContextProvider: FC<CallsContextProviderProps> = ({ roomId, onTranscription, children }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
   const maxWebcamQualityLevel = 1_080;
 
-  const room = useRoom({ roomId, queue });
+  const room = useRoom({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({
@@ -114,6 +110,7 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, queue, chi
       audio: trackObjectToString(pushedAudioTrack),
       screenshare: trackObjectToString(pushedScreenShareTrack),
     },
+    onTranscription,
   };
 
   return <RoomContext.Provider value={context}>{children}</RoomContext.Provider>;

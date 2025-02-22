@@ -4,8 +4,6 @@
 
 import { useState } from 'react';
 
-import { type DXN } from '@dxos/keys';
-
 import { type TranscriptionState } from '../types';
 
 export type Ai = {
@@ -13,11 +11,10 @@ export type Ai = {
   setTranscription: (transcription: TranscriptionState) => void;
 };
 
-export const useAi = ({ queue }: { queue?: DXN }): Ai => {
+export const useAi = (): Ai => {
   const [transcription, setTranscription] = useState<TranscriptionState>({
     enabled: false,
     lamportTimestamp: 0,
-    objectDxn: queue?.toString(), // TODO(burdon): Rename.
   });
 
   return {
