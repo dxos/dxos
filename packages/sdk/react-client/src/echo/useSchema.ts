@@ -9,9 +9,6 @@ import { type EchoSchema } from '@dxos/echo-schema';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
- * @param space - The containing space from which to fetch schema data.
- * @param typename - The specific type name to query from the schema registry.
- * @returns The current schema for the given type, or undefined if space/typename unavailable.
  */
 export const useSchema = (space: Space | undefined, typename: string | undefined): EchoSchema | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
