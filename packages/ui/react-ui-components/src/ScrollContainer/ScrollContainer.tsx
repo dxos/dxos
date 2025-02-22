@@ -82,12 +82,14 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     }, []);
 
     return (
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className={mx('flex flex-col grow overflow-y-scroll scrollbar-none', classNames)}
-      >
-        {children}
+      <div className='flex grow overflow-hidden'>
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          className={mx('flex flex-col grow overflow-y-auto scrollbar-none')}
+        >
+          {children}
+        </div>
       </div>
     );
   },

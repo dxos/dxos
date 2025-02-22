@@ -14,11 +14,9 @@ import { type TranscriptBlock, type TranscriptType } from '../types';
 
 const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
   const edge = useEdgeClient();
-  const queue = useQueue<TranscriptBlock>(
-    edge, //
-    transcript.queue ? DXN.parse(transcript.queue) : undefined,
-    { pollInterval: 5_00 },
-  );
+  const queue = useQueue<TranscriptBlock>(edge, transcript.queue ? DXN.parse(transcript.queue) : undefined, {
+    pollInterval: 1_000,
+  });
 
   return (
     <StackItem.Content toolbar={false}>
