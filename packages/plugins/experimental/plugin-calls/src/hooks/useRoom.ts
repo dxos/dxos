@@ -52,12 +52,12 @@ export const useRoom = ({ roomId }: { roomId: PublicKey }): UseRoomState => {
         setRoomState({ users, meetingId: roomId.toHex() });
         // Note: Small CRDT for merging transcription states.
         const maxTimestamp = Math.max(...users.map((user) => user.transcription?.lamportTimestamp ?? 0));
-        const newTranscriptionState = users.find(
-          (user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp,
-        );
+        const newTranscriptionState = users
+          .filter((user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp)
+          .sort((user1, user2) => user1.id.localeCompare(user2.id));
 
-        if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState) {
-          ai.setTranscription(newTranscriptionState.transcription!);
+        if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState.length > 0) {
+          ai.setTranscription(newTranscriptionState[0].transcription || {});
         }
       });
 
