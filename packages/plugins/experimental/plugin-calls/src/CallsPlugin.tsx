@@ -27,7 +27,7 @@ export const CallsPlugin = () =>
           id: TranscriptType.typename,
           metadata: {
             createObject: (props: { name?: string }, options: { space: Space }) =>
-              createIntent(CallsAction.Create, { ...props, space: options.space }),
+              createIntent(CallsAction.Create, { ...props }),
             placeholder: ['transcript title placeholder', { ns: CALLS_PLUGIN }],
             icon: 'ph--subtitles--regular',
           },

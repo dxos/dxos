@@ -7,7 +7,6 @@ import React, { useCallback, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -27,7 +26,7 @@ const CallsContainer: FC<CallsProps & { space: Space }> = ({ roomId, space }) =>
   }, [dispatch, space, target]);
 
   return (
-    <StackItem.Content toolbar={false} classNames='h-full w-full overflow-hidden'>
+    <StackItem.Content toolbar={false}>
       <Calls roomId={roomId} onTranscription={target ? handleTranscription : undefined} />
     </StackItem.Content>
   );

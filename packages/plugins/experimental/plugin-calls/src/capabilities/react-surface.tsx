@@ -5,11 +5,12 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
-import { CallsContainer } from '../components';
+import { CallsContainer, TranscriptionContainer } from '../components';
 import { CALLS_PLUGIN } from '../meta';
-import { type Call, isCall } from '../types';
+import { type Call, isCall, isTranscript, type TranscriptType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -26,5 +27,14 @@ export default () =>
       filter: (data): data is { subject: Space } => isSpace(data.subject),
       // TODO(mykola): Think about what we use as a roomId. Using the space key is not a good idea.
       component: ({ data }) => <CallsContainer space={data.subject} roomId={data.subject.key} />,
+    }),
+    createSurface({
+      id: CALLS_PLUGIN,
+      role: 'article',
+      filter: (data): data is { subject: TranscriptType } => isTranscript(data.subject),
+      component: ({ data, role }) => {
+        log.info('data', { data });
+        return <TranscriptionContainer transcript={data.subject} />;
+      },
     }),
   ]);

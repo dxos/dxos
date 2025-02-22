@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { isInstanceOf, S } from '@dxos/echo-schema';
+import { type Space, isReactiveObject, isSpace } from '@dxos/react-client/echo';
 
-import { TranscriptSchema } from './transcript';
+import { TranscriptSchema, TranscriptType } from './transcript';
 import { CALLS_PLUGIN } from '../meta';
 
 /**
@@ -32,3 +32,7 @@ export type Call = {
 };
 
 export const isCall = (data: any): data is Call => data.type === `${CALLS_PLUGIN}/space` && isSpace(data.space);
+
+export const isTranscript = (object: unknown): object is typeof TranscriptType => {
+  return isReactiveObject(object) && isInstanceOf(TranscriptType, object);
+};
