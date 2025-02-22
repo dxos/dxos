@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { type EchoSchema, FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
 import { ViewType, ViewProjection } from '@dxos/schema';
@@ -19,27 +19,10 @@ type KanbanViewEditorProps = { kanban: KanbanType };
 export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
-
-  const [schema, setSchema] = useState<EchoSchema | undefined>();
-
-  useEffect(() => {
-    if (space && kanban?.cardView?.target?.query?.type) {
-      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
-    }
-  }, [space, kanban?.cardView?.target?.query?.type]);
-
-  const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
+  const schema = useSchema(space, currentTypename);
+  const views = useQuery(space, Filter.schema(ViewType));
+
   const updateViewTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
