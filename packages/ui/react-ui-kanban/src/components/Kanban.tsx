@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useEffect, useMemo } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useMemo } from 'react';
 
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
@@ -36,6 +36,22 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       [model.columnFieldPath]: () => <></>,
     };
   }, [model.columnFieldPath]);
+
+  const handleSave = useCallback(
+    (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+      const id = values.id;
+      invariant(typeof id === 'string');
+      const object = model.objects.find((obj) => obj.id === id);
+      invariant(object);
+
+      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+      for (const path of changedPaths) {
+        const value = values[path];
+        setValue(object, path, value);
+      }
+    },
+    [model.objects],
+  );
 
   return (
     <Stack
@@ -110,7 +126,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} readonly />
+                      <Form values={card} schema={model.cardSchema} Custom={Custom} handleSave={handleSave} autosave />
                     </div>
                   </StackItem.Root>
                 ))}
