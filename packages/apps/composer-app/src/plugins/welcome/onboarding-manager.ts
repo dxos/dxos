@@ -13,6 +13,7 @@ import { EventSubscriptions, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { CLIENT_PLUGIN } from '@dxos/plugin-client';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { HelpAction } from '@dxos/plugin-help/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -108,8 +109,8 @@ export class OnboardingManager {
       await this._openRecoverIdentity();
     } else if (!this._identity && (this._token || this._skipAuth)) {
       await this._createIdentity();
-      await this._createRecoveryCode();
-      !this._skipAuth && (await this._startHelp());
+      await this.setupRecovery();
+      await this._startHelp();
       await this._createAgent();
     }
 
@@ -125,6 +126,21 @@ export class OnboardingManager {
 
   async destroy() {
     await this._ctx.dispose();
+  }
+
+  async setupRecovery() {
+    if (this._skipAuth) {
+      return;
+    }
+
+    await this._dispatch(
+      // TODO(wittjosiah): Factor out to client plugin.
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
+        subject: `${CLIENT_PLUGIN}/RecoverySetupDialog`,
+        options: { state: true, type: 'alert' },
+      }),
+    );
   }
 
   async fetchCredential() {
@@ -206,10 +222,6 @@ export class OnboardingManager {
     await this._dispatch(createIntent(ClientAction.CreateIdentity));
   }
 
-  private async _createRecoveryCode() {
-    await this._dispatch(createIntent(ClientAction.CreateRecoveryCode));
-  }
-
   private async _createAgent() {
     await this._dispatch(createIntent(ClientAction.CreateAgent));
   }
@@ -237,6 +249,10 @@ export class OnboardingManager {
   }
 
   private async _startHelp() {
+    if (this._skipAuth) {
+      return;
+    }
+
     await this._dispatch(createIntent(HelpAction.Start));
   }
 }
