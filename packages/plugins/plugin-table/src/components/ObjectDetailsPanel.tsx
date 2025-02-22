@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useSyncExternalStore } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { type JsonPath, type EchoSchema, setValue } from '@dxos/echo-schema';
+import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSpace, Filter, type Space } from '@dxos/react-client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useSelectedItems } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
