@@ -12,6 +12,7 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Config, PublicKey } from '@dxos/react-client';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { ScrollContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -28,7 +29,9 @@ const Render = (props: CallsProps) => {
         <Calls {...props} />
       </div>
       <div className='flex h-full w-96'>
-        <Json data={queue?.items} />
+        <ScrollContainer>
+          <Json data={queue?.items} />
+        </ScrollContainer>
       </div>
     </div>
   );

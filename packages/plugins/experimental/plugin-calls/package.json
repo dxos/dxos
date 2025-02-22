@@ -49,6 +49,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
