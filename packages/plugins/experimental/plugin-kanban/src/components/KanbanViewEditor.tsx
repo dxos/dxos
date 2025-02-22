@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
 import { ViewType, ViewProjection } from '@dxos/schema';
