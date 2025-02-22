@@ -7,7 +7,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 
-import type { Queue } from './interface';
+import { type Queue } from './types';
 
 type MakeOptions<T> = {
   spaceId?: SpaceId;

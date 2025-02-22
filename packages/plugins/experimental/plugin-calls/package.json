@@ -37,6 +37,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

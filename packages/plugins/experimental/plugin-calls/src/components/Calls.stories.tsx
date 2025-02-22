@@ -5,23 +5,44 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { type Queue } from '@dxos/echo-db';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Config, PublicKey } from '@dxos/react-client';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { ScrollContainer } from '@dxos/react-ui-components';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls, type CallsProps } from './Calls';
+import { type TranscriptionBlock } from '../types';
 import { randomQueueDxn } from '../utils';
+
+// TODO(burdon): Create mock data.
+// TODO(burdon): Actions (e.g., mark, summarize, translate, delete).
+
+const TranscriptionList: FC<{ queue?: Queue<TranscriptionBlock> }> = ({ queue }) => {
+  return (
+    <div className='flex flex-col w-full gap-2'>
+      {queue?.items.map((block) => (
+        <div key={block.id} className='flex flex-col p-2gap-2 border border-separator rounded-md'>
+          {block.segments.map((segment, i) => (
+            <div key={i}>
+              <div className='text-xs'>{String(segment.timestamp)}</div>
+              <div>{segment.text}</div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const Render = (props: CallsProps) => {
   const client = useEdgeClient();
-  const queue = useQueue(client, DXN.parse(props.storybookQueueDxn!), { pollInterval: 500 });
+  const queue = useQueue<TranscriptionBlock>(client, DXN.parse(props.storybookQueueDxn!), { pollInterval: 500 });
 
   return (
     <div className='flex grow gap-8 justify-center'>
@@ -30,7 +51,7 @@ const Render = (props: CallsProps) => {
       </div>
       <div className='flex h-full w-96'>
         <ScrollContainer>
-          <Json data={queue?.items} />
+          <TranscriptionList queue={queue} />
         </ScrollContainer>
       </div>
     </div>
