@@ -196,9 +196,9 @@ const componentMap: Record<string, BlockComponent> = {
 };
 
 const TabbedContainer = ({ items }: { items: { title: string; block: any }[] }) => {
-  const [selected, setSelected] = useState(0);
   const lines = items.map((item) => item.title);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (open) {
@@ -206,10 +206,18 @@ const TabbedContainer = ({ items }: { items: { title: string; block: any }[] }) 
     }
   }, [open]);
 
+  const handleSelect = (index: number) => {
+    if (index === selected) {
+      setOpen(false);
+    } else {
+      setSelected(index);
+    }
+  };
+
   return (
     <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} open={open} onChangeOpen={setOpen}>
       <div className='flex gap-2 w-full'>
-        <Tabs ref={tabsRef} length={items.length} selected={selected} onSelect={setSelected} />
+        <Tabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
         <Json data={items[selected].block} classNames='!p-1 text-xs' />
       </div>
     </ToggleContainer>

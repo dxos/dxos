@@ -54,6 +54,13 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(
               }
               break;
             }
+
+            case 'Enter': {
+              ev.preventDefault();
+              ev.stopPropagation();
+              onSelect?.(selected);
+              break;
+            }
           }
         }}
       >
