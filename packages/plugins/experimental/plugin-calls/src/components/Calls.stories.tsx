@@ -5,10 +5,9 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { type Queue } from '@dxos/echo-db';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Config, PublicKey } from '@dxos/react-client';
@@ -17,28 +16,9 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls, type CallsProps } from './Calls';
+import { TranscriptionList } from './Transcription';
 import { type TranscriptionBlock } from '../types';
 import { randomQueueDxn } from '../utils';
-
-// TODO(burdon): Create mock data.
-// TODO(burdon): Actions (e.g., mark, summarize, translate, delete).
-
-const TranscriptionList: FC<{ queue?: Queue<TranscriptionBlock> }> = ({ queue }) => {
-  return (
-    <div className='flex flex-col w-full gap-2'>
-      {queue?.items.map((block) => (
-        <div key={block.id} className='flex flex-col p-2gap-2 border border-separator rounded-md'>
-          {block.segments.map((segment, i) => (
-            <div key={i}>
-              <div className='text-xs'>{String(segment.timestamp)}</div>
-              <div>{segment.text}</div>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const Render = (props: CallsProps) => {
   const client = useEdgeClient();
@@ -51,7 +31,7 @@ const Render = (props: CallsProps) => {
       </div>
       <div className='flex h-full w-96'>
         <ScrollContainer>
-          <TranscriptionList queue={queue} />
+          <TranscriptionList blocks={queue?.items} />
         </ScrollContainer>
       </div>
     </div>

@@ -63,6 +63,7 @@
     "wavefile": "^11.0.0"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
