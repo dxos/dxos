@@ -128,7 +128,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} onSave={handleSave} autosave />
+                      <Form values={card} schema={model.cardSchema} Custom={Custom} onSave={handleSave} autoSave />
                     </div>
                   </StackItem.Root>
                 ))}
