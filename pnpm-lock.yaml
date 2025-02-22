@@ -5629,6 +5629,9 @@ importers:
       '@dxos/react-edge-client':
         specifier: workspace:*
         version: link:../../../sdk/react-edge-client
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-components
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
