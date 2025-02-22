@@ -63,7 +63,7 @@ export class MediaStreamRecorder extends AudioRecorder {
     }
 
     this._onChunk({
-      timestamp: event.timeStamp,
+      timestamp: Date.now(),
       data: wav.getSamples(),
     });
   }
