@@ -17,7 +17,7 @@ const meta: Meta<typeof TranscriptionList> = {
   title: 'plugins/plugin-calls/TranscriptionList',
   component: TranscriptionList,
   render: (args) => (
-    <div className='flex w-96'>
+    <div className='flex w-[500px]'>
       <ScrollContainer classNames='p-2'>
         <TranscriptionList {...args} />
       </ScrollContainer>
@@ -42,11 +42,13 @@ const next = () => {
   return start;
 };
 
+const names = Array.from({ length: 3 }, () => faker.person.fullName());
+
 export const Default: Story = {
   args: {
     blocks: Array.from({ length: 6 + Math.floor(Math.random()) * 10 }, () => ({
       id: faker.string.uuid(),
-      author: faker.person.fullName(),
+      author: faker.helpers.arrayElement(names),
       segments: Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => ({
         timestamp: next(),
         text: faker.lorem.paragraph(),
