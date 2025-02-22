@@ -68,7 +68,7 @@ const Render = (args: ChaosProps) => {
 };
 
 const meta: Meta<ChaosProps> = {
-  title: 'ui/react-ui-sfx/audio',
+  title: 'ui/react-ui-components/audio',
   component: Chaos,
   render: Render,
   decorators: [withTheme, withLayout({ fullscreen: true })],

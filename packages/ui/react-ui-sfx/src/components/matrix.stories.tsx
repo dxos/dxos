@@ -28,7 +28,7 @@ const Render = (props: MatrixProps) => {
 };
 
 const meta: Meta<MatrixProps> = {
-  title: 'ui/react-ui-sfx/matrix',
+  title: 'ui/react-ui-components/matrix',
   component: Matrix,
   render: Render,
   decorators: [withTheme, withLayout({ fullscreen: true })],

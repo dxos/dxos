@@ -23,11 +23,11 @@ const Render = (props: CallsProps) => {
   const queue = useQueue(client, DXN.parse(props.storybookQueueDxn!), { pollInterval: 500 });
 
   return (
-    <div className='flex flex-row h-full w-full justify-center'>
-      <div className='flex h-full overflow-hidden w-96 outline outline-red-500'>
+    <div className='flex grow gap-8 justify-center'>
+      <div className='flex h-full w-96'>
         <Calls {...props} />
       </div>
-      <div className='flex h-full overflow-hidden w-96 outline outline-blue-500'>
+      <div className='flex h-full w-96'>
         <Json data={queue?.items} />
       </div>
     </div>
