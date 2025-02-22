@@ -4,6 +4,8 @@
 
 import React, { type ComponentProps, useCallback, useEffect, useMemo } from 'react';
 
+import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -41,7 +43,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
     (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
       const id = values.id;
       invariant(typeof id === 'string');
-      const object = model.objects.find((obj) => obj.id === id);
+      const object = model.items.find((obj) => obj.id === id);
       invariant(object);
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
@@ -50,7 +52,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         setValue(object, path, value);
       }
     },
-    [model.objects],
+    [model.items],
   );
 
   return (
@@ -126,7 +128,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} handleSave={handleSave} autosave />
+                      <Form values={card} schema={model.cardSchema} Custom={Custom} onSave={handleSave} autosave />
                     </div>
                   </StackItem.Root>
                 ))}
