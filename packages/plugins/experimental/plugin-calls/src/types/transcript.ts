@@ -5,10 +5,10 @@
 import { EchoObject, ObjectId, S, TypedObject } from '@dxos/echo-schema';
 
 /**
- * Root transcript object.
+ * Root transcript object created when the user starts a transcription.
  */
 export const TranscriptSchema = S.Struct({
-  // TODO(burdon): Use string?
+  // TODO(burdon): Use string for dates?
   started: S.optional(S.Date),
   ended: S.optional(S.Date),
 
@@ -27,10 +27,10 @@ export class TranscriptType extends TypedObject({
 
 /**
  * First message in queue.
+ * Contains metadata for the recording and transcript.
  */
 const TranscriptHeader = S.Struct({
   started: S.optional(S.Date),
-  ended: S.optional(S.Date),
 });
 
 export type TranscriptHeader = S.Schema.Type<typeof TranscriptHeader>;
