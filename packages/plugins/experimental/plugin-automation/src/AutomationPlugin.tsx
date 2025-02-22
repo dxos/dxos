@@ -17,11 +17,6 @@ import { AutomationAction, ChainPromptType, ChainType, AIChatType, ServiceType }
 export const AutomationPlugin = () =>
   definePlugin(meta, [
     defineModule({
-      id: `${meta.id}/module/ai-client`,
-      activatesOn: ClientEvents.ClientReady,
-      activate: AiClient,
-    }),
-    defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
@@ -87,5 +82,10 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/ai-client`,
+      activatesOn: ClientEvents.ClientReady,
+      activate: AiClient,
     }),
   ]);

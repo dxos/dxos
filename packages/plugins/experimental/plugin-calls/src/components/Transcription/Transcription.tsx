@@ -10,13 +10,16 @@ import React, { type FC } from 'react';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { CALLS_PLUGIN } from '../../meta';
-import { type TranscriptionBlock } from '../../types';
+import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): react-ui-list.
-// TODO(burdon): Create mock data.
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
-export const TranscriptionList: FC<{ blocks?: TranscriptionBlock[] }> = ({ blocks }) => {
+export type TranscriptionProps = {
+  blocks?: TranscriptBlock[];
+};
+
+export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
 
   return (
@@ -49,7 +52,7 @@ export const TranscriptionList: FC<{ blocks?: TranscriptionBlock[] }> = ({ block
                   classNames='p-1'
                 />
                 <div className='grow truncate text-xs text-subdued'>
-                  {formatDistanceToNow(segment.timestamp, { addSuffix: true })}
+                  {formatDistanceToNow(segment.started, { addSuffix: true })}
                 </div>
               </div>
               <div>{segment.text}</div>

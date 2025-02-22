@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { type Space } from '@dxos/client/echo';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 
 import { AppGraphBuilder, ReactSurface } from './capabilities';
 import { CALLS_PLUGIN, meta } from './meta';
 import translations from './translations';
+import { CallsAction, TranscriptType } from './types';
 
 export const CallsPlugin = () =>
   definePlugin(meta, [
@@ -15,6 +18,30 @@ export const CallsPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: Events.SetupMetadata,
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: TranscriptType.typename,
+          metadata: {
+            createObject: (props: { name?: string }, options: { space: Space }) =>
+              createIntent(CallsAction.Create, { ...props, space: options.space }),
+            placeholder: ['transcript title placeholder', { ns: CALLS_PLUGIN }],
+            icon: 'ph--subtitles--regular',
+          },
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => [contributes(ClientCapabilities.Schema, [])],
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
@@ -26,11 +53,6 @@ export const CallsPlugin = () =>
           icon: 'ph--phone-call--regular',
         }),
       ],
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

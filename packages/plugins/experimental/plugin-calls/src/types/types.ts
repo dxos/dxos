@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { S } from '@dxos/echo-schema';
+import { type Space, SpaceSchema, isSpace } from '@dxos/react-client/echo';
 
+import { TranscriptSchema } from './transcript';
 import { CALLS_PLUGIN } from '../meta';
 
 /**
@@ -11,11 +13,18 @@ import { CALLS_PLUGIN } from '../meta';
  */
 export const CALLS_URL = 'https://calls-service.dxos.workers.dev';
 
-// export const CALLS_URL = 'http://localhost:8787';
-const CALLS_ACTION = `${CALLS_PLUGIN}/action`;
+export namespace CallsAction {
+  const CALLS_ACTION = `${CALLS_PLUGIN}/action`;
 
-export enum CallsAction {
-  CREATE = `${CALLS_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${CALLS_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      space: SpaceSchema,
+    }),
+    output: S.Struct({
+      object: TranscriptSchema,
+    }),
+  }) {}
 }
 
 export type Call = {
