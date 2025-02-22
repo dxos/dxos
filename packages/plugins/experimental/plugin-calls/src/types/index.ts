@@ -3,5 +3,5 @@
 //
 
 export * from './calls';
-export * from './transcription';
+export * from './transcript';
 export * from './types';

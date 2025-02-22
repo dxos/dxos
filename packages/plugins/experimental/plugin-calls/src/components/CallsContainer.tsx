@@ -8,13 +8,13 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { Calls, type CallsProps } from './Calls';
 
-const CallsContainer: FC<CallsProps> = ({ roomId, storybookQueueDxn }) => {
+const CallsContainer: FC<CallsProps> = ({ roomId, queue: storybookQueueDxn }) => {
   return (
     <StackItem.Content toolbar={false} classNames='h-full w-full overflow-hidden'>
       <Calls
         // TODO(mykola): Conflicts with the space swarm topic. Derive key from space key?
         roomId={roomId}
-        storybookQueueDxn={storybookQueueDxn}
+        queue={storybookQueueDxn}
       />
     </StackItem.Content>
   );

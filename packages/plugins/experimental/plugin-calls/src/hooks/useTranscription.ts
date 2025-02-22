@@ -13,7 +13,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
 import { type Ai, type UserMedia } from '../hooks';
-import { TranscriptionBlock, type Segment, type UserState } from '../types';
+import { TranscriptBlock, type TranscriptSegment, type UserState } from '../types';
 
 const PREFIXED_CHUNKS_AMOUNT = 5;
 const RECORD_INTERVAL = 200;
@@ -52,15 +52,15 @@ export const useTranscription = ({ edgeClient, ai, userMedia, identity, isSpeaki
   }, []);
 
   // Get queue.
-  const queue = useQueue<TranscriptionBlock>(
+  const queue = useQueue<TranscriptBlock>(
     edgeClient,
     ai.transcription.objectDxn ? DXN.parse(ai.transcription.objectDxn) : undefined,
   );
 
   // Handle transcription text.
   const handleSegments = useCallback(
-    async (segments: Segment[]) => {
-      const block = createStatic(TranscriptionBlock, {
+    async (segments: TranscriptSegment[]) => {
+      const block = createStatic(TranscriptBlock, {
         author: identity.name || 'Unknown',
         segments,
       });

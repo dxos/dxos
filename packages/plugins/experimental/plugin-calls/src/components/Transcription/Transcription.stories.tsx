@@ -11,17 +11,15 @@ import { faker } from '@dxos/random';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { TranscriptionList } from './Transcription';
+import { Transcription } from './Transcription';
 
-const meta: Meta<typeof TranscriptionList> = {
-  title: 'plugins/plugin-calls/TranscriptionList',
-  component: TranscriptionList,
+const meta: Meta<typeof Transcription> = {
+  title: 'plugins/plugin-calls/Transcription',
+  component: Transcription,
   render: (args) => (
-    <div className='flex w-[500px]'>
-      <ScrollContainer classNames='p-2'>
-        <TranscriptionList {...args} />
-      </ScrollContainer>
-    </div>
+    <ScrollContainer classNames='flex w-[500px] p-2'>
+      <Transcription {...args} />
+    </ScrollContainer>
   ),
   decorators: [
     withTheme,
@@ -35,7 +33,7 @@ const meta: Meta<typeof TranscriptionList> = {
 
 export default meta;
 
-type Story = StoryObj<typeof TranscriptionList>;
+type Story = StoryObj<typeof Transcription>;
 
 let start = new Date();
 const next = () => {
@@ -51,7 +49,7 @@ export const Default: Story = {
       id: faker.string.uuid(),
       author: faker.helpers.arrayElement(names),
       segments: Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => ({
-        timestamp: next(),
+        started: next(),
         text: faker.lorem.paragraph(),
       })),
     })).reverse(),

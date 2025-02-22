@@ -5,6 +5,7 @@
 import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
+import { type DXN } from '@dxos/keys';
 import { useConfig, type PublicKey } from '@dxos/react-client';
 
 import {
@@ -22,7 +23,7 @@ import { CALLS_URL } from '../types';
 
 type CallsContextProps = PropsWithChildren<{
   roomId: PublicKey;
-  storybookQueueDxn?: string;
+  queue?: DXN;
 }>;
 
 /**
@@ -30,14 +31,14 @@ type CallsContextProps = PropsWithChildren<{
  */
 // TODO(burdon): Need to provide global state for plugin and provider.
 // - First create simple plugin context that tracks the current roomId.
-export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, storybookQueueDxn, children }) => {
+export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, queue, children }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
   const maxWebcamQualityLevel = 1_080;
 
-  const room = useRoom({ roomId, storybookQueueDxn });
+  const room = useRoom({ roomId, queue });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({
