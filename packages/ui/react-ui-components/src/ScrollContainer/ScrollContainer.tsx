@@ -81,15 +81,14 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       setSticky(sticky);
     }, []);
 
+    // TOOD(burdon): Wrap with ScrollArea.
     return (
-      <div className='flex grow overflow-hidden'>
-        <div
-          ref={containerRef}
-          onScroll={handleScroll}
-          className={mx('flex flex-col grow overflow-y-auto scrollbar-none')}
-        >
-          {children}
-        </div>
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className={mx('flex flex-col grow overflow-y-auto scrollbar-none contain-layout')}
+      >
+        {children}
       </div>
     );
   },
