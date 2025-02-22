@@ -4,7 +4,7 @@
 
 export * from './useAsyncEffect';
 export * from './useAsyncState';
-export * from './useControlledValue';
+export * from './useControlledState';
 export * from './useDebugReactDeps';
 export * from './useDefaultValue';
 export * from './useDynamicRef';

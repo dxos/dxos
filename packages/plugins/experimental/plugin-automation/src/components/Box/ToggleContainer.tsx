@@ -4,39 +4,38 @@
 
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, useControlledState, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export type ToggleContainerProps = ThemedClassName<
   PropsWithChildren<{
     title?: string | JSX.Element;
     icon?: JSX.Element;
-    toggle?: boolean;
-    defaultOpen?: boolean;
+    open?: boolean;
     duration?: number;
     /** Should shrink the width when closed. */
     shrinkX?: boolean;
+    onChangeOpen?: (open: boolean) => void;
   }>
 >;
 
-// TODO(burdon): Externalize toggle state.
 export const ToggleContainer = ({
+  classNames,
   title,
   icon,
-  toggle,
-  defaultOpen,
+  open: _open,
   duration = 400,
   shrinkX = false,
   children,
-  classNames,
+  onChangeOpen,
 }: ToggleContainerProps) => {
-  const [expand, setExpand] = useState(defaultOpen || !toggle);
-  const [expandX, setExpandX] = useState(shrinkX ? expand : true);
-  const [expandY, setExpandY] = useState(expand);
+  const [open, setOpen] = useControlledState(_open);
+  const [expandX, setExpandX] = useState(shrinkX ? open : true);
+  const [expandY, setExpandY] = useState(open);
 
   useEffect(() => {
     let t: NodeJS.Timeout;
-    if (expand) {
+    if (open) {
       if (shrinkX) {
         setExpandX(true);
       }
@@ -56,25 +55,31 @@ export const ToggleContainer = ({
     }
 
     return () => clearTimeout(t);
-  }, [expand]);
+  }, [open]);
+
+  const handleToggle = () => {
+    if (onChangeOpen) {
+      onChangeOpen(!open);
+    } else {
+      setOpen((open) => !open);
+    }
+  };
 
   return (
     <div className={mx('overflow-hidden', classNames)}>
       {title && (
         <div
           className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer select-none'
-          onClick={toggle ? () => setExpand((open) => !open) : undefined}
+          onClick={handleToggle}
         >
-          {toggle && (
-            <div className='flex w-[24px] h-[24px] items-center justify-center'>
-              <Icon
-                size={4}
-                icon={'ph--caret-right--regular'}
-                style={{ transitionDuration: `${shrinkX ? duration * 2 : duration}ms` }}
-                classNames={['transition transition-transform ease-in-out', expand ? 'rotate-90' : 'transform-none']}
-              />
-            </div>
-          )}
+          <div className='flex w-[24px] h-[24px] items-center justify-center'>
+            <Icon
+              size={4}
+              icon={'ph--caret-right--regular'}
+              style={{ transitionDuration: `${shrinkX ? duration * 2 : duration}ms` }}
+              classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
+            />
+          </div>
           <div className='flex-1 pis-1 pie-1 truncate'>{title}</div>
           {icon}
         </div>

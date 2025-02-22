@@ -159,7 +159,7 @@ const TEST_MESSAGES: Message[] = [
 
 export const Default: Story = {
   args: {
-    debug: true,
+    // debug: true,
     messages: TEST_MESSAGES,
   },
 };
@@ -167,6 +167,13 @@ export const Default: Story = {
 export const Input: Story = {
   args: {
     streaming: true,
+  },
+};
+
+export const Collapse: Story = {
+  args: {
+    collapse: true,
+    messages: TEST_MESSAGES,
   },
 };
 

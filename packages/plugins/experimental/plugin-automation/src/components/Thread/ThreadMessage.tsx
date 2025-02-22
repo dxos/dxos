@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useEffect, useRef, useState, type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
@@ -12,7 +12,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { ToggleContainer, StatusLine } from '../Box';
+import { ToggleContainer, StatusLine, Tabs } from '../Box';
 import { MarkdownViewer } from '../MarkdownViewer';
 
 export type ThreadMessageProps = ThemedClassName<{
@@ -41,29 +41,26 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
   const toolBlocks = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
   if (collapse && toolBlocks.length > 0) {
     let request: (MessageContentBlock & { type: 'tool_use' }) | undefined;
-    const json: any[] = [];
-    const lines = toolBlocks.map((block) => {
+    const items = toolBlocks.map((block) => {
       switch (block.type) {
         case 'tool_use': {
           request = block;
-          json.push(block);
           // TODO(burdon): Get plugin name.
-          return `Calling ${block.name}...`;
+          return { title: `Calling ${block.name}...`, block };
         }
 
         case 'tool_result': {
           if (!request) {
-            log.warn('unexpected message', { tool: block });
-            return 'Error';
+            log.warn('unexpected message', { block });
+            return { title: 'Error', block };
           }
 
-          json.push(block);
-          return `Processed ${request.name}`;
+          return { title: `Processed ${request.name}`, block };
         }
 
         default: {
           request = undefined;
-          return 'Error';
+          return { title: 'Error', block };
         }
       }
     });
@@ -71,9 +68,7 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
     return (
       <div className={mx('flex', classNames)}>
         <div className='w-full p-1 px-2 overflow-hidden rounded-md bg-baseSurface'>
-          <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} toggle>
-            <Json data={json} classNames='!p-1 text-xs' />
-          </ToggleContainer>
+          <TabbedContainer items={items} />
         </div>
       </div>
     );
@@ -146,8 +141,7 @@ const componentMap: Record<string, BlockComponent> = {
             <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
           ) : undefined
         }
-        defaultOpen={block.disposition === 'cot'}
-        toggle
+        open={block.disposition === 'cot'}
       >
         <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
       </ToggleContainer>
@@ -179,7 +173,7 @@ const componentMap: Record<string, BlockComponent> = {
       default: {
         const title = block.disposition ? titles[block.disposition] : undefined;
         return (
-          <ToggleContainer title={title ?? 'JSON'} toggle>
+          <ToggleContainer title={title ?? 'JSON'}>
             <Json data={safeParseJson(block.json ?? block)} classNames='!p-1 text-xs' />
           </ToggleContainer>
         );
@@ -194,9 +188,30 @@ const componentMap: Record<string, BlockComponent> = {
     }
 
     return (
-      <ToggleContainer title={title ?? 'JSON'} toggle>
+      <ToggleContainer title={title ?? 'JSON'}>
         <Json data={block} classNames='!p-1 text-xs' />
       </ToggleContainer>
     );
   },
+};
+
+const TabbedContainer = ({ items }: { items: { title: string; block: any }[] }) => {
+  const [selected, setSelected] = useState(0);
+  const lines = items.map((item) => item.title);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (open) {
+      tabsRef.current?.focus();
+    }
+  }, [open]);
+
+  return (
+    <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} open={open} onChangeOpen={setOpen}>
+      <div className='flex gap-2 w-full'>
+        <Tabs ref={tabsRef} length={items.length} selected={selected} onSelect={setSelected} />
+        <Json data={items[selected].block} classNames='!p-1 text-xs' />
+      </div>
+    </ToggleContainer>
+  );
 };
