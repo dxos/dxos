@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type EchoSchema, S, TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
+import {
+  AST,
+  type EchoSchema,
+  S,
+  TypedObject,
+  FormatEnum,
+  TypeEnum,
+  type JsonProp,
+  PropertyValenceAnnotationId,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
@@ -24,6 +33,7 @@ export const initializeKanban = async ({
   })({
     title: S.optional(S.String).annotations({
       [AST.TitleAnnotationId]: 'Title',
+      [PropertyValenceAnnotationId]: 'primary',
     }),
     description: S.optional(S.String).annotations({
       [AST.TitleAnnotationId]: 'Description',

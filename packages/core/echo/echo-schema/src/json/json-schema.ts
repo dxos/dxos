@@ -21,6 +21,7 @@ import {
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
+  PropertyValenceAnnotationId,
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
 } from '../ast';
@@ -365,6 +366,7 @@ const ECHO_REFINEMENTS = [
   LabelAnnotationId,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
+  PropertyValenceAnnotationId,
 ];
 
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {

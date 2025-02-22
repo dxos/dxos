@@ -159,3 +159,8 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  * Generate test data.
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+
+/**
+ * Identifies property valence.
+ */
+export const PropertyValenceAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyValence');
