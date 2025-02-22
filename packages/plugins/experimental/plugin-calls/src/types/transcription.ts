@@ -28,6 +28,7 @@ const Segment = S.Struct({
   /**
    * Timestamp of the segment.
    */
+  // TODO(burdon): TS from service is not Unix TS (x1000).
   timestamp: S.Date,
 
   /**
@@ -38,14 +39,15 @@ const Segment = S.Struct({
 
 export type Segment = S.Schema.Type<typeof Segment>;
 
-/**
- * Block of transcription.
- */
-const BlockSchema = S.Struct({
+// TODO(burdon): Rename TranscriptionBlock.
+const TranscriptionBlockSchema = S.Struct({
   id: ObjectId,
   author: S.String,
   segments: S.Array(Segment),
 });
 
-export const Block = BlockSchema.pipe(EchoObject('dxos.org/type/Block', '0.1.0'));
-export type Block = S.Schema.Type<typeof Block>;
+export const TranscriptionBlock = TranscriptionBlockSchema.pipe(
+  EchoObject('dxos.org/type/TranscriptionBlock', '0.1.0'),
+);
+
+export type TranscriptionBlock = S.Schema.Type<typeof TranscriptionBlock>;

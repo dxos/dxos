@@ -12,23 +12,27 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Config, PublicKey } from '@dxos/react-client';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls, type CallsProps } from './Calls';
+import { TranscriptionList } from './Transcription';
+import { type TranscriptionBlock } from '../types';
 import { randomQueueDxn } from '../utils';
 
 const Render = (props: CallsProps) => {
   const client = useEdgeClient();
-  const queue = useQueue(client, DXN.parse(props.storybookQueueDxn!), { pollInterval: 500 });
+  const queue = useQueue<TranscriptionBlock>(client, DXN.parse(props.storybookQueueDxn!), { pollInterval: 500 });
 
   return (
-    <div className='flex flex-row h-full w-full justify-center'>
-      <div className='flex h-full overflow-hidden w-96 outline outline-red-500'>
+    <div className='flex grow gap-8 justify-center'>
+      <div className='flex h-full w-96'>
         <Calls {...props} />
       </div>
-      <div className='flex h-full overflow-hidden w-96 outline outline-blue-500'>
-        <Json data={queue?.items} />
+      <div className='flex h-full w-96'>
+        <ScrollContainer>
+          <TranscriptionList blocks={queue?.items} />
+        </ScrollContainer>
       </div>
     </div>
   );

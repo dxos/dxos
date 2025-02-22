@@ -23,7 +23,7 @@ import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-// TODO(zantonio): Move toolbar action handling to a more appropriate location.
+// TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);

@@ -15,7 +15,7 @@ import { Client, type ClientOptions, type ClientServicesProvider, SystemStatus }
 import { type Config } from '@dxos/config';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
-import { useControlledValue } from '@dxos/react-hooks';
+import { useControlledState } from '@dxos/react-hooks';
 import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
 
 import { ClientContext, type ClientContextProps } from './context';
@@ -114,7 +114,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     useImperativeHandle(forwardedRef, () => client, [client]);
 
     // Client status subscription.
-    const [status, setStatus] = useControlledValue(controlledStatus);
+    const [status, setStatus] = useControlledState(controlledStatus);
     useEffect(() => {
       if (!client) {
         return;

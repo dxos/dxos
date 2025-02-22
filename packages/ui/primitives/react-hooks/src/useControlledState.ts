@@ -7,7 +7,7 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 /**
  * A stateful hook with a controlled value.
  */
-export const useControlledValue = <TValue>(
+export const useControlledState = <TValue>(
   controlledValue: TValue,
   ...deps: any[]
 ): [TValue, Dispatch<SetStateAction<TValue>>] => {

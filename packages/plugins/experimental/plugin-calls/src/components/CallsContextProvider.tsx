@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useMemo, type ReactNode, type FC } from 'react';
+import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
 import { useConfig, type PublicKey } from '@dxos/react-client';
@@ -20,15 +20,16 @@ import {
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
-type CallsContextProps = {
+type CallsContextProps = PropsWithChildren<{
   roomId: PublicKey;
   storybookQueueDxn?: string;
-  children: ReactNode;
-};
+}>;
 
+/**
+ * Global context provider for calls.
+ */
 // TODO(burdon): Need to provide global state for plugin and provider.
 // - First create simple plugin context that tracks the current roomId.
-
 export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, storybookQueueDxn, children }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];

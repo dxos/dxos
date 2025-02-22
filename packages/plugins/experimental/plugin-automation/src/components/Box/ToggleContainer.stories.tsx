@@ -71,7 +71,6 @@ const Render = ({ shrinkX, ...props }: ToggleContainerProps) => {
           <ToggleContainer
             {...props}
             shrinkX={shrinkX}
-            toggle
             icon={
               running ? (
                 <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />

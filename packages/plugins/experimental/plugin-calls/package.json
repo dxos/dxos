@@ -37,6 +37,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -49,9 +50,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "date-fns": "^3.3.1",
     "effect": "^3.12.3",
     "extendable-media-recorder": "^9.2.19",
     "extendable-media-recorder-wav-encoder": "^7.0.123",
@@ -61,6 +64,7 @@
     "wavefile": "^11.0.0"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

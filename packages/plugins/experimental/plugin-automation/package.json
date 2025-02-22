@@ -32,6 +32,7 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.1",
     "@codemirror/language": "^6.10.3",
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
@@ -66,6 +67,7 @@
     "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
