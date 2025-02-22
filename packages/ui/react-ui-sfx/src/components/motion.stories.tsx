@@ -30,7 +30,7 @@ const Render = ({ active: _active }: SpinnerProps) => {
 };
 
 const meta: Meta<SpinnerProps> = {
-  title: 'ui/react-ui-components/motion',
+  title: 'ui/react-ui-sfx/motion',
   component: Spinner,
   render: Render,
   decorators: [withTheme, withLayout({ fullscreen: true })],
