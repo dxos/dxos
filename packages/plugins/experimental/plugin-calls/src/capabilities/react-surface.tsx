@@ -17,7 +17,7 @@ export default () =>
       id: `${CALLS_PLUGIN}/article`,
       role: 'article',
       filter: (data): data is { subject: Call } => isCall(data.subject),
-      component: ({ data, role }) => <CallsContainer roomId={data.subject.space.key} />,
+      component: ({ data }) => <CallsContainer roomId={data.subject.space.key} />,
     }),
     createSurface({
       id: `${CALLS_PLUGIN}/assistant`,
