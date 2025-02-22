@@ -33,6 +33,17 @@ export default () => {
       Each script must follow as strict shape for the definition but the body can contain any valid executable code.
       Scripts are written in JavaScript or TypeScript.
       Each script must define an input schema and output schema.
+      Each script must have its own detailed description.
+
+      Important: You cannot execute scripts. Scripts are only available as tools after the user deploys them. You must only call the available tools.
+
+      Description:
+        The description is a detailed description of the script.
+        It is used to describe the script's purpose, input, and output.
+        The description is used to generate the script's documentation.
+        The description is also goes into the script metadata.
+        The description is used by AI to understand the script and its purpose.
+        The description must provide cases on when the script should be used.
 
       Schema: 
         The schema is defined using a schema-DSL library called Effect Schema.
@@ -41,10 +52,18 @@ export default () => {
         The schema is used to validate the script's input and output.
         The schema is also goes into the script metadata.
         The properties in the schema must have valid descriptions.
+        The input and output schemas must both be a struct of fields.
 
       Restricts:
         The scripts can only import code from "dxos:functions" module. No other modules are allowed.
         Some web APIs are available - like fetch.
+
+      Reasoning:
+        Before writing a script, synthesize the following information:
+        - Description
+        - What APIs will be used.
+        - Detailed input schema
+        - Detailed output schema
 
       <apis>
         export function defineFunction(params: { 
@@ -88,13 +107,16 @@ export default () => {
       <example>
         import { defineFunction, S } from 'dxos:functions';
 
-        /**
-         * Returns the exchange rate between two currencies.
-         */
         export default defineFunction({
+          description: 'Returns the exchange rate between two currencies.',
+
           inputSchema: S.Struct({
             from: S.String.annotations({ description: 'The source currency' }),
             to: S.String.annotations({ description: 'The target currency' }),
+          }),
+
+          outputSchema: S.Struct({
+            rate: S.String.annotations({ description: 'The exchange rate' }),
           }),
 
           handler: async ({
@@ -107,7 +129,7 @@ export default () => {
               data: { rates },
             } = await res.json();
 
-            return rates[to].toString();
+            return { rate: rates[to].toString() };
           },
         });
       </example>

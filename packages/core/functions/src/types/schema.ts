@@ -40,6 +40,7 @@ export class FunctionType extends TypedObject({
   source: S.optional(Ref(ScriptType)),
 
   inputSchema: S.optional(JsonSchemaType),
+  outputSchema: S.optional(JsonSchemaType),
 
   // Local binding to a function name.
   binding: S.optional(S.String),
