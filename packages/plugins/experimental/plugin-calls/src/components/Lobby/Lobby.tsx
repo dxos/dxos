@@ -4,37 +4,36 @@
 
 import React, { type FC } from 'react';
 
-import { IconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useSubscribedState, useRoomContext } from '../../hooks';
+import { CALLS_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
+  const { t } = useTranslation(CALLS_PLUGIN);
   const { setJoined, userMedia, room, peer } = useRoomContext()!;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
   const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
-    <div className={mx('flex flex-col grow overflow-auto', classNames)}>
-      <VideoObject className='scale-x-[-1] object-cover' videoTrack={userMedia.videoTrack} muted />
-      <div className='grow' />
-      <div className='flex justify-between overflow-hidden'>
-        <Toolbar.Root>
-          <IconButton
-            variant='primary'
-            label='Join'
-            onClick={() => setJoined(true)}
-            disabled={!session?.sessionId}
-            icon='ph--phone-incoming--regular'
-          />
-          <div className='grow text-sm text-subdued'>
-            {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
-          </div>
-          <MediaButtons userMedia={userMedia} />
-        </Toolbar.Root>
-      </div>
+    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <VideoObject flip muted cover videoTrack={userMedia.videoTrack} />
+      <Toolbar.Root classNames='justify-between'>
+        <IconButton
+          variant='primary'
+          label={t('join')}
+          onClick={() => setJoined(true)}
+          disabled={!session?.sessionId}
+          icon='ph--phone-incoming--regular'
+        />
+        <div className='grow text-sm text-subdued'>
+          {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
+        </div>
+        <MediaButtons userMedia={userMedia} />
+      </Toolbar.Root>
     </div>
   );
 };

@@ -5,18 +5,19 @@
 import React, { type FC } from 'react';
 
 import { useEdgeClient } from '@dxos/react-edge-client';
-import { Toolbar, type ThemedClassName, IconButton } from '@dxos/react-ui';
+import { Toolbar, type ThemedClassName, IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
 import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
+import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 import { ParticipantGrid } from '../Participant';
 
-// TODO(burdon): Translations.
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
+  const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
   const {
     userMedia,
@@ -68,7 +69,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
         <Toolbar.Root>
           <IconButton
             variant='destructive'
-            label='Leave'
+            label={t('leave')}
             onClick={() => {
               userMedia.turnScreenShareOff();
               setJoined(false);
@@ -78,14 +79,14 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
           <div className='grow'></div>
           <IconButton
             icon={ai.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
-            label={ai.transcription.enabled ? 'Start transcription' : 'Stop transcription'}
+            label={ai.transcription.enabled ? t('transcription off') : t('transcription on')}
             onClick={handleToggleTranscription}
             iconOnly
           />
           <IconButton
             disabled={!canShareScreen || otherUserIsSharing}
-            icon={sharing ? 'ph--selection--regular' : 'ph--selection-slash--regular'}
-            label={sharing ? 'Screenshare' : 'Screenshare Off'}
+            icon={sharing ? 'ph--screencast--regular' : 'ph--rectangle--regular'}
+            label={sharing ? t('screenshare off') : t('screenshare on')}
             onClick={sharing ? userMedia.turnScreenShareOff : userMedia.turnScreenShareOn}
             iconOnly
           />

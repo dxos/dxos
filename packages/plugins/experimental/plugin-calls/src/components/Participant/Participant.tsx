@@ -16,7 +16,7 @@ import { VideoObject } from '../Media';
 
 export const screenshareSuffix = '_screenshare';
 
-export const Participant = ({ item: user, debug = false }: GridCellProps<UserState>) => {
+export const Participant = ({ item: user, debug = false, ...props }: GridCellProps<UserState>) => {
   const {
     dataSaverMode,
     userMedia,
@@ -35,7 +35,7 @@ export const Participant = ({ item: user, debug = false }: GridCellProps<UserSta
   const videoMid = useMid(videoTrack);
 
   return (
-    <GridCell item={user} speaking={user.speaking} wave={user.raisedHand} debug={debug}>
+    <GridCell {...props} item={user} name={user.name} speaking={user.speaking} wave={user.raisedHand} debug={debug}>
       <VideoObject
         className={mx('object-cover', isSelf && !isScreenShare ? 'scale-x-[-1]' : '')}
         videoTrack={videoTrack}
@@ -46,10 +46,10 @@ export const Participant = ({ item: user, debug = false }: GridCellProps<UserSta
           <Json
             classNames='text-xs'
             data={{
-              videoMid,
-              videoSettings: videoTrack?.getSettings(),
               audioMid,
               audioSettings: audioTrack?.getSettings(),
+              videoMid,
+              videoSettings: videoTrack?.getSettings(),
             }}
           />
         </div>

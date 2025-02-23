@@ -33,8 +33,11 @@ const TestCell = ({ item, ...props }: GridCellProps<TestItem>) => {
   }, []);
 
   return (
-    <GridCell {...props} item={item} label={item?.name} mute={mute} speaking={speaking} wave={wave}>
-      <img src={`https://placehold.co/1600x900?font=roboto&text=${item?.id}`} className='object-contain aspect-video' />
+    <GridCell {...props} item={item} name={item?.name} mute={mute} speaking={speaking} wave={wave}>
+      <img
+        src={`https://placehold.co/3200x1800?font=roboto&text=${item?.id}`}
+        className='object-contain aspect-video'
+      />
     </GridCell>
   );
 };
@@ -44,7 +47,8 @@ const meta: Meta<GridProps> = {
   component: Grid,
   render: (args) => {
     const [expanded, setExpanded] = useState<string | undefined>(args.expanded);
-    return <Grid {...args} Cell={TestCell} expanded={expanded} onExpand={setExpanded} />;
+    const filteredItems = args.items?.filter((item) => item !== expanded);
+    return <Grid {...args} Cell={TestCell} items={filteredItems} expanded={expanded} onExpand={setExpanded} />;
   },
   decorators: [
     withTheme,
@@ -60,7 +64,7 @@ export default meta;
 
 type Story = StoryObj<GridProps>;
 
-const items = Array.from({ length: 7 }, (_, i) => ({ id: i.toString(), name: faker.person.fullName() }));
+const items = Array.from({ length: 9 }, (_, i) => ({ id: i.toString(), name: faker.person.fullName() }));
 
 export const Default: Story = {
   args: {

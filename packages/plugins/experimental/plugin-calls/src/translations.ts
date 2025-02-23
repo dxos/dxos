@@ -8,11 +8,23 @@ export default [
   {
     'en-US': {
       [CALLS_PLUGIN]: {
-        'plugin name': 'Calls',
-        'calls label': 'Call room',
-        'calls panel label': 'Call',
-        'create calls label': 'Create calls room',
+        'plugin name': 'Meetings',
+        'calls label': 'Meeting room',
+        'calls panel label': 'Meeting',
+        'create calls label': 'Create meeting room',
         'delete calls label': 'Delete',
+
+        'join': 'Join',
+        'leave': 'Leave',
+
+        'mic on': 'Turn microphone on',
+        'mic off': 'Turn microphone off',
+        'camera on': 'Turn camera on',
+        'camera off': 'Turn camera off',
+        'transcription on': 'Start transcription',
+        'transcription off': 'Stop transcription',
+        'screenshare on': 'Start screen sharing',
+        'screenshare off': 'Stop screen sharing',
       },
     },
   },

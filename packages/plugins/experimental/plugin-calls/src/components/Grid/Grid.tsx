@@ -8,8 +8,9 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+const ASPECT_RATIO = 16 / 9;
 const MIN_HEIGHT = 200;
-const MIN_WIDTH = 240;
+const MIN_WIDTH = MIN_HEIGHT * ASPECT_RATIO;
 
 export type GridProps<T = any> = {
   Cell: ComponentType<GridCellProps>;
@@ -20,42 +21,19 @@ export type GridProps<T = any> = {
 };
 
 export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridProps<T>) => {
-  const { ref, width = 0, height = 0 } = useResizeDetector();
-  const filteredItems = items?.filter((item) => item !== expanded);
-  const singleRow = width >= height;
-
   return (
-    <div ref={ref} className={mx('flex flex-col gap-2 w-full h-full overflow-hidden')}>
+    <div className={mx('flex flex-col py-2 gap-2 w-full h-full overflow-hidden')}>
       {expanded && (
-        <div className={mx('flex grow aspect-video', singleRow && 'overflow-hidden')}>
+        <div className='flex flex-[50%] w-full overflow-hidden'>
           <Cell expanded item={expanded} onClick={() => onExpand?.()} />
         </div>
       )}
 
-      {(singleRow && (
-        <div className='flex shrink-0 overflow-hidden' style={{ minHeight: MIN_HEIGHT }}>
-          <GridRow Cell={Cell} items={filteredItems} debug={debug} onExpand={onExpand} />
-        </div>
-      )) || (
-        <div className='flex grow overflow-hidden'>
-          <GridColumn Cell={Cell} items={filteredItems} debug={debug} onExpand={onExpand} />
+      {items?.length && (
+        <div className='flex flex-[50%] w-full overflow-hidden'>
+          <GridColumn Cell={Cell} items={items} debug={debug} onExpand={onExpand} />
         </div>
       )}
-    </div>
-  );
-};
-
-/**
- * Single row.
- */
-const GridRow = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
-  return (
-    <div className='flex gap-2 overflow-x-auto'>
-      {items?.map((item, i) => (
-        <div key={i} className='aspect-video'>
-          <Cell {...props} item={item} onClick={() => onExpand?.(item)} />
-        </div>
-      ))}
     </div>
   );
 };
@@ -65,6 +43,10 @@ const GridRow = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'
  */
 const GridColumn = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
   const { ref, width, height = 0 } = useResizeDetector();
+
+  if (items?.length === 1) {
+    return <Cell {...props} item={items[0]} onClick={() => onExpand?.(items[0])} />;
+  }
 
   const cellsPerColumn = Math.floor(height / MIN_HEIGHT);
   const maxCols = Math.ceil(items?.length ?? 0 / cellsPerColumn);
@@ -78,12 +60,12 @@ const GridColumn = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expand
 
   const classNames = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3'];
   return (
-    <div ref={ref} className='flex overflow-y-auto'>
-      <div>
+    <div className='flex'>
+      <div ref={ref} className='overflow-y-auto'>
         <div className={mx('grid gap-2', classNames[Math.min(classNames.length, cols) - 1])}>
           {height &&
             items?.map((item, i) => (
-              <div key={i} className='aspect-video'>
+              <div key={i} className='flex aspect-video'>
                 <Cell {...props} item={item} onClick={() => onExpand?.(item)} />
               </div>
             ))}
@@ -96,7 +78,7 @@ const GridColumn = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expand
 export type GridCellProps<T = any> = PropsWithChildren<
   ThemedClassName<{
     item: T;
-    label?: string;
+    name?: string;
     mute?: boolean;
     wave?: boolean;
     speaking?: boolean;
@@ -109,12 +91,12 @@ export type GridCellProps<T = any> = PropsWithChildren<
 /**
  * Cell container.
  */
-export const GridCell = ({ children, classNames, label, mute, wave, speaking, expanded, onClick }: GridCellProps) => {
+export const GridCell = ({ children, classNames, name, mute, wave, speaking, expanded, onClick }: GridCellProps) => {
   const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
   return (
-    <div className={mx('flex grow overflow-hidden justify-center items-center', classNames)}>
-      <div className='group relative max-w-full max-h-full aspect-video'>
+    <div className={mx('flex w-full h-full overflow-hidden justify-center items-center', classNames)}>
+      <div className='group relative max-w-full max-h-full aspect-video overflow-hidden'>
         {children}
 
         {/* Action. */}
@@ -131,14 +113,14 @@ export const GridCell = ({ children, classNames, label, mute, wave, speaking, ex
           </div>
         )}
 
-        {/* Label. */}
-        {label && (
+        {/* Name. */}
+        {name && (
           <div className='z-10 absolute bottom-1 right-1 flex gap-1 items-center'>
             {wave && !expanded && (
               <Icon icon='ph--hand-waving--duotone' size={5} classNames='animate-pulse text-red-500' />
             )}
             <div className={mx('bg-neutral-800 text-neutral-100 py-0.5 rounded', expanded ? 'px-2' : 'px-1 text-xs')}>
-              {label}
+              {name}
             </div>
           </div>
         )}

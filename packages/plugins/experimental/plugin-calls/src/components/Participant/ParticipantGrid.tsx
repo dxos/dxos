@@ -37,7 +37,19 @@ export const ParticipantGrid = ({ identity, users, debug }: ParticipantGridProps
     [identity, users],
   ) as UserState[];
 
+  let showExpanded = expanded;
+  if (!showExpanded && allUsers.length === 1) {
+    showExpanded = allUsers[0];
+  }
+  const filteredItems = allUsers.filter((item) => item.id !== showExpanded?.id);
+
   return (
-    <Grid<UserState> Cell={Participant} debug={debug} items={allUsers} expanded={expanded} onExpand={setExpanded} />
+    <Grid<UserState>
+      Cell={Participant}
+      debug={debug}
+      items={filteredItems}
+      expanded={showExpanded}
+      onExpand={setExpanded}
+    />
   );
 };
