@@ -17,6 +17,8 @@ const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
   };
 };
 
+// Surface cadence sememes (in contrast-order)
+
 const surface0: Sememe = {
   light: ['neutral', 25],
   dark: ['neutral', 875],
@@ -45,6 +47,14 @@ const surface60: Sememe = {
   light: ['neutral', 100],
   dark: ['neutral', 725],
 };
+const surface90: Sememe = {
+  light: ['neutral', 400],
+  dark: ['neutral', 400],
+};
+const surface95: Sememe = {
+  light: ['neutral', 450],
+  dark: ['neutral', 450],
+};
 
 export const systemSememes = {
   // TODO(burdon): Organize by category (e.g., surface, text, etc.)
@@ -62,14 +72,9 @@ export const systemSememes = {
   'surface-40': surface40,
   'surface-50': surface50,
   'surface-60': surface60,
-  'surface-90': {
-    light: ['neutral', 400],
-    dark: ['neutral', 400],
-  },
-  'surface-95': {
-    light: ['neutral', 450],
-    dark: ['neutral', 450],
-  },
+  'surface-90': surface90,
+  'surface-95': surface95,
+  'surface-95t': applyAlpha(surface95, 0.1),
 
   'accentSurface-40': {
     light: ['primary', 600],
@@ -80,8 +85,16 @@ export const systemSememes = {
     dark: ['primary', 500],
   },
 
+  // Special surfaces (intentionally not part of contrast-order cadence)
+
+  deck: {
+    light: surface50.light,
+    dark: surface30.dark,
+  },
+
   //
   // Text (text-)
+  // TODO(thure): Establish contrast-order cadence for text
   //
 
   baseText: {
@@ -119,18 +132,19 @@ export const systemSememes = {
 } satisfies ColorSememes;
 
 export const systemAliases = {
-  // neutral
-  'surface-10': { attention: ['baseSurface'] },
+  // surface cadence
+  'surface-10': { root: ['attention', 'attentionRelated'], attention: ['baseSurface'] },
   'surface-20': { root: ['baseSurface'], attention: ['groupSurface'] },
-  'surface-30': { root: ['groupSurface'], attention: ['input'] },
+  'surface-30': { root: ['groupSurface', 'modalSurface'], attention: ['input'] },
   'surface-40': { root: ['input'], attention: ['hoverSurface'] },
   'surface-50': { root: ['hoverSurface'], attention: ['separator'] },
-  'surface-60': { root: ['separator'] },
+  'surface-60': { root: ['separator', 'tooltipSurface'] },
 
+  // special surfaces
   'surface-10t': { root: ['scrim'] },
-  'surface-0t': { root: ['modalSurface'] },
   'surface-90': { root: ['unAccent'] },
   'surface-95': { root: ['unAccentHover'] },
+  'surface-95t': { root: ['hoverOverlay'] },
   // accent
   'accentSurface-40': { root: ['accentSurfaceHover'] },
   'accentSurface-50': { root: ['accentSurface'] },

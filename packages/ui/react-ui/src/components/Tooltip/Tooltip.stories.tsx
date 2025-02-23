@@ -16,7 +16,7 @@ type StoryTooltipProps = {
 
 const StoryTooltip = ({ content }: StoryTooltipProps) => (
   <Tooltip.Provider>
-    <Tooltip.Root defaultOpen>
+    <Tooltip.Root open>
       <Tooltip.Trigger asChild>
         <Button>Trigger tooltip</Button>
       </Tooltip.Trigger>

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { surfaceCadence } from './sememes-system';
 import type { ColorSememes } from './types';
 
 export const sheetSememes = {
@@ -38,8 +37,8 @@ export const sheetSememes = {
     dark: ['neutral', 750],
   },
   gridLine: {
-    light: ['neutral', surfaceCadence.light[4]],
-    dark: ['neutral', surfaceCadence.dark[3]],
+    light: ['neutral', 70],
+    dark: ['neutral', 700],
   },
   gridOverlay: {
     light: ['primary', '500/.5'],
