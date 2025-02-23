@@ -53,6 +53,7 @@
     "@dxos/react-edge-client": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "date-fns": "^3.3.1",

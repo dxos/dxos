@@ -5641,6 +5641,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-syntax-highlighter
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
@@ -5691,9 +5694,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../common/storybook-utils

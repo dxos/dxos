@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Participant, screenshareSuffix } from './Participant';
 import { type UserState } from '../../types';
+import { Grid } from '../Grid';
 
 export type ParticipantGridProps = {
   identity: UserState;
@@ -14,6 +15,7 @@ export type ParticipantGridProps = {
 };
 
 export const ParticipantGrid = ({ identity, users, debug }: ParticipantGridProps) => {
+  const [expanded, setExpanded] = useState<UserState | undefined>();
   const allUsers = useMemo(
     () =>
       (identity ? [identity] : []).concat(users.filter((user) => user.joined)).flatMap((user) =>
@@ -36,10 +38,6 @@ export const ParticipantGrid = ({ identity, users, debug }: ParticipantGridProps
   ) as UserState[];
 
   return (
-    <div className='flex flex-col gap-1'>
-      {allUsers.map((user) => (
-        <Participant key={user.id} user={user} debug={debug} />
-      ))}
-    </div>
+    <Grid<UserState> Cell={Participant} debug={debug} items={allUsers} expanded={expanded} onExpand={setExpanded} />
   );
 };
