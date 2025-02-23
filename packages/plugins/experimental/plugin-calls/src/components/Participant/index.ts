@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ParticipantsLayout';
+export * from './Participant';
+export * from './ParticipantGrid';

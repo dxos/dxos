@@ -13,7 +13,7 @@ import { PullAudioTracks } from './PullAudioTracks';
 import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
-import { ParticipantsLayout } from '../Participant';
+import { ParticipantGrid } from '../Participant';
 
 // TODO(burdon): Translations.
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
@@ -62,7 +62,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         <div className='flex flex-col h-full overflow-y-scroll'>
-          <ParticipantsLayout identity={identity} users={otherUsers} debugEnabled={debugEnabled} />
+          <ParticipantGrid identity={identity} users={otherUsers} debug={debugEnabled} />
         </div>
 
         <Toolbar.Root>
