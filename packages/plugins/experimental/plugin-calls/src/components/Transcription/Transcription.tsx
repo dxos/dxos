@@ -5,7 +5,7 @@
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type FC } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptBlock } from '../../types';
@@ -28,8 +28,10 @@ export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
           key={block.id}
           className='flex flex-col border border-transparent hover:border-separator rounded'
         >
-          <div className='group flex items-center justify-between'>
+          <div className='group flex items-center'>
+            <Icon icon='ph--user--regular' classNames='mis-2' />
             <div className='p-2 text-sm text-subdued'>{block.author}</div>
+            <div className='grow' />
             <IconButton
               icon='ph--x--regular'
               label={t('button delete')}

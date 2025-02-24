@@ -47,7 +47,7 @@ const names = Array.from({ length: 3 }, () => faker.person.fullName());
 
 export const Default: Story = {
   args: {
-    blocks: Array.from({ length: 6 + Math.floor(Math.random()) * 10 }, () => ({
+    blocks: Array.from({ length: 6 + Math.floor(Math.random()) * 15 }, () => ({
       id: faker.string.uuid(),
       author: faker.helpers.arrayElement(names),
       segments: Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => ({
