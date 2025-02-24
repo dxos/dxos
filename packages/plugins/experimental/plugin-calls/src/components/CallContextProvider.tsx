@@ -24,7 +24,9 @@ export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, '
 
 /**
  * Global context provider for calls.
+ * @deprecated
  */
+// TODO(mykola): Move call state to CallManager.
 // TODO(burdon): Need to provide global state for plugin and provider.
 // - First create simple plugin context that tracks the current roomId.
 export const CallContextProvider: FC<CallContextProviderProps> = ({ children, roomId, onTranscription }) => {
