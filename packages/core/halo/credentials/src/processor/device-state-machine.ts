@@ -49,9 +49,9 @@ export class DeviceStateMachine implements CredentialProcessor {
     switch (assertion['@type']) {
       case 'dxos.halo.credentials.AuthorizedDevice': {
         // We don't need to validate that the device is already added since the credentials are considered idempotent.
-        // In the future, when we will have device-specific attributes, we should join them from all concurrent credentials.
-
+        // In the future, when we have device-specific attributes, we should join them from all concurrent credentials.
         this.authorizedDeviceKeys.set(assertion.deviceKey, this.authorizedDeviceKeys.get(assertion.deviceKey) ?? {});
+ 
         log('added device', {
           localDeviceKey: this._params.deviceKey,
           deviceKey: assertion.deviceKey,
