@@ -72,7 +72,12 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                 return (
                   <div key={compositeKey} role='none' className='flex items-center mt-2 gap-1'>
                     <div role='none' className='flex-1'>
-                      <TextInput {...props} type={'string'} label={key} />
+                      <TextInput
+                        {...props}
+                        getValue={() => (props.getValue() as any)[key]}
+                        type={'string'}
+                        label={key}
+                      />
                     </div>
                     <IconButton
                       icon='ph--trash--regular'
