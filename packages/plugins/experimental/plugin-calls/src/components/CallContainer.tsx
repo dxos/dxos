@@ -43,7 +43,6 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
 
 const Container = () => {
   const { joined } = useCallContext();
-  console.log(Date.now(), joined);
   return joined ? <Call /> : <Lobby />;
 };
 

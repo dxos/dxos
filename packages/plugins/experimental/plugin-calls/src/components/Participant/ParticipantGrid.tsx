@@ -31,7 +31,7 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
             ...user.tracks,
             video: user.tracks.screenshare,
             videoEnabled: user.tracks.screenshareEnabled,
-          } as any // TODO(burdon): Remove cast.
+          } as any, // TODO(burdon): Remove cast.
         };
 
         allUsers.push(screenshare);
@@ -43,32 +43,41 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
 
   const [expanded, setExpanded] = useState<UserState | undefined>();
   useEffect(() => {
-    // Check exists.
     if (expanded) {
+      // Check expanded user is still in call.
       if (!allUsers.find((user) => user.id === expanded?.id)) {
         setExpanded(undefined);
       }
     }
   }, [expanded, allUsers]);
 
-  let showExpanded = expanded;
-
-  // If only 2 users then expand other.
-  if (allUsers.length === 2) {
-    showExpanded = allUsers.find((user) => user.id !== self?.id);
-  }
+  // TODO(burdon): Auto expand if screenshare is enabled.
+  // TODO(burdon): Auto expand when second user joins call?
 
   // Filter out currently expanded and sort screenshare first.
+  // TODO(burdon): Put self last.
   const filteredItems = allUsers
-    .filter((item) => item.id !== showExpanded?.id);
-    // .sort((a, b) => (a.tracks?.screenshareEnabled ? -1 : 1)); // TODO(burdon): ???
+    .filter((user) => user.id !== expanded?.id)
+    .sort((a, b) => {
+      if (a.self) {
+        return 1;
+      } else if (b.self) {
+        return -1;
+      } else if (a.tracks?.screenshareEnabled) {
+        return -1;
+      } else if (b.tracks?.screenshareEnabled) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
 
   return (
     <Grid<UserState>
       Cell={Participant}
       debug={debug}
       items={filteredItems}
-      expanded={showExpanded}
+      expanded={expanded}
       onExpand={setExpanded}
     />
   );

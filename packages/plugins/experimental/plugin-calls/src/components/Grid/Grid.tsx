@@ -97,7 +97,7 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
   const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
   return (
-    <div className={mx('flex w-full h-full aspect-video justify-center items-center group relative', classNames)}>
+    <div className={mx('aspect-video group relative', classNames)}>
       {children}
 
       {/* Action. */}

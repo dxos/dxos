@@ -15,9 +15,9 @@ import { VideoObject } from '../Media';
 
 export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserState>) => {
   const {
+    call: { user: self },
     dataSaverMode,
     userMedia,
-    room: { user: self },
   } = useCallContext();
   const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);
   const isScreenshare = user.tracks?.screenshare;

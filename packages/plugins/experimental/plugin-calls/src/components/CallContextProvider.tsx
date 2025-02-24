@@ -12,7 +12,7 @@ import {
   type CallContextType,
   useIsSpeaking,
   usePeerConnection,
-  useCall,
+  useCallState,
   useStablePojo,
   useStateObservable,
   useSubscribedState,
@@ -32,9 +32,8 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const iceServers = config.get('runtime.services.ice') ?? [];
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
-  const maxWebcamQualityLevel = 1_080;
 
-  const room = useCall({ roomId });
+  const call = useCallState({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
@@ -42,19 +41,10 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
-  const scaleResolutionDownBy = useMemo(() => {
-    const videoStreamTrack = userMedia.videoTrack;
-    const { height, width } = tryToGetDimensions(videoStreamTrack);
-    // We need to do this in case camera is in portrait mode.
-    const smallestDimension = Math.min(height, width);
-    return Math.max(smallestDimension / maxWebcamQualityLevel, 1);
-  }, [maxWebcamQualityLevel, userMedia.videoTrack]);
-
   const videoEncodingParams = useStablePojo<RTCRtpEncodingParameters[]>([
     {
       maxFramerate: maxWebcamFramerate,
       maxBitrate: maxWebcamBitrate,
-      scaleResolutionDownBy,
     },
   ]);
   const videoTrackEncodingParams$ = useStateObservable<RTCRtpEncodingParameters[]>(videoEncodingParams);
@@ -91,18 +81,18 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   // TODO(burdon): Split root context vs. local call context.
   const context: CallContextType = {
     roomId,
-    room,
+    call,
     peer,
     userMedia,
-    isSpeaking,
 
     joined,
     setJoined,
+    isSpeaking,
+
+    iceConnectionState,
     dataSaverMode,
     setDataSaverMode,
-    iceConnectionState,
 
-    // TODO(burdon): Comment.
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),
       audio: trackObjectToString(pushedAudioTrack),
@@ -121,14 +111,4 @@ const trackObjectToString = (trackObject?: any): string | undefined => {
   }
 
   return trackObject.sessionId + '/' + trackObject.trackName;
-};
-
-const tryToGetDimensions = (videoStreamTrack?: MediaStreamTrack): { width: number; height: number; } => {
-  if (!videoStreamTrack || !videoStreamTrack.getCapabilities) {
-    return { width: 0, height: 0 };
-  }
-
-  const width = videoStreamTrack.getCapabilities().width?.max ?? 0;
-  const height = videoStreamTrack.getCapabilities().height?.max ?? 0;
-  return { width, height };
 };

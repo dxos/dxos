@@ -21,22 +21,22 @@ import { ParticipantGrid } from '../Participant';
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
-  const [raisedHand, setRaisedHand] = useState(false);
   const ai = useAi();
   const {
+    call: { room, user: self, updateUserState },
     userMedia,
     peer,
     isSpeaking,
     pushedTracks,
-    room: { user, otherUsers, updateUserState },
     setJoined,
     onTranscription,
   } = useCallContext();
 
   // Broadcast status over swarm.
+  const [raisedHand, setRaisedHand] = useState(false);
   useBroadcastStatus({
     peer,
-    user,
+    user: self,
     userMedia,
     pushedTracks,
     raisedHand,
@@ -45,7 +45,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   });
 
   // Transcription.
-  useTranscription({ user, userMedia, isSpeaking });
+  useTranscription({ user: self, userMedia, isSpeaking });
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
       enabled: !ai.transcription.enabled,
@@ -63,6 +63,9 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     ai.setTranscription(transcription);
   };
 
+  // Filter out self.
+  const otherUsers = (room.users ?? []).filter((user) => user.id !== self.id);
+
   // Screen sharing.
   const otherUserIsSharing = otherUsers.some((user) => user.tracks?.screenshare);
   const sharing = userMedia.screenshareVideoTrack !== undefined;
@@ -73,7 +76,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
-        <ParticipantGrid user={user} users={otherUsers} debug={debugEnabled} />
+        <ParticipantGrid user={self} users={otherUsers} debug={debugEnabled} />
 
         <Toolbar.Root>
           <IconButton
