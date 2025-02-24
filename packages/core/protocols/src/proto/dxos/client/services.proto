@@ -136,6 +136,7 @@ message RecoverIdentityRequest {
     dxos.keys.PublicKey device_key = 2;
     dxos.keys.PublicKey control_feed_key = 3;
     bytes signature = 4;
+    // These are required to verify the signature from the WebAuthn authenticator.
     optional bytes client_data_json = 5;
     optional bytes authenticator_data = 6;
   }

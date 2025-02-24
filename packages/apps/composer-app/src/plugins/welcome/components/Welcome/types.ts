@@ -14,6 +14,7 @@ export type WelcomeScreenProps = {
   identity?: Identity | null;
   error?: boolean;
   onSignup?: (email: string) => void;
+  onPasskey?: () => void;
   onJoinIdentity?: () => void;
   onRecoverIdentity?: () => void;
   onSpaceInvitation?: () => void;

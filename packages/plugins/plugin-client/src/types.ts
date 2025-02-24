@@ -69,6 +69,11 @@ export namespace ClientAction {
     input: S.Void,
     output: S.Void,
   }) {}
+
+  export class RedeemPasskey extends S.TaggedClass<RedeemPasskey>()(`${CLIENT_ACTION}/redeem-passkey`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
 }
 
 export type ClientPluginOptions = ClientOptions & {
