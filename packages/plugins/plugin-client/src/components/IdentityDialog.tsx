@@ -9,6 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { Clipboard, Dialog } from '@dxos/react-ui';
 import { IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
 
+import { MANAGE_CREDENTIALS_DIALOG } from './ManageCredentialsDialog';
 import { CLIENT_PLUGIN } from '../meta';
 import { ClientAction } from '../types';
 
@@ -44,6 +45,16 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
     await dispatch(createIntent(ClientAction.ResetStorage, { target: 'deviceInvitation' }));
   }, [dispatch]);
 
+  const handleManageCredentials = useCallback(async () => {
+    await dispatch(
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
+        subject: MANAGE_CREDENTIALS_DIALOG,
+        options: { state: true, blockAlign: 'start' },
+      }),
+    );
+  }, [dispatch]);
+
   return (
     <Dialog.Content>
       <Clipboard.Provider>
@@ -54,6 +65,7 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
           onResetStorage={handleResetStorage}
           onRecover={handleRecover}
           onJoinNewIdentity={handleJoinNewIdentity}
+          onManageCredentials={handleManageCredentials}
         />
       </Clipboard.Provider>
     </Dialog.Content>

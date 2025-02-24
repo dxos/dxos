@@ -1,7 +1,6 @@
 {
   "name": "@dxos/assistant",
   "version": "0.7.4",
-  "private": true,
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,7 +41,7 @@
     "inquirer": "^12.0.0"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "beast": {}
 }

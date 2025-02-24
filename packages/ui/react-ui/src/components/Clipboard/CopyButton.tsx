@@ -44,11 +44,15 @@ export const CopyButton = ({ value, classNames, iconProps, ...props }: CopyButto
   );
 };
 
-export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...props }: CopyButtonProps) => {
+type CopyButtonIconOnlyProps = CopyButtonProps & {
+  label?: string;
+};
+
+export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...props }: CopyButtonIconOnlyProps) => {
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
-  const label = isCopied ? t('copy success label') : t('copy label');
+  const label = isCopied ? t('copy success label') : props.label ?? t('copy label');
   const [open, setOpen] = useState(false);
   return (
     <Tooltip.Root delayDuration={1500} open={open} onOpenChange={setOpen}>

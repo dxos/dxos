@@ -9,8 +9,16 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeAuthChallengeError, type RecoverIdentityRequest, type RecoverIdentityResponseBody } from '@dxos/protocols';
+import {
+  EdgeAuthChallengeError,
+  type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
+  type RecoverIdentityResponseBody,
+} from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
+import {
+  type CreateRecoveryCredentialRequest,
+  type RecoverIdentityRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';
@@ -24,13 +32,19 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryPhrase() {
+  public async createRecoveryCredential({ recoveryKey, algorithm }: CreateRecoveryCredentialRequest) {
     const identity = this._identityProvider();
     invariant(identity);
 
-    const seedphrase = generateSeedPhrase();
-    const keypair = keyPairFromSeedPhrase(seedphrase);
-    const recoveryKey = PublicKey.from(keypair.publicKey);
+    let recoveryCode: string | undefined;
+    if (!recoveryKey) {
+      recoveryCode = generateSeedPhrase();
+      const keypair = keyPairFromSeedPhrase(recoveryCode);
+      recoveryKey = PublicKey.from(keypair.publicKey);
+      algorithm = 'ED25519';
+    }
+
+    invariant(algorithm, 'Algorithm is required.');
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
@@ -38,23 +52,86 @@ export class EdgeIdentityRecoveryManager {
         '@type': 'dxos.halo.credentials.IdentityRecovery',
         recoveryKey,
         identityKey,
+        algorithm,
       },
     });
 
     const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
-    return { seedphrase };
+    return { recoveryCode };
   }
 
-  public async recoverIdentity(args: { seedphrase: string }) {
+  public async requestRecoveryChallenge() {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
-    const recoveryKeypair = keyPairFromSeedPhrase(args.seedphrase);
+    const deviceKey = await this._keyring.createKey();
+    const controlFeedKey = await this._keyring.createKey();
+    const request: EdgeRecoverIdentityRequest = {
+      deviceKey: deviceKey.toHex(),
+      controlFeedKey: controlFeedKey.toHex(),
+    };
+
+    try {
+      await this._edgeClient.recoverIdentity(request);
+      throw new Error('No challenge received.');
+    } catch (error: any) {
+      if (!(error instanceof EdgeAuthChallengeError)) {
+        throw error;
+      }
+      return {
+        deviceKey,
+        controlFeedKey,
+        challenge: error.challenge,
+      };
+    }
+  }
+
+  public async recoverIdentityWithExternalSignature({
+    identityDid,
+    deviceKey,
+    controlFeedKey,
+    signature,
+    clientDataJson,
+    authenticatorData,
+  }: RecoverIdentityRequest.ExternalSignature) {
+    invariant(this._edgeClient, 'Not connected to EDGE.');
+
+    const request: EdgeRecoverIdentityRequest = {
+      identityDid,
+      deviceKey: deviceKey.toHex(),
+      controlFeedKey: controlFeedKey.toHex(),
+      signature:
+        clientDataJson && authenticatorData
+          ? {
+              signature: Buffer.from(signature).toString('base64'),
+              clientDataJson: Buffer.from(clientDataJson).toString('base64'),
+              authenticatorData: Buffer.from(authenticatorData).toString('base64'),
+            }
+          : Buffer.from(signature).toString('base64'),
+    };
+
+    const response = await this._edgeClient.recoverIdentity(request);
+
+    await this._acceptRecoveredIdentity({
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
+      haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
+      identityKey: PublicKey.fromHex(response.identityKey),
+      deviceKey,
+      controlFeedKey,
+      dataFeedKey: await this._keyring.createKey(),
+    });
+  }
+
+  public async recoverIdentity({ recoveryCode }: { recoveryCode: string }) {
+    invariant(this._edgeClient, 'Not connected to EDGE.');
+
+    const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);
     const recoveryKey = PublicKey.from(recoveryKeypair.publicKey);
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
-    const request: RecoverIdentityRequest = {
+    const request: EdgeRecoverIdentityRequest = {
       recoveryKey: recoveryKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),

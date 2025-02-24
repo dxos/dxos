@@ -24,6 +24,7 @@ export default [
         'email input label': 'Email',
         'email input placeholder': 'Your email',
         'login button label': 'Request Access',
+        'redeem passkey button label': 'Connect using a passkey',
         'join device button label': 'Connect using an existing device',
         'recover identity button label': 'Connect using a recovery code',
         'join space button label': 'Join space',

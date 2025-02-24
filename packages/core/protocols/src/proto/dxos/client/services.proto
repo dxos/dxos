@@ -118,17 +118,45 @@ service SystemService {
 //
 
 message Identity {
+  string did = 4;
   dxos.keys.PublicKey identity_key = 1;
   optional dxos.keys.PublicKey space_key = 2;
   optional halo.credentials.ProfileDocument profile = 3;
 }
 
-message RecoverIdentityRequest {
-  string seedphrase = 1;
+message RequestRecoveryChallengeResponse {
+  dxos.keys.PublicKey device_key = 1;
+  dxos.keys.PublicKey control_feed_key = 2;
+  string challenge = 3;
 }
 
-message CreateRecoveryPhraseResponse {
-  string seedphrase = 1;
+message RecoverIdentityRequest {
+  message ExternalSignature {
+    string identity_did = 1;
+    dxos.keys.PublicKey device_key = 2;
+    dxos.keys.PublicKey control_feed_key = 3;
+    bytes signature = 4;
+    // These are required to verify the signature from the WebAuthn authenticator.
+    optional bytes client_data_json = 5;
+    optional bytes authenticator_data = 6;
+  }
+
+  oneof request {
+    string recovery_code = 1;
+    ExternalSignature external = 2;
+  }
+}
+
+message CreateRecoveryCredentialRequest {
+  /// Optional recovery key. If not provided, a new key will be generated.
+  optional dxos.keys.PublicKey recovery_key = 1;
+
+  /// Algorithm used to generate the recovery key.
+  optional string algorithm = 2;
+}
+
+message CreateRecoveryCredentialResponse {
+  optional string recovery_code = 1;
 }
 
 message QueryIdentityResponse {
@@ -150,8 +178,9 @@ message CreateIdentityRequest {
 // TODO(wittjosiah): Align pluralization with other services.
 service IdentityService {
   rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
+  rpc RequestRecoveryChallenge(google.protobuf.Empty) returns (RequestRecoveryChallengeResponse);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
-  rpc CreateRecoveryPhrase(google.protobuf.Empty) returns (CreateRecoveryPhraseResponse);
+  rpc CreateRecoveryCredential(CreateRecoveryCredentialRequest) returns (CreateRecoveryCredentialResponse);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);

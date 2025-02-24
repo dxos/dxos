@@ -22,7 +22,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
           .getStore<ObservabilitySettingsProps>(OBSERVABILITY_PLUGIN)!.value;
         settings.enabled = state ?? !settings.enabled;
         observability.event({
-          identityId: getTelemetryIdentifier(client),
+          did: getTelemetryIdentifier(client),
           name: `${namespace}.observability.toggle`,
           properties: {
             enabled: settings.enabled,
@@ -42,7 +42,7 @@ export default ({ context, namespace }: { context: PluginsContext; namespace: st
         //   then this could awaited still rather than voiding.
         void context.waitForCapability(ObservabilityCapabilities.Observability).then((observability) => {
           const event = {
-            identityId: getTelemetryIdentifier(client),
+            did: getTelemetryIdentifier(client),
             name: `${namespace}.${data.name}`,
             properties: {
               ...data.properties,
