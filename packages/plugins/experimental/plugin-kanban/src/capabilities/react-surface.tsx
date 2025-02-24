@@ -61,13 +61,8 @@ export default () =>
         if (!space) {
           return null;
         }
-        const schemata = space?.db.schemaRegistry.query().runSync();
         const { initialSchema } = useFormValues();
-
-        const selectedSchema = useMemo(
-          () => schemata.find((schema) => schema.typename === initialSchema),
-          [schemata, initialSchema],
-        );
+        const [selectedSchema] = space?.db.schemaRegistry.query({ typename: initialSchema }).runSync();
 
         const singleSelectColumns = useMemo(() => {
           if (!selectedSchema?.jsonSchema?.properties) {
