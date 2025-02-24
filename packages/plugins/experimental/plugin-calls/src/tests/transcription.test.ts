@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type AudioChunk, AudioRecorder, Transcriber } from '../ai';
-import { type Segment } from '../types';
+import { type TranscriptSegment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
 // This is a playground for testing the transcription, requires `calls-service` to be running.
@@ -89,7 +89,7 @@ describe.skip('transcription', () => {
   });
 
   test('transcription of audio recording', { timeout: 10_000 }, async () => {
-    const trigger = new Trigger<Segment[]>({ autoReset: true });
+    const trigger = new Trigger<TranscriptSegment[]>({ autoReset: true });
     const transcription = new Transcriber({
       prefixedChunksAmount: 1,
     });
@@ -123,7 +123,7 @@ describe.skip('transcription', () => {
   });
 
   test('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
-    const trigger = new Trigger<Segment[]>({ autoReset: true });
+    const trigger = new Trigger<TranscriptSegment[]>({ autoReset: true });
     const transcription = new Transcriber({
       prefixedChunksAmount: 1,
     });

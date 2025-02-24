@@ -10,65 +10,69 @@ import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { type Ai } from './useAi';
-import type { RoomContextType } from './useRoomContext';
-import type { UserMedia } from './useUserMedia';
+import { type CallContextType } from './useCallContext';
+import { type UserMedia } from './useUserMedia';
 import { useSubscribedState } from './utils';
 import { type UserState } from '../types';
-import type { RxjsPeer } from '../utils';
+import { type RxjsPeer } from '../utils';
 
-interface Config {
+const BROADCAST_INTERVAL = 2_000;
+
+type UseBroadcastStatus = {
   ai: Ai;
-  userMedia: UserMedia;
   peer: RxjsPeer;
+  userMedia: UserMedia;
+  pushedTracks: CallContextType['pushedTracks'];
   identity?: UserState;
-  speaking?: boolean;
   raisedHand?: boolean;
-  pushedTracks: RoomContextType['pushedTracks'];
-  updateUserState: (user: UserState) => void;
-}
+  speaking?: boolean;
+  onUpdateUserState: (state: UserState) => void;
+};
 
 export const useBroadcastStatus = ({
-  userMedia,
-  identity,
-  peer,
-  pushedTracks,
-  updateUserState,
   ai,
+  peer,
+  userMedia,
+  pushedTracks,
+  identity,
+  raisedHand,
   speaking,
-}: Config) => {
-  const { audioEnabled, videoEnabled, screenShareEnabled } = userMedia;
+  onUpdateUserState,
+}: UseBroadcastStatus): void => {
+  const { audioEnabled, videoEnabled, screenshareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
   const { sessionId } = useSubscribedState(peer.session$) ?? {};
   useEffect(() => {
     if (!identity) {
       return;
     }
+
     const state: UserState = {
       id: identity.id,
       name: identity.name,
       joined: true,
-      raisedHand: false,
+      raisedHand,
       speaking,
       transceiverSessionId: sessionId,
       tracks: buf.create(TracksSchema, {
         audioEnabled,
         videoEnabled,
-        screenShareEnabled,
-        video,
+        screenshareEnabled,
         audio,
+        video,
         screenshare,
       }),
       transcription: buf.create(TranscriptionSchema, ai.transcription),
     };
 
-    updateUserState(state);
+    onUpdateUserState(state);
     const t = setInterval(() => {
       try {
-        updateUserState(state);
+        onUpdateUserState(state);
       } catch (err) {
         log.error('useBroadcastStatus', { err });
       }
-    }, 2_000);
+    }, BROADCAST_INTERVAL);
 
     return () => {
       clearInterval(t);
@@ -83,9 +87,10 @@ export const useBroadcastStatus = ({
     screenshare,
     audioEnabled,
     videoEnabled,
-    screenShareEnabled,
-    ai.transcription.enabled,
+    screenshareEnabled,
+    raisedHand,
     speaking,
+    ai.transcription.enabled,
   ]);
 
   useUnmount(() => {
@@ -93,7 +98,7 @@ export const useBroadcastStatus = ({
       return;
     }
 
-    updateUserState({
+    onUpdateUserState({
       id: identity.id,
       name: identity.name,
       joined: false,

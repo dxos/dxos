@@ -5,11 +5,11 @@
 import { useMemo } from 'react';
 import { of, switchMap } from 'rxjs';
 
-import { useRoomContext, useStateObservable, useSubscribedState } from '../../hooks';
+import { useCallContext, useStateObservable, useSubscribedState } from '../../hooks';
 import { type TrackObject } from '../../types';
 
 export const usePulledVideoTrack = (video: string | undefined) => {
-  const { peer } = useRoomContext();
+  const { peer } = useCallContext();
 
   const [sessionId, trackName] = video?.split('/') ?? [];
   const trackObject = useMemo(

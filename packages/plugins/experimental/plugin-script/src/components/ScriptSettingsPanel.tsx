@@ -10,7 +10,7 @@ import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMe
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Button, Clipboard, Input, Separator, useControlledValue, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Input, Separator, useControlledState, useTranslation } from '@dxos/react-ui';
 import { AccessTokenType } from '@dxos/schema';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -57,7 +57,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
     return () => clearTimeout(timeout);
   }, [githubToken, gistKey]);
 
-  const [binding, setBinding] = useControlledValue(fn?.binding ?? '');
+  const [binding, setBinding] = useControlledState(fn?.binding ?? '');
   const handleBindingChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       setBinding(event.target.value);

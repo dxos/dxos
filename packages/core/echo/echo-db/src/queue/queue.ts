@@ -8,7 +8,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 
-import type { Queue } from './interface';
+import type { Queue } from './types';
 
 /**
  * Client-side view onto an EDGE queue.

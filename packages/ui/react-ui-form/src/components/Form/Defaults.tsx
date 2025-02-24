@@ -75,6 +75,7 @@ export const NumberInput = ({
 
 export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onValueChange }: InputProps) => {
   const { status, error } = getStatus();
+  const checked = Boolean(getValue());
 
   // TODO(burdon): Runtime error:
   //  Warning: Unknown event handler property `onCheckedChange`. It will be ignored.
@@ -85,7 +86,7 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.Switch checked={getValue()} onCheckedChange={(value) => onValueChange(type, value)} />
+      <Input.Switch checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );

@@ -145,12 +145,7 @@ export default (context: PluginsContext) => {
             id,
             type,
             data: null,
-            properties: {
-              icon,
-              label,
-              object: null,
-              space,
-            },
+            properties: { icon, label, object: null, space },
           };
         }
 

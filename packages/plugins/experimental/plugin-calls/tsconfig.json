@@ -49,6 +49,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/storybook-utils"
     },
     {
@@ -58,7 +61,13 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/echo/echo-db"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/live-object"
     },
     {
       "path": "../../../core/protocols"
@@ -74,6 +83,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-components"
     },
     {
       "path": "../../../ui/react-ui-stack"

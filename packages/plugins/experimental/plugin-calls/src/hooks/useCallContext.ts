@@ -5,14 +5,16 @@
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 
 import { raise } from '@dxos/debug';
+import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { type PublicKey } from '@dxos/react-client';
 
-import { type UseRoomState } from './useRoom';
+import { type UseCallState } from './useCall';
 import { type UserMedia } from './useUserMedia';
+import { type TranscriptType } from '../types';
 import { type RxjsPeer } from '../utils';
 
-export type RoomContextType = {
+export type CallContextType = {
   roomId: PublicKey;
   thread?: ThreadType;
   isSpeaking: boolean;
@@ -23,16 +25,18 @@ export type RoomContextType = {
   userMedia: UserMedia;
   iceConnectionState: RTCIceConnectionState;
   peer: RxjsPeer;
-  room: UseRoomState;
+  room: UseCallState;
   pushedTracks: {
     screenshare?: string;
     video?: string;
     audio?: string;
   };
+
+  onTranscription?: () => Promise<ReactiveEchoObject<TranscriptType>>;
 };
 
-export const RoomContext = createContext<RoomContextType | undefined>(undefined);
+export const CallContext = createContext<CallContextType | undefined>(undefined);
 
-export const useRoomContext = () => {
-  return useContext(RoomContext) ?? raise(new Error('Missing RoomContextProvider'));
+export const useCallContext = () => {
+  return useContext(CallContext) ?? raise(new Error('Missing CallContext'));
 };

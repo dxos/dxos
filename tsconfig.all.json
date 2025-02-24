@@ -460,6 +460,9 @@
       "path": "packages/ui/react-ui-card/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-components/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-editor/tsconfig.json"
     },
     {

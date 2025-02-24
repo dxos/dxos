@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, createContext, useContext, useState, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, createContext, useContext, useState } from 'react';
 
 import { AudioStream } from './AudioStream';
 

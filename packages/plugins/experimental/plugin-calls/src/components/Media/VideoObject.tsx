@@ -8,53 +8,64 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'ref'> & {
   videoTrack?: MediaStreamTrack;
+  flip?: boolean;
+  // TODO(burdon): If screenshare then contain.
+  contain?: boolean;
 };
 
-export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(({ videoTrack, className, ...rest }, ref) => {
-  const internalRef = useRef<HTMLVideoElement | null>(null);
+export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
+  ({ videoTrack, className, flip, contain, ...rest }, ref) => {
+    const internalRef = useRef<HTMLVideoElement | null>(null);
 
-  useEffect(() => {
-    const mediaStream = new MediaStream();
-    if (videoTrack) {
-      mediaStream.addTrack(videoTrack);
-    }
-
-    const video = internalRef.current;
-    if (video) {
-      video.srcObject = mediaStream;
-      video.setAttribute('autoplay', 'true');
-      video.setAttribute('playsinline', 'true');
-    }
-
-    return () => {
+    useEffect(() => {
+      const mediaStream = new MediaStream();
       if (videoTrack) {
-        mediaStream.removeTrack(videoTrack);
+        mediaStream.addTrack(videoTrack);
       }
+
       const video = internalRef.current;
       if (video) {
-        video.srcObject = null;
+        video.srcObject = mediaStream;
+        video.setAttribute('autoplay', 'true');
+        video.setAttribute('playsinline', 'true');
       }
-    };
-  }, [videoTrack]);
 
-  return (
-    <video
-      className={mx('flex w-full aspect-video object-cover', className)}
-      ref={(v) => {
-        internalRef.current = v;
-        if (ref === null) {
-          return;
+      return () => {
+        if (videoTrack) {
+          mediaStream.removeTrack(videoTrack);
         }
 
-        if (typeof ref === 'function') {
-          ref(v);
-        } else {
-          ref.current = v;
+        const video = internalRef.current;
+        if (video) {
+          video.srcObject = null;
         }
-      }}
-      {...rest}
-    />
-  );
-});
+      };
+    }, [videoTrack]);
 
-VideoObject.displayName = 'VidoSrcObject';
+    return (
+      <video
+        className={mx(
+          'flex aspect-video',
+          flip && 'scale-x-[-1]',
+          contain ? 'object-contain' : 'object-cover',
+          className,
+        )}
+        ref={(v) => {
+          internalRef.current = v;
+          if (ref === null) {
+            return;
+          }
+
+          if (typeof ref === 'function') {
+            ref(v);
+          } else {
+            ref.current = v;
+          }
+        }}
+        {...rest}
+      />
+    );
+  },
+);
+
+VideoObject.displayName = 'VideoObject';

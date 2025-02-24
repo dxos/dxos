@@ -4,37 +4,39 @@
 
 import React, { type FC } from 'react';
 
-import { IconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useSubscribedState, useRoomContext } from '../../hooks';
+import { useSubscribedState, useCallContext } from '../../hooks';
+import { CALLS_PLUGIN } from '../../meta';
+import { GridCellContainer } from '../Grid';
 import { MediaButtons, VideoObject } from '../Media';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
-  const { setJoined, userMedia, room, peer } = useRoomContext()!;
+  const { t } = useTranslation(CALLS_PLUGIN);
+  const { setJoined, userMedia, room, peer } = useCallContext()!;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
   const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
-    <div className={mx('flex flex-col grow overflow-auto', classNames)}>
-      <VideoObject className='scale-x-[-1] object-contain' videoTrack={userMedia.videoTrack} muted />
-      <div className='grow' />
-      <div className='flex justify-between overflow-hidden'>
-        <Toolbar.Root>
-          <IconButton
-            variant='primary'
-            label='Join'
-            onClick={() => setJoined(true)}
-            disabled={!session?.sessionId}
-            icon='ph--phone-incoming--regular'
-          />
-          <div className='grow text-sm text-subdued'>
-            {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
-          </div>
-          <MediaButtons userMedia={userMedia} />
-        </Toolbar.Root>
-      </div>
+    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <GridCellContainer>
+        <VideoObject flip muted videoTrack={userMedia.videoTrack} />
+      </GridCellContainer>
+      <Toolbar.Root classNames='justify-between'>
+        <IconButton
+          variant='primary'
+          label={t('join call')}
+          onClick={() => setJoined(true)}
+          disabled={!session?.sessionId}
+          icon='ph--phone-incoming--regular'
+        />
+        <div className='grow text-sm text-subdued'>
+          {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
+        </div>
+        <MediaButtons userMedia={userMedia} />
+      </Toolbar.Root>
     </div>
   );
 };

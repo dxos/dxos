@@ -5,3 +5,4 @@
 export * from './IdentityDialog';
 export * from './JoinDialog';
 export * from './RecoveryCodeDialog';
+export * from './RecoverySetupDialog';

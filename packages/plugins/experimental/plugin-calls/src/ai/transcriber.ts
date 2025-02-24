@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type AudioChunk } from './audio-recorder';
-import { CALLS_URL, type Segment } from '../types';
+import { CALLS_URL, type TranscriptSegment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
 type WhisperWord = {
@@ -64,7 +64,7 @@ export class Transcriber extends Resource {
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
   private _config: WavConfig = { channels: 1, sampleRate: 16000, bitDepthCode: '16' };
-  private _onTranscription?: (params: Segment[]) => Promise<void>;
+  private _onTranscription?: (params: TranscriptSegment[]) => Promise<void>;
   private readonly _prefixedChunksAmount: number;
 
   constructor({ prefixedChunksAmount }: { prefixedChunksAmount: number }) {
@@ -85,7 +85,7 @@ export class Transcriber extends Resource {
     this._config = { ...this._config, ...config };
   }
 
-  setOnTranscription(onTranscription: (params: Segment[]) => Promise<void>) {
+  setOnTranscription(onTranscription: (params: TranscriptSegment[]) => Promise<void>) {
     this._onTranscription = onTranscription;
   }
 
@@ -184,19 +184,21 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): Segment[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): TranscriptSegment[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
     // Drop segments that end before the last segment end timestamp.
-    const filteredSegments = segments.filter((segment) => zeroTimestamp + segment.end * 1000 > this._lastUsedTimestamp);
+    const filteredSegments = segments.filter(
+      (segment) => zeroTimestamp + segment.end * 1_000 > this._lastUsedTimestamp,
+    );
 
     // Filter words of first segment to use.
     const firstSegment = {
       ...filteredSegments.at(0)!,
       words: filteredSegments
         .at(0)!
-        .words.filter((word) => zeroTimestamp + word.start * 1000 > this._lastUsedTimestamp),
+        .words.filter((word) => zeroTimestamp + word.start * 1_000 > this._lastUsedTimestamp),
     };
 
     // Update last timestamp.
@@ -204,8 +206,8 @@ export class Transcriber extends Resource {
 
     // Add absolute timestamp to each segment.
     return [firstSegment, ...filteredSegments.slice(1)].map((segment) => ({
+      started: new Date(zeroTimestamp + segment.start * 1_000),
       text: segment.text,
-      timestamp: new Date(zeroTimestamp + segment.start * 1000),
     }));
   }
 }

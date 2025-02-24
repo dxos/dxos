@@ -41,7 +41,7 @@ export class EdgeIdentityRecoveryManager {
       recoveryCode = generateSeedPhrase();
       const keypair = keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
-      algorithm = -8; // Ed25519
+      algorithm = 'ED25519';
     }
 
     invariant(algorithm, 'Algorithm is required.');
@@ -62,7 +62,69 @@ export class EdgeIdentityRecoveryManager {
     return { recoveryCode };
   }
 
-  public async recoverIdentity({ recoveryCode }: RecoverIdentityRequest) {
+  public async requestRecoveryChallenge() {
+    invariant(this._edgeClient, 'Not connected to EDGE.');
+
+    const deviceKey = await this._keyring.createKey();
+    const controlFeedKey = await this._keyring.createKey();
+    const request: EdgeRecoverIdentityRequest = {
+      deviceKey: deviceKey.toHex(),
+      controlFeedKey: controlFeedKey.toHex(),
+    };
+
+    try {
+      await this._edgeClient.recoverIdentity(request);
+      throw new Error('No challenge received.');
+    } catch (error: any) {
+      if (!(error instanceof EdgeAuthChallengeError)) {
+        throw error;
+      }
+      return {
+        deviceKey,
+        controlFeedKey,
+        challenge: error.challenge,
+      };
+    }
+  }
+
+  public async recoverIdentityWithExternalSignature({
+    identityDid,
+    deviceKey,
+    controlFeedKey,
+    signature,
+    clientDataJson,
+    authenticatorData,
+  }: RecoverIdentityRequest.ExternalSignature) {
+    invariant(this._edgeClient, 'Not connected to EDGE.');
+
+    const request: EdgeRecoverIdentityRequest = {
+      identityDid,
+      deviceKey: deviceKey.toHex(),
+      controlFeedKey: controlFeedKey.toHex(),
+      signature:
+        clientDataJson && authenticatorData
+          ? {
+              signature: Buffer.from(signature).toString('base64'),
+              clientDataJson: Buffer.from(clientDataJson).toString('base64'),
+              authenticatorData: Buffer.from(authenticatorData).toString('base64'),
+            }
+          : Buffer.from(signature).toString('base64'),
+    };
+
+    const response = await this._edgeClient.recoverIdentity(request);
+
+    await this._acceptRecoveredIdentity({
+      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
+      haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
+      haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
+      identityKey: PublicKey.fromHex(response.identityKey),
+      deviceKey,
+      controlFeedKey,
+      dataFeedKey: await this._keyring.createKey(),
+    });
+  }
+
+  public async recoverIdentity({ recoveryCode }: { recoveryCode: string }) {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);

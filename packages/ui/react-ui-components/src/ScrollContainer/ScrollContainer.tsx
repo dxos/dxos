@@ -3,9 +3,9 @@
 //
 
 import React, {
-  forwardRef,
   type PropsWithChildren,
   type UIEventHandler,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -26,11 +26,12 @@ export type ScrollContainerProps = ThemedClassName<PropsWithChildren>;
 /**
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
-// TODO(burdon): Move to react-ui.
 // TODO(burdon): Custom scrollbar.
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
   ({ children, classNames }, forwardedRef) => {
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Determines if user scrolled.
     const autoScrollRef = useRef(false);
 
     // Controller.
@@ -39,7 +40,8 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       () => ({
         scrollToBottom: () => {
           invariant(containerRef.current);
-          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+          // NOTE: Should be instant otherwise scrollHeight might be out of date.
+          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'instant' });
           autoScrollRef.current = false;
         },
       }),
@@ -57,7 +59,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
     }, [children]);
 
-    // Detect scroll end.
+    // Detect scroll to end.
     useEffect(() => {
       invariant(containerRef.current);
       const handleScrollEnd = () => {
@@ -68,7 +70,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       return () => containerRef.current?.removeEventListener('scrollend', handleScrollEnd);
     }, []);
 
-    // Scrolling.
+    // User scrolling.
     const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>((ev) => {
       if (autoScrollRef.current) {
         return;
@@ -79,11 +81,12 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       setSticky(sticky);
     }, []);
 
+    // TOOD(burdon): Wrap with ScrollArea.
     return (
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className={mx('flex flex-col grow overflow-y-scroll scrollbar-none', classNames)}
+        className={mx('flex flex-col grow overflow-y-auto scrollbar-none contain-layout')}
       >
         {children}
       </div>

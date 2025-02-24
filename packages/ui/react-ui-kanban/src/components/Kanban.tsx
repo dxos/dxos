@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useMemo } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useMemo } from 'react';
 
+import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
+import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -20,6 +23,9 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
+  const { select, clear } = useSelectionActions(model.id);
+  const selectedItems = useSelectedItems(model.id);
+  useEffect(() => () => clear(), []);
   // const [namingColumn, setNamingColumn] = useState(false);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
@@ -32,6 +38,22 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       [model.columnFieldPath]: () => <></>,
     };
   }, [model.columnFieldPath]);
+
+  const handleSave = useCallback(
+    (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+      const id = values.id;
+      invariant(typeof id === 'string');
+      const object = model.items.find((obj) => obj.id === id);
+      invariant(object);
+
+      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+      for (const path of changedPaths) {
+        const value = values[path];
+        setValue(object, path, value);
+      }
+    },
+    [model.items],
+  );
 
   return (
     <Stack
@@ -72,10 +94,17 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames='plb-1 pli-2 drag-preview-p-0'
+                    classNames={'plb-1 pli-2 drag-preview-p-0'}
                     focusIndicatorVariant='group'
+                    onClick={() => select([card.id])}
                   >
-                    <div role='none' className='rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator'>
+                    <div
+                      role='none'
+                      className={mx(
+                        'rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator',
+                        selectedItems.has(card.id) && 'dx-focus-ring',
+                      )}
+                    >
                       <div role='none' className='flex items-center'>
                         <StackItem.DragHandle asChild>
                           <IconButton
@@ -85,6 +114,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             label={t('card drag handle label')}
                           />
                         </StackItem.DragHandle>
+                        <AttentionGlyph attended={selectedItems.has(card.id)} />
                         {onRemoveCard && (
                           <>
                             <span role='separator' className='grow' />
@@ -98,7 +128,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} readonly />
+                      <Form values={card} schema={model.cardSchema} Custom={Custom} onSave={handleSave} autoSave />
                     </div>
                   </StackItem.Root>
                 ))}

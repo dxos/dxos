@@ -12,6 +12,7 @@ import {
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
+import { PublicKey } from '@dxos/react-client';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { ClientCapabilities } from './capabilities';
@@ -21,9 +22,10 @@ import { ClientAction, type ClientPluginOptions } from '../types';
 
 type IntentResolverOptions = Pick<ClientPluginOptions, 'onReset'> & {
   context: PluginsContext;
+  appName?: string;
 };
 
-export default ({ context, onReset }: IntentResolverOptions) =>
+export default ({ context, appName = 'Composer', onReset }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
@@ -125,6 +127,44 @@ export default ({ context, onReset }: IntentResolverOptions) =>
             }),
           ],
         };
+      },
+    }),
+    createResolver({
+      intent: ClientAction.CreatePasskey,
+      resolve: async () => {
+        const client = context.requestCapability(ClientCapabilities.Client);
+        const identity = client.halo.identity.get();
+        invariant(identity, 'Identity not available');
+
+        // TODO(wittjosiah): Consider factoring out passkey creation to the halo api.
+        const credential = await navigator.credentials.create({
+          publicKey: {
+            challenge: new Uint8Array(),
+            rp: { id: location.hostname, name: appName },
+            user: {
+              id: new TextEncoder().encode(identity.did),
+              name: identity.did,
+              displayName: identity.profile?.displayName ?? '',
+            },
+            pubKeyCredParams: [
+              { type: 'public-key', alg: -8 }, // Ed25519 (not yet supported across all browsers)
+              { type: 'public-key', alg: -7 }, // ES256
+            ],
+            // https://web.dev/articles/webauthn-discoverable-credentials#resident-key
+            authenticatorSelection: {
+              residentKey: 'required',
+              requireResidentKey: true,
+            },
+          },
+        });
+
+        invariant(credential, 'Credential not available');
+        const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
+        const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
+
+        invariant(client.services.services.IdentityService, 'IdentityService not available');
+        // TODO(wittjosiah): This needs a proper api.
+        await client.services.services.IdentityService.createRecoveryCredential({ recoveryKey, algorithm });
       },
     }),
   ]);

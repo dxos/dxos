@@ -17,16 +17,16 @@ import translations from '../translations';
 
 const Render = () => {
   const client = useClient();
-  const [seedphrase, setSeedphrase] = useState<string>();
+  const [recoveryCode, setRecoveryCode] = useState<string>();
   useAsyncEffect(async () => {
     const { recoveryCode } = (await client.services.services.IdentityService?.createRecoveryCredential({})) ?? {};
-    setSeedphrase(recoveryCode);
+    setRecoveryCode(recoveryCode);
   }, [client]);
 
   return (
-    <AlertDialog.Root open={!!seedphrase}>
+    <AlertDialog.Root open={!!recoveryCode}>
       <AlertDialog.Overlay>
-        <RecoveryCodeDialog code={seedphrase ?? ''} />
+        <RecoveryCodeDialog code={recoveryCode ?? ''} />
       </AlertDialog.Overlay>
     </AlertDialog.Root>
   );

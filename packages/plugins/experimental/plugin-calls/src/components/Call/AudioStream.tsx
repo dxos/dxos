@@ -5,7 +5,7 @@
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 import { of } from 'rxjs';
 
-import { useRoomContext, useSubscribedState } from '../../hooks';
+import { useCallContext, useSubscribedState } from '../../hooks';
 
 export type AudioStreamProps = {
   tracksToPull: string[];
@@ -72,7 +72,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
   const onTrackRemovedRef = useRef(onTrackRemoved);
   onTrackRemovedRef.current = onTrackRemoved;
 
-  const { peer } = useRoomContext();
+  const { peer } = useCallContext();
   const trackObject = useMemo(() => {
     const [sessionId, trackName] = track.split('/');
     return {

@@ -5,7 +5,7 @@
 /**
  * Client-side view onto an EDGE queue.
  */
-export type Queue<T> = {
+export type Queue<T = object> = {
   items: T[];
   isLoading: boolean;
   error: Error | null;

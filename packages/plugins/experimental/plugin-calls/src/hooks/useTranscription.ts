@@ -13,28 +13,24 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
 import { type Ai, type UserMedia } from '../hooks';
-import { Block, type Segment, type UserState } from '../types';
+import { TranscriptBlock, type TranscriptSegment, type UserState } from '../types';
 
 const PREFIXED_CHUNKS_AMOUNT = 5;
 const RECORD_INTERVAL = 200;
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
-/**
- * Records audio while user is speaking and transcribes it after user is done speaking.
- */
-export const useTranscription = ({
-  edgeClient,
-  userMedia,
-  identity,
-  isSpeaking,
-  ai,
-}: {
+export type UseTranscriptionProps = {
   edgeClient: EdgeHttpClient;
+  ai: Ai;
   userMedia: UserMedia;
   identity: UserState;
   isSpeaking: boolean;
-  ai: Ai;
-}) => {
+};
+
+/**
+ * Records audio while user is speaking and transcribes it after user is done speaking.
+ */
+export const useTranscription = ({ edgeClient, ai, userMedia, identity, isSpeaking }: UseTranscriptionProps) => {
   // Initialize audio transcription.
   const transcription = useRef<Transcriber | null>();
   const firstRun = useRef(false);
@@ -56,15 +52,15 @@ export const useTranscription = ({
   }, []);
 
   // Get queue.
-  const queue = useQueue<Block>(
+  const queue = useQueue<TranscriptBlock>(
     edgeClient,
     ai.transcription.objectDxn ? DXN.parse(ai.transcription.objectDxn) : undefined,
   );
 
   // Handle transcription text.
   const handleSegments = useCallback(
-    async (segments: Segment[]) => {
-      const block = createStatic(Block, {
+    async (segments: TranscriptSegment[]) => {
+      const block = createStatic(TranscriptBlock, {
         author: identity.name || 'Unknown',
         segments,
       });

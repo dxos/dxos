@@ -9,6 +9,8 @@ import { QueueImpl } from '@dxos/echo-db';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type DXN } from '@dxos/keys';
 
+const MIN_POLL_INTERVAL = 1_000;
+
 export type UseQueueOptions = {
   pollInterval?: number;
 };
@@ -32,19 +34,19 @@ export const useQueue = <T>(
   }, [queue]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
     if (options.pollInterval) {
       const poll = () => {
         void queue?.refresh().finally(() => {
-          interval = setTimeout(poll, options.pollInterval);
+          timeout = setTimeout(poll, Math.max(options.pollInterval ?? 0, MIN_POLL_INTERVAL));
         });
       };
 
       poll();
     }
 
-    return () => clearInterval(interval);
-  }, [options.pollInterval]);
+    return () => clearTimeout(timeout);
+  }, [queue, options.pollInterval]);
 
   return queue;
 };

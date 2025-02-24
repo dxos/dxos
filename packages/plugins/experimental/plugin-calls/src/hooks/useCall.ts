@@ -14,7 +14,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { useAi, type Ai } from './useAi';
 import { codec, type RoomState, type UserState } from '../types';
 
-export type UseRoomState = {
+export type UseCallState = {
   roomState: RoomState;
   identity: UserState;
   otherUsers: UserState[];
@@ -25,19 +25,13 @@ export type UseRoomState = {
 /**
  * Call session state.
  */
-export const useRoom = ({
-  roomId,
-  storybookQueueDxn,
-}: {
-  roomId: PublicKey;
-  storybookQueueDxn?: string;
-}): UseRoomState => {
+export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
   const [roomState, setRoomState] = useState<RoomState>({
     meetingId: roomId.toHex(),
     users: [],
   });
 
-  const ai = useAi({ storybookQueueDxn });
+  const ai = useAi();
   const haloIdentity = useIdentity();
   const client = useClient();
   const identityKey = haloIdentity!.identityKey.toHex();
@@ -58,12 +52,12 @@ export const useRoom = ({
         setRoomState({ users, meetingId: roomId.toHex() });
         // Note: Small CRDT for merging transcription states.
         const maxTimestamp = Math.max(...users.map((user) => user.transcription?.lamportTimestamp ?? 0));
-        const newTranscriptionState = users.find(
-          (user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp,
-        );
+        const newTranscriptionState = users
+          .filter((user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp)
+          .sort((user1, user2) => user1.id.localeCompare(user2.id));
 
-        if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState) {
-          ai.setTranscription(newTranscriptionState.transcription!);
+        if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState.length > 0) {
+          ai.setTranscription(newTranscriptionState[0].transcription || {});
         }
       });
 

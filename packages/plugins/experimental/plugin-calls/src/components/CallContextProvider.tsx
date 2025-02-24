@@ -2,41 +2,39 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useMemo, type ReactNode, type FC } from 'react';
+import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { useConfig, type PublicKey } from '@dxos/react-client';
+import { useConfig } from '@dxos/react-client';
 
 import {
-  RoomContext,
-  type RoomContextType,
+  CallContext,
+  useIsSpeaking,
   usePeerConnection,
+  useCall,
   useStablePojo,
   useStateObservable,
   useSubscribedState,
-  useRoom,
   useUserMedia,
-  useIsSpeaking,
+  type CallContextType,
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
-type CallsContextProps = {
-  roomId: PublicKey;
-  storybookQueueDxn?: string;
-  children: ReactNode;
-};
+export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, 'roomId' | 'onTranscription'>>;
 
+/**
+ * Global context provider for calls.
+ */
 // TODO(burdon): Need to provide global state for plugin and provider.
 // - First create simple plugin context that tracks the current roomId.
-
-export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, storybookQueueDxn, children }) => {
+export const CallContextProvider: FC<CallContextProviderProps> = ({ children, roomId, onTranscription }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
   const maxWebcamQualityLevel = 1_080;
 
-  const room = useRoom({ roomId, storybookQueueDxn });
+  const room = useCall({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({
@@ -83,17 +81,17 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, storybookQ
   );
   const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
 
-  const pushedScreenShareTrack$ = useMemo(
+  const pushedScreenshareTrack$ = useMemo(
     () =>
-      userMedia.screenShareVideoTrack$.pipe(
+      userMedia.screenshareVideoTrack$.pipe(
         switchMap((track) => (track ? from(peer.pushTrack(of(track))) : of(undefined))),
       ),
-    [peer, userMedia.screenShareVideoTrack$],
+    [peer, userMedia.screenshareVideoTrack$],
   );
-  const pushedScreenShareTrack = useSubscribedState(pushedScreenShareTrack$);
+  const pushedScreenshareTrack = useSubscribedState(pushedScreenshareTrack$);
 
   // TODO(burdon): Can we simplify?
-  const context: RoomContextType = {
+  const context: CallContextType = {
     roomId,
     room,
     peer,
@@ -110,11 +108,12 @@ export const CallsContextProvider: FC<CallsContextProps> = ({ roomId, storybookQ
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),
       audio: trackObjectToString(pushedAudioTrack),
-      screenshare: trackObjectToString(pushedScreenShareTrack),
+      screenshare: trackObjectToString(pushedScreenshareTrack),
     },
+    onTranscription,
   };
 
-  return <RoomContext.Provider value={context}>{children}</RoomContext.Provider>;
+  return <CallContext.Provider value={context}>{children}</CallContext.Provider>;
 };
 
 const trackObjectToString = (trackObject?: any): string | undefined => {
