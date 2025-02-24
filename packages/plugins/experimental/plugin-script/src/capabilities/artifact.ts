@@ -88,7 +88,7 @@ export default () => {
         })
         S.Array(S.String)
         S.Union(S.String, S.Number)
-        S.Optional(S.String)
+        S.optional(S.String)
         S.String.annotations({ description: 'The source currency' })
       </apis>
 
