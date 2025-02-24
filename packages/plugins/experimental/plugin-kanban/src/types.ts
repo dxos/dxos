@@ -21,7 +21,6 @@ import { KANBAN_PLUGIN } from './meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-// TODO(ZaymonFC): Consider making this a common annotation.
 export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialSchema');
 export const InitialPivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialPivotColumn');
 
