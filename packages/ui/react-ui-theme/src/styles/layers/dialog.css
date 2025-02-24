@@ -1,0 +1,41 @@
+@layer dx-components {
+  .dx-dialog__overlay {
+    @apply fixed z-50 inset-inline-0 block-start-0 bs-dvh bg-scrim overflow-auto grid place-items-center pbs-[env(safe-area-inset-top)];
+    @media (min-width: theme('screens.sm')) {
+      @apply p-[calc(env(safe-area-inset-top)+.5rem)];
+    }
+    @media (min-width: theme('screens.md')) {
+      @apply p-[calc(env(safe-area-inset-top)+1rem)];
+    }
+    @media (min-width: theme('screens.lg')) {
+      @apply p-[calc(env(safe-area-inset-top)+2rem)];
+    }
+    &[data-block-align="start"]{
+      @apply justify-center items-start;
+    }
+    &[data-block-align="center"]{
+      @apply place-content-center;
+    }
+    &[data-block-align="end"]{
+      @apply justify-center items-end;
+      background: transparent;
+      pointer-events: none;
+      .dx-dialog__content {
+        pointer-events: auto;
+      }
+    }
+  }
+  .dx-dialog__content {
+    /* TODO(thure): `flex` should not be default. */
+    @apply flex flex-col is-dvw sm:is-[95vw] max-is-full md:max-is-[24rem] p-4 will-change-[opacity,transform] animate-slideUpAndFade shadow-lg bg-modalSurface backdrop-blur;
+    @media (min-width: theme('screens.sm')) {
+      @apply border rounded-lg border-separator;
+    }
+  }
+  .dx-dialog__title {
+    @apply rounded shrink-0 text-xl font-medium;
+  }
+  .dx-dialog__description {
+    @apply mlb-2;
+  }
+}

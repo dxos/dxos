@@ -9,6 +9,7 @@ import { type ComponentFragment, type Elevation, type SurfaceLevel } from '@dxos
  */
 export const contentShadow: ComponentFragment<{ elevation?: Elevation }> = (_) => ['shadow-none'];
 
+// TODO(thure): These should become tokens.
 export const surfaceShadow: ComponentFragment<{ elevation?: Elevation }> = ({ elevation }) => [
   elevation === 'positioned' ? 'shadow' : elevation === 'dialog' || elevation === 'toast' ? 'shadow-lg' : 'shadow-none',
 ];
