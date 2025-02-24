@@ -21,15 +21,17 @@ export type GridProps<T = any> = {
 };
 
 export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridProps<T>) => {
+  const num = items?.length ?? 0;
+
   return (
     <div className={mx('flex flex-col py-2 gap-2 w-full h-full overflow-hidden')}>
       {expanded && (
-        <div className='flex flex-[60%] w-full overflow-hidden'>
+        <div className={mx('flex grow w-full overflow-hidden', num > 0 && 'flex-[60%]')}>
           <Cell expanded item={expanded} onClick={() => onExpand?.()} />
         </div>
       )}
 
-      {(items?.length ?? 0) > 0 && (
+      {num > 0 && (
         <div className='flex flex-[40%] w-full overflow-hidden'>
           <GridColumns Cell={Cell} items={items} debug={debug} onExpand={onExpand} />
         </div>

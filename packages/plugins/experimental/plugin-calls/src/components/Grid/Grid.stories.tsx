@@ -15,6 +15,8 @@ import { Grid, GridCell, type GridProps, type GridCellProps } from './Grid';
 type TestItem = {
   id: string;
   name: string;
+  imageUrl: string;
+  videoUrl: string;
 };
 
 const TestCell = ({ item, ...props }: GridCellProps<TestItem>) => {
@@ -34,10 +36,10 @@ const TestCell = ({ item, ...props }: GridCellProps<TestItem>) => {
 
   return (
     <GridCell {...props} item={item} name={item?.name} mute={mute} speaking={speaking} wave={wave}>
-      <img
-        src={`https://placehold.co/3200x1800?font=roboto&text=${item?.id}`}
-        className='object-contain aspect-video'
-      />
+      {item?.imageUrl && <img className='aspect-video object-contain' src={item?.imageUrl} />}
+      {item?.videoUrl && (
+        <video className='aspect-video object-cover' src={item?.videoUrl} autoPlay muted playsInline />
+      )}
     </GridCell>
   );
 };
@@ -64,7 +66,19 @@ export default meta;
 
 type Story = StoryObj<GridProps>;
 
-const items = Array.from({ length: 8 }, (_, i) => ({ id: i.toString(), name: faker.person.fullName() }));
+const videoUrls = [
+  'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+  'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+];
+
+const items: TestItem[] = Array.from({ length: 8 }, (_, i) => ({
+  id: i.toString(),
+  name: faker.person.fullName(),
+  // imageUrl: `https://placehold.co/3200x1800?font=roboto&text=${i}`,
+  videoUrl: videoUrls[i % videoUrls.length],
+}));
 
 export const Default: Story = {
   args: {

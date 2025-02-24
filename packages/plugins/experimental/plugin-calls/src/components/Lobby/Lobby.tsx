@@ -21,6 +21,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <VideoObject flip muted cover videoTrack={userMedia.videoTrack} />
+      <div className='grow' />
       <Toolbar.Root classNames='justify-between'>
         <IconButton
           variant='primary'

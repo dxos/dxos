@@ -37,10 +37,12 @@ export const ParticipantGrid = ({ identity, users, debug }: ParticipantGridProps
     [identity, users],
   ) as UserState[];
 
+  // TODO(burdon): If only 2 users then expand other.
   let showExpanded = expanded;
-  if (!showExpanded && allUsers.length === 1) {
-    showExpanded = allUsers[0];
+  if (allUsers.length === 2) {
+    showExpanded = allUsers.find((user) => user.id !== identity?.id);
   }
+
   const filteredItems = allUsers.filter((item) => item.id !== showExpanded?.id);
 
   return (
