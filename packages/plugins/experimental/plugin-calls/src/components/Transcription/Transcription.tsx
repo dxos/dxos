@@ -29,7 +29,7 @@ export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
           className='flex flex-col border border-transparent hover:border-separator rounded'
         >
           <div className='group flex items-center justify-between'>
-            <div className='p-2 text-sm'>{block.author}</div>
+            <div className='p-2 text-sm text-subdued'>{block.author}</div>
             <IconButton
               icon='ph--x--regular'
               label={t('button delete')}
@@ -40,8 +40,13 @@ export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
           </div>
 
           {block.segments.map((segment, i) => (
-            <div key={i} className='flex flex-col p-2 gap-1'>
+            <div key={i} className='flex flex-col px-2'>
+              <div>{segment.text}</div>
               <div className='flex gap-1 items-center justify-between'>
+                <div className='grow' />
+                <div className='truncate text-xs text-subdued'>
+                  {formatDistanceToNow(segment.started, { addSuffix: true })}
+                </div>
                 <IconButton
                   icon='ph--bookmark-simple--regular'
                   label={t('button bookmark')}
@@ -49,11 +54,7 @@ export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
                   size={4}
                   classNames='p-1'
                 />
-                <div className='grow truncate text-xs text-subdued'>
-                  {formatDistanceToNow(segment.started, { addSuffix: true })}
-                </div>
               </div>
-              <div>{segment.text}</div>
             </div>
           ))}
         </div>
