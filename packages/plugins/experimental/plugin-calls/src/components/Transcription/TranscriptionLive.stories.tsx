@@ -22,7 +22,7 @@ import { type TranscriptBlock } from '../../types';
 import { randomQueueDxn } from '../../utils';
 
 // Load the audio file during module initialization
-const audioUrl = 'https://dxos.network/test-voice.m4a';
+const audioUrl = 'https://dxos.network/test.wav';
 
 const createMediaStreamFromBlob = async (
   blob: Blob,
@@ -43,6 +43,7 @@ const createMediaStreamFromBlob = async (
   const audioContext = new AudioContext();
   const sourceNode = audioContext.createMediaElementSource(audio);
   const destinationNode = audioContext.createMediaStreamDestination();
+  destinationNode.channelCount = 1;
   sourceNode.connect(destinationNode);
 
   // Clean up the URL when the audio is loaded
@@ -56,71 +57,64 @@ const createMediaStreamFromBlob = async (
 };
 
 const Render = ({ queueDxn }: { queueDxn: string }) => {
-  const audio = useRef<{ stream: MediaStream; audio: HTMLAudioElement; track: MediaStreamTrack }>();
-
+  //
+  // Download the audio file.
+  //
+  const audioBlob = useRef<Blob>();
   useAsyncEffect(async () => {
-    if (!audio.current) {
-      try {
-        log.info('Fetching audio file');
-        const response = await fetch(audioUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
-        }
-
-        const blob = await response.blob();
-        log.info('Got audio blob', { size: blob.size, type: blob.type });
-
-        audio.current = await createMediaStreamFromBlob(blob);
-
-        // Add audio to the page
-        const audioElement = document.createElement('audio');
-        audioElement.srcObject = audio.current.stream;
-        audioElement.autoplay = true;
-        document.body.appendChild(audioElement);
-      } catch (error) {
-        log.error('Failed to load audio', { error });
-      }
+    const response = await fetch(audioUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
     }
+    audioBlob.current = await response.blob();
   }, []);
 
+  //
+  // Create the audio stream.
+  //
+  const audioStream = useRef<{ stream: MediaStream; audio: HTMLAudioElement; track: MediaStreamTrack }>();
+  const audioElement = useRef<HTMLAudioElement>();
+  const handleAudioReset = async () => {
+    if (!audioBlob.current) {
+      return;
+    }
+
+    audioStream.current = await createMediaStreamFromBlob(audioBlob.current);
+    audioElement.current!.srcObject = audioStream.current.stream;
+    audioElement.current!.autoplay = true;
+  };
+  useAsyncEffect(async () => {
+    audioElement.current = document.createElement('audio');
+    await handleAudioReset();
+    document.body.appendChild(audioElement.current);
+  }, [audioBlob.current]);
+
+  //
+  // Create the transcription queue.
+  //
   const echoClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(echoClient, DXN.parse(queueDxn), { pollInterval: 200 });
-  const isSpeaking = useIsSpeaking(audio.current?.track);
+  const isSpeaking = useIsSpeaking(audioStream.current?.track);
   useTranscription({
     transcription: { enabled: true, objectDxn: queueDxn },
     author: 'Healthy work-life balance',
-    audioStreamTrack: audio.current?.track,
+    audioStreamTrack: audioStream.current?.track,
     isSpeaking,
   });
 
   return (
-    <div className='flex flex-row gap-4 items-center'>
+    <div className='flex flex-col gap-4'>
       <ScrollContainer>
         <Transcription blocks={queue?.items} />
       </ScrollContainer>
       <IconButton
         onClick={() => {
-          audio.current?.audio.paused ? audio.current?.audio.play() : audio.current?.audio.pause();
+          audioStream.current?.audio.paused ? audioStream.current?.audio.play() : audioStream.current?.audio.pause();
         }}
         label='Play/Pause'
-        icon={audio.current?.audio.paused ? 'ph--play--regular' : 'ph--pause--regular'}
+        icon={audioStream.current?.audio.paused ? 'ph--play--regular' : 'ph--pause--regular'}
       />
-      <IconButton
-        onClick={async () => {
-          try {
-            const response = await fetch(audioUrl);
-            if (!response.ok) {
-              throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
-            }
-            const blob = await response.blob();
-            audio.current = await createMediaStreamFromBlob(blob);
-          } catch (error) {
-            log.error('Failed to reset audio', { error });
-          }
-        }}
-        label='Reset'
-        icon={'ph--arrow-clockwise--regular'}
-      />
+      <IconButton onClick={async () => handleAudioReset()} label='Reset' icon={'ph--arrow-clockwise--regular'} />
     </div>
   );
 };
