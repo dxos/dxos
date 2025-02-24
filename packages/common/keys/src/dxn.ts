@@ -11,7 +11,7 @@ import type { SpaceId } from './space-id';
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
- * Each DXN starts with a dx prefix, followed by a resource kind.
+ * Each DXN starts with a dxn prefix, followed by a resource kind.
  * Colon Symbol : is used a delimiter between parts.
  * DXNs may contain slashes.
  * '@' in the place of the space id is used to denote that the DXN should be resolved in the local space.
@@ -19,11 +19,11 @@ import type { SpaceId } from './space-id';
  * @example
  *
  * ```
- * dx:echo:<space key>:<echo id>
- * dx:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
- * dx:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6
- * dx:type:dxos.org/type/Calendar
- * dx:plugin:dxos.org/agent/plugin/functions
+ * dxn:echo:<space key>:<echo id>
+ * dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
+ * dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6
+ * dxn:type:dxos.org/type/Calendar
+ * dxn:plugin:dxos.org/agent/plugin/functions
  * ```
  */
 export class DXN {
