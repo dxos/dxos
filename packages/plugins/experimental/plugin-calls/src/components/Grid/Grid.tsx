@@ -151,7 +151,7 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
 
   return (
     <div className={mx('flex w-full h-full overflow-hidden justify-center items-center', classNames)}>
-      <div className='group relative max-w-full max-h-full aspect-video overflow-hidden'>
+      <div className='group relative flex max-w-full max-h-full aspect-video overflow-hidden'>
         {children}
 
         {/* Action. */}

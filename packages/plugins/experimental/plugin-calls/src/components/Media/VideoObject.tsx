@@ -44,7 +44,12 @@ export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
 
     return (
       <video
-        className={mx('aspect-video', flip && 'scale-x-[-1]', contain ? 'object-contain' : 'object-cover', className)}
+        className={mx(
+          'flex aspect-video',
+          flip && 'scale-x-[-1]',
+          contain ? 'object-contain' : 'object-cover',
+          className,
+        )}
         ref={(v) => {
           internalRef.current = v;
           if (ref === null) {

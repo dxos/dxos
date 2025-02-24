@@ -36,9 +36,9 @@ const TestCell = ({ item, ...props }: GridCellProps<TestItem>) => {
 
   return (
     <GridCell {...props} item={item} name={item?.name} mute={mute} speaking={speaking} wave={wave}>
-      {item?.imageUrl && <img className='aspect-video object-contain' src={item?.imageUrl} />}
+      {item?.imageUrl && <img className='flex aspect-video object-contain' src={item?.imageUrl} />}
       {item?.videoUrl && (
-        <video className='aspect-video object-cover' src={item?.videoUrl} autoPlay muted playsInline />
+        <video className='flex aspect-video object-cover' src={item?.videoUrl} autoPlay muted playsInline />
       )}
     </GridCell>
   );
