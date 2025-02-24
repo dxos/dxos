@@ -31,7 +31,7 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
 
       {(items?.length ?? 0) > 0 && (
         <div className='flex flex-[40%] w-full overflow-hidden'>
-          <GridColumn Cell={Cell} items={items} debug={debug} onExpand={onExpand} />
+          <GridColumns Cell={Cell} items={items} debug={debug} onExpand={onExpand} />
         </div>
       )}
     </div>
@@ -41,7 +41,7 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
 /**
  * Responsive vertically scrolling grid.
  */
-const GridColumn = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
+const GridColumns = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
 
   if (!items?.length) {
@@ -55,6 +55,7 @@ const GridColumn = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expand
   const gap = 8;
   const { cols, itemWidth } = calculateOptimalGrid(items?.length ?? 0, { width, height }, gap);
 
+  // TODO(burdon): Scroll if smaller than min size.
   return (
     <div ref={ref} className='w-full flex justify-center items-center'>
       {width && height && (
