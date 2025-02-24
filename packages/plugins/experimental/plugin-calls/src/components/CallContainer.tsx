@@ -11,18 +11,25 @@ import { type PublicKey } from '@dxos/keys';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { log } from '@dxos/log';
 
 import { Call } from './Call';
 import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
 import { Lobby } from './Lobby';
-import { useCallContext } from '../hooks';
+import { useCallContext, useCallGlobalContext } from '../hooks';
 import { type TranscriptType, CallsAction } from '../types';
 
-export type CallContainerProps = { space: Space; roomId: PublicKey };
+export type CallContainerProps = { 
+  space: Space; 
+  roomId: PublicKey;
+};
 
 export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
+  const { spaceKey, setSpace } = useCallGlobalContext();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const target = space?.properties[CollectionType.typename]?.target;
+  log.info('state', { spaceKey, space });  
+  setSpace(space.key);
 
   const handleTranscription = useCallback<NonNullable<CallContextProviderProps['onTranscription']>>(async () => {
     invariant(target);

@@ -7,6 +7,7 @@ export * from './utils';
 export * from './useAi';
 export * from './useBroadcastStatus';
 export * from './useCallContext';
+export * from './useCallsGlobalContext';
 export * from './useCallState';
 export * from './useDebugEnabled';
 export * from './useIsSpeaking';
