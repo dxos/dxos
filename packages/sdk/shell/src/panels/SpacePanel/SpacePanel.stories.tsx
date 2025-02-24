@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
@@ -179,6 +179,7 @@ export const SpaceManagerWithMember = () => {
                       presence: SpaceMember.PresenceState.ONLINE,
                       role: HaloSpaceMember.Role.ADMIN,
                       identity: {
+                        did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
                       },
                     },
@@ -212,6 +213,7 @@ export const SpaceManagerWithMembers = () => {
                       presence: SpaceMember.PresenceState.ONLINE,
                       role: HaloSpaceMember.Role.ADMIN,
                       identity: {
+                        did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
                         profile: {
                           displayName: 'John Doe',
@@ -252,6 +254,7 @@ export const SpaceManagerWithMoreMembers = () => {
                       presence: SpaceMember.PresenceState.ONLINE,
                       role: HaloSpaceMember.Role.ADMIN,
                       identity: {
+                        did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
                         profile: {
                           displayName: 'John Doe',
@@ -262,6 +265,7 @@ export const SpaceManagerWithMoreMembers = () => {
                       presence: SpaceMember.PresenceState.OFFLINE,
                       role: HaloSpaceMember.Role.ADMIN,
                       identity: {
+                        did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
                         profile: {
                           displayName: 'Alice Wong',
@@ -272,6 +276,7 @@ export const SpaceManagerWithMoreMembers = () => {
                       presence: SpaceMember.PresenceState.OFFLINE,
                       role: HaloSpaceMember.Role.ADMIN,
                       identity: {
+                        did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
                         profile: {
                           displayName: 'Steel Nickels',

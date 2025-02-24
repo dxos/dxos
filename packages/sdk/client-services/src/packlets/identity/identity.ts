@@ -17,7 +17,7 @@ import { type Space } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { writeMessages, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -38,6 +38,7 @@ import { DefaultSpaceStateMachine } from './default-space-state-machine';
 import { EdgeFeedReplicator } from '../spaces';
 
 export type IdentityParams = {
+  did: IdentityDid;
   identityKey: PublicKey;
   deviceKey: PublicKey;
   signer: Signer;
@@ -63,6 +64,7 @@ export class Identity {
 
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
+  public readonly did: IdentityDid;
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
 
@@ -73,6 +75,7 @@ export class Identity {
     this._signer = params.signer;
     this._presence = params.presence;
 
+    this.did = params.did;
     this.identityKey = params.identityKey;
     this.deviceKey = params.deviceKey;
 

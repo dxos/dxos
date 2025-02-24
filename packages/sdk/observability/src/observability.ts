@@ -216,11 +216,11 @@ export class Observability {
   async setIdentityTags(clientServices: Partial<ClientServices>) {
     if (clientServices.IdentityService) {
       clientServices.IdentityService.queryIdentity().subscribe((idqr) => {
-        if (!idqr?.identity?.identityKey) {
+        if (!idqr?.identity?.did) {
           log('empty response from identity service', { idqr });
           return;
         }
-        this.setTag('identityKey', idqr.identity.identityKey.truncate());
+        this.setTag('did', idqr.identity.did);
       });
     }
 
@@ -388,7 +388,7 @@ export class Observability {
       log('send space telemetry');
       for (const data of mapSpaces(spaces, { truncateKeys: true })) {
         this.event({
-          identityId: getTelemetryIdentifier(client),
+          did: getTelemetryIdentifier(client),
           name: `${namespace}.space.update`,
           properties: data,
         });
@@ -404,15 +404,15 @@ export class Observability {
       });
 
     spaces.forEach((space) => {
-      subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
+      subscriptions.set(space.id, subscribeToSpaceUpdate(space));
     });
 
     client.spaces.subscribe({
       next: async (spaces) => {
         spaces
-          .filter((space) => !subscriptions.has(space.key.toHex()))
+          .filter((space) => !subscriptions.has(space.id))
           .forEach((space) => {
-            subscriptions.set(space.key.toHex(), subscribeToSpaceUpdate(space));
+            subscriptions.set(space.id, subscribeToSpaceUpdate(space));
           });
       },
     });

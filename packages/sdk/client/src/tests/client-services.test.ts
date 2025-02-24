@@ -259,6 +259,7 @@ describe('Client services', () => {
         .toEqual(
           expect.objectContaining({
             identity: {
+              did: client1.halo.identity.get()!.did,
               identityKey: client1.halo.identity.get()!.identityKey,
               profile: {
                 displayName: 'Peer 1',
@@ -272,6 +273,7 @@ describe('Client services', () => {
         .toEqual(
           expect.objectContaining({
             identity: {
+              did: client2.halo.identity.get()!.did,
               identityKey: client2.halo.identity.get()!.identityKey,
               profile: {
                 displayName: 'Peer 2',

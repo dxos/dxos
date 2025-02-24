@@ -28,7 +28,7 @@ export class SegmentTelemetry {
     }
   }
 
-  page({ identityId: userId, ...options }: PageOptions = {}) {
+  page({ did: userId, ...options }: PageOptions = {}) {
     try {
       (window as any).analytics?.page({
         context: this._getTags(),
@@ -40,7 +40,7 @@ export class SegmentTelemetry {
     }
   }
 
-  event({ identityId: userId, name: event, ...options }: EventOptions) {
+  event({ did: userId, name: event, ...options }: EventOptions) {
     try {
       options.properties = {
         ...options.properties,
