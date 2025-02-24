@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, OptionsAnnotationId, RawObject, S, TypedObject } from '@dxos/echo-schema';
+import { AST, OptionsAnnotationId, RawObject, S, TypedObject, DXN } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -14,6 +14,7 @@ export enum TriggerKind {
   Webhook = 'webhook',
   Subscription = 'subscription',
   Email = 'email',
+  Queue = 'queue',
 }
 
 // TODO(burdon): Rename prop kind.
@@ -37,6 +38,13 @@ const EmailTriggerSchema = S.Struct({
 }).pipe(S.mutable);
 
 export type EmailTrigger = S.Schema.Type<typeof EmailTriggerSchema>;
+
+const QueueTriggerSchema = S.Struct({
+  type: S.Literal(TriggerKind.Queue).annotations(typeLiteralAnnotations),
+  queue: DXN,
+}).pipe(S.mutable);
+
+export type QueueTrigger = S.Schema.Type<typeof QueueTriggerSchema>;
 
 /**
  * Webhook.
@@ -92,6 +100,7 @@ export const TriggerSchema = S.Union(
   WebhookTriggerSchema,
   SubscriptionTriggerSchema,
   EmailTriggerSchema,
+  QueueTriggerSchema,
 ).annotations({
   [AST.TitleAnnotationId]: 'Trigger',
 });
