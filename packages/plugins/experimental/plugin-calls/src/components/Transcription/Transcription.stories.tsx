@@ -58,4 +58,4 @@ export const Default: Story = {
   },
 };
 
-export const Empty: Story = {}
+export const Empty: Story = {};

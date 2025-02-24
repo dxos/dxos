@@ -11,28 +11,27 @@ import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
-import { type Ai, type UserMedia } from '../hooks';
-import { TranscriptBlock, type TranscriptSegment, type UserState } from '../types';
+import { TranscriptBlock, type TranscriptionState, type TranscriptSegment } from '../types';
 
 const PREFIXED_CHUNKS_AMOUNT = 5;
 const RECORD_INTERVAL = 200;
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
 export type UseTranscriptionProps = {
-  ai: Ai;
-  user: UserState;
-  userMedia: UserMedia;
+  transcription: TranscriptionState;
+  author: string;
+  audioStreamTrack?: MediaStreamTrack;
   isSpeaking: boolean;
 };
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export const useTranscription = ({ ai, user, userMedia, isSpeaking }: UseTranscriptionProps) => {
+export const useTranscription = ({ transcription, author, audioStreamTrack, isSpeaking }: UseTranscriptionProps) => {
   const edgeClient = useEdgeClient();
 
   // Initialize audio transcription.
-  const transcription = useRef<Transcriber | null>();
+  const transcriber = useRef<Transcriber | null>();
   const firstRun = useRef(false);
 
   // Initialize transcription.
@@ -41,50 +40,50 @@ export const useTranscription = ({ ai, user, userMedia, isSpeaking }: UseTranscr
       firstRun.current = true;
     }
 
-    if (!transcription.current) {
-      transcription.current = new Transcriber({ prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT });
+    if (!transcriber.current) {
+      transcriber.current = new Transcriber({ prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT });
     }
 
     return () => {
-      void transcription.current?.close();
-      transcription.current = null;
+      void transcriber.current?.close();
+      transcriber.current = null;
     };
   }, []);
 
   // Get queue.
   const queue = useQueue<TranscriptBlock>(
     edgeClient,
-    ai.transcription.objectDxn ? DXN.parse(ai.transcription.objectDxn) : undefined,
+    transcription.objectDxn ? DXN.parse(transcription.objectDxn) : undefined,
   );
 
   // Handle transcription text.
   const handleSegments = useCallback(
     async (segments: TranscriptSegment[]) => {
       const block = createStatic(TranscriptBlock, {
-        author: user.name || 'Unknown',
+        author: author || 'Unknown',
         segments,
       });
       queue?.append([block]);
     },
-    [queue, user.name],
+    [queue, author],
   );
 
   // Set the transcription callback.
   useEffect(() => {
-    transcription.current?.setOnTranscription(handleSegments);
-  }, [handleSegments, transcription.current]);
+    transcriber.current?.setOnTranscription(handleSegments);
+  }, [handleSegments, transcriber.current]);
 
   // Initialize audio recorder.
   const recorder = useRef<AudioRecorder | null>(null);
   useEffect(() => {
-    if (!recorder.current && userMedia.audioTrack && transcription.current) {
+    if (!recorder.current && audioStreamTrack && transcriber.current) {
       recorder.current = new MediaStreamRecorder({
-        onChunk: (chunk) => transcription.current?.onChunk(chunk),
-        mediaStreamTrack: userMedia.audioTrack,
+        onChunk: (chunk) => transcriber.current?.onChunk(chunk),
+        mediaStreamTrack: audioStreamTrack,
         interval: RECORD_INTERVAL,
       });
-      const settings = userMedia.audioTrack.getSettings();
-      transcription.current.setWavConfig({
+      const settings = audioStreamTrack.getSettings();
+      transcriber.current.setWavConfig({
         sampleRate: settings.sampleRate,
         bitDepthCode: settings.sampleSize ? String(settings.sampleSize) : '16',
         channels: settings.channelCount,
@@ -95,23 +94,23 @@ export const useTranscription = ({ ai, user, userMedia, isSpeaking }: UseTranscr
       void recorder.current?.stop();
       recorder.current = null;
     };
-  }, [userMedia.audioTrack, transcription.current]);
+  }, [audioStreamTrack, transcriber.current]);
 
   // if user is not speaking, stop transcription after 1 second. if speaking, start transcription.
   const stopTimeout = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (!ai.transcription.enabled) {
+    if (!transcription.enabled) {
       return;
     }
 
     if (!isSpeaking) {
       stopTimeout.current = setTimeout(() => {
         log.info('stopping transcription');
-        transcription.current?.stopChunksRecording();
+        transcriber.current?.stopChunksRecording();
       }, STOP_TRANSCRIPTION_TIMEOUT);
     } else {
       log.info('starting transcription');
-      transcription.current?.startChunksRecording();
+      transcriber.current?.startChunksRecording();
       if (stopTimeout.current) {
         clearTimeout(stopTimeout.current);
         stopTimeout.current = null;
@@ -124,16 +123,16 @@ export const useTranscription = ({ ai, user, userMedia, isSpeaking }: UseTranscr
         stopTimeout.current = null;
       }
     };
-  }, [isSpeaking, ai.transcription.enabled]);
+  }, [isSpeaking, transcription.enabled]);
 
   // Turn transcription on and off.
   useAsyncEffect(async () => {
-    if (ai.transcription.enabled && transcription.current && recorder.current) {
-      await transcription.current.open();
+    if (transcription.enabled && transcriber.current && recorder.current) {
+      await transcriber.current.open();
       await recorder.current.start();
-    } else if (!ai.transcription.enabled) {
+    } else if (!transcription.enabled) {
       await recorder.current?.stop();
-      await transcription.current?.close();
+      await transcriber.current?.close();
     }
-  }, [ai.transcription.enabled, recorder.current, transcription.current]);
+  }, [transcription.enabled, recorder.current, transcriber.current]);
 };
