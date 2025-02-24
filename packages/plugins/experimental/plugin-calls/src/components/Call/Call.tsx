@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useState, type FC } from 'react';
 
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { Toolbar, type ThemedClassName, IconButton, useTranslation } from '@dxos/react-ui';
@@ -22,6 +22,7 @@ import { ParticipantGrid } from '../Participant';
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
+  const [raisedHand, setRaisedHand] = useState(false);
   const {
     userMedia,
     peer,
@@ -33,7 +34,16 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   } = useCallContext()!;
 
   // Broadcast status over swarm.
-  useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
+  useBroadcastStatus({
+    ai,
+    peer,
+    userMedia,
+    pushedTracks,
+    identity,
+    raisedHand,
+    speaking: isSpeaking,
+    onUpdateUserState: updateUserState,
+  });
 
   // Transcription.
   const edgeClient = useEdgeClient();
@@ -47,7 +57,6 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     // Check not already running.
     if (!ai.transcription.enabled && !ai.transcription.objectDxn) {
       const object = await onTranscription?.();
-
       if (object) {
         transcription.objectDxn = object.queue;
       }
@@ -58,40 +67,48 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
 
   // Screen sharing.
   const otherUserIsSharing = otherUsers.some((user) => user.tracks?.screenshare);
-  const sharing = userMedia.screenShareVideoTrack !== undefined;
+  const sharing = userMedia.screenshareVideoTrack !== undefined;
   const canShareScreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
+  // TODO(burdon): Raise hand.
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
-      <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-        <div className='flex flex-col h-full overflow-y-scroll'>
-          <ParticipantGrid identity={identity} users={otherUsers} debug={debugEnabled} />
-        </div>
+      <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
+        {/* <div className='flex flex-col w-full h-full overflow-y-scroll'> */}
+        <ParticipantGrid identity={identity} users={otherUsers} debug={debugEnabled} />
+        {/* </div> */}
 
         <Toolbar.Root>
           <IconButton
             variant='destructive'
-            label={t('leave')}
+            icon='ph--phone-x--regular'
+            label={t('leave call')}
             onClick={() => {
-              userMedia.turnScreenShareOff();
+              userMedia.turnScreenshareOff();
               setJoined(false);
             }}
-            icon='ph--phone-x--regular'
           />
           <div className='grow'></div>
           <IconButton
             icon={ai.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
+            iconOnly
             label={ai.transcription.enabled ? t('transcription off') : t('transcription on')}
             onClick={handleToggleTranscription}
-            iconOnly
           />
           <IconButton
             disabled={!canShareScreen || otherUserIsSharing}
             icon={sharing ? 'ph--screencast--regular' : 'ph--rectangle--regular'}
-            label={sharing ? t('screenshare off') : t('screenshare on')}
-            onClick={sharing ? userMedia.turnScreenShareOff : userMedia.turnScreenShareOn}
             iconOnly
+            label={sharing ? t('screenshare off') : t('screenshare on')}
+            onClick={sharing ? userMedia.turnScreenshareOff : userMedia.turnScreenshareOn}
+          />
+          <IconButton
+            icon={raisedHand ? 'ph--hand-waving--regular' : 'ph--hand-palm--regular'}
+            iconOnly
+            label={raisedHand ? t('lower hand') : t('raise hand')}
+            classNames={[raisedHand && 'text-red-500']}
+            onClick={() => setRaisedHand((raisedHand) => !raisedHand)}
           />
           <MediaButtons userMedia={userMedia} />
         </Toolbar.Root>

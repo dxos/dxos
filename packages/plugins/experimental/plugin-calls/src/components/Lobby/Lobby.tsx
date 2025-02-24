@@ -27,7 +27,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
       <Toolbar.Root classNames='justify-between'>
         <IconButton
           variant='primary'
-          label={t('join')}
+          label={t('join call')}
           onClick={() => setJoined(true)}
           disabled={!session?.sessionId}
           icon='ph--phone-incoming--regular'

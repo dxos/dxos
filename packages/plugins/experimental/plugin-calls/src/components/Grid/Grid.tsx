@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, type PropsWithChildren } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useState, useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -24,15 +24,17 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
   const num = items?.length ?? 0;
 
   return (
-    <div className={mx('flex flex-col py-2 gap-2 w-full h-full overflow-hidden')}>
+    <div className={mx('flex flex-col w-full h-full gap-2 overflow-hidden')}>
       {expanded && (
-        <div className={mx('flex grow w-full overflow-hidden', num > 0 && 'flex-[60%]')}>
-          <Cell expanded item={expanded} onClick={() => onExpand?.()} />
+        <div className={mx('flex w-full overflow-hidden', num > 0 ? 'flex-[60%]' : 'h-full')}>
+          <GridCellContainer>
+            <Cell expanded item={expanded} onClick={() => onExpand?.()} />
+          </GridCellContainer>
         </div>
       )}
 
       {num > 0 && (
-        <div className='flex flex-[40%] w-full overflow-hidden'>
+        <div className='flex flex-[40%] w-full'>
           <GridColumns Cell={Cell} items={items} debug={debug} onExpand={onExpand} />
         </div>
       )}
@@ -45,13 +47,8 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
  */
 const GridColumns = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
-
   if (!items?.length) {
     return null;
-  }
-
-  if (items?.length === 1) {
-    return <Cell {...props} item={items[0]} onClick={() => onExpand?.(items[0])} />;
   }
 
   const gap = 8;
@@ -59,22 +56,18 @@ const GridColumns = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expan
 
   // TODO(burdon): Scroll if smaller than min size.
   return (
-    <div ref={ref} className='w-full flex justify-center items-center'>
-      {width && height && (
+    <div ref={ref} className='flex w-full h-full justify-center items-center'>
+      {(width && height && (
         <div
-          className={mx('grid')}
+          className='grid'
           style={{
             gridTemplateColumns: `repeat(${cols}, ${itemWidth}px)`,
             gridGap: gap,
           }}
         >
-          {items.map((item, i) => (
-            <div key={i} className='flex'>
-              <Cell {...props} item={item} onClick={() => onExpand?.(item)} />
-            </div>
-          ))}
+          {items?.map((item, i) => <Cell key={i} {...props} item={item} onClick={() => onExpand?.(item)} />)}
         </div>
-      )}
+      )) || <div />}
     </div>
   );
 };
@@ -99,7 +92,7 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
   const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
   return (
-    <GridCellContainer classNames={['group relative', classNames]}>
+    <div className={mx('flex w-full h-full aspect-video justify-center items-center group relative', classNames)}>
       {children}
 
       {/* Action. */}
@@ -142,7 +135,7 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
           iconOnly
         />
       </div>
-    </GridCellContainer>
+    </div>
   );
 };
 
@@ -150,9 +143,19 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
  * Container centers largest child with aspect ratio.
  */
 export const GridCellContainer = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => setVisible(true), []);
+
   return (
     <div role='none' className='flex w-full h-full overflow-hidden justify-center items-center'>
-      <div role='none' className={mx('flex max-w-full max-h-full aspect-video', classNames)}>
+      <div
+        role='none'
+        className={mx(
+          'flex max-w-full max-h-full aspect-video opacity-0 transition-opacity duration-500',
+          visible && 'opacity-100',
+          classNames,
+        )}
+      >
         {children}
       </div>
     </div>

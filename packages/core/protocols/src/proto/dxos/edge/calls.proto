@@ -14,7 +14,7 @@ message Tracks {
   optional string video = 3;
   optional bool video_enabled = 4;
   optional string screenshare = 5;
-  optional bool screen_share_enabled = 6;
+  optional bool screenshare_enabled = 6;
 }
 
 /**

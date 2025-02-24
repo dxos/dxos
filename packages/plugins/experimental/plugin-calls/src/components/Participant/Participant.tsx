@@ -6,7 +6,6 @@ import React, { useMemo } from 'react';
 import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useCallContext, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
@@ -16,30 +15,29 @@ import { VideoObject } from '../Media';
 
 export const screenshareSuffix = '_screenshare';
 
-export const Participant = ({ item: user, debug = false, ...props }: GridCellProps<UserState>) => {
+export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserState>) => {
   const {
     dataSaverMode,
     userMedia,
     room: { identity },
   } = useCallContext();
-  const isSelf = identity.id && user.id?.startsWith(identity.id);
-  const isScreenShare = user.id?.endsWith(screenshareSuffix);
-  const pulledAudioTrack = usePulledAudioTrack(isScreenShare ? undefined : user.tracks?.audio);
+  const isSelf: boolean = identity.id !== undefined && user.id !== undefined && user.id.startsWith(identity.id);
+  const isScreenshare = user.id?.endsWith(screenshareSuffix);
+  const pulledAudioTrack = usePulledAudioTrack(isScreenshare ? undefined : user.tracks?.audio);
   const pulledVideoTrack = usePulledVideoTrack(
-    isScreenShare || (!isSelf && !dataSaverMode) ? user.tracks?.video : undefined,
+    isScreenshare || (!isSelf && !dataSaverMode) ? user.tracks?.video : undefined,
   );
-  const audioTrack = isSelf ? userMedia.audioTrack : pulledAudioTrack;
-  const videoTrack = isSelf && !isScreenShare ? userMedia.videoTrack : pulledVideoTrack;
 
+  const audioTrack = isSelf ? userMedia.audioTrack : pulledAudioTrack;
+  const videoTrack = isSelf && !isScreenshare ? userMedia.videoTrack : pulledVideoTrack;
+
+  // Debug.
   const audioMid = useMid(audioTrack);
   const videoMid = useMid(videoTrack);
 
   return (
     <GridCell {...props} item={user} name={user.name} speaking={user.speaking} wave={user.raisedHand} debug={debug}>
-      <VideoObject
-        className={mx('object-cover', isSelf && !isScreenShare ? 'scale-x-[-1]' : '')}
-        videoTrack={videoTrack}
-      />
+      <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} />
 
       {debug && (
         <div className='absolute top-1 left-1'>
@@ -47,8 +45,8 @@ export const Participant = ({ item: user, debug = false, ...props }: GridCellPro
             classNames='text-xs'
             data={{
               audioMid,
-              audioSettings: audioTrack?.getSettings(),
               videoMid,
+              audioSettings: audioTrack?.getSettings(),
               videoSettings: videoTrack?.getSettings(),
             }}
           />
@@ -60,7 +58,9 @@ export const Participant = ({ item: user, debug = false, ...props }: GridCellPro
 
 Participant.displayName = 'Participant';
 
-// TODO(burdon): Mid?
+/**
+ * Get the track's media ID.
+ */
 const useMid = (track?: MediaStreamTrack) => {
   const { peer } = useCallContext();
   const transceivers$ = useMemo(

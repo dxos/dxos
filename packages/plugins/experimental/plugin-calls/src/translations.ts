@@ -14,13 +14,16 @@ export default [
         'create calls label': 'Create meeting room',
         'delete calls label': 'Delete',
 
-        'join': 'Join',
-        'leave': 'Leave',
+        'join call': 'Join',
+        'leave call': 'Leave',
 
         'mic on': 'Turn microphone on',
         'mic off': 'Turn microphone off',
         'camera on': 'Turn camera on',
         'camera off': 'Turn camera off',
+
+        'raise hand': 'Raise hand',
+        'lower hand': 'Lower hand',
         'transcription on': 'Start transcription',
         'transcription off': 'Stop transcription',
         'screenshare on': 'Start screen sharing',
