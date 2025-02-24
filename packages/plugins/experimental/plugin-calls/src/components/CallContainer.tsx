@@ -15,6 +15,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Call } from './Call';
 import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
 import { Lobby } from './Lobby';
+import { CALLS_NAME, useCallContext as useRootCallContext } from './RootCallProvider';
 import { useCallContext } from '../hooks';
 import { type TranscriptType, CallsAction } from '../types';
 
@@ -23,6 +24,10 @@ export type CallContainerProps = { space: Space; roomId: PublicKey };
 export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const target = space?.properties[CollectionType.typename]?.target;
+
+  // TODO(mykola): Move call state to CallManager.
+  const { call } = useRootCallContext(CALLS_NAME);
+  call.setSpace(space);
 
   const handleTranscription = useCallback<NonNullable<CallContextProviderProps['onTranscription']>>(async () => {
     invariant(target);
