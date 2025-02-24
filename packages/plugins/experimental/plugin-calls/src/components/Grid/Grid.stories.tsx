@@ -15,8 +15,8 @@ import { Grid, GridCell, type GridProps, type GridCellProps } from './Grid';
 type TestItem = {
   id: string;
   name: string;
-  imageUrl: string;
-  videoUrl: string;
+  imageUrl?: string;
+  videoUrl?: string;
 };
 
 const TestCell = ({ item, ...props }: GridCellProps<TestItem>) => {

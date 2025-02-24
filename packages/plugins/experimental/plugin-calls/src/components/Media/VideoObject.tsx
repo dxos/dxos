@@ -10,11 +10,11 @@ export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'ref'> & {
   videoTrack?: MediaStreamTrack;
   flip?: boolean;
   // TODO(burdon): If screenshare then contain.
-  cover?: boolean;
+  contain?: boolean;
 };
 
 export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
-  ({ videoTrack, className, flip, cover, ...rest }, ref) => {
+  ({ videoTrack, className, flip, contain, ...rest }, ref) => {
     const internalRef = useRef<HTMLVideoElement | null>(null);
 
     useEffect(() => {
@@ -34,6 +34,7 @@ export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
         if (videoTrack) {
           mediaStream.removeTrack(videoTrack);
         }
+
         const video = internalRef.current;
         if (video) {
           video.srcObject = null;
@@ -43,7 +44,7 @@ export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
 
     return (
       <video
-        className={mx('aspect-video', flip && 'scale-x-[-1]', cover && 'object-cover', className)}
+        className={mx('aspect-video', flip && 'scale-x-[-1]', contain ? 'object-contain' : 'object-cover', className)}
         ref={(v) => {
           internalRef.current = v;
           if (ref === null) {
