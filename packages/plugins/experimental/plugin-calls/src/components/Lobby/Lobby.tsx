@@ -9,6 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useSubscribedState, useRoomContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
+import { GridCellContainer } from '../Grid';
 import { MediaButtons, VideoObject } from '../Media';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
@@ -20,8 +21,9 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <VideoObject flip muted videoTrack={userMedia.videoTrack} />
-      <div className='grow' />
+      <GridCellContainer>
+        <VideoObject flip muted videoTrack={userMedia.videoTrack} />
+      </GridCellContainer>
       <Toolbar.Root classNames='justify-between'>
         <IconButton
           variant='primary'

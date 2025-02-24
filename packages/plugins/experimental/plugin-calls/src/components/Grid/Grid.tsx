@@ -79,57 +79,6 @@ const GridColumns = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expan
   );
 };
 
-type GridDimensions = {
-  rows: number;
-  cols: number;
-  itemWidth: number;
-  itemHeight: number;
-};
-
-type ContainerDimensions = {
-  width: number;
-  height: number;
-};
-
-/**
- * Calculate the optimal grid dimensions for a given number of items and container dimensions.
- */
-const calculateOptimalGrid = (
-  itemCount: number,
-  container: ContainerDimensions,
-  gap = 8,
-  aspectRatio = 16 / 9,
-): GridDimensions => {
-  let bestArea = 0;
-  let result: GridDimensions = { rows: 1, cols: 1, itemWidth: 0, itemHeight: 0 };
-
-  // Try all possible row counts up to itemCount.
-  for (let rows = 1; rows <= itemCount; rows++) {
-    const cols = Math.ceil(itemCount / rows);
-
-    // Calculate item dimensions based on container constraints.
-    const itemWidth1 = (container.width - (cols - 1) * gap) / cols;
-    const itemHeight1 = itemWidth1 / aspectRatio;
-    const itemHeight2 = (container.height - (rows - 1) * gap) / rows;
-    const itemWidth2 = itemHeight2 * aspectRatio;
-
-    // Check which constraint (width or height) is limiting.
-    const useWidth = itemHeight1 * rows <= container.height;
-    const itemWidth = useWidth ? itemWidth1 : itemWidth2;
-    const itemHeight = useWidth ? itemHeight1 : itemHeight2;
-
-    // Calculate total area covered by items.
-    const area = itemWidth * itemHeight * itemCount;
-
-    if (area > bestArea) {
-      bestArea = area;
-      result = { rows, cols, itemWidth, itemHeight };
-    }
-  }
-
-  return result;
-};
-
 export type GridCellProps<T = any> = PropsWithChildren<
   ThemedClassName<{
     item: T;
@@ -150,51 +99,107 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
   const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
   return (
-    <div className={mx('flex w-full h-full overflow-hidden justify-center items-center', classNames)}>
-      <div className='group relative flex max-w-full max-h-full aspect-video overflow-hidden'>
-        {children}
+    <GridCellContainer classNames={['group relative', classNames]}>
+      {children}
 
-        {/* Action. */}
-        {onClick && (
-          <div className='z-10 absolute top-1 right-1 flex'>
-            <IconButton
-              classNames={mx('p-1 min-bs-1 rounded', hover)}
-              icon={expanded ? 'ph--x--regular' : 'ph--arrows-out--regular'}
-              size={expanded ? 5 : 3}
-              onClick={onClick}
-              label={expanded ? 'Close' : 'Expand'}
-              iconOnly
-            />
-          </div>
-        )}
-
-        {/* Name. */}
-        {name && (
-          <div className='z-10 absolute bottom-1 right-1 flex gap-1 items-center'>
-            {wave && !expanded && (
-              <Icon icon='ph--hand-waving--duotone' size={5} classNames='animate-pulse text-red-500' />
-            )}
-            <div className={mx('bg-neutral-800 text-neutral-100 py-0.5 rounded', expanded ? 'px-2' : 'px-1 text-xs')}>
-              {name}
-            </div>
-          </div>
-        )}
-
-        {/* Speaking indicator. */}
-        <div className='z-10 absolute bottom-1 left-1 flex'>
+      {/* Action. */}
+      {onClick && (
+        <div className='z-10 absolute top-1 right-1 flex'>
           <IconButton
-            classNames={mx(
-              'p-1 min-bs-1 rounded transition-opacity duration-300 opacity-0',
-              (mute || speaking) && 'opacity-100',
-              mute && 'bg-orange-500',
-            )}
-            icon={mute ? 'ph--microphone-slash--regular' : 'ph--waveform--regular'}
-            size={expanded ? 5 : 3}
-            label={mute ? 'Mute' : ''}
+            classNames={mx('p-1 min-bs-1 rounded', hover)}
             iconOnly
+            icon={expanded ? 'ph--x--regular' : 'ph--arrows-out--regular'}
+            size={expanded ? 5 : 3}
+            label={expanded ? 'Close' : 'Expand'}
+            onClick={onClick}
           />
         </div>
+      )}
+
+      {/* Name. */}
+      {name && (
+        <div className='z-10 absolute bottom-1 right-1 flex gap-1 items-center'>
+          {wave && !expanded && (
+            <Icon icon='ph--hand-waving--duotone' size={5} classNames='animate-pulse text-red-500' />
+          )}
+          <div className={mx('bg-neutral-800 text-neutral-100 py-0.5 rounded', expanded ? 'px-2' : 'px-1 text-xs')}>
+            {name}
+          </div>
+        </div>
+      )}
+
+      {/* Speaking indicator. */}
+      <div className='z-10 absolute bottom-1 left-1 flex'>
+        <IconButton
+          classNames={mx(
+            'p-1 min-bs-1 rounded transition-opacity duration-300 opacity-0',
+            (mute || speaking) && 'opacity-100',
+            mute && 'bg-orange-500',
+          )}
+          icon={mute ? 'ph--microphone-slash--regular' : 'ph--waveform--regular'}
+          size={expanded ? 5 : 3}
+          label={mute ? 'Mute' : ''}
+          iconOnly
+        />
+      </div>
+    </GridCellContainer>
+  );
+};
+
+/**
+ * Container centers largest child with aspect ratio.
+ */
+export const GridCellContainer = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
+  return (
+    <div role='none' className='flex w-full h-full overflow-hidden justify-center items-center'>
+      <div role='none' className={mx('flex max-w-full max-h-full aspect-video', classNames)}>
+        {children}
       </div>
     </div>
   );
+};
+
+type Dimensions = {
+  width: number;
+  height: number;
+};
+
+type GridDimensions = {
+  rows: number;
+  cols: number;
+  itemWidth: number;
+  itemHeight: number;
+};
+
+/**
+ * Calculate the optimal grid dimensions for a given number of items and container dimensions.
+ */
+const calculateOptimalGrid = (count: number, container: Dimensions, gap = 8, aspectRatio = 16 / 9): GridDimensions => {
+  let bestArea = 0;
+  let result: GridDimensions = { rows: 1, cols: 1, itemWidth: 0, itemHeight: 0 };
+
+  // Try all possible row counts up to itemCount.
+  for (let rows = 1; rows <= count; rows++) {
+    const cols = Math.ceil(count / rows);
+
+    // Calculate item dimensions based on container constraints.
+    const itemWidth1 = (container.width - (cols - 1) * gap) / cols;
+    const itemHeight1 = itemWidth1 / aspectRatio;
+    const itemHeight2 = (container.height - (rows - 1) * gap) / rows;
+    const itemWidth2 = itemHeight2 * aspectRatio;
+
+    // Check which constraint (width or height) is limiting.
+    const useWidth = itemHeight1 * rows <= container.height;
+    const itemWidth = useWidth ? itemWidth1 : itemWidth2;
+    const itemHeight = useWidth ? itemHeight1 : itemHeight2;
+
+    // Calculate total area covered by items.
+    const area = itemWidth * itemHeight * count;
+    if (area > bestArea) {
+      bestArea = area;
+      result = { rows, cols, itemWidth, itemHeight };
+    }
+  }
+
+  return result;
 };
