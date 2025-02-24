@@ -52,9 +52,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   get columnFieldPath() {
     const columnFieldId = this._kanban.columnFieldId;
-    invariant(columnFieldId);
+    if (columnFieldId === undefined) {
+      return undefined;
+    }
     const columnFieldProjection = this._projection.getFieldProjection(columnFieldId);
-    return columnFieldProjection?.props.property || '';
+    return columnFieldProjection?.props.property;
   }
 
   /**
@@ -147,8 +149,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   //
 
   private _getSelectOptions() {
-    invariant(this._kanban.columnFieldId);
-    return this._projection.getFieldProjection(this._kanban.columnFieldId).props.options;
+    if (this._kanban.columnFieldId === undefined) {
+      return [];
+    }
+
+    return this._projection.getFieldProjection(this._kanban.columnFieldId).props.options ?? [];
   }
 
   private _computeArrangement(): ArrangedCards<T> {
@@ -157,7 +162,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return [];
     }
 
-    return computeArrangement<T>(this._kanban, this._items.value, this.columnFieldPath, options);
+    return computeArrangement<T>({
+      kanban: this._kanban,
+      items: this._items.value,
+      pivotPath: this.columnFieldPath,
+      selectOptions: options,
+    });
   }
 
   /**
