@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BehaviorSubject, type Observable } from 'rxjs';
 
-// TODO(burdon): Replace rxjs with preact?
+// TODO(burdon): Replace rxjs with LiveObject?
 
 /**
  * Returns a stable reference to a POJO that might be created on every new render.
@@ -15,12 +15,18 @@ export const useStablePojo = <T>(value: T): T => {
   return useMemo(() => JSON.parse(jsonString), [jsonString]);
 };
 
+/**
+ * @deprecated Replace with LiveObject.
+ */
 export const useSubscribedState = <T>(observable: Observable<T>, defaultValue?: T): T => {
   const [state, setState] = useState(defaultValue);
   useObservableEffect(observable, setState);
   return state as any;
 };
 
+/**
+ * @deprecated Replace with LiveObject.
+ */
 export const useObservableEffect = <T>(observable: Observable<T>, fn: (value: T) => void) => {
   const fnRef = useRef(fn);
   fnRef.current = fn;

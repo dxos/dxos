@@ -35,6 +35,7 @@ export type UserMedia = {
   turnScreenshareOff: () => void;
 };
 
+// TOOD(burdon): Hard coded.
 const VIDEO_WIDTH = 1280;
 const VIDEO_HEIGHT = 720;
 
