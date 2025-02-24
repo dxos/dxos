@@ -10,9 +10,8 @@ import { log } from '@dxos/log';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { useAi } from './useAi';
 import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
-import { type UserMedia } from '../hooks';
+import { type Ai, type UserMedia } from '../hooks';
 import { TranscriptBlock, type TranscriptSegment, type UserState } from '../types';
 
 const PREFIXED_CHUNKS_AMOUNT = 5;
@@ -20,6 +19,7 @@ const RECORD_INTERVAL = 200;
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
 export type UseTranscriptionProps = {
+  ai: Ai;
   user: UserState;
   userMedia: UserMedia;
   isSpeaking: boolean;
@@ -28,9 +28,8 @@ export type UseTranscriptionProps = {
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export const useTranscription = ({ user, userMedia, isSpeaking }: UseTranscriptionProps) => {
+export const useTranscription = ({ ai, user, userMedia, isSpeaking }: UseTranscriptionProps) => {
   const edgeClient = useEdgeClient();
-  const ai = useAi();
 
   // Initialize audio transcription.
   const transcription = useRef<Transcriber | null>();

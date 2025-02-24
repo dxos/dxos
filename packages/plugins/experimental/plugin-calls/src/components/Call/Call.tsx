@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription, useAi } from '../../hooks';
+import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
@@ -21,9 +21,8 @@ import { ParticipantGrid } from '../Participant';
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
-  const ai = useAi();
   const {
-    call: { room, user: self, updateUserState },
+    call: { ai, room, user: self, updateUserState },
     userMedia,
     peer,
     isSpeaking,
@@ -45,7 +44,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   });
 
   // Transcription.
-  useTranscription({ user: self, userMedia, isSpeaking });
+  useTranscription({ ai, user: self, userMedia, isSpeaking });
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
       enabled: !ai.transcription.enabled,
