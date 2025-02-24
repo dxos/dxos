@@ -156,8 +156,8 @@ export const useUserMedia = (): UserMedia => {
 const useBlackCanvasStreamTrack = (videoTrack?: MediaStreamTrack) => {
   const canvas = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = videoTrack?.getSettings().width ?? 1280;
-    canvas.height = videoTrack?.getSettings().height ?? 720;
+    canvas.width = VIDEO_WIDTH;
+    canvas.height = VIDEO_HEIGHT;
     return canvas;
   }, [videoTrack]);
 
