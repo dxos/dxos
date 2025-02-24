@@ -49,8 +49,7 @@ export const useIsSpeaking = (mediaStreamTrack?: MediaStreamTrack) => {
         // Once the user has been determined to be speaking, we want
         // to lower the threshold because speech patterns don't always
         // kick up above 0.1
-        const audioLevelAboveThreshold =
-          vol > (isSpeakingRef.current ? 0.02 : 0.1);
+        const audioLevelAboveThreshold = vol > (isSpeakingRef.current ? 0.02 : 0.1);
         if (audioLevelAboveThreshold) {
           // user is still speaking, clear timeout & reset.
           clearTimeout(timeout);

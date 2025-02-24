@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, type PropsWithChildren, useState, useEffect, useMemo } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -159,7 +159,7 @@ export const GridCellContainer = ({ classNames, children }: ThemedClassName<Prop
       <div
         role='none'
         className={mx(
-          'is-full aspect-video', 
+          'is-full aspect-video',
           // 'opacity-0 transition-opacity duration-[2000]',
           // visible && 'opacity-50',
           classNames,
