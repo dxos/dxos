@@ -7,10 +7,9 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useSpaces, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -33,8 +32,8 @@ const StorybookKanban = () => {
   const space = spaces[spaces.length - 1];
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
-  const [cardSchema, setCardSchema] = useState<EchoSchema>();
   const [projection, setProjection] = useState<ViewProjection>();
+  const cardSchema = useSchema(space, kanban?.cardView?.target?.query.type);
 
   useEffect(() => {
     if (kanbans.length && !kanban) {
@@ -42,24 +41,6 @@ const StorybookKanban = () => {
       setKanban(kanban);
     }
   }, [kanbans]);
-
-  useEffect(() => {
-    if (!kanban) {
-      return;
-    }
-
-    const query = space.db.schemaRegistry.query({ typename: kanban.cardView?.target?.query.type });
-    const unsubscribe = query.subscribe(
-      () => {
-        const [schema] = query.results;
-        if (schema) {
-          setCardSchema(schema);
-        }
-      },
-      { fire: true },
-    );
-    return unsubscribe;
-  }, [kanban, kanban?.cardView?.target?.query.type, space]);
 
   useEffect(() => {
     if (kanban?.cardView?.target && cardSchema) {

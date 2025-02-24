@@ -8,7 +8,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
+import { create, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
@@ -23,15 +23,12 @@ import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-// TODO(zantonio): Move toolbar action handling to a more appropriate location.
+// TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
 
-  const schema = useMemo(
-    () => (table.view?.target ? space?.db.schemaRegistry.getSchema(table.view.target.query.type) : undefined),
-    [space, table.view?.target],
-  );
+  const schema = useSchema(space, table.view?.target?.query.type);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
