@@ -12,6 +12,7 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcription } from './Transcription';
+import translations from '../../translations';
 
 const meta: Meta<typeof Transcription> = {
   title: 'plugins/plugin-calls/Transcription',
@@ -31,6 +32,9 @@ const meta: Meta<typeof Transcription> = {
       classNames: 'justify-center',
     }),
   ],
+  parameters: {
+    translations
+  },
 };
 
 export default meta;
