@@ -28,6 +28,10 @@ export const setActive = ({ next, state, attention }: SetActiveOptions) => {
       state.deck.active = next;
     }
 
+    if (state.deck.fullscreen && !state.deck.solo) {
+      state.deck.fullscreen = false;
+    }
+
     if (attention) {
       const attended = attention.current;
       const [attendedId] = Array.from(attended);

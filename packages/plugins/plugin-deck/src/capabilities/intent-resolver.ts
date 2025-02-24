@@ -149,16 +149,16 @@ export default (context: PluginsContext) =>
           const current = deck.solo ? [deck.solo] : deck.active;
           // When un-soloing, the solo entry is added to the deck.
           const next = (
-            mode === 'solo' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]
+            mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]
           ).filter(nonNullable);
 
           const removed = current.filter((id) => !next.includes(id));
           const closed = Array.from(new Set([...deck.inactive.filter((id) => !next.includes(id)), ...removed]));
           deck.inactive = closed;
 
-          if (mode === 'solo' && next[0]) {
+          if (mode !== 'deck' && next[0]) {
             deck.solo = next[0];
-          } else if (mode !== 'solo' && deck.solo) {
+          } else if (mode === 'deck' && deck.solo) {
             deck.solo = undefined;
             deck.initialized = true;
           }
