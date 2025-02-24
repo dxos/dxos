@@ -35,6 +35,10 @@ export type UserMedia = {
   turnScreenshareOff: () => void;
 };
 
+// TOOD(burdon): Hard coded.
+const VIDEO_WIDTH = 1280;
+const VIDEO_HEIGHT = 720;
+
 export const useUserMedia = (): UserMedia => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [videoEnabled, setVideoEnabled] = useState(false);
@@ -89,7 +93,11 @@ export const useUserMedia = (): UserMedia => {
   const videoTrack$ = useMemo(
     () =>
       videoEnabled$.pipe(
-        switchMap((enabled) => (enabled ? getUserMediaTrack$('videoinput') : of(blackCanvasStreamTrack))),
+        switchMap((enabled) =>
+          enabled
+            ? getUserMediaTrack$('videoinput', of({ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }))
+            : of(blackCanvasStreamTrack),
+        ),
         shareReplay({ refCount: true, bufferSize: 1 }),
       ),
     [videoEnabled$],
@@ -149,8 +157,8 @@ export const useUserMedia = (): UserMedia => {
 const useBlackCanvasStreamTrack = (videoTrack?: MediaStreamTrack) => {
   const canvas = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = videoTrack?.getSettings().width ?? 1280;
-    canvas.height = videoTrack?.getSettings().height ?? 720;
+    canvas.width = VIDEO_WIDTH;
+    canvas.height = VIDEO_HEIGHT;
     return canvas;
   }, [videoTrack]);
 

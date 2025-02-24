@@ -17,6 +17,24 @@ message Tracks {
   optional bool screenshare_enabled = 6;
 }
 
+message UserState {
+  string id = 1;
+  string name = 2;
+  optional string transceiver_session_id = 3;
+  bool raised_hand = 4;
+  bool speaking = 5;
+  bool joined = 6;
+  Tracks tracks = 7;
+  optional Transcription transcription = 8;
+  optional bool self = 9;
+}
+
+message RoomState {
+  string meetingId = 1;
+  repeated UserState users = 2;
+  optional Transcription transcription = 3;
+}
+
 /**
  * Transcription settings.
  * It will be merged across all users in the room based on the Lamport timestamp (last one wins).
@@ -33,21 +51,4 @@ message Transcription {
    * Object DXN of where the transcription should be stored.
    */
   string object_dxn = 3;
-}
-
-message UserState {
-  string id = 1;
-  string name = 2;
-  optional string transceiver_session_id = 3;
-  bool raised_hand = 4;
-  bool speaking = 5;
-  bool joined = 6;
-  Tracks tracks = 7;
-  optional Transcription transcription = 8;
-}
-
-message RoomState {
-  string meetingId = 1;
-  repeated UserState users = 2;
-  optional Transcription transcription = 3;
 }

@@ -2,55 +2,82 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Participant, screenshareSuffix } from './Participant';
+import { Participant } from './Participant';
 import { type UserState } from '../../types';
 import { Grid } from '../Grid';
 
 export type ParticipantGridProps = {
-  identity: UserState;
+  user: UserState;
   users: UserState[];
   debug: boolean;
 };
 
-export const ParticipantGrid = ({ identity, users, debug }: ParticipantGridProps) => {
+export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridProps) => {
+  const allUsers = useMemo(() => {
+    const allUsers: UserState[] = self ? [self] : [];
+    users.forEach((user) => {
+      if (!user.joined) {
+        return;
+      }
+
+      allUsers.push(user);
+      if (user.tracks?.screenshareEnabled) {
+        const screenshare: UserState = {
+          ...user,
+          id: user.id + '_screenshare',
+          tracks: {
+            ...user.tracks,
+            video: user.tracks.screenshare,
+            videoEnabled: user.tracks.screenshareEnabled,
+          } as any, // TODO(burdon): Remove cast.
+        };
+
+        allUsers.push(screenshare);
+      }
+    });
+
+    return allUsers;
+  }, [self, users]) as UserState[];
+
   const [expanded, setExpanded] = useState<UserState | undefined>();
-  const allUsers = useMemo(
-    () =>
-      (identity ? [identity] : []).concat(users.filter((user) => user.joined)).flatMap((user) => {
-        if (user.tracks?.screenshareEnabled) {
-          const screenshare = {
-            ...user,
-            id: user.id + screenshareSuffix,
-            tracks: {
-              ...user.tracks,
-              video: user.tracks!.screenshare,
-              videoEnabled: user.tracks!.screenshareEnabled,
-            },
-          };
-          return [user, screenshare];
-        }
+  useEffect(() => {
+    if (expanded) {
+      // Check expanded user is still in call.
+      if (!allUsers.find((user) => user.id === expanded?.id)) {
+        setExpanded(undefined);
+      }
+    }
+  }, [expanded, allUsers]);
 
-        return [user];
-      }),
-    [identity, users],
-  ) as UserState[];
+  // TODO(burdon): Auto expand if screenshare is enabled.
+  // TODO(burdon): Auto expand when second user joins call?
 
-  // TODO(burdon): If only 2 users then expand other.
-  let showExpanded = expanded;
-  if (allUsers.length === 2) {
-    showExpanded = allUsers.find((user) => user.id !== identity?.id);
-  }
-
-  const filteredItems = allUsers.filter((item) => item.id !== showExpanded?.id);
+  // Filter out currently expanded and sort screenshare first.
+  // TODO(burdon): Put self last.
+  const filteredItems = allUsers
+    .filter((user) => user.id !== expanded?.id)
+    .sort((a, b) => {
+      if (a.self) {
+        return 1;
+      } else if (b.self) {
+        return -1;
+      } else if (a.tracks?.screenshareEnabled) {
+        return -1;
+      } else if (b.tracks?.screenshareEnabled) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
 
   return (
     <Grid<UserState>
       Cell={Participant}
       debug={debug}
       items={filteredItems}
-      expanded={showExpanded}
+      expanded={expanded}
       onExpand={setExpanded}
     />
   );

@@ -11,29 +11,28 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { useAi, type Ai } from './useAi';
+import { useAi } from './useAi';
 import { codec, type RoomState, type UserState } from '../types';
 
-export type UseCallState = {
-  roomState: RoomState;
-  identity: UserState;
-  otherUsers: UserState[];
-  ai: Ai;
+// TODO(burdon): Disambiguate room and call.
+export type CallState = {
+  room: RoomState;
+  user: UserState;
   updateUserState: (user: UserState) => void;
 };
 
 /**
  * Call session state.
  */
-export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
-  const [roomState, setRoomState] = useState<RoomState>({
+export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
+  const [room, setRoom] = useState<RoomState>({
     meetingId: roomId.toHex(),
     users: [],
   });
 
+  const client = useClient();
   const ai = useAi();
   const haloIdentity = useIdentity();
-  const client = useClient();
   const identityKey = haloIdentity!.identityKey.toHex();
   const displayName = haloIdentity?.profile?.displayName ?? generateName(haloIdentity!.identityKey.toHex());
   const peerKey = client.halo.device!.deviceKey.toHex();
@@ -49,7 +48,8 @@ export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
         });
 
         const users = event.peers?.map((p) => codec.decode(p.state!)) ?? [];
-        setRoomState({ users, meetingId: roomId.toHex() });
+        setRoom({ meetingId: roomId.toHex(), users });
+
         // Note: Small CRDT for merging transcription states.
         const maxTimestamp = Math.max(...users.map((user) => user.transcription?.lamportTimestamp ?? 0));
         const newTranscriptionState = users
@@ -80,6 +80,7 @@ export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
     }
   }, [roomId]);
 
+  // Swarm connection.
   useEffect(() => {
     const onBeforeUnload = () => {
       log.info('leaving room', { roomId });
@@ -96,24 +97,19 @@ export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
     };
   }, [roomId]);
 
-  const identity = useMemo<UserState>(
+  // Current user.
+  const user = useMemo<UserState>(
     () => ({
-      ...roomState.users!.find((user) => user.id === peerKey),
+      ...room.users!.find((user) => user.id === peerKey),
       name: displayName,
+      self: true,
     }),
-    [roomState.users, peerKey, displayName],
-  );
-
-  const otherUsers = useMemo<UserState[]>(
-    () => roomState.users!.filter((user) => user.id !== peerKey),
-    [roomState.users, peerKey],
+    [room.users, peerKey, displayName],
   );
 
   return {
-    ai,
-    identity,
-    otherUsers,
-    roomState,
+    room,
+    user,
     updateUserState: (user: UserState) => {
       client.services.services
         .NetworkService!.joinSwarm({

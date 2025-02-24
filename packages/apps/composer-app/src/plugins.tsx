@@ -7,7 +7,7 @@ import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
-import { CallsPlugin } from '@dxos/plugin-calls';
+import { CALLS_PLUGIN, CallsPlugin } from '@dxos/plugin-calls';
 import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
@@ -87,16 +87,20 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     WILDCARD_PLUGIN,
   ].filter(isNotFalsy);
 
-export const defaults = ({ isDev }: PluginConfig): string[] =>
+export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
-    // prettier-ignore
     isDev && DEBUG_PLUGIN,
+
+    // Default
     MARKDOWN_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,
     THREAD_PLUGIN,
     WNFS_PLUGIN,
+
+    // Labs
+    isLabs && CALLS_PLUGIN,
   ].filter(isNotFalsy);
 
 export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
@@ -125,7 +129,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
       },
       onReset: ({ target }) => {
         localStorage.clear();
-
         if (target === 'deviceInvitation') {
           window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
         } else if (target === 'recoverIdentity') {

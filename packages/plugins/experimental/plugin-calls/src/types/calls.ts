@@ -17,7 +17,7 @@ export type RoomState = buf.MessageInitShape<typeof RoomStateSchema>;
 export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
 
 export const codec = {
-  encode: (message: buf.MessageInitShape<typeof UserStateSchema>): Uint8Array => {
+  encode: (message: UserState): Uint8Array => {
     return buf.toBinary(UserStateSchema, buf.create(UserStateSchema, message));
   },
   decode: (message: Uint8Array): UserStateProto => {

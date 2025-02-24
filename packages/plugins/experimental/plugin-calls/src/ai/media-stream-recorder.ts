@@ -7,6 +7,7 @@ import { connect } from 'extendable-media-recorder-wav-encoder';
 import { WaveFile } from 'wavefile';
 
 import { synchronized } from '@dxos/async';
+import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type AudioChunk, AudioRecorder } from './audio-recorder';
@@ -48,6 +49,7 @@ export class MediaStreamRecorder extends AudioRecorder {
   private async _ondataavailable(event: IBlobEvent) {
     const blob = event.data;
     const uint8Array = new Uint8Array(await blob.arrayBuffer());
+
     // First chunk from the MediaRecorder has a header.
     const isHeader =
       uint8Array[0] === 0x52 && // R
@@ -55,11 +57,15 @@ export class MediaStreamRecorder extends AudioRecorder {
       uint8Array[2] === 0x46 && // F
       uint8Array[3] === 0x46; // F
     let wav: WaveFile;
+
     if (isHeader) {
       wav = new WaveFile(uint8Array);
       this._header = uint8Array.slice(0, 44);
+    } else if (this._header) {
+      wav = new WaveFile(new Uint8Array([...this._header, ...uint8Array]));
     } else {
-      wav = new WaveFile(new Uint8Array([...this._header!, ...uint8Array]));
+      log.warn('MediaStreamRecorder: no header');
+      return;
     }
 
     this._onChunk({

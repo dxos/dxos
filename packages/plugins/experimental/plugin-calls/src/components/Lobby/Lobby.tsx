@@ -14,10 +14,10 @@ import { MediaButtons, VideoObject } from '../Media';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
-  const { setJoined, userMedia, room, peer } = useCallContext()!;
+  const { call, userMedia, peer, setJoined } = useCallContext()!;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
-  const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
+  const numUsers = new Set(call.room.users?.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>

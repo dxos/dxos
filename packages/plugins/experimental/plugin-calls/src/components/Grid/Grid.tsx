@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, type PropsWithChildren, useState, useEffect } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useState, useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -42,17 +42,22 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
   );
 };
 
+const gap = 8;
+
 /**
  * Responsive vertically scrolling grid.
  */
 const GridColumns = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
-  if (!items?.length) {
+  const numItems = items?.length ?? 0;
+  const { cols, itemWidth } = useMemo(
+    () => calculateOptimalGrid(numItems, { width, height }, gap),
+    [items?.length, width, height, gap],
+  );
+
+  if (!numItems) {
     return null;
   }
-
-  const gap = 8;
-  const { cols, itemWidth } = calculateOptimalGrid(items?.length ?? 0, { width, height }, gap);
 
   // TODO(burdon): Scroll if smaller than min size.
   return (
@@ -92,7 +97,7 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
   const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
   return (
-    <div className={mx('flex w-full h-full aspect-video justify-center items-center group relative', classNames)}>
+    <div className={mx('aspect-video group relative', classNames)}>
       {children}
 
       {/* Action. */}
@@ -143,16 +148,20 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
  * Container centers largest child with aspect ratio.
  */
 export const GridCellContainer = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => setVisible(true), []);
+  // const [visible, setVisible] = useState(false);
+  // useEffect(() => {
+  //   console.log('viz');
+  //   setVisible(true)
+  // }, []);
 
   return (
     <div role='none' className='flex w-full h-full overflow-hidden justify-center items-center'>
       <div
         role='none'
         className={mx(
-          'flex max-w-full max-h-full aspect-video opacity-0 transition-opacity duration-500',
-          visible && 'opacity-100',
+          'is-full aspect-video', 
+          // 'opacity-0 transition-opacity duration-[2000]',
+          // visible && 'opacity-50',
           classNames,
         )}
       >

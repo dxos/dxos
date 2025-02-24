@@ -7,12 +7,12 @@ import { useCallback, useEffect, useRef } from 'react';
 import { createStatic } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { useQueue } from '@dxos/react-edge-client';
+import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { useAsyncEffect } from '@dxos/react-ui';
 
+import { useAi } from './useAi';
 import { type AudioRecorder, Transcriber, MediaStreamRecorder } from '../ai';
-import { type Ai, type UserMedia } from '../hooks';
+import { type UserMedia } from '../hooks';
 import { TranscriptBlock, type TranscriptSegment, type UserState } from '../types';
 
 const PREFIXED_CHUNKS_AMOUNT = 5;
@@ -20,17 +20,18 @@ const RECORD_INTERVAL = 200;
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
 export type UseTranscriptionProps = {
-  edgeClient: EdgeHttpClient;
-  ai: Ai;
+  user: UserState;
   userMedia: UserMedia;
-  identity: UserState;
   isSpeaking: boolean;
 };
 
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export const useTranscription = ({ edgeClient, ai, userMedia, identity, isSpeaking }: UseTranscriptionProps) => {
+export const useTranscription = ({ user, userMedia, isSpeaking }: UseTranscriptionProps) => {
+  const edgeClient = useEdgeClient();
+  const ai = useAi();
+
   // Initialize audio transcription.
   const transcription = useRef<Transcriber | null>();
   const firstRun = useRef(false);
@@ -61,12 +62,12 @@ export const useTranscription = ({ edgeClient, ai, userMedia, identity, isSpeaki
   const handleSegments = useCallback(
     async (segments: TranscriptSegment[]) => {
       const block = createStatic(TranscriptBlock, {
-        author: identity.name || 'Unknown',
+        author: user.name || 'Unknown',
         segments,
       });
       queue?.append([block]);
     },
-    [queue, identity.name],
+    [queue, user.name],
   );
 
   // Set the transcription callback.

@@ -4,13 +4,12 @@
 
 import React, { useState, type FC } from 'react';
 
-import { useEdgeClient } from '@dxos/react-edge-client';
 import { Toolbar, type ThemedClassName, IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
+import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription, useAi } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
@@ -22,32 +21,31 @@ import { ParticipantGrid } from '../Participant';
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
-  const [raisedHand, setRaisedHand] = useState(false);
+  const ai = useAi();
   const {
+    call: { room, user: self, updateUserState },
     userMedia,
     peer,
     isSpeaking,
     pushedTracks,
-    room: { ai, identity, otherUsers, updateUserState },
     setJoined,
     onTranscription,
-  } = useCallContext()!;
+  } = useCallContext();
 
   // Broadcast status over swarm.
+  const [raisedHand, setRaisedHand] = useState(false);
   useBroadcastStatus({
-    ai,
     peer,
+    user: self,
     userMedia,
     pushedTracks,
-    identity,
     raisedHand,
     speaking: isSpeaking,
     onUpdateUserState: updateUserState,
   });
 
   // Transcription.
-  const edgeClient = useEdgeClient();
-  useTranscription({ userMedia, identity, isSpeaking, ai, edgeClient });
+  useTranscription({ user: self, userMedia, isSpeaking });
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
       enabled: !ai.transcription.enabled,
@@ -65,19 +63,18 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     ai.setTranscription(transcription);
   };
 
-  // Screen sharing.
-  const otherUserIsSharing = otherUsers.some((user) => user.tracks?.screenshare);
-  const sharing = userMedia.screenshareVideoTrack !== undefined;
-  const canShareScreen =
-    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
+  // Filter out self.
+  const otherUsers = (room.users ?? []).filter((user) => user.id !== self.id);
 
-  // TODO(burdon): Raise hand.
+  // Screen sharing.
+  const canSharescreen =
+    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
+  const isScreensharing = userMedia.screenshareVideoTrack !== undefined;
+
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
-        {/* <div className='flex flex-col w-full h-full overflow-y-scroll'> */}
-        <ParticipantGrid identity={identity} users={otherUsers} debug={debugEnabled} />
-        {/* </div> */}
+        <ParticipantGrid user={self} users={otherUsers} debug={debugEnabled} />
 
         <Toolbar.Root>
           <IconButton
@@ -97,11 +94,12 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
             onClick={handleToggleTranscription}
           />
           <IconButton
-            disabled={!canShareScreen || otherUserIsSharing}
-            icon={sharing ? 'ph--screencast--regular' : 'ph--rectangle--regular'}
+            disabled={!canSharescreen}
+            icon={isScreensharing ? 'ph--broadcast--regular' : 'ph--screencast--regular'}
             iconOnly
-            label={sharing ? t('screenshare off') : t('screenshare on')}
-            onClick={sharing ? userMedia.turnScreenshareOff : userMedia.turnScreenshareOn}
+            label={isScreensharing ? t('screenshare off') : t('screenshare on')}
+            classNames={[isScreensharing && 'text-red-500']}
+            onClick={isScreensharing ? userMedia.turnScreenshareOff : userMedia.turnScreenshareOn}
           />
           <IconButton
             icon={raisedHand ? 'ph--hand-waving--regular' : 'ph--hand-palm--regular'}
