@@ -40,6 +40,7 @@ export default [
         'trigger type websocket': 'Websocket',
         'trigger type subscription': 'Subscription',
         'trigger type email': 'Email',
+        'trigger type queue': 'Queue',
 
         'trigger filter': 'Filter',
         'trigger cron': 'Cron',

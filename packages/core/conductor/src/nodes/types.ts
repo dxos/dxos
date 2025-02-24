@@ -6,7 +6,7 @@ import { AST } from '@effect/schema';
 
 import { Tool, Message } from '@dxos/artifact';
 import { type GenerationStreamEvent } from '@dxos/assistant';
-import { ObjectId, S } from '@dxos/echo-schema';
+import { DXN, ObjectId, S } from '@dxos/echo-schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
 import { StreamSchema } from '../util';
@@ -104,6 +104,14 @@ export const WebhookTriggerOutput = S.mutable(
     method: S.Literal('GET', 'POST'),
     headers: S.Record({ key: S.String, value: S.String }),
     bodyText: S.String,
+  }),
+);
+
+export const QueueTriggerOutput = S.mutable(
+  S.Struct({
+    queue: DXN,
+    item: S.Any,
+    cursor: S.String,
   }),
 );
 
