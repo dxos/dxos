@@ -86,7 +86,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className={mx('flex flex-col grow overflow-y-auto scrollbar-none contain-layout')}
+        className={mx('flex flex-col grow overflow-y-auto scrollbar-none contain-layout', classNames)}
       >
         {children}
       </div>

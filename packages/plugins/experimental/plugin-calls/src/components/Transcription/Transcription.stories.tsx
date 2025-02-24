@@ -17,9 +17,11 @@ const meta: Meta<typeof Transcription> = {
   title: 'plugins/plugin-calls/Transcription',
   component: Transcription,
   render: (args) => (
-    <ScrollContainer classNames='flex w-[500px] p-2'>
-      <Transcription {...args} />
-    </ScrollContainer>
+    <div className='flex w-[500px] p-2'>
+      <ScrollContainer>
+        <Transcription {...args} />
+      </ScrollContainer>
+    </div>
   ),
   decorators: [
     withTheme,
@@ -55,3 +57,5 @@ export const Default: Story = {
     })).reverse(),
   },
 };
+
+export const Empty: Story = {}
