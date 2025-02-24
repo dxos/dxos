@@ -5,7 +5,6 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
-import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
@@ -15,8 +14,6 @@ import { type UserMedia } from './useUserMedia';
 import { useSubscribedState } from './utils';
 import { type UserState } from '../types';
 import { type RxjsPeer } from '../utils';
-
-const BROADCAST_INTERVAL = 2_000;
 
 type UseBroadcastStatus = {
   peer: RxjsPeer;
@@ -65,17 +62,6 @@ export const useBroadcastStatus = ({
     };
 
     onUpdateUserState(state);
-    const t = setInterval(() => {
-      try {
-        onUpdateUserState(state);
-      } catch (err) {
-        log.error('useBroadcastStatus', { err });
-      }
-    }, BROADCAST_INTERVAL);
-
-    return () => {
-      clearInterval(t);
-    };
   }, [
     user?.id,
     user?.name,
