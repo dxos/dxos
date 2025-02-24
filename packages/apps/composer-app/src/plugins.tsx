@@ -6,7 +6,7 @@ import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@d
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
-import { AutomationPlugin } from '@dxos/plugin-automation';
+import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
 import { CALLS_PLUGIN, CallsPlugin } from '@dxos/plugin-calls';
 import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -100,8 +100,8 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     WNFS_PLUGIN,
 
     // Labs
-    isLabs && CALLS_PLUGIN,
-  ].filter(isNotFalsy);
+    isLabs && [AUTOMATION_PLUGIN, CALLS_PLUGIN],
+  ].flat().filter(isNotFalsy);
 
 export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
   [
