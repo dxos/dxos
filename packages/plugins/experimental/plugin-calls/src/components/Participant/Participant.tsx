@@ -8,7 +8,7 @@ import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useRoomContext, useSubscribedState } from '../../hooks';
+import { useCallContext, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
 import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
 import { GridCell, type GridCellProps } from '../Grid';
@@ -21,7 +21,7 @@ export const Participant = ({ item: user, debug = false, ...props }: GridCellPro
     dataSaverMode,
     userMedia,
     room: { identity },
-  } = useRoomContext();
+  } = useCallContext();
   const isSelf = identity.id && user.id?.startsWith(identity.id);
   const isScreenShare = user.id?.endsWith(screenshareSuffix);
   const pulledAudioTrack = usePulledAudioTrack(isScreenShare ? undefined : user.tracks?.audio);
@@ -62,7 +62,7 @@ Participant.displayName = 'Participant';
 
 // TODO(burdon): Mid?
 const useMid = (track?: MediaStreamTrack) => {
-  const { peer } = useRoomContext();
+  const { peer } = useCallContext();
   const transceivers$ = useMemo(
     () =>
       combineLatest([

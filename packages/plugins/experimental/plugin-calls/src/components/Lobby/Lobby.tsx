@@ -7,14 +7,14 @@ import React, { type FC } from 'react';
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useSubscribedState, useRoomContext } from '../../hooks';
+import { useSubscribedState, useCallContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { GridCellContainer } from '../Grid';
 import { MediaButtons, VideoObject } from '../Media';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
-  const { setJoined, userMedia, room, peer } = useRoomContext()!;
+  const { setJoined, userMedia, room, peer } = useCallContext()!;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
   const numUsers = new Set(room.otherUsers.filter((user) => user.tracks?.audio).map((user) => user.name)).size;

@@ -10,11 +10,11 @@ import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { type Ai } from './useAi';
-import type { RoomContextType } from './useRoomContext';
-import type { UserMedia } from './useUserMedia';
+import { type CallContextType } from './useCallContext';
+import { type UserMedia } from './useUserMedia';
 import { useSubscribedState } from './utils';
 import { type UserState } from '../types';
-import type { RxjsPeer } from '../utils';
+import { type RxjsPeer } from '../utils';
 
 interface Config {
   ai: Ai;
@@ -23,7 +23,7 @@ interface Config {
   identity?: UserState;
   speaking?: boolean;
   raisedHand?: boolean;
-  pushedTracks: RoomContextType['pushedTracks'];
+  pushedTracks: CallContextType['pushedTracks'];
   updateUserState: (user: UserState) => void;
 }
 

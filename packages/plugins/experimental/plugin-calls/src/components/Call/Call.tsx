@@ -10,12 +10,15 @@ import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { useRoomContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
+import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 import { ParticipantGrid } from '../Participant';
 
+/**
+ * Meeting component.
+ */
 export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
@@ -27,7 +30,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
     room: { ai, identity, otherUsers, updateUserState },
     setJoined,
     onTranscription,
-  } = useRoomContext()!;
+  } = useCallContext()!;
 
   // Broadcast status over swarm.
   useBroadcastStatus({ userMedia, peer, updateUserState, identity, pushedTracks, ai, speaking: isSpeaking });
