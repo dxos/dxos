@@ -60,8 +60,8 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
 
   // Filter out currently expanded and sort screenshare first.
   const filteredItems = allUsers
-    .filter((item) => item.id !== showExpanded?.id)
-    .sort((a, b) => (a.tracks?.screenshareEnabled ? -1 : 1)); // TODO(burdon): ???
+    .filter((item) => item.id !== showExpanded?.id);
+    // .sort((a, b) => (a.tracks?.screenshareEnabled ? -1 : 1)); // TODO(burdon): ???
 
   return (
     <Grid<UserState>

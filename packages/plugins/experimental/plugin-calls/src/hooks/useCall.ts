@@ -31,9 +31,9 @@ export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
     users: [],
   });
 
+  const client = useClient();
   const ai = useAi();
   const haloIdentity = useIdentity();
-  const client = useClient();
   const identityKey = haloIdentity!.identityKey.toHex();
   const displayName = haloIdentity?.profile?.displayName ?? generateName(haloIdentity!.identityKey.toHex());
   const peerKey = client.halo.device!.deviceKey.toHex();

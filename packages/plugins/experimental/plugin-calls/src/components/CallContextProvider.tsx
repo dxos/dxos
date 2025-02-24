@@ -9,6 +9,7 @@ import { useConfig } from '@dxos/react-client';
 
 import {
   CallContext,
+  type CallContextType,
   useIsSpeaking,
   usePeerConnection,
   useCall,
@@ -16,7 +17,6 @@ import {
   useStateObservable,
   useSubscribedState,
   useUserMedia,
-  type CallContextType,
 } from '../hooks';
 import { CALLS_URL } from '../types';
 
@@ -37,10 +37,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const room = useCall({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
-  const { peer, iceConnectionState } = usePeerConnection({
-    iceServers,
-    apiBase: `${CALLS_URL}/api/calls`,
-  });
+  const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);
@@ -90,7 +87,8 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   );
   const pushedScreenshareTrack = useSubscribedState(pushedScreenshareTrack$);
 
-  // TODO(burdon): Can we simplify?
+  // TODO(burdon): Can we simplify? e.g., remove observers?
+  // TODO(burdon): Split root context vs. local call context.
   const context: CallContextType = {
     roomId,
     room,
@@ -110,6 +108,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
       audio: trackObjectToString(pushedAudioTrack),
       screenshare: trackObjectToString(pushedScreenshareTrack),
     },
+
     onTranscription,
   };
 
@@ -124,12 +123,12 @@ const trackObjectToString = (trackObject?: any): string | undefined => {
   return trackObject.sessionId + '/' + trackObject.trackName;
 };
 
-const tryToGetDimensions = (videoStreamTrack?: MediaStreamTrack): { height: number; width: number } => {
+const tryToGetDimensions = (videoStreamTrack?: MediaStreamTrack): { width: number; height: number; } => {
   if (!videoStreamTrack || !videoStreamTrack.getCapabilities) {
-    return { height: 0, width: 0 };
+    return { width: 0, height: 0 };
   }
 
-  const height = videoStreamTrack.getCapabilities().height?.max ?? 0;
   const width = videoStreamTrack.getCapabilities().width?.max ?? 0;
-  return { height, width };
+  const height = videoStreamTrack.getCapabilities().height?.max ?? 0;
+  return { width, height };
 };
