@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
@@ -18,29 +18,7 @@ type TableViewEditorProps = { table: TableType };
 const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
-
-  // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
-  // endure typename changes. We shouldn't need to manage a subscription at this layer.
-  const [schema, setSchema] = useState(
-    space && table?.view?.target?.query?.type
-      ? space.db.schemaRegistry.getSchema(table.view.target!.query.type)
-      : undefined,
-  );
-  // TODO(dmaretskyi): New hook for schema query.
-  useEffect(() => {
-    if (space && table?.view?.target?.query?.type) {
-      const unsubscribe = space.db.schemaRegistry
-        .query({ typename: table.view.target.query.type })
-        .subscribe((query) => {
-          const schema = query.results[0];
-          if (schema) {
-            setSchema(schema);
-          }
-        });
-
-      return unsubscribe;
-    }
-  }, [space, table?.view?.target?.query?.type]);
+  const schema = useSchema(space, table.view?.target?.query.type);
 
   const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => table?.view?.target?.query?.type, [table?.view?.target?.query?.type]);

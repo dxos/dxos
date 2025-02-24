@@ -41,52 +41,63 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
       classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
-      onClick={handleClick}
     >
-      <Input.Root id={inputId}>
-        <div className='flex grow justify-center items-center'>
-          <Icon icon={icon} size={8} />
-        </div>
-        <div className='flex grow items-center'>
-          <Input.Label id={labelId} classNames='truncate w-full'>
-            {name ?? id}
-          </Input.Label>
-        </div>
-        <div className='flex grow justify-center items-center'>
+      <div className='flex grow justify-center items-center'>
+        <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
+      </div>
+      <div className='flex grow items-center truncate cursor-pointer' onClick={handleClick}>
+        {name ?? id}
+      </div>
+      <div className='flex grow justify-center items-center'>
+        <Input.Root id={inputId}>
           <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-        </div>
-      </Input.Root>
+        </Input.Root>
+      </div>
 
       <div />
       {(description || homePage || source) && (
-        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pie-2 overflow-y-scroll'>
-          <p className={mx(descriptionText, 'line-clamp-4 min-w-0')}>{description}</p>
-          {homePage && (
+        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pb-3 overflow-y-scroll'>
+          <div className='grow'>
+            <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-4')}>{description}</p>
+          </div>
+
+          <div className='flex gap-2 items-center'>
             <Link
-              href={homePage}
-              target='_blank'
-              rel='noreferrer'
               aria-describedby={descriptionId}
-              classNames='text-sm text-description line-clamp-4'
-              onClick={(ev) => ev.stopPropagation()}
+              classNames='text-sm text-description cursor-pointer'
+              onClick={handleClick}
             >
-              {t('home page label')}
-              <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+              {t('details label')}
             </Link>
-          )}
-          {source && (
-            <Link
-              href={source}
-              target='_blank'
-              rel='noreferrer'
-              aria-describedby={descriptionId}
-              classNames='text-sm text-description line-clamp-4'
-              onClick={(ev) => ev.stopPropagation()}
-            >
-              {t('source label')}
-              <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-            </Link>
-          )}
+
+            {homePage && (
+              <Link
+                href={homePage}
+                target='_blank'
+                rel='noreferrer'
+                aria-describedby={descriptionId}
+                classNames='text-sm text-description'
+                onClick={(ev) => ev.stopPropagation()}
+              >
+                {t('home page label')}
+                <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+              </Link>
+            )}
+
+            {source && (
+              <Link
+                href={source}
+                target='_blank'
+                rel='noreferrer'
+                aria-describedby={descriptionId}
+                classNames='text-sm text-description'
+                onClick={(ev) => ev.stopPropagation()}
+              >
+                {t('source label')}
+                <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </ListItem.Root>
