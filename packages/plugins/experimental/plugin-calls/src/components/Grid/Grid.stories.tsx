@@ -64,7 +64,7 @@ export default meta;
 
 type Story = StoryObj<GridProps>;
 
-const items = Array.from({ length: 9 }, (_, i) => ({ id: i.toString(), name: faker.person.fullName() }));
+const items = Array.from({ length: 8 }, (_, i) => ({ id: i.toString(), name: faker.person.fullName() }));
 
 export const Default: Story = {
   args: {

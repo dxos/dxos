@@ -8,9 +8,9 @@ import { useResizeDetector } from 'react-resize-detector';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-const ASPECT_RATIO = 16 / 9;
-const MIN_HEIGHT = 200;
-const MIN_WIDTH = MIN_HEIGHT * ASPECT_RATIO;
+// const ASPECT_RATIO = 16 / 9;
+// const MIN_HEIGHT = 200;
+// const MIN_WIDTH = MIN_HEIGHT * ASPECT_RATIO;
 
 export type GridProps<T = any> = {
   Cell: ComponentType<GridCellProps>;
@@ -24,13 +24,13 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
   return (
     <div className={mx('flex flex-col py-2 gap-2 w-full h-full overflow-hidden')}>
       {expanded && (
-        <div className='flex flex-[50%] w-full overflow-hidden'>
+        <div className='flex flex-[60%] w-full overflow-hidden'>
           <Cell expanded item={expanded} onClick={() => onExpand?.()} />
         </div>
       )}
 
-      {items?.length && (
-        <div className='flex flex-[50%] w-full overflow-hidden'>
+      {(items?.length ?? 0) > 0 && (
+        <div className='flex flex-[40%] w-full overflow-hidden'>
           <GridColumn Cell={Cell} items={items} debug={debug} onExpand={onExpand} />
         </div>
       )}
@@ -42,37 +42,89 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
  * Responsive vertically scrolling grid.
  */
 const GridColumn = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
-  const { ref, width, height = 0 } = useResizeDetector();
+  const { ref, width = 0, height = 0 } = useResizeDetector();
+
+  if (!items?.length) {
+    return null;
+  }
 
   if (items?.length === 1) {
     return <Cell {...props} item={items[0]} onClick={() => onExpand?.(items[0])} />;
   }
 
-  const cellsPerColumn = Math.floor(height / MIN_HEIGHT);
-  const maxCols = Math.ceil(items?.length ?? 0 / cellsPerColumn);
-  let cols = maxCols;
-  for (; cols > 0; cols--) {
-    const cellWidth = (width ?? 0) / cols;
-    if (cellWidth >= MIN_WIDTH) {
-      break;
+  const gap = 8;
+  const { cols, itemWidth } = calculateOptimalGrid(items?.length ?? 0, { width, height }, gap);
+
+  return (
+    <div ref={ref} className='w-full flex justify-center items-center'>
+      {width && height && (
+        <div
+          className={mx('grid')}
+          style={{
+            gridTemplateColumns: `repeat(${cols}, ${itemWidth}px)`,
+            gridGap: gap,
+          }}
+        >
+          {items.map((item, i) => (
+            <div key={i} className='flex'>
+              <Cell {...props} item={item} onClick={() => onExpand?.(item)} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+type GridDimensions = {
+  rows: number;
+  cols: number;
+  itemWidth: number;
+  itemHeight: number;
+};
+
+type ContainerDimensions = {
+  width: number;
+  height: number;
+};
+
+/**
+ * Calculate the optimal grid dimensions for a given number of items and container dimensions.
+ */
+const calculateOptimalGrid = (
+  itemCount: number,
+  container: ContainerDimensions,
+  gap = 8,
+  aspectRatio = 16 / 9,
+): GridDimensions => {
+  let bestArea = 0;
+  let result: GridDimensions = { rows: 1, cols: 1, itemWidth: 0, itemHeight: 0 };
+
+  // Try all possible row counts up to itemCount.
+  for (let rows = 1; rows <= itemCount; rows++) {
+    const cols = Math.ceil(itemCount / rows);
+
+    // Calculate item dimensions based on container constraints.
+    const itemWidth1 = (container.width - (cols - 1) * gap) / cols;
+    const itemHeight1 = itemWidth1 / aspectRatio;
+    const itemHeight2 = (container.height - (rows - 1) * gap) / rows;
+    const itemWidth2 = itemHeight2 * aspectRatio;
+
+    // Check which constraint (width or height) is limiting.
+    const useWidth = itemHeight1 * rows <= container.height;
+    const itemWidth = useWidth ? itemWidth1 : itemWidth2;
+    const itemHeight = useWidth ? itemHeight1 : itemHeight2;
+
+    // Calculate total area covered by items.
+    const area = itemWidth * itemHeight * itemCount;
+
+    if (area > bestArea) {
+      bestArea = area;
+      result = { rows, cols, itemWidth, itemHeight };
     }
   }
 
-  const classNames = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3'];
-  return (
-    <div className='flex'>
-      <div ref={ref} className='overflow-y-auto'>
-        <div className={mx('grid gap-2', classNames[Math.min(classNames.length, cols) - 1])}>
-          {height &&
-            items?.map((item, i) => (
-              <div key={i} className='flex aspect-video'>
-                <Cell {...props} item={item} onClick={() => onExpand?.(item)} />
-              </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  );
+  return result;
 };
 
 export type GridCellProps<T = any> = PropsWithChildren<
