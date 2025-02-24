@@ -4,13 +4,12 @@
 
 import React, { useState, type FC } from 'react';
 
-import { useEdgeClient } from '@dxos/react-edge-client';
 import { Toolbar, type ThemedClassName, IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PullAudioTracks } from './PullAudioTracks';
-import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription } from '../../hooks';
+import { useCallContext, useBroadcastStatus, useDebugMode, useTranscription, useAi } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
@@ -23,31 +22,30 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const debugEnabled = useDebugMode();
   const [raisedHand, setRaisedHand] = useState(false);
+  const ai = useAi();
   const {
     userMedia,
     peer,
     isSpeaking,
     pushedTracks,
-    room: { ai, identity, otherUsers, updateUserState },
+    room: { user, otherUsers, updateUserState },
     setJoined,
     onTranscription,
-  } = useCallContext()!;
+  } = useCallContext();
 
   // Broadcast status over swarm.
   useBroadcastStatus({
-    ai,
     peer,
+    user,
     userMedia,
     pushedTracks,
-    identity,
     raisedHand,
     speaking: isSpeaking,
     onUpdateUserState: updateUserState,
   });
 
   // Transcription.
-  const edgeClient = useEdgeClient();
-  useTranscription({ userMedia, identity, isSpeaking, ai, edgeClient });
+  useTranscription({ user, userMedia, isSpeaking });
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
       enabled: !ai.transcription.enabled,
@@ -75,9 +73,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
-        {/* <div className='flex flex-col w-full h-full overflow-y-scroll'> */}
-        <ParticipantGrid identity={identity} users={otherUsers} debug={debugEnabled} />
-        {/* </div> */}
+        <ParticipantGrid user={user} users={otherUsers} debug={debugEnabled} />
 
         <Toolbar.Root>
           <IconButton

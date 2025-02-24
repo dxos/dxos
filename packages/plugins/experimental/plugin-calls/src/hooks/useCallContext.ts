@@ -16,21 +16,25 @@ import { type RxjsPeer } from '../utils';
 
 export type CallContextType = {
   roomId: PublicKey;
-  thread?: ThreadType;
+  room: UseCallState;
+  thread?: ThreadType; // TODO(burdon): Remove?
   isSpeaking: boolean;
+  userMedia: UserMedia;
+  peer: RxjsPeer;
+
   joined: boolean;
   setJoined: Dispatch<SetStateAction<boolean>>;
+
   dataSaverMode: boolean;
   setDataSaverMode: Dispatch<SetStateAction<boolean>>;
-  userMedia: UserMedia;
-  iceConnectionState: RTCIceConnectionState;
-  peer: RxjsPeer;
-  room: UseCallState;
+
   pushedTracks: {
     screenshare?: string;
     video?: string;
     audio?: string;
   };
+
+  iceConnectionState: RTCIceConnectionState;
 
   onTranscription?: () => Promise<ReactiveEchoObject<TranscriptType>>;
 };

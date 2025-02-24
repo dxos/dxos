@@ -13,16 +13,14 @@ import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
 import { GridCell, type GridCellProps } from '../Grid';
 import { VideoObject } from '../Media';
 
-export const screenshareSuffix = '_screenshare';
-
 export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserState>) => {
   const {
     dataSaverMode,
     userMedia,
-    room: { identity },
+    room: { user: self },
   } = useCallContext();
-  const isSelf: boolean = identity.id !== undefined && user.id !== undefined && user.id.startsWith(identity.id);
-  const isScreenshare = user.id?.endsWith(screenshareSuffix);
+  const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);
+  const isScreenshare = user.tracks?.screenshare;
   const pulledAudioTrack = usePulledAudioTrack(isScreenshare ? undefined : user.tracks?.audio);
   const pulledVideoTrack = usePulledVideoTrack(
     isScreenshare || (!isSelf && !dataSaverMode) ? user.tracks?.video : undefined,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, type PropsWithChildren, useState, useEffect } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useState, useEffect, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -42,17 +42,22 @@ export const Grid = <T = any,>({ Cell, items, expanded, debug, onExpand }: GridP
   );
 };
 
+const gap = 8;
+
 /**
  * Responsive vertically scrolling grid.
  */
 const GridColumns = ({ Cell, items, onExpand, ...props }: Omit<GridProps, 'expanded'>) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
-  if (!items?.length) {
+  const numItems = items?.length ?? 0;
+  const { cols, itemWidth } = useMemo(
+    () => calculateOptimalGrid(numItems, { width, height }, gap),
+    [items?.length, width, height, gap],
+  );
+
+  if (!numItems) {
     return null;
   }
-
-  const gap = 8;
-  const { cols, itemWidth } = calculateOptimalGrid(items?.length ?? 0, { width, height }, gap);
 
   // TODO(burdon): Scroll if smaller than min size.
   return (

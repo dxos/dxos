@@ -11,14 +11,14 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { useAi, type Ai } from './useAi';
+import { useAi } from './useAi';
 import { codec, type RoomState, type UserState } from '../types';
 
+// TODO(burdon): Disambiguate room and call.
 export type UseCallState = {
   roomState: RoomState;
-  identity: UserState;
-  otherUsers: UserState[];
-  ai: Ai;
+  user: UserState;
+  otherUsers: UserState[]; // TODO(burdon): Rename.
   updateUserState: (user: UserState) => void;
 };
 
@@ -96,22 +96,24 @@ export const useCall = ({ roomId }: { roomId: PublicKey }): UseCallState => {
     };
   }, [roomId]);
 
-  const identity = useMemo<UserState>(
+  // Current user.
+  const user = useMemo<UserState>(
     () => ({
       ...roomState.users!.find((user) => user.id === peerKey),
       name: displayName,
+      self: true,
     }),
     [roomState.users, peerKey, displayName],
   );
 
+  // Other users.
   const otherUsers = useMemo<UserState[]>(
     () => roomState.users!.filter((user) => user.id !== peerKey),
     [roomState.users, peerKey],
   );
 
   return {
-    ai,
-    identity,
+    user,
     otherUsers,
     roomState,
     updateUserState: (user: UserState) => {
