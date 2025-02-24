@@ -148,16 +148,20 @@ export const GridCell = ({ children, classNames, name, mute, wave, speaking, exp
  * Container centers largest child with aspect ratio.
  */
 export const GridCellContainer = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => setVisible(true), []);
+  // const [visible, setVisible] = useState(false);
+  // useEffect(() => {
+  //   console.log('viz');
+  //   setVisible(true)
+  // }, []);
 
   return (
     <div role='none' className='flex w-full h-full overflow-hidden justify-center items-center'>
       <div
         role='none'
         className={mx(
-          'flex max-w-full max-h-full aspect-video opacity-0 transition-opacity duration-500',
-          visible && 'opacity-100',
+          'is-full aspect-video', 
+          // 'opacity-0 transition-opacity duration-[2000]',
+          // visible && 'opacity-50',
           classNames,
         )}
       >

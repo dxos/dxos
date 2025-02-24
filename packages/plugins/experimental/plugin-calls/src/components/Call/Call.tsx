@@ -67,12 +67,10 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   const otherUsers = (room.users ?? []).filter((user) => user.id !== self.id);
 
   // Screen sharing.
-  const otherUserIsSharing = otherUsers.some((user) => user.tracks?.screenshare);
-  const sharing = userMedia.screenshareVideoTrack !== undefined;
-  const canShareScreen =
+  const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
+  const isScreensharing = userMedia.screenshareVideoTrack !== undefined;
 
-  // TODO(burdon): Raise hand.
   return (
     <PullAudioTracks audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(nonNullable)}>
       <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
@@ -96,11 +94,12 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
             onClick={handleToggleTranscription}
           />
           <IconButton
-            disabled={!canShareScreen || otherUserIsSharing}
-            icon={sharing ? 'ph--screencast--regular' : 'ph--rectangle--regular'}
+            disabled={!canSharescreen}
+            icon={isScreensharing ? 'ph--broadcast--regular' : 'ph--screencast--regular'}
             iconOnly
-            label={sharing ? t('screenshare off') : t('screenshare on')}
-            onClick={sharing ? userMedia.turnScreenshareOff : userMedia.turnScreenshareOn}
+            label={isScreensharing ? t('screenshare off') : t('screenshare on')}
+            classNames={[isScreensharing && 'text-red-500']}
+            onClick={isScreensharing ? userMedia.turnScreenshareOff : userMedia.turnScreenshareOn}
           />
           <IconButton
             icon={raisedHand ? 'ph--hand-waving--regular' : 'ph--hand-palm--regular'}
