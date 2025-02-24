@@ -47,12 +47,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
 
-  /**
-   * Blocks to be retried once all feeds are processed or stalled.
-   * It is used to retry blocks that failed to be processed.
-   */
-  private readonly _reiterateBlocks: FeedBlock<T>[] = [];
-
   constructor(
     private readonly _selector: FeedBlockSelector<T>,
     public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions,
@@ -90,7 +84,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
   }
 
   reiterateBlock(block: FeedBlock<T>) {
-    this._reiterateBlocks.push(block);
     this._trigger.wake();
   }
 
@@ -134,13 +127,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     this._trigger.wake();
   }
 
-  private _getNextBlockForReiteration() {
-    const block = this._reiterateBlocks.shift();
-    invariant(block);
-    log('reiterate', { key: block?.feedKey.toHex(), seq: block?.seq });
-    return block;
-  }
-
   /**
    * Gets the next block from the selected queue.
    */
@@ -148,7 +134,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     let t: NodeJS.Timeout | undefined;
 
     while (this._running) {
-      let stalled = false;
       // Get blocks from the head of each queue.
       const queues = Array.from(this._feedQueues.values());
       const blocks = queues.map((queue) => queue.peek()).filter(isNotNullOrUndefined);
@@ -162,7 +147,6 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
             t = setTimeout(() => {
               this.stalled.emit(this);
               this._trigger.wake();
-              stalled = true;
             }, this.options.stallTimeout);
           }
         } else {
@@ -187,15 +171,10 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
             // console.log(Array.from(this._feedQueues.values()));
           }
         }
-      } else if (this._reiterateBlocks.length) {
-        return this._getNextBlockForReiteration();
       }
 
       // Wait until feed added, new block, or closing.
       await this._trigger.wait();
-      if (stalled && this._reiterateBlocks.length) {
-        return this._getNextBlockForReiteration();
-      }
     }
   }
 }
