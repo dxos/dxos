@@ -388,11 +388,11 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     const endTime = new Date();
     // TODO(nf): move to observability
     const installationId = this._observability?.getTag('installationId');
-    const userId = this._observability?.getTag('identityKey');
+    const did = this._observability?.getTag('did');
     if (this._observability) {
       this._observability?.event({
         installationId: installationId?.value,
-        identityId: userId?.value,
+        did: did?.value,
         name: 'cli.command.run',
         properties: {
           status: this._failing ? 'failure' : 'success',
