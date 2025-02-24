@@ -279,11 +279,6 @@ export class Pipeline implements PipelineAccessor {
     );
   }
 
-  retryMessage(message: FeedMessageBlock) {
-    invariant(this._feedSetIterator, 'Iterator not initialized.');
-    this._feedSetIterator.reiterateBlock(message);
-  }
-
   @synchronized
   async start() {
     invariant(!this._isStarted, 'Pipeline is already started.');
