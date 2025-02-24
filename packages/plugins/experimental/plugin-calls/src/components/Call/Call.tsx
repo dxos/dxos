@@ -44,7 +44,12 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   });
 
   // Transcription.
-  useTranscription({ ai, user: self, userMedia, isSpeaking });
+  useTranscription({
+    transcription: ai.transcription,
+    author: self.name || 'Unknown',
+    audioStreamTrack: userMedia.audioTrack,
+    isSpeaking,
+  });
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
       enabled: !ai.transcription.enabled,
