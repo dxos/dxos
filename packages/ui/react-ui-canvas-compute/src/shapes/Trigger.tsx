@@ -10,17 +10,20 @@ import {
   TimerTriggerOutput,
   VoidInput,
   WebhookTriggerOutput,
+  QueueTriggerOutput,
 } from '@dxos/conductor';
-import { Ref, S } from '@dxos/echo-schema';
+import { ObjectId, Ref, S } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
   FunctionTrigger,
+  type QueueTrigger,
   type SubscriptionTrigger,
   type TimerTrigger,
   TriggerKind,
   type TriggerType,
   type WebhookTrigger,
 } from '@dxos/functions';
+import { DXN, SpaceId } from '@dxos/keys';
 import { create, makeRef } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -124,6 +127,10 @@ const createTriggerSpec = (kind: TriggerKind): TriggerType => {
       return { type: TriggerKind.Subscription, filter: {} } satisfies SubscriptionTrigger;
     case TriggerKind.Email:
       return { type: TriggerKind.Email } satisfies EmailTrigger;
+    case TriggerKind.Queue: {
+      const dxn = new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString();
+      return { type: TriggerKind.Queue, queue: dxn } satisfies QueueTrigger;
+    }
   }
 };
 
@@ -133,6 +140,7 @@ const getOutputSchema = (kind: TriggerKind) => {
     [TriggerKind.Subscription]: SubscriptionTriggerOutput,
     [TriggerKind.Timer]: TimerTriggerOutput,
     [TriggerKind.Webhook]: WebhookTriggerOutput,
+    [TriggerKind.Queue]: QueueTriggerOutput,
   };
   return kindToSchema[kind];
 };
