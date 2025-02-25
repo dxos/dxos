@@ -6,9 +6,9 @@ let files = glob.sync('packages/**/src/**/*.{ts,tsx}', {
   ignore: ['**/gen/**', '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
 });
 
+// TODO(dmaretskyi): Glob ignore is not working.
 const IGNORED = ['gen', 'dist'];
 
-// TODO(dmaretskyi): Glob ignore is not working.
 files = files.filter((file) => !IGNORED.some((ignored) => file.includes(ignored)));
 
 console.log(`Running circular dependency check on ${files.length} files`);
@@ -21,7 +21,9 @@ const res = await madge(files, {
   },
 });
 
-const circular = res.circular();
+let circular = res.circular();
+
+circular = circular.filter((c) => !IGNORED.some((ignored) => c[0].includes(ignored)));
 
 if (circular.length) {
   const grouped = groupBy(circular, (c) => c[0].split('/src/')[0]);
