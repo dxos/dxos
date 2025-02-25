@@ -33,7 +33,7 @@ const meta: Meta<typeof Transcription> = {
     }),
   ],
   parameters: {
-    translations
+    translations,
   },
 };
 

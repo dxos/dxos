@@ -17,6 +17,8 @@ const PREFIXED_CHUNKS_AMOUNT = 5;
 const RECORD_INTERVAL = 200;
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
+// TODO(burdon): Rewrite as class with well defined lifecycle and start/stop method.
+
 export type UseTranscriptionProps = {
   transcription: TranscriptionState;
   author: string;
@@ -105,7 +107,7 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
 
     if (!isSpeaking) {
       stopTimeout.current = setTimeout(() => {
-        log.info('stopping transcription');
+        log.info('stopping transcription', { transcriber });
         transcriber.current?.stopChunksRecording();
       }, STOP_TRANSCRIPTION_TIMEOUT);
     } else {
