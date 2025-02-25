@@ -15,7 +15,7 @@ import { TranscriptBlock, type TranscriptionState } from '../types';
 // TODO(burdon): Move to config.
 const RECORD_INTERVAL = 200; // Length of the chunk in ms.
 const STOP_TRANSCRIPTION_TIMEOUT = 250; // Timeout to stop transcription after user is not speaking.
-const PREFIXED_CHUNKS_AMOUNT = 5; // Number of chunks to save before the user starts speaking.
+const PREFIXED_CHUNKS_AMOUNT = 10; // Number of chunks to save before the user starts speaking.
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50; // Number of chunks to transcribe automatically after. Combined should be mess than 25MB or whisper would fail.
 
 // TODO(burdon): Rewrite as class with well defined lifecycle and start/stop method.
