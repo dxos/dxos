@@ -7,8 +7,8 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { getSpace, isEchoObject, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AssistantPanel, AutomationPanel } from '../components';
-import { AUTOMATION_PLUGIN } from '../meta';
+import { AssistantPanel, AutomationPanel, AmbientChatDialog } from '../components';
+import { AUTOMATION_PLUGIN, AMBIENT_CHAT_DIALOG } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -16,6 +16,12 @@ export default () =>
       id: `${AUTOMATION_PLUGIN}/assistant`,
       role: 'complementary--assistant',
       component: ({ data }) => <AssistantPanel subject={data.subject} />,
+    }),
+    createSurface({
+      id: AMBIENT_CHAT_DIALOG,
+      role: 'dialog',
+      filter: (data): data is any => data.component === AMBIENT_CHAT_DIALOG,
+      component: () => <AmbientChatDialog />,
     }),
     createSurface({
       id: `${AUTOMATION_PLUGIN}/automation`,
