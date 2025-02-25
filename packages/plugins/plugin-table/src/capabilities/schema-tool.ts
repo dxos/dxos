@@ -2,11 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DescriptionAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
+
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnums, S, FormatEnum, Format, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnums, S, FormatEnum, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 const availableFormats = FormatEnums;
+
+// TODO(ZaymonFC): Move this somewhere common.
+export const TypeNameSchema = S.String.pipe(
+  S.pattern(/^[\da-z.-]+\.[a-z]{2,6}(\/[A-Za-z][\w-]*)*$/i),
+  S.annotations({
+    [TitleAnnotationId]: 'TypeName',
+    [DescriptionAnnotationId]: 'Domain-style type name path',
+  }),
+);
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
@@ -73,8 +84,8 @@ export const schemaTools = [
     name: 'schema_create',
     description: 'Create a new schema with the provided definition.',
     schema: S.Struct({
-      typename: Format.URL.annotations({
-        description: 'The schema typename (url format, no protocol). eg: example.com/type-name',
+      typename: TypeNameSchema.annotations({
+        description: 'The schema typename (url format, no protocol). eg: example.com/type-name, example.com/Contact',
       }),
       properties: S.Array(PropertyDefinitionSchema).pipe(
         S.annotations({ description: 'Array of property definitions for the schema.' }),
