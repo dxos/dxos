@@ -21,6 +21,7 @@ const res = await madge(files, {
   },
 });
 
+// TODO(dmaretskyi): Can also output dot graph.
 let circular = res.circular();
 
 circular = circular.filter((c) => !IGNORED.some((ignored) => c[0].includes(ignored)));
