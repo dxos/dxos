@@ -165,8 +165,6 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
-  console.log('[dl]', dialogType, dialogOpen, dialogContent, dialogBlockAlign);
-
   return (
     <Popover.Root
       modal
