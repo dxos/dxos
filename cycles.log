@@ -1,5 +1,0 @@
-
-> @dxos/dxos@0.7.4 check-cycles /Users/dmaretskyi/Code/dxos/dxos
-> node scripts/check-cycles.mjs
-
-Running circular dependency check on 3690 files
