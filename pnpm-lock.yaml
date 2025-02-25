@@ -2938,6 +2938,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../common/crypto
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -2986,6 +2989,9 @@ importers:
       effect:
         specifier: ^3.12.1
         version: 3.12.7
+      esbuild-wasm:
+        specifier: ^0.16.14
+        version: 0.16.17
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -6149,9 +6155,6 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../../core/compute
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug

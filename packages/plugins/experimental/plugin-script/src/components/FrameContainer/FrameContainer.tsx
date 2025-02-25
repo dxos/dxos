@@ -5,13 +5,12 @@
 import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
+import { type BundlerResult } from '@dxos/functions/bundler';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
-
-import { type BundlerResult } from '../../bundler';
 
 export type FrameContainerProps = {
   containerUrl: string;
