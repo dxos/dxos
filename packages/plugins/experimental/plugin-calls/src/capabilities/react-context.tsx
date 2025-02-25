@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext } from 'react';
+import React from 'react';
 
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 import { create } from '@dxos/live-object';
 
+import { CallsGlobalContext, type CallsGlobalContextType } from '../hooks';
 import { CALLS_PLUGIN } from '../meta';
-import { CallsGlobalContext, CallsGlobalContextType } from '../hooks';
 
 export type CallsPluginOptions = {};
 

@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-
-import { CALLS_PLUGIN } from '../meta';
+import { type PublicKey } from '@dxos/keys';
 
 export type CallsGlobalContextType = {
   spaceKey?: PublicKey;
