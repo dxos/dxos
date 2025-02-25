@@ -8,14 +8,14 @@ import { useUnmount } from 'react-use';
 import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
-import { useAi } from './useAi';
 import { type CallContextType } from './useCallContext';
 import { type UserMedia } from './useUserMedia';
 import { useSubscribedState } from './utils';
-import { type UserState } from '../types';
+import { type TranscriptionState, type UserState } from '../types';
 import { type RxjsPeer } from '../utils';
 
 type UseBroadcastStatus = {
+  transcription: TranscriptionState;
   peer: RxjsPeer;
   userMedia: UserMedia;
   pushedTracks: CallContextType['pushedTracks'];
@@ -26,6 +26,7 @@ type UseBroadcastStatus = {
 };
 
 export const useBroadcastStatus = ({
+  transcription,
   peer,
   userMedia,
   pushedTracks,
@@ -34,7 +35,6 @@ export const useBroadcastStatus = ({
   speaking,
   onUpdateUserState,
 }: UseBroadcastStatus): void => {
-  const ai = useAi();
   const { audioEnabled, videoEnabled, screenshareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
   const { sessionId } = useSubscribedState(peer.session$) ?? {};
@@ -58,7 +58,7 @@ export const useBroadcastStatus = ({
         video,
         screenshare,
       }),
-      transcription: buf.create(TranscriptionSchema, ai.transcription),
+      transcription: buf.create(TranscriptionSchema, transcription),
     };
 
     onUpdateUserState(state);
@@ -75,7 +75,7 @@ export const useBroadcastStatus = ({
     screenshareEnabled,
     raisedHand,
     speaking,
-    ai.transcription.enabled,
+    transcription.enabled,
   ]);
 
   useUnmount(() => {
