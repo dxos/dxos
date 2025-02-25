@@ -5,7 +5,7 @@
 export const monitorAudioLevel = ({
   mediaStreamTrack,
   onMeasure,
-  intervalMs = 1000 / 60, // default should land us near 60fps
+  intervalMs = 1000 / 10, // 12 fps.
 }: {
   mediaStreamTrack: MediaStreamTrack;
   onMeasure: (value: number) => void;
@@ -43,7 +43,7 @@ export const monitorAudioLevel = ({
         peak = current;
       }
       tick();
-    });
+    }, intervalMs);
   };
   tick();
 

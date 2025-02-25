@@ -8,14 +8,14 @@ import { createStatic } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
-import { useAsyncEffect } from '@dxos/react-ui';
 
 import { MediaStreamRecorder, Transcriber } from '../ai';
 import { TranscriptBlock, type TranscriptionState } from '../types';
 
-const PREFIXED_CHUNKS_AMOUNT = 5;
-const RECORD_INTERVAL = 200;
-const STOP_TRANSCRIPTION_TIMEOUT = 250;
+const RECORD_INTERVAL = 200; // Length of the chunk in ms.
+const STOP_TRANSCRIPTION_TIMEOUT = 250; // Timeout to stop transcription after user is not speaking.
+const PREFIXED_CHUNKS_AMOUNT = 5; // Number of chunks to save before the user starts speaking.
+const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50; // Number of chunks to transcribe automatically after. Combined should be mess than 25MB or whisper would fail.
 
 // TODO(burdon): Rewrite as class with well defined lifecycle and start/stop method.
 
@@ -50,11 +50,13 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
       transcriber.current = new Transcriber({
         recorder,
         onSegments: async (segments) => {
-          log.info('onSegments', { segments });
           const block = createStatic(TranscriptBlock, { author: author || 'Unknown', segments });
           queue?.append([block]);
         },
-        prefixedChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+        config: {
+          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
+          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+        },
       });
     }
 
@@ -65,17 +67,23 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
   }, [queue, audioStreamTrack]);
 
   // Turn transcription on and off.
-  useAsyncEffect(async () => {
+  useEffect(() => {
     if (transcription.enabled && transcriber.current) {
-      await transcriber.current.open();
-    } else if (!transcription.enabled) {
-      await transcriber.current?.close();
+      void transcriber.current.open();
+    } else if (!transcription.enabled && transcriber.current) {
+      void transcriber.current.close();
     }
   }, [transcription.enabled, transcriber.current]);
 
   // if user is not speaking, stop transcription after STOP_TRANSCRIPTION_TIMEOUT. if speaking, start transcription.
   const stopTimeout = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
+    log.info('useTranscription', {
+      enabled: transcription.enabled,
+      isSpeaking,
+      transcriber: !!transcriber.current,
+      isOpen: transcriber.current?.isOpen,
+    });
     if (!transcription.enabled) {
       return;
     }
@@ -87,11 +95,11 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
       }, STOP_TRANSCRIPTION_TIMEOUT);
     } else {
       log.info('starting transcription');
-      transcriber.current?.startChunksRecording();
       if (stopTimeout.current) {
         clearTimeout(stopTimeout.current);
         stopTimeout.current = null;
       }
+      transcriber.current?.startChunksRecording();
     }
 
     return () => {
@@ -100,5 +108,5 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
         stopTimeout.current = null;
       }
     };
-  }, [isSpeaking, transcription.enabled, transcriber.current]);
+  }, [isSpeaking, transcription.enabled, transcriber.current, transcriber.current?.isOpen]);
 };
