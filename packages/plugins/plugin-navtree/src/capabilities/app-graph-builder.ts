@@ -31,10 +31,10 @@ export default (context: PluginsContext) =>
           properties: {
             label: ['open commands label', { ns: NAVTREE_PLUGIN }],
             icon: 'ph--magnifying-glass--regular',
-            // keyBinding: {
-            //   macos: 'meta+k',
-            //   windows: 'ctrl+k',
-            // },
+            keyBinding: {
+              macos: 'meta+k',
+              windows: 'ctrl+k',
+            },
           },
         },
       ],

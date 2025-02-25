@@ -39,8 +39,8 @@ export default (context: PluginsContext) => {
             icon: 'ph--chat-centered-text--regular',
             disposition: 'pin-end',
             keyBinding: {
-              macos: 'meta+k',
-              windows: 'ctrl+k',
+              macos: 'shift+meta+k',
+              windows: 'shift+ctrl+k',
             },
           },
         },
