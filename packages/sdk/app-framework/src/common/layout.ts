@@ -92,7 +92,7 @@ export namespace LayoutAction {
       options: S.Struct({
         state: S.optional(S.Boolean.annotations({ description: 'Whether the dialog is open or closed.' })),
         blockAlign: S.optional(
-          S.Literal('start', 'center').annotations({ description: 'The alignment of the dialog.' }),
+          S.Literal('start', 'center', 'end').annotations({ description: 'The alignment of the dialog.' }),
         ),
         type: S.optional(S.Literal('default', 'alert').annotations({ description: 'The type of dialog.' })),
         props: S.optional(
