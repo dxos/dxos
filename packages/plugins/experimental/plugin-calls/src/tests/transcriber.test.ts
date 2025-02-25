@@ -133,7 +133,7 @@ describe('Transcriber', () => {
         log.info('transcription', { segments });
         trigger.wake(segments);
       },
-      // prefixedChunksAmount: 1,
+      prefixedChunksAmount: 1,
     });
 
     await openAndClose(transcription);

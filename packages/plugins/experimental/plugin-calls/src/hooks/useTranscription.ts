@@ -12,6 +12,7 @@ import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { MediaStreamRecorder, Transcriber } from '../ai';
 import { TranscriptBlock, type TranscriptionState } from '../types';
 
+// TODO(burdon): Move to config.
 const RECORD_INTERVAL = 200; // Length of the chunk in ms.
 const STOP_TRANSCRIPTION_TIMEOUT = 250; // Timeout to stop transcription after user is not speaking.
 const PREFIXED_CHUNKS_AMOUNT = 5; // Number of chunks to save before the user starts speaking.
@@ -30,8 +31,8 @@ export type UseTranscriptionProps = {
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
 export const useTranscription = ({ transcription, author, audioStreamTrack, isSpeaking }: UseTranscriptionProps) => {
-  const edgeClient = useEdgeClient();
   // Get queue.
+  const edgeClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(
     edgeClient,
     transcription.objectDxn ? DXN.parse(transcription.objectDxn) : undefined,
@@ -47,6 +48,7 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
         mediaStreamTrack: audioStreamTrack,
         interval: RECORD_INTERVAL,
       });
+
       transcriber.current = new Transcriber({
         recorder,
         onSegments: async (segments) => {
@@ -75,8 +77,8 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
     }
   }, [transcription.enabled, transcriber.current]);
 
-  // if user is not speaking, stop transcription after STOP_TRANSCRIPTION_TIMEOUT. if speaking, start transcription.
-  const stopTimeout = useRef<NodeJS.Timeout | null>(null);
+  // If user is not speaking, stop transcription after STOP_TRANSCRIPTION_TIMEOUT. if speaking, start transcription.
+  const t = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     log.info('useTranscription', {
       enabled: transcription.enabled,
@@ -84,28 +86,30 @@ export const useTranscription = ({ transcription, author, audioStreamTrack, isSp
       transcriber: !!transcriber.current,
       isOpen: transcriber.current?.isOpen,
     });
+
     if (!transcription.enabled) {
       return;
     }
 
-    if (!isSpeaking) {
-      stopTimeout.current = setTimeout(() => {
+    if (isSpeaking) {
+      log.info('starting transcription');
+      if (t.current) {
+        clearTimeout(t.current);
+        t.current = null;
+      }
+
+      transcriber.current?.startChunksRecording();
+    } else {
+      t.current = setTimeout(() => {
         log.info('stopping transcription', { transcriber });
         transcriber.current?.stopChunksRecording();
       }, STOP_TRANSCRIPTION_TIMEOUT);
-    } else {
-      log.info('starting transcription');
-      if (stopTimeout.current) {
-        clearTimeout(stopTimeout.current);
-        stopTimeout.current = null;
-      }
-      transcriber.current?.startChunksRecording();
     }
 
     return () => {
-      if (stopTimeout.current) {
-        clearTimeout(stopTimeout.current);
-        stopTimeout.current = null;
+      if (t.current) {
+        clearTimeout(t.current);
+        t.current = null;
       }
     };
   }, [isSpeaking, transcription.enabled, transcriber.current, transcriber.current?.isOpen]);
