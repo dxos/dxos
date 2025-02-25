@@ -6,9 +6,9 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { contributes } from '@dxos/app-framework';
+import { initializeBundler } from '@dxos/functions/bundler';
 
 import { ScriptCapabilities } from './capabilities';
-import { initializeBundler } from '../bundler';
 import { Compiler } from '../compiler';
 
 export default async () => {
