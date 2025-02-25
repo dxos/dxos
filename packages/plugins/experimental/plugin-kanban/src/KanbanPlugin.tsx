@@ -10,7 +10,7 @@ import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-k
 import { IntentResolver, ReactSurface } from './capabilities';
 import { KANBAN_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { KanbanAction } from './types';
+import { CreateKanbanSchema, type CreateKanbanType, KanbanAction } from './types';
 
 export const KanbanPlugin = () =>
   definePlugin(meta, [
@@ -26,7 +26,8 @@ export const KanbanPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: KanbanType.typename,
           metadata: {
-            createObject: (props: { name?: string }, options: { space: Space }) =>
+            creationSchema: CreateKanbanSchema,
+            createObject: (props: CreateKanbanType, options: { space: Space }) =>
               createIntent(KanbanAction.Create, { ...props, space: options.space }),
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
