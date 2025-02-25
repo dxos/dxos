@@ -3,18 +3,16 @@
 //
 
 import { type IBlobEvent, type IMediaRecorder, MediaRecorder, register } from 'extendable-media-recorder';
-import { connect } from 'extendable-media-recorder-wav-encoder';
 import { WaveFile } from 'wavefile';
 
 import { synchronized } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type AudioChunk, AudioRecorder } from './audio-recorder';
+import { type WavConfig, type AudioChunk, type AudioRecorder } from './audio-recorder';
 
 let wavEncoderInitialized = false;
-
-export type WavMediaRecorderConfig = {};
 
 /**
  * Recorder that uses the MediaContext API and AudioNode API to record audio.
@@ -22,7 +20,7 @@ export type WavMediaRecorderConfig = {};
  * It records MediaStream using https://www.npmjs.com/package/extendable-media-recorder.
  */
 @trace.resource()
-export class MediaStreamRecorder extends AudioRecorder {
+export class MediaStreamRecorder implements AudioRecorder {
   private readonly _mediaStreamTrack: MediaStreamTrack;
   /**
    * Default MediaRecorder implementation do not support wav encoding.
@@ -30,19 +28,51 @@ export class MediaStreamRecorder extends AudioRecorder {
   private readonly _interval: number;
   private _mediaRecorder?: IMediaRecorder = undefined;
   private _header?: Uint8Array = undefined;
+  private _onChunk?: (chunk: AudioChunk) => void;
 
-  constructor({
-    onChunk,
-    mediaStreamTrack,
-    interval,
-  }: {
-    onChunk: (chunk: AudioChunk) => void;
-    mediaStreamTrack: MediaStreamTrack;
-    interval: number;
-  }) {
-    super(onChunk);
+  constructor({ mediaStreamTrack, interval }: { mediaStreamTrack: MediaStreamTrack; interval: number }) {
     this._mediaStreamTrack = mediaStreamTrack;
     this._interval = interval;
+  }
+
+  get wavConfig(): WavConfig {
+    const settings = this._mediaStreamTrack.getSettings();
+    return {
+      channels: settings.channelCount ?? 1,
+      sampleRate: settings.sampleRate ?? 16000,
+      bitDepthCode: settings.sampleSize ? String(settings.sampleSize) : '16',
+    };
+  }
+
+  setOnChunk(onChunk: (chunk: AudioChunk) => void): void {
+    this._onChunk = onChunk;
+  }
+
+  async start() {
+    if (!wavEncoderInitialized) {
+      const { connect } = await import('extendable-media-recorder-wav-encoder');
+      await register(await connect());
+      wavEncoderInitialized = true;
+    }
+
+    if (!this._mediaRecorder) {
+      const stream = new MediaStream([this._mediaStreamTrack]);
+      this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
+    }
+
+    if (this._mediaRecorder.state === 'recording') {
+      return;
+    }
+    invariant(this._onChunk, 'MediaStreamRecorder: onChunk is not set');
+    this._mediaRecorder.ondataavailable = (event) => this._ondataavailable(event);
+    this._mediaRecorder.start(this._interval);
+  }
+
+  async stop() {
+    if (this._mediaRecorder?.state !== 'recording') {
+      return;
+    }
+    this._mediaRecorder.stop();
   }
 
   @synchronized
@@ -68,34 +98,9 @@ export class MediaStreamRecorder extends AudioRecorder {
       return;
     }
 
-    this._onChunk({
+    this._onChunk!({
       timestamp: Date.now(),
       data: wav.getSamples(),
     });
-  }
-
-  async start() {
-    if (!wavEncoderInitialized) {
-      await register(await connect());
-      wavEncoderInitialized = true;
-    }
-
-    if (!this._mediaRecorder) {
-      const stream = new MediaStream([this._mediaStreamTrack]);
-      this._mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/wav' });
-    }
-
-    if (this._mediaRecorder.state === 'recording') {
-      return;
-    }
-    this._mediaRecorder.ondataavailable = (event) => this._ondataavailable(event);
-    this._mediaRecorder.start(this._interval);
-  }
-
-  async stop() {
-    if (this._mediaRecorder?.state !== 'recording') {
-      return;
-    }
-    this._mediaRecorder.stop();
   }
 }

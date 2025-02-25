@@ -7,13 +7,12 @@
 
 import { WaveFile } from 'wavefile';
 
-import { DeferredTask, synchronized } from '@dxos/async';
+import { DeferredTask } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type AudioChunk } from './audio-recorder';
+import { type AudioRecorder, type AudioChunk } from './audio-recorder';
 import { CALLS_URL, type TranscriptSegment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
@@ -46,12 +45,6 @@ type WhisperSegment = {
   words: WhisperWord[];
 };
 
-type WavConfig = {
-  channels: number;
-  sampleRate: number;
-  bitDepthCode: string;
-};
-
 /**
  * Handles transcription of audio chunks.
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
@@ -61,32 +54,37 @@ export class Transcriber extends Resource {
   private _audioChunks: AudioChunk[] = [];
   private _lastUsedTimestamp = 0;
 
+  private readonly _recorder: AudioRecorder;
+  private readonly _onSegments: (segments: TranscriptSegment[]) => Promise<void>;
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
-  private _config: WavConfig = { channels: 1, sampleRate: 16000, bitDepthCode: '16' };
-  private _onTranscription?: (params: TranscriptSegment[]) => Promise<void>;
   private readonly _prefixedChunksAmount: number;
 
-  constructor({ prefixedChunksAmount }: { prefixedChunksAmount: number }) {
+  constructor({
+    recorder,
+    onSegments,
+    prefixedChunksAmount,
+  }: {
+    recorder: AudioRecorder;
+    onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+    prefixedChunksAmount: number;
+  }) {
     super();
     this._prefixedChunksAmount = prefixedChunksAmount;
+    this._recorder = recorder;
+    this._onSegments = onSegments;
   }
 
   protected override async _open(ctx: Context) {
+    this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
+    await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
   }
 
   protected override async _close() {
     this._recording = false;
     this._transcribeTask = undefined;
-  }
-
-  setWavConfig(config: Partial<WavConfig>) {
-    this._config = { ...this._config, ...config };
-  }
-
-  setOnTranscription(onTranscription: (params: TranscriptSegment[]) => Promise<void>) {
-    this._onTranscription = onTranscription;
+    await this._recorder.stop();
   }
 
   startChunksRecording() {
@@ -99,11 +97,6 @@ export class Transcriber extends Resource {
     }
     this._recording = false;
     this._transcribeTask?.schedule();
-  }
-
-  @synchronized
-  onChunk(chunk: AudioChunk) {
-    this._saveAudioChunk(chunk);
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {
@@ -120,7 +113,6 @@ export class Transcriber extends Resource {
   }
 
   private async _transcribe() {
-    log.info('transcribing audio chunks...');
     const chunks = this._audioChunks;
 
     const audio = await this._mergeAudioChunks(chunks);
@@ -131,19 +123,19 @@ export class Transcriber extends Resource {
 
     const alignedSegments = this._alignSegments(segments, chunks);
     if (alignedSegments.length > 0) {
-      await this._onTranscription?.(alignedSegments);
+      await this._onSegments(alignedSegments);
     }
   }
 
   @trace.span({ showInBrowserTimeline: true })
   private async _mergeAudioChunks(chunks: AudioChunk[]) {
     const file = new WaveFile();
-    invariant(this._config.sampleRate, 'Sample rate is not set');
+    const wavConfig = this._recorder.wavConfig;
 
     file.fromScratch(
-      this._config.channels,
-      this._config.sampleRate,
-      this._config.bitDepthCode,
+      wavConfig.channels,
+      wavConfig.sampleRate,
+      wavConfig.bitDepthCode,
       mergeFloat64Arrays(chunks.map(({ data }) => data)),
     );
 
