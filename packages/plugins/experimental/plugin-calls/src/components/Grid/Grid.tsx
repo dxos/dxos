@@ -151,7 +151,7 @@ export const GridCellContainer = ({ classNames, children }: ThemedClassName<Prop
   // const [visible, setVisible] = useState(false);
   // useEffect(() => {
   //   console.log('viz');
-  //   setVisible(true)
+  //   setVisible(true);
   // }, []);
 
   return (
@@ -159,7 +159,7 @@ export const GridCellContainer = ({ classNames, children }: ThemedClassName<Prop
       <div
         role='none'
         className={mx(
-          'is-full aspect-video',
+          'flex max-w-full max-h-full aspect-video overflow-hidden',
           // 'opacity-0 transition-opacity duration-[2000]',
           // visible && 'opacity-50',
           classNames,

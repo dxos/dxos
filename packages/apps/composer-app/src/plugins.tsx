@@ -85,7 +85,9 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
     WILDCARD_PLUGIN,
-  ].filter(isNotFalsy);
+  ]
+    .filter(isNotFalsy)
+    .flat();
 
 export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
@@ -101,7 +103,9 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Labs
     isLabs && [AUTOMATION_PLUGIN, CALLS_PLUGIN],
-  ].flat().filter(isNotFalsy);
+  ]
+    .filter(isNotFalsy)
+    .flat();
 
 export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
   [
@@ -174,4 +178,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     WelcomePlugin(),
     WildcardPlugin(),
     WnfsPlugin(),
-  ].filter(isNotFalsy);
+  ]
+    .filter(isNotFalsy)
+    .flat();
