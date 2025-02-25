@@ -35,7 +35,7 @@ export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserS
 
   return (
     <GridCell {...props} item={user} name={user.name} speaking={user.speaking} wave={user.raisedHand} debug={debug}>
-      <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} />
+      <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
 
       {debug && (
         <div className='absolute top-1 left-1'>
