@@ -103,7 +103,10 @@ describe('Transcriber', () => {
         log.info('transcription', { segments });
         trigger.wake(segments);
       },
-      prefixedChunksAmount: 1,
+      config: {
+        transcribeAfterChunksAmount: 1000,
+        prefixBufferChunksAmount: 1,
+      },
     });
 
     await openAndClose(transcription);
@@ -133,7 +136,10 @@ describe('Transcriber', () => {
         log.info('transcription', { segments });
         trigger.wake(segments);
       },
-      prefixedChunksAmount: 1,
+      config: {
+        transcribeAfterChunksAmount: 1000,
+        prefixBufferChunksAmount: 1,
+      },
     });
 
     await openAndClose(transcription);
