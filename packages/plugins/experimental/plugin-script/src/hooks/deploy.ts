@@ -13,6 +13,7 @@ import {
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
 } from '@dxos/functions';
+import { Bundler } from '@dxos/functions/bundler';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, create, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
@@ -20,7 +21,6 @@ import { useTranslation } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
 import { type ViewState } from './view';
-import { Bundler } from '../bundler';
 import { SCRIPT_PLUGIN } from '../meta';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };

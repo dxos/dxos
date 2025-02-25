@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, LayoutAction, type PluginsContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createExtension, toSignal } from '@dxos/plugin-graph';
+import { createExtension, type Node, ROOT_ID, toSignal } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
 import { getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
 
-import { AUTOMATION_PLUGIN } from '../meta';
+import { AMBIENT_CHAT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) => {
   const resolve = (typename: string) =>
@@ -45,6 +45,37 @@ export default (context: PluginsContext) => {
           },
         };
       },
+    }),
+    createExtension({
+      id: `${AUTOMATION_PLUGIN}/ambient-chat`,
+      filter: (node): node is Node<null> => node.id === ROOT_ID,
+      actions: () => [
+        {
+          id: `${LayoutAction.UpdateDialog._tag}/ambient-chat/open`,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(
+              createIntent(LayoutAction.UpdateDialog, {
+                part: 'dialog',
+                subject: AMBIENT_CHAT_DIALOG,
+                options: {
+                  state: true,
+                  blockAlign: 'end',
+                },
+              }),
+            );
+          },
+          properties: {
+            label: ['open ambient chat label', { ns: AUTOMATION_PLUGIN }],
+            icon: 'ph--chat-centered-text--regular',
+            disposition: 'pin-end',
+            keyBinding: {
+              macos: 'shift+meta+k',
+              windows: 'shift+ctrl+k',
+            },
+          },
+        },
+      ],
     }),
     createExtension({
       id: `${AUTOMATION_PLUGIN}/automation-for-subject`,

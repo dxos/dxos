@@ -4,6 +4,7 @@
 
 import { lazy } from 'react';
 
+export * from './AmbientChatDialog';
 export * from './AutomationPanel';
 export * from './ChatContainer';
 export * from './MarkdownViewer';

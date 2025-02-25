@@ -7,12 +7,17 @@ import { type SelectOption } from '@dxos/echo-schema';
 import { type BaseKanbanItem, type KanbanType } from './defs';
 import { UNCATEGORIZED_VALUE } from './defs';
 
-export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(
-  kanban: KanbanType,
-  items: T[],
-  pivotPath: string,
-  selectOptions: SelectOption[],
-) => {
+export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
+  kanban,
+  items,
+  pivotPath,
+  selectOptions,
+}: {
+  kanban: KanbanType;
+  items: T[];
+  pivotPath?: string;
+  selectOptions: SelectOption[];
+}) => {
   // Get valid column values from select options
   const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
 
