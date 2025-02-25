@@ -7,8 +7,8 @@
 
 import { WaveFile } from 'wavefile';
 
-import { DeferredTask } from '@dxos/async';
-import { type Context, Resource } from '@dxos/context';
+import { DeferredTask, Trigger } from '@dxos/async';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
@@ -45,6 +45,19 @@ type WhisperSegment = {
   words: WhisperWord[];
 };
 
+export type TranscribeConfig = {
+  /**
+   * Number of chunks to transcribe automatically after.
+   */
+  transcribeAfterChunksAmount: number;
+
+  /**
+   * Number of chunks to save before the user starts speaking.
+   * This is needed to catch the beginning of the user's speech.
+   */
+  prefixBufferChunksAmount: number;
+};
+
 /**
  * Handles transcription of audio chunks.
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
@@ -58,27 +71,30 @@ export class Transcriber extends Resource {
   private readonly _onSegments: (segments: TranscriptSegment[]) => Promise<void>;
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
-  private readonly _prefixedChunksAmount: number;
+  private readonly _config: TranscribeConfig;
+
+  private readonly _openTrigger = new Trigger({ autoReset: true });
 
   constructor({
     recorder,
     onSegments,
-    prefixedChunksAmount,
+    config,
   }: {
     recorder: AudioRecorder;
     onSegments: (segments: TranscriptSegment[]) => Promise<void>;
-    prefixedChunksAmount: number;
+    config: TranscribeConfig;
   }) {
     super();
-    this._prefixedChunksAmount = prefixedChunksAmount;
     this._recorder = recorder;
     this._onSegments = onSegments;
+    this._config = config;
   }
 
   protected override async _open(ctx: Context) {
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
     this._transcribeTask = new DeferredTask(ctx, async () => this._transcribe());
+    this._openTrigger.wake();
   }
 
   protected override async _close() {
@@ -88,11 +104,14 @@ export class Transcriber extends Resource {
   }
 
   startChunksRecording() {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
+      return;
+    }
     this._recording = true;
   }
 
   stopChunksRecording() {
-    if (!this._recording) {
+    if (this._lifecycleState !== LifecycleState.OPEN || !this._recording) {
       return;
     }
     this._recording = false;
@@ -106,14 +125,20 @@ export class Transcriber extends Resource {
     if (
       !this._recording &&
       (!this._transcribeTask || !this._transcribeTask.scheduled) &&
-      this._audioChunks.length >= this._prefixedChunksAmount
+      this._audioChunks.length >= this._config.prefixBufferChunksAmount
     ) {
-      this._audioChunks = this._prefixedChunksAmount > 0 ? this._audioChunks.slice(-this._prefixedChunksAmount) : [];
+      this._audioChunks = this._dropOldChunks();
+    } else if (this._audioChunks.length >= this._config.transcribeAfterChunksAmount && this._recording) {
+      this._transcribeTask?.schedule();
     }
   }
 
   private async _transcribe() {
     const chunks = this._audioChunks;
+    this._audioChunks = this._dropOldChunks();
+    if (chunks.length === 0) {
+      return;
+    }
 
     const audio = await this._mergeAudioChunks(chunks);
     const segments = await this._fetchTranscription(audio);
@@ -125,6 +150,12 @@ export class Transcriber extends Resource {
     if (alignedSegments.length > 0) {
       await this._onSegments(alignedSegments);
     }
+  }
+
+  private _dropOldChunks() {
+    return this._config.prefixBufferChunksAmount > 0
+      ? this._audioChunks.slice(-this._config.prefixBufferChunksAmount)
+      : [];
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -180,24 +211,31 @@ export class Transcriber extends Resource {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
-    // Drop segments that end before the last segment end timestamp.
-    const filteredSegments = segments.filter(
-      (segment) => zeroTimestamp + segment.end * 1_000 > this._lastUsedTimestamp,
-    );
+    const filteredSegments = segments
+      // Use segments that end after the last used timestamp.
+      // Segments could overlap, so we need to filter words that starts after the last used timestamp.
+      .filter((segment) => zeroTimestamp + segment.end * 1_000 >= this._lastUsedTimestamp)
+      // Use words that starts after the last used timestamp.
+      .map((segment) => {
+        const words = segment.words.filter((word) => zeroTimestamp + word.start * 1_000 >= this._lastUsedTimestamp);
+        return {
+          ...segment,
+          words,
+          text: words.map((word) => word.word).join(''),
+          start: words.at(0)?.start ?? segment.end,
+        };
+      })
+      .filter((segment) => segment.words.length > 0);
 
-    // Filter words of first segment to use.
-    const firstSegment = {
-      ...filteredSegments.at(0)!,
-      words: filteredSegments
-        .at(0)!
-        .words.filter((word) => zeroTimestamp + word.start * 1_000 > this._lastUsedTimestamp),
-    };
+    if (filteredSegments.length === 0) {
+      return [];
+    }
 
     // Update last timestamp.
-    this._lastUsedTimestamp = filteredSegments.at(-1)?.end ?? this._lastUsedTimestamp;
+    this._lastUsedTimestamp = zeroTimestamp + filteredSegments.at(-1)!.end * 1_000;
 
     // Add absolute timestamp to each segment.
-    return [firstSegment, ...filteredSegments.slice(1)].map((segment) => ({
+    return filteredSegments.map((segment) => ({
       started: new Date(zeroTimestamp + segment.start * 1_000),
       text: segment.text,
     }));
