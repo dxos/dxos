@@ -53,7 +53,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
   );
 
   return (
-    <div className='flex grow justify-center overflow-center bg-base'>
+    <div className='flex grow justify-center overflow-center bg-baseSurface'>
       <div className='flex w-[500px] bg-white dark:bg-black'>
         <Thread {...props} messages={messages} streaming={streaming} onSubmit={handleSubmit} onStop={() => {}} />
       </div>

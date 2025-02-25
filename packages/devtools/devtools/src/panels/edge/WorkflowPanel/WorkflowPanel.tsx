@@ -117,7 +117,7 @@ export const WorkflowPanel = () => {
         className={mx(
           'bs-[--statusbar-size]',
           'flex justify-end items-center gap-2',
-          'bg-base text-description',
+          'bg-baseSurface text-description',
           'border-bs border-separator',
           'text-lg pointer-fine:text-xs',
         )}

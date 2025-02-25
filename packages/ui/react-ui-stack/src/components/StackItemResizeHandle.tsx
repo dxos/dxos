@@ -44,8 +44,9 @@ export const StackItemResizeHandle = () => {
       if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
         return;
       }
+
       // TODO(thure): This should handle StackItem state vs local state better.
-      draggable({
+      return draggable({
         element: buttonRef.current,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           // We will be moving the line to indicate a drag; we can disable the native drag preview.
