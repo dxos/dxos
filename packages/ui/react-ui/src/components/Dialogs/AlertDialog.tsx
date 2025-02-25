@@ -95,7 +95,9 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   },
 );
 
-type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' };
+type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & {
+  blockAlign?: 'center' | 'start' | 'end';
+};
 
 const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = forwardRef<
   HTMLDivElement,
