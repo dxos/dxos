@@ -7,8 +7,8 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
-import { AUTOMATION_PLUGIN } from '../meta';
+import { AmbientChatDialog, AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
+import { AUTOMATION_PLUGIN, AMBIENT_CHAT_DIALOG } from '../meta';
 import { AIChatType } from '../types';
 
 export default () =>
@@ -25,6 +25,12 @@ export default () =>
       component: ({ data }) => (
         <ServiceRegistry space={isSpace(data.subject) ? data.subject : getSpace(data.subject)!} />
       ),
+    }),
+    createSurface({
+      id: AMBIENT_CHAT_DIALOG,
+      role: 'dialog',
+      filter: (data): data is any => data.component === AMBIENT_CHAT_DIALOG,
+      component: () => <AmbientChatDialog />,
     }),
     createSurface({
       id: `${AUTOMATION_PLUGIN}/automation`,

@@ -60,7 +60,7 @@ export const DeckState = S.mutable(
      * Data to be passed to the dialog Surface.
      */
     dialogContent: S.optional(S.Any),
-    dialogBlockAlign: S.optional(S.Literal('start', 'center')),
+    dialogBlockAlign: S.optional(S.Literal('start', 'center', 'end')),
     dialogType: S.optional(S.Literal('default', 'alert')),
 
     popoverOpen: S.Boolean,
