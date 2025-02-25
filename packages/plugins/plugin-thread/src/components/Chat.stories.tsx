@@ -15,7 +15,6 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Thread } from '@dxos/react-ui-thread';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -47,10 +46,7 @@ const Story = () => {
   }
 
   return (
-    <Mosaic.Root debug>
-      <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>{space && <ChatContainer thread={thread} />}</main>
-      <Mosaic.DragOverlay />
-    </Mosaic.Root>
+    <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>{space && <ChatContainer thread={thread} />}</main>
   );
 };
 

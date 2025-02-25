@@ -7,7 +7,6 @@ import React, { type FC, forwardRef } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
-import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
@@ -58,37 +57,28 @@ export const Snippet: FC<{ text: string; match?: RegExp }> = ({ text, match }) =
 
 export type SearchItemProps = SearchResult & { selected: boolean } & Pick<SearchResultsProps, 'onSelect'>;
 
-export const SearchItem: MosaicTileComponent<SearchItemProps> = forwardRef(
-  ({ draggableStyle, draggableProps, item, debug = false }, forwardRef) => {
-    const { id, type, label, snippet, match, selected, onSelect } = item;
-    const Icon = type ? getIcon(type) : undefined;
+export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, forwardRef) => {
+  const { id, type, label, snippet, match, selected, onSelect } = item;
+  const Icon = type ? getIcon(type) : undefined;
 
-    return (
-      <Card.Root
-        ref={forwardRef}
-        style={draggableStyle}
-        classNames={mx('mx-2 mt-2 cursor-pointer', ghostHover, selected && styles.selected)}
-        onClick={() => onSelect?.(id)}
-      >
-        <Card.Header>
-          <Card.DragHandle {...draggableProps} />
-          <Card.Title title={label ?? 'Untitled'} />
-          {Icon && <Card.Endcap Icon={Icon} />}
-        </Card.Header>
-        {snippet && (
-          <Card.Body gutter>
-            <Snippet text={snippet} match={match} />
-          </Card.Body>
-        )}
-        {debug && (
-          <Card.Body gutter>
-            <pre className='text-xs whitespace-pre-line'>{JSON.stringify(item)}</pre>
-          </Card.Body>
-        )}
-      </Card.Root>
-    );
-  },
-);
+  return (
+    <Card.Root
+      ref={forwardRef}
+      classNames={mx('mx-2 mt-2 cursor-pointer', ghostHover, selected && styles.selected)}
+      onClick={() => onSelect?.(id)}
+    >
+      <Card.Header>
+        <Card.Title title={label ?? 'Untitled'} />
+        {Icon && <Card.Endcap Icon={Icon} />}
+      </Card.Header>
+      {snippet && (
+        <Card.Body gutter>
+          <Snippet text={snippet} match={match} />
+        </Card.Body>
+      )}
+    </Card.Root>
+  );
+});
 
 export type SearchResultsProps = {
   match?: RegExp;
@@ -99,21 +89,18 @@ export type SearchResultsProps = {
 
 // TODO(burdon): Key cursor up/down.
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
-  const path = 'search';
   return (
     <ScrollArea.Root classNames='grow'>
       <ScrollArea.Viewport>
-        <Mosaic.Container id={path} Component={SearchItem}>
-          {items.map((item) => (
-            <Mosaic.DraggableTile
-              key={item.id}
-              path={path}
-              type={SEARCH_RESULT}
-              item={{ ...item, selected: selected === item.id, onSelect }}
-              Component={SearchItem}
-            />
-          ))}
-        </Mosaic.Container>
+        {items.map((item) => (
+          <SearchItem
+            key={item.id}
+            type={SEARCH_RESULT}
+            {...item}
+            onSelect={onSelect}
+            selected={selected === item.id}
+          />
+        ))}
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar orientation='vertical'>
         <ScrollArea.Thumb />
