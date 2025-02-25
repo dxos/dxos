@@ -38,6 +38,10 @@ export default (context: PluginsContext) => {
             label: ['open ambient chat label', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--chat-centered-text--regular',
             disposition: 'pin-end',
+            keyBinding: {
+              macos: 'meta+k',
+              windows: 'ctrl+k',
+            },
           },
         },
       ],
