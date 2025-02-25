@@ -73,7 +73,7 @@ export const schemaTools = [
     name: 'schema_create',
     description: 'Create a new schema with the provided definition.',
     schema: S.Struct({
-      typename: S.String.annotations({
+      typename: Format.URL.annotations({
         description:
           'The fully qualified schema typename. Must start with a domain, and then one or more path components. eg: example.com/type-name.',
       }),
