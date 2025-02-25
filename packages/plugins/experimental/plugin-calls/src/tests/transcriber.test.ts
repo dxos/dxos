@@ -9,14 +9,16 @@ import { WaveFile } from 'wavefile';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { openAndClose } from '@dxos/test-utils';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type AudioChunk, AudioRecorder, Transcriber } from '../ai';
+import { type AudioChunk, type AudioRecorder } from '../ai/audio-recorder';
+import { Transcriber } from '../ai/transcriber';
 import { type TranscriptSegment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
 // This is a playground for testing the transcription, requires `calls-service` to be running.
-describe.skip('transcription', () => {
+describe('Transcriber', () => {
   const DIR_PATH = path.join(__dirname, 'audio');
 
   const readFile = async (filename: string) => {
@@ -56,20 +58,21 @@ describe.skip('transcription', () => {
     const chunks: AudioChunk[] = [];
     const trigger = new Trigger({ autoReset: true });
 
-    const reader = new MockAudioRecorder({
-      onChunk: (chunk) => {
-        chunks.push(chunk);
-        trigger.wake();
-      },
+    const recorder = new MockAudioRecorder({
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
     });
 
-    await reader.start();
+    recorder.setOnChunk((chunk) => {
+      chunks.push(chunk);
+      trigger.wake();
+    });
+
+    await recorder.start();
 
     const chunksNumber = 3;
     for (let i = 0; i < chunksNumber; i++) {
-      reader.emitChunk();
+      recorder.emitChunk();
     }
 
     while (chunks.length < chunksNumber) {
@@ -79,35 +82,31 @@ describe.skip('transcription', () => {
     const wav = new WaveFile();
     wav.fromScratch(
       1, //
-      reader.sampleRate,
+      recorder.wavConfig.sampleRate,
       '16',
       mergeFloat64Arrays(chunks.map((chunk) => chunk.data)),
     );
     await writeOutputFile('merged.wav', wav.toBuffer());
 
-    await reader.stop();
+    await recorder.stop();
   });
 
   test('transcription of audio recording', { timeout: 10_000 }, async () => {
     const trigger = new Trigger<TranscriptSegment[]>({ autoReset: true });
-    const transcription = new Transcriber({
-      prefixedChunksAmount: 1,
-    });
     const recorder = new MockAudioRecorder({
-      onChunk: (chunk) => transcription.onChunk(chunk), //
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
     });
-    transcription.setOnTranscription(async (segments) => {
-      log.info('transcription', { segments });
-      trigger.wake(segments);
-    });
-    transcription.setWavConfig({
-      sampleRate: 24000,
-      bitDepthCode: '16',
+    const transcription = new Transcriber({
+      recorder,
+      onSegments: async (segments) => {
+        log.info('transcription', { segments });
+        trigger.wake(segments);
+      },
+      prefixedChunksAmount: 1,
     });
 
-    await recorder.start();
+    await openAndClose(transcription);
 
     transcription.startChunksRecording();
 
@@ -124,23 +123,20 @@ describe.skip('transcription', () => {
 
   test('transcription of audio recording with overlapping chunks', { timeout: 20_000 }, async () => {
     const trigger = new Trigger<TranscriptSegment[]>({ autoReset: true });
-    const transcription = new Transcriber({
-      prefixedChunksAmount: 1,
-    });
     const recorder = new MockAudioRecorder({
-      onChunk: (chunk) => transcription.onChunk(chunk), //
       buffer: await readFile('test.wav'),
       chunkDuration: 3_000,
     });
-    transcription.setOnTranscription(async (segments) => {
-      log.info('transcription', { segments });
-      trigger.wake(segments);
+    const transcription = new Transcriber({
+      recorder,
+      onSegments: async (segments) => {
+        log.info('transcription', { segments });
+        trigger.wake(segments);
+      },
+      prefixedChunksAmount: 1,
     });
-    transcription.setWavConfig({
-      sampleRate: recorder.sampleRate,
-      bitDepthCode: '16',
-    });
-    await recorder.start();
+
+    await openAndClose(transcription);
 
     transcription.startChunksRecording();
     recorder.emitChunk();
@@ -170,27 +166,27 @@ describe.skip('transcription', () => {
 });
 
 @trace.resource()
-class MockAudioRecorder extends AudioRecorder {
+class MockAudioRecorder implements AudioRecorder {
   public chunks: AudioChunk[] = [];
   public wav: WaveFile;
   public chunkDuration: number;
+  private _onChunk?: (chunk: AudioChunk) => void = undefined;
 
-  constructor({
-    onChunk,
-    buffer,
-    chunkDuration,
-  }: {
-    onChunk: (chunk: AudioChunk) => void;
-    buffer: Uint8Array;
-    chunkDuration: number;
-  }) {
-    super(onChunk);
+  constructor({ buffer, chunkDuration }: { buffer: Uint8Array; chunkDuration: number }) {
     this.wav = new WaveFile(buffer);
     this.chunkDuration = chunkDuration;
   }
 
-  get sampleRate() {
-    return (this.wav.fmt as any).sampleRate;
+  get wavConfig() {
+    return {
+      channels: 1,
+      sampleRate: (this.wav.fmt as any).sampleRate,
+      bitDepthCode: '16',
+    };
+  }
+
+  setOnChunk(onChunk: (chunk: AudioChunk) => void) {
+    this._onChunk = onChunk;
   }
 
   /**
@@ -202,7 +198,7 @@ class MockAudioRecorder extends AudioRecorder {
       return;
     }
 
-    this._onChunk(chunk);
+    this._onChunk!(chunk);
   }
 
   @trace.span()
@@ -210,7 +206,8 @@ class MockAudioRecorder extends AudioRecorder {
     log.info('start mock audio recorder', { wavParams: this.wav.fmt });
     const now = Date.now();
     const samples = this.wav.getSamples();
-    const increment = this.sampleRate * (this.chunkDuration / 1000);
+    const sampleRate = this.wavConfig.sampleRate;
+    const increment = sampleRate * (this.chunkDuration / 1000);
     for (let i = 0; i < samples.length; i += increment) {
       const chunk = samples.slice(i, i + increment);
       this.chunks.push({

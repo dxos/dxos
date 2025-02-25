@@ -14,6 +14,12 @@ export type AudioChunk = {
   data: Float64Array;
 };
 
+export type WavConfig = {
+  channels: number;
+  sampleRate: number;
+  bitDepthCode: string;
+};
+
 /**
  * Records MediaStreamTrack to Uint8Array 16-bit PCM data.
  * The data is passed to the onChunk callback with the timestamp of the chunk.
@@ -30,20 +36,21 @@ export type AudioChunk = {
  *        chunk   chunk   chunk   chunk
  *
  */
-export abstract class AudioRecorder {
-  constructor(
-    /**
-     * Callback for receiving audio chunks.
-     */
-    protected readonly _onChunk: (chunk: AudioChunk) => void,
-  ) {}
+export interface AudioRecorder {
+  wavConfig: WavConfig;
+
+  /**
+   * Sets callback for receiving audio chunks.
+   */
+  setOnChunk(onChunk: (chunk: AudioChunk) => void): void;
 
   /**
    * Starts the recorder.
    */
-  abstract start(): Promise<void>;
+  start(): Promise<void>;
+
   /**
    * Stops the recorder.
    */
-  abstract stop(): Promise<void>;
+  stop(): Promise<void>;
 }

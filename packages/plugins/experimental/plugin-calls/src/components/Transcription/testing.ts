@@ -43,14 +43,6 @@ export const useAudio = (audioUrl: string): UseAudioState => {
           },
           { once: true },
         );
-        audio.addEventListener(
-          'ended',
-          () => {
-            log.info('stream ended');
-            URL.revokeObjectURL(audio.src);
-          },
-          { once: true },
-        );
         audio.load();
       });
 

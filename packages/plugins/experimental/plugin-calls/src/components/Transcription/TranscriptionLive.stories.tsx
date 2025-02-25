@@ -8,6 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
@@ -28,20 +29,26 @@ const Render = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; trans
     if (stream && audioElement.current) {
       audioElement.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, audioElement.current]);
 
   // Playing state.
   const [playing, setPlaying] = useState(false);
   useEffect(() => {
+    if (!audio) {
+      log.warn('no audio');
+      return;
+    }
+
     if (playing) {
-      void audio?.play();
+      void audio.play();
     } else {
-      void audio?.pause();
+      void audio.pause();
     }
   }, [audio, playing]);
 
   // Start transcription.
   const echoClient = useEdgeClient();
+  // It sometimes do not start transcription.
   const isSpeaking = useIsSpeaking(track);
   useTranscription({
     author: 'test',

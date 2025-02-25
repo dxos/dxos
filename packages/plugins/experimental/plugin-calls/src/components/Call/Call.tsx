@@ -34,6 +34,7 @@ export const Call: FC<ThemedClassName> = ({ classNames }) => {
   // Broadcast status over swarm.
   const [raisedHand, setRaisedHand] = useState(false);
   useBroadcastStatus({
+    transcription: ai.transcription,
     peer,
     user: self,
     userMedia,
