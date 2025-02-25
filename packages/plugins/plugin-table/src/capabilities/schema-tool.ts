@@ -73,7 +73,7 @@ export const schemaTools = [
     name: 'schema_create',
     description: 'Create a new schema with the provided definition.',
     schema: S.Struct({
-      typename: Format.DXN.annotations({
+      typename: Format.URL.annotations({
         description: 'The fully qualified schema typename. eg: example.com/type-name',
       }),
       properties: S.Array(PropertyDefinitionSchema).pipe(

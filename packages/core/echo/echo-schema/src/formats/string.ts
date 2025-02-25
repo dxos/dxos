@@ -78,7 +78,7 @@ export const Regex = S.String.annotations({
  * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
 export const URL = S.String.pipe(
-  S.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/),
+  S.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
   S.annotations({
     [FormatAnnotationId]: FormatEnum.URL,
     [AST.TitleAnnotationId]: 'URL',
