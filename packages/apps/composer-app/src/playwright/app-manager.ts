@@ -42,7 +42,6 @@ export class AppManager {
     this.page = page;
 
     await this.isAuthenticated({ timeout: 10_000 });
-    await this.confirmRecoveryCode();
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
