@@ -13,7 +13,7 @@ import { isActionLike, type NodeArg } from '@dxos/app-graph';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
-import { Path } from '@dxos/react-ui-mosaic';
+import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { StorybookNavTree } from '../stories/StorybookNavTree';
