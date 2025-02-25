@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { type ReactiveObject, create } from '@dxos/live-object';
-import { Path } from '@dxos/react-ui-mosaic';
+import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from './capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
