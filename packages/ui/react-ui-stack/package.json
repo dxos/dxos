@@ -42,7 +42,6 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@fluentui/react-tabster": "9.23.3",

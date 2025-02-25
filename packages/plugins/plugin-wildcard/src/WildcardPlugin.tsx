@@ -5,11 +5,17 @@
 import React, { type Ref } from 'react';
 
 import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import { Wildcard } from './components';
 import { meta } from './meta';
 import translations from './translations';
+
+export const isTileProps = (
+  props: Record<string, unknown>,
+): props is { path: 'string'; item: { id: string; [key: string]: any } } =>
+  typeof props.path === 'string' && typeof props.item === 'object' && props.item
+    ? 'id' in props.item && typeof props.item.id === 'string'
+    : false;
 
 // TODO(burdon): Rename CardPlugin?
 export const WildcardPlugin = () =>
@@ -33,7 +39,7 @@ export const WildcardPlugin = () =>
             component: ({ data, role, ...props }, forwardedRef) => {
               const object = data?.subject;
               const cardProps = { ...props, item: (object as any)?.object ?? object };
-              return isTileComponentProps(cardProps) ? (
+              return isTileProps(cardProps) ? (
                 <Wildcard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
               ) : null;
             },

@@ -15,7 +15,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
-import { Path } from '@dxos/react-ui-mosaic';
+import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { StorybookNavTree } from './StorybookNavTree';

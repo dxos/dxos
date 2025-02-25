@@ -777,9 +777,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -5894,9 +5891,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -6285,9 +6279,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -6345,9 +6336,6 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../../ui/react-ui-searchlist
@@ -6916,9 +6904,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7326,9 +7311,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7508,9 +7490,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
@@ -8413,9 +8392,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
@@ -8744,9 +8720,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -8872,9 +8845,6 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../ui/react-ui-card
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -11207,9 +11177,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../react-ui-text-tooltip
@@ -11530,9 +11497,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11962,9 +11926,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

@@ -24,8 +24,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*"
+    "@dxos/react-ui-card": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

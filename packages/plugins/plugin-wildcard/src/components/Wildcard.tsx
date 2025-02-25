@@ -2,18 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { DropdownMenu, Input } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-card';
-import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import { DropdownMenu, Input, type ThemedClassName } from '@dxos/react-ui';
+import { Card, type CardRootProps } from '@dxos/react-ui-card';
 import { mx } from '@dxos/react-ui-theme';
 
-const Wildcard: MosaicTileComponent<any> = forwardRef(
-  (
-    { classNames, isDragging, draggableStyle, draggableProps, item: object, grow, debug, onSelect, onAction },
-    forwardRef,
-  ) => {
+type WildcardProps = ThemedClassName<
+  ComponentPropsWithRef<'div'> & {
+    item: { id: string; [key: string]: any };
+    onSelect?: () => void;
+    onAction?: (arg: any) => void;
+    debug?: boolean;
+  } & Pick<CardRootProps, 'grow'>
+>;
+
+const Wildcard = forwardRef<HTMLDivElement, WildcardProps>(
+  ({ classNames, item: object, grow, onSelect, onAction, debug }, forwardRef) => {
     if (!object) {
       return <div>INVALID OBJECT</div>;
     }
@@ -34,10 +39,10 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
 
     // TODO(burdon): Should this include the drag handle or just the content?
     return (
-      <div role='none' ref={forwardRef} className='flex w-full' style={draggableStyle}>
-        <Card.Root classNames={mx('w-full snap-center', isDragging && 'opacity-20', classNames)} grow={grow}>
+      <div role='none' ref={forwardRef} className='flex w-full'>
+        <Card.Root classNames={mx('w-full snap-center', classNames)} grow={grow}>
           <Card.Header onDoubleClick={() => onSelect?.()}>
-            <Card.DragHandle {...draggableProps} />
+            <Card.DragHandle />
             {label && (
               <Input.Root>
                 <Input.TextInput
