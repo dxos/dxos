@@ -2,9 +2,14 @@
 import glob from 'glob';
 import madge from 'madge';
 
-const files = glob.sync('packages/**/src/**/*.{ts,tsx}', {
+let files = glob.sync('packages/**/src/**/*.{ts,tsx}', {
   ignore: ['**/gen/**', '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/scripts/**'],
 });
+
+const IGNORED = ['gen', 'dist'];
+
+// TODO(dmaretskyi): Glob ignore is not working.
+files = files.filter((file) => !IGNORED.some((ignored) => file.includes(ignored)));
 
 console.log(`Running circular dependency check on ${files.length} files`);
 
