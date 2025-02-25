@@ -120,7 +120,7 @@ export class Transcriber extends Resource {
   }
 
   private async _transcribe() {
-    log.info('Transcribing audio chunks');
+    log.info('transcribing audio chunks...');
     const chunks = this._audioChunks;
 
     const audio = await this._mergeAudioChunks(chunks);
@@ -176,7 +176,7 @@ export class Transcriber extends Resource {
       segments: WhisperSegment[];
     } = await response.json();
 
-    log.info('Transcription response', {
+    log.info('transcription response', {
       segments,
       string: segments.map((segments) => segments.text).join(' '),
     });

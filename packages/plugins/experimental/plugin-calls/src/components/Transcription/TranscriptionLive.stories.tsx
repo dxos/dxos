@@ -8,7 +8,6 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
@@ -17,59 +16,14 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcription } from './Transcription';
+import { useAudio } from './testing';
 import { useIsSpeaking, useTranscription } from '../../hooks';
 import { type TranscriptBlock } from '../../types';
 import { randomQueueDxn } from '../../utils';
 
 const Render = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; transcriptUrl: string }) => {
-  // Create the stream.
-  const [{ stream, track, audio }, setStream] = useState<{
-    stream?: MediaStream;
-    track?: MediaStreamTrack;
-    audio?: HTMLAudioElement;
-  }>({});
-  useEffect(() => {
-    const t = setTimeout(async () => {
-      if (!audioElement.current) {
-        return;
-      }
-
-      const response = await fetch(audioUrl);
-      const blob = await response.blob();
-      log.info('loaded audio', { audioUrl, status: response.status });
-
-      // TODO(burdon): Doesn't load entire file.
-      const audio = new Audio();
-      {
-        audio.src = URL.createObjectURL(blob);
-        await new Promise((resolve) => {
-          audio.addEventListener('canplay', resolve, { once: true });
-          audio.load();
-        });
-
-        URL.revokeObjectURL(audio.src);
-      }
-      log.info('ok');
-
-      const ctx = new AudioContext();
-
-      const destination = ctx.createMediaStreamDestination();
-      destination.channelCount = 1;
-
-      const source = ctx.createMediaElementSource(audio);
-      source.connect(destination);
-
-      setStream({
-        stream: destination.stream,
-        track: destination.stream.getAudioTracks()[0],
-        audio,
-      });
-    });
-
-    return () => clearTimeout(t);
-  }, [audioUrl]);
-
   const audioElement = useRef<HTMLAudioElement>(null);
+  const { stream, track, audio } = useAudio(audioUrl);
   useEffect(() => {
     if (stream && audioElement.current) {
       audioElement.current.srcObject = stream;

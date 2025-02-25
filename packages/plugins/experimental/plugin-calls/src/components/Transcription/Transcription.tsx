@@ -19,7 +19,7 @@ export type TranscriptionProps = {
 
 export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
-  const hoverButton = 'p-1 min-bs-1 transition-opacity duration-250 opacity-10 group-hover:opacity-100'
+  const hoverButton = 'p-1 min-bs-1 transition-opacity duration-250 opacity-10 group-hover:opacity-100';
 
   return (
     <div role='list' className='flex flex-col grow gap-2 m-1'>
@@ -58,7 +58,7 @@ export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
                   iconOnly
                   size={4}
                   classNames={hoverButton}
-                  />
+                />
               </div>
             </div>
           ))}
