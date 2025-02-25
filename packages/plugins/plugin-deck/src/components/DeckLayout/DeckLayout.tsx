@@ -165,6 +165,8 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
+  console.log('[dl]', dialogType, dialogOpen, dialogContent, dialogBlockAlign);
+
   return (
     <Popover.Root
       modal
@@ -290,10 +292,20 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
       </Popover.Portal>
 
       {/* Global dialog. */}
-      <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
-        <Dialog.Overlay blockAlign={dialogBlockAlign}>
+      {/* TODO(thure): End block alignment affecting `modal` and whether the surface renders in an overlay is tailored
+            to the needs of the ambient chat dialog. As the feature matures, consider separating concerns. */}
+      <Dialog.Root
+        modal={dialogBlockAlign !== 'end'}
+        open={dialogOpen}
+        onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}
+      >
+        {dialogBlockAlign === 'end' ? (
           <Surface role='dialog' data={dialogContent} limit={1} />
-        </Dialog.Overlay>
+        ) : (
+          <Dialog.Overlay blockAlign={dialogBlockAlign}>
+            <Surface role='dialog' data={dialogContent} limit={1} />
+          </Dialog.Overlay>
+        )}
       </Dialog.Root>
 
       {/* Global toasts. */}

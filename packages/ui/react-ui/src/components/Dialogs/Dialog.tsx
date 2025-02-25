@@ -106,17 +106,22 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
 
 DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
-type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps>;
+type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps> & { inOverlayLayout?: boolean };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
       <DialogContentPrimitive
         {...props}
-        className={tx('dialog.content', 'dialog', { inOverlayLayout }, classNames)}
+        className={tx(
+          'dialog.content',
+          'dialog',
+          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout },
+          classNames,
+        )}
         ref={forwardedRef}
       >
         {children}
