@@ -11,6 +11,7 @@ import { faker } from '@dxos/random';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Grid, GridCell, type GridProps, type GridCellProps } from './Grid';
+import { ResponsiveGrid } from './ResponsiveGrid';
 
 type TestItem = {
   id: string;
@@ -85,4 +86,8 @@ export const Default: Story = {
     items,
     expanded: items[0],
   },
+};
+
+export const Responsive: Story = {
+  render: (args) => <ResponsiveGrid items={items} pinned={items[0].id} />,
 };
