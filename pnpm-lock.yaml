@@ -335,6 +335,9 @@ importers:
       serve:
         specifier: ^14.1.2
         version: 14.1.2
+      shx:
+        specifier: ^0.3.3
+        version: 0.3.4
       syncpack:
         specifier: ^8.2.4
         version: 8.2.4

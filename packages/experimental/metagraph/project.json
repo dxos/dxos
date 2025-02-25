@@ -16,7 +16,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "true"
+          "shx true"
         ]
       }
     },
