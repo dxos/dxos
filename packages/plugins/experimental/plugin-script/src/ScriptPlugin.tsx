@@ -10,7 +10,7 @@ import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import { Artifact, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
@@ -66,5 +66,10 @@ export const ScriptPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact`,
+      activatesOn: Events.Startup,
+      activate: Artifact,
     }),
   ]);

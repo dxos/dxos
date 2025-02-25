@@ -10,12 +10,12 @@ import { FormatAnnotationId, FormatEnum } from './types';
  * Decentralized name.
  */
 export const DXN = S.NonEmptyString.pipe(
-  S.pattern(/^([a-z][\da-z.-]+)\.([a-z.]{2,6})([/\w-]*)*\/?$/),
+  S.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
   S.annotations({
     [FormatAnnotationId]: FormatEnum.DXN,
     [AST.TitleAnnotationId]: 'DXN',
     [AST.DescriptionAnnotationId]: 'DXN URI',
-    [AST.ExamplesAnnotationId]: ['example.com/type/MyType'],
+    [AST.ExamplesAnnotationId]: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
   }),
 );
 

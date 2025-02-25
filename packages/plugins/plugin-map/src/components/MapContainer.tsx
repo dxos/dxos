@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useControlledValue } from '@dxos/react-ui';
+import { useControlledState } from '@dxos/react-ui';
 import { type MapCanvasProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -21,7 +21,7 @@ export type MapContainerProps = { role?: string; type?: MapControlType; map?: Ma
 >;
 
 export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainerProps) => {
-  const [type, setType] = useControlledValue(_type);
+  const [type, setType] = useControlledState(_type);
   const markers = useMarkers(map);
 
   return (

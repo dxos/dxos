@@ -29,7 +29,6 @@ const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
   return useCallback(
     ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps }) => {
       const composedData = { prop, schema, ...baseData };
-
       if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
         return undefined;
       }

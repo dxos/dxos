@@ -61,6 +61,7 @@ export interface FunctionContextAi {
 /**
  * Event payload.
  */
+// TODO(dmaretskyi): Update type definitions to match the actual payload.
 export type FunctionEvent<TData = {}, TMeta = {}> = {
   data: FunctionEventMeta<TMeta> & TData;
 };

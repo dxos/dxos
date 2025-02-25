@@ -3,6 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
+import { DescriptionAnnotationId } from '@effect/schema/AST';
 
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
@@ -54,6 +55,7 @@ export namespace Format {
  * List of annotations for JSON encoding/decoding.
  */
 export const CustomAnnotations = {
+  description: DescriptionAnnotationId,
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
 };

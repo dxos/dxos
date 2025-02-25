@@ -5,7 +5,8 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -23,7 +24,7 @@ import { OBJECT_DIAGNOSTICS, type QuerySource, type QuerySourceProvider } from '
 import { type Filter, type QueryResult } from '../query';
 
 export type LoadObjectParams = {
-  spaceKey: PublicKey;
+  spaceId: SpaceId;
   objectId: string;
   documentId: string;
 };
@@ -193,8 +194,9 @@ export class IndexQuerySource implements QuerySource {
       });
     }
 
+    invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
     const object = await this._params.objectLoader.loadObject({
-      spaceKey: result.spaceKey,
+      spaceId: result.spaceId,
       objectId: result.id,
       documentId: result.documentId,
     });

@@ -44,6 +44,12 @@ export type GetNotarizationResponseBody = {
   awaitingNotarization: { credentials: string[] };
 };
 
+export type ExecuteWorkflowResponseBody = {
+  success: boolean;
+  reason?: string;
+  output?: any;
+};
+
 export type PostNotarizationRequestBody = {
   credentials: string[];
 };
@@ -119,7 +125,15 @@ export type UploadFunctionResponseBody = {
   functionId: string;
   version: string;
   meta: {
+    description?: string;
+    /**
+     * JSON Schema for the input of the function.
+     */
     inputSchema?: object;
+    /**
+     * JSON Schema for the output of the function.
+     */
+    outputSchema?: object;
   };
 };
 

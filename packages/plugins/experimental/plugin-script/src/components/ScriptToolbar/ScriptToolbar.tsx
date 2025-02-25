@@ -10,12 +10,14 @@ import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';
 import { createGapSeparator, MenuProvider, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
 
-import { createDeploy } from './deploy';
-import { createFormat } from './format';
-import { createTemplateSelect } from './templateSelect';
-import { useToolbarAction } from './useToolbarAction';
-import { type ScriptToolbarState } from './useToolbarState';
-import { createView } from './view';
+import {
+  type ScriptToolbarState,
+  createDeploy,
+  createFormat,
+  createTemplateSelect,
+  createView,
+  useToolbarAction,
+} from '../../hooks';
 
 export type ScriptToolbarProps = ThemedClassName<{
   role?: string;

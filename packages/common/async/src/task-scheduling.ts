@@ -28,6 +28,10 @@ export class DeferredTask {
     private readonly _callback: () => Promise<void>,
   ) {}
 
+  get scheduled() {
+    return this._scheduled;
+  }
+
   /**
    * Schedule the task to run asynchronously.
    */

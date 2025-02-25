@@ -168,9 +168,9 @@ export class OnboardingManager {
         const newCredential = await upgradeCredential({ hubUrl: this._hubUrl, presentation });
         await this._client.halo.writeCredentials([newCredential]);
       }
-    } catch (error) {
+    } catch (err) {
       // If failed to upgrade, log the error and continue. Most likely offline.
-      log.catch(error);
+      log.catch(err);
     }
   }
 

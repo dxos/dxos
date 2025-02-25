@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useTrackProps, type ThemedClassName } from '@dxos/react-ui';
+import { useDynamicRef, useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useBoardContext } from './context';
@@ -30,7 +30,8 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
   useTrackProps({ classNames, piece, orientation, bounds, label, Component }, Piece.displayName, false);
   const { model } = useBoardContext();
 
-  const { dragging: isDragging } = useBoardContext();
+  const { dragging: isDragging, promoting } = useBoardContext();
+  const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
 
@@ -65,20 +66,20 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
           nativeSetDragImage,
         });
       },
-      canDrag: () => model?.turn === piece.side,
+      canDrag: () => !promotingRef.current && model?.turn === piece.side,
       onDragStart: () => setDragging(true),
-      onDrop: ({ location }) => {
-        const drop = location.current.dropTargets[0].data;
-        const loc = drop.location;
-        if (isLocation(loc)) {
-          setCurrent((current) => ({ ...current, location: loc }));
+      onDrop: ({ location: { current } }) => {
+        const location = current.dropTargets[0].data.location;
+        if (isLocation(location)) {
+          setCurrent((current) => ({ ...current, location }));
         }
+
         setDragging(false);
       },
     });
   }, [model, piece]);
 
-  // Update position independently of render cycle (otherwise animation is interrupted).
+  // Must update position independently of render cycle (otherwise animation is interrupted).
   useEffect(() => {
     requestAnimationFrame(() => {
       if (!ref.current || !bounds) {

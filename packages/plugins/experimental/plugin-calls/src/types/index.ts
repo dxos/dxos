@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './defs';
+export * from './calls';
+export * from './transcript';
 export * from './types';

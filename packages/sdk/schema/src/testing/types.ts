@@ -109,4 +109,26 @@ export namespace Testing {
     typename: 'example.com/type/Project',
     version: '0.1.0',
   })(ProjectSchema.fields) {}
+
+  //
+  // Email
+  //
+
+  export const EmailSchema = S.Struct({
+    from: S.String,
+    to: S.String,
+    subject: S.String,
+    created: S.String,
+    body: S.String,
+    category: S.String,
+  }).annotations({
+    [LabelAnnotationId]: 'subject',
+  });
+
+  export type EmailSchemaType = S.Schema.Type<typeof EmailSchema>;
+
+  export class EmailType extends TypedObject({
+    typename: 'example.com/type/Email',
+    version: '0.1.0',
+  })(EmailSchema.fields, { partial: true }) {}
 }

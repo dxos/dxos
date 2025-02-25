@@ -5,17 +5,26 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { getSpace, isEchoObject, type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AssistantPanel, AutomationPanel, AmbientChatDialog } from '../components';
+import { AmbientChatDialog, AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
 import { AUTOMATION_PLUGIN, AMBIENT_CHAT_DIALOG } from '../meta';
+import { AIChatType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${AUTOMATION_PLUGIN}/assistant`,
-      role: 'complementary--assistant',
-      component: ({ data }) => <AssistantPanel subject={data.subject} />,
+      id: `${AUTOMATION_PLUGIN}/ai-chat`,
+      role: 'article',
+      filter: (data): data is { subject: AIChatType } => data.subject instanceof AIChatType,
+      component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
+    }),
+    createSurface({
+      id: `${AUTOMATION_PLUGIN}/service-registry`,
+      role: 'complementary--service-registry',
+      component: ({ data }) => (
+        <ServiceRegistry space={isSpace(data.subject) ? data.subject : getSpace(data.subject)!} />
+      ),
     }),
     createSurface({
       id: AMBIENT_CHAT_DIALOG,

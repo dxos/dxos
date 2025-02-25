@@ -40,6 +40,12 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../experimental/artifact"
+    },
+    {
+      "path": "../../experimental/assistant"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

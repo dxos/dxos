@@ -5,8 +5,22 @@
 import { type ColorAliases, type ColorSememes } from './types';
 
 export const surfaceCadence = {
-  dark: [850, 800, 775, 710, 695, 680, 650],
-  light: [25, 35, 70, 80, 90],
+  dark: [
+    850, //
+    800,
+    775,
+    710,
+    695,
+    680,
+    650,
+  ],
+  light: [
+    25, //
+    35,
+    70,
+    80,
+    90,
+  ],
 };
 
 export const systemSememes = {
@@ -111,8 +125,8 @@ export const systemSememes = {
 
 export const systemAliases = {
   // neutral
-  'surface-0': ['attention', 'currentRelated'],
-  'surface-10': ['deck'],
+  'surface-0': ['deck'],
+  'surface-10': ['attention', 'currentRelated'],
   'surface-10t': ['scrim'],
   'surface-20': ['baseSurface'],
   'surface-20t': ['modalSurface'],

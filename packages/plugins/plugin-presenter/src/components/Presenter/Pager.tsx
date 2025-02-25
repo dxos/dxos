@@ -5,7 +5,7 @@
 import { Play, X, CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import React, { type FC, useEffect } from 'react';
 
-import { Button, useControlledValue } from '@dxos/react-ui';
+import { Button, useControlledState } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 export type PagerProps = {
@@ -17,7 +17,7 @@ export type PagerProps = {
 };
 
 export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
-  const [index, setIndex] = useControlledValue(controlledIndex);
+  const [index, setIndex] = useControlledState(controlledIndex);
   useEffect(() => {
     onChange?.(index);
   }, [index]);

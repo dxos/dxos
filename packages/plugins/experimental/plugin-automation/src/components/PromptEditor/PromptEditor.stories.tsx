@@ -28,7 +28,7 @@ const template = [
   '{input}',
 ].join('\n');
 
-const DefaultStory = () => {
+const Render = () => {
   const client = useClient();
   const [chain] = useState(() => {
     const space = client.spaces.default;
@@ -49,8 +49,8 @@ const DefaultStory = () => {
 export const Default = {};
 
 const meta: Meta = {
-  title: 'plugins/plugin-automation/PromptTemplate',
-  render: DefaultStory,
+  title: 'plugins/plugin-automation/PromptEditor',
+  render: Render,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
     withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),

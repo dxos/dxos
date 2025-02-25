@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { runInContextAsync } from '@dxos/async';
+import { runInContextAsync, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -140,8 +140,8 @@ export class SpaceStateMachine implements SpaceState {
   /**
    * @param credential Message to process.
    * @param fromFeed Key of the feed where this credential is recorded.
-   * @synchronized
    */
+  @synchronized
   async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
     if (credential.id) {
       if (this._processedCredentials.has(credential.id)) {
