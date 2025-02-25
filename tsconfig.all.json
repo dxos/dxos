@@ -370,9 +370,6 @@
       "path": "packages/plugins/plugin-token-manager/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-wildcard/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {

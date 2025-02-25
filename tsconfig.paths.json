@@ -199,9 +199,6 @@
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
       ],
-      "@dxos/plugin-wildcard": [
-        "packages/plugins/plugin-wildcard/src/index.ts"
-      ],
       "@dxos/plugin-wnfs": [
         "packages/plugins/plugin-wnfs/src/index.ts"
       ],

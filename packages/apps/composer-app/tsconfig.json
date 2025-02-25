@@ -186,9 +186,6 @@
       "path": "../../plugins/plugin-token-manager"
     },
     {
-      "path": "../../plugins/plugin-wildcard"
-    },
-    {
       "path": "../../plugins/plugin-wnfs"
     },
     {
