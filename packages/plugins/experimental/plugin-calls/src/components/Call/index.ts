@@ -3,5 +3,3 @@
 //
 
 export * from './Call';
-export * from './PullAudioTracks';
-export * from './PullVideoTrack';

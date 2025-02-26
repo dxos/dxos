@@ -12,5 +12,7 @@ export * from './useCallState';
 export * from './useDebugEnabled';
 export * from './useIsSpeaking';
 export * from './usePeerConnection';
+export * from './usePullAudioTracks';
+export * from './usePullVideoTrack';
 export * from './useTranscription';
 export * from './useUserMedia';

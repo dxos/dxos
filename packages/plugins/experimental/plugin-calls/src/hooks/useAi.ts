@@ -11,6 +11,7 @@ export type Ai = {
   setTranscription: (transcription: TranscriptionState) => void;
 };
 
+// TODO(burdon): Move into local context.
 export const useAi = (): Ai => {
   const [transcription, setTranscription] = useState<TranscriptionState>({
     enabled: false,

@@ -7,9 +7,8 @@ import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
-import { useCallContext, useSubscribedState } from '../../hooks';
+import { useCallContext, usePulledAudioTrack, usePulledVideoTrack, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
-import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 

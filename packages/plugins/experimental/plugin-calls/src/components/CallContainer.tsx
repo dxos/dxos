@@ -3,7 +3,7 @@
 //
 
 import { pipe } from 'effect';
-import React, { useCallback, type FC } from 'react';
+import React, { type PropsWithChildren, useCallback, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
@@ -15,7 +15,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Call } from './Call';
 import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
 import { Lobby } from './Lobby';
-import { useCallContext } from '../hooks';
+import { type CallContextType, useCallContext } from '../hooks';
 import { type TranscriptType, CallsAction } from '../types';
 
 export type CallContainerProps = {
@@ -43,15 +43,30 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   return (
     <CallContextProvider roomId={roomId} onTranscription={target ? handleTranscription : undefined}>
       <StackItem.Content toolbar={false} classNames='w-full'>
-        <Container />
+        <WithContext condition={(context) => !context.joined}>
+          <Lobby />
+        </WithContext>
+        <WithContext condition={(context) => context.joined}>
+          <Call.Root>
+            <Call.Room />
+            <Call.Toolbar />
+          </Call.Root>
+        </WithContext>
       </StackItem.Content>
     </CallContextProvider>
   );
 };
 
-const Container = () => {
-  const { joined } = useCallContext();
-  return joined ? <Call /> : <Lobby />;
-};
-
 export default CallContainer;
+
+const WithContext: FC<PropsWithChildren<{ condition: (context: CallContextType) => boolean }>> = ({
+  children,
+  condition,
+}) => {
+  const context = useCallContext();
+  if (!condition(context)) {
+    return null;
+  }
+
+  return <>{children}</>;
+};

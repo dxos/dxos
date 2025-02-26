@@ -77,7 +77,6 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   );
   const pushedScreenshareTrack = useSubscribedState(pushedScreenshareTrack$);
 
-  // TODO(burdon): Can we simplify? e.g., remove observers?
   // TODO(burdon): Split root context vs. local call context.
   const context: CallContextType = {
     roomId,
