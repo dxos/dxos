@@ -243,7 +243,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
    */
   _rebuild() {
     if (this._isDirty || this._schema == null) {
-      this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
+      this._schema = toEffectSchema(getSnapshot(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
   }
@@ -265,18 +265,21 @@ const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignatu
   } as any;
 };
 
-// TODO(dmaretskyi): Change to `getSnapshot`.
-const unwrapProxy = (jsonSchema: any): any => {
+/**
+ * Returns a non-reactive snapshot of the given live object.
+ */
+// TODO(wittjosiah): Types.
+export const getSnapshot = (jsonSchema: any): any => {
   if (typeof jsonSchema !== 'object') {
     return jsonSchema;
   }
   if (Array.isArray(jsonSchema)) {
-    return jsonSchema.map(unwrapProxy);
+    return jsonSchema.map(getSnapshot);
   }
 
   const result: any = {};
   for (const key in jsonSchema) {
-    result[key] = unwrapProxy(jsonSchema[key]);
+    result[key] = getSnapshot(jsonSchema[key]);
   }
 
   return result;

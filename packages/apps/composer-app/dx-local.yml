@@ -7,8 +7,7 @@ runtime:
 
   services:
     edge:
-#      url: https://edge-main.dxos.workers.dev/
-      url: http://localhost:8787
+      url: https://edge-main.dxos.workers.dev/
     agentHosting:
       type: LOCAL_TESTING
     ai:

@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { HttpClient, HttpClientRequest } from '@effect/platform';
+import { Effect, pipe } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
+import { getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { create, getMeta } from '@dxos/live-object';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -334,6 +336,25 @@ export const registry: Record<NodeType, Executable> = {
   ['function' as const]: defineComputeNode({
     input: AnyInput,
     output: AnyOutput,
+    exec: synchronizedComputeFunction((input, node) => {
+      invariant(node?.function != null);
+      const path = getUserFunctionUrlInMetadata(getMeta(node.function));
+      // TODO(wittjosiah): Get from config.
+      const baseUrl = '';
+      return Effect.gen(function* () {
+        const client = yield* HttpClient.HttpClient;
+        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
+        return yield* pipe(
+          HttpClientRequest.post(`${baseUrl}${path}`),
+          HttpClientRequest.setHeader('Content-Type', 'application/json'),
+          HttpClientRequest.bodyText(JSON.stringify(input)),
+          client.execute,
+          Effect.flatMap((res) => res.json),
+          Effect.flatMap((res) => S.decodeUnknown(outputSchema)(res)),
+          Effect.scoped,
+        );
+      });
+    }),
   }),
 
   ['gpt' as const]: defineComputeNode({

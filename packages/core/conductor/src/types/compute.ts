@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type HttpClient } from '@effect/platform';
 import { Effect, type Scope } from 'effect';
 
 import { type S } from '@dxos/echo-schema';
@@ -86,7 +87,13 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   node?: ComputeNode, // TODO(burdon): Why could node be undefined?
 ) => ComputeEffect<ValueBag<O>>;
 
-export type ComputeRequirements = EventLogger | QueueService | GptService | SpaceService | Scope.Scope;
+export type ComputeRequirements =
+  | HttpClient.HttpClient
+  | EventLogger
+  | QueueService
+  | GptService
+  | SpaceService
+  | Scope.Scope;
 
 /**
  * For results of compute functions.

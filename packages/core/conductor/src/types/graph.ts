@@ -3,6 +3,7 @@
 //
 
 import { JsonSchemaType, Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
+import { FunctionType } from '@dxos/functions';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 export const ComputeValueType = S.Literal('string', 'number', 'boolean', 'object');
@@ -26,6 +27,9 @@ export const ComputeNode = S.extend(
 
     /** For composition nodes. */
     subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
+
+    /** For composition of function nodes. */
+    function: S.optional(Ref(FunctionType)),
 
     /**
      * For template nodes determines the type of the value.

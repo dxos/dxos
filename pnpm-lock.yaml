@@ -2444,6 +2444,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -2468,6 +2471,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.75.1
+        version: 0.75.1(effect@3.12.7)
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.7)
@@ -4316,6 +4322,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.75.1
+        version: 0.75.1(effect@3.12.7)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10776,6 +10785,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.75.1
+        version: 0.75.1(effect@3.12.7)
       chess.js:
         specifier: ^1.0.0
         version: 1.0.0
@@ -10802,11 +10814,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/storybook-utils
       '@effect/ai':
-        specifier: ^0.5.1
-        version: 0.5.2(@effect/platform@0.72.2(effect@3.12.7))(effect@3.12.7)
-      '@effect/platform':
-        specifier: ^0.72.1
-        version: 0.72.2(effect@3.12.7)
+        specifier: 0.8.0
+        version: 0.8.0(@effect/platform@0.75.1(effect@3.12.7))(effect@3.12.7)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -15101,16 +15110,16 @@ packages:
   '@dxos/automerge-wasm@0.17.1':
     resolution: {integrity: sha512-iFqAuNpoBuqXOCaB8l8uvm/8AfDMFD4HLhKKMmIeTGuLWtY3TbuyNF5XzUNE1slRBlVsg4orzCWh6IAiAPvB8A==}
 
-  '@effect/ai@0.5.2':
-    resolution: {integrity: sha512-W1vtDvvsKnM1CC/j0L4yg8EQo51bEvecV2UhpSpqdr32IuSvwkN5TVG6G1aNzJ2RXODAuVLOqDF+KinyiT/OzA==}
+  '@effect/ai@0.8.0':
+    resolution: {integrity: sha512-IqlMIL5gurllSvQNMBFIhWAJDs/W5qt98nbM+80QQDnvhCz34PmIKyaq5GaLwLk/RBTBALXSnQpTBSme38qigg==}
     peerDependencies:
-      '@effect/platform': ^0.72.2
-      effect: ^3.12.2
+      '@effect/platform': ^0.75.0
+      effect: ^3.12.6
 
-  '@effect/platform@0.72.2':
-    resolution: {integrity: sha512-7oWNTyrlkDoopA2kEm2s3M1VAJETnIK/bVlW4qqEVbKLern8znPotIx1fRNtTIUANPKhUMclC3Jt+R+3UEUdUw==}
+  '@effect/platform@0.75.1':
+    resolution: {integrity: sha512-YIrlMiRm4dGDaMtCwiLOwDK5AqtVIWGx4MkqBmYhQTqnthDdyg4j7rxbPvzaedsnn6EEaE7kIIKJVolBQsf3qw==}
     peerDependencies:
-      effect: ^3.12.2
+      effect: ^3.12.7
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
@@ -37180,12 +37189,12 @@ snapshots:
 
   '@dxos/automerge-wasm@0.17.1': {}
 
-  '@effect/ai@0.5.2(@effect/platform@0.72.2(effect@3.12.7))(effect@3.12.7)':
+  '@effect/ai@0.8.0(@effect/platform@0.75.1(effect@3.12.7))(effect@3.12.7)':
     dependencies:
-      '@effect/platform': 0.72.2(effect@3.12.7)
+      '@effect/platform': 0.75.1(effect@3.12.7)
       effect: 3.12.7
 
-  '@effect/platform@0.72.2(effect@3.12.7)':
+  '@effect/platform@0.75.1(effect@3.12.7)':
     dependencies:
       effect: 3.12.7
       find-my-way-ts: 0.1.5

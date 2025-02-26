@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { FetchHttpClient } from '@effect/platform';
 import { type Context, Effect, Either, Exit, Layer, Scope } from 'effect';
 
 import { type ImageContentBlock } from '@dxos/artifact';
@@ -349,7 +350,7 @@ export class ComputeGraphController extends Resource {
     const spaceLayer =
       services.spaceService != null ? Layer.succeed(SpaceService, services.spaceService) : SpaceService.empty;
 
-    return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer);
+    return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer, FetchHttpClient.layer);
   }
 
   private _createLogger(): Context.Tag.Service<EventLogger> {

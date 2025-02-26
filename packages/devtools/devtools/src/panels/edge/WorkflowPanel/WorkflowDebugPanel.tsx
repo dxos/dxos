@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { FetchHttpClient } from '@effect/platform';
 import { Effect, Layer, type Scope } from 'effect';
 // import { Ollama } from 'ollama';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
@@ -242,7 +243,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeR
     db: space.db,
   });
   const queueService = QueueService.notAvailable;
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService);
+  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer);
 };
 
 const inputTemplateFromAst = (ast: AST.AST): string => {
