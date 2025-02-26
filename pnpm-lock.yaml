@@ -5299,6 +5299,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
