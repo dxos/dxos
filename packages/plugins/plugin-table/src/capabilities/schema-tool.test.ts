@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 
 import { TypeNameSchema } from './schema-tool';
 
-describe('TYPENAME format', () => {
+describe('TypeNameSchema format', () => {
   const valid = [
     'example.com/us-cities',
     'dxos.org/Contact',
