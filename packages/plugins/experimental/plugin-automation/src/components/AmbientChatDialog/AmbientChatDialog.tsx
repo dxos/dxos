@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 
@@ -12,9 +13,24 @@ const preventDefault = (event: Event) => event.preventDefault();
 
 export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const [size, setSize] = useState<Size>('min-content');
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
-      <Dialog.Content onInteractOutside={preventDefault} classNames='pointer-events-auto' inOverlayLayout>
+      <Dialog.Content
+        onInteractOutside={preventDefault}
+        classNames='pointer-events-auto relative'
+        inOverlayLayout
+        {...resizeAttributes}
+        style={sizeStyle(size, 'vertical')}
+      >
+        <ResizeHandle
+          side='block-start'
+          defaultSize='min-content'
+          minSize={5}
+          fallbackSize={5}
+          signifierPosition='center'
+          onSizeChange={setSize}
+        />
         <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
         <Dialog.Close>
           <Icon icon='ph--x--regular' size={4} />
