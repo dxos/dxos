@@ -5,9 +5,11 @@
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { createContext, useContext } from 'react';
 
+import { type Size as DndSize } from '@dxos/react-ui-dnd';
+
 import { type Orientation, type Size } from './Stack';
 
-export type StackItemSize = number | 'min-content';
+export type StackItemSize = DndSize;
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
