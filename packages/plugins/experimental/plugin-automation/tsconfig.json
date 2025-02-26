@@ -77,6 +77,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../../ui/react-ui-editor"
     },
     {

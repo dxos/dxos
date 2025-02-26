@@ -50,10 +50,10 @@
       "path": "../react-ui-attention"
     },
     {
-      "path": "../react-ui-editor"
+      "path": "../react-ui-dnd"
     },
     {
-      "path": "../react-ui-mosaic"
+      "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-theme"

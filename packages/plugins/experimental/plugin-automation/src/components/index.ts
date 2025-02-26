@@ -4,5 +4,7 @@
 
 import { lazy } from 'react';
 
+export * from './AmbientChatDialog';
+
 export const AssistantPanel = lazy(() => import('./AssistantPanel'));
 export const AutomationPanel = lazy(() => import('./AutomationPanel'));

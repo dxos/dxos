@@ -27,9 +27,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/crypto"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
@@ -103,9 +100,6 @@
     },
     {
       "path": "../../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../../ui/react-ui-mosaic"
     },
     {
       "path": "../../../ui/react-ui-stack"

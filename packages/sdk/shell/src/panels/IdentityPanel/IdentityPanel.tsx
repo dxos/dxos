@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { IdentificationCard, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -12,7 +12,7 @@ import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Input, Toolbar, Tooltip, useClipboard, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Clipboard, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePickerToolbarButton } from '@dxos/react-ui-pickers';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
@@ -44,15 +44,13 @@ const IdentityHeading = ({
   onUpdateProfile,
   connectionState,
   onChangeConnectionState,
+  onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
   const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
-  const { textValue, setTextValue } = useClipboard();
-  const identityHex = identity.identityKey.toHex();
-  const publicKeyCopied = textValue === identityHex;
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
@@ -95,26 +93,28 @@ const IdentityHeading = ({
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
           <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Toolbar.Button
-                classNames='bs-[--rail-action]'
-                data-testid='update-profile-form-copy-key'
-                onClick={() => setTextValue(identityHex)}
-              >
-                <span className='sr-only'>
-                  {t(publicKeyCopied ? 'copy success label' : 'copy self public key label')}
-                </span>
-                <Key className={getSize(5)} />
-              </Toolbar.Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom'>
-                {t(publicKeyCopied ? 'copy success label' : 'copy self public key label')}
-                <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          <Clipboard.IconButton
+            classNames='bs-[--rail-action]'
+            data-testid='update-profile-form-copy-key'
+            label={t('copy self did label')}
+            value={identity.did}
+          />
+          {onManageCredentials && (
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Toolbar.Button classNames='bs-[--rail-action]' onClick={onManageCredentials}>
+                  <span className='sr-only'>{t('manage credentials label')}</span>
+                  <IdentificationCard className={getSize(5)} />
+                </Toolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content side='bottom'>
+                  {t('manage credentials label')}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          )}
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
@@ -154,6 +154,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     connectionState,
     onChangeConnectionState,
     onDone,
+    onManageCredentials,
     ...rest
   } = props;
   const { t } = useTranslation('os');
@@ -181,6 +182,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
           onUpdateProfile,
           connectionState,
           onChangeConnectionState,
+          onManageCredentials,
         }}
       />
       <Viewport.Root activeView={activeView}>

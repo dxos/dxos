@@ -54,6 +54,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     [hubUrl, identity],
   );
 
+  const handlePasskey = useCallback(async () => {
+    await dispatch(createIntent(ClientAction.RedeemPasskey));
+  }, [dispatch]);
+
   const handleJoinIdentity = useCallback(async () => {
     await dispatch(createIntent(ClientAction.JoinIdentity));
   }, [dispatch]);
@@ -128,6 +132,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       identity={identity}
       error={error}
       onSignup={handleSignup}
+      onPasskey={!identity && !spaceInvitationCode ? handlePasskey : undefined}
       onJoinIdentity={!identity && !spaceInvitationCode ? handleJoinIdentity : undefined}
       onRecoverIdentity={!identity && !spaceInvitationCode ? handleRecoverIdentity : undefined}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}

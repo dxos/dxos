@@ -5,17 +5,17 @@
 import React, { useEffect, useRef } from 'react';
 
 import { clientServiceBundle } from '@dxos/client-protocol';
+import { type BundleResult } from '@dxos/functions/bundler';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { type BundlerResult } from '../../bundler';
-
 export type FrameContainerProps = {
   containerUrl: string;
-  result: BundlerResult;
+  result: BundleResult;
   debug?: boolean;
 };
 
@@ -46,6 +46,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
   }, [iframeRef]);
 
   // Encodes compiled code via URL.
+  invariant(result.sourceHash, 'Source hash is required.');
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
   const src = result.bundle && `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(result.bundle)}`;
 

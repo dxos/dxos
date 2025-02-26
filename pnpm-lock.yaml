@@ -689,9 +689,6 @@ importers:
       '@dxos/plugin-token-manager':
         specifier: workspace:*
         version: link:../../plugins/plugin-token-manager
-      '@dxos/plugin-wildcard':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-wildcard
       '@dxos/plugin-wnfs':
         specifier: workspace:*
         version: link:../../plugins/plugin-wnfs
@@ -777,9 +774,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -2938,6 +2932,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../common/crypto
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
@@ -2986,6 +2983,9 @@ importers:
       effect:
         specifier: ^3.12.1
         version: 3.12.7
+      esbuild-wasm:
+        specifier: ^0.16.14
+        version: 0.16.17
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -5299,6 +5299,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -5888,9 +5891,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -5930,6 +5930,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -6146,9 +6149,6 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../../core/compute
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../../common/crypto
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -6279,9 +6279,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme
@@ -6339,9 +6336,6 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../../ui/react-ui-searchlist
@@ -6447,8 +6441,8 @@ importers:
   packages/plugins/experimental/plugin-theme-editor:
     dependencies:
       '@ch-ui/tokens':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 1.2.0
+        version: 1.2.0
       '@codemirror/lang-json':
         specifier: 6.0.1
         version: 6.0.1
@@ -6641,9 +6635,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
@@ -6654,6 +6645,15 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
     devDependencies:
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -6904,9 +6904,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7314,9 +7311,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7496,9 +7490,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
@@ -8401,9 +8392,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
@@ -8732,9 +8720,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -8833,52 +8818,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
-  packages/plugins/plugin-wildcard:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui-card':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-card
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10527,6 +10466,37 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
+  packages/ui/react-ui-dnd:
+    dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: ^1.4.0
+        version: 1.4.0
+      '@radix-ui/react-use-controllable-state':
+        specifier: 1.1.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+
   packages/ui/react-ui-editor:
     dependencies:
       '@codemirror/autocomplete':
@@ -11195,9 +11165,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../react-ui-text-tooltip
@@ -11293,109 +11260,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
-  packages/ui/react-ui-mosaic:
-    dependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/modifiers':
-        specifier: ^6.0.0
-        version: 6.0.0(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-ui-card':
-        specifier: workspace:*
-        version: link:../react-ui-card
-      '@dxos/react-ui-types':
-        specifier: workspace:*
-        version: link:../react-ui-types
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-      '@radix-ui/react-compose-refs':
-        specifier: 1.1.1
-        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      react-resize-detector:
-        specifier: ^11.0.1
-        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    devDependencies:
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/d3':
-        specifier: ^7.4.3
-        version: 7.4.3
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      d3:
-        specifier: ^7.9.0
-        version: 7.9.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -11518,9 +11382,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-mosaic':
+      '@dxos/react-ui-dnd':
         specifier: workspace:*
-        version: link:../react-ui-mosaic
+        version: link:../react-ui-dnd
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11869,11 +11733,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: 2.1.0
-        version: 2.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))
+        specifier: 2.0.1
+        version: 2.0.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))
       '@ch-ui/tokens':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 1.2.0
+        version: 1.2.0
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -11926,9 +11790,6 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0
     devDependencies:
-      '@ch-ui/colors':
-        specifier: 1.0.0
-        version: 1.0.0
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -11953,9 +11814,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../react-ui-mosaic
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14251,14 +14109,14 @@ packages:
     resolution: {integrity: sha512-vevNSzPHnVDgyw6ZotbnE0y4FZFtIQQVKKjwVHGcfST7C5bqRyt69K1Nooo0r6s7laeJhS7YwXYmgLyPouc12w==}
     engines: {node: '>=20.0.0'}
 
-  '@ch-ui/tailwind-tokens@2.1.0':
-    resolution: {integrity: sha512-pvappJ7L3C0JigkaHU2UDZkfkXKQI2jPMZt7wqt9I9EHOJmGOEzGS99h7cp55c+U+m+vF7Ac2Y937HlT4gY9Sg==}
+  '@ch-ui/tailwind-tokens@2.0.1':
+    resolution: {integrity: sha512-fyyen4uCaCVx+YrJ7gBUeugav8AEk55Ul1yoCJUAQsuTdgZPWPGKxIPwKUL/unpLZDkg384QpmuTYB1twwnfaQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
 
-  '@ch-ui/tokens@2.0.0':
-    resolution: {integrity: sha512-6rjJKi72sJtUh8B3cBvTqirVFJJtE7ojyuIu8+tGH5Q+QPgfkWKYmvt3b7m5AR+pahXWszqF6BEEkj1Du11HbQ==}
+  '@ch-ui/tokens@1.2.0':
+    resolution: {integrity: sha512-TkNygnnCwVjRAmF3rzCIgophrgeUHinkBEHNdw8ogjmFlxOxrl0kF3k3QlTaxJhKfi2BLL9lSuFcws7AhqLXUw==}
     engines: {node: '>=20.0.0'}
 
   '@chainsafe/is-ip@2.0.2':
@@ -26401,7 +26259,6 @@ packages:
 
   lodash.get@4.4.2:
     resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
-    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
 
   lodash.isarguments@3.1.0:
     resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
@@ -26429,7 +26286,6 @@ packages:
 
   lodash.omit@4.5.0:
     resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
-    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
 
   lodash.orderby@4.6.0:
     resolution: {integrity: sha512-T0rZxKmghOOf5YPnn8EY5iLYeWCpZq8G41FfqoVHH5QDTAFaghJRmAdLiadEDq+ztgM2q5PjA+Z1fOwGrLgmtg==}
@@ -35973,12 +35829,12 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))':
+  '@ch-ui/tailwind-tokens@2.0.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))':
     dependencies:
-      '@ch-ui/tokens': 2.0.0
+      '@ch-ui/tokens': 1.2.0
       tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3))
 
-  '@ch-ui/tokens@2.0.0':
+  '@ch-ui/tokens@1.2.0':
     dependencies:
       '@ch-ui/colors': 1.0.0
       postcss: 8.4.47
@@ -57956,7 +57812,7 @@ snapshots:
       '@apideck/better-ajv-errors': 0.3.6(ajv@8.12.0)
       '@babel/core': 7.22.19
       '@babel/preset-env': 7.23.9(@babel/core@7.22.19)
-      '@babel/runtime': 7.25.9
+      '@babel/runtime': 7.24.5
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.22.19)(@types/babel__core@7.20.5)(rollup@2.79.1)
       '@rollup/plugin-node-resolve': 11.2.1(rollup@2.79.1)
       '@rollup/plugin-replace': 2.4.2(rollup@2.79.1)

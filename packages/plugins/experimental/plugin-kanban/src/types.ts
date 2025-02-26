@@ -1,6 +1,8 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
+
+import { TitleAnnotationId } from '@effect/schema/AST';
 
 import { S } from '@dxos/echo-schema';
 import { type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -19,14 +21,32 @@ import { KANBAN_PLUGIN } from './meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
+export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialSchema');
+export const InitialPivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialPivotColumn');
+
+export const CreateKanbanSchema = S.Struct({
+  name: S.optional(S.String),
+  initialSchema: S.optional(
+    S.String.annotations({
+      [InitialSchemaAnnotationId]: true,
+      [TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
+    }),
+  ),
+  initialPivotColumn: S.optional(
+    S.String.annotations({
+      [InitialPivotColumnAnnotationId]: true,
+      [TitleAnnotationId]: 'Pivot column',
+    }),
+  ),
+});
+
+export type CreateKanbanType = S.Schema.Type<typeof CreateKanbanSchema>;
+
 export namespace KanbanAction {
   const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 
   export class Create extends S.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      space: SpaceSchema,
-    }),
+    input: S.extend(S.Struct({ space: SpaceSchema }), CreateKanbanSchema),
     output: S.Struct({
       object: KanbanType,
     }),
@@ -69,7 +89,7 @@ export type Location = {
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
 
-export const createKanban = async (space: Space) => {
-  const { kanban } = await initializeKanban({ space });
+export const createKanban = async (props: { space: Space; initialSchema?: string; initialPivotColumn?: string }) => {
+  const { kanban } = await initializeKanban(props);
   return kanban;
 };

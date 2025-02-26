@@ -16,6 +16,7 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
+import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, StackItemContext, type StackItemSize, type StackItemData } from './StackContext';
@@ -159,16 +160,14 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
               : orientation === 'horizontal'
                 ? 'dx-focus-ring-group-x'
                 : 'dx-focus-ring-group-y',
-            size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
             classNames,
           )}
           data-dx-stack-item
+          {...resizeAttributes}
           style={{
-            ...(size !== 'min-content' && {
-              [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
-            }),
+            ...sizeStyle(size, orientation),
             ...(Number.isFinite(order) && {
               [orientation === 'horizontal' ? 'gridColumn' : 'gridRow']: `${order}`,
             }),
