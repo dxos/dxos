@@ -19,18 +19,20 @@ describe('Bundler', () => {
 
   test('Basic', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle('const x = 100'); // TODO(burdon): Test import.
+    const result = await bundler.bundle({ source: 'const x = 100' }); // TODO(burdon): Test import.
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;
   });
 
   test('Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle(`
+    const result = await bundler.bundle({
+      source: `
       import { Filter } from './runtime.js';
 
       const query = Filter.typename('dxos.org/type/Example');
-    `);
+    `,
+    });
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;
   });
@@ -38,17 +40,19 @@ describe('Bundler', () => {
   // TODO(dmaretskyi): Flaky on CI: https://cloud.nx.app/runs/Hjcifa8Ccq/task/plugin-script%3Atest
   test.skip('HTTPS Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle(`
+    const result = await bundler.bundle({
+      source: `
       import { invariant } from 'https://esm.sh/@dxos/invariant';
       invariant(true);
-    `);
+    `,
+    });
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;
   });
 
   test('Error', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle("import missing from './module'; missing();");
+    const result = await bundler.bundle({ source: "import missing from './module'; missing();" });
     expect(result.bundle).to.not.exist;
     expect(result.error).to.exist;
   });
