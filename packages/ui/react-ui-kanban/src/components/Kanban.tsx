@@ -149,17 +149,17 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     </div>
                   </StackItem.Root>
                 ))}
-                {onAddCard && (
-                  <div role='none' className='plb-1 pli-2'>
-                    <IconButton
-                      icon='ph--plus--regular'
-                      label={t('add card label')}
-                      onClick={() => handleAddCard(columnValue)}
-                      classNames='is-full'
-                    />
-                  </div>
-                )}
               </Stack>
+              {onAddCard && (
+                <div role='none' className='plb-2 pli-2'>
+                  <IconButton
+                    icon='ph--plus--regular'
+                    label={t('add card label')}
+                    onClick={() => handleAddCard(columnValue)}
+                    classNames='is-full'
+                  />
+                </div>
+              )}
               <StackItem.Heading classNames='pli-2 order-first'>
                 {!uncategorized && (
                   <StackItem.DragHandle asChild>
