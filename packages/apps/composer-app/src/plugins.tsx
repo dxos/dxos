@@ -42,7 +42,6 @@ import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
 import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
-import { WildcardPlugin, WILDCARD_PLUGIN } from '@dxos/plugin-wildcard';
 import { WnfsPlugin, WNFS_PLUGIN } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
 
@@ -84,7 +83,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     THEME_PLUGIN,
     TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
-    WILDCARD_PLUGIN,
   ].filter(isNotFalsy);
 
 export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
@@ -172,6 +170,5 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     ThreadPlugin(),
     TokenManagerPlugin(),
     WelcomePlugin(),
-    WildcardPlugin(),
     WnfsPlugin(),
   ].filter(isNotFalsy);

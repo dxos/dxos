@@ -14,7 +14,6 @@ import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/r
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
-import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
   getSize,
   hoverableControlItem,
@@ -26,7 +25,7 @@ import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
-import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
+import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
 // TODO(thure): #8149
@@ -109,11 +108,7 @@ export const MessageContainer = ({
 };
 
 const MessagePart = ({ part }: { part: Expando }) => {
-  return (
-    <Mosaic.Container id={part.id}>
-      <Mosaic.DraggableTile type={THREAD_ITEM} path={part.id} item={part} Component={MessageBlockObjectTile} />
-    </Mosaic.Container>
-  );
+  return <MessageBlockObjectTile subject={part} />;
 };
 
 const TextboxBlock = ({
@@ -165,9 +160,9 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile: MosaicTileComponent<ReactiveEchoObject<any>> = forwardRef(
-  ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
-    let title = item.name ?? item.title ?? item.type ?? 'Object';
+const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: ReactiveEchoObject<any> }>(
+  ({ subject }, forwardedRef) => {
+    let title = subject.name ?? subject.title ?? subject.type ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
     }
@@ -176,17 +171,9 @@ const MessageBlockObjectTile: MosaicTileComponent<ReactiveEchoObject<any>> = for
       <div
         role='group'
         className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}
-        style={draggableStyle}
         ref={forwardedRef}
       >
-        <Surface
-          role='card'
-          limit={1}
-          data={{ subject: item }}
-          draggableProps={draggableProps}
-          fallback={title}
-          {...props}
-        />
+        <Surface role='card' limit={1} data={{ subject }} fallback={title} />
       </div>
     );
   },
