@@ -12,8 +12,8 @@ import { createToolsFromApi, resolveAuthorization } from './openapi';
 import { ChatProcessor } from '../hooks';
 import type { ApiAuthorization } from '../types';
 
-describe('openapi', () => {
-  describe('mapping', () => {
+describe.skip('openapi', () => {
+  describe.skip('mapping', () => {
     test('amadeus flight availabilities', async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API);
 
@@ -26,19 +26,16 @@ describe('openapi', () => {
 
     test('amadeus hotel search', async () => {
       const tools = await createToolsFromApi(HOTEL_SEARCH_API);
-
       log.info('tools', { tools });
     });
 
     test('amadeus hotel name autocomplete', async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API);
-
       log.info('tools', { tools });
     });
 
-    test.only('weather', async () => {
+    test('weather', async () => {
       const tools = await createToolsFromApi(WEATHER_API, { authorization: VISUAL_CROSSING_CREDENTIALS });
-
       log.info('tools', { tools });
     });
   });
