@@ -12,8 +12,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
-const MIN_DIVIDER_HEIGHT = 200;
-const MAX_DIVIDER_HEIGHT = 600;
+const MIN_HEIGHT = 300;
 
 /**
  * Props for the ResponsiveGrid component.
@@ -55,7 +54,8 @@ export const ResponsiveGrid = <T extends object = any>({
   pinned,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
-  const { width = 0, height = 0, ref } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width = 0, height = 0, ref: gridContainerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
 
   const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
@@ -71,22 +71,26 @@ export const ResponsiveGrid = <T extends object = any>({
   // Absolutely positioned items.
   const [bounds, setBounds] = useState<[T, CSSProperties][]>([]);
   useEffect(() => {
-    if (!ref.current) {
+    if (!gridContainerRef.current) {
       return;
     }
 
     // TODO(burdon): Consider directly setting bounds instead of state update.
     const t = setTimeout(() => {
-      setBounds(items.map((item) => [item, getBounds(ref.current!, getId(item))]));
+      setBounds(items.map((item) => [item, getBounds(gridContainerRef.current!, getId(item))]));
     }, 100); // Wait until layout has been updated.
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
 
   // Divider.
   const dividerRef = useRef<HTMLDivElement>(null);
-  const [dividerHeight, setDividerHeight] = useState(MAX_DIVIDER_HEIGHT); // TODO(burdon): Save.
+  const [dividerHeight, setDividerHeight] = useState(0); // TODO(burdon): Save.
   const [state, setState] = useState<{ type: 'idle' } | { type: 'dragging' }>({ type: 'idle' });
   useEffect(() => {
+    if (!dividerHeight) {
+      setDividerHeight(containerRef.current!.clientHeight / 2);
+    }
+
     const divider = dividerRef.current;
     if (!divider) {
       return;
@@ -110,19 +114,21 @@ export const ResponsiveGrid = <T extends object = any>({
       onDrop: ({ location }) => {
         preventUnhandled.stop();
         setState({ type: 'idle' });
-        setDividerHeight(getProposedHeight({ height: dividerHeight, location }));
+        setDividerHeight(
+          getProposedHeight({ maxHeight: containerRef.current!.clientHeight, height: dividerHeight, location }),
+        );
         // contentRef.current?.style.removeProperty('--local-resizing-width');
       },
     });
-  }, []);
+  }, [dividerRef.current]);
 
   return (
-    <div className='relative flex flex-col is-full overflow-hidden divide-y divide-neutral-200'>
+    <div ref={containerRef} className='relative flex flex-col is-full overflow-hidden divide-y divide-neutral-200'>
       {pinnedItem && (
         <>
           <div
             className='flex w-full overflow-hidden'
-            style={{ minHeight: MIN_DIVIDER_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
+            style={{ minHeight: MIN_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
           >
             <ResponsiveContainer>
               <div {...{ 'data-grid-item': pinned }} className='aspect-video' />
@@ -133,7 +139,11 @@ export const ResponsiveGrid = <T extends object = any>({
         </>
       )}
 
-      <div ref={ref} className='flex w-full grow overflow-hidden items-center justify-center' style={{ padding: gap }}>
+      <div
+        ref={gridContainerRef}
+        className='flex w-full grow overflow-hidden items-center justify-center'
+        style={{ padding: gap }}
+      >
         {columns > 0 && (
           <div
             role='grid'
@@ -152,26 +162,33 @@ export const ResponsiveGrid = <T extends object = any>({
 
       {/* Absolutely positioned items. */}
       <div>
-        {ref.current &&
-          bounds.map(([item, bounds]) => (
-            <Cell
-              key={getId(item)}
-              item={item}
-              style={bounds}
-              pinned={getId(item) === pinned}
-              classNames='absolute transition-all duration-500'
-              onClick={() => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item))}
-            />
-          ))}
+        {bounds.map(([item, bounds]) => (
+          <Cell
+            key={getId(item)}
+            pinned={getId(item) === pinned}
+            item={item}
+            style={bounds}
+            classNames='absolute transition-all duration-500'
+            onClick={() => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item))}
+          />
+        ))}
       </div>
     </div>
   );
 };
 
-const getProposedHeight = ({ height, location }: { height: number; location: DragLocationHistory }): number => {
-  const diffX = location.current.input.clientX - location.initial.input.clientX;
-  const proposedHeight = height + diffX;
-  return Math.min(Math.max(MAX_DIVIDER_HEIGHT, proposedHeight), MIN_DIVIDER_HEIGHT);
+const getProposedHeight = ({
+  maxHeight,
+  height,
+  location,
+}: {
+  maxHeight: number;
+  height: number;
+  location: DragLocationHistory;
+}): number => {
+  const dx = location.current.input.clientX - location.initial.input.clientX;
+  const proposedHeight = height + dx;
+  return Math.min(Math.max(maxHeight, proposedHeight), MIN_HEIGHT);
 };
 
 const getBounds = (root: HTMLElement, id: string) => {

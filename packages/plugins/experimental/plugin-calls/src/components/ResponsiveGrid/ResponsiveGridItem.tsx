@@ -79,8 +79,10 @@ export const ResponsiveGridItem = <T extends object = any>({
 
       {/* Name. */}
       {name && (
-        <div className='z-10 absolute bottom-1 right-1 flex gap-1 items-center'>
-          <div className={mx('bg-neutral-800 text-neutral-100 py-0.5 rounded', pinned ? 'px-2' : 'px-1 text-xs')}>
+        <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
+          <div
+            className={mx('bg-neutral-800 text-neutral-100 py-0.5 truncate rounded', pinned ? 'px-2' : 'px-1 text-xs')}
+          >
             {name}
           </div>
         </div>

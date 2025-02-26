@@ -17,6 +17,7 @@ import translations from '../../translations';
 type TestItem = {
   id: string;
   name: string;
+  type?: 'image' | 'video';
   imageUrl?: string;
   videoUrl?: string;
 };
@@ -37,10 +38,10 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
   }, []);
 
   return (
-    <ResponsiveGridItem {...props} item={item} name={item?.name} mute={mute} speaking={speaking} wave={wave}>
-      {item?.imageUrl && <img className='flex aspect-video object-contain' src={item?.imageUrl} />}
-      {item?.videoUrl && (
-        <video className='flex aspect-video object-cover' src={item?.videoUrl} playsInline autoPlay loop muted />
+    <ResponsiveGridItem {...props} item={item} name={item.name} mute={mute} speaking={speaking} wave={wave}>
+      {item.type === 'image' && <img className='flex aspect-video object-contain' src={item.imageUrl} />}
+      {item.type === 'video' && (
+        <video className='flex aspect-video object-cover' src={item.videoUrl} playsInline autoPlay loop muted />
       )}
     </ResponsiveGridItem>
   );
@@ -51,7 +52,23 @@ const meta: Meta<ResponsiveGridProps<TestItem>> = {
   component: ResponsiveGrid,
   render: (args) => {
     const [pinned, setPinned] = useState<string | undefined>(args.pinned);
-    return <ResponsiveGrid {...args} Cell={TestCell} items={args.items} pinned={pinned} onPinnedChange={setPinned} />;
+    const [items, setItems] = useState<TestItem[]>(args.items);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setItems((items) => {
+          if (items.length >= 20) {
+            return items;
+          }
+
+          return [...items, createItem(items[0]?.type)];
+        });
+      }, 3_000);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    return <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />;
   },
   decorators: [
     withTheme,
@@ -66,8 +83,6 @@ const meta: Meta<ResponsiveGridProps<TestItem>> = {
   },
 };
 
-export default meta;
-
 const videoUrls = [
   'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
   'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
@@ -75,25 +90,29 @@ const videoUrls = [
   'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
 ];
 
-const items: TestItem[] = Array.from({ length: 8 }, (_, i) => ({
-  id: i.toString(),
-  name: faker.person.fullName(),
-  imageUrl: `https://placehold.co/3200x1800/333/999?font=roboto&text=${i}`,
-  videoUrl: videoUrls[i % videoUrls.length],
-}));
+const createItem = (type?: 'image' | 'video') => {
+  const id = faker.string.uuid();
+  return {
+    id,
+    type,
+    name: faker.person.fullName(),
+    imageUrl: `https://placehold.co/3200x1800/333/999?font=roboto&text=${id.slice(0, 2)}`,
+    videoUrl: faker.helpers.arrayElement(videoUrls),
+  };
+};
+
+export default meta;
 
 type Story = StoryObj<ResponsiveGridProps<TestItem>>;
 
 export const Default: Story = {
   args: {
-    items: items.map(({ imageUrl, ...item }) => ({ ...item })),
-    pinned: items[0].id,
+    items: Array.from({ length: 8 }, (_, i) => createItem('video')),
   },
 };
 
 export const Images: Story = {
   args: {
-    items: items.map(({ videoUrl, ...item }) => ({ ...item })),
-    pinned: items[0].id,
+    items: Array.from({ length: 8 }, (_, i) => createItem('image')),
   },
 };
