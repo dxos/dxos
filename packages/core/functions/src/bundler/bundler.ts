@@ -31,7 +31,7 @@ export type BundleOptions = {
 
 export type BundleResult = {
   timestamp: number;
-  sourceHash: Buffer;
+  sourceHash?: Buffer;
   imports?: Import[];
   bundle?: string;
   error?: any;
@@ -59,10 +59,10 @@ export class Bundler {
   async bundle({ path, source }: BundleOptions): Promise<BundleResult> {
     const { sandboxedModules: providedModules, ...options } = this._options;
 
-    const createResult = async (result?: Partial<BundlerResult>) => {
+    const createResult = async (result?: Partial<BundleResult>) => {
       return {
         timestamp: Date.now(),
-        sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
+        sourceHash: source ? Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))) : undefined,
         ...result,
       };
     };
@@ -72,7 +72,7 @@ export class Bundler {
       await initialized;
     }
 
-    const imports = analyzeSourceFileImports(source);
+    const imports = source ? analyzeSourceFileImports(source) : [];
 
     // https://esbuild.github.io/api/#build
     try {
