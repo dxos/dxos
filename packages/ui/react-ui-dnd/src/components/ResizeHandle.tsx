@@ -11,7 +11,8 @@ import React, { useLayoutEffect, useRef } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
+import { type Size, type Side } from '../types';
+import { REM } from '../util';
 
 const measureSubject = (element: HTMLButtonElement, fallbackSize: number): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-resize-subject]');
@@ -23,14 +24,17 @@ const getNextSize = (
   location: DragLocationHistory,
   client: 'clientX' | 'clientY',
   minSize: number,
+  side: Side,
 ) => {
-  return Math.max(minSize, startSize + (location.current.input[client] - location.initial.input[client]) / REM);
+  return Math.max(
+    minSize,
+    startSize +
+      ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? 1 : -1),
+  );
 };
 
-export type Size = number | 'min-content';
-
 export type ResizeHandleProps = {
-  side: 'inline-start' | 'inline-end' | 'block-start' | 'block-end';
+  side: Side;
   size?: Size;
   defaultSize?: Size;
   onSizeChange?: (nextSize: Size, commit?: boolean) => void;
@@ -38,7 +42,11 @@ export type ResizeHandleProps = {
   fallbackSize: number;
   minSize: number;
   maxSize?: number;
-  signifierPosition?: 'start' | 'center' | 'end';
+  iconPosition?: 'start' | 'center' | 'end';
+};
+
+export const resizeAttributes = {
+  'data-dx-resize-subject': true,
 };
 
 export const ResizeHandle = ({
@@ -47,6 +55,7 @@ export const ResizeHandle = ({
   size: propsSize,
   onSizeChange,
   fallbackSize,
+  iconPosition = 'start',
   minSize,
 }: ResizeHandleProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -85,13 +94,13 @@ export const ResizeHandle = ({
           if (typeof dragStartSize.current !== 'number') {
             return;
           }
-          setSize(getNextSize(dragStartSize.current, location, client, minSize));
+          setSize(getNextSize(dragStartSize.current, location, client, minSize, side));
         },
         onDrop: ({ location }) => {
           if (typeof dragStartSize.current !== 'number') {
             return;
           }
-          const nextSize = getNextSize(dragStartSize.current, location, client, minSize);
+          const nextSize = getNextSize(dragStartSize.current, location, client, minSize, side);
           setSize(nextSize);
           onSizeChange?.(nextSize, true);
           dragStartSize.current = nextSize;
@@ -106,37 +115,55 @@ export const ResizeHandle = ({
   return (
     <button
       ref={buttonRef}
+      data-side={side}
       className={mx(
-        'group absolute',
+        'group absolute flex focus-visible:outline-none',
         orientation === 'horizontal'
-          ? 'cursor-col-resize is-3 bs-full inline-end-[-1px] !border-lb-0 before:inset-block-0 before:inline-end-0 before:is-1'
-          : 'cursor-row-resize bs-3 is-full block-end-[-1px] !border-li-0 before:inset-inline-0 before:block-end-0 before:bs-1',
+          ? 'cursor-col-resize is-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 !border-lb-0 before:inset-block-0 before:is-1'
+          : 'cursor-row-resize bs-4 inset-inline-0 data-[side="block-end"]:block-end-0 data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:block-start-0 data-[side="block-start"]:before:block-start-0 !border-li-0 before:inset-inline-0 before:bs-1',
+        orientation === 'horizontal'
+          ? iconPosition === 'end'
+            ? 'align-end'
+            : iconPosition === 'center'
+              ? 'align-center'
+              : 'align-start'
+          : iconPosition === 'end'
+            ? 'justify-end'
+            : iconPosition === 'center'
+              ? 'justify-center'
+              : 'justify-start',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
         'before:absolute before:block before:bg-accentFocusIndicator',
       )}
     >
       <div
         role='none'
+        data-side={side}
         className={mx(
-          'absolute flex items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal'
-            ? 'block-start-0 inline-end-px bs-[--rail-size]'
-            : 'inline-start-0 block-end-px is-[--rail-size] flex justify-center',
+          'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
+          orientation === 'horizontal' ? 'bs-[--rail-size] is-4' : 'is-[--rail-size] bs-4',
         )}
       >
-        <DragHandleSignifier orientation={orientation} />
+        <DragHandleSignifier side={side} />
       </div>
     </button>
   );
 };
 
-const DragHandleSignifier = ({ orientation }: { orientation: 'horizontal' | 'vertical' }) => {
+const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       viewBox='0 0 256 256'
       fill='currentColor'
-      className={mx('shrink-0 bs-[1em] is-[1em] text-unAccent', orientation === 'vertical' && 'rotate-90')}
+      className={mx(
+        'shrink-0 bs-4 is-4 text-unAccent',
+        side === 'block-end'
+          ? 'rotate-90'
+          : side === 'block-start'
+            ? '-rotate-90'
+            : side === 'inline-start' && 'rotate-180',
+      )}
     >
       {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />
       <path d='M256,232c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' /> */}
