@@ -205,7 +205,7 @@ export const registry: Record<NodeType, Executable> = {
         const edgeClientService = yield* QueueService;
         const { objects: messages } = yield* Effect.promise(() => edgeClientService.queryQueue(DXN.parse(id)));
 
-        const decoded = S.decodeUnknownSync(S.Array(Message))(messages);
+        const decoded = S.decodeUnknownSync(S.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
         };

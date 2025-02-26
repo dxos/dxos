@@ -9,7 +9,7 @@ import { create, makeRef } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
-import { DEFAULT_INPUT } from './types';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 
 // TODO(burdon): DXN from echo-schema is a different type.
 
@@ -80,7 +80,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
       id: createEdgeId({ source: sourceId, target: targetId }),
       source: sourceId,
       target: targetId,
-      output: source.property ?? DEFAULT_INPUT,
+      output: source.property ?? DEFAULT_OUTPUT,
       input: target.property ?? DEFAULT_INPUT,
     };
 
