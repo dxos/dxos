@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { useSubscribedState, useCallContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
-import { ResponsiveGridItemContainer } from '../ResponsiveGrid';
+import { ResponsiveContainer } from '../ResponsiveGrid';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
@@ -21,9 +21,9 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
 
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <ResponsiveGridItemContainer>
+      <ResponsiveContainer>
         <VideoObject flip muted videoTrack={userMedia.videoTrack} />
-      </ResponsiveGridItemContainer>
+      </ResponsiveContainer>
       <Toolbar.Root classNames='justify-between'>
         <IconButton
           variant='primary'

@@ -12,6 +12,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
+import translations from '../../translations';
 
 type TestItem = {
   id: string;
@@ -60,6 +61,9 @@ const meta: Meta<ResponsiveGridProps<TestItem>> = {
       classNames: 'justify-center',
     }),
   ],
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;
@@ -74,7 +78,7 @@ const videoUrls = [
 const items: TestItem[] = Array.from({ length: 8 }, (_, i) => ({
   id: i.toString(),
   name: faker.person.fullName(),
-  // imageUrl: `https://placehold.co/3200x1800?font=roboto&text=${i}`,
+  imageUrl: `https://placehold.co/3200x1800/333/999?font=roboto&text=${i}`,
   videoUrl: videoUrls[i % videoUrls.length],
 }));
 
@@ -82,7 +86,14 @@ type Story = StoryObj<ResponsiveGridProps<TestItem>>;
 
 export const Default: Story = {
   args: {
-    items,
+    items: items.map(({ imageUrl, ...item }) => ({ ...item })),
+    pinned: items[0].id,
+  },
+};
+
+export const Images: Story = {
+  args: {
+    items: items.map(({ videoUrl, ...item }) => ({ ...item })),
     pinned: items[0].id,
   },
 };

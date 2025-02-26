@@ -17,6 +17,12 @@ export default [
         'join call': 'Join',
         'leave call': 'Leave',
 
+        'icon pin': 'Pin video',
+        'icon unpin': 'Unpin video',
+        'icon wave': 'Waving',
+        'icon muted': 'Muted',
+        'icon speaking': 'Speaking',
+
         'mic on': 'Turn microphone on',
         'mic off': 'Turn microphone off',
         'camera on': 'Turn camera on',

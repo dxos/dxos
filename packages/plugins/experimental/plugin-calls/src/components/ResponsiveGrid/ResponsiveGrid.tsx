@@ -9,11 +9,11 @@ import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/type
 import React, { useState, useEffect, useMemo, type CSSProperties, useRef, type ComponentType } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
-import { ResponsiveGridItemContainer } from './ResponsiveGridItemContainer';
 
 const MIN_DIVIDER_HEIGHT = 200;
-const MAX_DIVIDER_HEIGHT = 800;
+const MAX_DIVIDER_HEIGHT = 600;
 
 /**
  * Props for the ResponsiveGrid component.
@@ -61,11 +61,10 @@ export const ResponsiveGrid = <T extends object = any>({
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
 
   // Recalculate optimal columns when container size or items change.
-  const [columns, setColumns] = useState(1);
-  const cellWidth = Math.floor((width - gap * (columns - 1)) / columns);
+  const [{ columns, cellWidth }, setOptimalColumns] = useState<OptimalColumns>({ columns: 0, cellWidth: 0 });
   useEffect(() => {
     if (width > 0 && height > 0) {
-      setColumns(calculateOptimalColumns(width, height, mainItems.length, gap));
+      setOptimalColumns(calculateOptimalColumns(width, height, mainItems.length, gap));
     }
   }, [width, height, mainItems.length, gap]);
 
@@ -122,34 +121,33 @@ export const ResponsiveGrid = <T extends object = any>({
       {pinnedItem && (
         <>
           <div
-            className='flex w-full'
+            className='flex w-full overflow-hidden'
             style={{ minHeight: MIN_DIVIDER_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
           >
-            <ResponsiveGridItemContainer classNames='grow'>
-              <div {...{ 'data-grid-item': pinned }} className='grow' />
-            </ResponsiveGridItemContainer>
+            <ResponsiveContainer>
+              <div {...{ 'data-grid-item': pinned }} className='aspect-video' />
+            </ResponsiveContainer>
           </div>
-          <div ref={dividerRef} className='ns-resize before:content-[""] h-[4px] bg-primary-200' />
+
+          <div ref={dividerRef} className='ns-resize before:content-[""] h-[2px] bg-primary-500' />
         </>
       )}
 
       <div ref={ref} className='flex w-full grow overflow-hidden items-center justify-center' style={{ padding: gap }}>
-        <div
-          role='grid'
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
-            gap: `${gap}px`,
-          }}
-        >
-          {mainItems.map((item) => (
-            <div
-              key={getId(item)}
-              {...{ 'data-grid-item': getId(item) }}
-              className='p-2 aspect-video bg-neutral-200 rounded-lg opacity-10'
-            />
-          ))}
-        </div>
+        {columns > 0 && (
+          <div
+            role='grid'
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
+              gap: `${gap}px`,
+            }}
+          >
+            {mainItems.map((item) => (
+              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='aspect-video' />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Absolutely positioned items. */}
@@ -182,11 +180,16 @@ const getBounds = (root: HTMLElement, id: string) => {
   return { left, top, width, height };
 };
 
+type OptimalColumns = {
+  columns: number;
+  cellWidth: number;
+};
+
 /**
  * Calculates the optimal number of columns for a grid layout that minimizes wasted space.
  * @param containerWidth - Width of the container in pixels.
  * @param containerHeight - Height of the container in pixels.
- * @param itemCount - Total number of items to display.
+ * @param count - Total number of items to display.
  * @param gap - Space between items in pixels.
  * @param aspectRatio - Desired aspect ratio of items (width/height).
  * @returns The optimal number of columns.
@@ -194,20 +197,23 @@ const getBounds = (root: HTMLElement, id: string) => {
 const calculateOptimalColumns = (
   containerWidth: number,
   containerHeight: number,
-  itemCount: number,
+  count: number,
   gap: number,
   aspectRatio = 16 / 9,
-) => {
-  if (itemCount === 0) {
-    return 1;
+): OptimalColumns => {
+  if (count === 0) {
+    return { columns: 1, cellWidth: 1 };
   }
 
+  let bestRows = 1;
   let bestColumns = 1;
   let minWastedSpace = Infinity;
 
+  // TODO(burdon): Balance rows and columns.
+
   // Try different column counts to find the optimal layout that minimizes wasted space.
-  for (let cols = 1; cols <= itemCount; cols++) {
-    const rows = Math.ceil(itemCount / cols);
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
 
     // Calculate available space accounting for gaps.
     const availableWidth = containerWidth - gap * (cols - 1);
@@ -226,9 +232,16 @@ const calculateOptimalColumns = (
     const wastedSpace = containerWidth * containerHeight - usedWidth * usedHeight;
     if (wastedSpace < minWastedSpace) {
       minWastedSpace = wastedSpace;
+      bestRows = rows;
       bestColumns = cols;
     }
   }
 
-  return bestColumns;
+  // Prefer fewer columns to balance rows and columns.
+  const cellWidth = Math.floor((containerWidth - gap * (bestColumns - 1)) / bestColumns);
+  while (bestColumns > 1 && count / (bestColumns - 1) < bestRows) {
+    bestColumns--;
+  }
+
+  return { columns: bestColumns, cellWidth };
 };

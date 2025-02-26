@@ -4,5 +4,6 @@
 
 export * from './Chaos';
 export * from './Matrix';
+export * from './Oscilloscope';
 export * from './Spinner';
 export * from './Waveform';
