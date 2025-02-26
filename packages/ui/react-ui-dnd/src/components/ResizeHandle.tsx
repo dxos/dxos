@@ -42,7 +42,7 @@ export type ResizeHandleProps = {
   fallbackSize: number;
   minSize: number;
   maxSize?: number;
-  signifierPosition?: 'start' | 'center' | 'end';
+  iconPosition?: 'start' | 'center' | 'end';
 };
 
 export const resizeAttributes = {
@@ -55,7 +55,7 @@ export const ResizeHandle = ({
   size: propsSize,
   onSizeChange,
   fallbackSize,
-  signifierPosition = 'start',
+  iconPosition = 'start',
   minSize,
 }: ResizeHandleProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -117,10 +117,21 @@ export const ResizeHandle = ({
       ref={buttonRef}
       data-side={side}
       className={mx(
-        'group absolute focus-visible:outline-none',
+        'group absolute flex focus-visible:outline-none',
         orientation === 'horizontal'
-          ? 'cursor-col-resize is-3 bs-full data-[side="inline-end"]:-inline-end-px data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:-inline-start-px data-[side="inline-start"]:before:inline-start-0 !border-lb-0 before:inset-block-0 before:is-1'
-          : 'cursor-row-resize bs-3 is-full data-[side="block-end"]:-block-end-px data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:-block-start-px data-[side="block-start"]:before:block-start-0 !border-li-0 before:inset-inline-0 before:bs-1',
+          ? 'cursor-col-resize is-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 !border-lb-0 before:inset-block-0 before:is-1'
+          : 'cursor-row-resize bs-4 inset-inline-0 data-[side="block-end"]:block-end-0 data-[side="block-end"]:before:block-end-0 data-[side="block-start"]:block-start-0 data-[side="block-start"]:before:block-start-0 !border-li-0 before:inset-inline-0 before:bs-1',
+        orientation === 'horizontal'
+          ? iconPosition === 'end'
+            ? 'align-end'
+            : iconPosition === 'center'
+              ? 'align-center'
+              : 'align-start'
+          : iconPosition === 'end'
+            ? 'justify-end'
+            : iconPosition === 'center'
+              ? 'justify-center'
+              : 'justify-start',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
         'before:absolute before:block before:bg-accentFocusIndicator',
       )}
@@ -128,12 +139,9 @@ export const ResizeHandle = ({
       <div
         role='none'
         data-side={side}
-        data-signifier-position={signifierPosition}
         className={mx(
-          'absolute flex items-center justify-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
-          orientation === 'horizontal'
-            ? 'bs-[--rail-size] block-start-0 data-[side="inline-end"]:inline-end-px data-[side="inline-start"]:inline-start-px'
-            : 'is-[--rail-size] inline-start-0 data-[side="block-end"]:block-end-px data-[side="block-start"]:block-start-px',
+          'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
+          orientation === 'horizontal' ? 'bs-[--rail-size] is-4' : 'is-[--rail-size] bs-4',
         )}
       >
         <DragHandleSignifier side={side} />
@@ -149,7 +157,7 @@ const DragHandleSignifier = ({ side }: Pick<ResizeHandleProps, 'side'>) => {
       viewBox='0 0 256 256'
       fill='currentColor'
       className={mx(
-        'shrink-0 bs-[1em] is-[1em] text-unAccent',
+        'shrink-0 bs-4 is-4 text-unAccent',
         side === 'block-end'
           ? 'rotate-90'
           : side === 'block-start'

@@ -18,17 +18,20 @@ export const AmbientChatDialog = () => {
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
         onInteractOutside={preventDefault}
-        classNames='pointer-events-auto relative'
+        classNames='pointer-events-auto relative overflow-hidden'
         inOverlayLayout
         {...resizeAttributes}
-        style={sizeStyle(size, 'vertical')}
+        style={{
+          ...sizeStyle(size, 'vertical'),
+          maxBlockSize: 'calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 8rem)',
+        }}
       >
         <ResizeHandle
           side='block-start'
           defaultSize='min-content'
           minSize={5}
           fallbackSize={5}
-          signifierPosition='center'
+          iconPosition='center'
           onSizeChange={setSize}
         />
         <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
