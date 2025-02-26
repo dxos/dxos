@@ -38,6 +38,7 @@ export enum PresetName {
   GPT_QUEUE = 'webhook-gpt-queue',
   CHAT_GPT = 'chat-gpt-text',
   EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
+  OBJECT_CHANGE_QUEUE = 'objectChange-queue',
 }
 
 export const presets = {
@@ -60,7 +61,7 @@ export const presets = {
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
-              .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'body' })
+              .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'bodyText' })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
               .createEdge({ source: queueId.id, target: append.id, input: 'id' })
               .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
@@ -73,6 +74,66 @@ export const presets = {
           attachTrigger(functionTrigger, computeModel);
 
           return addToSpace(PresetName.GPT_QUEUE, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+
+    [
+      PresetName.OBJECT_CHANGE_QUEUE,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          const template = canvasModel.createNode(
+            createTemplate({
+              valueType: 'object',
+              ...rawPosition({ centerX: -64, centerY: -79, width: 320, height: 320 }),
+            }),
+          );
+
+          let functionTrigger: FunctionTrigger | undefined;
+          canvasModel.builder.call((builder) => {
+            const triggerShape = createTrigger({
+              triggerKind: TriggerKind.Subscription,
+              ...position({ x: -18, y: -2 }),
+            });
+            const trigger = canvasModel.createNode(triggerShape);
+            const { queueId } = setupQueue(canvasModel, {
+              queuePosition: { centerX: -80, centerY: 378, width: 320, height: 448 },
+            });
+            const append = canvasModel.createNode(
+              createAppend(rawPosition({ centerX: 320, centerY: 192, width: 128, height: 122 })),
+            );
+
+            builder
+              .createEdge({ source: queueId.id, target: append.id, input: 'id' })
+              .createEdge({ source: template.id, target: append.id, input: 'items' })
+              .createEdge({ source: trigger.id, target: template.id, output: 'type', input: 'type' })
+              .createEdge({
+                source: trigger.id,
+                target: template.id,
+                output: 'changedObjectId',
+                input: 'changedObjectId',
+              });
+
+            functionTrigger = triggerShape.functionTrigger!.target!;
+            const triggerSpec = functionTrigger.spec;
+            invariant(triggerSpec && triggerSpec.type === TriggerKind.Subscription, 'No trigger spec.');
+            triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' };
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+
+          const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
+          invariant(templateComputeNode, 'Template compute node was not created.');
+          templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "{{changedObjectId}}"', '}'].join('\n');
+          templateComputeNode.inputSchema = toJsonSchema(S.Struct({ type: S.String, changedObjectId: S.String }));
+
+          attachTrigger(functionTrigger, computeModel);
+
+          return addToSpace(PresetName.OBJECT_CHANGE_QUEUE, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;

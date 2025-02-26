@@ -5,11 +5,11 @@
 import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type PublicKey } from '@dxos/keys';
+
+import { type CallManager } from '../call';
 
 export type CallsGlobalContextType = {
-  spaceKey?: PublicKey;
-  setSpace: (spaceKey: PublicKey) => void;
+  call: CallManager;
 };
 
 /**

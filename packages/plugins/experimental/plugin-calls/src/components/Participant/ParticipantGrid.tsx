@@ -18,7 +18,7 @@ export type ParticipantGridProps = {
 
 export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridProps) => {
   const allUsers = useMemo(() => {
-    const allUsers: UserState[] = self ? [self] : [];
+    const allUsers: UserState[] = [];
     users.forEach((user) => {
       if (!user.joined) {
         return;

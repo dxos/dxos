@@ -6,8 +6,10 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import React, { useState, useEffect, useMemo, type CSSProperties, useRef, type ComponentType } from 'react';
+import React, { useState, useEffect, useMemo, useRef, type ComponentType } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
+
+import { invariant } from '@dxos/invariant';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
@@ -69,7 +71,7 @@ export const ResponsiveGrid = <T extends object = any>({
   }, [width, height, mainItems.length, gap]);
 
   // Absolutely positioned items.
-  const [bounds, setBounds] = useState<[T, CSSProperties][]>([]);
+  const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
   useEffect(() => {
     if (!gridContainerRef.current) {
       return;
@@ -79,7 +81,11 @@ export const ResponsiveGrid = <T extends object = any>({
     const t = setTimeout(() => {
       setBounds(
         items.map((item) => {
-          const bounds = getBounds(gridContainerRef.current!, getId(item))!;
+          invariant(containerRef.current);
+          invariant(gridContainerRef.current);
+          const el = gridContainerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
+          invariant(el);
+          const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
           return [item, bounds];
         }),
       );
@@ -89,13 +95,9 @@ export const ResponsiveGrid = <T extends object = any>({
 
   // Divider.
   const dividerRef = useRef<HTMLDivElement>(null);
-  const [dividerHeight, setDividerHeight] = useState(0); // TODO(burdon): Save.
+  const [dividerHeight, setDividerHeight] = useState(MIN_HEIGHT); // TODO(burdon): Save.
   const [state, setState] = useState<{ type: 'idle' } | { type: 'dragging' }>({ type: 'idle' });
   useEffect(() => {
-    if (!dividerHeight) {
-      setDividerHeight(containerRef.current!.clientHeight / 2);
-    }
-
     const divider = dividerRef.current;
     if (!divider) {
       return;
@@ -125,9 +127,7 @@ export const ResponsiveGrid = <T extends object = any>({
         // contentRef.current?.style.removeProperty('--local-resizing-width');
       },
     });
-  }, [dividerRef.current]);
-
-  return <div>{items.length}</div>;
+  }, []);
 
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
@@ -162,7 +162,7 @@ export const ResponsiveGrid = <T extends object = any>({
             }}
           >
             {mainItems.map((item) => (
-              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='bg-black aspect-video' />
+              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='aspect-video' />
             ))}
           </div>
         )}
@@ -199,14 +199,18 @@ const getProposedHeight = ({
   return Math.min(Math.max(maxHeight, proposedHeight), MIN_HEIGHT);
 };
 
-const getBounds = (root: HTMLElement, id: string): CSSProperties | undefined => {
-  const el = document.querySelector(`[data-grid-item="${id}"]`);
-  if (!el) {
-    return undefined;
-  }
+type DOMRectBounds = Pick<DOMRect, 'top' | 'left' | 'width' | 'height'>;
 
-  const { left, top, width, height } = el.getBoundingClientRect();
-  return { left, top, width, height };
+// TODO(burdon): Reconcile with react-ui-gameboard.
+const getRelativeBounds = (container: HTMLElement, el: HTMLElement): DOMRectBounds => {
+  const containerRect = container.getBoundingClientRect();
+  const elementRect = el.getBoundingClientRect();
+  return {
+    top: elementRect.top - containerRect.top,
+    left: elementRect.left - containerRect.left,
+    width: elementRect.width,
+    height: elementRect.height,
+  };
 };
 
 type OptimalColumns = {

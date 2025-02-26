@@ -7,7 +7,7 @@ import { type Space } from '@dxos/client/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { CALLS_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { CallsAction, TranscriptType } from './types';
@@ -38,12 +38,11 @@ export const CallsPlugin = () =>
       activatesOn: ClientEvents.SetupSchema,
       activate: () => [contributes(ClientCapabilities.Schema, [TranscriptType])],
     }),
-    // TODO(mykola): Fix infinite loop rerendering.
-    // defineModule({
-    //   id: `${meta.id}/module/react-context`,
-    //   activatesOn: Events.Startup,
-    //   activate: ReactContext,
-    // }),
+    defineModule({
+      id: `${meta.id}/module/react-context`,
+      activatesOn: Events.Startup,
+      activate: ReactContext,
+    }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupSurfaces,
