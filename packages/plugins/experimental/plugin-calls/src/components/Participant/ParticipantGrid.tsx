@@ -58,7 +58,7 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
 
   // Filter out currently expanded and sort screenshare first.
   // TODO(burdon): Put self last.
-  const filteredItems: UserState[] = allUsers.sort((a, b) => {
+  const sortedUsers: UserState[] = allUsers.sort((a, b) => {
     if (a.self) {
       return 1;
     } else if (b.self) {
@@ -77,7 +77,7 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
       Cell={Participant}
       debug={debug}
       getId={getId}
-      items={filteredItems}
+      items={sortedUsers}
       pinned={pinned}
       onPinnedChange={setPinned}
     />

@@ -18,10 +18,7 @@ export const CallRoom: FC<ThemedClassName> = ({ classNames }) => {
     call: { room, user: self },
   } = useCallContext();
 
-  // Filter out self.
-  const otherUsers = (room.users ?? []).filter((user) => user.id !== self.id);
-
-  return <ParticipantGrid user={self} users={otherUsers} debug={debug} />;
+  return <ParticipantGrid user={self} users={room.users} debug={debug} />;
 };
 
 CallRoom.displayName = 'CallRoom';

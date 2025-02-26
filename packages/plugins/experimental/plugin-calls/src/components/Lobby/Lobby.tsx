@@ -20,10 +20,11 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const numUsers = new Set(call.room.users?.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
       <ResponsiveContainer>
         <VideoObject flip muted videoTrack={userMedia.videoTrack} />
       </ResponsiveContainer>
+
       <Toolbar.Root classNames='justify-between'>
         <IconButton
           variant='primary'
@@ -33,7 +34,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
           icon='ph--phone-incoming--regular'
         />
         <div className='grow text-sm text-subdued'>
-          {sessionError ?? `${numUsers} ${numUsers === 1 ? 'participant' : 'participants'}`}
+          {sessionError ?? `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
         </div>
         <MediaButtons userMedia={userMedia} />
       </Toolbar.Root>

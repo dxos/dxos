@@ -77,7 +77,12 @@ export const ResponsiveGrid = <T extends object = any>({
 
     // TODO(burdon): Consider directly setting bounds instead of state update.
     const t = setTimeout(() => {
-      setBounds(items.map((item) => [item, getBounds(gridContainerRef.current!, getId(item))]));
+      setBounds(
+        items.map((item) => {
+          const bounds = getBounds(gridContainerRef.current!, getId(item))!;
+          return [item, bounds];
+        }),
+      );
     }, 100); // Wait until layout has been updated.
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
@@ -122,16 +127,22 @@ export const ResponsiveGrid = <T extends object = any>({
     });
   }, [dividerRef.current]);
 
+  return <div>{items.length}</div>;
+
   return (
-    <div ref={containerRef} className='relative flex flex-col is-full overflow-hidden divide-y divide-neutral-200'>
+    <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
       {pinnedItem && (
         <>
+          {/* Pinned item. */}
           <div
             className='flex w-full overflow-hidden'
             style={{ minHeight: MIN_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
           >
             <ResponsiveContainer>
-              <div {...{ 'data-grid-item': pinned }} className='aspect-video' />
+              <div {...{ 'data-grid-item': pinned }}>
+                {/* Placeholder image. */}
+                <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
+              </div>
             </ResponsiveContainer>
           </div>
 
@@ -139,11 +150,8 @@ export const ResponsiveGrid = <T extends object = any>({
         </>
       )}
 
-      <div
-        ref={gridContainerRef}
-        className='flex w-full grow overflow-hidden items-center justify-center'
-        style={{ padding: gap }}
-      >
+      {/* Placeholder grid. */}
+      <div ref={gridContainerRef} className='flex w-full grow overflow-hidden items-center justify-center'>
         {columns > 0 && (
           <div
             role='grid'
@@ -154,7 +162,7 @@ export const ResponsiveGrid = <T extends object = any>({
             }}
           >
             {mainItems.map((item) => (
-              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='aspect-video' />
+              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='bg-black aspect-video' />
             ))}
           </div>
         )}
@@ -191,8 +199,12 @@ const getProposedHeight = ({
   return Math.min(Math.max(maxHeight, proposedHeight), MIN_HEIGHT);
 };
 
-const getBounds = (root: HTMLElement, id: string) => {
-  const el = document.querySelector(`[data-grid-item="${id}"]`)!;
+const getBounds = (root: HTMLElement, id: string): CSSProperties | undefined => {
+  const el = document.querySelector(`[data-grid-item="${id}"]`);
+  if (!el) {
+    return undefined;
+  }
+
   const { left, top, width, height } = el.getBoundingClientRect();
   return { left, top, width, height };
 };

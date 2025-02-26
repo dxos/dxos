@@ -60,7 +60,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   const props = wave && !pinned ? iconProps.wave : mute ? iconProps.mute : speaking ? iconProps.speaking : undefined;
 
   return (
-    <div className={mx('aspect-video group relative', classNames)} style={style}>
+    <div className={mx('w-full h-full aspect-video group relative', classNames)} style={style}>
       {children}
 
       {/* Action. */}

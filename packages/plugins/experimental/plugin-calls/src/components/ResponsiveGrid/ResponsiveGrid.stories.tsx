@@ -51,7 +51,7 @@ const meta: Meta<ResponsiveGridProps<TestItem>> = {
   title: 'plugins/plugin-calls/ResponsiveGridProps',
   component: ResponsiveGrid,
   render: (args) => {
-    const [pinned, setPinned] = useState<string | undefined>(args.pinned);
+    const [pinned, setPinned] = useState<string | undefined>(args.pinned ?? args.items[0]?.id);
     const [items, setItems] = useState<TestItem[]>(args.items);
 
     useEffect(() => {

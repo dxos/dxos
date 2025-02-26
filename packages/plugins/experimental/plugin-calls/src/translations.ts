@@ -17,6 +17,9 @@ export default [
         'join call': 'Join',
         'leave call': 'Leave',
 
+        'lobby participant': 'participant',
+        'lobby participants': 'participants',
+
         'icon pin': 'Pin video',
         'icon unpin': 'Unpin video',
         'icon wave': 'Waving',
