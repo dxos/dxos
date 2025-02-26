@@ -12,7 +12,7 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
 
@@ -146,7 +146,7 @@ export class QueryState extends Resource {
           } satisfies QueryResult;
         }),
       )
-    ).filter(nonNullable);
+    ).filter(isNonNullable);
 
     if (this._firstRun) {
       this.metrics.documentLoadTime = performance.now() - beginFilter;
@@ -193,7 +193,7 @@ const filterToIndexQuery = (filter: FilterProto): IndexQuery => {
           ? filter.type.map((type) => dxnToIndexerTypename(DXN.parse(type)))
           : (filter.or ?? [])
               .flatMap((f) => f.type?.map((type) => dxnToIndexerTypename(DXN.parse(type))) ?? [])
-              .filter(nonNullable),
+              .filter(isNonNullable),
       inverted: filter.not,
     };
   } else {

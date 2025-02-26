@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { nonNullable, numericalValues, range } from '@dxos/util';
+import { isNonNullable, numericalValues, range } from '@dxos/util';
 
 import { Timeframe } from './timeframe';
 
@@ -30,7 +30,7 @@ const createRandomTimeframe = ({ keys, base, similarity = 0.1, occupancy = 0.05 
 
       return [key, Math.floor(Math.random() * 10_000)];
     })
-    .filter(nonNullable);
+    .filter(isNonNullable);
   return new Timeframe(frames);
 };
 

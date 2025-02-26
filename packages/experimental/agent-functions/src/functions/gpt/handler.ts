@@ -12,7 +12,7 @@ import { ChainPromptType } from '@dxos/plugin-automation/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
@@ -90,7 +90,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
       return [message, thread] as [MessageType, ThreadType | undefined];
     })
-    .filter(nonNullable);
+    .filter(isNonNullable);
 
   log.info('processing', {
     objects: objects.length,

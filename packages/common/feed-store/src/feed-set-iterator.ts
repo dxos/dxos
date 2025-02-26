@@ -9,7 +9,7 @@ import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap, nonNullable } from '@dxos/util';
+import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue } from './feed-queue';
@@ -136,7 +136,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     while (this._running) {
       // Get blocks from the head of each queue.
       const queues = Array.from(this._feedQueues.values());
-      const blocks = queues.map((queue) => queue.peek()).filter(nonNullable);
+      const blocks = queues.map((queue) => queue.peek()).filter(isNonNullable);
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);

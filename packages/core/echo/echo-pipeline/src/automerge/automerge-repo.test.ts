@@ -34,7 +34,7 @@ import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { openAndClose } from '@dxos/test-utils';
-import { nonNullable, range } from '@dxos/util';
+import { isNonNullable, range } from '@dxos/util';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
@@ -679,7 +679,7 @@ const createRepoTopology = async <Peers extends string[], Peer extends string = 
             : pair[1]
           : null;
       })
-      .filter(nonNullable);
+      .filter(isNonNullable);
     return new Repo({
       peerId: peerId as PeerId,
       storage: args.options?.storages?.[peerIndex],

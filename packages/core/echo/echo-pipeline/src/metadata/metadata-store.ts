@@ -24,7 +24,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
-import { ComplexMap, arrayToBuffer, forEachAsync, nonNullable } from '@dxos/util';
+import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
@@ -161,7 +161,7 @@ export class MetadataStore {
 
     await forEachAsync(
       [this._metadata.identity?.haloSpace.key, ...(this._metadata.spaces?.map((space) => space.key) ?? [])].filter(
-        nonNullable,
+        isNonNullable,
       ),
       async (key) => {
         try {

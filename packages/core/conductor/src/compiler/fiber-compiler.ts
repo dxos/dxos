@@ -7,7 +7,7 @@ import { Effect, Layer, Scope } from 'effect';
 import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 import { EventLogger, GptService } from '../services';
@@ -134,7 +134,7 @@ export const compile = async ({
 const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
   return diagnostic
     .map((d) => {
-      const objects = [d.nodeId && `Node(${d.nodeId})`, d.edgeId && `Edge(${d.edgeId})`].filter(nonNullable).join(' ,');
+      const objects = [d.nodeId && `Node(${d.nodeId})`, d.edgeId && `Edge(${d.edgeId})`].filter(isNonNullable).join(' ,');
       return `${d.severity}: ${d.message}${objects ? `. ${objects}.` : ''} `;
     })
     .join('\n');

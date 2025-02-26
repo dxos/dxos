@@ -27,7 +27,7 @@ import {
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = {
   id: string;
@@ -94,7 +94,7 @@ export const TypescriptEditor = ({
               ]
             : [],
         ],
-      ].filter(nonNullable),
+      ].filter(isNonNullable),
       selection,
       scrollTo,
     }),

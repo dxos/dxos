@@ -13,7 +13,7 @@ import { FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { ExportedCellChange, type HyperFormula } from '#hyperformula';
 import { ComputeNode } from './compute-node';
@@ -161,7 +161,7 @@ export class ComputeGraph extends Resource {
                 const { type, id } = parseSheetName(name);
                 return type && id ? this._space?.db.getObjectById(id) : undefined;
               })
-              .filter(nonNullable);
+              .filter(isNonNullable);
 
             for (const obj of objects) {
               if (obj.name === name) {

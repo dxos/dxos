@@ -21,7 +21,7 @@ import { getTypename, isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
 import { SPACE_PLUGIN } from '../meta';
@@ -252,9 +252,9 @@ export default (context: PluginsContext) => {
 
         return collection.objects
           .map((object) => object.target)
-          .filter(nonNullable)
+          .filter(isNonNullable)
           .map((object) => createObjectNode({ object, space, resolve, navigable: state.navigableCollections }))
-          .filter(nonNullable);
+          .filter(isNonNullable);
       },
     }),
 
@@ -273,9 +273,9 @@ export default (context: PluginsContext) => {
 
         return collection.objects
           .map((object) => object.target)
-          .filter(nonNullable)
+          .filter(isNonNullable)
           .map((object) => createObjectNode({ object, space, resolve, navigable: state.navigableCollections }))
-          .filter(nonNullable);
+          .filter(isNonNullable);
       },
       resolver: ({ id }) => {
         if (id.length !== FQ_ID_LENGTH) {

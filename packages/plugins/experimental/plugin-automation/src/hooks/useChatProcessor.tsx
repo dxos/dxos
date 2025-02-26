@@ -9,7 +9,7 @@ import { createSystemPrompt, type Tool } from '@dxos/artifact';
 import { FunctionType } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
@@ -46,7 +46,7 @@ export const useChatProcessor = (chat: AIChatType) => {
       ...serviceTools,
       ...functions
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
-        .filter(nonNullable),
+        .filter(isNonNullable),
     ],
     [globalTools, artifactDefinitions, serviceTools, functions, space?.id],
   );

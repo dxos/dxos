@@ -6,7 +6,7 @@ import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 
 import { invariant } from '@dxos/invariant';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type JsonPath, type JsonProp } from './jsonPath';
 
@@ -387,11 +387,11 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
             invariant(AST.isLiteral(literal.type));
             return literal.type.literal;
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
 
         return literals.length ? [prop, S.Literal(...literals)] : undefined;
       })
-      .filter(nonNullable),
+      .filter(isNonNullable),
   );
 
   const schema = S.Struct(fields);

@@ -12,7 +12,7 @@ import {
   isAction,
   isActionLike,
 } from '@dxos/app-graph';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type FlattenedActions, type NavTreeItemGraphNode } from './types';
 
@@ -95,7 +95,7 @@ export const getChildren = (
       const nextPath = [...path, node.id];
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
     })
-    .filter(nonNullable) as NavTreeItemGraphNode[];
+    .filter(isNonNullable) as NavTreeItemGraphNode[];
 };
 
 export const getActions = (graph: Graph, node: Node): FlattenedActions => {

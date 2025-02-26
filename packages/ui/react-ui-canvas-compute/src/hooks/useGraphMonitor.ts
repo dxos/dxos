@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { type GraphMonitor, type CanvasGraphModel, type Connection } from '@dxos/react-ui-canvas-editor';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { createComputeNode, isValidComputeNode } from '../graph';
 import { type ComputeShape, type TriggerShape } from '../shapes';
@@ -79,7 +79,7 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
               return model.edges.find((computeEdge) => computeEdge.input === input && computeEdge.output === output)
                 ?.id;
             })
-            .filter(nonNullable);
+            .filter(isNonNullable);
 
           model.removeNodes(nodeIds);
           model.removeEdges(edgeIds);

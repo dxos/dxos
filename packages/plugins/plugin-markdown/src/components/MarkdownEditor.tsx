@@ -35,7 +35,7 @@ import {
   createEditorAction,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNotFalsy, nonNullable } from '@dxos/util';
+import { isNotFalsy, isNonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -85,7 +85,7 @@ export const MarkdownEditor = ({
   // Extensions from other plugins.
   // TODO(burdon): Reconcile with DocumentEditor.useExtensions.
   const providerExtensions = useMemo(
-    () => extensionProviders?.flatMap((provider) => provider({})).filter(nonNullable),
+    () => extensionProviders?.flatMap((provider) => provider({})).filter(isNonNullable),
     [extensionProviders],
   );
 

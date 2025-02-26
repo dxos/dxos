@@ -16,7 +16,7 @@ import {
   type QueryService,
   type QueryResult as RemoteQueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type ReactiveEchoObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
@@ -147,7 +147,7 @@ export class IndexQuerySource implements QuerySource {
           const processedResults = await Promise.all(
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
-          const results = processedResults.filter(nonNullable);
+          const results = processedResults.filter(isNonNullable);
 
           log('queryIndex processed results', {
             queryId,
