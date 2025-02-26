@@ -1,0 +1,234 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
+import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
+import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
+import React, { useState, useEffect, useMemo, type CSSProperties, useRef, type ComponentType } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
+
+import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
+import { ResponsiveGridItemContainer } from './ResponsiveGridItemContainer';
+
+const MIN_DIVIDER_HEIGHT = 200;
+const MAX_DIVIDER_HEIGHT = 800;
+
+/**
+ * Props for the ResponsiveGrid component.
+ */
+export type ResponsiveGridProps<T extends object = any> = {
+  /** Cell component. */
+  Cell: ComponentType<ResponsiveGridItemProps<T>>;
+
+  /** Space between grid items in pixels. */
+  gap?: number;
+
+  /** Function to get the ID of an item. */
+  getId?: (item: T) => string;
+
+  /** Array of items to display in the grid. */
+  items: T[];
+
+  /** ID of the pinned item. */
+  pinned?: string;
+
+  /** Debug mode. */
+  debug?: boolean;
+
+  /** Callback when the pinned item changes. */
+  onPinnedChange?: (pinned: string | undefined) => void;
+};
+
+const defaultGetId: ResponsiveGridProps<any>['getId'] = (item: any) => item.id;
+
+/**
+ * A responsive grid component that automatically adjusts its layout to optimize space usage.
+ * Maintains aspect ratio of items while ensuring uniform gaps between them.
+ */
+export const ResponsiveGrid = <T extends object = any>({
+  Cell,
+  gap = 16,
+  getId = defaultGetId,
+  items,
+  pinned,
+  onPinnedChange,
+}: ResponsiveGridProps<T>) => {
+  const { width = 0, height = 0, ref } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
+
+  const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
+  const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
+
+  // Recalculate optimal columns when container size or items change.
+  const [columns, setColumns] = useState(1);
+  const cellWidth = Math.floor((width - gap * (columns - 1)) / columns);
+  useEffect(() => {
+    if (width > 0 && height > 0) {
+      setColumns(calculateOptimalColumns(width, height, mainItems.length, gap));
+    }
+  }, [width, height, mainItems.length, gap]);
+
+  // Absolutely positioned items.
+  const [bounds, setBounds] = useState<[T, CSSProperties][]>([]);
+  useEffect(() => {
+    if (!ref.current) {
+      return;
+    }
+
+    // TODO(burdon): Consider directly setting bounds instead of state update.
+    const t = setTimeout(() => {
+      setBounds(items.map((item) => [item, getBounds(ref.current!, getId(item))]));
+    }, 100); // Wait until layout has been updated.
+    return () => clearTimeout(t);
+  }, [mainItems, width, height]);
+
+  // Divider.
+  const dividerRef = useRef<HTMLDivElement>(null);
+  const [dividerHeight, setDividerHeight] = useState(MAX_DIVIDER_HEIGHT); // TODO(burdon): Save.
+  const [state, setState] = useState<{ type: 'idle' } | { type: 'dragging' }>({ type: 'idle' });
+  useEffect(() => {
+    const divider = dividerRef.current;
+    if (!divider) {
+      return;
+    }
+
+    return draggable({
+      element: divider,
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        disableNativeDragPreview({ nativeSetDragImage });
+        preventUnhandled.start();
+      },
+      onDragStart: () => {
+        setState({ type: 'dragging' });
+      },
+      onDrag: ({ location }) => {
+        // contentRef.current?.style.setProperty(
+        //   '--local-resizing-width',
+        //   `${getProposedWidth({ initialWidth: dividerHeight, location })}px`,
+        // );
+      },
+      onDrop: ({ location }) => {
+        preventUnhandled.stop();
+        setState({ type: 'idle' });
+        setDividerHeight(getProposedHeight({ height: dividerHeight, location }));
+        // contentRef.current?.style.removeProperty('--local-resizing-width');
+      },
+    });
+  }, []);
+
+  return (
+    <div className='relative flex flex-col is-full overflow-hidden divide-y divide-neutral-200'>
+      {pinnedItem && (
+        <>
+          <div
+            className='flex w-full'
+            style={{ minHeight: MIN_DIVIDER_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
+          >
+            <ResponsiveGridItemContainer classNames='grow'>
+              <div {...{ 'data-grid-item': pinned }} className='grow' />
+            </ResponsiveGridItemContainer>
+          </div>
+          <div ref={dividerRef} className='ns-resize before:content-[""] h-[4px] bg-primary-200' />
+        </>
+      )}
+
+      <div ref={ref} className='flex w-full grow overflow-hidden items-center justify-center' style={{ padding: gap }}>
+        <div
+          role='grid'
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${columns}, ${cellWidth}px)`,
+            gap: `${gap}px`,
+          }}
+        >
+          {mainItems.map((item) => (
+            <div
+              key={getId(item)}
+              {...{ 'data-grid-item': getId(item) }}
+              className='p-2 aspect-video bg-neutral-200 rounded-lg opacity-10'
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Absolutely positioned items. */}
+      <div>
+        {ref.current &&
+          bounds.map(([item, bounds]) => (
+            <Cell
+              key={getId(item)}
+              item={item}
+              style={bounds}
+              pinned={getId(item) === pinned}
+              classNames='absolute transition-all duration-500'
+              onClick={() => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item))}
+            />
+          ))}
+      </div>
+    </div>
+  );
+};
+
+const getProposedHeight = ({ height, location }: { height: number; location: DragLocationHistory }): number => {
+  const diffX = location.current.input.clientX - location.initial.input.clientX;
+  const proposedHeight = height + diffX;
+  return Math.min(Math.max(MAX_DIVIDER_HEIGHT, proposedHeight), MIN_DIVIDER_HEIGHT);
+};
+
+const getBounds = (root: HTMLElement, id: string) => {
+  const el = document.querySelector(`[data-grid-item="${id}"]`)!;
+  const { left, top, width, height } = el.getBoundingClientRect();
+  return { left, top, width, height };
+};
+
+/**
+ * Calculates the optimal number of columns for a grid layout that minimizes wasted space.
+ * @param containerWidth - Width of the container in pixels.
+ * @param containerHeight - Height of the container in pixels.
+ * @param itemCount - Total number of items to display.
+ * @param gap - Space between items in pixels.
+ * @param aspectRatio - Desired aspect ratio of items (width/height).
+ * @returns The optimal number of columns.
+ */
+const calculateOptimalColumns = (
+  containerWidth: number,
+  containerHeight: number,
+  itemCount: number,
+  gap: number,
+  aspectRatio = 16 / 9,
+) => {
+  if (itemCount === 0) {
+    return 1;
+  }
+
+  let bestColumns = 1;
+  let minWastedSpace = Infinity;
+
+  // Try different column counts to find the optimal layout that minimizes wasted space.
+  for (let cols = 1; cols <= itemCount; cols++) {
+    const rows = Math.ceil(itemCount / cols);
+
+    // Calculate available space accounting for gaps.
+    const availableWidth = containerWidth - gap * (cols - 1);
+    const itemWidth = availableWidth / cols;
+    const itemHeight = itemWidth / aspectRatio;
+
+    // Skip configurations that exceed container height.
+    const totalHeight = itemHeight * rows + gap * (rows - 1);
+    if (totalHeight > containerHeight) {
+      continue;
+    }
+
+    // Calculate total wasted space for this configuration.
+    const usedWidth = itemWidth * cols + gap * (cols - 1);
+    const usedHeight = itemHeight * rows + gap * (rows - 1);
+    const wastedSpace = containerWidth * containerHeight - usedWidth * usedHeight;
+    if (wastedSpace < minWastedSpace) {
+      minWastedSpace = wastedSpace;
+      bestColumns = cols;
+    }
+  }
+
+  return bestColumns;
+};
