@@ -6,6 +6,7 @@ import React, { type ComponentProps, useCallback, useEffect, useMemo } from 'rea
 
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/react-client/echo';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -15,9 +16,28 @@ import { mx } from '@dxos/react-ui-theme';
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
 import { translationKey } from '../translations';
 
+//
+// Focus management.
+//
+const focusStore = create<{ focus: Record<string, string> }>({ focus: {} });
+
+const setFocus = (kanbanId: string, cardId: string | undefined) => {
+  if (cardId) {
+    focusStore.focus[kanbanId] = cardId;
+  }
+};
+
+const clearFocus = (kanbanId: string) => {
+  delete focusStore.focus[kanbanId];
+};
+
+const shouldFocus = (kanbanId: string, cardId: string) => {
+  return focusStore.focus[kanbanId] === cardId;
+};
+
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
-  onAddCard?: (columnValue: string | undefined) => void;
+  onAddCard?: (columnValue: string | undefined) => string | undefined;
   onRemoveCard?: (card: T) => void;
 };
 
@@ -54,6 +74,24 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
     },
     [model.items],
   );
+
+  const handleAddCard = useCallback(
+    (columnValue: string | undefined) => {
+      if (onAddCard) {
+        const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
+        setFocus(model.id, newCardId);
+      }
+    },
+    [onAddCard, model.id],
+  );
+
+  const cardToFocus = focusStore.focus[model.id];
+  useEffect(() => {
+    if (cardToFocus) {
+      // Clear focus after render cycle
+      setTimeout(() => clearFocus(model.id), 0);
+    }
+  }, [cardToFocus, model.id]);
 
   return (
     <Stack
@@ -128,7 +166,14 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} onSave={handleSave} autoSave />
+                      <Form
+                        values={card}
+                        schema={model.cardSchema}
+                        Custom={Custom}
+                        onSave={handleSave}
+                        autoFocus={shouldFocus(model.id, card.id)}
+                        autoSave
+                      />
                     </div>
                   </StackItem.Root>
                 ))}
@@ -137,7 +182,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <IconButton
                       icon='ph--plus--regular'
                       label={t('add card label')}
-                      onClick={() => onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue)}
+                      onClick={() => handleAddCard(columnValue)}
                       classNames='is-full'
                     />
                   </div>

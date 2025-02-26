@@ -63,13 +63,14 @@ const StorybookKanban = () => {
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && cardSchema && path) {
-        space.db.add(
-          create(cardSchema, {
-            title: faker.commerce.productName(),
-            description: faker.lorem.paragraph(),
-            [path]: columnValue,
-          }),
-        );
+        const card = create(cardSchema, {
+          title: faker.commerce.productName(),
+          description: faker.lorem.paragraph(),
+          [path]: columnValue,
+        });
+
+        space.db.add(card);
+        return card.id;
       }
     },
     [space, cardSchema, model],
