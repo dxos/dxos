@@ -8,9 +8,9 @@ import { createArtifactElement } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
-import { SpaceAction } from '@dxos/plugin-space/types';
 
 // TODO(burdon): Factor out.
 declare global {

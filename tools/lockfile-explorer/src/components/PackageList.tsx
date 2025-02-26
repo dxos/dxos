@@ -1,5 +1,10 @@
-import { render, Text, Box, useStdout, useInput, Transform, measureElement, Spacer, Newline } from 'ink';
-import React, { forwardRef, useRef } from 'react';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Text, Box, Transform, measureElement, Spacer } from 'ink';
+import React, { useRef } from 'react';
+
 import type { VersionId } from '../lockfile';
 import { ellipsis } from '../util/ellipsis';
 

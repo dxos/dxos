@@ -1,5 +1,10 @@
-import React, { useState, useEffect, useRef, type ReactNode } from 'react';
-import { render, Text, Box, useStdout, useInput, Transform, measureElement, Spacer, Newline } from 'ink';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Text, Box } from 'ink';
+import React from 'react';
+
 import {
   parsePackageId,
   type LockfileResult,

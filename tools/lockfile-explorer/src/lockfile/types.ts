@@ -1,3 +1,6 @@
+//
+// Copyright 2025 DXOS.org
+//
 
 export type PackageName = string & { __PackageName: never };
 /**

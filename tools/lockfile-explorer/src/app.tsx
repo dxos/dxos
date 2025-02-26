@@ -1,9 +1,19 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import fuzzy from 'fuzzy';
+import { render, Text, Box, useStdout, useInput } from 'ink';
+import { resolve } from 'node:path';
 import React, { useState, useEffect, useRef, type ReactNode } from 'react';
-import { render, Text, Box, useStdout, useInput, Transform, measureElement, Spacer, Newline } from 'ink';
+
+import { DependantList } from './components/DependantList';
+import { Input } from './components/Input';
+import { PackageList } from './components/PackageList';
+import { StatusBar } from './components/StatusBar';
 import {
   findLockfile,
   loadLockfile,
-  parsePackageId,
   setAllToVersion,
   type LockfileResult,
   type PackageId,
@@ -12,16 +22,7 @@ import {
   type VersionId,
   type VersionSpecifier,
 } from './lockfile';
-import { Input } from './components/Input';
-import fuzzy from 'fuzzy';
 import { entries, keys } from './util/object';
-import { dirname, resolve } from 'node:path';
-import { readFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
-import { StatusBar } from './components/StatusBar';
-import { PackageList } from './components/PackageList';
-import { ellipsis } from './util/ellipsis';
-import { DependantList } from './components/DependantList';
 
 const App = () => {
   const { stdout } = useStdout();
@@ -77,14 +78,14 @@ const App = () => {
   });
 
   let selectedVersionRow:
-      | {
-          versionId: VersionId;
-          dependent?: PackageId;
-          importer?: PackagePath;
-          row: [VersionId, { dependents: PackageId[]; importers: PackagePath[] }];
-        }
-      | undefined = undefined,
-    tmp = 0;
+    | {
+        versionId: VersionId;
+        dependent?: PackageId;
+        importer?: PackagePath;
+        row: [VersionId, { dependents: PackageId[]; importers: PackagePath[] }];
+      }
+    | undefined;
+  let tmp = 0;
   for (let i = 0; i < selectedPackageVersions.length; i++) {
     if (rightSelected - tmp === 0) {
       selectedVersionRow = { versionId: selectedPackageVersions[i][0], row: selectedPackageVersions[i] };

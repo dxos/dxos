@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Box, Text } from 'ink';
 import React, { type ReactNode } from 'react';
 

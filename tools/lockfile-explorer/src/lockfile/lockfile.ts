@@ -1,12 +1,14 @@
-import { existsSync, readFileSync } from 'node:fs';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { basename, dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import * as yaml from 'yaml';
-import { entries, keys } from '../util/object';
-import type { PackageName, VersionId, VersionSpecifier } from './types';
-import type { PackageId } from './types';
-import type { PackageIndex } from './types';
-import type { Lockfile } from './types';
+
+import type { PackageName, VersionId, VersionSpecifier, PackageId, PackageIndex, Lockfile } from './types';
+import { entries } from '../util/object';
 
 export const findLockfile = (path: string): string => {
   if (path.endsWith('pnpm-lock.yaml') && existsSync(path)) {

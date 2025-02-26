@@ -1,6 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Text, useInput } from 'ink';
 import type { ComponentProps } from 'react';
 import React from 'react';
-import { Text, useInput } from 'ink';
 
 export type InputProps = {
   value: string;
@@ -12,7 +16,6 @@ export const Input = ({ value, onChange, ...rest }: InputProps) => {
     if (key.backspace || key.delete) {
       onChange(value.slice(0, -1));
     } else if (key.return || key.ctrl) {
-      return;
     } else {
       onChange(value + input);
     }
