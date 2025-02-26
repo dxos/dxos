@@ -23,6 +23,11 @@ export const CallToolbar = () => {
     onTranscription,
   } = useCallContext();
 
+  // Screen sharing.
+  const isScreensharing = userMedia.screenshareVideoTrack !== undefined;
+  const canSharescreen =
+    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
+
   // Broadcast status over swarm.
   const [raisedHand, setRaisedHand] = useState(false);
   useBroadcastStatus({
@@ -43,6 +48,12 @@ export const CallToolbar = () => {
     audioStreamTrack: userMedia.audioTrack,
     isSpeaking,
   });
+
+  const handleLeave = () => {
+    userMedia.turnScreenshareOff();
+    setJoined(false);
+  };
+
   const handleToggleTranscription = async () => {
     const transcription: TranscriptionState = {
       enabled: !ai.transcription.enabled,
@@ -60,22 +71,9 @@ export const CallToolbar = () => {
     ai.setTranscription(transcription);
   };
 
-  // Screen sharing.
-  const canSharescreen =
-    typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
-  const isScreensharing = userMedia.screenshareVideoTrack !== undefined;
-
   return (
     <Toolbar.Root>
-      <IconButton
-        variant='destructive'
-        icon='ph--phone-x--regular'
-        label={t('leave call')}
-        onClick={() => {
-          userMedia.turnScreenshareOff();
-          setJoined(false);
-        }}
-      />
+      <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={handleLeave} />
       <div className='grow'></div>
       <IconButton
         icon={ai.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
