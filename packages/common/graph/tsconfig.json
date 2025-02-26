@@ -44,9 +44,6 @@
       "path": "../log"
     },
     {
-      "path": "../node-std"
-    },
-    {
       "path": "../random"
     },
     {

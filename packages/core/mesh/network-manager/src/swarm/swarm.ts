@@ -11,7 +11,7 @@ import { log, logInfo } from '@dxos/log';
 import { type SwarmEvent, type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
+import { ComplexMap, nonNullable } from '@dxos/util';
 
 import { type Connection, ConnectionState } from './connection';
 import { type ConnectionLimiter } from './connection-limiter';
@@ -104,7 +104,7 @@ export class Swarm {
   get connections() {
     return Array.from(this._peers.values())
       .map((peer) => peer.connection)
-      .filter(isNotNullOrUndefined);
+      .filter(nonNullable);
   }
 
   get ownPeerId() {
