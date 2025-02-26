@@ -10,10 +10,10 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { useCallContext, useSubscribedState } from '../../hooks';
 import { type UserState } from '../../types';
 import { usePulledAudioTrack, usePulledVideoTrack } from '../Call';
-import { GridCell, type GridCellProps } from '../Grid';
 import { VideoObject } from '../Media';
+import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 
-export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserState>) => {
+export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
   const {
     call: { user: self },
     dataSaverMode,
@@ -34,7 +34,14 @@ export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserS
   const videoMid = useMid(videoTrack);
 
   return (
-    <GridCell {...props} item={user} name={user.name} speaking={user.speaking} wave={user.raisedHand} debug={debug}>
+    <ResponsiveGridItem
+      {...props}
+      item={user}
+      name={user.name}
+      speaking={user.speaking}
+      wave={user.raisedHand}
+      debug={debug}
+    >
       <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
 
       {debug && (
@@ -50,7 +57,7 @@ export const Participant = ({ item: user, debug, ...props }: GridCellProps<UserS
           />
         </div>
       )}
-    </GridCell>
+    </ResponsiveGridItem>
   );
 };
 

@@ -6,7 +6,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Participant } from './Participant';
 import { type UserState } from '../../types';
-import { Grid } from '../Grid';
+import { ResponsiveGrid } from '../ResponsiveGrid';
+
+const getId = (user: UserState): string => user.id!;
 
 export type ParticipantGridProps = {
   user: UserState;
@@ -41,44 +43,43 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
     return allUsers;
   }, [self, users]) as UserState[];
 
-  const [expanded, setExpanded] = useState<UserState | undefined>();
+  const [pinned, setPinned] = useState<string | undefined>();
   useEffect(() => {
-    if (expanded) {
+    if (pinned) {
       // Check expanded user is still in call.
-      if (!allUsers.find((user) => user.id === expanded?.id)) {
-        setExpanded(undefined);
+      if (!allUsers.find((user) => user.id === pinned)) {
+        setPinned(undefined);
       }
     }
-  }, [expanded, allUsers]);
+  }, [pinned, allUsers]);
 
   // TODO(burdon): Auto expand if screenshare is enabled.
   // TODO(burdon): Auto expand when second user joins call?
 
   // Filter out currently expanded and sort screenshare first.
   // TODO(burdon): Put self last.
-  const filteredItems = allUsers
-    .filter((user) => user.id !== expanded?.id)
-    .sort((a, b) => {
-      if (a.self) {
-        return 1;
-      } else if (b.self) {
-        return -1;
-      } else if (a.tracks?.screenshareEnabled) {
-        return -1;
-      } else if (b.tracks?.screenshareEnabled) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
+  const filteredItems: UserState[] = allUsers.sort((a, b) => {
+    if (a.self) {
+      return 1;
+    } else if (b.self) {
+      return -1;
+    } else if (a.tracks?.screenshareEnabled) {
+      return -1;
+    } else if (b.tracks?.screenshareEnabled) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
 
   return (
-    <Grid<UserState>
+    <ResponsiveGrid<UserState>
       Cell={Participant}
       debug={debug}
+      getId={getId}
       items={filteredItems}
-      expanded={expanded}
-      onExpand={setExpanded}
+      pinned={pinned}
+      onPinnedChange={setPinned}
     />
   );
 };
