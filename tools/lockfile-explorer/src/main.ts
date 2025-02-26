@@ -4,4 +4,4 @@
 
 import { runApp } from './app';
 
-runApp();
+void runApp();

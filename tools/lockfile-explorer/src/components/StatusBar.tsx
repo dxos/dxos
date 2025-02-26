@@ -16,8 +16,8 @@ export type StatusBar = {
 export const StatusBar = ({ actions, statusText }: StatusBar) => {
   return (
     <Box flexDirection='row'>
-      {actions.map(({ binding, description }) => (
-        <Text>
+      {actions.map(({ binding, description }, i) => (
+        <Text key={i}>
           <Text bold>[{binding}]</Text> <Text color='gray'>{description}</Text>
         </Text>
       ))}

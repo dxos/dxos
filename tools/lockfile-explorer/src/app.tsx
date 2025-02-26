@@ -5,9 +5,9 @@
 import fuzzy from 'fuzzy';
 import { render, Text, Box, useStdout, useInput } from 'ink';
 import { resolve } from 'node:path';
-import React, { useState, useEffect, useRef, type ReactNode } from 'react';
+import React, { useState, useEffect, type ReactNode } from 'react';
 
-import { DependantList } from './components/DependantList';
+import { DependentList } from './components/DependantList';
 import { Input } from './components/Input';
 import { PackageList } from './components/PackageList';
 import { StatusBar } from './components/StatusBar';
@@ -36,7 +36,7 @@ const App = () => {
   useEffect(() => {
     const path = findLockfile(process.argv[2] ?? process.cwd());
 
-    loadLockfile(path).then((lockfile) => {
+    void loadLockfile(path).then((lockfile) => {
       setLockfile(lockfile);
     });
   }, []);
@@ -63,8 +63,6 @@ const App = () => {
       setLeftSelected(Math.max(0, filtered.length - 1));
     }
   }, [filtered.length]);
-
-  const listContainerRef = useRef(null);
 
   const selectedPackage = filtered[leftSelected];
   const selectedPackageVersions =
@@ -153,7 +151,7 @@ const App = () => {
     }
 
     if (key.ctrl && input === 's') {
-      setAllToVersionAction();
+      void setAllToVersionAction();
     }
   });
 
@@ -213,7 +211,7 @@ const App = () => {
           updatedPackages={updatedPackages}
         />
         {selectedPackage && selectedPackageVersions && lockfile && (
-          <DependantList
+          <DependentList
             dependants={selectedPackageVersions}
             lockfile={lockfile}
             isFocused={selectedPanel === 1}

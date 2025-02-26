@@ -3,6 +3,7 @@
 //
 
 export type PackageName = string & { __PackageName: never };
+
 /**
  * @example '^19.7.2'
  */

@@ -16,6 +16,7 @@ export const Input = ({ value, onChange, ...rest }: InputProps) => {
     if (key.backspace || key.delete) {
       onChange(value.slice(0, -1));
     } else if (key.return || key.ctrl) {
+      // noop
     } else {
       onChange(value + input);
     }

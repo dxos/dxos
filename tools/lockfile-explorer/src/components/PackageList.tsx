@@ -6,7 +6,7 @@ import { Text, Box, Transform, measureElement, Spacer } from 'ink';
 import React, { useRef } from 'react';
 
 import type { VersionId } from '../lockfile';
-import { ellipsis } from '../util/ellipsis';
+import { ellipsis } from '../util';
 
 export type PackageListProps = {
   packages: {
@@ -33,7 +33,7 @@ export const PackageList = ({ packages, selectedIndex, isFocused, updatedPackage
       overflow='hidden'
     >
       {packages.map(({ name, version, versionCount }, idx) => {
-        const { width = 0, height = 0 } = ref.current ? measureElement(ref.current) : {};
+        const { width = 0 } = ref.current ? measureElement(ref.current) : {};
         const isSelected = selectedIndex === idx;
         const isUpdated = updatedPackages.includes(name);
         return (

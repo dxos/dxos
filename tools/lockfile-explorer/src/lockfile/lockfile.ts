@@ -8,7 +8,7 @@ import { dirname, join, resolve } from 'node:path';
 import * as yaml from 'yaml';
 
 import type { PackageName, VersionId, VersionSpecifier, PackageId, PackageIndex, Lockfile } from './types';
-import { entries } from '../util/object';
+import { entries } from '../util';
 
 export const findLockfile = (path: string): string => {
   if (path.endsWith('pnpm-lock.yaml') && existsSync(path)) {
@@ -111,7 +111,7 @@ export const setAllToVersion = async (
   versionSpecifier: VersionSpecifier,
 ) => {
   for (const [importer, manifest] of entries(lockfile.lockfile.importers)) {
-    for (const [depName, { version, specifier }] of entries({
+    for (const [depName, { specifier }] of entries({
       ...(manifest.dependencies ?? {}),
       ...(manifest.devDependencies ?? {}),
       ...(manifest.optionalDependencies ?? {}),
