@@ -5,8 +5,9 @@
 import { DescriptionAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnums, S, FormatEnum, TypedObject, formatToType, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnums, S, FormatEnum, TypedObject, formatToType, TypeEnum, SelectOptionSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { hueTokenThemes } from '@dxos/react-ui-theme';
 
 const availableFormats = FormatEnums;
 
@@ -19,12 +20,23 @@ export const TypeNameSchema = S.String.pipe(
   }),
 );
 
+const palettes = Object.keys(hueTokenThemes);
+
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
   name: S.String.annotations({ description: 'The name of the property.' }),
   format: S.Enums(FormatEnum).annotations({
     description: 'The format of the property (call schema_formats for full list).',
   }),
+  config: S.optional(
+    S.Struct({
+      options: S.optional(
+        S.Array(SelectOptionSchema).annotations({
+          description: `Options for SingleSelect/MultiSelect formats. Available colors: ${palettes.join(', ')}`,
+        }),
+      ),
+    }),
+  ),
 }).pipe(S.mutable);
 
 // TODO(ZaymonFC): If this works well, move this to global tools.
@@ -112,6 +124,19 @@ export const schemaTools = [
 
       const schema = TypedObject({ typename, version: '0.1.0' })(fields);
       const [registeredSchema] = await space.db.schemaRegistry.register([schema]);
+
+      // TODO(ZaymonFC): This is a temporary workaround.
+      //   We should consolidate schema manipulation logic between here and the ViewProjection.
+      //   Currently this just implements the SingleSelect format, but we need to extend this
+      //   to all formats.
+      for (const prop of properties) {
+        if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.SingleSelect;
+          registeredSchema.jsonSchema.properties![prop.name].oneOf = prop.config.options.map(
+            ({ id, title, color }) => ({ const: id, title, color }),
+          );
+        }
+      }
 
       return ToolResult.Success(registeredSchema);
     },

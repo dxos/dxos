@@ -44,6 +44,12 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../experimental/artifact"
+    },
+    {
+      "path": "../../experimental/assistant"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
