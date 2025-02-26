@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback, useEffect, useMemo } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/react-client/echo';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -15,25 +14,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
 import { translationKey } from '../translations';
-
-//
-// Focus management.
-//
-const focusStore = create<{ focus: Record<string, string> }>({ focus: {} });
-
-const setFocus = (kanbanId: string, cardId: string | undefined) => {
-  if (cardId) {
-    focusStore.focus[kanbanId] = cardId;
-  }
-};
-
-const clearFocus = (kanbanId: string) => {
-  delete focusStore.focus[kanbanId];
-};
-
-const shouldFocus = (kanbanId: string, cardId: string) => {
-  return focusStore.focus[kanbanId] === cardId;
-};
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
@@ -45,8 +25,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { select, clear } = useSelectionActions(model.id);
   const selectedItems = useSelectedItems(model.id);
+  const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
-  // const [namingColumn, setNamingColumn] = useState(false);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
@@ -79,19 +59,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
     (columnValue: string | undefined) => {
       if (onAddCard) {
         const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
-        setFocus(model.id, newCardId);
+        setFocusedCardId(newCardId);
       }
     },
-    [onAddCard, model.id],
+    [onAddCard],
   );
-
-  const cardToFocus = focusStore.focus[model.id];
-  useEffect(() => {
-    if (cardToFocus) {
-      // Clear focus after render cycle
-      setTimeout(() => clearFocus(model.id), 0);
-    }
-  }, [cardToFocus, model.id]);
 
   return (
     <Stack
@@ -171,7 +143,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                         schema={model.cardSchema}
                         Custom={Custom}
                         onSave={handleSave}
-                        autoFocus={shouldFocus(model.id, card.id)}
+                        autoFocus={card.id === focusedCardId}
                         autoSave
                       />
                     </div>
