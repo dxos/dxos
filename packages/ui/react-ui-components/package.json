@@ -24,7 +24,6 @@
   "dependencies": {
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

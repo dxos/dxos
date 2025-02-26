@@ -94,7 +94,8 @@ describe('EchoSchema', () => {
     expect(() => {
       object.field1 = 42;
     }).to.throw();
-    // TODO(richburdon): Re-enable validation.
+
+    // TODO(burdon): Re-enable validation?
     // expect(() => {
     //   object.field2 = false;
     // }).to.throw();

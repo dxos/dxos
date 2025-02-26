@@ -21,6 +21,7 @@ export const ServiceRegistry = ({ space }: { space: Space }) => {
     return matchingServices.map((service) => enabledServices.find((s) => s.serviceId === service.serviceId) ?? service);
   }, [matchingServices, enabledServices]);
 
+  // TODO(burdon): Reaplce with SpacePlugin intent.
   const handleSetEnabled = (service: ServiceType, enabled: boolean) => {
     if (enabled) {
       space.db.add(service);

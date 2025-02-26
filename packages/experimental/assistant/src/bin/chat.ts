@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { writeFileSync } from 'fs';
 import inquirer from 'inquirer';
+import { writeFileSync } from 'node:fs';
 
 import { createUserMessage } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
@@ -24,6 +24,7 @@ import {
   Task,
 } from '../testing';
 
+// TOOD(burdon): Get from config.
 const client = new AIServiceClientImpl({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });

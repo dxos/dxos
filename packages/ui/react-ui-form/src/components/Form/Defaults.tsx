@@ -77,8 +77,6 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
   const { status, error } = getStatus();
   const checked = Boolean(getValue());
 
-  // TODO(burdon): Runtime error:
-  //  Warning: Unknown event handler property `onCheckedChange`. It will be ignored.
   return (
     <Input.Root validationValence={status}>
       {!inputOnly && (

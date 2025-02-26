@@ -96,7 +96,8 @@ export const ResponsiveGrid = <T extends object = any>({
   // Divider.
   const dividerRef = useRef<HTMLDivElement>(null);
   const [dividerHeight, setDividerHeight] = useState(MIN_HEIGHT); // TODO(burdon): Save.
-  const [state, setState] = useState<{ type: 'idle' } | { type: 'dragging' }>({ type: 'idle' });
+  // TODO(burdon): Replace with @thure's new componentry.
+  const [_state, setState] = useState<{ type: 'idle' } | { type: 'dragging' }>({ type: 'idle' });
   useEffect(() => {
     const divider = dividerRef.current;
     if (!divider) {

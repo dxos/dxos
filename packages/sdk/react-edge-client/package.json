@@ -24,7 +24,6 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*"
   },

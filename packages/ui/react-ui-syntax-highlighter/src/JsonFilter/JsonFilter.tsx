@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Move to jsonpath-plus.
 import jp from 'jsonpath';
 import React, { useEffect, useState } from 'react';
 

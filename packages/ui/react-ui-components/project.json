@@ -14,15 +14,13 @@
           "{projectRoot}/src/index.ts"
         ],
         "platforms": [
-          "browser",
-          "node"
+          "browser"
         ]
       }
     },
     "lint": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

@@ -80,7 +80,7 @@ export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
 };
 
 /**
- * Helper that updates the text value at the given path. Cal
+ * Helper that updates the text value at the given path. Caller must ensure the path is valid.
  * @param obj - The object to update.
  * @param path - The path to the text value to update.
  * @param newText - The new text value.

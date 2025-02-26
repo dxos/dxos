@@ -12,8 +12,7 @@ import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type AudioChunk, type AudioRecorder } from '../ai/audio-recorder';
-import { Transcriber } from '../ai/transcriber';
+import { type AudioChunk, type AudioRecorder, Transcriber } from '../ai';
 import { type TranscriptSegment } from '../types';
 import { mergeFloat64Arrays } from '../utils';
 
@@ -39,14 +38,14 @@ describe('Transcriber', () => {
     const fileBuffer = await readFile('test.wav');
     const wav = new WaveFile(fileBuffer);
 
-    // Get PCM samples and format info
+    // Get PCM samples and format info.
     const samples = wav.getSamples();
     const format = wav.fmt as any;
 
-    // Take second half of samples
+    // Take second half of samples.
     const halfSamples = samples.slice(Math.floor(samples.length / 2));
 
-    // Create new WAV file with half the samples
+    // Create new WAV file with half the samples.
     const halfWav = new WaveFile();
     halfWav.fromScratch(1, format.sampleRate!, '16', halfSamples);
 

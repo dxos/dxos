@@ -18,7 +18,7 @@ export const attachTypedJsonSerializer = (obj: any) => {
   });
 };
 
-// NOTE: KEEP `function`!
+// NOTE: KEEP as function.
 const typedJsonSerializer = function (this: any, key: string, value: any) {
   const { id, [TYPENAME_SYMBOL]: typename, ...rest } = this;
   return {
