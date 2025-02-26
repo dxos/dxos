@@ -7,10 +7,7 @@ import { render, Text, Box, useStdout, useInput } from 'ink';
 import { resolve } from 'node:path';
 import React, { useState, useEffect, type ReactNode } from 'react';
 
-import { DependentList } from './components/DependantList';
-import { Input } from './components/Input';
-import { PackageList } from './components/PackageList';
-import { StatusBar } from './components/StatusBar';
+import { DependentList, PackageList, StatusBar, Input } from './components';
 import {
   findLockfile,
   loadLockfile,
