@@ -4,7 +4,7 @@
 
 import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { deepMapValues, nonNullable, stripUndefined } from '@dxos/util';
+import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
 import { getObjectCore, type ReactiveEchoObject } from './echo-handler';
@@ -39,7 +39,7 @@ export class Serializer {
     }
 
     const data = {
-      objects: loadedObjects.filter(nonNullable).map((object) => {
+      objects: loadedObjects.filter(isNonNullable).map((object) => {
         return this.exportObject(object as any);
       }),
 

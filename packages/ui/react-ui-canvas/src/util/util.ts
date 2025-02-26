@@ -36,4 +36,15 @@ export const testId = <ID = string>(id: ID, inspect = false) => {
   return { [DATA_TEST_ID]: id };
 };
 
+export const inspectElement = (el: Element) => {
+  (window as any).INSPECT = () => {
+    (window as any).inspect(el);
+    (window as any).element = el;
+    // eslint-disable-next-line no-console
+    console.log('Open storybook in expanded window;\nthen run INSPECT()');
+    // eslint-disable-next-line no-console
+    console.log(el);
+  };
+};
+
 export const DATA_TEST_ID = 'data-test-id';

@@ -8,4 +8,5 @@ export { GeoPoint } from './object';
 export * from './select';
 
 export * from './format';
+export * from './string';
 export * from './types';

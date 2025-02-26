@@ -19,11 +19,11 @@
       "default": "node-datachannel/*"
     },
     "#tcp-transport": {
+      "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node/transport/tcp/index.cjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
-      "require": "./dist/lib/node/transport/tcp/index.cjs",
-      "types": "./dist/types/src/transport/tcp/index.d.ts"
+      "require": "./dist/lib/node/transport/tcp/index.cjs"
     }
   },
   "exports": {

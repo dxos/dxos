@@ -15,7 +15,8 @@ import { protocol } from './defs';
 import { type EdgeIdentity } from './edge-identity';
 import { toUint8Array } from './protocol';
 
-const SIGNAL_KEEPALIVE_INTERVAL = 5_000;
+const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
+const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
 
 /**
  * 1MB websocket message limit: https://developers.cloudflare.com/durable-objects/platform/limits/
@@ -79,9 +80,9 @@ export class EdgeWsConnection extends Resource {
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
     };
-    this._ws.onclose = () => {
+    this._ws.onclose = (event) => {
       if (this.isOpen) {
-        log('disconnected while being open');
+        log.warn('disconnected while being open', { code: event.code, reason: event.reason });
         this._callbacks.onRestartRequired();
       }
     };
@@ -153,10 +154,11 @@ export class EdgeWsConnection extends Resource {
       this._inactivityTimeoutCtx,
       () => {
         if (this.isOpen) {
+          log.warn('restart due to inactivity timeout');
           this._callbacks.onRestartRequired();
         }
       },
-      2 * SIGNAL_KEEPALIVE_INTERVAL,
+      SIGNAL_KEEPALIVE_TIMEOUT,
     );
   }
 }

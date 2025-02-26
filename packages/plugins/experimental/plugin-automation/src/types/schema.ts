@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, S, TypedObject } from '@dxos/echo-schema';
+import { ComputeGraph } from '@dxos/conductor';
+import { Expando, Ref, S, TypedObject, type Ref$ } from '@dxos/echo-schema';
+import { FunctionType } from '@dxos/functions';
 
 // TODO(burdon): Change to S.Literal (and discriminated union).
 export enum ChainInputType {
@@ -35,4 +37,96 @@ export class ChainPromptType extends TypedObject({ typename: 'dxos.org/type/Chai
 export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', version: '0.1.0' })({
   name: S.optional(S.String),
   prompts: S.optional(S.mutable(S.Array(Ref(ChainPromptType)))),
+}) {}
+
+export class AIChatType extends TypedObject({ typename: 'dxos.org/type/AIChat', version: '0.1.0' })({
+  name: S.optional(S.String),
+  // TODO(wittjosiah): Should be a ref to a Queue.
+  queue: Ref(Expando),
+}) {}
+
+const ApiAuthorizationKey = S.Struct({
+  type: S.Literal('api-key'),
+  key: S.String,
+  placement: S.Union(
+    S.Struct({
+      type: S.Literal('authorization-header'),
+    }),
+    S.Struct({
+      type: S.Literal('query'),
+      name: S.String,
+    }),
+  ),
+});
+
+const ApiAuthorizationOauth = S.Struct({
+  type: S.Literal('oauth'),
+  clientId: S.String,
+  clientSecret: S.String,
+  tokenUrl: S.String,
+  grantType: S.String,
+});
+
+export const ApiAuthorization = S.Union(ApiAuthorizationKey, ApiAuthorizationOauth);
+export type ApiAuthorization = S.Schema.Type<typeof ApiAuthorization>;
+
+const ServiceInterfaceFunction = S.Struct({
+  kind: S.Literal('function'),
+  fn: Ref(FunctionType) as Ref$<FunctionType>,
+});
+
+const ServiceInterfaceWorkflow = S.Struct({
+  kind: S.Literal('workflow'),
+  workflow: Ref(ComputeGraph) as Ref$<ComputeGraph>,
+});
+
+const ServiceInterfaceApi = S.Struct({
+  kind: S.Literal('api'),
+
+  /**
+   * URL to fetch the openapi schema.
+   */
+  schemaUrl: S.optional(S.String),
+
+  /**
+   * Inlined openapi schema.
+   */
+  schema: S.optional(S.Any),
+
+  /**
+   * Authorization configuration if required.
+   */
+  authorization: S.optional(ApiAuthorization),
+});
+
+const ServiceInterface = S.Union(ServiceInterfaceFunction, ServiceInterfaceWorkflow, ServiceInterfaceApi);
+export type ServiceInterface = S.Schema.Type<typeof ServiceInterface>;
+
+// export const ServiceType = S.Struct({
+//   serviceId: S.String,
+//   name: S.optional(S.String),
+//   description: S.optional(S.String),
+//   category: S.optional(S.String),
+//   enabled: S.optional(S.Boolean),
+
+//   /**
+//    * Entries exposed: functions, workflows, and APIs.
+//    */
+//   interfaces: S.optional(S.Array(ServiceInterface)),
+// }).pipe(EchoObject('dxos.org/type/Service', '0.1.0'));
+// dxn:type:dxos.org/type/Service
+
+// export type ServiceType = S.Schema.Type<typeof ServiceType>;
+
+export class ServiceType extends TypedObject({ typename: 'dxos.org/type/ServiceType', version: '0.1.0' })({
+  serviceId: S.String,
+  name: S.optional(S.String),
+  description: S.optional(S.String),
+  category: S.optional(S.String),
+  enabled: S.optional(S.Boolean),
+
+  /**
+   * Entries exposed: functions, workflows, and APIs.
+   */
+  interfaces: S.optional(S.Array(ServiceInterface)),
 }) {}

@@ -8,7 +8,7 @@ import { type Client, PublicKey } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import type { CoreDatabase, ReactiveEchoObject } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -61,6 +61,7 @@ export interface FunctionContextAi {
 /**
  * Event payload.
  */
+// TODO(dmaretskyi): Update type definitions to match the actual payload.
 export type FunctionEvent<TData = {}, TMeta = {}> = {
   data: FunctionEventMeta<TMeta> & TData;
 };
@@ -135,7 +136,9 @@ export const subscriptionHandler = <TMeta>(
 
     registerTypes(space, types);
     const objects = space
-      ? data.objects?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
+      ? data.objects
+          ?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id))
+          .filter(isNonNullable)
       : [];
 
     if (!!data.spaceKey && !space) {

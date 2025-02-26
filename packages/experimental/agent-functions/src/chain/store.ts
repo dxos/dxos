@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 const metaKey = ({ space, id }: ChainDocument['metadata']) => `${space ?? ''}/${id}`;
 
@@ -138,7 +138,7 @@ export class ChainStore {
   // TODO(burdon): Split into chunks?
   async addDocuments(docs: ChainDocument[]) {
     invariant(this._vectorStore);
-    const documentIds = docs.map(({ metadata }) => this._documentById.get(metaKey(metadata))).filter(nonNullable);
+    const documentIds = docs.map(({ metadata }) => this._documentById.get(metaKey(metadata))).filter(isNonNullable);
     if (documentIds.length) {
       await this._vectorStore.delete({ ids: documentIds.map(({ id }) => id) });
     }
@@ -168,7 +168,7 @@ export class ChainStore {
         }
         return documentId;
       })
-      .filter(nonNullable);
+      .filter(isNonNullable);
 
     if (documentIds.length) {
       await this._vectorStore.delete({ ids: documentIds.map(({ id }) => id) });

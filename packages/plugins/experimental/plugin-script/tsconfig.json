@@ -72,6 +72,12 @@
       "path": "../../../core/protocols"
     },
     {
+      "path": "../../../experimental/artifact"
+    },
+    {
+      "path": "../../../experimental/assistant"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

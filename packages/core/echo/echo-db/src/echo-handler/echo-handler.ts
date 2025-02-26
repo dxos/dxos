@@ -22,6 +22,7 @@ import {
   SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
+  symbolSchema,
   TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
@@ -135,6 +136,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case TYPENAME_SYMBOL:
           return this._getTypename(target);
+        case symbolSchema:
+          return this.getSchema(target);
       }
     }
 
@@ -383,7 +386,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].database.schemaRegistry.getSchemaById(typeReference.objectId);
+    return target[symbolInternals].database.schemaRegistry.query({ id: typeReference.toDXN().toString() }).runSync()[0];
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {

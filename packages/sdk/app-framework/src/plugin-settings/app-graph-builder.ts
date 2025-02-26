@@ -4,7 +4,7 @@
 
 import { createExtension, type Node } from '@dxos/app-graph';
 import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { SETTINGS_ID, SETTINGS_KEY, SETTINGS_PLUGIN, SettingsAction } from './actions';
 import { Capabilities } from '../common';
@@ -68,7 +68,7 @@ export default (context: PluginsContext) =>
 
               return [plugin.meta, settings];
             })
-            .filter(nonNullable)
+            .filter(isNonNullable)
             .map(([meta, settings]) => ({
               id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
               type: 'category',
@@ -107,7 +107,7 @@ export default (context: PluginsContext) =>
 
             return [plugin.meta, settings];
           })
-          .filter(nonNullable)
+          .filter(isNonNullable)
           .map(([meta, settings]) => ({
             id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
             type: 'category',

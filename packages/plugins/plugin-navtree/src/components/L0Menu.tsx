@@ -89,6 +89,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('') : []),
     [type, item.properties.label, t],
   );
+
   return (
     <Tooltip.Root delayDuration={0}>
       <Tooltip.Trigger asChild>
@@ -152,7 +153,8 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
       data-itemid={id}
       data-testid={testId}
     >
-      <L0Item item={item} parent={parent} path={groupPath} />
+      {/* TODO(burdon): Option. */}
+      {/* <L0Item item={item} parent={parent} path={groupPath} /> */}
       {collectionItems.map((collectionItem) => (
         <L0Item key={collectionItem.id} item={collectionItem} parent={item} path={groupPath} />
       ))}

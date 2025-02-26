@@ -90,9 +90,6 @@
       "path": "../../plugins/experimental/plugin-inbox"
     },
     {
-      "path": "../../plugins/experimental/plugin-kanban"
-    },
-    {
       "path": "../../plugins/experimental/plugin-native"
     },
     {
@@ -133,6 +130,9 @@
     },
     {
       "path": "../../plugins/plugin-help"
+    },
+    {
+      "path": "../../plugins/plugin-kanban"
     },
     {
       "path": "../../plugins/plugin-map"

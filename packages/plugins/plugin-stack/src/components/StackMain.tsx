@@ -19,7 +19,7 @@ import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
@@ -58,7 +58,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       // TODO(wittjosiah): Should the database handle this differently?
       // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
       .map((object) => object.target)
-      .filter(nonNullable)
+      .filter(isNonNullable)
       .map((object) => {
         const metadata = allMetadata.find((m) => m.id === (getType(object)?.objectId ?? 'never'))
           ?.metadata as StackSectionMetadata;
@@ -75,7 +75,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
     async (id: string) => {
       const index = collection.objects
         .map((object) => object.target)
-        .filter(nonNullable)
+        .filter(isNonNullable)
         .findIndex((section) => fullyQualifiedId(section) === id);
       const object = collection.objects[index].target;
       if (isReactiveObject(object)) {

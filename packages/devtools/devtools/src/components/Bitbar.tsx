@@ -3,7 +3,7 @@
 //
 
 import React, { type FC } from 'react';
-import useResizeObserver from 'use-resize-observer';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { mx } from '@dxos/react-ui-theme';
 import { BitField, range } from '@dxos/util';
@@ -25,7 +25,7 @@ export const Bitbar: FC<BitbarParams> = ({
   height = size,
   className,
 }) => {
-  const { ref, width } = useResizeObserver();
+  const { ref, width } = useResizeDetector();
 
   const buckets = Math.min(Math.floor((width ?? 0) / (size + margin)), length);
 

@@ -6,8 +6,8 @@ import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@d
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { CallsPlugin } from '@dxos/plugin-calls';
+import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
+import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
 import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
@@ -83,19 +83,27 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     THEME_PLUGIN,
     TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
-  ].filter(isNotFalsy);
+  ]
+    .filter(isNotFalsy)
+    .flat();
 
-export const defaults = ({ isDev }: PluginConfig): string[] =>
+export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
-    // prettier-ignore
     isDev && DEBUG_PLUGIN,
+
+    // Default
     MARKDOWN_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,
     THREAD_PLUGIN,
     WNFS_PLUGIN,
-  ].filter(isNotFalsy);
+
+    // Labs
+    isLabs && [AUTOMATION_PLUGIN, CALLS_PLUGIN],
+  ]
+    .filter(isNotFalsy)
+    .flat();
 
 export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
   [
@@ -123,7 +131,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
       },
       onReset: ({ target }) => {
         localStorage.clear();
-
         if (target === 'deviceInvitation') {
           window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
         } else if (target === 'recoverIdentity') {
@@ -168,4 +175,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     TokenManagerPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
-  ].filter(isNotFalsy);
+  ]
+    .filter(isNotFalsy)
+    .flat();

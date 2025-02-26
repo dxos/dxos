@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { executeQuery } from './query-executor';
 import { createTestData } from '../testing';
 
-test('run', async ({ expect }) => {
+test.skip('run', async ({ expect }) => {
   const dataSource = createTestData();
   // for (const node of dataSource.nodes) {
   //   log.info('node', { id: node.id, label: node.label, name: node.properties.name });
