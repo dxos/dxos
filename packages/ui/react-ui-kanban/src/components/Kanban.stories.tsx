@@ -133,7 +133,9 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        const { schema } = await initializeKanban({ space });
+        const { schema, kanban } = await initializeKanban({ space });
+        space.db.add(kanban);
+
         // TODO(burdon): Replace with sdk/schema/testing.
         Array.from({ length: 8 }).map(() => {
           return space.db.add(
