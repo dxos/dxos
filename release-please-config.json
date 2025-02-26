@@ -749,6 +749,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-dnd/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
