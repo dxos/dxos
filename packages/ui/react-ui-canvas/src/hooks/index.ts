@@ -3,5 +3,5 @@
 //
 
 export * from './projection';
-export * from './useProjection';
+export * from './useCanvasContext';
 export * from './useWheel';

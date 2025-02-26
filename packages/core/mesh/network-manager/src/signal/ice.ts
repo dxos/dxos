@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { isNotNullOrUndefined } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 export interface IceProvider {
   getIceServers: () => Promise<RTCIceServer[]>;
@@ -33,7 +33,7 @@ export const createIceProvider = (iceProviders: Runtime.Services.IceProvider[]):
           ),
         )
       )
-        .filter(isNotNullOrUndefined)
+        .filter(isNonNullable)
         .map(({ iceServers }: { iceServers: RTCIceServer[] }) => iceServers)
         .flat();
 

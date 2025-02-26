@@ -21,6 +21,8 @@ export const SpaceSchema: S.Schema<Space> = S.Any.pipe(
   S.filter((x) => isSpace(x)),
   S.annotations({ title: 'Space' }),
 );
+
+// TODO(dmaretskyi): Move to @dxos/echo-schema.
 export const ReactiveObjectSchema: S.Schema<ReactiveObject<any>> = S.Any.pipe(
   S.filter((x) => isReactiveObject(x)),
   S.annotations({ title: 'ReactiveObject' }),

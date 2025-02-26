@@ -3,11 +3,11 @@
 //
 
 import {
+  FlameChart as FlameChartJs,
   type FlameChartNodes,
   type FlameChartSettings,
   type Marks,
   type Waterfall,
-  FlameChart as FlameChartJs,
   type WaterfallItem,
   type Mark,
   type UIPlugin,
@@ -15,7 +15,7 @@ import {
   type Timeseries,
 } from 'flame-chart-js';
 import React, { useCallback, useEffect, useRef } from 'react';
-import useResizeObserver from 'use-resize-observer';
+import { useResizeDetector } from 'react-resize-detector';
 
 export type NodeTypes =
   | { node: FlatTreeNode | null; type: 'flame-chart-node' }
@@ -42,18 +42,21 @@ export type FlameChartProps = {
 };
 
 export const FlameChart = (props: FlameChartProps) => {
-  const boxRef = useRef<null | HTMLDivElement>(null);
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
   const flameChart = useRef<null | FlameChartJs>(null);
 
-  useResizeObserver({
-    ref: boxRef,
-    onResize: ({ width = 0, height = 0 }) => flameChart.current?.resize(width, height - 3),
+  const boxRef = useRef<null | HTMLDivElement>(null);
+  useResizeDetector({
+    targetRef: boxRef,
+    onResize: ({ width = 0, height = 0 }) => {
+      if (width && height) {
+        flameChart.current?.resize(width, height - 3);
+      }
+    },
   });
 
   const initialize = useCallback(() => {
     const { data, marks, waterfall, timeseries, settings, colors, plugins, timeframeTimeseries } = props;
-
     if (canvasRef.current && boxRef.current) {
       const { width = 0, height = 0 } = boxRef.current.getBoundingClientRect();
       canvasRef.current.width = width;

@@ -11,7 +11,7 @@ import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@
 import { Form, type InputProps } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/react-ui-theme';
-import { nonNullable, type MaybePromise } from '@dxos/util';
+import { isNonNullable, type MaybePromise } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../../meta';
 import { type CollectionType } from '../../types';
@@ -29,7 +29,6 @@ const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
   return useCallback(
     ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps }) => {
       const composedData = { prop, schema, ...baseData };
-
       if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
         return undefined;
       }
@@ -72,7 +71,7 @@ export const CreateObjectPanel = ({
   const schema = schemas.find((schema) => getObjectAnnotation(schema)?.typename === typename);
   const options: ObjectAnnotation[] = schemas
     .map(getObjectAnnotation)
-    .filter(nonNullable)
+    .filter(isNonNullable)
     .sort((a, b) => {
       const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
       const nameB = t('typename label', { ns: b.typename, defaultValue: b.typename });

@@ -17,6 +17,8 @@ export default [
         'object title placeholder': 'New script',
         'create object label': 'Create script',
         'create stack section label': 'Create script',
+        'description label': 'Description',
+        'description placeholder': 'Describe what the script does.',
         'binding placeholder': 'Function name',
         'function request placeholder': 'Function request',
         'deploy label': 'Deploy',

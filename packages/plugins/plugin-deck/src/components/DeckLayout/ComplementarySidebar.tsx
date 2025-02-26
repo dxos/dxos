@@ -33,8 +33,8 @@ export type ComplementarySidebarProps = {
 export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarProps) => {
   const layout = useCapability(DeckCapabilities.MutableDeckState);
   const attended = useAttended();
-  const panelIds = useMemo(() => panels.map((p) => p.id), [panels]);
-  const activePanelId = panelIds.find((p) => p === current) ?? panels[0].id;
+  const panelIds = useMemo(() => panels.map((panel) => panel.id), [panels]);
+  const activePanelId = panelIds.find((panelId) => panelId === current) ?? panels[0].id;
   const activeEntryId = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${activePanelId}` : undefined;
   const { graph } = useAppGraph();
   const node = useNode(graph, activeEntryId);

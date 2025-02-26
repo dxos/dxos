@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
-import type { ObjectMeta } from './object/meta';
+import { type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
@@ -124,7 +124,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
 
-  return Reference.fromLegacyTypename(annotation.typename);
+  return Reference.fromDXN(DXN.fromTypenameAndVersion(annotation.typename, annotation.version));
 };
 
 /**
@@ -151,3 +151,36 @@ export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => 
 
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
+
+export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
+  schema: Schema,
+  object: any,
+): object is S.Schema.Type<Schema> => {
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
+    throw new Error('Schema must have an object annotation.');
+  }
+
+  const objectTypename = getTypename(object);
+  if (!objectTypename) {
+    return false;
+  }
+
+  if (objectTypename.startsWith('dxn:')) {
+    return schemaDXN.toString() === objectTypename;
+  } else {
+    const typeDXN = schemaDXN.asTypeDXN();
+    if (!typeDXN) {
+      return false;
+    }
+
+    return typeDXN.type === objectTypename;
+  }
+};
+
+/**
+ * Object that has an associated typename.
+ * The typename is retrievable using {@link getTypename}.
+ * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
+ */
+export type HasTypename = {};

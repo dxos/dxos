@@ -18,7 +18,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -179,7 +179,7 @@ export const CommentContainer = ({
         </div>
       </div>
       {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {RefArray.allResolvedTargets(thread.messages?.filter(nonNullable) ?? []).map((message) => (
+      {RefArray.allResolvedTargets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleMessageDelete} />
       ))}
       {/*
