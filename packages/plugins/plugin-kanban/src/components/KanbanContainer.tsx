@@ -54,7 +54,9 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && cardSchema && path) {
-        space.db.add(create(cardSchema, { [path]: columnValue }));
+        const card = create(cardSchema, { [path]: columnValue });
+        space.db.add(card);
+        return card.id;
       }
     },
     [space, cardSchema, model],
