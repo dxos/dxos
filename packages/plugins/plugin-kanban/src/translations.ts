@@ -26,6 +26,7 @@ export default [
         'delete item label': 'Delete card',
         'create kanban label': 'Create kanban',
         'card field deleted label': 'Card field deleted',
+        'card deleted label': 'Card deleted',
       },
     },
   },

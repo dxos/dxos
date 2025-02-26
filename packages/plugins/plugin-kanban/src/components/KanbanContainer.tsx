@@ -4,18 +4,21 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type EchoSchema } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useQuery, getSpace, create } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 import { ViewProjection } from '@dxos/schema';
 
+import { KanbanAction } from '../types';
+
 export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }) => {
   const [cardSchema, setCardSchema] = useState<EchoSchema>();
   const [projection, setProjection] = useState<ViewProjection>();
   const space = getSpace(kanban);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   useEffect(() => {
     if (kanban.cardView?.target?.query?.type && space) {
@@ -64,10 +67,9 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   const handleRemoveCard = useCallback(
     (card: { id: string }) => {
-      invariant(space);
-      space.db.remove(card);
+      void dispatch(createIntent(KanbanAction.DeleteCard, { card }));
     },
-    [space],
+    [dispatch],
   );
 
   return (
