@@ -28,10 +28,9 @@ export const getUserMediaTrack$ = (
     ),
     constraints$,
   ]).pipe(
-    // switchMap on the outside here will cause a new
+    // switchMap on the outside here will cause a new.
     switchMap(([deviceList, constraints]) => {
-      // concat here is going to make these be subscribed
-      // to sequentially
+      // Concat here is going to make these be subscribed to sequentially.
       return concat(
         ...deviceList
           .filter((d) => d.kind === kind)
@@ -57,7 +56,7 @@ const acquireTrack = (
   cleanupRef: { current: () => void },
 ) => {
   const { deviceId, label } = device;
-  log.info(`🙏🏻 Requesting ${label}`);
+  log.info(`requesting ${label}`);
   navigator.mediaDevices
     .getUserMedia(
       device.kind === 'videoinput' ? { video: { ...constraints, deviceId } } : { audio: { ...constraints, deviceId } },
@@ -65,19 +64,18 @@ const acquireTrack = (
     .then(async (mediaStream) => {
       const track = device.kind === 'videoinput' ? mediaStream.getVideoTracks()[0] : mediaStream.getAudioTracks()[0];
       const cleanup = () => {
-        log.info('🛑 Stopping track');
+        log.info('stopping track');
         track.stop();
       };
       cleanupRef.current = cleanup;
       subscriber.next(track);
       track.addEventListener('ended', () => {
-        log.info('🔌 Track ended abrubptly');
+        log.info('track ended abrubptly');
         subscriber.complete();
       });
     })
     .catch((err) => {
-      // this device is in use already, probably on Windows
-      // so we can just call this one complete and move on
+      // This device is in use already, probably on Windows so we can just call this one complete and move on.
       if (err instanceof Error && err.name === 'NotReadable') {
         subscriber.complete();
       } else {

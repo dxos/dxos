@@ -9,5 +9,6 @@ export const mergeFloat64Arrays = (arrays: Float64Array[]) => {
     newArray.set(array, offset);
     offset += array.length;
   }
+
   return newArray;
 };

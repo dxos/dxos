@@ -78,7 +78,7 @@ export class RxjsPeer {
         peerConnection.addEventListener('iceconnectionstatechange', () => {
           clearTimeout(iceTimeout);
           if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
-            log.debug(`💥 Peer iceConnectionState is ${peerConnection.iceConnectionState}`);
+            log.debug(`Peer iceConnectionState is ${peerConnection.iceConnectionState}`);
             subscribe.next(setup());
           } else if (peerConnection.iceConnectionState === 'disconnected') {
             // TODO: we should start to inspect the connection stats from here on for
@@ -90,7 +90,7 @@ export class RxjsPeer {
                 return;
               }
               log.debug(
-                `💥 Peer iceConnectionState was ${peerConnection.iceConnectionState} for more than ${timeoutSeconds} seconds`,
+                `Peer iceConnectionState was ${peerConnection.iceConnectionState} for more than ${timeoutSeconds} seconds`,
               );
               subscribe.next(setup());
             }, timeoutSeconds * 1000);
@@ -100,7 +100,7 @@ export class RxjsPeer {
         // TODO: Remove this
         Object.assign(window, {
           explode: () => {
-            log.debug('💥 Manually exploding connection');
+            log.debug('Manually exploding connection');
             peerConnection.close();
             peerConnection.dispatchEvent(new Event('connectionstatechange'));
           },
@@ -164,7 +164,7 @@ export class RxjsPeer {
   closeTrackDispatcher = new BulkRequestDispatcher(32);
 
   async createSession(peerConnection: RTCPeerConnection) {
-    log.debug('🆕 creating new session');
+    log.debug('creating new session');
     const { apiBase } = this.config;
     const response = await this.fetch(`${apiBase}/sessions/new?SESSION`, { method: 'POST' });
     if (response.status > 400) {
@@ -202,7 +202,7 @@ export class RxjsPeer {
       // is unsubscribed from immediately after subscribing. This will prevent
       // React's StrictMode from causing extra API calls to push/pull tracks.
       const timeout = setTimeout(() => {
-        log.debug('📤 pushing track ', trackName);
+        log.debug('pushing track ', trackName);
         pushedTrackPromise = this.pushTrackDispatcher
           .doBulkRequest({ trackName, transceiver }, (tracks) =>
             this.taskScheduler.schedule(async () => {
@@ -259,7 +259,7 @@ export class RxjsPeer {
         pushedTrackPromise
           ?.then(async () => {
             await this.taskScheduler.schedule(async () => {
-              log.debug('🔚 Closing pushed track ', trackName);
+              log.debug('Closing pushed track ', trackName);
               return this.closeTrack(peerConnection, transceiver.mid, sessionId);
             });
           })
@@ -272,7 +272,7 @@ export class RxjsPeer {
     track$: Observable<MediaStreamTrack>,
     encodings$: Observable<RTCRtpEncodingParameters[]> = of([]),
   ): Observable<TrackObject> {
-    // we want a single id for this connection, but we need to wait for
+    // We want a single id for this connection, but we need to wait for
     // the first track to show up before we can proceed, so we
     const stableId$ = track$.pipe(
       take(1),
@@ -285,7 +285,7 @@ export class RxjsPeer {
         const transceiver = session.peerConnection.addTransceiver(track, {
           direction: 'sendonly',
         });
-        log.debug('🌱 creating transceiver!');
+        log.debug('creating transceiver!');
 
         return {
           transceiver,
@@ -314,7 +314,7 @@ export class RxjsPeer {
         });
         transceiver.sender.setParameters(parameters).catch((err) => log.catch(err));
         if (transceiver.sender.transport !== null) {
-          log.debug('♻︎ replacing track');
+          log.debug('replacing track');
           transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
         }
       }),
@@ -334,11 +334,10 @@ export class RxjsPeer {
     let mid = '';
     return new Observable<MediaStreamTrack>((subscribe) => {
       let pulledTrackPromise: Promise<unknown>;
-      // we're doing this in a timeout so that we can bail if the observable
-      // is unsubscribed from immediately after subscribing. This will prevent
-      // React's StrictMode from causing extra API calls to push/pull tracks.
+      // We're doing this in a timeout so that we can bail if the observable is unsubscribed from immediately after subscribing.
+      // This will prevent React's StrictMode from causing extra API calls to push/pull tracks.
       const timeout = setTimeout(() => {
-        log.debug('📥 pulling track ', trackData.trackName);
+        log.debug('pulling track ', trackData.trackName);
         pulledTrackPromise = this.pullTrackDispatcher
           .doBulkRequest(trackData, (tracks) =>
             this.taskScheduler.schedule(async () => {
@@ -421,7 +420,7 @@ export class RxjsPeer {
         pulledTrackPromise
           ?.then((trackName) => {
             if (mid) {
-              log.debug('🔚 Closing pulled track ', trackName);
+              log.debug('Closing pulled track ', trackName);
               this.taskScheduler
                 .schedule(async () => this.closeTrack(peerConnection, mid, sessionId))
                 .catch((err) => log.catch(err));
@@ -436,8 +435,7 @@ export class RxjsPeer {
     return combineLatest([
       this.session$,
       trackData$.pipe(
-        // only necessary when pulling a track that was pushed locally to avoid
-        // re-pulling when pushed track transceiver replaces track
+        // Only necessary when pulling a track that was pushed locally to avoid re-pulling when pushed track transceiver replaces track
         distinctUntilChanged((x, y) => JSON.stringify(x) === JSON.stringify(y)),
       ),
     ]).pipe(
@@ -452,18 +450,19 @@ export class RxjsPeer {
   }
 
   async closeTrack(peerConnection: RTCPeerConnection, mid: string | null, sessionId: string) {
-    // TODO: Close tracks in bulk
+    // TODO: Close tracks in bulk.
     const { apiBase } = this.config;
     const transceiver = peerConnection.getTransceivers().find((t) => t.mid === mid);
     if (peerConnection.connectionState !== 'connected' || transceiver === undefined) {
       return;
     }
+
     transceiver.direction = 'inactive';
-    // create an offer
+    // Create an offer.
     const offer = await peerConnection.createOffer();
-    // Turn on Opus DTX to save bandwidth
+    // Turn on Opus DTX to save bandwidth.
     offer.sdp = offer.sdp?.replace('useinbandfec=1', 'usedtx=1;useinbandfec=1');
-    // And set the offer as the local description
+    // And set the offer as the local description.
     await peerConnection.setLocalDescription(offer);
     const requestBody = {
       tracks: [{ mid: transceiver.mid }],
@@ -502,7 +501,7 @@ const resolveTrack = async (
 const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
   if (peerConnection.connectionState !== 'connected') {
     const connected = new Promise((resolve, reject) => {
-      // timeout after 5s
+      // Timeout after 5s.
       const timeout = setTimeout(() => {
         peerConnection.removeEventListener('connectionstatechange', connectionStateChangeHandler);
         reject(new Error('Connection timeout'));

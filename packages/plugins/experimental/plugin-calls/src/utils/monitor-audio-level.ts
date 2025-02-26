@@ -20,7 +20,7 @@ export const monitorAudioLevel = ({
   const analyserNode = audioContext.createAnalyser();
   mediaStreamAudioSourceNode.connect(analyserNode);
   // Since we just need a rough approximation and will be measuring
-  // frequently, we want to drop this down from the default of 2048
+  // frequently, we want to drop this down from the default of 2048.
   analyserNode.fftSize = 32;
 
   const pcmData = new Float32Array(analyserNode.fftSize);
