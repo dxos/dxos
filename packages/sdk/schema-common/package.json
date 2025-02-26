@@ -1,0 +1,32 @@
+{
+  "name": "@dxos/schema-common",
+  "version": "0.7.4",
+  "description": "Common schemas used to build applications.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo-schema": "workspace:*"
+  },
+  "devDependencies": {},
+  "peerDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

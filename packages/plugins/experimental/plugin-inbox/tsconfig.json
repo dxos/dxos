@@ -53,6 +53,9 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../sdk/schema-common"
+    },
+    {
       "path": "../../../ui/react-ui"
     },
     {
