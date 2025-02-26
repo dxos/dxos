@@ -24,7 +24,7 @@ export const StackItemResizeHandle = () => {
       fallbackSize={DEFAULT_EXTRINSIC_SIZE}
       minSize={orientation === 'horizontal' ? MIN_WIDTH : MIN_HEIGHT}
       size={size}
-      onChangeSize={setSize}
+      onSizeChange={setSize}
     />
   );
 };

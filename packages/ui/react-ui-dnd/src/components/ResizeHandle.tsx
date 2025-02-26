@@ -14,7 +14,7 @@ import { mx } from '@dxos/react-ui-theme';
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 const measureSubject = (element: HTMLButtonElement, fallbackSize: number): { width: number; height: number } => {
-  const stackItemElement = element.closest('[data-dx-stack-item]');
+  const stackItemElement = element.closest('[data-dx-resize-subject]');
   return stackItemElement?.getBoundingClientRect() ?? { width: fallbackSize, height: fallbackSize };
 };
 
@@ -33,7 +33,7 @@ export type ResizeHandleProps = {
   side: 'inline-start' | 'inline-end' | 'block-start' | 'block-end';
   size?: Size;
   defaultSize?: Size;
-  onChangeSize?: (nextSize: Size, commit?: boolean) => void;
+  onSizeChange?: (nextSize: Size, commit?: boolean) => void;
   unit?: 'rem';
   fallbackSize: number;
   minSize: number;
@@ -45,7 +45,7 @@ export const ResizeHandle = ({
   side,
   defaultSize,
   size: propsSize,
-  onChangeSize,
+  onSizeChange,
   fallbackSize,
   minSize,
 }: ResizeHandleProps) => {
@@ -53,7 +53,7 @@ export const ResizeHandle = ({
   const [size = 'min-content', setSize] = useControllableState({
     prop: propsSize,
     defaultProp: defaultSize,
-    onChange: onChangeSize,
+    onChange: onSizeChange,
   });
   const dragStartSize = useRef<Size>(size);
   const orientation = side.startsWith('inline') ? 'horizontal' : 'vertical';
@@ -93,7 +93,7 @@ export const ResizeHandle = ({
           }
           const nextSize = getNextSize(dragStartSize.current, location, client, minSize);
           setSize(nextSize);
-          onChangeSize?.(nextSize, true);
+          onSizeChange?.(nextSize, true);
           dragStartSize.current = nextSize;
         },
       });
