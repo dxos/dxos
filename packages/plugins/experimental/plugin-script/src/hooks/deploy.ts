@@ -6,10 +6,10 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import {
   FunctionType,
+  type ScriptType,
   getInvocationUrl,
   getUserFunctionUrlInMetadata,
   incrementSemverPatch,
-  type ScriptType,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
 } from '@dxos/functions';
@@ -21,7 +21,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
 import { type ViewState } from './view';
-import { SCRIPT_PLUGIN } from '../../meta';
+import { SCRIPT_PLUGIN } from '../meta';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
 
