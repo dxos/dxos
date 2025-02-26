@@ -165,6 +165,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             classNames,
           )}
           data-dx-stack-item
+          data-dx-resize-subject
           style={{
             ...(size !== 'min-content' && {
               [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
