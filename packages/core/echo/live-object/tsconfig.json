@@ -29,9 +29,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../protocols"
-    },
-    {
       "path": "../echo-protocol"
     },
     {
