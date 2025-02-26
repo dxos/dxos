@@ -151,14 +151,15 @@ export const MarkdownInput = ({
   const { status, error } = getStatus();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // TODO(ZaymonFC): If we start using `Enter` for form submission, we should prevent default behavior here
+  //  since we're using a textarea element and the user needs to be able to enter new lines.
+
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
-    if (!textarea) {
-      return;
+    if (textarea) {
+      textarea.style.blockSize = 'auto'; // For measurement.
+      textarea.style.blockSize = `${textarea.scrollHeight + 2}px`;
     }
-
-    textarea.style.blockSize = 'auto'; // For measurement.
-    textarea.style.blockSize = `${textarea.scrollHeight + 2}px`;
   }, []);
 
   // Adjust height on initial render.
