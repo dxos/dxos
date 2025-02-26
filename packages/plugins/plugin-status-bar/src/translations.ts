@@ -40,7 +40,7 @@ const translations: Record<Language, TranslationEntry> = {
     'email input label': 'Email',
     'email input placeholder': 'hello@example.com',
     'feedback text area label': 'Feedback',
-    'feedback text area placeholder': 'Found a bug? Have a suggestion? Let us know!',
+    'feedback text area placeholder': 'Please describe your issue or suggestion.',
     'send feedback label': 'Send Feedback',
     'warning title': 'WARNING',
     'technology preview message': 'Composer is still in technology preview.',

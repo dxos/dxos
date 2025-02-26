@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject, foreignKeyEquals, type ObjectMeta } from '@dxos/echo-schema';
+import { type BaseObject, foreignKeyEquals, type ObjectMeta, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, deepMapValues, intersection } from '@dxos/util';
 
@@ -23,7 +23,10 @@ export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveO
  */
 export const getSnapshot = <T extends BaseObject>(obj: ReactiveObject<T>): T => {
   return deepMapValues(obj, (value, recurse) => {
-    // TODO(dmaretskyi): Do not recurse on references.
+    // Do not recurse on references.
+    if (Ref.isRef(value)) {
+      return { '/': value.dxn.toString() };
+    }
 
     return recurse(value);
   });

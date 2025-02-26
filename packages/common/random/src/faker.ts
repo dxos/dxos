@@ -106,4 +106,5 @@ export const faker = {
     airport: () => randAirport(),
     location: () => randAirport().location,
   },
+  email: {},
 };

@@ -27,7 +27,7 @@ import { useEffect, useMemo } from 'react';
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
 import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { documentId } from './selection';
 import { type EditorToolbarState } from '../components';
@@ -87,7 +87,7 @@ export const commentsState = StateField.define<CommentsState>({
             const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
             return range && { comment, range };
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
 
         return { ...value, comments: commentStates };
       }
@@ -151,7 +151,7 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
       const mark = createCommentMark(comment.comment.id, comment.comment.id === current);
       return mark.range(range.from, range.to);
     })
-    .filter(nonNullable);
+    .filter(isNonNullable);
 
   return Decoration.set(decorations);
 });
@@ -507,7 +507,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     }),
 
     options.onUpdate && trackPastedComments(options.onUpdate),
-  ].filter(nonNullable);
+  ].filter(isNonNullable);
 };
 
 //

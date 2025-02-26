@@ -13,7 +13,7 @@ import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type ChainResources } from '../../chain';
 import { type ModelInvocationArgs, type ModelInvoker } from '../../chain/model-invoker';
@@ -84,10 +84,10 @@ export class RequestProcessor {
           const text =
             blocks
               ?.map(({ content }) => content)
-              .filter(nonNullable)
+              .filter(isNonNullable)
               .join('\n') ?? '';
 
-          const parts = blocks?.map(({ object }) => object).filter(nonNullable) ?? [];
+          const parts = blocks?.map(({ object }) => object).filter(isNonNullable) ?? [];
           log.info('response', { blocks });
           return { success: true, text, parts };
         }

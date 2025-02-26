@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): Move to jsonpath-plus.
 import jp from 'jsonpath';
 
 import { type BaseObject, FormatEnum, TypeEnum } from '@dxos/echo-schema';

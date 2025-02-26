@@ -10,11 +10,12 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import {
   AppGraphBuilder,
   CheckAppScheme,
+  DeckSettings,
   DeckState,
   LayoutIntentResolver,
   ReactRoot,
-  DeckSettings,
   ReactSurface,
+  Tools,
   UrlHandler,
 } from './capabilities';
 import { DeckEvents } from './events';
@@ -68,6 +69,11 @@ export const DeckPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/tools`,
+      activatesOn: Events.Startup,
+      activate: Tools,
     }),
     defineModule({
       id: `${meta.id}/module/url`,

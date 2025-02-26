@@ -183,6 +183,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
+  // TODO(burdon): Rename.
   get schemaRegistry(): EchoSchemaRegistry {
     return this._schemaRegistry;
   }

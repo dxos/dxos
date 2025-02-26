@@ -5,7 +5,7 @@
 import React, { createContext, type Dispatch, type PropsWithChildren, type SetStateAction, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
-import { useControlledValue } from '@dxos/react-ui';
+import { useControlledState } from '@dxos/react-ui';
 
 import { type LatLng } from '../util';
 
@@ -40,10 +40,10 @@ export const GlobeContextProvider = ({
   translation: _translation,
   rotation: _rotation,
 }: GlobeContextProviderProps) => {
-  const [center, setCenter] = useControlledValue(_center);
-  const [scale, setScale] = useControlledValue(_scale);
-  const [translation, setTranslation] = useControlledValue<Point>(_translation);
-  const [rotation, setRotation] = useControlledValue<Vector>(_rotation);
+  const [center, setCenter] = useControlledState(_center);
+  const [scale, setScale] = useControlledState(_scale);
+  const [translation, setTranslation] = useControlledState<Point>(_translation);
+  const [rotation, setRotation] = useControlledState<Vector>(_rotation);
 
   return (
     <GlobeContext.Provider

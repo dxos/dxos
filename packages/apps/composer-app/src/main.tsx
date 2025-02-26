@@ -57,9 +57,10 @@ const main = async () => {
   const observabilityDisabled = await isObservabilityDisabled(appKey);
   const observabilityGroup = await getObservabilityGroup(appKey);
 
+  const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
   const services = await createClientServices(
     config,
-    config.values.runtime?.app?.env?.DX_HOST
+    disableSharedWorker
       ? undefined
       : () =>
           new SharedWorker(new URL('./shared-worker', import.meta.url), {

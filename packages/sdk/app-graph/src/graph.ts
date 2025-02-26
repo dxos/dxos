@@ -8,7 +8,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type ReactiveObject, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type MakeOptional, nonNullable, pick } from '@dxos/util';
+import { type MakeOptional, isNonNullable, pick } from '@dxos/util';
 
 import { type Node, type NodeArg, type NodeFilter, type Relation, actionGroupSymbol, isActionLike } from './node';
 
@@ -162,7 +162,7 @@ export class Graph {
             const nextSeen = [...seen, node.id];
             return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
       }
       return obj;
     };
@@ -599,7 +599,7 @@ export class Graph {
     } else {
       return edges[relation]
         .map((id) => this._nodes[id])
-        .filter(nonNullable)
+        .filter(isNonNullable)
         .filter((n) => !type || n.type === type);
     }
   }

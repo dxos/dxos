@@ -21,6 +21,7 @@ export const useCapabilities = <T, U extends T = T>(
     () => computed(() => manager.context.requestCapabilities(interfaceDef, filter)),
     [interfaceDef],
   );
+
   return signal.value;
 };
 
