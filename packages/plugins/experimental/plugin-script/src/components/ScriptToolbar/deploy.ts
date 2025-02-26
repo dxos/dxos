@@ -105,7 +105,7 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
 
       const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-      const buildResult = await bundler.bundle(script.source.target!.content);
+      const buildResult = await bundler.bundle({ source: script.source.target!.content });
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;
       }

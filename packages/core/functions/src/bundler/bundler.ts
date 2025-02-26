@@ -15,9 +15,23 @@ export type Import = {
   namedImports: string[];
 };
 
-export type BundlerResult = {
+export type BundleOptions = {
+  /**
+   * Path to the source file on the local file system.
+   * If provided, the path will be used instead of the `source` code.
+   */
+  path?: string;
+
+  /**
+   * Source code to bundle.
+   * Required if `path` is not provided.
+   */
+  source?: string;
+};
+
+export type BundleResult = {
   timestamp: number;
-  sourceHash: Buffer;
+  sourceHash?: Buffer;
   imports?: Import[];
   bundle?: string;
   error?: any;
@@ -42,13 +56,13 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 export class Bundler {
   constructor(private readonly _options: BundlerOptions) {}
 
-  async bundle(source: string): Promise<BundlerResult> {
+  async bundle({ path, source }: BundleOptions): Promise<BundleResult> {
     const { sandboxedModules: providedModules, ...options } = this._options;
 
-    const createResult = async (result?: Partial<BundlerResult>) => {
+    const createResult = async (result?: Partial<BundleResult>) => {
       return {
         timestamp: Date.now(),
-        sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
+        sourceHash: source ? Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))) : undefined,
         ...result,
       };
     };
@@ -58,7 +72,7 @@ export class Bundler {
       await initialized;
     }
 
-    const imports = analyzeSourceFileImports(source);
+    const imports = source ? analyzeSourceFileImports(source) : [];
 
     // https://esbuild.github.io/api/#build
     try {
@@ -67,7 +81,7 @@ export class Bundler {
         conditions: ['workerd', 'browser'],
         metafile: true,
         write: false,
-        entryPoints: ['memory:main.tsx'],
+        entryPoints: [path ?? 'memory:main.tsx'],
         bundle: true,
         format: 'esm',
         plugins: [
