@@ -382,9 +382,6 @@
       "path": "packages/plugins/plugin-token-manager/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-wildcard/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {
@@ -463,6 +460,9 @@
       "path": "packages/ui/react-ui-components/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-dnd/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-editor/tsconfig.json"
     },
     {
@@ -485,9 +485,6 @@
     },
     {
       "path": "packages/ui/react-ui-menu/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-mosaic/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"

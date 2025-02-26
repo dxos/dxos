@@ -7,7 +7,7 @@ import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
-import { CALLS_PLUGIN, CallsPlugin } from '@dxos/plugin-calls';
+import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
 import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
@@ -42,7 +42,6 @@ import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
 import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
-import { WildcardPlugin, WILDCARD_PLUGIN } from '@dxos/plugin-wildcard';
 import { WnfsPlugin, WNFS_PLUGIN } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
 
@@ -84,7 +83,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     THEME_PLUGIN,
     TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
-    WILDCARD_PLUGIN,
   ]
     .filter(isNotFalsy)
     .flat();
@@ -176,7 +174,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     ThreadPlugin(),
     TokenManagerPlugin(),
     WelcomePlugin(),
-    WildcardPlugin(),
     WnfsPlugin(),
   ]
     .filter(isNotFalsy)

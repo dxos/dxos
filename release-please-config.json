@@ -659,11 +659,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-wildcard/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
@@ -794,6 +789,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-dnd/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
@@ -830,11 +830,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-menu/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-mosaic/package.json",
           "jsonpath": "$.version"
         },
         {
