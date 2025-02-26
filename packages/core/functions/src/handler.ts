@@ -136,7 +136,9 @@ export const subscriptionHandler = <TMeta>(
 
     registerTypes(space, types);
     const objects = space
-      ? data.objects?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(isNonNullable)
+      ? data.objects
+          ?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id))
+          .filter(isNonNullable)
       : [];
 
     if (!!data.spaceKey && !space) {
