@@ -20,7 +20,7 @@ export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
         onInteractOutside={preventDefault}
-        classNames='pointer-events-auto relative overflow-hidden is-[600px] max-is-none'
+        classNames='pointer-events-auto relative overflow-hidden is-[500px] max-is-none'
         inOverlayLayout
         {...resizeAttributes}
         style={{
@@ -38,11 +38,12 @@ export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
           onSizeChange={setSize}
         />
 
-        <div className='flex justify-between items-center'>
+        <div className='flex w-full items-center'>
           <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
           <Dialog.Close>
             <Icon icon='ph--x--regular' size={4} />
           </Dialog.Close>
+          <div className='grow' />
           <IconButton
             variant='ghost'
             icon='ph--caret-down--regular'
@@ -55,7 +56,7 @@ export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
           />
         </div>
 
-        <Prompt />
+        <Prompt autoFocus lineWrapping />
       </Dialog.Content>
     </div>
   );
