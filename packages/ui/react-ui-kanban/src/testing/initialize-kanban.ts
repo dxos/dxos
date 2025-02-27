@@ -80,9 +80,21 @@ export const initializeKanban = async ({
       fields: ['title', 'description'],
     });
 
-    const initialPivotField = 'state';
     const viewProjection = new ViewProjection(schema, view);
 
+    // Set description field to Markdown format.
+    const descriptionFieldId = viewProjection.getFieldId('description');
+    if (descriptionFieldId) {
+      const fieldProjection = viewProjection.getFieldProjection(descriptionFieldId);
+      if (fieldProjection) {
+        viewProjection.setFieldProjection({
+          ...fieldProjection,
+          props: { ...fieldProjection.props, format: FormatEnum.Markdown },
+        });
+      }
+    }
+
+    const initialPivotField = 'state';
     viewProjection.setFieldProjection({
       field: {
         id: createFieldId(),
