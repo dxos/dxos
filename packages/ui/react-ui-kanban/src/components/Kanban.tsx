@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
+import { Stack, StackItem, autoScrollRootAttributes, railGridHorizontalContainFitContent } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -83,13 +83,16 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='pli-1 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-1 plb-2 drag-preview-p-0'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
           >
             <div
               role='none'
-              className={mx('bg-deck rounded-lg grid dx-focus-ring-group-x-indicator', railGridHorizontal)}
+              className={mx(
+                'shrink min-bs-0 bg-deck rounded-lg grid dx-focus-ring-group-x-indicator',
+                railGridHorizontalContainFitContent,
+              )}
             >
               <Stack
                 id={columnValue}
@@ -104,7 +107,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'plb-1 pli-2 drag-preview-p-0'}
+                    classNames={'contain-layout plb-1 pli-2 drag-preview-p-0'}
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >

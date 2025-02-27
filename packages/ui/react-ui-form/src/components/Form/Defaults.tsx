@@ -188,6 +188,7 @@ export const MarkdownInput = ({
         onChange={(event) => onValueChange(type, event.target.value)}
         onBlur={onBlur}
         style={{ resize: 'none' }}
+        spellCheck={false}
       />
       {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>

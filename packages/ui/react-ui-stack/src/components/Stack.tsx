@@ -14,6 +14,7 @@ import React, {
   forwardRef,
   useLayoutEffect,
   useState,
+  useMemo,
 } from 'react';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
@@ -22,14 +23,19 @@ import { mx } from '@dxos/react-ui-theme';
 import { type StackContextValue, StackContext, type StackItemData } from './StackContext';
 
 export type Orientation = 'horizontal' | 'vertical';
-export type Size = 'intrinsic' | 'contain';
+export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';
 
 export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
   Partial<StackContextValue> & { itemsCount?: number };
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
-
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
+
+// TODO(ZaymonFC): Magic 2px to stop overflow (tabster dummies... ask @thure).
+export const railGridHorizontalContainFitContent =
+  'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
+export const railGridVerticalContainFitContent =
+  'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
 
 export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
 
@@ -55,7 +61,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     const arrowNavigationGroup = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
-      [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']: `repeat(${itemsCount}, min-content)`,
+      [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
+        `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
       ...style,
     };
 
@@ -85,7 +92,9 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               setDropping(true);
             }
           },
-          onDragLeave: () => setDropping(false),
+          onDragLeave: () => {
+            return setDropping(false);
+          },
           onDrop: ({ self, source }) => {
             setDropping(false);
             if (source.data.type === acceptSourceType && selfDroppable) {
@@ -97,6 +106,17 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       );
     }, [stackElement, selfDroppable, orientation]);
 
+    const gridClasses = useMemo(() => {
+      if (!rail) {
+        return orientation === 'horizontal' ? 'grid-rows-1 pli-1' : 'grid-cols-1 plb-1';
+      }
+      if (orientation === 'horizontal') {
+        return size === 'contain-fit-content' ? railGridHorizontalContainFitContent : railGridHorizontal;
+      } else {
+        return size === 'contain-fit-content' ? railGridVerticalContainFitContent : railGridVertical;
+      }
+    }, [rail, orientation, size]);
+
     return (
       <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
         <div
@@ -104,14 +124,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           {...arrowNavigationGroup}
           className={mx(
             'grid relative',
-            rail
-              ? orientation === 'horizontal'
-                ? railGridHorizontal
-                : railGridVertical
-              : orientation === 'horizontal'
-                ? 'grid-rows-1 pli-1'
-                : 'grid-cols-1 plb-1',
-            size === 'contain' &&
+            gridClasses,
+            (size === 'contain' || size === 'contain-fit-content') &&
               (orientation === 'horizontal'
                 ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
                 : 'overflow-y-auto min-is-0 is-full max-is-full'),
