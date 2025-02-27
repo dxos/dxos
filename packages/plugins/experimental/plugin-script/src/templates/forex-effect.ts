@@ -7,6 +7,7 @@ import { defineFunction, S } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,
+  FetchHttpClient,
   // @ts-ignore
 } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.2';
 // @ts-ignore
@@ -30,11 +31,14 @@ export default defineFunction({
       data: { from, to },
     },
   }: any) =>
-    HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
-      HttpClient.execute,
-      Effect.flatMap((res: any) => res.json),
-      Effect.timeout('1 second'),
-      Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
-      Effect.map(({ data: { rates } }: any) => ({ rate: rates[to].toString() })),
-    ),
+    Effect.gen(function* () {
+      const res = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
+        HttpClient.execute,
+        Effect.flatMap((res: any) => res.json),
+        Effect.timeout('1 second'),
+        Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+        Effect.scoped,
+      );
+      return { rate: res.data.rates[to].toString() };
+    }).pipe(Effect.provide(FetchHttpClient.layer)),
 });
