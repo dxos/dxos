@@ -77,7 +77,7 @@ export const ResizeHandle = ({
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
 
   useLayoutEffect(() => {
-    if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
+    if (!buttonRef.current) {
       return;
     }
 
