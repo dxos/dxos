@@ -39,6 +39,7 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
       name={user.name}
       speaking={user.speaking}
       wave={user.raisedHand}
+      mute={audioTrack ? !audioTrack.enabled : false}
       debug={debug}
     >
       <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
