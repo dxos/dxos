@@ -1,26 +1,16 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
-import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import React, {
-  Children,
-  type CSSProperties,
-  type ComponentPropsWithRef,
-  forwardRef,
-  useLayoutEffect,
-  useState,
-  useMemo,
-} from 'react';
+import React, { Children, type CSSProperties, type ComponentPropsWithRef, forwardRef, useState, useMemo } from 'react';
 
 import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type StackContextValue, StackContext, type StackItemData } from './StackContext';
+import { type StackContextValue, StackContext } from './StackContext';
+import { useStackDropForElements } from '../hooks/useStackDropForElements';
 
 export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';
@@ -56,8 +46,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
   ) => {
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
-    const [dropping, setDropping] = useState(false);
-
     const arrowNavigationGroup = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
@@ -68,43 +56,13 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const selfDroppable = !!(itemsCount < 1 && onRearrange && props.id);
 
-    useLayoutEffect(() => {
-      if (!stackElement || !selfDroppable) {
-        return;
-      }
-      const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
-      return combine(
-        dropTargetForElements({
-          element: stackElement,
-          getData: ({ input, element }) => {
-            return attachClosestEdge(
-              { id: props.id, type: orientation === 'horizontal' ? 'card' : 'column' },
-              { input, element, allowedEdges: [orientation === 'horizontal' ? 'left' : 'top'] },
-            );
-          },
-          onDragEnter: ({ source }) => {
-            if (source.data.type === acceptSourceType) {
-              setDropping(true);
-            }
-          },
-          onDrag: ({ source }) => {
-            if (source.data.type === acceptSourceType) {
-              setDropping(true);
-            }
-          },
-          onDragLeave: () => {
-            return setDropping(false);
-          },
-          onDrop: ({ self, source }) => {
-            setDropping(false);
-            if (source.data.type === acceptSourceType && selfDroppable) {
-              onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
-            }
-          },
-        }),
-        autoScrollForElements({ element: stackElement, getAllowedAxis: () => orientation }),
-      );
-    }, [stackElement, selfDroppable, orientation]);
+    const { dropping } = useStackDropForElements({
+      id: props.id,
+      element: stackElement,
+      selfDroppable,
+      orientation,
+      onRearrange,
+    });
 
     const gridClasses = useMemo(() => {
       if (!rail) {
