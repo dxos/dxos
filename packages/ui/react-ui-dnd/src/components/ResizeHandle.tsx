@@ -9,6 +9,7 @@ import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/type
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useLayoutEffect, useRef } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Size, type Side } from '../types';
@@ -23,40 +24,47 @@ const getNextSize = (
   startSize: number,
   location: DragLocationHistory,
   client: 'clientX' | 'clientY',
-  minSize: number,
   side: Side,
+  minSize: number,
+  maxSize: number | undefined,
 ) => {
-  return Math.max(
-    minSize,
-    startSize +
-      ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? 1 : -1),
+  console.log(maxSize);
+  return Math.min(
+    maxSize ?? Infinity,
+    Math.max(
+      minSize,
+      startSize +
+        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('end') ? 1 : -1),
+    ),
   );
-};
-
-export type ResizeHandleProps = {
-  side: Side;
-  size?: Size;
-  defaultSize?: Size;
-  onSizeChange?: (nextSize: Size, commit?: boolean) => void;
-  unit?: 'rem';
-  fallbackSize: number;
-  minSize: number;
-  maxSize?: number;
-  iconPosition?: 'start' | 'center' | 'end';
 };
 
 export const resizeAttributes = {
   'data-dx-resize-subject': true,
 };
 
+export type ResizeHandleProps = ThemedClassName<{
+  side: Side;
+  defaultSize?: Size;
+  fallbackSize: number;
+  size?: Size;
+  minSize: number;
+  maxSize?: number;
+  unit?: 'rem';
+  iconPosition?: 'start' | 'center' | 'end';
+  onSizeChange?: (nextSize: Size, commit?: boolean) => void;
+}>;
+
 export const ResizeHandle = ({
+  classNames,
   side,
-  defaultSize,
-  size: propsSize,
-  onSizeChange,
-  fallbackSize,
   iconPosition = 'start',
+  defaultSize,
+  fallbackSize,
+  size: propsSize,
   minSize,
+  maxSize,
+  onSizeChange,
 }: ResizeHandleProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [size = 'min-content', setSize] = useControllableState({
@@ -65,52 +73,52 @@ export const ResizeHandle = ({
     onChange: onSizeChange,
   });
   const dragStartSize = useRef<Size>(size);
+
   const orientation = side.startsWith('inline') ? 'horizontal' : 'vertical';
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
 
-  useLayoutEffect(
-    () => {
-      if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
-        return;
-      }
-      // TODO(thure): This should handle StackItem state vs local state better.
-      draggable({
-        element: buttonRef.current,
-        onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          // We will be moving the line to indicate a drag; we can disable the native drag preview.
-          disableNativeDragPreview({ nativeSetDragImage });
-          // We don't want any native drop animation for when the user does not drop on a drop target.
-          // We want the drag to finish immediately.
-          preventUnhandled.start();
-        },
-        onDragStart: () => {
-          dragStartSize.current =
-            dragStartSize.current === 'min-content'
-              ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] /
-                REM
-              : dragStartSize.current;
-        },
-        onDrag: ({ location }) => {
-          if (typeof dragStartSize.current !== 'number') {
-            return;
-          }
-          setSize(getNextSize(dragStartSize.current, location, client, minSize, side));
-        },
-        onDrop: ({ location }) => {
-          if (typeof dragStartSize.current !== 'number') {
-            return;
-          }
-          const nextSize = getNextSize(dragStartSize.current, location, client, minSize, side);
-          setSize(nextSize);
-          onSizeChange?.(nextSize, true);
-          dragStartSize.current = nextSize;
-        },
-      });
-    },
-    [
-      // Note that `size` should not be a dependency here since dragging this adjusts the size.
-    ],
-  );
+  useLayoutEffect(() => {
+    if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
+      return;
+    }
+
+    // TODO(thure): This should handle StackItem state vs local state better.
+    return draggable({
+      element: buttonRef.current,
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        // We will be moving the line to indicate a drag; we can disable the native drag preview.
+        disableNativeDragPreview({ nativeSetDragImage });
+        // We don't want any native drop animation for when the user does not drop on a drop target.
+        // We want the drag to finish immediately.
+        preventUnhandled.start();
+      },
+      onDragStart: () => {
+        dragStartSize.current =
+          dragStartSize.current === 'min-content'
+            ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] / REM
+            : dragStartSize.current;
+      },
+      onDrag: ({ location }) => {
+        if (typeof dragStartSize.current !== 'number') {
+          return;
+        }
+        setSize(getNextSize(dragStartSize.current, location, client, side, minSize, maxSize));
+      },
+      onDrop: ({ location }) => {
+        if (typeof dragStartSize.current !== 'number') {
+          return;
+        }
+        const nextSize = getNextSize(dragStartSize.current, location, client, side, minSize, maxSize);
+        setSize(nextSize);
+        onSizeChange?.(nextSize, true);
+        dragStartSize.current = nextSize;
+      },
+    });
+  }, [
+    // Note that `size` should not be a dependency here since dragging this adjusts the size.
+    minSize,
+    maxSize,
+  ]);
 
   return (
     <button
@@ -134,6 +142,7 @@ export const ResizeHandle = ({
               : 'justify-start',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
         'before:absolute before:block before:bg-accentFocusIndicator',
+        classNames,
       )}
     >
       <div

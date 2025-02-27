@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useMemo, useRef, type ComponentType } from 'react';
+import React, { useState, useEffect, useMemo, type ComponentType } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
+import { resizeAttributes, ResizeHandle, sizeStyle, type Size } from '@dxos/react-ui-dnd';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
-const MIN_HEIGHT = 500;
-
+const MIN_HEIGHT_REM = 15;
+const DEFAULT_HEIGHT_REM = 30;
 /**
  * Props for the ResponsiveGrid component.
  */
@@ -52,14 +53,21 @@ export const ResponsiveGrid = <T extends object = any>({
   pinned,
   onPinnedChange,
 }: ResponsiveGridProps<T>) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { width = 0, height = 0, ref: gridContainerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
+  const { height: containerHeight = 0, ref: containerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
+  const [dividerHeight, setDividerHeight] = useState<Size>(DEFAULT_HEIGHT_REM);
+  const maxDividerHeight = Math.max(DEFAULT_HEIGHT_REM, containerHeight / 16 - MIN_HEIGHT_REM);
+  useEffect(() => {
+    if (typeof dividerHeight === 'number' && dividerHeight > maxDividerHeight) {
+      setDividerHeight(maxDividerHeight);
+    }
+  }, [containerHeight, dividerHeight, maxDividerHeight]);
 
   const pinnedItem = useMemo(() => items.find((item) => getId(item) === pinned), [items, pinned]);
   const mainItems = useMemo(() => items.filter((item) => getId(item) !== pinned), [items, pinned]);
 
   // Recalculate optimal columns when container size or items change.
   const [{ columns, cellWidth }, setOptimalColumns] = useState<OptimalColumns>({ columns: 0, cellWidth: 0 });
+  const { width = 0, height = 0, ref: gridContainerRef } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   useEffect(() => {
     if (width > 0 && height > 0) {
       setOptimalColumns(calculateOptimalColumns(width, height, mainItems.length, gap));
@@ -87,18 +95,19 @@ export const ResponsiveGrid = <T extends object = any>({
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
 
-  // TODO(burdon): Draggable divider.
-  const dividerRef = useRef<HTMLDivElement>(null);
-  const [dividerHeight] = useState(MIN_HEIGHT);
-
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
       {pinnedItem && (
         <>
           {/* Pinned item. */}
           <div
-            className='flex w-full overflow-hidden'
-            style={{ minHeight: MIN_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
+            {...resizeAttributes}
+            className='relative flex w-full overflow-hidden border-be border-separator'
+            style={{
+              ...sizeStyle(dividerHeight, 'vertical'),
+              paddingTop: gap,
+              paddingBottom: gap,
+            }}
           >
             <ResponsiveContainer>
               <div {...{ 'data-grid-item': getId(pinnedItem) }} className='aspect-video overflow-hidden'>
@@ -106,14 +115,30 @@ export const ResponsiveGrid = <T extends object = any>({
                 <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
               </div>
             </ResponsiveContainer>
-          </div>
 
-          <div ref={dividerRef} className='h-[2px] ns-resize before:content-[""] bg-primary-500' />
+            <ResizeHandle
+              side='block-end'
+              classNames='z-10'
+              defaultSize='min-content'
+              minSize={MIN_HEIGHT_REM}
+              maxSize={maxDividerHeight}
+              fallbackSize={DEFAULT_HEIGHT_REM}
+              iconPosition='center'
+              onSizeChange={setDividerHeight}
+            />
+          </div>
         </>
       )}
 
       {/* Placeholder grid. */}
-      <div ref={gridContainerRef} className='flex w-full grow overflow-hidden items-center justify-center'>
+      <div
+        ref={gridContainerRef}
+        className='flex w-full grow overflow-hidden items-center justify-center'
+        style={{
+          paddingTop: gap,
+          paddingBottom: gap,
+        }}
+      >
         {columns > 0 && (
           <div
             role='grid'
