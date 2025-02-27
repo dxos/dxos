@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
-import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
-import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
 import React, { useState, useEffect, useMemo, useRef, type ComponentType } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -80,60 +76,20 @@ export const ResponsiveGrid = <T extends object = any>({
     // TODO(burdon): Consider directly setting bounds instead of state update.
     const t = setTimeout(() => {
       setBounds(
-        items
-          .map((item) => {
-            invariant(containerRef.current);
-            invariant(gridContainerRef.current);
-            const el = gridContainerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
-            if (!el) {
-              return null;
-            }
-
-            const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
-            return [item, bounds];
-          })
-          .filter((item): item is [T, DOMRectBounds] => item !== null),
+        items.map((item) => {
+          invariant(containerRef.current);
+          const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
+          const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
+          return [item, bounds];
+        }),
       );
     }, 100); // Wait until layout has been updated.
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
 
-  // Divider.
+  // TODO(burdon): Draggable divider.
   const dividerRef = useRef<HTMLDivElement>(null);
-  const [dividerHeight, setDividerHeight] = useState(MIN_HEIGHT); // TODO(burdon): Save.
-  // TODO(burdon): Replace with @thure's new componentry.
-  const [_state, setState] = useState<{ type: 'idle' } | { type: 'dragging' }>({ type: 'idle' });
-  useEffect(() => {
-    const divider = dividerRef.current;
-    if (!divider) {
-      return;
-    }
-
-    return draggable({
-      element: divider,
-      onGenerateDragPreview: ({ nativeSetDragImage }) => {
-        disableNativeDragPreview({ nativeSetDragImage });
-        preventUnhandled.start();
-      },
-      onDragStart: () => {
-        setState({ type: 'dragging' });
-      },
-      onDrag: ({ location }) => {
-        // contentRef.current?.style.setProperty(
-        //   '--local-resizing-width',
-        //   `${getProposedWidth({ initialWidth: dividerHeight, location })}px`,
-        // );
-      },
-      onDrop: ({ location }) => {
-        preventUnhandled.stop();
-        setState({ type: 'idle' });
-        setDividerHeight(
-          getProposedHeight({ maxHeight: containerRef.current!.clientHeight, height: dividerHeight, location }),
-        );
-        // contentRef.current?.style.removeProperty('--local-resizing-width');
-      },
-    });
-  }, []);
+  const [dividerHeight] = useState(MIN_HEIGHT);
 
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
@@ -145,14 +101,14 @@ export const ResponsiveGrid = <T extends object = any>({
             style={{ minHeight: MIN_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
           >
             <ResponsiveContainer>
-              <div {...{ 'data-grid-item': getId(pinnedItem) }}>
+              <div {...{ 'data-grid-item': getId(pinnedItem) }} className='aspect-video overflow-hidden'>
                 {/* Placeholder image. */}
                 <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
               </div>
             </ResponsiveContainer>
           </div>
 
-          <div ref={dividerRef} className='ns-resize before:content-[""] h-[2px] bg-primary-500' />
+          <div ref={dividerRef} className='h-[2px] ns-resize before:content-[""] bg-primary-500' />
         </>
       )}
 
@@ -189,20 +145,6 @@ export const ResponsiveGrid = <T extends object = any>({
       </div>
     </div>
   );
-};
-
-const getProposedHeight = ({
-  maxHeight,
-  height,
-  location,
-}: {
-  maxHeight: number;
-  height: number;
-  location: DragLocationHistory;
-}): number => {
-  const dx = location.current.input.clientX - location.initial.input.clientX;
-  const proposedHeight = height + dx;
-  return Math.min(Math.max(maxHeight, proposedHeight), MIN_HEIGHT);
 };
 
 type DOMRectBounds = Pick<DOMRect, 'top' | 'left' | 'width' | 'height'>;

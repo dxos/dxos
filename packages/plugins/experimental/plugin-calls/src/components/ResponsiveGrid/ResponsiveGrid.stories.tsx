@@ -53,9 +53,9 @@ const meta: Meta<ResponsiveGridProps<TestItem>> = {
   render: (args) => {
     const [pinned, setPinned] = useState<string | undefined>(args.pinned ?? args.items[0]?.id);
     const [items, setItems] = useState<TestItem[]>(args.items);
-
     useEffect(() => {
       const interval = setInterval(() => {
+        return;
         setItems((items) => {
           if (items.length >= 20) {
             return items;
