@@ -19,62 +19,51 @@ const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
 
 // Surface cadence sememes (in contrast-order)
 
-const STEPS = 9;
-const DARK_MIN = 875;
-const DARK_MAX = 700;
+const STEPS = 7;
+const DARK_MIN = 850;
+const DARK_MAX = 750;
 const darkCadence = (step: number) => {
   return DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS);
 };
 const LIGHT_MIN = 25;
-const LIGHT_MAX = 150;
+const LIGHT_MAX = 120;
 const lightCadence = (step: number) => {
   return LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS);
 };
 
-const surface0: Sememe = {
+const surface10: Sememe = {
   light: ['neutral', lightCadence(0)],
   dark: ['neutral', darkCadence(0)],
 };
-const surface10: Sememe = {
+const surface20: Sememe = {
   light: ['neutral', lightCadence(1)],
   dark: ['neutral', darkCadence(1)],
 };
-const surface20: Sememe = {
+const surface30: Sememe = {
   light: ['neutral', lightCadence(2)],
   dark: ['neutral', darkCadence(2)],
 };
-const surface30: Sememe = {
+const surface40: Sememe = {
   light: ['neutral', lightCadence(3)],
   dark: ['neutral', darkCadence(3)],
 };
-const surface40: Sememe = {
+const surface50: Sememe = {
   light: ['neutral', lightCadence(4)],
   dark: ['neutral', darkCadence(4)],
 };
-const surface50: Sememe = {
+const surface60: Sememe = {
   light: ['neutral', lightCadence(5)],
   dark: ['neutral', darkCadence(5)],
 };
-const surface60: Sememe = {
+const surface70: Sememe = {
   light: ['neutral', lightCadence(6)],
   dark: ['neutral', darkCadence(6)],
 };
-const surface70: Sememe = {
+const surface80: Sememe = {
   light: ['neutral', lightCadence(7)],
   dark: ['neutral', darkCadence(7)],
 };
-const surface80: Sememe = {
-  light: ['neutral', lightCadence(8)],
-  dark: ['neutral', darkCadence(8)],
-};
-const surface90: Sememe = {
-  light: ['neutral', lightCadence(9)],
-  dark: ['neutral', darkCadence(9)],
-};
-const surface100: Sememe = {
-  light: ['neutral', lightCadence(10)],
-  dark: ['neutral', darkCadence(10)],
-};
+
 const surface400: Sememe = {
   light: ['neutral', 400],
   dark: ['neutral', 400],
@@ -91,8 +80,6 @@ export const systemSememes = {
   // Surfaces (bg-)
   //
 
-  'surface-0': surface0,
-  'surface-0t': applyAlpha(surface0, 0.88),
   'surface-10': surface10,
   'surface-10t': applyAlpha(surface10, 0.65),
   'surface-20': surface20,
@@ -102,8 +89,7 @@ export const systemSememes = {
   'surface-60': surface60,
   'surface-70': surface70,
   'surface-80': surface80,
-  'surface-90': surface90,
-  'surface-100': surface100,
+
   'surface-400': surface400,
   'surface-450': surface450,
   'surface-450t': applyAlpha(surface450, 0.1),
@@ -165,17 +151,14 @@ export const systemSememes = {
 
 export const systemAliases = {
   // surface cadence
-  'surface-10': { root: ['modalSurface', 'tooltipSurface'] },
-  'surface-20': { root: ['attention', 'currentRelated'], attention: ['baseSurface'] },
-  'surface-30': { root: ['baseSurface'], attention: ['input'] },
-  'surface-40': { root: ['input'], attention: ['groupSurface'] },
-  'surface-50': { root: ['groupSurface'], attention: ['hoverSurface'] },
-  'surface-60': { root: ['hoverSurface'], attention: ['cardSurface'] },
-  'surface-70': { root: ['cardSurface'], attention: ['separator'] },
+  'surface-10': { root: ['attention', 'currentRelated'], attention: ['baseSurface'] },
+  'surface-20': { root: ['baseSurface'], attention: ['hoverSurface'] },
+  'surface-30': { root: ['hoverSurface', 'modalSurface', 'tooltipSurface'], attention: ['groupSurface'] },
+  'surface-40': { root: ['groupSurface'], attention: ['input'] },
+  'surface-50': { root: ['input'], attention: ['cardSurface'] },
+  'surface-60': { root: ['cardSurface'] },
+  'surface-70': { attention: ['separator'] },
   'surface-80': { root: ['separator'] },
-  // 'surface-80': { root: ['separator'] },
-  // 'surface-90': { attention: ['separator'] },
-  // 'surface-100': { root: ['separator'] },
 
   // special surfaces
   'surface-10t': { root: ['scrim'] },

@@ -221,7 +221,7 @@ export const RawTreeItem = <T = any,>({
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-input',
+          'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-cardSurface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
