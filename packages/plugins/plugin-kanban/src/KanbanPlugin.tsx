@@ -7,7 +7,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
 import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { Artifact, IntentResolver, ReactSurface } from './capabilities';
 import { KANBAN_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { CreateKanbanSchema, type CreateKanbanType, KanbanAction } from './types';
@@ -48,5 +48,10 @@ export const KanbanPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact`,
+      activatesOn: Events.Startup,
+      activate: Artifact,
     }),
   ]);
