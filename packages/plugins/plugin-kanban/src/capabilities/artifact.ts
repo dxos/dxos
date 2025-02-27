@@ -14,8 +14,6 @@ import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
 import { KanbanAction } from '../types';
-import { hueTokenThemes } from '@dxos/react-ui-theme';
-import { ChromaticPalette, MessageValence } from '@dxos/react-ui';
 
 const QualifiedId = S.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',
