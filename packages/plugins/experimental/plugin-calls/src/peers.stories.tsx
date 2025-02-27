@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { usePeerConnection, useStablePojo } from './hooks';
@@ -31,12 +32,6 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
     hadRun.current = true;
     videoElement.src = video;
 
-    videoElement.addEventListener('canplay', () => {
-      log.info('Video can play, starting playback');
-      videoElement.play().catch((err) => {
-        log.error('Error playing video', { err });
-      });
-    });
     videoElement.addEventListener('playing', () => {
       const stream = (videoElement as any).captureStream();
       log.info('Captured stream', { stream });
@@ -64,10 +59,12 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);
+  const [metrics, setMetrics] = useState<Record<string, any>>({});
 
   // Get video stream track
   const videoStreamTrack = useVideoStreamTrack(pushVideoElement.current);
 
+  // Push/pull video stream track to cloudflare.
   useEffect(() => {
     if (!videoStreamTrack) {
       log.info('no videoStreamTrack');
@@ -75,6 +72,8 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
     }
 
     log.info('starting push/pull', { videoStreamTrack });
+
+    // Push track to cloudflare.
     const pushedTrackObservable = peerPush.pushTrack(
       of(videoStreamTrack).pipe(
         tap((track) => {
@@ -83,10 +82,12 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
         }),
       ),
     );
+
+    // Pull track from cloudflare.
     const pulledTrackObservable = peerPull.pullTrack(
       pushedTrackObservable.pipe(
         // We need to wait for the track to be available on the call.
-        delay(1000),
+        delay(500),
         switchMap((track) => {
           performance.mark('pullTrack:begin');
           delete track.mid;
@@ -95,21 +96,37 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
       ),
     );
 
+    // Play pulled track.
     const subscription = pulledTrackObservable.subscribe((track) => {
       if (!track) {
         log.info('no pulled track');
         return;
       }
-      performance.mark('pullTrack:end');
-      log.info('successfully pulled track', {
-        track,
-        pullTime: performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration,
-      });
+
+      // Measure time to pull track.
+      {
+        performance.mark('pullTrack:end');
+        const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
+        setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': pullTime }));
+        log.info('successfully pulled track', {
+          track,
+          pullTime: performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration,
+        });
+      }
+
       invariant(pullVideoElement.current);
+      performance.mark('playVideo:begin');
       pullVideoElement.current.srcObject = new MediaStream([track]);
-      pullVideoElement.current.play().catch((err) => {
-        log.error('Error playing video', { err });
-      });
+      pullVideoElement.current
+        .play()
+        .then(() => {
+          performance.mark('playVideo:end');
+          const playTime = performance.measure('playVideo', 'playVideo:begin', 'playVideo:end').duration;
+          setMetrics((prev) => ({ ...prev, 'time to play pulled video [ms]': playTime }));
+        })
+        .catch((err) => {
+          log.error('Error playing video', { err });
+        });
     });
 
     return () => subscription?.unsubscribe();
@@ -117,8 +134,9 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
   return (
     <div className='flex flex-col gap-4 w-[400px] justify-center'>
-      <video ref={pushVideoElement} muted src={video} />
+      <video ref={pushVideoElement} muted autoPlay src={video} />
       <video ref={pullVideoElement} muted />
+      <Json data={metrics} />
     </div>
   );
 };
