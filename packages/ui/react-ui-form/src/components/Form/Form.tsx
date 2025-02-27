@@ -83,7 +83,9 @@ export const Form = <T extends BaseObject>({
 
   return (
     <FormProvider
+      formRef={formRef}
       schema={schema}
+      autoSave={autoSave}
       initialValues={initialValues}
       onValuesChanged={onValuesChanged}
       onValidate={onValidate}
