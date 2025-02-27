@@ -152,12 +152,12 @@ export const systemSememes = {
 export const systemAliases = {
   // surface cadence
   'surface-10': { root: ['attention', 'currentRelated'], attention: ['baseSurface'] },
-  'surface-20': { root: ['baseSurface'], attention: ['hoverSurface'] },
-  'surface-30': { root: ['hoverSurface', 'modalSurface', 'tooltipSurface'], attention: ['groupSurface'] },
-  'surface-40': { root: ['groupSurface'], attention: ['input'] },
-  'surface-50': { root: ['input'], attention: ['cardSurface'] },
-  'surface-60': { root: ['cardSurface'] },
-  'surface-70': { attention: ['separator'] },
+  'surface-20': { root: ['baseSurface'] },
+  'surface-30': { root: ['modalSurface', 'tooltipSurface'], attention: ['input'] },
+  'surface-40': { root: ['input'], attention: ['cardSurface'] },
+  'surface-50': { root: ['cardSurface'] },
+  'surface-60': { attention: ['hoverSurface'] },
+  'surface-70': { root: ['hoverSurface'], attention: ['separator'] },
   'surface-80': { root: ['separator'] },
 
   // special surfaces

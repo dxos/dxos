@@ -80,7 +80,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'bg-[--dx-groupSurface] rounded-lg grid dx-focus-ring-group-x-indicator',
+                'border border-separator rounded-lg grid dx-focus-ring-group-x-indicator',
                 railGridHorizontal,
               )}
             >
@@ -141,7 +141,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       icon='ph--plus--regular'
                       label={t('add card label')}
                       onClick={() => onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue)}
-                      classNames='is-full'
+                      classNames='is-full bg-cardSurface'
                     />
                   </div>
                 )}
