@@ -6,4 +6,7 @@ import { lazy } from 'react';
 
 export { type MapContainerProps, type MapControlType } from './MapContainer';
 
+export * from './Globe';
+export * from './Map';
+
 export const MapContainer = lazy(() => import('./MapContainer'));

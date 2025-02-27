@@ -3,7 +3,7 @@
 //
 
 import { type BaseObject, type ObjectId, Ref } from '@dxos/echo-schema';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 /**
  * Helper functions for working with arrays of refs.
@@ -13,7 +13,7 @@ export const RefArray = Object.freeze({
    * @returns all resolved targets.
    */
   allResolvedTargets: <T extends BaseObject>(refs: Ref<T>[]): T[] => {
-    return refs.map((ref) => ref.target).filter(nonNullable);
+    return refs.map((ref) => ref.target).filter(isNonNullable);
   },
 
   loadAll: <T extends BaseObject>(refs: Ref<T>[]): Promise<T[]> => {

@@ -1,9 +1,9 @@
+# iOS profiles
+profiles/
+
 # Generated
 public/assets/
 public/icons.svg
-
-# iOS profiles
-profiles/
 
 trace.zip
 

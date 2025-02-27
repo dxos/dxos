@@ -6,9 +6,16 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type BoardModel } from './types';
+import { type PieceRecord, type BoardModel, type Move } from './types';
 
-export const BoardContext = createContext<{ model?: BoardModel; dragging: boolean } | undefined>(undefined);
+export type BoardContextType = {
+  model?: BoardModel;
+  dragging?: boolean; // TODO(burdon): Change to PieceRecord.
+  promoting?: PieceRecord;
+  onPromotion: (move: Move) => void;
+};
+
+export const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 export const useBoardContext = () => {
   return useContext(BoardContext) ?? raise(new Error('Missing BoardContext'));

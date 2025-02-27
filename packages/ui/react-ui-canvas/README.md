@@ -1,3 +1,1 @@
-# @dxos/react-ui-canvas
-
-Basic canvas with pan and zoom.
+# @dxos/react-ui-canvas-editor

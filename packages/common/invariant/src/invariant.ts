@@ -67,7 +67,6 @@ export const failedInvariant = (message1?: unknown, message2?: string, meta?: Ca
   let errorMessage = 'invariant violation';
 
   const message = [message1, message2].filter((str) => typeof str === 'string').join(' ');
-
   if (message) {
     errorMessage += `: ${message}`;
   }

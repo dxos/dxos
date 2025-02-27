@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { ComputeGraph } from '@dxos/conductor';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -29,6 +30,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   const { t } = useTranslation(AUTOMATION_PLUGIN);
 
   const functions = useQuery(space, Filter.schema(FunctionType));
+  const workflows = useQuery(space, Filter.schema(ComputeGraph));
   const scripts = useQuery(space, Filter.schema(ScriptType));
 
   const handleSave = (values: FunctionTriggerType) => {
@@ -45,10 +47,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         ['function' satisfies keyof FunctionTriggerType]: (props) => (
           <SelectInput
             {...props}
-            options={functions.map((fn) => ({
-              value: fn.name,
-              label: getFunctionName(scripts, fn),
-            }))}
+            options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
           />
         ),
         ['spec.type' as const]: (props) => (
@@ -62,10 +61,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         ),
         ['meta' as const]: (props) => {
           const meta = props.getValue()!;
-
+          useEffect(() => props.onValueChange('object', { ...meta }), []);
           const [newMetaFieldName, setNewMetaFieldName] = useState('');
-
-          React.useEffect(() => props.onValueChange('object', { ...meta }), []);
 
           return (
             <>
@@ -75,7 +72,12 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                 return (
                   <div key={compositeKey} role='none' className='flex items-center mt-2 gap-1'>
                     <div role='none' className='flex-1'>
-                      <TextInput {...props} type={'string'} label={key} />
+                      <TextInput
+                        {...props}
+                        getValue={() => (props.getValue() as any)[key]}
+                        type={'string'}
+                        label={key}
+                      />
                     </div>
                     <IconButton
                       icon='ph--trash--regular'
@@ -123,6 +125,11 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   );
 };
 
-const getFunctionName = (scripts: ScriptType[], fn: FunctionType) => {
-  return scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+const getWorkflowOptions = (graphs: ComputeGraph[]) => {
+  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
+};
+
+const getFunctionOptions = (scripts: ScriptType[], functions: FunctionType[]) => {
+  const getLabel = (fn: FunctionType) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:worker:${fn.name}` }));
 };

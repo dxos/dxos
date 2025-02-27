@@ -79,7 +79,9 @@ describe('Keyring', () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));
     const count = 10;
     let emittedCount = 0;
-    keyring.keysUpdate.on(() => emittedCount++);
+    keyring.keysUpdate.on(() => {
+      emittedCount++;
+    });
     for (let i = 0; i < count; i++) {
       await keyring.createKey();
     }

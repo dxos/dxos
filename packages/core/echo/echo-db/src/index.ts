@@ -15,3 +15,4 @@ export * from './serializer';
 export * from './serialized-space';
 export * from './text';
 export * from './util';
+export * from './queue';

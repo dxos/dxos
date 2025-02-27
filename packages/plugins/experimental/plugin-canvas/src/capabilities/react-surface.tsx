@@ -5,10 +5,10 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { CanvasContainer } from '../components';
 import { CANVAS_PLUGIN } from '../meta';
-import { CanvasBoardType } from '../types';
 
 export default () =>
   contributes(

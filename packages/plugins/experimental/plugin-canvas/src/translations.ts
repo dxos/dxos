@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
+
 import { CANVAS_PLUGIN } from './meta';
-import { CanvasBoardType } from './types';
 
 export default [
   {

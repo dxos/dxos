@@ -8,7 +8,7 @@ import { Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { byPosition, type Position, isNode, type MaybePromise, nonNullable } from '@dxos/util';
+import { byPosition, type Position, isNode, type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
 import { type ActionData, actionGroupSymbol, type Node, type NodeArg, type Relation } from './node';
@@ -101,7 +101,7 @@ export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): 
           connector: ({ node }) => actions({ node })?.map((arg) => ({ ...arg, type: ACTION_TYPE })),
         } satisfies BuilderExtension)
       : undefined,
-  ].filter(nonNullable);
+  ].filter(isNonNullable);
 };
 
 export type GraphBuilderTraverseOptions = {

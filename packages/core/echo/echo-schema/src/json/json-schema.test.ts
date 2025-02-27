@@ -11,17 +11,21 @@ import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import {
   PropertyMeta,
   setSchemaProperty,
-  type JsonSchemaType,
   getSchemaProperty,
   getObjectAnnotation,
   getEchoIdentifierAnnotation,
   EntityKind,
+  JsonSchemaType,
+  createSchemaReference,
+  getSchemaReference,
+  Ref,
 } from '../ast';
-import { createSchemaReference, getSchemaReference, Ref } from '../ast/ref';
-import { FormatAnnotationId } from '../formats';
-import { Email } from '../formats/string';
+import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
+import { StoredSchema } from '../schema';
 import { Contact } from '../testing';
+
+const EXAMPLE_NAMESPACE = '@example';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -36,15 +40,14 @@ describe('effect-to-json', () => {
 
   test('field meta annotation', () => {
     const meta = { maxLength: 0 };
-    const metaNamespace = 'dxos.test';
     class Schema extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
-      name: S.String.pipe(PropertyMeta(metaNamespace, meta)),
+      name: S.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
-    expect(getEchoProp(jsonSchema.properties!.name).annotations[metaNamespace]).to.deep.eq(meta);
+    expect(getEchoProp(jsonSchema.properties!.name).annotations[EXAMPLE_NAMESPACE]).to.deep.eq(meta);
   });
 
   test('reference annotation', () => {
@@ -106,7 +109,7 @@ describe('effect-to-json', () => {
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {
-        id: { type: 'string' },
+        id: { type: 'string', description: 'a string' },
         name: { type: 'string', title: 'Name', description: 'Person name' },
         email: {
           type: 'string',
@@ -119,7 +122,7 @@ describe('effect-to-json', () => {
     });
   });
 
-  test('Contact schema serialization', () => {
+  test('handles suspend -- Contact schema serialization', () => {
     const schema = toJsonSchema(Contact);
     expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
@@ -149,9 +152,11 @@ describe('effect-to-json', () => {
       properties: {
         id: {
           type: 'string',
+          description: 'a string',
         },
         name: {
           type: 'string',
+          description: 'a string',
         },
         org: {
           $id: '/schemas/echo/ref',
@@ -183,6 +188,28 @@ describe('effect-to-json', () => {
     setSchemaProperty(jsonSchema, 'employer' as JsonProp, createSchemaReference(Org.typename));
     const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'employer' as JsonProp) ?? {}) ?? {};
     expect(typename).to.eq(Org.typename);
+  });
+
+  test('serialize circular schema (StoredSchema)', () => {
+    const jsonSchema = toJsonSchema(StoredSchema);
+    expect(Object.keys(jsonSchema.properties!).length).toBeGreaterThan(0);
+
+    // TODO(dmaretskyi): Currently unable to deserialize.
+    // const effectSchema = toEffectSchema(jsonSchema);
+    // console.log(JSON.stringify(jsonSchema, null, 2));
+  });
+
+  test('tuple schema with description', () => {
+    const schema = S.Struct({
+      args: S.Tuple(
+        S.String.annotations({ description: 'The source currency' }),
+        S.String.annotations({ description: 'The target currency' }),
+      ),
+    });
+    const jsonSchema = toJsonSchema(schema);
+
+    // console.log(JSON.stringify(jsonSchema, null, 2));
+    (S.asserts(JsonSchemaType) as any)(jsonSchema);
   });
 
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
@@ -220,7 +247,7 @@ describe('json-to-effect', () => {
       class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })(
         {
           string: S.String,
-          number: S.Number.pipe(PropertyMeta('dxos.test', { is_date: true })),
+          number: S.Number.pipe(PropertyMeta(EXAMPLE_NAMESPACE, { is_date: true })),
           boolean: S.Boolean,
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
@@ -341,6 +368,16 @@ describe('json-to-effect', () => {
     const roundTrippedSchema = toJsonSchema(effectSchema);
 
     expect(roundTrippedSchema).to.deep.equal(originalSchema);
+  });
+
+  test('description gets preserved', () => {
+    const schema = S.Struct({
+      name: S.String.annotations({ description: 'Name' }),
+    });
+    const jsonSchema = toJsonSchema(schema);
+    const effectSchema = toEffectSchema(jsonSchema);
+    const jsonSchema2 = toJsonSchema(effectSchema);
+    expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
 
   const prepareAstForCompare = (obj: AST.AST): any =>

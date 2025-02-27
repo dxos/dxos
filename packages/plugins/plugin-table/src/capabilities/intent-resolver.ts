@@ -23,14 +23,23 @@ export default () =>
       },
     }),
     createResolver({
+      intent: TableAction.AddRow,
+      resolve: async ({ table, data }) => {
+        const space = getSpace(table);
+        invariant(space);
+        invariant(table.view?.target);
+        const schema = space.db.schemaRegistry.getSchema(table.view.target.query.type);
+        invariant(schema);
+        space.db.add(create(schema, data));
+      },
+    }),
+    createResolver({
       intent: TableAction.DeleteColumn,
       resolve: ({ table, fieldId, deletionData }, undo) => {
         invariant(table.view);
-
         const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.type);
         invariant(schema);
         const projection = new ViewProjection(schema, table.view.target!);
-
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {

@@ -27,6 +27,7 @@ import {
   WifiHigh,
   MagnifyingGlass,
   Cloud,
+  Function,
 } from '@phosphor-icons/react';
 
 export type SectionItem = {
@@ -191,6 +192,11 @@ export const useSections = (): SectionItem[] => {
       title: 'EDGE',
       Icon: Cloud,
       items: [
+        {
+          id: '/edge/workflows',
+          title: 'Workflows',
+          Icon: Function,
+        },
         {
           id: '/edge/dashboard',
           title: 'Dashboard',

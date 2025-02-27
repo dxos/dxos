@@ -23,8 +23,8 @@ export type PieceRecord<T extends PieceType = PieceType> = {
 export type PieceMap<T extends PieceType = PieceType> = Record<string, PieceRecord<T>>;
 
 export type Move = {
-  source: Location;
-  target: Location;
+  from: Location;
+  to: Location;
   piece: PieceType;
   promotion?: PieceType;
 };
@@ -47,8 +47,12 @@ export const isLocation = (token: unknown): token is Location =>
 
 export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] === l2[0] && l1[1] === l2[1];
 
+/**
+ * Generic board model.
+ */
 export interface BoardModel<T extends PieceType = PieceType> {
   turn: Player;
   pieces: ReadonlySignal<PieceMap<T>>;
   isValidMove: (move: Move) => boolean;
+  canPromote?: (move: Move) => boolean;
 }

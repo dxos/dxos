@@ -73,7 +73,7 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export type GlobeControlProps = MapCanvasProps & { onToggle: () => void };
+export type GlobeControlProps = MapCanvasProps & { onToggle?: () => void };
 
 export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle }: GlobeControlProps) => {
   const [topology] = useAsyncState(loadTopology);
@@ -85,7 +85,7 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
   const handleAction: ControlProps['onAction'] = (action) => {
     switch (action) {
       case 'toggle': {
-        onToggle();
+        onToggle?.();
         break;
       }
 

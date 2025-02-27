@@ -20,7 +20,7 @@ import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 import { setActive } from './set-active';
@@ -150,7 +150,7 @@ export default (context: PluginsContext) =>
           // When un-soloing, the solo entry is added to the deck.
           const next = (
             mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]
-          ).filter(nonNullable);
+          ).filter(isNonNullable);
 
           const removed = current.filter((id) => !next.includes(id));
           const closed = Array.from(new Set([...deck.inactive.filter((id) => !next.includes(id)), ...removed]));

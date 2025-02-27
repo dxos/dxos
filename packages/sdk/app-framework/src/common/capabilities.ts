@@ -6,6 +6,7 @@ import { type Schema as S } from '@effect/schema';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
+import { type ArtifactDefinition, type Tool } from '@dxos/artifact';
 import { type Space } from '@dxos/client-protocol';
 import { type RootSettingsStore } from '@dxos/local-storage';
 
@@ -85,6 +86,11 @@ export namespace Capabilities {
 
   export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
+
+  export const Tools = defineCapability<Tool[]>('dxos.org/app-framework/capability/tools');
+  export const ArtifactDefinition = defineCapability<ArtifactDefinition>(
+    'dxos.org/app-framework/capability/artifact-definition',
+  );
 
   export type FileUploader = (file: File, space: Space) => Promise<FileInfo | undefined>;
   export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');

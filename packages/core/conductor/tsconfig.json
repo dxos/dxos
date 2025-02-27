@@ -1,0 +1,53 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../experimental/artifact"
+    },
+    {
+      "path": "../../experimental/assistant"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-schema"
+    },
+    {
+      "path": "../echo/live-object"
+    },
+    {
+      "path": "../mesh/edge-client"
+    },
+    {
+      "path": "../protocols"
+    }
+  ]
+}

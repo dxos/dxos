@@ -10,7 +10,7 @@ import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAttended } from '@dxos/react-ui-attention';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { ThreadCapabilities as LocalThreadCapabilities } from '../capabilities';
 import { CommentsContainer } from '../components';
@@ -34,7 +34,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const threadObjects = RefArray.allResolvedTargets(subject.threads ?? []);
 
   const threads = useMemo(() => {
-    return threadObjects.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
+    return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];
   }, [JSON.stringify(threadObjects), JSON.stringify(drafts)]);
 
   const detachedIds = useMemo(() => {
