@@ -42,6 +42,7 @@ export enum PresetName {
   EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
   FOREX_FUNCTION_CALL = 'forex-function-call',
+  DISCORD_MESSAGES = 'discord-messages',
 }
 
 export const presets = {
@@ -353,6 +354,40 @@ export const presets = {
           const computeModel = createComputeGraph(canvasModel);
 
           return addToSpace(PresetName.FOREX_FUNCTION_CALL, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+    [
+      PresetName.DISCORD_MESSAGES,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          canvasModel.builder.call((builder) => {
+            // DXOS general channel.
+            const channelId = canvasModel.createNode(
+              createConstant({ value: '837138313172353098', ...position({ x: -10, y: -5 }) }),
+            );
+            const queueId = canvasModel.createNode(
+              createConstant({
+                value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+                ...position({ x: -10, y: 5 }),
+              }),
+            );
+            const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
+            const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
+
+            builder
+              .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
+              .createEdge({ source: channelId.id, target: converter.id, input: 'channelId' })
+              .createEdge({ source: converter.id, target: view.id, output: 'newMessages' });
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+
+          return addToSpace(PresetName.DISCORD_MESSAGES, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
