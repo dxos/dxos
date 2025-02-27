@@ -28,7 +28,6 @@ const getNextSize = (
   minSize: number,
   maxSize: number | undefined,
 ) => {
-  console.log(maxSize);
   return Math.min(
     maxSize ?? Infinity,
     Math.max(
