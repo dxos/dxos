@@ -90,7 +90,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 bg-deck rounded-lg grid dx-focus-ring-group-x-indicator',
+                'shrink min-bs-0 bg-groupSurface rounded-lg grid dx-focus-ring-group-x-indicator',
                 railGridHorizontalContainFitContent,
               )}
             >
@@ -114,7 +114,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <div
                       role='none'
                       className={mx(
-                        'rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator',
+                        'rounded bg-baseSurface dx-focus-ring-group-y-indicator',
                         selectedItems.has(card.id) && 'dx-focus-ring',
                       )}
                     >
@@ -159,7 +159,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     icon='ph--plus--regular'
                     label={t('add card label')}
                     onClick={() => handleAddCard(columnValue)}
-                    classNames='is-full'
+                    classNames='is-full bg-baseSurface'
                   />
                 </div>
               )}

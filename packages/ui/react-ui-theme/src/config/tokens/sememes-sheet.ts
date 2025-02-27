@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { surfaceCadence } from './sememes-system';
-import type { ColorSememes } from './types';
+import type { ColorAliases, ColorSememes } from './types';
 
 export const sheetSememes = {
   // NOTE: background styles for the main content area must have transparency otherwise they will mask the selection.
@@ -37,10 +36,6 @@ export const sheetSememes = {
     light: ['neutral', 25],
     dark: ['neutral', 750],
   },
-  gridLine: {
-    light: ['neutral', surfaceCadence.light[4]],
-    dark: ['neutral', surfaceCadence.dark[3]],
-  },
   gridOverlay: {
     light: ['primary', '500/.5'],
     dark: ['primary', '500/.5'],
@@ -62,3 +57,7 @@ export const sheetSememes = {
     dark: ['amber', '200/.2'],
   },
 } satisfies ColorSememes;
+
+export const sheetAliases = {
+  groupSurface: { root: ['gridLine'] },
+} satisfies ColorAliases;

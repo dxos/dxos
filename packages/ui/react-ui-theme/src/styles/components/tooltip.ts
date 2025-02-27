@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme, type Elevation } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { arrow, chromeText, surfaceShadow, modalSurface, popperMotion, surfaceZIndex } from '../fragments';
+import { arrow, chromeText, surfaceShadow, popperMotion, surfaceZIndex } from '../fragments';
 
 export type TooltipStyleProps = Partial<{
   elevation: Elevation;
@@ -13,8 +13,7 @@ export type TooltipStyleProps = Partial<{
 
 export const tooltipContent: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'inline-flex items-center rounded-md plb-2 pli-3 max-is-64',
-    modalSurface,
+    'inline-flex items-center rounded-md plb-2 pli-3 max-is-64 bg-tooltipSurface',
     popperMotion,
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'tooltip' }),

@@ -6547,8 +6547,8 @@ importers:
   packages/plugins/experimental/plugin-theme-editor:
     dependencies:
       '@ch-ui/tokens':
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 2.0.0
+        version: 2.0.0
       '@codemirror/lang-json':
         specifier: 6.0.1
         version: 6.0.1
@@ -12391,11 +12391,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: 2.0.1
-        version: 2.0.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))
+        specifier: 2.1.0
+        version: 2.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))
       '@ch-ui/tokens':
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 2.0.0
+        version: 2.0.0
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -12448,6 +12448,9 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0
     devDependencies:
+      '@ch-ui/colors':
+        specifier: 1.0.0
+        version: 1.0.0
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -14789,14 +14792,14 @@ packages:
     resolution: {integrity: sha512-vevNSzPHnVDgyw6ZotbnE0y4FZFtIQQVKKjwVHGcfST7C5bqRyt69K1Nooo0r6s7laeJhS7YwXYmgLyPouc12w==}
     engines: {node: '>=20.0.0'}
 
-  '@ch-ui/tailwind-tokens@2.0.1':
-    resolution: {integrity: sha512-fyyen4uCaCVx+YrJ7gBUeugav8AEk55Ul1yoCJUAQsuTdgZPWPGKxIPwKUL/unpLZDkg384QpmuTYB1twwnfaQ==}
+  '@ch-ui/tailwind-tokens@2.1.0':
+    resolution: {integrity: sha512-pvappJ7L3C0JigkaHU2UDZkfkXKQI2jPMZt7wqt9I9EHOJmGOEzGS99h7cp55c+U+m+vF7Ac2Y937HlT4gY9Sg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
 
-  '@ch-ui/tokens@1.2.0':
-    resolution: {integrity: sha512-TkNygnnCwVjRAmF3rzCIgophrgeUHinkBEHNdw8ogjmFlxOxrl0kF3k3QlTaxJhKfi2BLL9lSuFcws7AhqLXUw==}
+  '@ch-ui/tokens@2.0.0':
+    resolution: {integrity: sha512-6rjJKi72sJtUh8B3cBvTqirVFJJtE7ojyuIu8+tGH5Q+QPgfkWKYmvt3b7m5AR+pahXWszqF6BEEkj1Du11HbQ==}
     engines: {node: '>=20.0.0'}
 
   '@chainsafe/is-ip@2.0.2':
@@ -36695,12 +36698,12 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.0.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))':
+  '@ch-ui/tailwind-tokens@2.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3)))':
     dependencies:
-      '@ch-ui/tokens': 1.2.0
+      '@ch-ui/tokens': 2.0.0
       tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3))
 
-  '@ch-ui/tokens@1.2.0':
+  '@ch-ui/tokens@2.0.0':
     dependencies:
       '@ch-ui/colors': 1.0.0
       postcss: 8.4.47
