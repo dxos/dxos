@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useMemo, type ComponentType } from 'react';
+import React, { useState, useEffect, useMemo, type ComponentType, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
@@ -95,6 +95,11 @@ export const ResponsiveGrid = <T extends object = any>({
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
 
+  const handleClick = useCallback(
+    (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
+    [pinned, onPinnedChange],
+  );
+
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
       {pinnedItem && (
@@ -160,11 +165,11 @@ export const ResponsiveGrid = <T extends object = any>({
         {bounds.map(([item, bounds]) => (
           <Cell
             key={getId(item)}
-            pinned={getId(item) === pinned}
+            classNames='absolute transition-all duration-500'
             item={item}
             style={bounds}
-            classNames='absolute transition-all duration-500'
-            onClick={() => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item))}
+            pinned={getId(item) === pinned}
+            onClick={items.length > 1 ? handleClick : undefined}
           />
         ))}
       </div>

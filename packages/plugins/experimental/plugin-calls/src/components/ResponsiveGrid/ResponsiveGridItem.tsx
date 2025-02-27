@@ -14,17 +14,17 @@ const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{
-    style?: CSSProperties;
     item: T;
+    style?: CSSProperties;
+    pinned?: boolean;
     name?: string;
     self?: boolean;
-    pinned?: boolean;
     screenshare?: boolean;
     mute?: boolean;
     wave?: boolean;
     speaking?: boolean;
     debug?: boolean;
-    onClick?: () => void;
+    onClick?: (item: T) => void;
   }>
 >;
 
@@ -34,6 +34,7 @@ export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
 export const ResponsiveGridItem = <T extends object = any>({
   children,
   classNames,
+  item,
   style,
   name,
   self,
@@ -72,7 +73,7 @@ export const ResponsiveGridItem = <T extends object = any>({
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 3}
             label={pinned ? t('icon unpin') : t('icon pin')}
-            onClick={onClick}
+            onClick={() => onClick?.(item)}
           />
         </div>
       )}
