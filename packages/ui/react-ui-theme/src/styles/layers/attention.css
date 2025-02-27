@@ -2,24 +2,7 @@
   /* If an element should apply attention-related color tokens, it should use this class. */
   .attention-surface {
     --surface-separator: transparent;
-    background-color: var(--surface-bg);
-    border-color: var(--surface-separator);
-  }
-}
-
-/* Utilities below control _how_ an element becomes attended. */
-@layer dx-base {
-  /* If an element is attended this attribute will be set. */
-  [data-is-attention-source] {
-    --surface-bg: var(--dx-attention);
-    --surface-separator: var(--dx-separator);
-  }
-
-  /* Used to style elements which are _related_ to the currently attended element. */
-  .current-related[aria-current] {
-    --surface-bg: var(--dx-attention);
-    &:focus-within {
-      --surface-bg: var(--dx-attention);
-    }
+    background-color: var(--dx-baseSurface);
+    border-color: var(--dx-separator);
   }
 }

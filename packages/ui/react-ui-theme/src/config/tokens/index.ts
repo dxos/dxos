@@ -65,7 +65,7 @@ export const userDefaultTokenSet = {
       namespace: semanticColors.namespace,
     },
     alias: {
-      statements: aliasColors.statements,
+      conditions: aliasColors.conditions,
       aliases: systemAliases,
       namespace: aliasColors.namespace,
     },
