@@ -2,23 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { type PropsWithChildren, useState } from 'react';
 
-import { Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
+import { Prompt } from '../Prompt';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
-export const AmbientChatDialog = () => {
+export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
+  const [iter, setIter] = useState(0);
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
         onInteractOutside={preventDefault}
-        classNames='pointer-events-auto relative overflow-hidden'
+        classNames='pointer-events-auto relative overflow-hidden is-[600px] max-is-none'
         inOverlayLayout
         {...resizeAttributes}
         style={{
@@ -27,6 +29,7 @@ export const AmbientChatDialog = () => {
         }}
       >
         <ResizeHandle
+          key={iter}
           side='block-start'
           defaultSize='min-content'
           minSize={5}
@@ -34,11 +37,25 @@ export const AmbientChatDialog = () => {
           iconPosition='center'
           onSizeChange={setSize}
         />
-        <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
-        <Dialog.Close>
-          <Icon icon='ph--x--regular' size={4} />
-        </Dialog.Close>
-        <h1>Hello</h1>
+
+        <div className='flex justify-between items-center'>
+          <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
+          <Dialog.Close>
+            <Icon icon='ph--x--regular' size={4} />
+          </Dialog.Close>
+          <IconButton
+            variant='ghost'
+            icon='ph--caret-down--regular'
+            iconOnly
+            label='Shrink'
+            onClick={() => {
+              setIter((iter) => iter + 1);
+              setSize('min-content');
+            }}
+          />
+        </div>
+
+        <Prompt />
       </Dialog.Content>
     </div>
   );
