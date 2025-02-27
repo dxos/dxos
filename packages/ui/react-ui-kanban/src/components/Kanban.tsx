@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentProps, useCallback, useEffect, useMemo } from 'react';
+import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Stack, StackItem, railGridHorizontal, autoScrollRootAttributes } from '@dxos/react-ui-stack';
+import { Stack, StackItem, autoScrollRootAttributes, railGridHorizontalContainFitContent } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../defs';
@@ -17,7 +17,7 @@ import { translationKey } from '../translations';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
-  onAddCard?: (columnValue: string | undefined) => void;
+  onAddCard?: (columnValue: string | undefined) => string | undefined;
   onRemoveCard?: (card: T) => void;
 };
 
@@ -25,8 +25,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { select, clear } = useSelectionActions(model.id);
   const selectedItems = useSelectedItems(model.id);
+  const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
-  // const [namingColumn, setNamingColumn] = useState(false);
 
   // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
   //   omit fields from the form?
@@ -55,6 +55,16 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
     [model.items],
   );
 
+  const handleAddCard = useCallback(
+    (columnValue: string | undefined) => {
+      if (onAddCard) {
+        const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
+        setFocusedCardId(newCardId);
+      }
+    },
+    [onAddCard],
+  );
+
   return (
     <Stack
       orientation='horizontal'
@@ -73,13 +83,16 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='pli-1 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-1 plb-2 drag-preview-p-0'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
           >
             <div
               role='none'
-              className={mx('bg-deck rounded-lg grid dx-focus-ring-group-x-indicator', railGridHorizontal)}
+              className={mx(
+                'shrink min-bs-0 bg-groupSurface rounded-lg grid dx-focus-ring-group-x-indicator',
+                railGridHorizontalContainFitContent,
+              )}
             >
               <Stack
                 id={columnValue}
@@ -94,14 +107,14 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'plb-1 pli-2 drag-preview-p-0'}
+                    classNames={'contain-layout plb-1 pli-2 drag-preview-p-0'}
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >
                     <div
                       role='none'
                       className={mx(
-                        'rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator',
+                        'rounded bg-baseSurface dx-focus-ring-group-y-indicator',
                         selectedItems.has(card.id) && 'dx-focus-ring',
                       )}
                     >
@@ -128,21 +141,28 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form values={card} schema={model.cardSchema} Custom={Custom} onSave={handleSave} autoSave />
+                      <Form
+                        values={card}
+                        schema={model.cardSchema}
+                        Custom={Custom}
+                        onSave={handleSave}
+                        autoFocus={card.id === focusedCardId}
+                        autoSave
+                      />
                     </div>
                   </StackItem.Root>
                 ))}
-                {onAddCard && (
-                  <div role='none' className='plb-1 pli-2'>
-                    <IconButton
-                      icon='ph--plus--regular'
-                      label={t('add card label')}
-                      onClick={() => onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue)}
-                      classNames='is-full'
-                    />
-                  </div>
-                )}
               </Stack>
+              {onAddCard && (
+                <div role='none' className='plb-2 pli-2'>
+                  <IconButton
+                    icon='ph--plus--regular'
+                    label={t('add card label')}
+                    onClick={() => handleAddCard(columnValue)}
+                    classNames='is-full bg-baseSurface'
+                  />
+                </div>
+              )}
               <StackItem.Heading classNames='pli-2 order-first'>
                 {!uncategorized && (
                   <StackItem.DragHandle asChild>

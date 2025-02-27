@@ -69,6 +69,13 @@ export namespace KanbanAction {
     }),
     output: S.Void,
   }) {}
+
+  export class DeleteCard extends S.TaggedClass<DeleteCard>()(`${KANBAN_ACTION}/delete-card`, {
+    input: S.Struct({
+      card: S.Any, // The card object to delete
+    }),
+    output: S.Void,
+  }) {}
 }
 
 // TODO(burdon): Undo?

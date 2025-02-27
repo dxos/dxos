@@ -22,7 +22,7 @@
     "src"
   ],
   "dependencies": {
-    "@ch-ui/tokens": "1.2.0",
+    "@ch-ui/tokens": "2.0.0",
     "@codemirror/lang-json": "6.0.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
