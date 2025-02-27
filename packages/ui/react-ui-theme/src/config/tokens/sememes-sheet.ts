@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { ColorSememes } from './types';
+import type { ColorAliases, ColorSememes } from './types';
 
 export const sheetSememes = {
   // NOTE: background styles for the main content area must have transparency otherwise they will mask the selection.
@@ -36,10 +36,6 @@ export const sheetSememes = {
     light: ['neutral', 25],
     dark: ['neutral', 750],
   },
-  gridLine: {
-    light: ['neutral', 70],
-    dark: ['neutral', 700],
-  },
   gridOverlay: {
     light: ['primary', '500/.5'],
     dark: ['primary', '500/.5'],
@@ -61,3 +57,7 @@ export const sheetSememes = {
     dark: ['amber', '200/.2'],
   },
 } satisfies ColorSememes;
+
+export const sheetAliases = {
+  cardSurface: { root: ['gridLine'] },
+} satisfies ColorAliases;

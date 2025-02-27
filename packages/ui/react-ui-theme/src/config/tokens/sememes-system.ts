@@ -19,49 +19,53 @@ const applyAlpha = (sememe: Sememe, alpha: number): Sememe => {
 
 // Surface cadence sememes (in contrast-order)
 
-const STEPS = 7;
+const STEPS = 8;
 const DARK_MIN = 850;
-const DARK_MAX = 750;
+const DARK_MAX = 700;
 const darkCadence = (step: number) => {
-  return DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS);
+  return Math.floor(DARK_MIN + (DARK_MAX - DARK_MIN) * (step / STEPS));
 };
 const LIGHT_MIN = 25;
-const LIGHT_MAX = 120;
+const LIGHT_MAX = 180;
 const lightCadence = (step: number) => {
-  return LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS);
+  return Math.floor(LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * (step / STEPS));
 };
 
-const surface10: Sememe = {
+const surface0: Sememe = {
   light: ['neutral', lightCadence(0)],
   dark: ['neutral', darkCadence(0)],
 };
-const surface20: Sememe = {
+const surface10: Sememe = {
   light: ['neutral', lightCadence(1)],
   dark: ['neutral', darkCadence(1)],
 };
-const surface30: Sememe = {
+const surface20: Sememe = {
   light: ['neutral', lightCadence(2)],
   dark: ['neutral', darkCadence(2)],
 };
-const surface40: Sememe = {
+const surface30: Sememe = {
   light: ['neutral', lightCadence(3)],
   dark: ['neutral', darkCadence(3)],
 };
-const surface50: Sememe = {
+const surface40: Sememe = {
   light: ['neutral', lightCadence(4)],
   dark: ['neutral', darkCadence(4)],
 };
-const surface60: Sememe = {
+const surface50: Sememe = {
   light: ['neutral', lightCadence(5)],
   dark: ['neutral', darkCadence(5)],
 };
-const surface70: Sememe = {
+const surface60: Sememe = {
   light: ['neutral', lightCadence(6)],
   dark: ['neutral', darkCadence(6)],
 };
-const surface80: Sememe = {
+const surface70: Sememe = {
   light: ['neutral', lightCadence(7)],
   dark: ['neutral', darkCadence(7)],
+};
+const surface80: Sememe = {
+  light: ['neutral', lightCadence(8)],
+  dark: ['neutral', darkCadence(8)],
 };
 
 const surface400: Sememe = {
@@ -107,7 +111,7 @@ export const systemSememes = {
 
   deck: {
     light: surface60.light,
-    dark: surface10.dark,
+    dark: surface0.dark,
   },
 
   //
@@ -154,9 +158,9 @@ export const systemAliases = {
   'surface-10': { root: ['attention', 'currentRelated'], attention: ['baseSurface'] },
   'surface-20': { root: ['baseSurface'] },
   'surface-30': { root: ['modalSurface', 'tooltipSurface'], attention: ['input'] },
-  'surface-40': { root: ['input'], attention: ['cardSurface'] },
-  'surface-50': { root: ['cardSurface'] },
-  'surface-60': { attention: ['hoverSurface'] },
+  'surface-40': { root: ['input'] },
+  'surface-50': { attention: ['cardSurface'] },
+  'surface-60': { root: ['cardSurface'], attention: ['hoverSurface'] },
   'surface-70': { root: ['hoverSurface'], attention: ['separator'] },
   'surface-80': { root: ['separator'] },
 
