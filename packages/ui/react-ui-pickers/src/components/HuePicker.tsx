@@ -13,22 +13,23 @@ import {
   type ThemedClassName,
   Toolbar,
   Tooltip,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
-  const { tx } = useThemeContext();
   const size = 20;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <rect x={0} y={0} width={size} height={size} className={tx('hue.fill', 'select--hue__preview', { hue })} />
+      <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${hue}Surface)`} />
+      <text x='10' y='15' textAnchor='middle' fontSize='14' fontWeight='bold' fill={`var(--dx-${hue}SurfaceText)`}>
+        T
+      </text>
     </svg>
   );
 };
 
-const hueTokens = Object.keys(hueTokenThemes).slice(0, 16);
+const hueTokens = Object.keys(hueTokenThemes);
 
 export type HuePickerProps = {
   disabled?: boolean;
@@ -97,7 +98,7 @@ export const HuePickerToolbarButton = ({
         </Tooltip.Portal>
         <DropdownMenu.Portal>
           <DropdownMenu.Content side='bottom' classNames='!w-40'>
-            <DropdownMenu.Viewport classNames='grid grid-cols-4'>
+            <DropdownMenu.Viewport classNames='grid grid-cols-6'>
               {hueTokens.map((hue) => {
                 return (
                   <DropdownMenu.CheckboxItem
