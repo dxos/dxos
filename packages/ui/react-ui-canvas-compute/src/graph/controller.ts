@@ -26,6 +26,7 @@ import {
   SpaceService,
   type ValueBag,
   type GraphDiagnostic,
+  FunctionCallService,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
@@ -145,6 +146,7 @@ export class ComputeGraphController extends Resource {
   }
 
   setServices(services: Partial<Services>) {
+    log.info('setServices', { services });
     Object.assign(this._services, services);
   }
 
@@ -249,10 +251,10 @@ export class ComputeGraphController extends Resource {
         // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
         const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
           Effect.withSpan('runGraph'),
-          Effect.provide(services),
           Scope.extend(scope),
 
           Effect.flatMap(computeValueBag),
+          Effect.provide(services),
           Effect.withSpan('test'),
           Effect.tap((values) => {
             for (const [key, value] of Object.entries(values)) {
@@ -311,9 +313,9 @@ export class ComputeGraphController extends Resource {
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
           const effect = (computingOutputs ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
             Effect.withSpan('runGraph'),
-            Effect.provide(services),
             Scope.extend(scope),
             Effect.flatMap(computeValueBag),
+            Effect.provide(services),
             Effect.withSpan('test'),
             Effect.tap((values) => {
               for (const [key, value] of Object.entries(values)) {
@@ -350,7 +352,15 @@ export class ComputeGraphController extends Resource {
     const spaceLayer =
       services.spaceService != null ? Layer.succeed(SpaceService, services.spaceService) : SpaceService.empty;
 
-    return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer, FetchHttpClient.layer);
+    const functionCallServiceLayer =
+      services.edgeHttpClient != null && services.spaceService != null
+        ? Layer.succeed(
+            FunctionCallService,
+            FunctionCallService.fromClient(services.edgeHttpClient.baseUrl, services.spaceService.spaceId),
+          )
+        : Layer.succeed(FunctionCallService, FunctionCallService.mock());
+
+    return Layer.mergeAll(logLayer, gptLayer, queueLayer, spaceLayer, functionCallServiceLayer, FetchHttpClient.layer);
   }
 
   private _createLogger(): Context.Tag.Service<EventLogger> {

@@ -11,6 +11,7 @@ import { mapValues } from '@dxos/util';
 // TODO(burdon): Move to types to untangle circular deps.
 import type { ComputeNode } from './graph';
 import type { EventLogger, GptService, QueueService, SpaceService } from '../services';
+import type { FunctionCallService } from '../services/function-call-service';
 
 //
 // Errors
@@ -93,6 +94,7 @@ export type ComputeRequirements =
   | QueueService
   | GptService
   | SpaceService
+  | FunctionCallService
   | Scope.Scope;
 
 /**

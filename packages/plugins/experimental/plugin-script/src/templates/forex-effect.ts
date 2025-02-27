@@ -1,7 +1,3 @@
-//
-// Copyright 2025 DXOS.org
-//
-
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 import {
@@ -10,11 +6,9 @@ import {
   HttpClientResponse,
   HttpClientError,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.61.0?deps=effect@3.6.0';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.12';
 // @ts-ignore
-import type { Cause } from 'https://esm.sh/effect@3.6.0';
-// @ts-ignore
-import { Effect, Schedule } from 'https://esm.sh/effect@3.6.0';
+import { Effect, Schedule } from 'https://esm.sh/effect@3.13.2';
 
 /**
  * Returns the exchange rate between two currencies.

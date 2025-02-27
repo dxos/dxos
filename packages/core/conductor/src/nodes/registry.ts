@@ -33,7 +33,7 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { GptService, QueueService, SpaceService } from '../services';
+import { FunctionCallService, GptService, QueueService, SpaceService } from '../services';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -336,34 +336,29 @@ export const registry: Record<NodeType, Executable> = {
   ['function' as const]: defineComputeNode({
     input: AnyInput,
     output: AnyOutput,
-    exec: synchronizedComputeFunction((input, node) => {
-      // TODO(wittjosiah): Get from config.
-      const baseUrl = 'https://edge-main.dxos.workers.dev/';
-      return Effect.gen(function* () {
+    exec: synchronizedComputeFunction((input, node) =>
+      Effect.gen(function* (): any {
         const fn = yield* Effect.tryPromise(async () => node?.function?.load());
         if (!node || !fn) {
           return {};
         }
 
-        const client = yield* HttpClient.HttpClient;
+        const functionCallService = yield* FunctionCallService;
+
         const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
         const path = getUserFunctionUrlInMetadata(getMeta(fn));
-        const url = path && getInvocationUrl(path, baseUrl, { spaceId: undefined });
-        if (!url) {
-          return {};
+        if (!path) {
+          throw new Error('Function not resolved');
         }
 
-        return yield* pipe(
-          HttpClientRequest.post(url),
-          HttpClientRequest.setHeader('Content-Type', 'application/json'),
-          HttpClientRequest.bodyText(JSON.stringify(input)),
-          client.execute,
-          Effect.flatMap((res) => res.json),
-          Effect.flatMap((res) => S.decodeUnknown(outputSchema)(res)),
-          Effect.scoped,
-        );
-      });
-    }),
+        const result = yield* Effect.tryPromise({
+          try: () => functionCallService.callFunction(path, input),
+          catch: (e) => e,
+        });
+
+        return yield* S.decodeUnknown(outputSchema)(result);
+      }),
+    ),
   }),
 
   ['gpt' as const]: defineComputeNode({

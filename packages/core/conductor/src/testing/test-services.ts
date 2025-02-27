@@ -12,6 +12,7 @@ import { consoleLogger, noopLogger } from './logger';
 import { EventLogger, GptService, SpaceService, QueueService } from '../services';
 import { MockGpt } from '../services/testing';
 import type { ComputeRequirements } from '../types';
+import { FunctionCallService } from '../services/function-call-service';
 
 export type TestServiceOptions = {
   gpt?: Context.Tag.Service<GptService>;
@@ -36,7 +37,15 @@ export const testServices = ({
     edgeClient != null && edgeHttpClient != null ? QueueService.fromClient(edgeHttpClient) : QueueService.notAvailable;
   const gptLayer = Layer.succeed(GptService, gpt);
   const spaceLayer = SpaceService.empty;
-  return Layer.mergeAll(logLayer, edgeClientLayer, gptLayer, spaceLayer, FetchHttpClient.layer);
+  const functionCallServiceLayer = Layer.succeed(FunctionCallService, FunctionCallService.mock());
+  return Layer.mergeAll(
+    logLayer,
+    edgeClientLayer,
+    gptLayer,
+    spaceLayer,
+    FetchHttpClient.layer,
+    functionCallServiceLayer,
+  );
 };
 
 const DEFAULT_MOCK_GPT = new MockGpt({
