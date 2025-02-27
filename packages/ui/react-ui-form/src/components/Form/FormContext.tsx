@@ -64,13 +64,13 @@ export const FormProvider = ({
       const keyIsEnter = event.key === 'Enter';
       const modifierUsed = event.shiftKey || event.ctrlKey || event.altKey || event.metaKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
+      const inputOptOut = (event.target as HTMLElement).getAttribute('data-no-submit') === 'true';
 
-      if (keyIsEnter && !inputIsTextarea && !modifierUsed) {
+      if (keyIsEnter && !inputIsTextarea && !modifierUsed && !inputOptOut) {
         if (!autoSave && form.canSave) {
           form.handleSave();
         }
         if (autoSave && form.formIsValid) {
-          console.log('YUS');
           (event.target as HTMLElement).blur();
         }
       }
