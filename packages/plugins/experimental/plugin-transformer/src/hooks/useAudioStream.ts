@@ -7,7 +7,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { log } from '@dxos/log';
 
 export type AudioStreamConfig = {
-  active: boolean;
+  active?: boolean;
   debug?: boolean;
   onAudioData?: (audioData: Float32Array) => Promise<void>;
 };
@@ -91,7 +91,6 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
         if (active) {
           cleanup();
           log.info('initializing audio stream...');
-
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
               channelCount: 1,
@@ -113,10 +112,10 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
 
           mediaStreamRef.current = stream;
 
-          // Create AudioContext for proper audio format
+          // Create AudioContext for proper audio format.
           const context = new AudioContext({ sampleRate: 16_000 });
 
-          // Add the audio worklet module
+          // Add the audio worklet module.
           await context.audioWorklet.addModule(
             URL.createObjectURL(
               new Blob(
@@ -136,7 +135,7 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
                         this._buffer.push(new Float32Array(channel));
                         this._samplesProcessed += channel.length;
 
-                        // Process every 2 seconds (32000 samples at 16kHz)
+                        // Process every 2 seconds (32000 samples at 16kHz).
                         if (this._samplesProcessed >= 32000) {
                           const combinedLength = this._buffer.reduce((acc, curr) => acc + curr.length, 0);
                           const combinedAudio = new Float32Array(combinedLength);
@@ -149,7 +148,7 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
 
                           this.port.postMessage({ type: 'audio-data', data: combinedAudio });
                           
-                          // Reset buffer and counter
+                          // Reset buffer and counter.
                           this._buffer = [];
                           this._samplesProcessed = 0;
                         }
@@ -169,7 +168,7 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
           const analyser = context.createAnalyser();
           analyserRef.current = analyser;
 
-          // Create and connect the audio worklet node
+          // Create and connect the audio worklet node.
           const workletNode = new AudioWorkletNode(context, 'audio-processor');
           workletNodeRef.current = workletNode;
 
@@ -181,7 +180,7 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
             if (event.data.type === 'audio-data') {
               isProcessingRef.current = true;
               try {
-                log.info('processing audio', {
+                log('processing audio', {
                   sampleRate: context.sampleRate,
                   length: event.data.data.length,
                   min: Math.min(...event.data.data),
@@ -203,7 +202,7 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
             }
           };
 
-          // Connect the audio nodes
+          // Connect the audio nodes.
           source.connect(analyser);
           analyser.connect(workletNode);
           workletNode.connect(context.destination);

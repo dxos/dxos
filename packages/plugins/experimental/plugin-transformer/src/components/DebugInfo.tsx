@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 export type DebugInfoProps = {
-  error?: string;
+  error: string;
   isModelLoading: boolean;
   stream: MediaStream | null;
   isTranscribing: boolean;
@@ -13,10 +13,10 @@ export type DebugInfoProps = {
   audioLevel: number;
   gpuInfo: string;
   model: string;
-  debug?: boolean;
+  debug: boolean;
 };
 
-export const DebugInfo: FC<DebugInfoProps> = ({
+export const DebugInfo: FC<Partial<DebugInfoProps>> = ({
   error,
   isModelLoading,
   stream,
@@ -44,7 +44,7 @@ export const DebugInfo: FC<DebugInfoProps> = ({
         <div>
           <div className='mb-2 text-green-600'>
             <strong>Status:</strong> Microphone is active
-            {debug && (
+            {debug && audioLevel && (
               <div className='mt-2 w-48 h-5 bg-gray-200 rounded relative'>
                 <div
                   className='h-full bg-green-500 transition-all duration-100 rounded'

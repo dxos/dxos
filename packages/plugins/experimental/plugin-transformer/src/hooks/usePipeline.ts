@@ -5,9 +5,10 @@
 import { type Pipeline, pipeline, env } from '@xenova/transformers';
 import { useState, useRef, useEffect } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-// Add WebGPU types
+// Add WebGPU types.
 declare global {
   interface Navigator {
     gpu?: {
@@ -26,11 +27,11 @@ declare global {
   }
 }
 
-// Configure cache and runtime settings
+// Configure cache and runtime settings.
 env.cacheDir = './.cache';
 env.allowLocalModels = true;
 
-// Configure ONNX runtime for WebGPU
+// Configure ONNX runtime for WebGPU.
 (env.backends.onnx as any).wasm.numThreads = 1;
 (env.backends.onnx as any).provider = 'webgpu';
 (env.backends.onnx as any).webgpu = {
@@ -38,42 +39,44 @@ env.allowLocalModels = true;
 };
 
 export type PipelineConfig = {
-  active: boolean;
-  model: string;
+  active?: boolean;
   debug?: boolean;
+  model: string;
 };
 
 export type PipelineState = {
+  gpuInfo: string;
   isLoaded: boolean;
   isLoading: boolean;
-  gpuInfo: string;
   error: string | null;
 };
 
+// TODO(burdon): Document external API.
 export type TranscriptionOptions = {
-  samplingRate: number;
-  chunkLength: number;
-  strideLength: number;
-  returnTimestamps: boolean;
+  sampling_rate: number;
+  chunk_length_s: number;
+  stride_length_s: number;
+  return_timestamps: boolean;
   language: string;
 };
 
 export const usePipeline = ({ active, model, debug }: PipelineConfig) => {
   const [state, setState] = useState<PipelineState>({
+    gpuInfo: '',
     isLoaded: false,
     isLoading: false,
-    gpuInfo: '',
     error: null,
   });
 
   const pipelineRef = useRef<Pipeline | null>(null);
 
+  // TODO(burdon): Factor out loading model. Separate tests.
   useEffect(() => {
     const loadModel = async () => {
       try {
         setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-        // Check WebGPU support
+        // Check WebGPU support.
         if (!navigator.gpu) {
           log.warn('WebGPU is not supported, falling back to CPU');
           setState((prev) => ({ ...prev, gpuInfo: 'WebGPU not supported (using CPU)' }));
@@ -84,7 +87,7 @@ export const usePipeline = ({ active, model, debug }: PipelineConfig) => {
               throw new Error('No GPU adapter found');
             }
 
-            // Try to get adapter info if available
+            // Try to get adapter info if available.
             try {
               const adapterInfo = await adapter.requestAdapterInfo();
               if (adapterInfo) {
@@ -138,18 +141,8 @@ export const usePipeline = ({ active, model, debug }: PipelineConfig) => {
   }, [active, debug, model]);
 
   const transcribe = async (audioData: Float32Array, options: TranscriptionOptions) => {
-    if (!pipelineRef.current) {
-      throw new Error('Pipeline not initialized');
-    }
-
-    const result = await pipelineRef.current(audioData, {
-      sampling_rate: options.samplingRate,
-      chunk_length_s: options.chunkLength,
-      stride_length_s: options.strideLength,
-      return_timestamps: options.returnTimestamps,
-      language: options.language,
-    });
-
+    invariant(pipelineRef.current, 'pipeline not initialized');
+    const result = await pipelineRef.current(audioData, options);
     return result;
   };
 

@@ -4,7 +4,7 @@
 
 import React, { type CSSProperties, type PropsWithChildren } from 'react';
 
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -16,8 +16,10 @@ export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{
     style?: CSSProperties;
     item: T;
-    pinned?: boolean;
     name?: string;
+    self?: boolean;
+    pinned?: boolean;
+    screenshare?: boolean;
     mute?: boolean;
     wave?: boolean;
     speaking?: boolean;
@@ -34,7 +36,9 @@ export const ResponsiveGridItem = <T extends object = any>({
   classNames,
   style,
   name,
+  self,
   pinned,
+  screenshare,
   mute,
   wave,
   speaking,
@@ -50,10 +54,6 @@ export const ResponsiveGridItem = <T extends object = any>({
     mute: {
       icon: 'ph--microphone-slash--regular',
       label: t('icon muted'),
-    },
-    speaking: {
-      icon: 'ph--waveform--regular',
-      label: t('icon speaking'),
     },
   };
 
@@ -80,6 +80,8 @@ export const ResponsiveGridItem = <T extends object = any>({
       {/* Name. */}
       {name && (
         <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
+          {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 3} />}
+          {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 3} />}
           <div
             className={mx('bg-neutral-800 text-neutral-100 py-0.5 truncate rounded', pinned ? 'px-2' : 'px-1 text-xs')}
           >

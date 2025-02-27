@@ -10,37 +10,39 @@ import { DebugInfo } from './DebugInfo';
 import { useAudioStream, usePipeline } from '../hooks';
 
 export type VoiceProps = {
-  debug?: boolean;
   active?: boolean;
+  debug?: boolean;
   model?: string;
 };
 
-export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-base' }: VoiceProps) => {
+export const Voice = ({ active, debug, model = 'Xenova/whisper-base' }: VoiceProps) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcription, setTranscription] = useState<string>('');
 
   const {
+    transcribe,
+    gpuInfo,
     isLoaded: isModelLoaded,
     isLoading: isModelLoading,
-    gpuInfo,
     error: pipelineError,
-    transcribe,
-  } = usePipeline({ active, model, debug });
+  } = usePipeline({ active, debug, model });
 
-  useEffect(() => {
-    if (debug) {
-      log('Voice component state:', {
-        active,
-        isModelLoaded,
-        isModelLoading,
-        pipelineError,
-        isTranscribing,
-      });
-    }
-  }, [active, debug, isModelLoaded, isModelLoading, pipelineError, isTranscribing]);
+  const {
+    stream,
+    error: audioError,
+    audioLevel,
+  } = useAudioStream({
+    active,
+    debug,
+    // onAudioData: handleAudioData
+  });
 
   const handleAudioData = useCallback(
     async (audioData: Float32Array) => {
+      if (!isModelLoaded) {
+        return;
+      }
+
       if (isTranscribing) {
         return;
       }
@@ -48,10 +50,10 @@ export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-b
       setIsTranscribing(true);
       try {
         const result = await transcribe(audioData, {
-          samplingRate: 16000,
-          chunkLength: 5,
-          strideLength: 1,
-          returnTimestamps: false,
+          sampling_rate: 16000,
+          chunk_length_s: 5,
+          stride_length_s: 1,
+          return_timestamps: false,
           language: 'english',
         });
 
@@ -68,19 +70,9 @@ export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-b
     [transcribe, isTranscribing],
   );
 
-  const {
-    stream,
-    error: audioError,
-    audioLevel,
-  } = useAudioStream({
-    active: active && isModelLoaded,
-    debug,
-    // onAudioData: handleAudioData,
-  });
-
   useEffect(() => {
     if (debug) {
-      log('Audio stream state:', {
+      log.info('audio state', {
         hasStream: !!stream,
         audioError,
         audioLevel,
@@ -88,6 +80,18 @@ export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-b
       });
     }
   }, [debug, stream, audioError, audioLevel, active, isModelLoaded]);
+
+  useEffect(() => {
+    if (debug) {
+      log.info('transcription state', {
+        active,
+        isModelLoaded,
+        isModelLoading,
+        isTranscribing,
+        pipelineError,
+      });
+    }
+  }, [active, debug, isModelLoaded, isModelLoading, pipelineError, isTranscribing]);
 
   return (
     <DebugInfo
