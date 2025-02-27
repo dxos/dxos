@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -27,8 +27,24 @@ export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-b
     transcribe,
   } = usePipeline({ active, model, debug });
 
+  useEffect(() => {
+    if (debug) {
+      log('Voice component state:', {
+        active,
+        isModelLoaded,
+        isModelLoading,
+        pipelineError,
+        isTranscribing,
+      });
+    }
+  }, [active, debug, isModelLoaded, isModelLoading, pipelineError, isTranscribing]);
+
   const handleAudioData = useCallback(
     async (audioData: Float32Array) => {
+      if (isTranscribing) {
+        return;
+      }
+
       setIsTranscribing(true);
       try {
         const result = await transcribe(audioData, {
@@ -49,7 +65,7 @@ export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-b
         setIsTranscribing(false);
       }
     },
-    [transcribe],
+    [transcribe, isTranscribing],
   );
 
   const {
@@ -59,8 +75,19 @@ export const Voice = ({ debug = false, active = false, model = 'Xenova/whisper-b
   } = useAudioStream({
     active: active && isModelLoaded,
     debug,
-    onAudioData: handleAudioData,
+    // onAudioData: handleAudioData,
   });
+
+  useEffect(() => {
+    if (debug) {
+      log('Audio stream state:', {
+        hasStream: !!stream,
+        audioError,
+        audioLevel,
+        shouldBeActive: active && isModelLoaded,
+      });
+    }
+  }, [debug, stream, audioError, audioLevel, active, isModelLoaded]);
 
   return (
     <DebugInfo

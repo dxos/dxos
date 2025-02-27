@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 export type AudioStreamConfig = {
   active: boolean;
   debug?: boolean;
-  onAudioData: (audioData: Float32Array) => Promise<void>;
+  onAudioData?: (audioData: Float32Array) => Promise<void>;
 };
 
 export type AudioStreamState = {
@@ -25,34 +25,77 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
     audioLevel: 0,
   });
 
+  // TODO(burdon): Convert to class.
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>();
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const isProcessingRef = useRef(false);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioBufferRef = useRef<Float32Array[]>([]);
 
-  // Audio visualization
+  // Stats for visualization.
   const updateAudioLevel = useCallback(() => {
     if (analyserRef.current) {
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       analyserRef.current.getByteFrequencyData(dataArray);
-
-      // Calculate average level
       const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
       setState((prev) => ({ ...prev, audioLevel: average }));
-
       animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
     }
   }, []);
 
+  const cleanup = useCallback(() => {
+    log('cleaning up audio resources');
+
+    // Stop all tracks.
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+        track.enabled = false;
+      });
+      mediaStreamRef.current = null;
+    }
+
+    // Disconnect and cleanup audio nodes.
+    if (workletNodeRef.current) {
+      workletNodeRef.current.disconnect();
+      workletNodeRef.current = null;
+    }
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
+      analyserRef.current = null;
+    }
+    if (audioContextRef.current) {
+      void audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = undefined;
+    }
+
+    audioBufferRef.current = [];
+    setState({
+      stream: null,
+      error: null,
+      audioLevel: 0,
+    });
+  }, [debug]);
+
   useEffect(() => {
-    let audioContext: AudioContext | null = null;
+    let mounted = true;
 
     const startStream = async () => {
       try {
         if (active) {
-          const mediaStream = await navigator.mediaDevices.getUserMedia({
+          cleanup();
+          log.info('initializing audio stream...');
+
+          const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
               channelCount: 1,
-              sampleRate: 16000,
+              sampleRate: 16_000,
               echoCancellation: true,
               noiseSuppression: true,
               autoGainControl: true,
@@ -60,110 +103,151 @@ export const useAudioStream = ({ active, debug, onAudioData }: AudioStreamConfig
             video: false,
           });
 
+          if (!mounted || !active) {
+            stream.getTracks().forEach((track) => {
+              track.stop();
+              track.enabled = false;
+            });
+            return;
+          }
+
+          mediaStreamRef.current = stream;
+
           // Create AudioContext for proper audio format
-          audioContext = new AudioContext({ sampleRate: 16000 });
-          const source = audioContext.createMediaStreamSource(mediaStream);
+          const context = new AudioContext({ sampleRate: 16_000 });
 
-          // Create a script processor to handle raw audio data
-          const processor = audioContext.createScriptProcessor(4096, 1, 1);
-          const analyser = audioContext.createAnalyser();
+          // Add the audio worklet module
+          await context.audioWorklet.addModule(
+            URL.createObjectURL(
+              new Blob(
+                [
+                  `class AudioProcessor extends AudioWorkletProcessor {
+                    constructor() {
+                      super();
+                      this._buffer = [];
+                      this._samplesProcessed = 0;
+                    }
 
-          source.connect(analyser);
-          analyser.connect(processor);
+                    process(inputs, outputs) {
+                      const input = inputs[0];
+                      const channel = input[0];
+                      
+                      if (channel) {
+                        this._buffer.push(new Float32Array(channel));
+                        this._samplesProcessed += channel.length;
 
-          // Buffer to accumulate audio data
-          let audioBuffer: Float32Array[] = [];
-          let isProcessing = false;
+                        // Process every 2 seconds (32000 samples at 16kHz)
+                        if (this._samplesProcessed >= 32000) {
+                          const combinedLength = this._buffer.reduce((acc, curr) => acc + curr.length, 0);
+                          const combinedAudio = new Float32Array(combinedLength);
+                          let offset = 0;
 
-          processor.onaudioprocess = async (e) => {
-            const inputData = e.inputBuffer.getChannelData(0);
-            audioBuffer.push(new Float32Array(inputData));
+                          for (const buffer of this._buffer) {
+                            combinedAudio.set(buffer, offset);
+                            offset += buffer.length;
+                          }
 
-            // Process every 2 seconds (32000 samples at 16kHz)
-            if (audioBuffer.length * 4096 >= 32000 && !isProcessing) {
-              isProcessing = true;
+                          this.port.postMessage({ type: 'audio-data', data: combinedAudio });
+                          
+                          // Reset buffer and counter
+                          this._buffer = [];
+                          this._samplesProcessed = 0;
+                        }
+                      }
+                      return true;
+                    }
+                  }
 
+                  registerProcessor('audio-processor', AudioProcessor);`,
+                ],
+                { type: 'application/javascript' },
+              ),
+            ),
+          );
+
+          const source = context.createMediaStreamSource(stream);
+          const analyser = context.createAnalyser();
+          analyserRef.current = analyser;
+
+          // Create and connect the audio worklet node
+          const workletNode = new AudioWorkletNode(context, 'audio-processor');
+          workletNodeRef.current = workletNode;
+
+          workletNode.port.onmessage = async (event) => {
+            if (!mounted || !active) {
+              return;
+            }
+
+            if (event.data.type === 'audio-data') {
+              isProcessingRef.current = true;
               try {
-                // Combine audio chunks
-                const combinedLength = audioBuffer.reduce((acc, curr) => acc + curr.length, 0);
-                const combinedAudio = new Float32Array(combinedLength);
-                let offset = 0;
+                log.info('processing audio', {
+                  sampleRate: context.sampleRate,
+                  length: event.data.data.length,
+                  min: Math.min(...event.data.data),
+                  max: Math.max(...event.data.data),
+                });
 
-                for (const buffer of audioBuffer) {
-                  combinedAudio.set(buffer, offset);
-                  offset += buffer.length;
-                }
-
-                if (debug) {
-                  log.info('processing audio', {
-                    sampleRate: audioContext?.sampleRate,
-                    length: combinedAudio.length,
-                    min: Math.min(...combinedAudio),
-                    max: Math.max(...combinedAudio),
-                  });
-                }
-
-                await onAudioData(combinedAudio);
-
-                // Clear the buffer after processing
-                audioBuffer = [];
+                await onAudioData?.(event.data.data);
               } catch (err) {
-                setState((prev) => ({
-                  ...prev,
-                  error: 'Error processing audio: ' + (err as Error).message,
-                }));
+                if (mounted) {
+                  setState((prev) => ({
+                    ...prev,
+                    error: 'Error processing audio: ' + (err as Error).message,
+                  }));
+                }
                 log.error('audio processing error', { err });
               } finally {
-                isProcessing = false;
+                isProcessingRef.current = false;
               }
             }
           };
 
-          // Connect the processor to the destination to start processing
-          processor.connect(audioContext.destination);
+          // Connect the audio nodes
+          source.connect(analyser);
+          analyser.connect(workletNode);
+          workletNode.connect(context.destination);
 
           if (debug) {
-            analyserRef.current = analyser;
-            analyserRef.current.fftSize = 256;
+            analyser.fftSize = 256;
             updateAudioLevel();
           }
 
-          audioContextRef.current = audioContext;
-          setState({
-            stream: mediaStream,
-            error: null,
-            audioLevel: 0,
-          });
+          audioContextRef.current = context;
+          if (mounted && active) {
+            setState({
+              stream,
+              error: null,
+              audioLevel: 0,
+            });
+          }
         }
       } catch (err) {
-        setState((prev) => ({
-          ...prev,
-          error: 'Error accessing microphone: ' + (err as Error).message,
-          stream: null,
-        }));
+        if (mounted) {
+          setState((prev) => ({
+            ...prev,
+            error: 'Error accessing microphone: ' + (err as Error).message,
+            stream: null,
+          }));
+        }
         log.error('microphone error', { err });
+        cleanup();
       }
     };
 
     void startStream();
 
     return () => {
-      if (state.stream) {
-        state.stream.getTracks().forEach((track) => track.stop());
-      }
-      if (audioContext) {
-        void audioContext.close();
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      setState({
-        stream: null,
-        error: null,
-        audioLevel: 0,
-      });
+      mounted = false;
+      cleanup();
     };
-  }, [active, debug, onAudioData, updateAudioLevel]);
+  }, [active, debug, onAudioData, updateAudioLevel, cleanup]);
+
+  useEffect(() => {
+    if (!active) {
+      cleanup();
+    }
+  }, [active, cleanup]);
 
   return state;
 };

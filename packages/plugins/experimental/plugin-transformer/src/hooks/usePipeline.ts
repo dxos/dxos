@@ -149,6 +149,7 @@ export const usePipeline = ({ active, model, debug }: PipelineConfig) => {
       return_timestamps: options.returnTimestamps,
       language: options.language,
     });
+
     return result;
   };
 
