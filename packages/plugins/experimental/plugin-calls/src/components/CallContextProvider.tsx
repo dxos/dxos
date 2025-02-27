@@ -11,7 +11,7 @@ import {
   CallContext,
   type CallContextType,
   useIsSpeaking,
-  usePeerConnection,
+  useCfCallsConnection,
   useCallState,
   useStablePojo,
   useStateObservable,
@@ -36,7 +36,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const call = useCallState({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
-  const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
+  const { peer, iceConnectionState } = useCfCallsConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);

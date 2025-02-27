@@ -6,8 +6,9 @@ import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
-import { of, tap, switchMap, delay } from 'rxjs';
 
+import { scheduleTask, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
@@ -15,7 +16,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { usePeerConnection, useStablePojo } from './hooks';
+import { useCfCallsConnection, useStablePojo } from './hooks';
 // @ts-ignore
 import video from './tests/assets/video.mp4';
 import { CALLS_URL } from './types';
@@ -49,13 +50,13 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
 
 const Render = ({ videoSrc }: { videoSrc: string }) => {
   const config = useConfig();
-  const peerConfig = useStablePojo({
+  const cfCallsConfig = useStablePojo({
     iceServers: config.get('runtime.services.ice'),
     apiBase: `${CALLS_URL}/api/calls`,
   });
 
-  const { peer: peerPush } = usePeerConnection(peerConfig);
-  const { peer: peerPull } = usePeerConnection(peerConfig);
+  const { peer: peerPush } = useCfCallsConnection(cfCallsConfig);
+  const { peer: peerPull } = useCfCallsConnection(cfCallsConfig);
 
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);
@@ -70,53 +71,42 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
       log.info('no videoStreamTrack');
       return;
     }
+    const ctx = new Context();
 
-    log.info('starting push/pull', { videoStreamTrack });
+    scheduleTask(ctx, async () => {
+      log.info('starting push/pull', { videoStreamTrack });
 
-    // Push track to cloudflare.
-    const pushedTrackObservable = peerPush.pushTrack(
-      of(videoStreamTrack).pipe(
-        tap((track) => {
-          performance.mark('push:begin');
-          log.info('start push track', { track });
-        }),
-      ),
-    );
+      performance.mark('webrtc:begin');
+      await peerPush.waitUntilOpen();
+      await peerPull.waitUntilOpen();
+      performance.mark('webrtc:end');
+      const webrtcTime = performance.measure('webrtc', 'webrtc:begin', 'webrtc:end').duration;
+      setMetrics((prev) => ({ ...prev, 'time to open webrtc [ms]': webrtcTime }));
 
-    // Pull track from cloudflare.
-    const pulledTrackObservable = peerPull.pullTrack(
-      pushedTrackObservable.pipe(
-        // We need to wait for the track to be available on the call.
-        delay(500),
-        switchMap((track) => {
-          performance.mark('pullTrack:begin');
-          delete track.mid;
-          return of(track);
-        }),
-      ),
-    );
+      // Push track to cloudflare.
+      performance.mark('push:begin');
+      const pushedTrack = await peerPush.pushTrack(videoStreamTrack);
+      performance.mark('push:end');
+      const pushTime = performance.measure('push', 'push:begin', 'push:end').duration;
+      log.info('successfully pushed track', { pushTime, pushedTrack });
+      setMetrics((prev) => ({ ...prev, 'time to push track [ms]': pushTime }));
 
-    // Play pulled track.
-    const subscription = pulledTrackObservable.subscribe((track) => {
-      if (!track) {
-        log.info('no pulled track');
-        return;
-      }
+      // Wait for cloudflare to process the track.
+      await sleep(500);
 
-      // Measure time to pull track.
-      {
-        performance.mark('pullTrack:end');
-        const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
-        setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': pullTime }));
-        log.info('successfully pulled track', {
-          track,
-          pullTime: performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration,
-        });
-      }
+      // Pull track from cloudflare.
+      performance.mark('pullTrack:begin');
+      const pulledTrack = await peerPull.pullTrack({ ...pushedTrack, mid: undefined });
+      performance.mark('pullTrack:end');
+      const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
+      setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': pullTime }));
+      log.info('successfully pulled track', { pullTime, pulledTrack });
 
+      invariant(pulledTrack);
       invariant(pullVideoElement.current);
+
       performance.mark('playVideo:begin');
-      pullVideoElement.current.srcObject = new MediaStream([track]);
+      pullVideoElement.current.srcObject = new MediaStream([pulledTrack]);
       pullVideoElement.current
         .play()
         .then(() => {
@@ -129,7 +119,9 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
         });
     });
 
-    return () => subscription?.unsubscribe();
+    return () => {
+      void ctx.dispose();
+    };
   }, [videoStreamTrack]);
 
   return (
