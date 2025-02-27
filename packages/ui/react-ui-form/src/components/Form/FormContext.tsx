@@ -53,7 +53,7 @@ export const FormProvider = ({
     autoSave?: boolean;
   }
 >) => {
-  const formHandler = useForm(formOptions);
+  const form = useForm(formOptions);
 
   useEffect(() => {
     if (!formRef?.current) {
@@ -65,9 +65,13 @@ export const FormProvider = ({
       const modifierUsed = event.shiftKey || event.ctrlKey || event.altKey || event.metaKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
 
-      if (keyIsEnter && !inputIsTextarea && !modifierUsed && !autoSave) {
-        if (formHandler.canSave) {
-          formHandler.handleSave();
+      if (keyIsEnter && !inputIsTextarea && !modifierUsed) {
+        if (!autoSave && form.canSave) {
+          form.handleSave();
+        }
+        if (autoSave && form.formIsValid) {
+          console.log('YUS');
+          (event.target as HTMLElement).blur();
         }
       }
     };
@@ -76,7 +80,7 @@ export const FormProvider = ({
 
     formElement.addEventListener('keydown', handleKeyDown);
     return () => formElement.removeEventListener('keydown', handleKeyDown);
-  }, [formRef, formHandler, autoSave]);
+  }, [formRef, form, autoSave]);
 
-  return <FormContext.Provider value={formHandler}>{children}</FormContext.Provider>;
+  return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };

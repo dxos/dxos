@@ -24,6 +24,7 @@ export type FormHandler<T extends BaseObject> = {
   touched: Record<JsonPath, boolean>;
   changed: Record<JsonPath, boolean>;
   canSave: boolean;
+  formIsValid: boolean;
   handleSave: () => void;
 
   //
@@ -129,6 +130,10 @@ export const useForm = <T extends BaseObject>({
     }
   }, [values, schemaDirty]);
 
+  const formIsValid = useMemo(() => {
+    return Object.keys(errors).length === 0;
+  }, [errors]);
+
   /**
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
@@ -222,6 +227,7 @@ export const useForm = <T extends BaseObject>({
     changed,
     canSave,
     handleSave,
+    formIsValid,
 
     // Field utils.
     getStatus,
