@@ -112,15 +112,10 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             </mask>
           </defs>
           {variant === 'circle' ? (
-            <circle
-              className={hue ? tx('hue.fill', 'avatar__frame__circle', { hue }) : 'fill-[var(--surface-bg)]'}
-              cx='50%'
-              cy='50%'
-              r={r}
-            />
+            <circle cx='50%' cy='50%' r={r} fill={hue ? `var(--dx-${hue}Fill)` : 'var(--surface-bg)'} />
           ) : (
             <rect
-              className={hue ? tx('hue.fill', 'avatar__frame__rect', { hue }) : 'fill-[var(--surface-bg)]'}
+              fill={hue ? `var(--dx-${hue}Fill)` : 'var(--surface-bg)'}
               x={ringGap + ringWidth}
               y={ringGap + ringWidth}
               width={2 * r}
