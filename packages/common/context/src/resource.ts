@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
+import { ResourceClosedError } from './resource-closed-error';
 
 export enum LifecycleState {
   CLOSED = 'CLOSED',
@@ -27,6 +29,7 @@ export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
+  #openedTrigger = new Trigger({ autoReset: true });
 
   /**
    * Managed internally by the resource.
@@ -118,6 +121,13 @@ export abstract class Resource implements Lifecycle {
     return this;
   }
 
+  async waitUntilOpen() {
+    if (this.#lifecycleState === LifecycleState.OPEN) {
+      return;
+    }
+    await this.#openedTrigger.wait();
+  }
+
   async [Symbol.asyncDispose]() {
     await this.close();
   }
@@ -127,6 +137,7 @@ export abstract class Resource implements Lifecycle {
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
+    this.#openedTrigger.wake();
   }
 
   async #close(ctx = Context.default()) {
@@ -135,6 +146,7 @@ export abstract class Resource implements Lifecycle {
     await this._close(ctx);
     this.#internalCtx = this.#createContext();
     this.#lifecycleState = LifecycleState.CLOSED;
+    this.#openedTrigger.throw(new ResourceClosedError());
   }
 
   #createContext() {
