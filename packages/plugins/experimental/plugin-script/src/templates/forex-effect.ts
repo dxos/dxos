@@ -1,12 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 import {
   HttpClient,
   HttpClientRequest,
-  HttpClientResponse,
-  HttpClientError,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.12';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.2';
 // @ts-ignore
 import { Effect, Schedule } from 'https://esm.sh/effect@3.13.2';
 
@@ -29,8 +31,8 @@ export default defineFunction({
     },
   }: any) =>
     HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
-      HttpClient.fetchOk,
-      HttpClientResponse.json,
+      HttpClient.execute,
+      Effect.flatMap((res: any) => res.json),
       Effect.timeout('1 second'),
       Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
       Effect.map(({ data: { rates } }: any) => ({ rate: rates[to].toString() })),

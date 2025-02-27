@@ -1,7 +1,11 @@
-import { getInvocationUrl } from '@dxos/functions';
-import type { SpaceId } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
 
 import { Context } from 'effect';
+
+import { getInvocationUrl } from '@dxos/functions';
+import type { SpaceId } from '@dxos/keys';
 
 export class FunctionCallService extends Context.Tag('FunctionCallService')<
   FunctionCallService,
