@@ -10,6 +10,7 @@ import { aliasColors } from './alias-colors';
 import { lengthsFacet } from './lengths';
 import { huePalettes, physicalColors } from './physical-colors';
 import { semanticColors } from './semantic-colors';
+import { systemAliases, systemSememes } from './sememes-system';
 
 export const tokenSet = {
   colors: {
@@ -50,7 +51,7 @@ const adapterConfig: TailwindAdapterConfig = {
   },
 };
 
-export const userDefaultTokenSet = /* {
+export const userDefaultTokenSet = {
   colors: {
     physical: {
       conditions: physicalColors.conditions,
@@ -72,6 +73,6 @@ export const userDefaultTokenSet = /* {
     },
   },
   lengths: lengthsFacet,
-} satisfies TokenSet; */ tokenSet;
+} satisfies TokenSet;
 
 export const tokensTailwindConfig = adapter(tokenSet, adapterConfig);
