@@ -70,18 +70,15 @@ export const FormField = ({ property, path, readonly, inline, lookupComponent, C
   const CustomComponent = Custom?.[jsonPath];
   if (CustomComponent) {
     return (
-      // TODO(ZaymonFC): We should try to remove this div wrapper.
-      <div role='none'>
-        <CustomComponent
-          type={type}
-          format={format}
-          label={label}
-          inputOnly={inline}
-          placeholder={placeholder}
-          disabled={readonly}
-          {...inputProps}
-        />
-      </div>
+      <CustomComponent
+        type={type}
+        format={format}
+        label={label}
+        inputOnly={inline}
+        placeholder={placeholder}
+        disabled={readonly}
+        {...inputProps}
+      />
     );
   }
 

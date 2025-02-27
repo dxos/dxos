@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactElement, useEffect, useMemo } from 'react';
+import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
 import { type BaseObject, type S, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -68,12 +68,13 @@ export const Form = <T extends BaseObject>({
   lookupComponent,
   Custom,
 }: FormProps<T>) => {
+  const formRef = useRef<HTMLDivElement>(null);
   const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
 
-  // TODO(burdon): Hack to select first input.
+  // Focus the first input element within this form.
   useEffect(() => {
-    if (autoFocus) {
-      const input = document.querySelector('input');
+    if (autoFocus && formRef.current) {
+      const input = formRef.current.querySelector('input');
       if (input) {
         input.focus();
       }
@@ -90,7 +91,7 @@ export const Form = <T extends BaseObject>({
       onSave={onSave}
     >
       {/* TODO(burdon): Remove padding. */}
-      <div role='none' className={mx('p-2', classNames)} data-testid={testId}>
+      <div ref={formRef} role='none' className={mx('p-2', classNames)} data-testid={testId}>
         <FormFields
           schema={schema}
           path={path}
