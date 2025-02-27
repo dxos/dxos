@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { Dialog } from '@dxos/react-ui';
+import { Dialog, Toolbar } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { AmbientChatDialog } from './AmbientChatDialog';
@@ -19,9 +19,16 @@ const meta: Meta<typeof AmbientChatDialog> = {
   render: () => {
     const [open, setOpen] = useState(true);
     return (
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <AmbientChatDialog />
-      </Dialog.Root>
+      <>
+        <div>
+          <Toolbar.Root>
+            <Toolbar.Button onClick={() => setOpen(true)}>Open</Toolbar.Button>
+          </Toolbar.Root>
+        </div>
+        <Dialog.Root open={open} onOpenChange={setOpen}>
+          <AmbientChatDialog />
+        </Dialog.Root>
+      </>
     );
   },
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
