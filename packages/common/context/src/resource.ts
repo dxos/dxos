@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
 import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
-import { ResourceClosedError } from './resource-closed-error';
 
 export enum LifecycleState {
   CLOSED = 'CLOSED',
@@ -29,7 +27,6 @@ export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
-  #openedTrigger = new Trigger({ autoReset: true });
 
   /**
    * Managed internally by the resource.
@@ -121,11 +118,21 @@ export abstract class Resource implements Lifecycle {
     return this;
   }
 
+  /**
+   * Waits until the resource is open.
+   */
   async waitUntilOpen() {
-    if (this.#lifecycleState === LifecycleState.OPEN) {
-      return;
+    switch (this.#lifecycleState) {
+      case LifecycleState.OPEN:
+        return;
+      case LifecycleState.ERROR:
+        throw new Error(`Invalid state: ${this.#lifecycleState}`);
     }
-    await this.#openedTrigger.wait();
+
+    if (!this.#openPromise) {
+      throw new Error('Resource is not being opened');
+    }
+    await this.#openPromise;
   }
 
   async [Symbol.asyncDispose]() {
@@ -137,7 +144,6 @@ export abstract class Resource implements Lifecycle {
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
-    this.#openedTrigger.wake();
   }
 
   async #close(ctx = Context.default()) {
@@ -146,7 +152,6 @@ export abstract class Resource implements Lifecycle {
     await this._close(ctx);
     this.#internalCtx = this.#createContext();
     this.#lifecycleState = LifecycleState.CLOSED;
-    this.#openedTrigger.throw(new ResourceClosedError());
   }
 
   #createContext() {
