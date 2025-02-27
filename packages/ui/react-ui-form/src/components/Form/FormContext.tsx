@@ -86,7 +86,7 @@ export const FormProvider = ({
 
     formElement.addEventListener('keydown', handleKeyDown);
     return () => formElement.removeEventListener('keydown', handleKeyDown);
-  }, [formRef, form, autoSave]);
+  }, [formRef, form.canSave, form.formIsValid, form.handleSave, autoSave]);
 
   return <FormContext.Provider value={form}>{children}</FormContext.Provider>;
 };
