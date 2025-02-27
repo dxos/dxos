@@ -29,11 +29,11 @@ export const lengthsFacet = {
   },
   alias: {
     namespace: 'dx-',
-    statements: [':root'],
+    conditions: { root: [':root'] },
     aliases: {
-      noLine: ['focusOffset'],
-      hairLine: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'],
-      thickLine: ['focusLine'],
+      noLine: { root: ['focusOffset'] },
+      hairLine: { root: ['modalLine', 'landmarkLine', 'positionedLine', 'gridGap'] },
+      thickLine: { root: ['focusLine'] },
     },
   },
 } satisfies Facet;
