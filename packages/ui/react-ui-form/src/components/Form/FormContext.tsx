@@ -62,11 +62,17 @@ export const FormProvider = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const keyIsEnter = event.key === 'Enter';
-      const modifierUsed = event.shiftKey || event.ctrlKey || event.altKey || event.metaKey;
+      const modifierUsed = event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
       const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
-      const inputOptOut = (event.target as HTMLElement).getAttribute('data-no-submit') === 'true';
+      const inputOptOut = (event.target as HTMLElement).hasAttribute('data-no-submit');
 
-      if (keyIsEnter && !inputIsTextarea && !modifierUsed && !inputOptOut) {
+      // Regular inputs: Submit on Enter (no modifiers).
+      const shouldSubmitRegularInput = !inputIsTextarea && keyIsEnter && !modifierUsed;
+
+      // Textareas: Submit only on Meta+Enter.
+      const shouldSubmitTextarea = inputIsTextarea && keyIsEnter && event.metaKey;
+
+      if ((shouldSubmitRegularInput || shouldSubmitTextarea) && !inputOptOut) {
         if (!autoSave && form.canSave) {
           form.handleSave();
         }
