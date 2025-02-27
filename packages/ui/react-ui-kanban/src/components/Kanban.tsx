@@ -79,7 +79,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
           >
             <div
               role='none'
-              className={mx('bg-deck rounded-lg grid dx-focus-ring-group-x-indicator', railGridHorizontal)}
+              className={mx(
+                'bg-[--dx-groupSurface] rounded-lg grid dx-focus-ring-group-x-indicator',
+                railGridHorizontal,
+              )}
             >
               <Stack
                 id={columnValue}
@@ -101,7 +104,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <div
                       role='none'
                       className={mx(
-                        'rounded bg-[--surface-bg] dx-focus-ring-group-y-indicator',
+                        'rounded bg-[--dx-cardSurface] dx-focus-ring-group-y-indicator',
                         selectedItems.has(card.id) && 'dx-focus-ring',
                       )}
                     >
