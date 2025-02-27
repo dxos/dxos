@@ -55,6 +55,8 @@ export abstract class RagPipeline {
       .slice(0, 3)
       .map((item) => item.text);
 
+    log.info('topContexts', { topContexts });
+
     // Generate completions using retrieved context.
     // const prompt = `
     // Given the history and list of commands below, complete the following user input.

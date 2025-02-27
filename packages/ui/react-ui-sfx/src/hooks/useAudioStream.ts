@@ -22,6 +22,7 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
   const dataArrayRef = useRef<Uint8Array>();
   const tracksRef = useRef<MediaStreamTrack[]>();
   const sourceRef = useRef<MediaStreamAudioSourceNode>();
+
   const close = () => {
     log.info('closing microphone');
     sourceRef.current?.disconnect();
