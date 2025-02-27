@@ -26,7 +26,7 @@ export type Session = {
  * API: https://developers.cloudflare.com/calls/https-api/
  * Inspired by client from https://github.com/threepointone/partyserver/tree/main/packages/partytracks
  */
-export class CloudflareCallsClient extends Resource {
+export class CloudflareCallsPeer extends Resource {
   private readonly _persistentLifecycle = new PersistentLifecycle<Session>({
     start: () => this._startSession(),
     stop: (session) => this._stopSession(session),
