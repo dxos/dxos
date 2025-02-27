@@ -15,8 +15,10 @@ import {
   createChat,
   createComputeGraph,
   createConstant,
+  createFunction,
   createGpt,
   createQueue,
+  createSurface,
   createTemplate,
   createText,
   createTrigger,
@@ -39,6 +41,7 @@ export enum PresetName {
   CHAT_GPT = 'chat-gpt-text',
   EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
+  FOREX_FUNCTION_CALL = 'forex-function-call',
 }
 
 export const presets = {
@@ -320,6 +323,36 @@ export const presets = {
           attachTrigger(functionTrigger, computeModel);
 
           return addToSpace(PresetName.EMAIL_WITH_SUMMARY, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+    [
+      PresetName.FOREX_FUNCTION_CALL,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          canvasModel.builder.call((builder) => {
+            const sourceCurrency = canvasModel.createNode(
+              createConstant({ value: 'USD', ...position({ x: -10, y: -5 }) }),
+            );
+            const targetCurrency = canvasModel.createNode(
+              createConstant({ value: 'EUR', ...position({ x: -10, y: 5 }) }),
+            );
+            const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
+            const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
+
+            builder
+              .createEdge({ source: sourceCurrency.id, target: converter.id, input: 'from' })
+              .createEdge({ source: targetCurrency.id, target: converter.id, input: 'to' })
+              .createEdge({ source: converter.id, target: view.id, output: 'rate' });
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+
+          return addToSpace(PresetName.FOREX_FUNCTION_CALL, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
