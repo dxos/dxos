@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
-const MIN_HEIGHT = 300;
+const MIN_HEIGHT = 500;
 
 /**
  * Props for the ResponsiveGrid component.
