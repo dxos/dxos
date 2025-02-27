@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger, scheduleMicroTask, TriggerState } from '@dxos/async';
+import { Trigger, scheduleMicroTask, TriggerState, PersistentLifecycle } from '@dxos/async';
 import { Resource, type Lifecycle } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -11,7 +11,6 @@ import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
-import { PersistentLifecycle } from '@dxos/context';
 import { type Protocol } from './protocol';
 import { getEdgeUrlWithProtocol } from './utils';
 
