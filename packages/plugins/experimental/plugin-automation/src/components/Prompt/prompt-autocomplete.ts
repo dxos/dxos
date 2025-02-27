@@ -25,7 +25,7 @@ export type AutocompleteOptions = {
    * @param text The current text before the cursor
    * @returns Array of suggestion strings
    */
-  onSuggest: (text: string) => string[];
+  onSuggest?: (text: string) => string[];
 };
 
 class InlineSuggestionWidget extends WidgetType {
@@ -67,7 +67,7 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
 
       private computeDecorations(view: EditorView): DecorationSet {
         const text = view.state.doc.toString();
-        const suggestions = onSuggest(text);
+        const suggestions = onSuggest?.(text) ?? [];
         if (!suggestions.length) {
           this._currentSuggestion = null;
           return Decoration.none;
