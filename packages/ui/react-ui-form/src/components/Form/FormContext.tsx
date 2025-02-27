@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, useContext, type FocusEvent, type PropsWithChildren } from 'react';
+import React, { createContext, useContext, useEffect, type FocusEvent, type PropsWithChildren } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
@@ -42,7 +42,41 @@ export const useInputProps = (path: (string | number)[] = []): FormInputStatePro
   };
 };
 
-export const FormProvider = ({ children, ...formOptions }: PropsWithChildren<FormOptions<any>>) => {
+export const FormProvider = ({
+  children,
+  formRef,
+  autoSave,
+  ...formOptions
+}: PropsWithChildren<
+  FormOptions<any> & {
+    formRef?: React.RefObject<HTMLDivElement>;
+    autoSave?: boolean;
+  }
+>) => {
   const formHandler = useForm(formOptions);
+
+  useEffect(() => {
+    if (!formRef?.current) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const keyIsEnter = event.key === 'Enter';
+      const modifierUsed = event.shiftKey || event.ctrlKey || event.altKey || event.metaKey;
+      const inputIsTextarea = (event.target as HTMLElement).tagName.toLowerCase() === 'textarea';
+
+      if (keyIsEnter && !inputIsTextarea && !modifierUsed && !autoSave) {
+        if (formHandler.canSave) {
+          formHandler.handleSave();
+        }
+      }
+    };
+
+    const formElement = formRef.current;
+
+    formElement.addEventListener('keydown', handleKeyDown);
+    return () => formElement.removeEventListener('keydown', handleKeyDown);
+  }, [formRef, formHandler, autoSave]);
+
   return <FormContext.Provider value={formHandler}>{children}</FormContext.Provider>;
 };
