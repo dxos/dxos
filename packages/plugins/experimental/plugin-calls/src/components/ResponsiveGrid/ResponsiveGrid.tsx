@@ -80,14 +80,19 @@ export const ResponsiveGrid = <T extends object = any>({
     // TODO(burdon): Consider directly setting bounds instead of state update.
     const t = setTimeout(() => {
       setBounds(
-        items.map((item) => {
-          invariant(containerRef.current);
-          invariant(gridContainerRef.current);
-          const el = gridContainerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
-          invariant(el);
-          const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
-          return [item, bounds];
-        }),
+        items
+          .map((item) => {
+            invariant(containerRef.current);
+            invariant(gridContainerRef.current);
+            const el = gridContainerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
+            if (!el) {
+              return null;
+            }
+
+            const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
+            return [item, bounds];
+          })
+          .filter((item): item is [T, DOMRectBounds] => item !== null),
       );
     }, 100); // Wait until layout has been updated.
     return () => clearTimeout(t);
@@ -140,7 +145,7 @@ export const ResponsiveGrid = <T extends object = any>({
             style={{ minHeight: MIN_HEIGHT, height: dividerHeight, paddingTop: gap, paddingBottom: gap }}
           >
             <ResponsiveContainer>
-              <div {...{ 'data-grid-item': pinned }}>
+              <div {...{ 'data-grid-item': getId(pinnedItem) }}>
                 {/* Placeholder image. */}
                 <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
               </div>

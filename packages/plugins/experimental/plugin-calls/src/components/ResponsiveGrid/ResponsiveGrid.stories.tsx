@@ -48,7 +48,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 };
 
 const meta: Meta<ResponsiveGridProps<TestItem>> = {
-  title: 'plugins/plugin-calls/ResponsiveGridProps',
+  title: 'plugins/plugin-calls/ResponsiveGrid',
   component: ResponsiveGrid,
   render: (args) => {
     const [pinned, setPinned] = useState<string | undefined>(args.pinned ?? args.items[0]?.id);
