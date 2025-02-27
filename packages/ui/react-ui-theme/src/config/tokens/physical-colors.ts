@@ -16,27 +16,26 @@ const gamuts: (Gamut & string)[] = ['srgb', 'p3', 'rec2020'];
 
 const DEG_RAD = Math.PI / 180;
 
-const hueKeyPoint = (hue: number, values?: PhysicalPalette['values']): PhysicalPalette => {
+const hueKeyPoint = (hue: number): PhysicalPalette => {
   const hueDeg = (360 * (hue / 17) + 26) % 360;
   return {
     keyPoint: [0.5, 0.165 + 0.04 * Math.cos((hueDeg - 15) * DEG_RAD), hueDeg],
     lowerCp: 1,
     upperCp: 1,
     torsion: 0,
-    ...(values && { values }),
   };
 };
 
 export const huePalettes = {
   red: hueKeyPoint(0),
   orange: hueKeyPoint(1),
-  amber: hueKeyPoint(2, [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900]),
+  amber: hueKeyPoint(2),
   yellow: hueKeyPoint(3),
   lime: hueKeyPoint(4),
   green: hueKeyPoint(5),
-  emerald: hueKeyPoint(6, [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900]),
+  emerald: hueKeyPoint(6),
   teal: hueKeyPoint(7),
-  cyan: hueKeyPoint(8, [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900]),
+  cyan: hueKeyPoint(8),
   sky: hueKeyPoint(9),
   blue: hueKeyPoint(10),
   indigo: hueKeyPoint(11),
@@ -44,7 +43,7 @@ export const huePalettes = {
   purple: hueKeyPoint(13),
   fuchsia: hueKeyPoint(14),
   pink: hueKeyPoint(15),
-  rose: hueKeyPoint(16, [50, 100, 150, 200, 250, 300, 350, 400, 500, 550, 600, 700, 800, 900]),
+  rose: hueKeyPoint(16),
 };
 
 /**

@@ -50,7 +50,7 @@ const adapterConfig: TailwindAdapterConfig = {
   },
 };
 
-export const userDefaultTokenSet = {
+export const userDefaultTokenSet = /* {
   colors: {
     physical: {
       conditions: physicalColors.conditions,
@@ -72,6 +72,6 @@ export const userDefaultTokenSet = {
     },
   },
   lengths: lengthsFacet,
-} satisfies TokenSet;
+} satisfies TokenSet; */ tokenSet;
 
 export const tokensTailwindConfig = adapter(tokenSet, adapterConfig);
