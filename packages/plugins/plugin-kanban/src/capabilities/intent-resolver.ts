@@ -42,4 +42,23 @@ export default () =>
         }
       },
     }),
+    createResolver({
+      intent: KanbanAction.DeleteCard,
+      resolve: ({ card }, undo) => {
+        const space = getSpace(card);
+        invariant(space);
+
+        if (!undo) {
+          space.db.remove(card);
+          return {
+            undoable: {
+              message: ['card deleted label', { ns: KANBAN_PLUGIN }],
+              data: { card },
+            },
+          };
+        } else {
+          space.db.add(card);
+        }
+      },
+    }),
   ]);

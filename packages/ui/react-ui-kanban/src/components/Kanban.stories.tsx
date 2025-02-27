@@ -63,13 +63,14 @@ const StorybookKanban = () => {
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
       if (space && cardSchema && path) {
-        space.db.add(
-          create(cardSchema, {
-            title: faker.commerce.productName(),
-            description: faker.lorem.paragraph(),
-            [path]: columnValue,
-          }),
-        );
+        const card = create(cardSchema, {
+          title: faker.commerce.productName(),
+          description: faker.lorem.paragraph(),
+          [path]: columnValue,
+        });
+
+        space.db.add(card);
+        return card.id;
       }
     },
     [space, cardSchema, model],
@@ -133,7 +134,9 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        const { schema } = await initializeKanban({ space });
+        const { schema, kanban } = await initializeKanban({ space });
+        space.db.add(kanban);
+
         // TODO(burdon): Replace with sdk/schema/testing.
         Array.from({ length: 8 }).map(() => {
           return space.db.add(
