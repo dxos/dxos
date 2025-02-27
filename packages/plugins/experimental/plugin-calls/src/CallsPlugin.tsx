@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { type Space } from '@dxos/client/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 
 import { AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { CALLS_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { CallsAction, TranscriptType } from './types';
 
 export const CallsPlugin = () =>
   definePlugin(meta, [
@@ -18,25 +15,6 @@ export const CallsPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: TranscriptType.typename,
-          metadata: {
-            createObject: (props: { name?: string }, options: { space: Space }) =>
-              createIntent(CallsAction.Create, { ...props }),
-            placeholder: ['transcript title placeholder', { ns: CALLS_PLUGIN }],
-            icon: 'ph--subtitles--regular',
-          },
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [TranscriptType])],
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,

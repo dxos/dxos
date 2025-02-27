@@ -5,12 +5,12 @@
 import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
+import { useAi, useIsSpeaking } from '@dxos/plugin-transcription';
 import { useConfig } from '@dxos/react-client';
 
 import {
   CallContext,
   type CallContextType,
-  useIsSpeaking,
   usePeerConnection,
   useCallState,
   useStablePojo,
@@ -33,7 +33,8 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
 
-  const call = useCallState({ roomId });
+  const ai = useAi();
+  const call = useCallState({ ai, roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });

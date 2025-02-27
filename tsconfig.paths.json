@@ -70,6 +70,12 @@
       "@dxos/plugin-theme-editor": [
         "packages/plugins/experimental/plugin-theme-editor/src/index.ts"
       ],
+      "@dxos/plugin-transcription": [
+        "packages/plugins/experimental/plugin-transcription/src/index.ts"
+      ],
+      "@dxos/plugin-transcription/types": [
+        "packages/plugins/experimental/plugin-transcription/src/types/index.ts"
+      ],
       "@dxos/plugin-transformer": [
         "packages/plugins/experimental/plugin-transformer/src/index.ts"
       ],

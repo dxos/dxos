@@ -7,11 +7,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Stream } from '@dxos/codec-protobuf';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
+import { type Ai } from '@dxos/plugin-transcription';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { type Ai, useAi } from './useAi';
 import { codec, type RoomState, type UserState } from '../types';
 
 // TODO(burdon): Disambiguate room and call.
@@ -25,14 +25,13 @@ export type CallState = {
 /**
  * Call session state.
  */
-export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
+export const useCallState = ({ ai, roomId }: { ai: Ai; roomId: PublicKey }): CallState => {
   const [room, setRoom] = useState<RoomState>({
     meetingId: roomId.toHex(),
     users: [],
   });
 
   const client = useClient();
-  const ai = useAi();
   const haloIdentity = useIdentity();
   const identityKey = haloIdentity!.identityKey.toHex();
   const displayName = haloIdentity?.profile?.displayName ?? generateName(haloIdentity!.identityKey.toHex());

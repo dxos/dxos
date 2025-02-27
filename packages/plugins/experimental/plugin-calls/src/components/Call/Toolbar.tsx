@@ -4,11 +4,12 @@
 
 import React, { useState } from 'react';
 
+import { useTranscription } from '@dxos/plugin-transcription';
+import { type TranscriptionState } from '@dxos/plugin-transcription/types';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { useCallContext, useBroadcastStatus, useTranscription } from '../../hooks';
+import { useCallContext, useBroadcastStatus } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
-import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 
 export const CallToolbar = () => {

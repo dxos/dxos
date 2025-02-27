@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
@@ -12,7 +12,9 @@ import { Prompt } from '../Prompt';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
-export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
+// TODO(budon): Voice and suggest.
+
+export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
   const [iter, setIter] = useState(0);
@@ -56,7 +58,12 @@ export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
           />
         </div>
 
-        <Prompt autoFocus lineWrapping />
+        <div className='grid grid-cols-[1fr_auto] w-full'>
+          <Prompt autoFocus lineWrapping classNames='pt-1' />
+          <div className='flex flex-col h-full'>
+            <IconButton icon='ph--microphone--regular' iconOnly label='Microphone' onClick={() => {}} />
+          </div>
+        </div>
       </Dialog.Content>
     </div>
   );

@@ -8,7 +8,7 @@ import { combineLatest, map, type Observable, of, shareReplay, switchMap, tap } 
 import { invariant } from '@dxos/invariant';
 
 import { useStateObservable, useSubscribedState } from './utils';
-import { getScreenshare$, getUserMediaTrack$ } from '../utils';
+import { getScreenshare$, getUserMediaTrack$ } from '../util';
 
 export type UserMedia = {
   audioDeviceId: string | undefined;

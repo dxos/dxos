@@ -35,5 +35,5 @@ export const Prompt = ({ classNames, autoFocus, lineWrapping = false, onEnter, o
     ],
   });
 
-  return <div ref={parentRef} className={mx(classNames)} />;
+  return <div ref={parentRef} className={mx('w-full', classNames)} />;
 };
