@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { getSnapshot, S } from '@dxos/echo-schema';
@@ -43,37 +43,51 @@ type TextInputComponentProps = ShapeComponentProps<FunctionShape> & TextBoxProps
 
 const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps) => {
   const client = useClient();
-  const { node } = useComputeNodeState(shape);
+  const { node, runtime } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
   const initialValue = node.function?.target && fullyQualifiedId(node.function.target);
 
-  const handleEnter: TextBoxProps['onEnter'] = async (text) => {
-    const value = text.trim();
-    const { spaceId, objectId } = parseId(value);
-    if (!spaceId || !objectId) {
-      return;
-    }
+  const handleEnter = useCallback(
+    async (text: string) => {
+      const value = text.trim();
+      const { spaceId, objectId } = parseId(value);
+      if (!spaceId || !objectId) {
+        return;
+      }
 
-    const space = client.spaces.get(spaceId);
-    const object = space?.db.getObjectById(objectId);
-    if (!space || !(object instanceof ScriptType)) {
-      return;
-    }
+      const space = client.spaces.get(spaceId);
+      const object = space?.db.getObjectById(objectId);
+      if (!space || !(object instanceof ScriptType)) {
+        return;
+      }
 
-    const {
-      objects: [fn],
-    } = await space.db.query(Filter.schema(FunctionType, { source: object })).run();
-    if (!fn) {
-      return;
-    }
+      const {
+        objects: [fn],
+      } = await space.db.query(Filter.schema(FunctionType, { source: object })).run();
+      if (!fn) {
+        return;
+      }
 
-    node.function = makeRef(fn);
-    node.inputSchema = getSnapshot(fn.inputSchema);
-    node.outputSchema = getSnapshot(fn.outputSchema);
-  };
+      node.function = makeRef(fn);
+      node.inputSchema = getSnapshot(fn.inputSchema);
+      node.outputSchema = getSnapshot(fn.outputSchema);
+    },
+    [client, node],
+  );
+
+  const handleAction = useCallback(
+    (action: 'run' | 'open' | 'close') => {
+      if (action !== 'run') {
+        return;
+      }
+
+      runtime.evalNode();
+    },
+    [runtime],
+  );
 
   return (
-    <Box shape={shape} title='Function'>
+    <Box shape={shape} title='Function' onAction={handleAction}>
       <TextBox
         {...props}
         ref={inputRef}

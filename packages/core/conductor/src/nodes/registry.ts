@@ -9,7 +9,7 @@ import { JSONPath } from 'jsonpath-plus';
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
 import { isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
-import { getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { create, getMeta } from '@dxos/live-object';
@@ -337,15 +337,24 @@ export const registry: Record<NodeType, Executable> = {
     input: AnyInput,
     output: AnyOutput,
     exec: synchronizedComputeFunction((input, node) => {
-      invariant(node?.function != null);
-      const path = getUserFunctionUrlInMetadata(getMeta(node.function));
       // TODO(wittjosiah): Get from config.
-      const baseUrl = '';
+      const baseUrl = 'https://edge-main.dxos.workers.dev/';
       return Effect.gen(function* () {
+        const fn = yield* Effect.tryPromise(async () => node?.function?.load());
+        if (!node || !fn) {
+          return {};
+        }
+
         const client = yield* HttpClient.HttpClient;
         const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
+        const path = getUserFunctionUrlInMetadata(getMeta(fn));
+        const url = path && getInvocationUrl(path, baseUrl, { spaceId: undefined });
+        if (!url) {
+          return {};
+        }
+
         return yield* pipe(
-          HttpClientRequest.post(`${baseUrl}${path}`),
+          HttpClientRequest.post(url),
           HttpClientRequest.setHeader('Content-Type', 'application/json'),
           HttpClientRequest.bodyText(JSON.stringify(input)),
           client.execute,
