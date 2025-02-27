@@ -159,8 +159,8 @@ export const systemAliases = {
   'surface-20': { root: ['baseSurface'] },
   'surface-30': { root: ['modalSurface', 'tooltipSurface'], attention: ['input'] },
   'surface-40': { root: ['input'] },
-  'surface-50': { attention: ['cardSurface'] },
-  'surface-60': { root: ['cardSurface'], attention: ['hoverSurface'] },
+  'surface-50': { attention: ['groupSurface'] },
+  'surface-60': { root: ['groupSurface'], attention: ['hoverSurface'] },
   'surface-70': { root: ['hoverSurface'], attention: ['separator'] },
   'surface-80': { root: ['separator'] },
 

@@ -90,7 +90,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             <div
               role='none'
               className={mx(
-                'shrink min-bs-0 bg-cardSurface rounded-lg grid dx-focus-ring-group-x-indicator',
+                'shrink min-bs-0 bg-groupSurface rounded-lg grid dx-focus-ring-group-x-indicator',
                 railGridHorizontalContainFitContent,
               )}
             >

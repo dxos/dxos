@@ -59,5 +59,5 @@ export const sheetSememes = {
 } satisfies ColorSememes;
 
 export const sheetAliases = {
-  cardSurface: { root: ['gridLine'] },
+  groupSurface: { root: ['gridLine'] },
 } satisfies ColorAliases;
