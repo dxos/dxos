@@ -4,7 +4,7 @@
 
 import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/conductor';
 import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
-import { FunctionTrigger, TriggerKind } from '@dxos/functions/types';
+import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
@@ -19,6 +19,7 @@ import {
   createGpt,
   createQueue,
   createSurface,
+  createRandom,
   createTemplate,
   createText,
   createTrigger,
@@ -42,6 +43,7 @@ export enum PresetName {
   EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
   FOREX_FUNCTION_CALL = 'forex-function-call',
+  TIMER_TICK_QUEUE = 'timerTick-queue',
   DISCORD_MESSAGES = 'discord-messages',
 }
 
@@ -88,56 +90,28 @@ export const presets = {
       PresetName.OBJECT_CHANGE_QUEUE,
       async (space, n, cb) => {
         const objects = range(n, () => {
-          const canvasModel = CanvasGraphModel.create<ComputeShape>();
-
-          const template = canvasModel.createNode(
-            createTemplate({
-              valueType: 'object',
-              ...rawPosition({ centerX: -64, centerY: -79, width: 320, height: 320 }),
-            }),
+          const { canvasModel, computeModel } = createQueueSinkPreset(
+            TriggerKind.Subscription,
+            (triggerSpec) => (triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' }),
+            'type',
           );
-
-          let functionTrigger: FunctionTrigger | undefined;
-          canvasModel.builder.call((builder) => {
-            const triggerShape = createTrigger({
-              triggerKind: TriggerKind.Subscription,
-              ...position({ x: -18, y: -2 }),
-            });
-            const trigger = canvasModel.createNode(triggerShape);
-            const { queueId } = setupQueue(canvasModel, {
-              queuePosition: { centerX: -80, centerY: 378, width: 320, height: 448 },
-            });
-            const append = canvasModel.createNode(
-              createAppend(rawPosition({ centerX: 320, centerY: 192, width: 128, height: 122 })),
-            );
-
-            builder
-              .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-              .createEdge({ source: template.id, target: append.id, input: 'items' })
-              .createEdge({ source: trigger.id, target: template.id, output: 'type', input: 'type' })
-              .createEdge({
-                source: trigger.id,
-                target: template.id,
-                output: 'changedObjectId',
-                input: 'changedObjectId',
-              });
-
-            functionTrigger = triggerShape.functionTrigger!.target!;
-            const triggerSpec = functionTrigger.spec;
-            invariant(triggerSpec && triggerSpec.type === TriggerKind.Subscription, 'No trigger spec.');
-            triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' };
-          });
-
-          const computeModel = createComputeGraph(canvasModel);
-
-          const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
-          invariant(templateComputeNode, 'Template compute node was not created.');
-          templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "{{changedObjectId}}"', '}'].join('\n');
-          templateComputeNode.inputSchema = toJsonSchema(S.Struct({ type: S.String, changedObjectId: S.String }));
-
-          attachTrigger(functionTrigger, computeModel);
-
           return addToSpace(PresetName.OBJECT_CHANGE_QUEUE, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+
+    [
+      PresetName.TIMER_TICK_QUEUE,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const { canvasModel, computeModel } = createQueueSinkPreset(
+            TriggerKind.Timer,
+            (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
+            'result',
+          );
+          return addToSpace(PresetName.TIMER_TICK_QUEUE, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
@@ -403,6 +377,65 @@ export const presets = {
       },
     ],
   ] as [PresetName, ObjectGenerator<any>][],
+};
+
+const createQueueSinkPreset = <SpecType extends TriggerKind>(
+  triggerKind: SpecType,
+  initSpec: (spec: Extract<TriggerType, { type: SpecType }>) => void,
+  triggerOutputName: string,
+) => {
+  const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+  const template = canvasModel.createNode(
+    createTemplate({
+      valueType: 'object',
+      ...rawPosition({ centerX: -64, centerY: -79, width: 320, height: 320 }),
+    }),
+  );
+
+  let functionTrigger: FunctionTrigger | undefined;
+  canvasModel.builder.call((builder) => {
+    const triggerShape = createTrigger({
+      triggerKind,
+      ...rawPosition({ centerX: -578, centerY: -187, height: 320, width: 320 }),
+    });
+    const trigger = canvasModel.createNode(triggerShape);
+    const { queueId } = setupQueue(canvasModel, {
+      queuePosition: { centerX: -80, centerY: 378, width: 320, height: 448 },
+    });
+    const append = canvasModel.createNode(
+      createAppend(rawPosition({ centerX: 320, centerY: 192, width: 128, height: 122 })),
+    );
+    const random = canvasModel.createNode(
+      createRandom(rawPosition({ centerX: -509, centerY: -30, width: 64, height: 64 })),
+    );
+
+    builder
+      .createEdge({ source: queueId.id, target: append.id, input: 'id' })
+      .createEdge({ source: template.id, target: append.id, input: 'items' })
+      .createEdge({ source: trigger.id, target: template.id, output: triggerOutputName, input: 'type' })
+      .createEdge({
+        source: random.id,
+        target: template.id,
+        input: 'changeId',
+      });
+
+    functionTrigger = triggerShape.functionTrigger!.target!;
+    const triggerSpec = functionTrigger.spec;
+    invariant(triggerSpec && triggerSpec.type === triggerKind, 'No trigger spec.');
+    initSpec(triggerSpec as any);
+  });
+
+  const computeModel = createComputeGraph(canvasModel);
+
+  const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
+  invariant(templateComputeNode, 'Template compute node was not created.');
+  templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
+  templateComputeNode.inputSchema = toJsonSchema(S.Struct({ type: S.String, changeId: S.String }));
+
+  attachTrigger(functionTrigger, computeModel);
+
+  return { canvasModel, computeModel };
 };
 
 const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, compute: ComputeGraphModel) => {
