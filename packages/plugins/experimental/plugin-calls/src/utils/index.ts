@@ -3,7 +3,7 @@
 //
 
 export * from './cf-calls-peer';
-export * from './get-device-list-observable';
+export * from './get-device-list';
 export * from './get-screenshare';
 export * from './get-time-str';
 export * from './get-user-media';
