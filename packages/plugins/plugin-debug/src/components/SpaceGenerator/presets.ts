@@ -365,10 +365,13 @@ export const presets = {
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
+          let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
-            // DXOS general channel.
+            const triggerShape = createTrigger({ triggerKind: TriggerKind.Timer, ...position({ x: -10, y: -5 }) });
+            const trigger = canvasModel.createNode(triggerShape);
+            // DXOS dev-null channel.
             const channelId = canvasModel.createNode(
-              createConstant({ value: '837138313172353098', ...position({ x: -10, y: -5 }) }),
+              createConstant({ value: '1088569858767212554', ...position({ x: -10, y: 0 }) }),
             );
             const queueId = canvasModel.createNode(
               createConstant({
@@ -381,13 +384,17 @@ export const presets = {
             const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
 
             builder
-              .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
+              .createEdge({ source: trigger.id, target: converter.id, input: 'tick' })
               .createEdge({ source: channelId.id, target: converter.id, input: 'channelId' })
+              .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
               .createEdge({ source: converter.id, target: view.id, output: 'newMessages' })
               .createEdge({ source: queueId.id, target: queue.id, input: 'input' });
+
+            functionTrigger = triggerShape.functionTrigger!.target!;
           });
 
           const computeModel = createComputeGraph(canvasModel);
+          attachTrigger(functionTrigger, computeModel);
 
           return addToSpace(PresetName.DISCORD_MESSAGES, space, canvasModel, computeModel);
         });
