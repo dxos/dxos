@@ -21,9 +21,11 @@ const MessageSchema = S.Struct({
 
 export default defineFunction({
   inputSchema: S.Struct({
+    // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
+    tick: S.optional(S.String),
     channelId: S.String,
-    queueId: S.String,
     pageSize: S.optional(S.Number),
+    queueId: S.String,
   }),
 
   outputSchema: S.Struct({
