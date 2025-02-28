@@ -74,7 +74,7 @@ export class MixedStreamParser {
     let streamBlock: StreamBlock | undefined;
     const stack: StreamBlock[] = [];
 
-    let messagesCollected: Message[] = [];
+    const messagesCollected: Message[] = [];
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
