@@ -56,7 +56,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     }
     const ctx = new Context();
     scheduleMicroTask(ctx, async () => {
-      if (!peer) {
+      if (!peer || (!userMedia.state.videoTrack && !pushedVideoTrack)) {
         return;
       }
 
@@ -78,7 +78,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     }
     const ctx = new Context();
     scheduleMicroTask(ctx, async () => {
-      if (!peer) {
+      if (!peer || (!userMedia.state.audioTrack && !pushedAudioTrack)) {
         return;
       }
       log.info('>>> push audio track', { userMedia: userMedia.state.audioTrack, pushedAudioTrack });

@@ -233,10 +233,7 @@ export class CloudflareCallsPeer extends Resource {
       }
     }
 
-    if (!track) {
-      return undefined;
-    }
-
+    invariant(track);
     const stableId = crypto.randomUUID();
 
     const transceiver = this.session.peerConnection!.addTransceiver(track!, {
