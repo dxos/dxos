@@ -31,14 +31,14 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
 
   useEffect(() => {
-    const coordinateColumn = getLocationProperty(map?.view?.target);
-    if (!coordinateColumn) {
+    const locationProperty = getLocationProperty(map?.view?.target);
+    if (!locationProperty) {
       return;
     }
 
     const newMarkers: MapMarker[] = (rowsForType ?? [])
       .map((row) => {
-        const geopoint = row[coordinateColumn];
+        const geopoint = row[locationProperty];
         if (!geopoint) {
           return undefined;
         }
