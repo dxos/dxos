@@ -69,6 +69,7 @@ export const Voice = ({ active, debug, model = 'Xenova/whisper-base' }: VoicePro
     },
     [transcribe, isTranscribing],
   );
+  log.info('handleAudioData', { handleAudioData });
 
   useEffect(() => {
     if (debug) {
