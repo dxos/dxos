@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
+import { scheduleMicroTask, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { useAudioTrack, useIsSpeaking, Transcriber, MediaStreamRecorder } from '@dxos/plugin-transcription';
+import { type TranscriberParams, useAudioTrack, useIsSpeaking, useTranscriber } from '@dxos/plugin-transcription';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
@@ -30,43 +32,34 @@ export const AmbientChatDialog = () => {
 
   // Audio/transcription.
   const [active, setActive] = useState(false);
+  // TODO(mykola): Do not recreate track on every state change. Or make it possible to substitute track in transcriber.
   const track = useAudioTrack(active);
   const isSpeaking = useIsSpeaking(track);
-
+  const onSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
+    log.info('segments', { segments });
+  }, []);
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    onSegments,
+  });
   // Start/stop transcription.
-  const transcriberRef = useRef<Transcriber>(null);
   useEffect(() => {
-    if (track && active) {
-      const init = async () => {
-        const transcriber = new Transcriber({
-          config: {
-            transcribeAfterChunksAmount: 50,
-            prefixBufferChunksAmount: 10,
-          },
-          recorder: new MediaStreamRecorder({
-            mediaStreamTrack: track,
-            interval: 200,
-          }),
-          onSegments: async (segments) => {
-            log.info('segments', { segments });
-          },
-        });
-
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (active && transcriber) {
+        log.info('opening transcriber');
         await transcriber.open();
-        void transcriber?.startChunksRecording();
-        log.info('recording...');
-      };
-
-      void init();
-    } else {
-      if (transcriberRef.current) {
-        log.info('stopping');
-        transcriberRef.current?.stopChunksRecording();
-        void transcriberRef.current?.close();
-        log.info('stopped');
+        transcriber.startChunksRecording();
+      } else if (!active) {
+        transcriber?.stopChunksRecording();
+        await transcriber?.close();
       }
-    }
-  }, [track, active]);
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [active, transcriber]);
 
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
