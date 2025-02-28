@@ -22,6 +22,7 @@ export default () =>
       intent: KanbanAction.DeleteCardField,
       resolve: ({ kanban, fieldId, deletionData }, undo) => {
         invariant(kanban.cardView);
+        invariant(kanban.cardView.target?.query.type);
 
         const schema =
           kanban.cardView.target && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.type);
