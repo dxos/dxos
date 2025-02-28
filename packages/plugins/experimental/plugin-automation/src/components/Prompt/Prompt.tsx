@@ -19,13 +19,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { createAutocompleteExtension, type AutocompleteOptions } from './prompt-autocomplete';
 
+// TODO(burdon): Handle object references.
+
 export type PromptProps = ThemedClassName<
   { value: string } & AutocompleteOptions &
     Pick<UseTextEditorProps, 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping'>
 >;
-
-// TODO(burdon): Handle object references.
 
 export const Prompt = forwardRef<EditorView | undefined, PromptProps>(
   ({ classNames, value, autoFocus, lineWrapping = false, onEnter, onSuggest }, forwardRef) => {
@@ -63,8 +63,10 @@ export const Prompt = forwardRef<EditorView | undefined, PromptProps>(
       ],
     });
 
+    // Expose editor view.
     useImperativeHandle(forwardRef, () => view, [view]);
 
+    // Update text.
     useEffect(() => {
       if (value) {
         view?.dispatch({
