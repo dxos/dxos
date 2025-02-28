@@ -7,8 +7,7 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
-import { getUserFunctionUrlInMetadata } from '@dxos/functions/edge';
+import { isInstanceOf, ObjectId, S, toEffectSchema, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { create, getMeta } from '@dxos/live-object';
@@ -407,4 +406,11 @@ const textToImageTool: Tool = {
     // TODO(burdon): Testing.
     // model: '@testing/kitten-in-bubble',
   },
+};
+
+// TODO(dmaretskyi): Reconcile with `getUserFunctionUrlInMetadata` in `@dxos/functions/edge`.
+const FUNCTIONS_META_KEY = 'dxos.org/service/function';
+
+const getUserFunctionUrlInMetadata = (meta: ObjectMeta) => {
+  return meta.keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
 };

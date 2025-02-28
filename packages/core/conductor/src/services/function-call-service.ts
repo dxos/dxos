@@ -4,7 +4,6 @@
 
 import { Context } from 'effect';
 
-import { getInvocationUrl } from '@dxos/functions/edge';
 import type { SpaceId } from '@dxos/keys';
 
 export class FunctionCallService extends Context.Tag('FunctionCallService')<
@@ -39,3 +38,25 @@ export class FunctionCallService extends Context.Tag('FunctionCallService')<
     };
   };
 }
+
+// TODO(dmaretskyi): Reconcile with `getInvocationUrl` in `@dxos/functions/edge`.
+const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: InvocationOptions = {}) => {
+  const baseUrl = new URL('functions/', edgeUrl);
+
+  // Leading slashes cause the URL to be treated as an absolute path.
+  const relativeUrl = functionUrl.replace(/^\//, '');
+  const url = new URL(`./${relativeUrl}`, baseUrl.toString());
+  options.spaceId && url.searchParams.set('spaceId', options.spaceId);
+  options.subjectId && url.searchParams.set('subjectId', options.subjectId);
+  url.protocol = isSecure(url.protocol) ? 'https' : 'http';
+  return url.toString();
+};
+
+const isSecure = (protocol: string) => {
+  return protocol === 'https:' || protocol === 'wss:';
+};
+
+type InvocationOptions = {
+  spaceId?: SpaceId;
+  subjectId?: string;
+};
