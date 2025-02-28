@@ -135,6 +135,11 @@ export const schemaTools = [
             ({ id, title, color }) => ({ const: id, title, color }),
           );
         }
+
+        if (prop.format === FormatEnum.LatLng) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLng;
+          registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
+        }
       }
 
       return ToolResult.Success(registeredSchema);

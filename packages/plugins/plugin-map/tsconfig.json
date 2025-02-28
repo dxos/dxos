@@ -27,6 +27,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -57,7 +60,13 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-geo"
