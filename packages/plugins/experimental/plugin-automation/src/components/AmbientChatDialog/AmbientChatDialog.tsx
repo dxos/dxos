@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -10,20 +10,12 @@ import { log } from '@dxos/log';
 import { type TranscriberParams, useAudioTrack, useTranscriber } from '@dxos/plugin-transcription';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
+import { type EditorView } from '@dxos/react-ui-editor';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
-import { Prompt } from '../Prompt';
-
-const ON = 'https://dxos.network/sound-on.wav';
-const OFF = 'https://dxos.network/sound-off.wav';
-
-const playSound = (on?: boolean) => {
-  const audio = new Audio(on ? ON : OFF);
-  void audio.play().catch((error) => {
-    log.error('error playing click sound', { error });
-  });
-};
+import { Prompt, type PromptProps } from '../Prompt';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
@@ -33,8 +25,11 @@ export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
   const [iter, setIter] = useState(0);
+  const soundStart = useSoundEffect('StartRecording');
+  const soundStop = useSoundEffect('StopRecording');
 
   const [prompt, setPrompt] = useState('');
+  const promptRef = useRef<EditorView>();
 
   // TODO(burdon): Get acitve space for queue.
   // const space = useSpace();
@@ -66,15 +61,14 @@ export const AmbientChatDialog = () => {
         await transcriber.open();
         log.info('starting...');
         setRecording(true);
-        playSound(true);
+        soundStart.play();
         transcriber.startChunksRecording();
       } else if (!active && transcriber?.isOpen) {
         transcriber?.stopChunksRecording();
         await transcriber?.close();
         log.info('stopped');
         setRecording(false);
-        playSound(false);
-        // TODO(burdon): Focus.
+        soundStop.play();
       }
     });
 
@@ -82,6 +76,12 @@ export const AmbientChatDialog = () => {
       void ctx.dispose();
     };
   }, [active, transcriber]);
+
+  // Suggest.
+  // TODO(burdon): Suggestions.
+  const handleSuggest = useCallback<NonNullable<PromptProps['onSuggest']>>((text) => {
+    return [];
+  }, []);
 
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
@@ -124,7 +124,15 @@ export const AmbientChatDialog = () => {
         </div>
 
         <div className='grid grid-cols-[1fr_auto] w-full'>
-          <Prompt autoFocus lineWrapping classNames='pt-1' value={prompt} onChange={setPrompt} />
+          <Prompt
+            ref={promptRef}
+            autoFocus
+            lineWrapping
+            classNames='pt-1'
+            value={prompt}
+            onEnter={setPrompt}
+            onSuggest={handleSuggest}
+          />
           <div className='flex flex-col h-full'>
             <IconButton
               classNames={mx(recording && 'bg-primary-500')}

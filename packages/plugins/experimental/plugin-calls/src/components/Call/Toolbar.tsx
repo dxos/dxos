@@ -11,6 +11,7 @@ import { useTranscriber } from '@dxos/plugin-transcription';
 import { TranscriptBlock, type TranscriptSegment } from '@dxos/plugin-transcription/types';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 
 import { useCallContext, useBroadcastStatus } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
@@ -114,9 +115,11 @@ export const CallToolbar = () => {
     };
   }, [transcription.state.value.enabled, transcriber, transcriber?.isOpen, isSpeaking]);
 
+  const leaveSound = useSoundEffect('LeaveCall');
   const handleLeave = () => {
     userMedia.turnScreenshareOff();
     setJoined(false);
+    leaveSound.play();
   };
 
   const handleToggleTranscription = async () => {

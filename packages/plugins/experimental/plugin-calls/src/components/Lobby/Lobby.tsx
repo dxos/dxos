@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, useCallback } from 'react';
 
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useSubscribedState, useCallContext } from '../../hooks';
@@ -19,6 +20,12 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const sessionError = useSubscribedState(peer.sessionError$);
   const numUsers = new Set(call.room.users?.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
 
+  const joinSound = useSoundEffect('JoinCall');
+  const handleJoin = useCallback(() => {
+    setJoined(true);
+    joinSound.play();
+  }, [setJoined, joinSound]);
+
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
       <ResponsiveContainer>
@@ -29,7 +36,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
         <IconButton
           variant='primary'
           label={t('join call')}
-          onClick={() => setJoined(true)}
+          onClick={handleJoin}
           disabled={!session?.sessionId}
           icon='ph--phone-incoming--regular'
         />
