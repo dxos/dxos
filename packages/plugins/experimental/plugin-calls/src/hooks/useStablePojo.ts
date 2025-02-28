@@ -4,8 +4,6 @@
 
 import { useMemo } from 'react';
 
-// TODO(burdon): Replace rxjs with LiveObject?
-
 /**
  * Returns a stable reference to a POJO that might be created on every new render.
  */
