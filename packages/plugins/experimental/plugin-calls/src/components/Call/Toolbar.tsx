@@ -2,16 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 
+import { createStatic } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useTranscriber } from '@dxos/plugin-transcription';
+import { TranscriptBlock, type TranscriptSegment } from '@dxos/plugin-transcription/types';
+import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { useCallContext, useBroadcastStatus } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { MediaButtons } from '../Media';
 
+const STOP_TRANSCRIPTION_TIMEOUT = 250;
+
+// TODO(mykola): Move transcription related logic to a separate component.
 export const CallToolbar = () => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const {
@@ -42,12 +49,70 @@ export const CallToolbar = () => {
     onUpdateUserState: updateUserState,
   });
 
-  useTranscriber({
-    author: self.name,
+  // Initialize transcriber.
+  const edgeClient = useEdgeClient();
+  const queue = useQueue<TranscriptBlock>(
+    edgeClient,
+    transcription.state.value.queueDxn ? DXN.parse(transcription.state.value.queueDxn) : undefined,
+  );
+  const handleSegments = useCallback(
+    async (segments: TranscriptSegment[]) => {
+      const block = createStatic(TranscriptBlock, { author: self.name, segments });
+      queue?.append([block]);
+    },
+    [queue, self.name],
+  );
+  const transcriber = useTranscriber({
     audioStreamTrack: userMedia.audioTrack,
-    transcription: transcription.state.value,
-    isSpeaking,
+    onSegments: handleSegments,
   });
+
+  // Turn transcription on and off.
+  useEffect(() => {
+    if (transcription.state.value.enabled && transcriber) {
+      void transcriber.open();
+    } else if (!transcription.state.value.enabled && transcriber) {
+      void transcriber.close();
+    }
+  }, [transcription.state.value.enabled, transcriber]);
+
+  // If user is not speaking, stop transcription after STOP_TRANSCRIPTION_TIMEOUT. if speaking, start transcription.
+  const disableTimeout = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    const transcriptionEnabled = transcription.state.value.enabled;
+    log('transcription', {
+      enabled: transcriptionEnabled,
+      transcriber: !!transcriber,
+      isOpen: transcriber?.isOpen,
+      isSpeaking,
+    });
+
+    if (!transcriptionEnabled) {
+      return;
+    }
+
+    if (isSpeaking) {
+      log.info('starting transcription');
+      if (disableTimeout.current) {
+        clearTimeout(disableTimeout.current);
+        disableTimeout.current = null;
+      }
+
+      transcriber?.startChunksRecording();
+    } else {
+      disableTimeout.current = setTimeout(() => {
+        log.info('stopping transcription', { transcriber });
+        transcriber?.stopChunksRecording();
+      }, STOP_TRANSCRIPTION_TIMEOUT);
+    }
+
+    return () => {
+      if (disableTimeout.current) {
+        clearTimeout(disableTimeout.current);
+        disableTimeout.current = null;
+      }
+    };
+  }, [transcription.state.value.enabled, transcriber, transcriber?.isOpen, isSpeaking]);
 
   const handleLeave = () => {
     userMedia.turnScreenshareOff();

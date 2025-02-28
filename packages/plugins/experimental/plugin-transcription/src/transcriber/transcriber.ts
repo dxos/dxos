@@ -61,6 +61,12 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 };
 
+export type TranscriberParams = {
+  config: TranscribeConfig;
+  recorder: AudioRecorder;
+  onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+};
+
 /**
  * Handles transcription of audio chunks.
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
@@ -74,20 +80,12 @@ export class Transcriber extends Resource {
 
   private readonly _config: TranscribeConfig;
   private readonly _recorder: AudioRecorder;
-  private readonly _onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+  private readonly _onSegments: TranscriberParams['onSegments'];
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
 
-  constructor({
-    config,
-    recorder,
-    onSegments,
-  }: {
-    config: TranscribeConfig;
-    recorder: AudioRecorder;
-    onSegments: (segments: TranscriptSegment[]) => Promise<void>;
-  }) {
+  constructor({ config, recorder, onSegments }: TranscriberParams) {
     super();
     this._config = config;
     this._recorder = recorder;
@@ -123,6 +121,7 @@ export class Transcriber extends Resource {
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {
+    log.info('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
 
     // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
@@ -138,6 +137,7 @@ export class Transcriber extends Resource {
   }
 
   private async _transcribe() {
+    log.info('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
     this._audioChunks = this._dropOldChunks();
     if (chunks.length === 0) {

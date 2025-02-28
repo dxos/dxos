@@ -5,8 +5,9 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createStatic } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
@@ -17,27 +18,49 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
-import { useIsSpeaking, useTranscriber, useAudioFile, useAudioTrack } from '../hooks';
-import { type TranscriptBlock } from '../types';
+import { useTranscriber, useAudioFile, useAudioTrack } from '../hooks';
+import { type TranscriberParams } from '../transcriber';
+import { TranscriptBlock } from '../types';
 import { randomQueueDxn } from '../util';
 
 const Microphone = () => {
   // Audio.
   const [playing, setPlaying] = useState(false);
   const track = useAudioTrack(playing);
-  const isSpeaking = useIsSpeaking(track);
 
   // Create the transcription queue.
   const queueDxn = useMemo(() => randomQueueDxn(), []);
   const echoClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(echoClient, queueDxn, { pollInterval: 500 });
+  const handleSegments = useCallback<TranscriberParams['onSegments']>(
+    async (segments) => {
+      const block = createStatic(TranscriptBlock, { author: 'test', segments });
+      queue?.append([block]);
+    },
+    [queue],
+  );
 
   // Transcriber.
-  useTranscriber({
-    audioStreamTrack: track,
-    transcription: { enabled: true, queueDxn: queueDxn.toString() },
-    isSpeaking,
-  });
+  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+
+  useEffect(() => {
+    if (transcriber) {
+      void transcriber.open();
+    }
+
+    return () => {
+      void transcriber?.close();
+    };
+  }, [transcriber]);
+
+  // Manage transcription state.
+  useEffect(() => {
+    if (playing && transcriber?.isOpen) {
+      void transcriber?.startChunksRecording();
+    } else if (!playing) {
+      void transcriber?.stopChunksRecording();
+    }
+  }, [transcriber, playing, transcriber?.isOpen]);
 
   return (
     <div className='flex flex-col w-[400px]'>
@@ -59,7 +82,6 @@ const Microphone = () => {
 const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; transcriptUrl: string }) => {
   const audioElement = useRef<HTMLAudioElement>(null);
   const { audio, stream, track } = useAudioFile(audioUrl);
-  const isSpeaking = useIsSpeaking(track);
   useEffect(() => {
     if (stream && audioElement.current) {
       audioElement.current.srcObject = stream;
@@ -81,16 +103,39 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [audio, playing]);
 
-  // Transcriber.
-  useTranscriber({
-    audioStreamTrack: track,
-    transcription: { enabled: true, queueDxn: queueDxn.toString() },
-    isSpeaking,
-  });
-
   // Create the transcription queue.
   const echoClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(echoClient, queueDxn, { pollInterval: 500 });
+  const handleSegments = useCallback<TranscriberParams['onSegments']>(
+    async (segments) => {
+      const block = createStatic(TranscriptBlock, { author: 'test', segments });
+      queue?.append([block]);
+    },
+    [queue],
+  );
+
+  // Transcriber.
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    onSegments: handleSegments,
+  });
+
+  useEffect(() => {
+    if (transcriber) {
+      void transcriber.open();
+    }
+  }, [transcriber]);
+
+  // Manage transcription state.
+  useEffect(() => {
+    if (track?.readyState === 'live' && transcriber?.isOpen) {
+      log.info('starting transcription');
+      void transcriber.startChunksRecording();
+    } else if (track?.readyState !== 'live' && transcriber) {
+      log.info('stopping transcription');
+      void transcriber.stopChunksRecording();
+    }
+  }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
   return (
     <div className='flex flex-col w-[400px]'>
