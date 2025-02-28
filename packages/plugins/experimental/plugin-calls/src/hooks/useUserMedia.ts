@@ -17,8 +17,6 @@ export type UserMedia = {
     audioDeviceId?: string;
     audioEnabled?: boolean;
     audioTrack?: MediaStreamTrack;
-    publicAudioTrack?: MediaStreamTrack;
-    mutedAudioTrack?: MediaStreamTrack;
 
     videoDeviceId?: string;
     videoEnabled?: boolean;
@@ -66,44 +64,42 @@ export const useUserMedia = (): UserMedia => {
   //
   // Audio
   //
-
   useEffect(() => {
-    scheduleMicroTask(new Context(), async () => {
-      {
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (state.audioEnabled) {
         const track = await getUserMediaTrack('audioinput');
         state.audioTrack = track;
         state.audioDeviceId = track.getSettings().deviceId;
-      }
-
-      {
-        const track = await getUserMediaTrack('audioinput');
-        track.enabled = false;
-        state.mutedAudioTrack = track;
+      } else {
+        state.audioTrack = undefined;
       }
     });
-  }, []);
 
-  useEffect(() => {
-    state.publicAudioTrack = state.audioEnabled ? state.audioTrack : state.mutedAudioTrack;
-  }, [state.audioEnabled, state.audioTrack, state.mutedAudioTrack]);
+    return () => {
+      void ctx.dispose();
+      untracked(() => state.audioTrack?.stop());
+    };
+  }, [state.audioEnabled]);
 
   //
   // Video
   //
-
   const blackCanvasStreamTrack = useBlackCanvasStreamTrack();
   useEffect(() => {
-    if (state.videoEnabled) {
-      scheduleMicroTask(new Context(), async () => {
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (state.videoEnabled) {
         const track = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
         state.videoTrack = track;
         state.videoDeviceId = track.getSettings().deviceId;
-      });
-    } else {
-      state.videoTrack = blackCanvasStreamTrack;
-    }
+      } else if (blackCanvasStreamTrack.readyState === 'live') {
+        state.videoTrack = blackCanvasStreamTrack;
+      }
+    });
 
     return () => {
+      void ctx.dispose();
       untracked(() => state.videoTrack?.stop());
     };
   }, [state.videoEnabled]);
@@ -111,19 +107,21 @@ export const useUserMedia = (): UserMedia => {
   //
   // Screenshare
   //
-
   useEffect(() => {
-    if (state.screenshareEnabled) {
-      scheduleMicroTask(new Context(), async () => {
-        const ms = await getScreenshare({ contentHint: 'text' });
+    const ctx = new Context();
+    let ms: MediaStream | undefined;
+    scheduleMicroTask(ctx, async () => {
+      if (state.screenshareEnabled) {
+        ms = await getScreenshare({ contentHint: 'text' });
         state.screenshareVideoTrack = ms?.getVideoTracks()[0];
-      });
-    } else {
-      state.screenshareVideoTrack = undefined;
-    }
+      } else {
+        state.screenshareVideoTrack = undefined;
+      }
+    });
 
     return () => {
-      untracked(() => state.screenshareVideoTrack?.stop());
+      void ctx.dispose();
+      ms?.getTracks().forEach((t) => t.stop());
     };
   }, [state.screenshareEnabled]);
 
@@ -143,6 +141,12 @@ const useBlackCanvasStreamTrack = (videoTrack?: MediaStreamTrack) => {
     const canvas = document.createElement('canvas');
     canvas.width = VIDEO_WIDTH;
     canvas.height = VIDEO_HEIGHT;
+
+    const ctx = canvas.getContext('2d');
+    invariant(ctx);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     return canvas;
   }, [videoTrack]);
 

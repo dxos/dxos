@@ -48,46 +48,69 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     },
   ]);
 
+  // Push video track.
   const [pushedVideoTrack, setPushedVideoTrack] = useState<TrackObject>();
   useEffect(() => {
-    log.info('>>> push video track begin', { pushedVideoTrack, userMedia: userMedia.state.videoTrack });
-    if (
-      pushedVideoTrack &&
-      userMedia.state.videoTrack &&
-      pushedVideoTrack.trackName === userMedia.state.videoTrack.id
-    ) {
+    if (!peer) {
       return;
     }
-
-    scheduleMicroTask(new Context(), async () => {
-      if (userMedia.state.videoTrack && peer) {
-        const track = await peer.pushTrack(userMedia.state.videoTrack, videoEncodingParams);
-        log.info('>>> push video track done', { track });
-        setPushedVideoTrack(track);
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (!peer) {
+        return;
       }
+
+      log.info('>>> push video track', { userMedia: userMedia.state.videoTrack, pushedVideoTrack });
+      const track = userMedia.state.videoTrack;
+      const pushedTrack = await peer.pushTrack(track ?? null, videoEncodingParams, pushedVideoTrack);
+      setPushedVideoTrack(pushedTrack);
     });
+    return () => {
+      void ctx.dispose();
+    };
   }, [peer, userMedia.state.videoTrack, videoEncodingParams]);
 
+  // Push audio track.
   const [pushedAudioTrack, setPushedAudioTrack] = useState<TrackObject>();
   useEffect(() => {
-    scheduleMicroTask(new Context(), async () => {
-      if (userMedia.state.publicAudioTrack && peer) {
-        const track = await peer.pushTrack(userMedia.state.publicAudioTrack, [
-          { networkPriority: 'high' },
-        ] satisfies RTCRtpEncodingParameters[]);
-        setPushedAudioTrack(track);
+    if (!peer) {
+      return;
+    }
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (!peer) {
+        return;
       }
+      log.info('>>> push audio track', { userMedia: userMedia.state.audioTrack, pushedAudioTrack });
+      const track = userMedia.state.audioTrack;
+      const pushedTrack = await peer.pushTrack(track ?? null, [{ networkPriority: 'high' }], pushedAudioTrack);
+      setPushedAudioTrack(pushedTrack);
     });
-  }, [peer, userMedia.state.publicAudioTrack]);
+    return () => {
+      void ctx.dispose();
+    };
+  }, [peer, userMedia.state.audioTrack]);
 
+  // Push screenshare track.
   const [pushedScreenshareTrack, setPushedScreenshareTrack] = useState<TrackObject>();
   useEffect(() => {
-    scheduleMicroTask(new Context(), async () => {
-      if (userMedia.state.screenshareVideoTrack && peer) {
-        const track = await peer.pushTrack(userMedia.state.screenshareVideoTrack);
-        setPushedScreenshareTrack(track);
+    if (!peer || !userMedia.state.screenshareVideoTrack) {
+      return;
+    }
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (!peer || !userMedia.state.screenshareVideoTrack) {
+        return;
       }
+
+      log.info('>>> push screenshare track', { userMedia: userMedia.state.screenshareVideoTrack });
+      const track = userMedia.state.screenshareVideoTrack;
+      const pushedTrack = await peer.pushTrack(track, undefined, pushedScreenshareTrack);
+      setPushedScreenshareTrack(pushedTrack);
     });
+    return () => {
+      void ctx.dispose();
+    };
   }, [peer, userMedia.state.screenshareVideoTrack]);
 
   // TODO(burdon): Split root context vs. local call context.

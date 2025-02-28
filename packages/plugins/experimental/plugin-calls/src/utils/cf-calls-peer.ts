@@ -214,15 +214,32 @@ export class CloudflareCallsPeer extends Resource {
     return pushedTrackPromise;
   }
 
-  async pushTrack(track: MediaStreamTrack, encodings: RTCRtpEncodingParameters[] = []): Promise<TrackObject> {
+  async pushTrack(
+    track: MediaStreamTrack | null,
+    encodings: RTCRtpEncodingParameters[] = [],
+    previousTrack?: TrackObject,
+  ): Promise<TrackObject | undefined> {
     await this.waitUntilOpen();
 
     invariant(this.session);
     // we want a single id for this connection, but we need to wait for
     // the first track to show up before we can proceed, so we
 
+    if (previousTrack) {
+      const transceiver = this.session.peerConnection!.getTransceivers().find((t) => t.mid === previousTrack.mid);
+      if (transceiver) {
+        void transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
+        return previousTrack;
+      }
+    }
+
+    if (!track) {
+      return undefined;
+    }
+
     const stableId = crypto.randomUUID();
-    const transceiver = this.session.peerConnection!.addTransceiver(track, {
+
+    const transceiver = this.session.peerConnection!.addTransceiver(track!, {
       direction: 'sendonly',
     });
     log.verbose('🌱 creating transceiver!');
@@ -242,10 +259,6 @@ export class CloudflareCallsPeer extends Resource {
       parameters.encodings[i] = { ...existing, ...encoding };
     });
     transceiver.sender.setParameters(parameters).catch((err) => log.catch(err));
-    if (transceiver.sender.transport !== null) {
-      log.debug('♻︎ replacing track');
-      transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
-    }
 
     return pushedTrackData;
   }
