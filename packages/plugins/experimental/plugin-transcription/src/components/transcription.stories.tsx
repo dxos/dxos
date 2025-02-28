@@ -17,14 +17,14 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
-import { useIsSpeaking, useTranscriber, useAudioFile, useAudioStream } from '../hooks';
+import { useIsSpeaking, useTranscriber, useAudioFile, useAudioTrack } from '../hooks';
 import { type TranscriptBlock } from '../types';
 import { randomQueueDxn } from '../util';
 
 const Microphone = () => {
   // Audio.
   const [playing, setPlaying] = useState(false);
-  const track = useAudioStream(playing);
+  const track = useAudioTrack(playing);
   const isSpeaking = useIsSpeaking(track);
 
   // Create the transcription queue.

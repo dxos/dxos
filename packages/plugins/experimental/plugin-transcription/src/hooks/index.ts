@@ -5,6 +5,6 @@
 export * from './transcription';
 
 export * from './useAudioFile';
-export * from './useAudioStream';
+export * from './useAudioTrack';
 export * from './useIsSpeaking';
 export * from './useTranscriber';

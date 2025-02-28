@@ -5463,6 +5463,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../../plugin-stack
+      '@dxos/plugin-transcription':
+        specifier: workspace:*
+        version: link:../plugin-transcription
       '@dxos/plugin-wnfs':
         specifier: workspace:*
         version: link:../../plugin-wnfs
