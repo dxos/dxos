@@ -26,8 +26,7 @@ export default () =>
       filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
-        const [lng = 0, lat = 0] = [];
-        // TODO(Zaymon): Get initial center from data
+        const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
         const [center, setCenter] = useState<LatLngLiteral>({ lat, lng });
         const [zoom, setZoom] = useState(14);
 
