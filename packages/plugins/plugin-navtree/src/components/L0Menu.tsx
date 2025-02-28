@@ -109,7 +109,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
                 'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
                 type === 'tab' || pinned ? 'rounded' : 'rounded-full',
                 pinned
-                  ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0'
+                  ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
                   : 'bg-groupSurface inset-inline-3 inset-block-2',
               )}
               {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
@@ -195,7 +195,7 @@ export const L0Menu = ({
           }
         })}
       </div>
-      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] gap-0.5 pbs-2'>
+      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
           .map((item) => (
