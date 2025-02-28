@@ -15,7 +15,11 @@ import translations from '../../translations';
 
 const Story = (args: Partial<SpaceSettingsPanelProps>) => {
   const { space } = useClientProvider();
-  return <SpaceSettingsPanel {...args} space={space!} />;
+  return (
+    <div role='none' className='p-2 border border-primary-500 rounded'>
+      <SpaceSettingsPanel {...args} space={space!} />
+    </div>
+  );
 };
 
 const meta: Meta = {
