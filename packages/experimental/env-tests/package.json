@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/env-tests",
+  "version": "0.0.1",
+  "description": "Testing that our code compiles in different environments.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/conductor": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.12.3",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "peerDependencies": {
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.12.3",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
