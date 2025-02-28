@@ -11,12 +11,15 @@ import { type PublicKey } from '@dxos/react-client';
 
 import { type CallState } from './useCallState';
 import { type UserMedia } from './useUserMedia';
-import { type RxjsPeer } from '../util';
+import { type CloudflareCallsPeer } from '../util';
 
 export type CallContextType = {
   roomId: PublicKey;
   call: CallState;
-  peer: RxjsPeer;
+  /**
+   * Undefined until the peer is opened.
+   */
+  peer?: CloudflareCallsPeer;
   userMedia: UserMedia;
 
   joined: boolean;

@@ -20,7 +20,7 @@ import { mergeFloat64Arrays } from '../util';
 
 // This is a playground for testing the transcription, requires `calls-service` to be running.
 describe.skip('Transcriber', () => {
-  const DIR_PATH = path.join(__dirname, 'audio');
+  const DIR_PATH = path.join(__dirname, 'assets');
 
   const readFile = async (filename: string) => {
     return fs.readFileSync(path.join(DIR_PATH, filename));

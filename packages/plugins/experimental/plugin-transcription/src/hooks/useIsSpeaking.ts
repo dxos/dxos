@@ -18,6 +18,7 @@ export const useIsSpeaking = (mediaStreamTrack?: MediaStreamTrack) => {
   // this effect syncs the state on a 50ms interval
   useEffect(() => {
     if (!mediaStreamTrack) {
+      setIsSpeaking(false);
       return;
     }
 

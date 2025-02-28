@@ -33,7 +33,7 @@ export const CallToolbar = () => {
   } = useCallContext();
 
   // Screen sharing.
-  const isScreensharing = userMedia.screenshareVideoTrack !== undefined;
+  const isScreensharing = userMedia.state.screenshareVideoTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
@@ -64,7 +64,7 @@ export const CallToolbar = () => {
     [queue, self.name],
   );
   const transcriber = useTranscriber({
-    audioStreamTrack: userMedia.audioTrack,
+    audioStreamTrack: userMedia.state.audioTrack,
     onSegments: handleSegments,
   });
 
