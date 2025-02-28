@@ -47,7 +47,7 @@
         "dist/types/src/testing/index.d.ts"
       ],
       "types": [
-        "dist/types/src/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },

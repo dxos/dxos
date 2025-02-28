@@ -8,7 +8,7 @@ import { JSONPath } from 'jsonpath-plus';
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
 import { isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
-import { getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { getUserFunctionUrlInMetadata } from '@dxos/functions/edge';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { create, getMeta } from '@dxos/live-object';

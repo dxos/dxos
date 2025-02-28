@@ -3,7 +3,7 @@
 //
 
 import { JsonSchemaType, Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions/types';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 export const ComputeValueType = S.Literal('string', 'number', 'boolean', 'object');

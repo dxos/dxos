@@ -4,7 +4,7 @@
 
 import { Context } from 'effect';
 
-import { getInvocationUrl } from '@dxos/functions';
+import { getInvocationUrl } from '@dxos/functions/edge';
 import type { SpaceId } from '@dxos/keys';
 
 export class FunctionCallService extends Context.Tag('FunctionCallService')<
