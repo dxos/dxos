@@ -28,6 +28,7 @@
     }
   },
   "files": [
+    "assets",
     "dist",
     "src"
   ],

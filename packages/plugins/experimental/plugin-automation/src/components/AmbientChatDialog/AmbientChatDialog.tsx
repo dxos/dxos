@@ -10,8 +10,17 @@ import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
+import OFF from '../../../assets/off.wav';
+import ON from '../../../assets/on.wav';
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { Prompt } from '../Prompt';
+
+const playSound = (on?: boolean) => {
+  const audio = new Audio(on ? ON : OFF);
+  void audio.play().catch((error) => {
+    log.error('error playing click sound', { error });
+  });
+};
 
 const preventDefault = (event: Event) => event.preventDefault();
 
@@ -52,6 +61,7 @@ export const AmbientChatDialog = () => {
           },
         });
 
+        playSound(true);
         await transcriber.open();
         void transcriber?.startChunksRecording();
         log.info('recording...');
@@ -60,6 +70,7 @@ export const AmbientChatDialog = () => {
       void init();
     } else {
       if (transcriberRef.current) {
+        playSound(false);
         log.info('stopping');
         transcriberRef.current?.stopChunksRecording();
         void transcriberRef.current?.close();
