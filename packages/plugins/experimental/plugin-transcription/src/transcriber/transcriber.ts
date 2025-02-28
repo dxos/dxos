@@ -71,26 +71,27 @@ export class Transcriber extends Resource {
   private _lastUsedTimestamp = 0;
 
   private readonly _openTrigger = new Trigger({ autoReset: true });
+
+  private readonly _config: TranscribeConfig;
   private readonly _recorder: AudioRecorder;
   private readonly _onSegments: (segments: TranscriptSegment[]) => Promise<void>;
-  private readonly _config: TranscribeConfig;
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
 
   constructor({
+    config,
     recorder,
     onSegments,
-    config,
   }: {
+    config: TranscribeConfig;
     recorder: AudioRecorder;
     onSegments: (segments: TranscriptSegment[]) => Promise<void>;
-    config: TranscribeConfig;
   }) {
     super();
+    this._config = config;
     this._recorder = recorder;
     this._onSegments = onSegments;
-    this._config = config;
   }
 
   protected override async _open(ctx: Context) {

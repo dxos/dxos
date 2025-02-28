@@ -4,5 +4,7 @@
 
 export * from './transcription';
 
+export * from './useAudioFile';
+export * from './useAudioStream';
 export * from './useIsSpeaking';
-export * from './useTranscription';
+export * from './useTranscriber';

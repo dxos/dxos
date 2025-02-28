@@ -4,7 +4,7 @@
 
 import { lazy } from 'react';
 
-export * from './Transcription';
-export * from './TranscriptionContainer';
+export * from './Transcript';
+export * from './TranscriptContainer';
 
-export const TranscriptionContainer = lazy(() => import('./TranscriptionContainer'));
+export const TranscriptContainer = lazy(() => import('./TranscriptContainer'));

@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { useTranscription } from '@dxos/plugin-transcription';
+import { DXN } from '@dxos/keys';
+import { useTranscriber } from '@dxos/plugin-transcription';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { useCallContext, useBroadcastStatus } from '../../hooks';
@@ -41,12 +42,11 @@ export const CallToolbar = () => {
     onUpdateUserState: updateUserState,
   });
 
-  // Transcription.
-  useTranscription({
+  useTranscriber({
     author: self.name,
-    isSpeaking,
     audioStreamTrack: userMedia.audioTrack,
     transcription: transcription.state.value,
+    isSpeaking,
   });
 
   const handleLeave = () => {
@@ -56,10 +56,10 @@ export const CallToolbar = () => {
 
   const handleToggleTranscription = async () => {
     transcription.setEnabled(!transcription.state.value.enabled);
-    if (transcription.state.value.enabled && !transcription.state.value.objectDxn) {
+    if (transcription.state.value.enabled && !transcription.state.value.queueDxn) {
       const object = await onTranscription?.();
       if (object?.queue) {
-        transcription.setQueue(object.queue);
+        transcription.setQueue(DXN.parse(object.queue));
       }
     }
   };

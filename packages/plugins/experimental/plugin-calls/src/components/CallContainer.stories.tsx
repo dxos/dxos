@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Transcription } from '@dxos/plugin-transcription';
+import { Transcript } from '@dxos/plugin-transcription';
 import { TranscriptType, type TranscriptBlock } from '@dxos/plugin-transcription/types';
 import { Config, PublicKey, useClient } from '@dxos/react-client';
 import { create, Filter, makeRef, useQuery } from '@dxos/react-client/echo';
@@ -44,7 +44,7 @@ const Render = (props: CallContainerProps) => {
       </div>
       <div className='flex h-full w-[400px] border border-neutral-500'>
         <ScrollContainer>
-          <Transcription blocks={queue?.items} />
+          <Transcript blocks={queue?.items} />
         </ScrollContainer>
       </div>
     </div>

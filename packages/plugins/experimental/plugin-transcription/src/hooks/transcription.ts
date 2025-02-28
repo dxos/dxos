@@ -4,6 +4,7 @@
 
 import { signal, type ReadonlySignal } from '@preact/signals-core';
 
+import { type DXN } from '@dxos/keys';
 import { type TranscriptionState } from '@dxos/plugin-transcription/types';
 
 /**
@@ -34,7 +35,7 @@ export class CallTranscription {
     this.setState({ enabled });
   }
 
-  setQueue(objectDxn: string) {
-    this.setState({ objectDxn });
+  setQueue(queue: DXN) {
+    this.setState({ queueDxn: queue.toString() });
   }
 }
