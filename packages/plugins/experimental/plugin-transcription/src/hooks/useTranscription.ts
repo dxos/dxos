@@ -9,7 +9,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 
-import { MediaStreamRecorder, Transcriber } from '../ai';
+import { MediaStreamRecorder, Transcriber } from '../transcriber';
 import { TranscriptBlock, type TranscriptionState } from '../types';
 
 // TODO(burdon): Move to config.
@@ -22,7 +22,7 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50; // Number of chunks to transcribe aut
 
 export type UseTranscriptionProps = {
   transcription: TranscriptionState;
-  author: string;
+  author?: string;
   audioStreamTrack?: MediaStreamTrack;
   isSpeaking: boolean;
 };
@@ -30,6 +30,7 @@ export type UseTranscriptionProps = {
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
+// TODO(burdon): Refactor -- should return controller.
 export const useTranscription = ({ transcription, author, audioStreamTrack, isSpeaking }: UseTranscriptionProps) => {
   // Get queue.
   const edgeClient = useEdgeClient();

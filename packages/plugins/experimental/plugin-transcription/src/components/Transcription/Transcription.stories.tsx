@@ -15,7 +15,7 @@ import { Transcription } from './Transcription';
 import translations from '../../translations';
 
 const meta: Meta<typeof Transcription> = {
-  title: 'plugins/plugin-calls/Transcription',
+  title: 'plugins/plugin-transcription/Transcription',
   component: Transcription,
   render: (args) => (
     <div className='flex w-[500px] p-2'>

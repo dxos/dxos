@@ -6,6 +6,7 @@ export * from './utils';
 
 export * from './useBroadcastStatus';
 export * from './useCallContext';
+export * from './useCallTranscription';
 export * from './useCallsGlobalContext';
 export * from './useCallState';
 export * from './useDebugEnabled';

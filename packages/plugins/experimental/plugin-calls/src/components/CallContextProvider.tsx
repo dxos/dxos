@@ -5,7 +5,7 @@
 import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { useAi, useIsSpeaking } from '@dxos/plugin-transcription';
+import { useIsSpeaking } from '@dxos/plugin-transcription';
 import { useConfig } from '@dxos/react-client';
 
 import {
@@ -25,16 +25,13 @@ export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, '
 /**
  * Global context provider for calls.
  */
-// TODO(burdon): Need to provide global state for plugin and provider.
-// - First create simple plugin context that tracks the current roomId.
 export const CallContextProvider: FC<CallContextProviderProps> = ({ children, roomId, onTranscription }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
 
-  const ai = useAi();
-  const call = useCallState({ ai, roomId });
+  const call = useCallState({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.audioTrack);
   const { peer, iceConnectionState } = usePeerConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
