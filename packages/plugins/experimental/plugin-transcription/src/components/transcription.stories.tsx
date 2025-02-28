@@ -121,19 +121,22 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   });
 
   useEffect(() => {
-    if (transcriber) {
+    if (transcriber && playing) {
       void transcriber.open();
+    } else if (!playing) {
+      transcriber?.stopChunksRecording();
+      void transcriber?.close();
     }
-  }, [transcriber]);
+  }, [transcriber, playing]);
 
   // Manage transcription state.
   useEffect(() => {
     if (track?.readyState === 'live' && transcriber?.isOpen) {
       log.info('starting transcription');
-      void transcriber.startChunksRecording();
+      transcriber.startChunksRecording();
     } else if (track?.readyState !== 'live' && transcriber) {
       log.info('stopping transcription');
-      void transcriber.stopChunksRecording();
+      transcriber.stopChunksRecording();
     }
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
