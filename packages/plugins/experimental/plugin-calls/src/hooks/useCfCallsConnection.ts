@@ -4,9 +4,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { scheduleMicroTask } from '@dxos/async';
+import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 
 import { useStablePojo } from './useStablePojo';
 import { type CloudflareCallsConfig, CloudflareCallsPeer } from '../utils';
@@ -22,16 +21,16 @@ export const useCfCallsConnection = (config: CloudflareCallsConfig): PeerConnect
   const [peer, setPeer] = useState<CloudflareCallsPeer>();
 
   useEffect(() => {
-    let newPeer: CloudflareCallsPeer | undefined;
-    scheduleMicroTask(new Context(), async () => {
-      log.info('useCfCallsConnection', { stableConfig });
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
       void peer?.close();
-      newPeer = new CloudflareCallsPeer(stableConfig);
+      const newPeer = new CloudflareCallsPeer(stableConfig);
+      ctx.onDispose(() => newPeer?.close());
       await newPeer.open();
       setPeer(newPeer);
     });
     return () => {
-      void newPeer?.close();
+      void ctx.dispose();
     };
   }, [stableConfig]);
 

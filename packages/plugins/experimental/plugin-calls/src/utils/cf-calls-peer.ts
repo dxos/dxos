@@ -214,6 +214,7 @@ export class CloudflareCallsPeer extends Resource {
     return pushedTrackPromise;
   }
 
+  // TODO(mykola): Add cleanup.
   async pushTrack(
     track: MediaStreamTrack | null,
     encodings: RTCRtpEncodingParameters[] = [],
@@ -226,9 +227,9 @@ export class CloudflareCallsPeer extends Resource {
     // the first track to show up before we can proceed, so we
 
     if (previousTrack) {
-      const transceiver = this.session.peerConnection!.getTransceivers().find((t) => t.mid === previousTrack.mid);
+      const transceiver = this.session.peerConnection.getTransceivers().find((t) => t.mid === previousTrack.mid);
       if (transceiver) {
-        void transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
+        transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
         return previousTrack;
       }
     }
@@ -236,9 +237,7 @@ export class CloudflareCallsPeer extends Resource {
     invariant(track);
     const stableId = crypto.randomUUID();
 
-    const transceiver = this.session.peerConnection!.addTransceiver(track!, {
-      direction: 'sendonly',
-    });
+    const transceiver = this.session.peerConnection!.addTransceiver(track, { direction: 'sendonly' });
     log.verbose('🌱 creating transceiver!');
 
     const pushedTrackData = await this._pushTrackInBulk(
@@ -260,6 +259,7 @@ export class CloudflareCallsPeer extends Resource {
     return pushedTrackData;
   }
 
+  // TODO(mykola): Add retry logic.
   private async _pullTrackInBulk(
     peerConnection: RTCPeerConnection,
     sessionId: string,
@@ -354,7 +354,8 @@ export class CloudflareCallsPeer extends Resource {
     await this.waitUntilOpen();
 
     invariant(this.session);
-    return this._pullTrackInBulk(this.session.peerConnection!, this.session.sessionId!, trackData);
+    const session = this.session;
+    return this._pullTrackInBulk(session.peerConnection!, session.sessionId!, trackData);
   }
 
   private async _closeTrack(peerConnection: RTCPeerConnection, mid: string | null, sessionId: string) {

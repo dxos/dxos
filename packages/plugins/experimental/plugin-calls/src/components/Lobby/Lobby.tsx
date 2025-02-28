@@ -17,7 +17,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { call, userMedia, peer, setJoined } = useCallContext()!;
   const session = peer?.session;
   const sessionError = peer?.sessionError;
-  const numUsers = new Set(call.room.users?.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
+  const numUsers = call.room.users?.filter((user) => user.joined).length ?? 0;
 
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>

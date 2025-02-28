@@ -4,8 +4,8 @@
 
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
-import { scheduleMicroTask } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { scheduleTask, sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 
 import { useCallContext } from '../../hooks';
 
@@ -90,10 +90,17 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
       return;
     }
 
-    scheduleMicroTask(new Context(), async () => {
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      // Wait for the track to be available.
+      await cancelWithContext(ctx, sleep(500));
       audioTrack.current = await peer?.pullTrack(trackObject);
     });
-  }, [peer, trackObject]);
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [trackObject, peer?.session]);
 
   useEffect(() => {
     if (!audioTrack.current) {

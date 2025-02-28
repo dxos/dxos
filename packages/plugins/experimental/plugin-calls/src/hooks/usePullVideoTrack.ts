@@ -4,9 +4,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { scheduleMicroTask } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
+import { scheduleTask, sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 
 import { useCallContext } from './useCallContext';
 import { type TrackObject } from '../types';
@@ -33,11 +32,16 @@ export const usePulledVideoTrack = (video: string | undefined) => {
       return;
     }
 
-    scheduleMicroTask(new Context(), async () => {
-      log.info('>>> pulling track', { trackObject });
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      await cancelWithContext(ctx, sleep(500));
       setPulledTrack(await peer.pullTrack(trackObject));
     });
-  }, [peer, trackObject]);
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [trackObject, peer?.session]);
 
   return pulledTrack;
 };

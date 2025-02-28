@@ -4,11 +4,10 @@
 import { untracked } from '@preact/signals-core';
 import { useEffect, useMemo } from 'react';
 
-import { scheduleMicroTask } from '@dxos/async';
+import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
-import { log } from '@dxos/log';
 
 import { getScreenshare, getUserMediaTrack } from '../utils';
 
@@ -48,7 +47,6 @@ export const useUserMedia = (): UserMedia => {
     state.audioEnabled = false;
   };
   const turnCameraOn = () => {
-    log.info('turnCameraOn');
     state.videoEnabled = true;
   };
   const turnCameraOff = () => {
@@ -66,7 +64,7 @@ export const useUserMedia = (): UserMedia => {
   //
   useEffect(() => {
     const ctx = new Context();
-    scheduleMicroTask(ctx, async () => {
+    scheduleTask(ctx, async () => {
       if (state.audioEnabled) {
         const track = await getUserMediaTrack('audioinput');
         state.audioTrack = track;
@@ -88,7 +86,7 @@ export const useUserMedia = (): UserMedia => {
   const blackCanvasStreamTrack = useBlackCanvasStreamTrack();
   useEffect(() => {
     const ctx = new Context();
-    scheduleMicroTask(ctx, async () => {
+    scheduleTask(ctx, async () => {
       if (state.videoEnabled) {
         const track = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
         state.videoTrack = track;
@@ -110,7 +108,7 @@ export const useUserMedia = (): UserMedia => {
   useEffect(() => {
     const ctx = new Context();
     let ms: MediaStream | undefined;
-    scheduleMicroTask(ctx, async () => {
+    scheduleTask(ctx, async () => {
       if (state.screenshareEnabled) {
         ms = await getScreenshare({ contentHint: 'text' });
         state.screenshareVideoTrack = ms?.getVideoTracks()[0];
