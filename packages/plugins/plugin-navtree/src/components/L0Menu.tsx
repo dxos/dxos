@@ -85,6 +85,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
         ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
         : { onClick: handleClick };
   const localizedString = toLocalizedString(item.properties.label, t);
+  const hue = item.properties.hue ?? null;
   const avatarValue = useMemo(
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('') : []),
     [type, item.properties.label, t],
@@ -105,10 +106,13 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             <div
               role='none'
               className={mx(
-                'absolute -z-[1] group-hover/l0i:bg-groupSurface dx-focus-ring-group-indicator transition-colors',
+                'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
                 type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-                pinned ? 'bg-transparent inset-inline-3 inset-block-0' : 'bg-groupSurface inset-inline-3 inset-block-2',
+                pinned
+                  ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0'
+                  : 'bg-groupSurface inset-inline-3 inset-block-2',
               )}
+              {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
             />
           )}
           <div
@@ -116,7 +120,11 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
           />
           {type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-            <span role='img' className='place-self-center text-3xl font-light'>
+            <span
+              role='img'
+              className='place-self-center text-3xl font-light'
+              {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
+            >
               {avatarValue}
             </span>
           ) : (
@@ -187,7 +195,7 @@ export const L0Menu = ({
           }
         })}
       </div>
-      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
+      <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] gap-0.5 pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
           .map((item) => (

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useRef, useState } from 'react';
 
@@ -10,12 +9,13 @@ import {
   Button,
   type ButtonProps,
   DropdownMenu,
+  Icon,
   type ThemedClassName,
   Toolbar,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { getSize, hues, mx } from '@dxos/react-ui-theme';
+import { hues, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const size = 20;
@@ -84,7 +84,7 @@ export const HuePickerToolbarButton = ({
           <DropdownMenu.Trigger asChild>
             <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
               <span className='sr-only'>{t('select hue label')}</span>
-              <Palette className={getSize(5)} />
+              <Icon icon='ph--palette--regular' size={5} />
             </Toolbar.Button>
           </DropdownMenu.Trigger>
         </Tooltip.Trigger>
@@ -137,38 +137,46 @@ export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClick
           <Button variant='ghost' classNames='gap-2 plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select hue label')}</span>
             <div role='none' className='pis-14 grow flex items-center justify-center gap-2'>
-              <HuePreview hue={hueValue!} />
-              <span>{t(`${hueValue} label`)}</span>
+              {hue ? (
+                <>
+                  <HuePreview hue={hueValue!} />
+                  <span>{t(`${hueValue} label`)}</span>
+                </>
+              ) : (
+                <span>{t('select a hue label')}</span>
+              )}
             </div>
-            <CaretDown className={getSize(4)} />
+            <Icon icon='ph--caret-down--regular' size={4} />
           </Button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content side='right'>
-          <DropdownMenu.Viewport>
-            {hues.map((hue) => {
-              return (
-                <DropdownMenu.CheckboxItem
-                  key={hue}
-                  checked={hue === hueValue}
-                  onCheckedChange={() => setHueValue(hue)}
-                >
-                  <HuePreview hue={hue} />
-                  <span className='grow'>{t(`${hue} label`)}</span>
-                  <DropdownMenu.ItemIndicator>
-                    <Check />
-                  </DropdownMenu.ItemIndicator>
-                </DropdownMenu.CheckboxItem>
-              );
-            })}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content side='right'>
+            <DropdownMenu.Viewport>
+              {hues.map((hue) => {
+                return (
+                  <DropdownMenu.CheckboxItem
+                    key={hue}
+                    checked={hue === hueValue}
+                    onCheckedChange={() => setHueValue(hue)}
+                  >
+                    <HuePreview hue={hue} />
+                    <span className='grow'>{t(`${hue} label`)}</span>
+                    <DropdownMenu.ItemIndicator>
+                      <Icon icon='ph--check--regular' size={4} />
+                    </DropdownMenu.ItemIndicator>
+                  </DropdownMenu.CheckboxItem>
+                );
+              })}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
           <Button variant='ghost' onClick={onClickClear} disabled={disabled}>
             <span className='sr-only'>{t('clear label')}</span>
-            <ArrowCounterClockwise />
+            <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
