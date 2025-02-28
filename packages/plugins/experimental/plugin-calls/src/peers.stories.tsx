@@ -16,7 +16,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { useCfCallsConnection, useStablePojo } from './hooks';
+import { useCfCallsConnection } from './hooks';
 // @ts-ignore
 import video from './tests/assets/video.mp4';
 import { CALLS_URL } from './types';
@@ -50,10 +50,10 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
 
 const Render = ({ videoSrc }: { videoSrc: string }) => {
   const config = useConfig();
-  const cfCallsConfig = useStablePojo({
+  const cfCallsConfig = {
     iceServers: config.get('runtime.services.ice'),
     apiBase: `${CALLS_URL}/api/calls`,
-  });
+  };
 
   const { peer: peerPush } = useCfCallsConnection(cfCallsConfig);
   const { peer: peerPull } = useCfCallsConnection(cfCallsConfig);
@@ -65,20 +65,19 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
   // Get video stream track
   const videoStreamTrack = useVideoStreamTrack(pushVideoElement.current);
 
+  const hadRun = useRef(false);
   // Push/pull video stream track to cloudflare.
   useEffect(() => {
-    if (!videoStreamTrack) {
-      log.info('no videoStreamTrack');
+    if (hadRun.current || !videoStreamTrack || !peerPush || !peerPull) {
       return;
     }
-    const ctx = new Context();
+    hadRun.current = true;
 
+    const ctx = new Context();
     scheduleTask(ctx, async () => {
       log.info('starting push/pull', { videoStreamTrack });
 
       performance.mark('webrtc:begin');
-      await peerPush.waitUntilOpen();
-      await peerPull.waitUntilOpen();
       performance.mark('webrtc:end');
       const webrtcTime = performance.measure('webrtc', 'webrtc:begin', 'webrtc:end').duration;
       setMetrics((prev) => ({ ...prev, 'time to open webrtc [ms]': webrtcTime }));
@@ -107,22 +106,16 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
       performance.mark('playVideo:begin');
       pullVideoElement.current.srcObject = new MediaStream([pulledTrack]);
-      pullVideoElement.current
-        .play()
-        .then(() => {
-          performance.mark('playVideo:end');
-          const playTime = performance.measure('playVideo', 'playVideo:begin', 'playVideo:end').duration;
-          setMetrics((prev) => ({ ...prev, 'time to play pulled video [ms]': playTime }));
-        })
-        .catch((err) => {
-          log.error('Error playing video', { err });
-        });
+      await pullVideoElement.current.play();
+      performance.mark('playVideo:end');
+      const playTime = performance.measure('playVideo', 'playVideo:begin', 'playVideo:end').duration;
+      setMetrics((prev) => ({ ...prev, 'time to play pulled video [ms]': playTime }));
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [videoStreamTrack]);
+  }, [videoStreamTrack, peerPush, peerPull]);
 
   return (
     <div className='flex flex-col gap-4 w-[400px] justify-center'>
