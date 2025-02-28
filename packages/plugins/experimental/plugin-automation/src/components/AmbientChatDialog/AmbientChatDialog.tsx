@@ -12,8 +12,8 @@ import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
+import ON from '../../../assets/click.wav';
 import OFF from '../../../assets/off.wav';
-import ON from '../../../assets/on.wav';
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { Prompt } from '../Prompt';
 
@@ -63,14 +63,16 @@ export const AmbientChatDialog = () => {
     scheduleMicroTask(ctx, async () => {
       if (active && transcriber) {
         await transcriber.open();
-        log('starting...');
+        log.info('starting...');
         setRecording(true);
+        playSound(true);
         transcriber.startChunksRecording();
-      } else if (!active) {
+      } else if (!active && transcriber?.isOpen) {
         transcriber?.stopChunksRecording();
         await transcriber?.close();
-        log('stopped');
+        log.info('stopped');
         setRecording(false);
+        playSound(false);
       }
     });
 
