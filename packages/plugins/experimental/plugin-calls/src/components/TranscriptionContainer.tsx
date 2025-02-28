@@ -2,29 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback, useMemo, useState, type FC } from 'react';
-
-import { DXN } from '@dxos/keys';
-import { useEdgeClient, useQueue, type EdgeHttpClient } from '@dxos/react-edge-client';
-import { ScrollContainer } from '@dxos/react-ui-components';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
-import { AIServiceClient, AIServiceClientImpl, MixedStreamParser } from '@dxos/assistant';
+import { type AIServiceClient, AIServiceClientImpl, MixedStreamParser } from '@dxos/assistant';
 import { create, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { useConfig } from '@dxos/react-client';
+import { useEdgeClient, useQueue, type EdgeHttpClient } from '@dxos/react-edge-client';
 import { Button } from '@dxos/react-ui';
+import { ScrollContainer } from '@dxos/react-ui-components';
+import { StackItem } from '@dxos/react-ui-stack';
 import { TextType } from '@dxos/schema';
-import { pipe } from 'effect';
-import { TranscriptBlock, type TranscriptType } from '../types';
+
 import { Transcription } from './Transcription';
+import { TranscriptBlock, type TranscriptType } from '../types';
 
 const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
   const edge = useEdgeClient();
