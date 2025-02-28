@@ -60,7 +60,7 @@ export class MixedStreamParser {
   /**
    * Parse stream until end.
    */
-  async parse(stream: GenerationStream) {
+  async parse(stream: GenerationStream): Promise<Message[]> {
     const transformer = new StreamTransform();
 
     /**
@@ -73,6 +73,8 @@ export class MixedStreamParser {
      */
     let streamBlock: StreamBlock | undefined;
     const stack: StreamBlock[] = [];
+
+    let messagesCollected: Message[] = [];
 
     for await (const event of stream) {
       // log.info('event', { type: event.type, event });
@@ -103,6 +105,7 @@ export class MixedStreamParser {
           if (!this._message) {
             log.warn('unexpected message_stop');
           } else {
+            messagesCollected.push(this._message);
             this._message = undefined;
           }
           break;
@@ -247,6 +250,8 @@ export class MixedStreamParser {
         this._emitUpdate(contentBlock, streamBlock);
       }
     } // for.
+
+    return messagesCollected;
   }
 }
 
