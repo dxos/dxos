@@ -53,7 +53,7 @@ export default () => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
           const intent = pipe(
-            createIntent(MapAction.Create, { coordinates: [longitude, latitude] }),
+            createIntent(MapAction.Create, { space: extensions.space, coordinates: [longitude, latitude] as const }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
           );
           const { data, error } = await extensions.dispatch(intent);

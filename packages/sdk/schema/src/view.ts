@@ -67,13 +67,18 @@ export class ViewType extends TypedObject({
    */
   fields: S.mutable(S.Array(FieldSchema)),
 
+  /**
+   * Additional metadata for the view.
+   */
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
 }) {}
 
 type CreateViewProps = {
   name: string;
-  typename: string;
+  typename?: string;
   jsonSchema?: JsonSchemaType;
   fields?: string[];
 };
