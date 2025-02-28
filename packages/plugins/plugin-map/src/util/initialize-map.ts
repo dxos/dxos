@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormatEnum, type GeoPoint, type JsonProp } from '@dxos/echo-schema';
+import { FormatEnum, type GeoPoint } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
-import { createView, ViewProjection, getSchemaProperties } from '@dxos/schema';
+import { createView } from '@dxos/schema';
 
 import { MapType } from '../types';
 
@@ -42,32 +42,32 @@ export const initializeMap = async ({
 
     view.query.type = initialSchema;
 
-    // Only auto-find a LatLng property if none is specified
     if (propertyOfInterest) {
-      const viewProjection = new ViewProjection(schema, view);
-      const fieldId = viewProjection.getFieldId(propertyOfInterest as JsonProp);
-
-      if (fieldId) {
-        view.query.metadata = {
-          // TODO(ZaymonFC): Is there a more precise name for this?
-          fieldOfInterest: fieldId,
-        };
-      }
+      view.query.metadata = {
+        // TODO(ZaymonFC): Is there a more precise name for this?
+        fieldOfInterest: propertyOfInterest,
+      };
     } else {
       // Find a property with LatLng format
-      const coordinateProp = getSchemaProperties(schema.ast).find((prop) => prop.format === FormatEnum.LatLng)?.name;
+      const coordinateProperties: string[] = [];
+      if (schema.jsonSchema?.properties) {
+        // Look for properties that use the LatLng format enum
+        const properties = Object.entries(schema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
+          if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
+            acc.push(key);
+          }
+          return acc;
+        }, []);
 
+        coordinateProperties.push(...properties);
+      }
+
+      const coordinateProp = coordinateProperties.at(0);
       if (coordinateProp) {
-        // Use ViewProjection to get stable field ID
-        const viewProjection = new ViewProjection(schema, view);
-        const fieldId = viewProjection.getFieldId(coordinateProp as JsonProp);
-
-        if (fieldId) {
-          view.query.metadata = {
-            // TODO(ZaymonFC): Is there a more precise name for this?
-            fieldOfInterest: fieldId,
-          };
-        }
+        view.query.metadata = {
+          // TODO(ZaymonFC): Is there a more precise name for this?
+          fieldOfInterest: coordinateProp,
+        };
       }
     }
   }

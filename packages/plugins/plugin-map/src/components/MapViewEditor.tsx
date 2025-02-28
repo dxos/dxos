@@ -20,6 +20,13 @@ type MapViewEditorProps = { map: MapType };
 export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   const space = getSpace(map);
   const currentTypename = useMemo(() => map?.view?.target?.query?.type, [map?.view?.target?.query?.type]);
+  const currentCoordinateProperty = useMemo(() => {
+    const meta = map?.view?.target?.query?.metadata;
+    if (!meta) {
+      return;
+    }
+    return meta.fieldOfInterest;
+  }, [map?.view?.target?.query?.metadata]);
   const currentSchema = useSchema(space, currentTypename);
 
   const [allSchemata, setAllSchemata] = useState<EchoSchema[]>([]);
@@ -74,7 +81,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateColumn: map.view?.target?.query?.metadata?.fieldOfInterest }),
+    () => ({ coordinateSource: currentTypename, coordinateColumn: currentCoordinateProperty }),
     [map],
   );
 
