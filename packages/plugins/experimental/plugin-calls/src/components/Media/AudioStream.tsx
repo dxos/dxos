@@ -3,9 +3,11 @@
 //
 
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
-import { of } from 'rxjs';
 
-import { useCallContext, useSubscribedState } from '../../hooks';
+import { scheduleTask, sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
+
+import { useCallContext } from '../../hooks';
 
 export type AudioStreamProps = {
   tracksToPull: string[];
@@ -82,23 +84,38 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
     } as const;
   }, [track]);
 
-  const pulledTrack$ = useMemo(() => {
-    return peer.pullTrack(of(trackObject));
-  }, [peer, trackObject]);
-
-  const audioTrack = useSubscribedState(pulledTrack$);
+  const audioTrack = useRef<MediaStreamTrack>();
   useEffect(() => {
-    if (!audioTrack) {
+    if (!trackObject) {
       return;
     }
 
-    mediaStream.addTrack(audioTrack);
-    onTrackAddedRef.current(track, audioTrack);
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      // TODO(mykola): Add retry logic. Delete delay.
+      // Wait for the track to be available on CF.
+      await cancelWithContext(ctx, sleep(500));
+      audioTrack.current = await peer?.pullTrack(trackObject);
+    });
+
     return () => {
-      mediaStream.removeTrack(audioTrack);
-      onTrackRemovedRef.current(track, audioTrack);
+      void ctx.dispose();
     };
-  }, [audioTrack, mediaStream, track]);
+  }, [trackObject, peer?.session]);
+
+  useEffect(() => {
+    if (!audioTrack.current) {
+      return;
+    }
+    const currentAudioTrack = audioTrack.current;
+
+    mediaStream.addTrack(currentAudioTrack);
+    onTrackAddedRef.current(track, currentAudioTrack);
+    return () => {
+      mediaStream.removeTrack(currentAudioTrack);
+      onTrackRemovedRef.current(track, currentAudioTrack);
+    };
+  }, [audioTrack.current, mediaStream, track]);
 
   return null;
 };
