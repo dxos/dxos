@@ -12,13 +12,13 @@ export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
-      resolve: async ({ space, name, coordinates, initialSchema, propertyOfInterest }) => {
+      resolve: async ({ space, name, coordinates, initialSchema, locationProperty }) => {
         const { map } = await initializeMap({
           space,
           name,
           coordinates,
           initialSchema,
-          propertyOfInterest,
+          locationProperty,
         });
         return {
           data: { object: map },

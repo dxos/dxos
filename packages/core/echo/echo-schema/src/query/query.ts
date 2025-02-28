@@ -24,10 +24,6 @@ const QuerySchema = S.Struct({
   // typename: S.String,
   type: S.optional(S.String),
   sort: S.optional(S.Array(FieldSort)),
-
-  // TODO(ZaymonFC): Maybe this shouldn't be optional?
-  //   Not sure how to migrate old views.
-  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
 }).pipe(S.mutable);
 
 export interface QueryType extends S.Schema.Type<typeof QuerySchema> {}

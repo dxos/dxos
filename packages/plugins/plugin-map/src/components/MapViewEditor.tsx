@@ -9,6 +9,7 @@ import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 
 import { type MapType } from '../types';
+import { getLocationProperty, setLocationProperty } from '../util';
 
 export const MapSettingsSchema = S.Struct({
   coordinateSource: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Coordinate source type' })),
@@ -20,13 +21,7 @@ type MapViewEditorProps = { map: MapType };
 export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   const space = getSpace(map);
   const currentTypename = useMemo(() => map?.view?.target?.query?.type, [map?.view?.target?.query?.type]);
-  const currentCoordinateProperty = useMemo(() => {
-    const meta = map?.view?.target?.query?.metadata;
-    if (!meta) {
-      return;
-    }
-    return meta.fieldOfInterest;
-  }, [map?.view?.target?.query?.metadata]);
+  const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
   const currentSchema = useSchema(space, currentTypename);
 
   const [allSchemata, setAllSchemata] = useState<EchoSchema[]>([]);
@@ -71,10 +66,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
       if (map.view?.target && values.coordinateColumn) {
-        if (!map.view.target.query.metadata) {
-          map.view.target.query.metadata = {};
-        }
-        map.view.target.query.metadata.fieldOfInterest = values.coordinateColumn;
+        setLocationProperty(map.view.target, values.coordinateColumn);
       }
     },
     [map],

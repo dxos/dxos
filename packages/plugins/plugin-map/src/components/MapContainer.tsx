@@ -13,6 +13,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
 import { type MapType } from '../types';
+import { getLocationProperty } from '../util';
 
 export type MapControlType = 'globe' | 'map';
 
@@ -30,7 +31,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
 
   useEffect(() => {
-    const coordinateColumn = map?.view?.target?.query?.metadata?.fieldOfInterest;
+    const coordinateColumn = getLocationProperty(map?.view?.target);
     if (!coordinateColumn) {
       return;
     }
@@ -59,7 +60,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
       .filter(isNotNullable);
 
     setMarkers(newMarkers);
-  }, [rowsForType, map?.view?.target?.query?.metadata]);
+  }, [rowsForType, map?.view?.target]);
 
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>

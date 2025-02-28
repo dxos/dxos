@@ -9,11 +9,8 @@ import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
 
-// Define annotation IDs as symbols
 export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-map/annotation/InitialSchema');
-
-// TODO(ZaymonFC): Maybe this should be called coordinateProperty?
-export const PropertyOfInterestAnnotationId = Symbol.for('@dxos/plugin-map/annotation/PropertyOfInterest');
+export const LocationPropertyAnnotationId = Symbol.for('@dxos/plugin-map/annotation/LocationProperty');
 
 // Create schema for map creation
 export const CreateMapSchema = S.Struct({
@@ -24,10 +21,10 @@ export const CreateMapSchema = S.Struct({
       [AST.TitleAnnotationId]: 'Schema', // TODO(ZaymonFC): Title... hmm.
     }),
   ),
-  propertyOfInterest: S.optional(
+  locationProperty: S.optional(
     S.String.annotations({
-      [PropertyOfInterestAnnotationId]: true,
-      [AST.TitleAnnotationId]: 'Coordinate property',
+      [LocationPropertyAnnotationId]: true,
+      [AST.TitleAnnotationId]: 'Location property',
     }),
   ),
 });

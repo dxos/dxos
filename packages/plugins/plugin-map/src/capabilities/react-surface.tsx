@@ -16,7 +16,7 @@ import { MapCapabilities } from './capabilities';
 import { MapContainer, MapControl } from '../components';
 import { MapViewEditor } from '../components/MapViewEditor';
 import { MAP_PLUGIN } from '../meta';
-import { InitialSchemaAnnotationId, MapType, PropertyOfInterestAnnotationId } from '../types';
+import { InitialSchemaAnnotationId, MapType, LocationPropertyAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -84,7 +84,7 @@ export default () =>
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, PropertyOfInterestAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, LocationPropertyAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
