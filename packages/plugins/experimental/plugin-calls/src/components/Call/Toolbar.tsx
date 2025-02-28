@@ -119,7 +119,7 @@ export const CallToolbar = () => {
   const handleLeave = () => {
     userMedia.turnScreenshareOff();
     setJoined(false);
-    leaveSound.play();
+    void leaveSound.play();
   };
 
   const handleToggleTranscription = async () => {

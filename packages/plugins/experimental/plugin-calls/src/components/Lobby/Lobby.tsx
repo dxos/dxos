@@ -23,7 +23,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const joinSound = useSoundEffect('JoinCall');
   const handleJoin = useCallback(() => {
     setJoined(true);
-    joinSound.play();
+    void joinSound.play();
   }, [setJoined, joinSound]);
 
   return (

@@ -61,14 +61,14 @@ export const AmbientChatDialog = () => {
         await transcriber.open();
         log.info('starting...');
         setRecording(true);
-        soundStart.play();
+        void soundStart.play();
         transcriber.startChunksRecording();
       } else if (!active && transcriber?.isOpen) {
         transcriber?.stopChunksRecording();
         await transcriber?.close();
         log.info('stopped');
         setRecording(false);
-        soundStop.play();
+        void soundStop.play();
       }
     });
 
