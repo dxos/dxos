@@ -120,7 +120,7 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
 const createTriggerSpec = (kind: TriggerKind): TriggerType => {
   switch (kind) {
     case TriggerKind.Timer:
-      return { type: TriggerKind.Timer, cron: '0 0 * * *' } satisfies TimerTrigger;
+      return { type: TriggerKind.Timer, cron: '*/10 * * * *' } satisfies TimerTrigger;
     case TriggerKind.Webhook:
       return { type: TriggerKind.Webhook, method: 'POST' } satisfies WebhookTrigger;
     case TriggerKind.Subscription:

@@ -22,7 +22,8 @@
         "stories:mkdist"
       ]
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

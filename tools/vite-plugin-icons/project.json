@@ -21,6 +21,7 @@
       ],
       "executor": "nx:noop"
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   }
 }

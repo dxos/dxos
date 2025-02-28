@@ -2,11 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DescriptionAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
+
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnum, FormatEnums, formatToType, S, TypedObject, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, formatToType, S, TypedObject, TypeEnum, SelectOptionSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { hues } from '@dxos/react-ui-theme';
 
 const availableFormats = FormatEnums;
+
+// TODO(ZaymonFC): Move this somewhere common.
+export const TypeNameSchema = S.String.pipe(
+  S.pattern(/^[\da-z.-]+\.[a-z]{2,6}(\/[A-Za-z][\w-]*)*$/i),
+  S.annotations({
+    [TitleAnnotationId]: 'TypeName',
+    [DescriptionAnnotationId]: 'Domain-style type name path',
+  }),
+);
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
@@ -14,6 +26,15 @@ const PropertyDefinitionSchema = S.Struct({
   format: S.Enums(FormatEnum).annotations({
     description: 'The format of the property (call schema_formats for full list).',
   }),
+  config: S.optional(
+    S.Struct({
+      options: S.optional(
+        S.Array(SelectOptionSchema).annotations({
+          description: `Options for SingleSelect/MultiSelect formats. Available colors: ${hues.join(', ')}`,
+        }),
+      ),
+    }),
+  ),
 }).pipe(S.mutable);
 
 // TODO(ZaymonFC): If this works well, move this to global tools.
@@ -73,7 +94,7 @@ export const schemaTools = [
     name: 'schema_create',
     description: 'Create a new schema with the provided definition.',
     schema: S.Struct({
-      typename: S.String.annotations({
+      typename: TypeNameSchema.annotations({
         description:
           'The fully qualified schema typename. Must start with a domain, and then one or more path components. eg: example.com/type-name.',
       }),
@@ -102,6 +123,24 @@ export const schemaTools = [
 
       const schema = TypedObject({ typename, version: '0.1.0' })(fields);
       const [registeredSchema] = await space.db.schemaRegistry.register([schema]);
+
+      // TODO(ZaymonFC): This is a temporary workaround.
+      //   We should consolidate schema manipulation logic between here and the ViewProjection.
+      //   Currently this just implements the SingleSelect format, but we need to extend this
+      //   to all formats.
+      for (const prop of properties) {
+        if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.SingleSelect;
+          registeredSchema.jsonSchema.properties![prop.name].oneOf = prop.config.options.map(
+            ({ id, title, color }) => ({ const: id, title, color }),
+          );
+        }
+
+        if (prop.format === FormatEnum.LatLng) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLng;
+          registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
+        }
+      }
 
       return ToolResult.Success(registeredSchema);
     },

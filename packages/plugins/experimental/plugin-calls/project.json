@@ -22,6 +22,7 @@
       }
     },
     "lint": {},
+    "pack": {},
     "test": {}
   },
   "implicitDependencies": [

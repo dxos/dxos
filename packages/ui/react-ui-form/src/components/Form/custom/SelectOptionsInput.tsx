@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, Icon, IconButton, Input, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePickerToolbarButton } from '@dxos/react-ui-pickers';
-import { hueTokenThemes, mx } from '@dxos/react-ui-theme';
+import { hues, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
@@ -32,20 +32,17 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
 
   const randomHue = () => {
     const usedHues = new Set(options?.map((option) => option.color) ?? []);
-    const hueKeys = Object.keys(hueTokenThemes) as Array<keyof typeof hueTokenThemes>;
-
     // Pick a random unused option from hueTokenThemes.
-    const unusedHues = hueKeys.filter((hue) => !usedHues.has(hue));
+    const unusedHues = hues.filter((hue) => !usedHues.has(hue));
     if (unusedHues.length > 0) {
       return unusedHues[Math.floor(Math.random() * unusedHues.length)];
     }
 
     // Pick a random one that hasn't been used in the last three options
     const lastThree = new Set(options?.slice(-3).map((option) => option.color) ?? []);
-    const availableHues = hueKeys.filter((hue) => !lastThree.has(hue));
+    const availableHues = hues.filter((hue) => !lastThree.has(hue));
     return (
-      availableHues[Math.floor(Math.random() * availableHues.length)] ??
-      hueKeys[Math.floor(Math.random() * hueKeys.length)]
+      availableHues[Math.floor(Math.random() * availableHues.length)] ?? hues[Math.floor(Math.random() * hues.length)]
     );
   };
 
@@ -154,6 +151,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               onChange={handleTitleChange(item.id)}
                               onKeyDown={handleKeyDown}
                               classNames='flex-1'
+                              data-no-submit
                             />
                             <Toolbar.Root classNames='p-0 m-0 !is-auto'>
                               <HuePickerToolbarButton hue={item.color} onChangeHue={handleColorChange(item.id)} />
