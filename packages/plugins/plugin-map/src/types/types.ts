@@ -18,7 +18,7 @@ export const CreateMapSchema = S.Struct({
   initialSchema: S.optional(
     S.String.annotations({
       [InitialSchemaAnnotationId]: true,
-      [AST.TitleAnnotationId]: 'Schema', // TODO(ZaymonFC): Title... hmm.
+      [AST.TitleAnnotationId]: 'Schema',
     }),
   ),
   locationProperty: S.optional(
