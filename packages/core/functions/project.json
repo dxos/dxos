@@ -21,6 +21,7 @@
       }
     },
     "lint": {},
+    "pack": {},
     "postbuild": {
       "executor": "nx:run-script",
       "options": {
