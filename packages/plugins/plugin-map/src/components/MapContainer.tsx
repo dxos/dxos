@@ -43,15 +43,12 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
           return undefined;
         }
 
-        // TODO(ZaymonFC): Why is table storing it as a string and not an object?
-        //   This will need to be updated once we fix that
-        const coordinates = geopoint?.split(',').map(Number);
-        if (!coordinates || coordinates.length < 2) {
+        if (!Array.isArray(geopoint) || geopoint.length < 2) {
           return undefined;
         }
 
-        const [lat, lng] = coordinates;
-        if (!lat || !lng) {
+        const [lng, lat] = geopoint;
+        if (typeof lng !== 'number' || typeof lat !== 'number') {
           return undefined;
         }
 
