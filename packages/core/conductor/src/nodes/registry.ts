@@ -11,6 +11,7 @@ import { isInstanceOf, ObjectId, S, toEffectSchema, type ObjectMeta } from '@dxo
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { create, getMeta } from '@dxos/live-object';
+import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -245,6 +246,21 @@ export const registry: Record<NodeType, Executable> = {
                 spaceService.db.schemaRegistry
                   .query({
                     typename: (await container.view?.load())?.query.type,
+                  })
+                  .first(),
+              );
+
+              for (const item of items) {
+                const { id: _id, '@type': _type, ...rest } = item as any;
+                // TODO(dmaretskyi): Forbid type on create.
+                spaceService.db.add(create(schema, rest));
+              }
+              yield* Effect.promise(() => spaceService.db.flush());
+            } else if (isInstanceOf(KanbanType, container)) {
+              const schema = yield* Effect.promise(async () =>
+                spaceService.db.schemaRegistry
+                  .query({
+                    typename: (await container.cardView?.load())?.query.type,
                   })
                   .first(),
               );

@@ -16,6 +16,8 @@ import { Effect, Config, Redacted } from 'https://esm.sh/effect@3.13.3';
 const MessageSchema = S.Struct({
   id: S.String,
   foreignId: S.Number,
+  from: S.String,
+  created: S.String,
   content: S.String,
 }).pipe(EchoObject('example.com/type/Message', '0.1.0'));
 
@@ -62,6 +64,8 @@ export default defineFunction({
               createStatic(MessageSchema, {
                 id: ObjectId.random(),
                 foreignId: parseInt(message.id),
+                from: message.author.username,
+                created: message.timestamp,
                 content: message.content,
               }),
             )

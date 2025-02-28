@@ -32,6 +32,9 @@
       "path": "../../experimental/assistant"
     },
     {
+      "path": "../../ui/react-ui-kanban"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {

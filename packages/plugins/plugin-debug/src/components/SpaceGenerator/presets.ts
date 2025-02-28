@@ -45,6 +45,7 @@ export enum PresetName {
   FOREX_FUNCTION_CALL = 'forex-function-call',
   TIMER_TICK_QUEUE = 'timerTick-queue',
   DISCORD_MESSAGES = 'discord-messages',
+  KANBAN_QUEUE = 'kanban-queue',
 }
 
 export const presets = {
@@ -303,6 +304,7 @@ export const presets = {
         return objects;
       },
     ],
+
     [
       PresetName.FOREX_FUNCTION_CALL,
       async (space, n, cb) => {
@@ -333,6 +335,7 @@ export const presets = {
         return objects;
       },
     ],
+
     [
       PresetName.DISCORD_MESSAGES,
       async (space, n, cb) => {
@@ -371,6 +374,54 @@ export const presets = {
           attachTrigger(functionTrigger, computeModel);
 
           return addToSpace(PresetName.DISCORD_MESSAGES, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+
+    [
+      PresetName.KANBAN_QUEUE,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          // TODO(wittjosiah): Integrate directly w/ Kanban.
+          // const results = space.db.query(Filter.schema(KanbanType)).runSync();
+          // const kanban = results.find((r) => r.object?.cardView?.target?.query?.type?.endsWith('Message'));
+          // invariant(kanban, 'Kanban not found.');
+
+          const results = space.db.query(Filter.schema(TableType)).runSync();
+          const messages = results.find((r) => r.object?.view?.target?.query?.type?.endsWith('Message'));
+          invariant(messages, 'Table not found.');
+
+          let functionTrigger: FunctionTrigger | undefined;
+          canvasModel.builder.call((builder) => {
+            const triggerShape = createTrigger({
+              triggerKind: TriggerKind.Queue,
+              ...position({ x: -10, y: -5 }),
+            });
+            const trigger = canvasModel.createNode(triggerShape);
+
+            const tableId = canvasModel.createNode(
+              createConstant({
+                value: DXN.fromLocalObjectId(messages.id).toString(),
+                ...position({ x: -10, y: 5 }),
+              }),
+            );
+            const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 0 })));
+
+            builder
+              .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
+              .createEdge({ source: trigger.id, target: appendToTable.id, input: 'items', output: 'item' });
+
+            functionTrigger = triggerShape.functionTrigger!.target!;
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+          attachTrigger(functionTrigger, computeModel);
+
+          return addToSpace(PresetName.KANBAN_QUEUE, space, canvasModel, computeModel);
         });
         cb?.(objects);
         return objects;
