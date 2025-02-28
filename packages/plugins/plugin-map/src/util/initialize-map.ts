@@ -26,16 +26,11 @@ export const initializeMap = async ({
   locationProperty,
 }: InitializeMapProps): Promise<{ map: MapType }> => {
   const map = create(MapType, { name });
-
   if (coordinates) {
     map.coordinates = coordinates;
   }
 
-  // Create a view with minimal configuration
-  const view = createView({
-    name: "Map's item view",
-    fields: [],
-  });
+  const view = createView({ name: "Map's item view", fields: [] });
 
   if (initialSchema) {
     const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
@@ -46,10 +41,10 @@ export const initializeMap = async ({
     if (locationProperty) {
       setLocationProperty(view, locationProperty);
     } else {
-      // Find a property with LatLng format
+      // Find a property with LatLng format.
       const locationProperties: string[] = [];
       if (schema.jsonSchema?.properties) {
-        // Look for properties that use the LatLng format enum
+        // Look for properties that use the LatLng format enum.
         const properties = Object.entries(schema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
           if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
             acc.push(key);
@@ -59,7 +54,6 @@ export const initializeMap = async ({
 
         locationProperties.push(...properties);
       }
-
       const locationProp = locationProperties.at(0);
       if (locationProp) {
         setLocationProperty(view, locationProp);

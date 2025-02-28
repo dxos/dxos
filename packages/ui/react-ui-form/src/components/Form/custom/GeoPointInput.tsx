@@ -16,11 +16,9 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
   const { status, error } = getStatus();
   const value = getValue<GeoPoint>() ?? [0, 0];
 
-  // Add state for the input text values
   const [longitudeText, setLongitudeText] = useState(value[0].toString());
   const [latitudeText, setLatitudeText] = useState(value[1].toString());
 
-  // Update text state when props value changes
   useEffect(() => {
     setLongitudeText(value[0].toString());
     setLatitudeText(value[1].toString());
@@ -45,10 +43,6 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
     [getValue, onValueChange, type],
   );
 
-  // Usage with string literals
-  const handleLongitudeChange = handleCoordinateChange('longitude', setLongitudeText);
-  const handleLatitudeChange = handleCoordinateChange('latitude', setLatitudeText);
-
   return (
     <Input.Root validationValence={status}>
       <InputHeader error={error}>
@@ -61,7 +55,7 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
           disabled={disabled}
           placeholder={t('placeholder longitude')}
           value={longitudeText}
-          onChange={handleLongitudeChange}
+          onChange={handleCoordinateChange('longitude', setLongitudeText)}
           onBlur={onBlur}
         />
         <Input.TextInput
@@ -70,7 +64,7 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
           disabled={disabled}
           placeholder={t('placeholder latitude')}
           value={latitudeText}
-          onChange={handleLatitudeChange}
+          onChange={handleCoordinateChange('latitude', setLatitudeText)}
           onBlur={onBlur}
         />
       </div>
