@@ -12,10 +12,11 @@ import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
-import ON from '../../../assets/click.wav';
-import OFF from '../../../assets/off.wav';
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { Prompt } from '../Prompt';
+
+const ON = 'https://dxos.network/sound-on.wav';
+const OFF = 'https://dxos.network/sound-off.wav';
 
 const playSound = (on?: boolean) => {
   const audio = new Audio(on ? ON : OFF);
@@ -73,6 +74,7 @@ export const AmbientChatDialog = () => {
         log.info('stopped');
         setRecording(false);
         playSound(false);
+        // TODO(burdon): Focus.
       }
     });
 
