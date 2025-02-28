@@ -5,7 +5,16 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type Dispatch,
+  type FC,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { createStatic } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
@@ -23,24 +32,47 @@ import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
 import { randomQueueDxn } from '../util';
 
+const UX: FC<{
+  playing: boolean;
+  setPlaying: Dispatch<SetStateAction<boolean>>;
+  blocks?: TranscriptBlock[];
+}> = ({ playing, setPlaying, blocks }) => {
+  return (
+    <div className='flex flex-col w-[400px]'>
+      <Toolbar.Root>
+        <IconButton
+          iconOnly
+          icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={playing ? 'Pause' : 'Play'}
+          onClick={() => setPlaying((playing) => !playing)}
+        />
+      </Toolbar.Root>
+      <ScrollContainer>
+        <Transcript blocks={blocks} />
+      </ScrollContainer>
+    </div>
+  );
+};
+
 const Microphone = () => {
-  // Audio.
   const [playing, setPlaying] = useState(false);
+
+  // Audio.
   const track = useAudioTrack(playing);
 
-  // Create the transcription queue.
+  // Queue.
   const queueDxn = useMemo(() => randomQueueDxn(), []);
   const echoClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(echoClient, queueDxn, { pollInterval: 500 });
+
+  // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
-      const block = createStatic(TranscriptBlock, { author: 'test', segments });
+      const block = createStatic(TranscriptBlock, { segments });
       queue?.append([block]);
     },
     [queue],
   );
-
-  // Transcriber.
   const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
   useEffect(() => {
     void transcriber?.open();
@@ -58,24 +90,13 @@ const Microphone = () => {
     }
   }, [transcriber, playing, transcriber?.isOpen]);
 
-  return (
-    <div className='flex flex-col w-[400px]'>
-      <Toolbar.Root>
-        <IconButton
-          iconOnly
-          icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
-          label='Play'
-          onClick={() => setPlaying((playing) => !playing)}
-        />
-      </Toolbar.Root>
-      <ScrollContainer>
-        <Transcript blocks={queue?.items} />
-      </ScrollContainer>
-    </div>
-  );
+  return <UX playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
 };
 
 const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; transcriptUrl: string }) => {
+  const [playing, setPlaying] = useState(false);
+
+  // Audio.
   const audioElement = useRef<HTMLAudioElement>(null);
   const { audio, stream, track } = useAudioFile(audioUrl);
   useEffect(() => {
@@ -84,8 +105,6 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [stream, audioElement.current]);
 
-  // Playing state.
-  const [playing, setPlaying] = useState(false);
   useEffect(() => {
     if (!audio) {
       log.warn('no audio');
@@ -99,7 +118,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [audio, playing]);
 
-  // Create the transcription queue.
+  // Transcriber.
   const echoClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(echoClient, queueDxn, { pollInterval: 500 });
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
@@ -110,7 +129,6 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     [queue],
   );
 
-  // Transcriber.
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
@@ -125,7 +143,6 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [transcriber, playing]);
 
-  // Manage transcription state.
   useEffect(() => {
     if (track?.readyState === 'live' && transcriber?.isOpen) {
       log.info('starting transcription');
@@ -136,22 +153,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
-  return (
-    <div className='flex flex-col w-[400px]'>
-      <audio ref={audioElement} autoPlay />
-      <Toolbar.Root>
-        <IconButton
-          iconOnly
-          icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
-          label='Play'
-          onClick={() => setPlaying((playing) => !playing)}
-        />
-      </Toolbar.Root>
-      <ScrollContainer>
-        <Transcript blocks={queue?.items} />
-      </ScrollContainer>
-    </div>
-  );
+  return <UX playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
 };
 
 const meta: Meta<typeof AudioFile> = {

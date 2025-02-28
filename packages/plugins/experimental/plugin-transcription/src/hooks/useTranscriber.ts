@@ -38,6 +38,7 @@ export const useTranscriber = ({ audioStreamTrack, onSegments }: UseTranscriberP
     if (!onSegments || !audioStreamTrack) {
       return undefined;
     }
+
     return new Transcriber({
       config: {
         transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
