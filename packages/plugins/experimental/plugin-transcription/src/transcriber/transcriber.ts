@@ -121,7 +121,7 @@ export class Transcriber extends Resource {
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {
-    log.info('saving audio chunk', { chunk });
+    log('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
 
     // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
@@ -137,7 +137,7 @@ export class Transcriber extends Resource {
   }
 
   private async _transcribe() {
-    log.info('transcribing', { chunks: this._audioChunks.length });
+    log('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
     this._audioChunks = this._dropOldChunks();
     if (chunks.length === 0) {

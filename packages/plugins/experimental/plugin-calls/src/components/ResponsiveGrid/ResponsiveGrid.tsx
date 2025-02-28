@@ -13,6 +13,7 @@ import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
 const MIN_HEIGHT_REM = 15;
 const DEFAULT_HEIGHT_REM = 30;
+
 /**
  * Props for the ResponsiveGrid component.
  */

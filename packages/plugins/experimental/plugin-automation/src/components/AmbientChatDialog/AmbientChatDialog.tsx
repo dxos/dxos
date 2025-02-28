@@ -4,8 +4,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { scheduleMicroTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type TranscriberParams, useAudioTrack, useIsSpeaking, useTranscriber } from '@dxos/plugin-transcription';
+import { type TranscriberParams, useAudioTrack, useTranscriber } from '@dxos/plugin-transcription';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
@@ -31,6 +33,8 @@ export const AmbientChatDialog = () => {
   const [size, setSize] = useState<Size>('min-content');
   const [iter, setIter] = useState(0);
 
+  const [prompt, setPrompt] = useState('');
+
   // TODO(burdon): Get acitve space for queue.
   // const space = useSpace();
   // const queueDxn = useMemo(() => {
@@ -38,25 +42,41 @@ export const AmbientChatDialog = () => {
   // }, [space]);
 
   // Audio/transcription.
-  const [active, setActive] = useState(false);
   // TODO(mykola): Do not recreate track on every state change. Or make it possible to substitute track in transcriber.
+  const [active, setActive] = useState(false);
+  const [recording, setRecording] = useState(false);
   const track = useAudioTrack(active);
-  const isSpeaking = useIsSpeaking(track);
-  const onSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
-    log.info('segments', { segments });
+
+  // Transcriber.
+  const handleSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
+    const text = segments.map((str) => str.text.trim().replace(/[^\w\s]/g, '')).join(' ');
+    setPrompt(text);
   }, []);
   const transcriber = useTranscriber({
     audioStreamTrack: track,
-    onSegments,
+    onSegments: handleSegments,
   });
+
   // Start/stop transcription.
   useEffect(() => {
-    playSound(active);
-    if (active) {
-      transcriber?.startChunksRecording();
-    } else {
-      transcriber?.stopChunksRecording();
-    }
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (active && transcriber) {
+        await transcriber.open();
+        log('starting...');
+        setRecording(true);
+        transcriber.startChunksRecording();
+      } else if (!active) {
+        transcriber?.stopChunksRecording();
+        await transcriber?.close();
+        log('stopped');
+        setRecording(false);
+      }
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
   }, [active, transcriber]);
 
   return (
@@ -100,12 +120,13 @@ export const AmbientChatDialog = () => {
         </div>
 
         <div className='grid grid-cols-[1fr_auto] w-full'>
-          <Prompt autoFocus lineWrapping classNames='pt-1' />
+          <Prompt autoFocus lineWrapping classNames='pt-1' value={prompt} onChange={setPrompt} />
           <div className='flex flex-col h-full'>
             <IconButton
-              classNames={mx(isSpeaking && 'animate-pulse')}
+              classNames={mx(recording && 'bg-primary-500')}
               icon='ph--microphone--regular'
               iconOnly
+              noTooltip
               label='Microphone'
               onMouseDown={() => setActive(true)}
               onMouseUp={() => setActive(false)}
