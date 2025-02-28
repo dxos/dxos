@@ -31,7 +31,8 @@
         "{projectRoot}/src/shaders/glsl/gen"
       ]
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild"

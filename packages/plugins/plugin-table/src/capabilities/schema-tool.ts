@@ -7,7 +7,7 @@ import { DescriptionAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { FormatEnum, FormatEnums, formatToType, S, TypedObject, TypeEnum, SelectOptionSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { hueTokenThemes } from '@dxos/react-ui-theme';
+import { hues } from '@dxos/react-ui-theme';
 
 const availableFormats = FormatEnums;
 
@@ -20,8 +20,6 @@ export const TypeNameSchema = S.String.pipe(
   }),
 );
 
-const palettes = Object.keys(hueTokenThemes);
-
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
   name: S.String.annotations({ description: 'The name of the property.' }),
@@ -32,7 +30,7 @@ const PropertyDefinitionSchema = S.Struct({
     S.Struct({
       options: S.optional(
         S.Array(SelectOptionSchema).annotations({
-          description: `Options for SingleSelect/MultiSelect formats. Available colors: ${palettes.join(', ')}`,
+          description: `Options for SingleSelect/MultiSelect formats. Available colors: ${hues.join(', ')}`,
         }),
       ),
     }),
