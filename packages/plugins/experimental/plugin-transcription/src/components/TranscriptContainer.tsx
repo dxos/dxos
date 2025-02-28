@@ -9,10 +9,10 @@ import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Transcription } from './Transcription';
+import { Transcript } from './Transcript';
 import { type TranscriptBlock, type TranscriptType } from '../types';
 
-const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
+export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
   const edge = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(edge, transcript.queue ? DXN.parse(transcript.queue) : undefined, {
     pollInterval: 1_000,
@@ -21,7 +21,7 @@ const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript
   return (
     <StackItem.Content toolbar={false}>
       <ScrollContainer>
-        <Transcription blocks={queue?.items} />
+        <Transcript blocks={queue?.items} />
       </ScrollContainer>
     </StackItem.Content>
   );

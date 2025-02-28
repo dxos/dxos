@@ -3,14 +3,10 @@
 //
 
 import { CALLS_PLUGIN } from './meta';
-import { TranscriptType } from './types/transcript';
 
 export default [
   {
     'en-US': {
-      [TranscriptType.typename]: {
-        'typename label': 'Transcript',
-      },
       [CALLS_PLUGIN]: {
         'plugin name': 'Meetings',
         'calls label': 'Meeting room',
@@ -41,9 +37,6 @@ export default [
         'transcription off': 'Stop transcription',
         'screenshare on': 'Start screen sharing',
         'screenshare off': 'Stop screen sharing',
-
-        'delete button': 'Delete',
-        'bookmark button': 'Bookmark',
       },
     },
   },

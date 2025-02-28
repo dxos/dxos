@@ -11,16 +11,16 @@ import { faker } from '@dxos/random';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { Transcription } from './Transcription';
+import { Transcript } from './Transcript';
 import translations from '../../translations';
 
-const meta: Meta<typeof Transcription> = {
-  title: 'plugins/plugin-calls/Transcription',
-  component: Transcription,
+const meta: Meta<typeof Transcript> = {
+  title: 'plugins/plugin-transcription/Transcript',
+  component: Transcript,
   render: (args) => (
     <div className='flex w-[500px] p-2'>
       <ScrollContainer>
-        <Transcription {...args} />
+        <Transcript {...args} />
       </ScrollContainer>
     </div>
   ),
@@ -39,7 +39,7 @@ const meta: Meta<typeof Transcription> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Transcription>;
+type Story = StoryObj<typeof Transcript>;
 
 let start = new Date();
 const next = () => {

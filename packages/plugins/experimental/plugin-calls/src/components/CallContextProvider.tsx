@@ -5,12 +5,12 @@
 import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
+import { useIsSpeaking } from '@dxos/plugin-transcription';
 import { useConfig } from '@dxos/react-client';
 
 import {
   CallContext,
   type CallContextType,
-  useIsSpeaking,
   usePeerConnection,
   useCallState,
   useStablePojo,
@@ -25,8 +25,6 @@ export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, '
 /**
  * Global context provider for calls.
  */
-// TODO(burdon): Need to provide global state for plugin and provider.
-// - First create simple plugin context that tracks the current roomId.
 export const CallContextProvider: FC<CallContextProviderProps> = ({ children, roomId, onTranscription }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];

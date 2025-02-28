@@ -12,14 +12,14 @@ import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type AudioChunk, type AudioRecorder, Transcriber } from '../ai';
+import { type AudioChunk, type AudioRecorder, Transcriber } from '../transcriber';
 import { type TranscriptSegment } from '../types';
-import { mergeFloat64Arrays } from '../utils';
+import { mergeFloat64Arrays } from '../util';
 
-// TODO(burdon): ReferenceError: Worker is not defined
+// TODO(burdon): ReferenceError: Worker is not defined (Can only run with web workers).
 
 // This is a playground for testing the transcription, requires `calls-service` to be running.
-describe('Transcriber', () => {
+describe.skip('Transcriber', () => {
   const DIR_PATH = path.join(__dirname, 'audio');
 
   const readFile = async (filename: string) => {
@@ -37,7 +37,7 @@ describe('Transcriber', () => {
 
   test.skip('split wav file', async () => {
     // Read the WAV file
-    const fileBuffer = await readFile('test.wav');
+    const fileBuffer = await readFile('./testing/test.wav');
     const wav = new WaveFile(fileBuffer);
 
     // Get PCM samples and format info.

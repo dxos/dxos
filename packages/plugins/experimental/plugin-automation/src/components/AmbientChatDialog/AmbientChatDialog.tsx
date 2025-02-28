@@ -2,20 +2,65 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
+import { scheduleMicroTask, scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
+import { type TranscriberParams, useAudioTrack, useIsSpeaking, useTranscriber } from '@dxos/plugin-transcription';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
+import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { Prompt } from '../Prompt';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
-export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
+// TODO(budon): Voice and suggest.
+
+export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
   const [iter, setIter] = useState(0);
+
+  // TODO(burdon): Get acitve space for queue.
+  // const space = useSpace();
+  // const queueDxn = useMemo(() => {
+  //   return space ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]) : undefined;
+  // }, [space]);
+
+  // Audio/transcription.
+  const [active, setActive] = useState(false);
+  // TODO(mykola): Do not recreate track on every state change. Or make it possible to substitute track in transcriber.
+  const track = useAudioTrack(active);
+  const isSpeaking = useIsSpeaking(track);
+  const onSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
+    log.info('segments', { segments });
+  }, []);
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    onSegments,
+  });
+  // Start/stop transcription.
+  useEffect(() => {
+    const ctx = new Context();
+    scheduleMicroTask(ctx, async () => {
+      if (active && transcriber) {
+        log.info('opening transcriber');
+        await transcriber.open();
+        transcriber.startChunksRecording();
+      } else if (!active) {
+        transcriber?.stopChunksRecording();
+        await transcriber?.close();
+      }
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [active, transcriber]);
+
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
@@ -56,7 +101,19 @@ export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
           />
         </div>
 
-        <Prompt autoFocus lineWrapping />
+        <div className='grid grid-cols-[1fr_auto] w-full'>
+          <Prompt autoFocus lineWrapping classNames='pt-1' />
+          <div className='flex flex-col h-full'>
+            <IconButton
+              classNames={mx(isSpeaking && 'animate-pulse')}
+              icon='ph--microphone--regular'
+              iconOnly
+              label='Microphone'
+              onMouseDown={() => setActive(true)}
+              onMouseUp={() => setActive(false)}
+            />
+          </div>
+        </div>
       </Dialog.Content>
     </div>
   );

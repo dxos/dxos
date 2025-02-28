@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { monitorAudioLevel } from '../utils';
+import { monitorAudioLevel } from '../util';
 
 export const useIsSpeaking = (mediaStreamTrack?: MediaStreamTrack) => {
   const [isSpeaking, setIsSpeaking] = useState(false);

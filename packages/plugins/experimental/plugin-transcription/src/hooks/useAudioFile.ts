@@ -2,28 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
 export type UseAudioState = {
+  audio?: HTMLAudioElement;
   stream?: MediaStream;
   track?: MediaStreamTrack;
-  audio?: HTMLAudioElement;
 };
 
-export const useAudio = (audioUrl: string): UseAudioState => {
-  // Create the stream.
-  const [{ stream, track, audio }, setStream] = useState<UseAudioState>({});
+export const useAudioFile = (audioUrl: string): UseAudioState => {
+  const [{ audio, stream, track }, setStream] = useState<UseAudioState>({});
   useEffect(() => {
     const t = setTimeout(async () => {
       const response = await fetch(audioUrl);
       const blob = await response.blob();
-      log.info('loaded audio', { audioUrl, status: response.status });
-
-      // TODO(burdon): Doesn't load entire file.
       const audio = new Audio();
       audio.src = URL.createObjectURL(blob);
       await new Promise<void>((resolve, reject) => {
@@ -55,14 +49,14 @@ export const useAudio = (audioUrl: string): UseAudioState => {
       source.connect(destination);
 
       setStream({
+        audio,
         stream: destination.stream,
         track: destination.stream.getAudioTracks()[0],
-        audio,
       });
     });
 
     return () => clearTimeout(t);
   }, [audioUrl]);
 
-  return { stream, track, audio };
+  return { audio, stream, track };
 };

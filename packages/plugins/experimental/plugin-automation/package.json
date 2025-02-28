@@ -62,6 +62,7 @@
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
+    "@dxos/plugin-transcription": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",

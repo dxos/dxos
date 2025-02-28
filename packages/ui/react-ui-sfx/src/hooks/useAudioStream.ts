@@ -15,7 +15,7 @@ export type UseAudioStream = {
  * Web audio data channel.
  * https://webaudio.github.io/web-audio-api
  */
-// TODO(burdon): Factor out; reconcile with calls API?
+// TODO(burdon): Factor out; reconcile with transcription API.
 export const useAudioStream = (active?: boolean): UseAudioStream => {
   const audioContextRef = useRef<AudioContext>();
   const analyserRef = useRef<AnalyserNode>();

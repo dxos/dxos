@@ -1,9 +1,6 @@
 //
 // Copyright 2025 DXOS.org
 //
-//
-// Copyright 2025 DXOS.org
-//
 
 import { WaveFile } from 'wavefile';
 
@@ -13,15 +10,17 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
 import { type AudioRecorder, type AudioChunk } from './audio-recorder';
-import { CALLS_URL, type TranscriptSegment } from '../types';
-import { mergeFloat64Arrays } from '../utils';
+import { TRANSCRIPTION_URL, type TranscriptSegment } from '../types';
+import { mergeFloat64Arrays } from '../util';
 
 type WhisperWord = {
   word: string;
+
   /**
    * Time in seconds from the start of the audio.
    */
   start: number;
+
   /**
    * Time in seconds from the start of the audio.
    */
@@ -30,18 +29,22 @@ type WhisperWord = {
 
 type WhisperSegment = {
   text: string;
+
   /**
    * Time in seconds from the start of the audio.
    */
   start: number;
+
   /**
    * Time in seconds from the start of the audio.
    */
   end: number;
+
   /**
    * Probability of no speech in the segment.
    */
   no_speech_prob: number;
+
   words: WhisperWord[];
 };
 
@@ -58,6 +61,12 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 };
 
+export type TranscriberParams = {
+  config: TranscribeConfig;
+  recorder: AudioRecorder;
+  onSegments: (segments: TranscriptSegment[]) => Promise<void>;
+};
+
 /**
  * Handles transcription of audio chunks.
  * If user is not speaking, the last `minChunksAmount` chunks are saved and transcribed.
@@ -67,27 +76,20 @@ export class Transcriber extends Resource {
   private _audioChunks: AudioChunk[] = [];
   private _lastUsedTimestamp = 0;
 
-  private readonly _recorder: AudioRecorder;
-  private readonly _onSegments: (segments: TranscriptSegment[]) => Promise<void>;
-  private _recording = false;
-  private _transcribeTask?: DeferredTask = undefined;
-  private readonly _config: TranscribeConfig;
-
   private readonly _openTrigger = new Trigger({ autoReset: true });
 
-  constructor({
-    recorder,
-    onSegments,
-    config,
-  }: {
-    recorder: AudioRecorder;
-    onSegments: (segments: TranscriptSegment[]) => Promise<void>;
-    config: TranscribeConfig;
-  }) {
+  private readonly _config: TranscribeConfig;
+  private readonly _recorder: AudioRecorder;
+  private readonly _onSegments: TranscriberParams['onSegments'];
+
+  private _recording = false;
+  private _transcribeTask?: DeferredTask = undefined;
+
+  constructor({ config, recorder, onSegments }: TranscriberParams) {
     super();
+    this._config = config;
     this._recorder = recorder;
     this._onSegments = onSegments;
-    this._config = config;
   }
 
   protected override async _open(ctx: Context) {
@@ -119,6 +121,7 @@ export class Transcriber extends Resource {
   }
 
   private _saveAudioChunk(chunk: AudioChunk) {
+    log.info('saving audio chunk', { chunk });
     this._audioChunks.push(chunk);
 
     // Clean the buffer if the user is not speaking and the transcription task is not scheduled.
@@ -134,6 +137,7 @@ export class Transcriber extends Resource {
   }
 
   private async _transcribe() {
+    log.info('transcribing', { chunks: this._audioChunks.length });
     const chunks = this._audioChunks;
     this._audioChunks = this._dropOldChunks();
     if (chunks.length === 0) {
@@ -180,7 +184,7 @@ export class Transcriber extends Resource {
       throw new Error('No audio to send for transcribing');
     }
 
-    const response = await fetch(`${CALLS_URL}/transcribe`, {
+    const response = await fetch(`${TRANSCRIPTION_URL}/transcribe`, {
       method: 'POST',
       body: JSON.stringify({ audio }),
       headers: {

@@ -50,9 +50,9 @@ export class MediaStreamRecorder implements AudioRecorder {
 
   async start() {
     if (!wavEncoderInitialized) {
+      wavEncoderInitialized = true;
       const { connect } = await import('extendable-media-recorder-wav-encoder');
       await register(await connect());
-      wavEncoderInitialized = true;
     }
 
     if (!this._mediaRecorder) {

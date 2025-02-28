@@ -7,18 +7,18 @@ import React, { type FC } from 'react';
 
 import { Icon, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { CALLS_PLUGIN } from '../../meta';
+import { TRANSCRIPTION_PLUGIN } from '../../meta';
 import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): react-ui-list.
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
-export type TranscriptionProps = {
+export type TranscriptProps = {
   blocks?: TranscriptBlock[];
 };
 
-export const Transcription: FC<TranscriptionProps> = ({ blocks }) => {
-  const { t } = useTranslation(CALLS_PLUGIN);
+export const Transcript: FC<TranscriptProps> = ({ blocks }) => {
+  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const hoverButton = 'p-1 min-bs-1 transition-opacity duration-250 opacity-10 group-hover:opacity-100';
 
   return (

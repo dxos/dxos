@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useStablePojo, useSubscribedState } from './utils';
-import { RxjsPeer, type PeerConfig } from '../utils';
+import { RxjsPeer, type PeerConfig } from '../util';
 
 export type PeerConnectionState = {
   peer: RxjsPeer;
