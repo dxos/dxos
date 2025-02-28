@@ -19,6 +19,7 @@ import {
   makeValueBag,
   unwrapValueBag,
   QueueService,
+  FunctionCallService,
 } from '@dxos/conductor';
 import { AST } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -243,7 +244,8 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeR
     db: space.db,
   });
   const queueService = QueueService.notAvailable;
-  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer);
+  const functionCallService = Layer.succeed(FunctionCallService, FunctionCallService.mock());
+  return Layer.mergeAll(logLayer, gptLayer, spaceService, queueService, FetchHttpClient.layer, functionCallService);
 };
 
 const inputTemplateFromAst = (ast: AST.AST): string => {
