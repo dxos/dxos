@@ -27,7 +27,7 @@ import { log } from '@dxos/log';
 import { type DocAccessor, type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemeMode } from '@dxos/react-ui';
-import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
+import { type HuePalette } from '@dxos/react-ui-theme';
 import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { automerge } from './automerge';
@@ -194,8 +194,7 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
 
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();
-    const { cursorLightValue, cursorDarkValue } =
-      hueTokens[(identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0')];
+    const hue = (identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0');
 
     extensions.push(
       awareness(
@@ -205,8 +204,8 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
           peerId: identity.identityKey.toHex(),
           info: {
             displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
-            darkColor: cursorDarkValue,
-            lightColor: cursorLightValue,
+            darkColor: `var(--dx-${hue}Cursor)`,
+            lightColor: `var(--dx-${hue}Cursor)`,
           },
         }),
       ),

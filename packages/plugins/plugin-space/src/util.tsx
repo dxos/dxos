@@ -205,6 +205,7 @@ export const constructSpaceNode = ({
       ...partials,
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
+      hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
       icon: 'ph--planet--regular',
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',

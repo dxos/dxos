@@ -4,7 +4,6 @@
 
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
-import { ArrowCounterClockwise, CaretDown, UserCircle } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useRef, useState } from 'react';
 
@@ -18,8 +17,8 @@ import {
   useMediaQuery,
   useThemeContext,
   useTranslation,
+  Icon,
 } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 import './emoji.css';
 
@@ -77,7 +76,7 @@ export const EmojiPickerToolbarButton = ({
           <Popover.Trigger asChild>
             <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
               <span className='sr-only'>{t('select emoji label')}</span>
-              <UserCircle className={getSize(5)} />
+              <Icon icon='ph--user-circle--regular' size={5} />
             </Toolbar.Button>
           </Popover.Trigger>
         </Tooltip.Trigger>
@@ -142,7 +141,7 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
           <Button variant='ghost' classNames='gap-2 text-2xl plb-1' disabled={disabled}>
             <span className='sr-only'>{t('select emoji label')}</span>
             <span className='grow pis-14'>{emojiValue}</span>
-            <CaretDown className={getSize(4)} />
+            <Icon icon='ph--caret-down--regular' size={4} />
           </Button>
         </Popover.Trigger>
         <Popover.Content
@@ -174,7 +173,7 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
         <Tooltip.Trigger asChild>
           <Button variant='ghost' onClick={onClickClear} disabled={disabled}>
             <span className='sr-only'>{t('clear label')}</span>
-            <ArrowCounterClockwise />
+            <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
