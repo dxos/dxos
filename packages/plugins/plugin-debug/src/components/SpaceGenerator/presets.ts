@@ -378,11 +378,13 @@ export const presets = {
             );
             const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
             const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
+            const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
 
             builder
               .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
               .createEdge({ source: channelId.id, target: converter.id, input: 'channelId' })
-              .createEdge({ source: converter.id, target: view.id, output: 'newMessages' });
+              .createEdge({ source: converter.id, target: view.id, output: 'newMessages' })
+              .createEdge({ source: queueId.id, target: queue.id, input: 'input' });
           });
 
           const computeModel = createComputeGraph(canvasModel);
