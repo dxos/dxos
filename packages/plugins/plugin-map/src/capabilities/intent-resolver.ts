@@ -3,18 +3,27 @@
 //
 
 import { contributes, Capabilities, createResolver, type PluginsContext } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
 
 import { MapCapabilities } from './capabilities';
-import { MapAction, MapType } from '../types';
+import { MapAction } from '../types';
+import { initializeMap } from '../util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
-      resolve: ({ name, coordinates }) => ({
-        data: { object: create(MapType, { name, coordinates }) },
-      }),
+      resolve: async ({ space, name, coordinates, initialSchema, propertyOfInterest }) => {
+        const { map } = await initializeMap({
+          space,
+          name,
+          coordinates,
+          initialSchema,
+          propertyOfInterest,
+        });
+        return {
+          data: { object: map },
+        };
+      },
     }),
     createResolver({
       intent: MapAction.Toggle,

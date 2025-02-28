@@ -73,7 +73,7 @@ export class ViewType extends TypedObject({
 
 type CreateViewProps = {
   name: string;
-  typename: string;
+  typename?: string;
   jsonSchema?: JsonSchemaType;
   fields?: string[];
 };

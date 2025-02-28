@@ -1,24 +1,48 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { GeoPoint, S } from '@dxos/echo-schema';
+import { GeoPoint, S, AST } from '@dxos/echo-schema';
+import { SpaceSchema } from '@dxos/react-client/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { MapType } from './map';
 import { MAP_PLUGIN } from '../meta';
 
+// Define annotation IDs as symbols
+export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-map/annotation/InitialSchema');
+
+// TODO(ZaymonFC): Maybe this should be called coordinateProperty?
+export const PropertyOfInterestAnnotationId = Symbol.for('@dxos/plugin-map/annotation/PropertyOfInterest');
+
+// Create schema for map creation
+export const CreateMapSchema = S.Struct({
+  name: S.optional(S.String),
+  initialSchema: S.optional(
+    S.String.annotations({
+      [InitialSchemaAnnotationId]: true,
+      [AST.TitleAnnotationId]: 'Schema', // TODO(ZaymonFC): Title... hmm.
+    }),
+  ),
+  propertyOfInterest: S.optional(
+    S.String.annotations({
+      [PropertyOfInterestAnnotationId]: true,
+      [AST.TitleAnnotationId]: 'Coordinate property',
+    }),
+  ),
+});
+
+export type CreateMapType = S.Schema.Type<typeof CreateMapSchema>;
+
 export namespace MapAction {
   const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
   export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
-    input: S.Struct({
-      name: S.optional(S.String),
-      coordinates: S.optional(GeoPoint),
-    }),
-    output: S.Struct({
-      object: MapType,
-    }),
+    input: S.extend(
+      S.Struct({ space: SpaceSchema, coordinates: S.optional(S.Array(GeoPoint).pipe(S.mutable)) }),
+      CreateMapSchema,
+    ),
+    output: S.Struct({ object: MapType }),
   }) {}
 
   export class Toggle extends S.TaggedClass<Toggle>()(`${MAP_ACTION}/toggle`, {
