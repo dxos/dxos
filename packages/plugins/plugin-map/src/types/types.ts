@@ -38,10 +38,7 @@ export namespace MapAction {
   const MAP_ACTION = `${MAP_PLUGIN}/action`;
 
   export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
-    input: S.extend(
-      S.Struct({ space: SpaceSchema, coordinates: S.optional(S.Array(GeoPoint).pipe(S.mutable)) }),
-      CreateMapSchema,
-    ),
+    input: S.extend(S.Struct({ space: SpaceSchema, coordinates: S.optional(GeoPoint) }), CreateMapSchema),
     output: S.Struct({ object: MapType }),
   }) {}
 

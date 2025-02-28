@@ -12,7 +12,7 @@ import { MapType } from '../types';
 type InitializeMapProps = {
   space: Space;
   name?: string;
-  coordinates?: GeoPoint[];
+  coordinates?: GeoPoint;
   initialSchema?: string;
   propertyOfInterest?: string;
 };

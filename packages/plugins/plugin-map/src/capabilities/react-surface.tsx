@@ -53,8 +53,7 @@ export default () =>
       role: 'canvas-node',
       filter: (data) => isInstanceOf(MapType, data),
       component: ({ data }) => {
-        // TODO(ZaymonFC): Pull out interesting map data.
-        const [lng = 0, lat = 0] = [];
+        const [lng = 0, lat = 0] = data?.coordinates ?? [];
         return <MapControl center={{ lat, lng }} zoom={14} />;
       },
     }),
