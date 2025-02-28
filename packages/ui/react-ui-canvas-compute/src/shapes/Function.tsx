@@ -8,7 +8,7 @@ import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { getSnapshot, S } from '@dxos/echo-schema';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, makeRef, parseId } from '@dxos/react-client/echo';
+import { Filter, makeRef, parseId } from '@dxos/react-client/echo';
 import {
   TextBox,
   type TextBoxControl,
@@ -45,7 +45,6 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   const client = useClient();
   const { node, runtime } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
-  const initialValue = node.function?.target && fullyQualifiedId(node.function.target);
 
   const handleEnter = useCallback(
     async (text: string) => {
@@ -68,6 +67,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
         return;
       }
 
+      node.value = value;
       node.function = makeRef(fn);
       node.inputSchema = getSnapshot(fn.inputSchema);
       node.outputSchema = getSnapshot(fn.outputSchema);
@@ -91,7 +91,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       <TextBox
         {...props}
         ref={inputRef}
-        value={initialValue}
+        value={node.value}
         language={node.valueType === 'object' ? 'json' : undefined}
         onBlur={handleEnter}
         onEnter={handleEnter}
