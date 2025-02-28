@@ -11,6 +11,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { Transcription } from './Transcription';
 import { type TranscriptBlock, type TranscriptType } from '../types';
+import { Button } from '@dxos/react-ui';
 
 const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
   const edge = useEdgeClient();
@@ -18,8 +19,15 @@ const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript
     pollInterval: 1_000,
   });
 
+  const handleSummarize = () => {
+    console.log('summarize', transcript.queue?.toString());
+  };
+
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content toolbar={true}>
+      <StackItem.Heading>
+        <Button onClick={handleSummarize}>Summarize</Button>
+      </StackItem.Heading>
       <ScrollContainer>
         <Transcription blocks={queue?.items} />
       </ScrollContainer>
