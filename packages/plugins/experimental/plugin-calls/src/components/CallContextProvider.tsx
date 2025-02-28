@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useMemo, type FC, type PropsWithChildren } from 'react';
-import { from, of, switchMap } from 'rxjs';
+import React, { useState, type FC, type PropsWithChildren, useEffect } from 'react';
 
+import { scheduleMicroTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 
 import {
@@ -14,11 +16,9 @@ import {
   useCfCallsConnection,
   useCallState,
   useStablePojo,
-  useStateObservable,
-  useSubscribedState,
   useUserMedia,
 } from '../hooks';
-import { CALLS_URL } from '../types';
+import { CALLS_URL, type TrackObject } from '../types';
 
 export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, 'roomId' | 'onTranscription'>>;
 
@@ -35,7 +35,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
 
   const call = useCallState({ roomId });
   const userMedia = useUserMedia();
-  const isSpeaking = useIsSpeaking(userMedia.audioTrack);
+  const isSpeaking = useIsSpeaking(userMedia.state.audioTrack);
   const { peer, iceConnectionState } = useCfCallsConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const [joined, setJoined] = useState(false);
@@ -47,35 +47,48 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
       maxBitrate: maxWebcamBitrate,
     },
   ]);
-  const videoTrackEncodingParams$ = useStateObservable<RTCRtpEncodingParameters[]>(videoEncodingParams);
-  const pushedVideoTrack$ = useMemo(
-    () => peer.pushTrack(userMedia.videoTrack$, videoTrackEncodingParams$),
-    [peer, userMedia.videoTrack$, videoTrackEncodingParams$],
-  );
 
-  const pushedVideoTrack = useSubscribedState(pushedVideoTrack$);
-  const pushedAudioTrack$ = useMemo(
-    () =>
-      peer.pushTrack(
-        userMedia.publicAudioTrack$,
-        of<RTCRtpEncodingParameters[]>([
-          {
-            networkPriority: 'high',
-          },
-        ]),
-      ),
-    [peer, userMedia.publicAudioTrack$],
-  );
-  const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
+  const [pushedVideoTrack, setPushedVideoTrack] = useState<TrackObject>();
+  useEffect(() => {
+    log.info('>>> push video track begin', { pushedVideoTrack, userMedia: userMedia.state.videoTrack });
+    if (
+      pushedVideoTrack &&
+      userMedia.state.videoTrack &&
+      pushedVideoTrack.trackName === userMedia.state.videoTrack.id
+    ) {
+      return;
+    }
 
-  const pushedScreenshareTrack$ = useMemo(
-    () =>
-      userMedia.screenshareVideoTrack$.pipe(
-        switchMap((track) => (track ? from(peer.pushTrack(of(track))) : of(undefined))),
-      ),
-    [peer, userMedia.screenshareVideoTrack$],
-  );
-  const pushedScreenshareTrack = useSubscribedState(pushedScreenshareTrack$);
+    scheduleMicroTask(new Context(), async () => {
+      if (userMedia.state.videoTrack && peer) {
+        const track = await peer.pushTrack(userMedia.state.videoTrack, videoEncodingParams);
+        log.info('>>> push video track done', { track });
+        setPushedVideoTrack(track);
+      }
+    });
+  }, [peer, userMedia.state.videoTrack, videoEncodingParams]);
+
+  const [pushedAudioTrack, setPushedAudioTrack] = useState<TrackObject>();
+  useEffect(() => {
+    scheduleMicroTask(new Context(), async () => {
+      if (userMedia.state.publicAudioTrack && peer) {
+        const track = await peer.pushTrack(userMedia.state.publicAudioTrack, [
+          { networkPriority: 'high' },
+        ] satisfies RTCRtpEncodingParameters[]);
+        setPushedAudioTrack(track);
+      }
+    });
+  }, [peer, userMedia.state.publicAudioTrack]);
+
+  const [pushedScreenshareTrack, setPushedScreenshareTrack] = useState<TrackObject>();
+  useEffect(() => {
+    scheduleMicroTask(new Context(), async () => {
+      if (userMedia.state.screenshareVideoTrack && peer) {
+        const track = await peer.pushTrack(userMedia.state.screenshareVideoTrack);
+        setPushedScreenshareTrack(track);
+      }
+    });
+  }, [peer, userMedia.state.screenshareVideoTrack]);
 
   // TODO(burdon): Split root context vs. local call context.
   const context: CallContextType = {

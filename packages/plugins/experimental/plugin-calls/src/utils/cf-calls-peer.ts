@@ -68,6 +68,11 @@ export class CloudflareCallsPeer extends Resource {
     return this._persistentLifecycle.state;
   }
 
+  // TODO(mykola): Expose session errors.
+  get sessionError() {
+    return undefined;
+  }
+
   private async _startSession() {
     const peerConnection = await this._createRtcConnection();
     const sessionId = await this._initiateCallSession();

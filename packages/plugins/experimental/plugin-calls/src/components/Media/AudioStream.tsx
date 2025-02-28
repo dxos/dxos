@@ -3,9 +3,11 @@
 //
 
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
-import { of } from 'rxjs';
 
-import { useCallContext, useSubscribedState } from '../../hooks';
+import { scheduleMicroTask } from '@dxos/async';
+import { Context } from '@dxos/context';
+
+import { useCallContext } from '../../hooks';
 
 export type AudioStreamProps = {
   tracksToPull: string[];
@@ -82,23 +84,30 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
     } as const;
   }, [track]);
 
-  const pulledTrack$ = useMemo(() => {
-    return peer.pullTrack(of(trackObject));
-  }, [peer, trackObject]);
-
-  const audioTrack = useSubscribedState(pulledTrack$);
+  const audioTrack = useRef<MediaStreamTrack>();
   useEffect(() => {
-    if (!audioTrack) {
+    if (!trackObject) {
       return;
     }
 
-    mediaStream.addTrack(audioTrack);
-    onTrackAddedRef.current(track, audioTrack);
+    scheduleMicroTask(new Context(), async () => {
+      audioTrack.current = await peer?.pullTrack(trackObject);
+    });
+  }, [peer, trackObject]);
+
+  useEffect(() => {
+    if (!audioTrack.current) {
+      return;
+    }
+    const currentAudioTrack = audioTrack.current;
+
+    mediaStream.addTrack(currentAudioTrack);
+    onTrackAddedRef.current(track, currentAudioTrack);
     return () => {
-      mediaStream.removeTrack(audioTrack);
-      onTrackRemovedRef.current(track, audioTrack);
+      mediaStream.removeTrack(currentAudioTrack);
+      onTrackRemovedRef.current(track, currentAudioTrack);
     };
-  }, [audioTrack, mediaStream, track]);
+  }, [audioTrack.current, mediaStream, track]);
 
   return null;
 };

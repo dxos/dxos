@@ -14,15 +14,15 @@ export const MediaButtons: FC<{ userMedia: UserMedia }> = ({ userMedia }) => {
   return (
     <>
       <IconButton
-        icon={userMedia.audioEnabled ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
-        label={userMedia.audioEnabled ? t('mic off') : t('mic on')}
-        onClick={userMedia.audioEnabled ? userMedia.turnMicOff : userMedia.turnMicOn}
+        icon={userMedia.state.audioEnabled ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
+        label={userMedia.state.audioEnabled ? t('mic off') : t('mic on')}
+        onClick={userMedia.state.audioEnabled ? userMedia.turnMicOff : userMedia.turnMicOn}
         iconOnly
       />
       <IconButton
-        icon={userMedia.videoEnabled ? 'ph--video-camera--regular' : 'ph--video-camera-slash--regular'}
-        label={userMedia.videoEnabled ? t('camera off') : t('camera on')}
-        onClick={userMedia.videoEnabled ? userMedia.turnCameraOff : userMedia.turnCameraOn}
+        icon={userMedia.state.videoEnabled ? 'ph--video-camera--regular' : 'ph--video-camera-slash--regular'}
+        label={userMedia.state.videoEnabled ? t('camera off') : t('camera on')}
+        onClick={userMedia.state.videoEnabled ? userMedia.turnCameraOff : userMedia.turnCameraOn}
         iconOnly
       />
     </>

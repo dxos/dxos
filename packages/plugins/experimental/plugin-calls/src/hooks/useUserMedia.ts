@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 import { untracked } from '@preact/signals-core';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 
+import { scheduleMicroTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -48,6 +50,7 @@ export const useUserMedia = (): UserMedia => {
     state.audioEnabled = false;
   };
   const turnCameraOn = () => {
+    log.info('turnCameraOn');
     state.videoEnabled = true;
   };
   const turnCameraOff = () => {
@@ -64,21 +67,20 @@ export const useUserMedia = (): UserMedia => {
   // Audio
   //
 
-
   useEffect(() => {
-    getUserMediaTrack('audioinput')
-      .then((track) => {
+    scheduleMicroTask(new Context(), async () => {
+      {
+        const track = await getUserMediaTrack('audioinput');
         state.audioTrack = track;
         state.audioDeviceId = track.getSettings().deviceId;
-      })
-      .catch((err) => log.catch(err));
+      }
 
-    getUserMediaTrack('audioinput')
-      .then((track) => {
+      {
+        const track = await getUserMediaTrack('audioinput');
         track.enabled = false;
         state.mutedAudioTrack = track;
-      })
-      .catch((err) => log.catch(err));
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -92,12 +94,11 @@ export const useUserMedia = (): UserMedia => {
   const blackCanvasStreamTrack = useBlackCanvasStreamTrack();
   useEffect(() => {
     if (state.videoEnabled) {
-      getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT })
-        .then((track) => {
-          state.videoTrack = track;
-          state.videoDeviceId = track.getSettings().deviceId;
-        })
-        .catch((err) => log.catch(err));
+      scheduleMicroTask(new Context(), async () => {
+        const track = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
+        state.videoTrack = track;
+        state.videoDeviceId = track.getSettings().deviceId;
+      });
     } else {
       state.videoTrack = blackCanvasStreamTrack;
     }
@@ -113,14 +114,17 @@ export const useUserMedia = (): UserMedia => {
 
   useEffect(() => {
     if (state.screenshareEnabled) {
-      getScreenshare({ contentHint: 'text' })
-        .then((ms) => {
-          state.screenshareVideoTrack = ms?.getVideoTracks()[0];
-        })
-        .catch((err) => log.catch(err));
+      scheduleMicroTask(new Context(), async () => {
+        const ms = await getScreenshare({ contentHint: 'text' });
+        state.screenshareVideoTrack = ms?.getVideoTracks()[0];
+      });
     } else {
       state.screenshareVideoTrack = undefined;
     }
+
+    return () => {
+      untracked(() => state.screenshareVideoTrack?.stop());
+    };
   }, [state.screenshareEnabled]);
 
   return {

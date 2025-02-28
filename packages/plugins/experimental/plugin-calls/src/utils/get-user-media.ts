@@ -30,11 +30,9 @@ export const getUserMediaTrack = async (
 const acquireTrack = async (device: MediaDeviceInfo, constraints: MediaTrackConstraints): Promise<MediaStreamTrack> => {
   const { deviceId, label } = device;
   log.info(`requesting ${label}`);
-  return navigator.mediaDevices
-    .getUserMedia(
-      device.kind === 'videoinput' ? { video: { ...constraints, deviceId } } : { audio: { ...constraints, deviceId } },
-    )
-    .then(async (mediaStream) => {
-      return device.kind === 'videoinput' ? mediaStream.getVideoTracks()[0] : mediaStream.getAudioTracks()[0];
-    });
+
+  const mediaStream = await navigator.mediaDevices.getUserMedia(
+    device.kind === 'videoinput' ? { video: { ...constraints, deviceId } } : { audio: { ...constraints, deviceId } },
+  );
+  return device.kind === 'videoinput' ? mediaStream.getVideoTracks()[0] : mediaStream.getAudioTracks()[0];
 };
