@@ -1,19 +1,26 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "async",
-  "tags": ["scope:common"],
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["{projectRoot}/src/index.ts"]
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
       }
     },
     "lint": {},
-    "test": {},
-    "pack": {}
+    "pack": {},
+    "test": {}
   },
-  "implicitDependencies": ["esbuild", "node-std"]
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
 }
