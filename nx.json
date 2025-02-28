@@ -97,7 +97,18 @@
     },
     "compile-lib": { "cache": true },
     "compile-node": { "cache": true },
-    "storybook-build": { "cache": true }
+    "storybook-build": { "cache": true },
+    "pack": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{workspaceRoot}/dist/tarballs/{projectName}"],
+      "options": {
+        "command": "bash -c 'pnpm pack --pack-destination \"$(git rev-parse --show-toplevel)/dist/tarballs/{projectName}\"'",
+        "cwd": "{projectRoot}"
+      }
+    }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"
 }

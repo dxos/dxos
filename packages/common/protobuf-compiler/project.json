@@ -13,6 +13,7 @@
       }
     },
     "lint": {},
+    "pack": {},
     "prebuild": {
       "dependsOn": [
         "^build",

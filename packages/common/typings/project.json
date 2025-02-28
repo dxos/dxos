@@ -13,7 +13,8 @@
         "outputPath": "{projectRoot}/dist/types",
         "tsConfig": "{projectRoot}/tsconfig.json"
       }
-    }
+    },
+    "pack": {}
   },
   "lint": {
     "executor": "@nx/linter:eslint",
