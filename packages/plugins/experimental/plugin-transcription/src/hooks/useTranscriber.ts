@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useRef } from 'react';
-
-import { log } from '@dxos/log';
+import { useEffect, useMemo } from 'react';
 
 import { MediaStreamRecorder, Transcriber, type TranscriberParams } from '../transcriber';
 
@@ -36,29 +34,28 @@ export type UseTranscriberProps = {
  */
 export const useTranscriber = ({ audioStreamTrack, onSegments }: UseTranscriberProps) => {
   // Initialize audio transcription.
-  const transcriber = useRef<Transcriber>();
-  useEffect(() => {
-    if (onSegments && audioStreamTrack) {
-      void transcriber.current?.close();
-      log.info('creating transcriber');
-      transcriber.current = new Transcriber({
-        config: {
-          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
-          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-        },
-        recorder: new MediaStreamRecorder({
-          mediaStreamTrack: audioStreamTrack,
-          interval: RECORD_INTERVAL,
-        }),
-        onSegments,
-      });
+  const transcriber = useMemo<Transcriber | undefined>(() => {
+    if (!onSegments || !audioStreamTrack) {
+      return undefined;
     }
-
-    return () => {
-      void transcriber.current?.close();
-      transcriber.current = undefined;
-    };
+    return new Transcriber({
+      config: {
+        transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
+        prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+      },
+      recorder: new MediaStreamRecorder({
+        mediaStreamTrack: audioStreamTrack,
+        interval: RECORD_INTERVAL,
+      }),
+      onSegments,
+    });
   }, [audioStreamTrack, onSegments]);
 
-  return transcriber.current;
+  useEffect(() => {
+    return () => {
+      void transcriber?.close();
+    };
+  }, [transcriber]);
+
+  return transcriber;
 };
