@@ -269,6 +269,10 @@ export class Toolbox {
           }
         }
 
+        if (projectJson.targets.build != null) {
+          projectJson.targets.pack ??= {};
+        }
+
         const updated = sortJson(projectJson, {
           depth: -1,
           map: {
