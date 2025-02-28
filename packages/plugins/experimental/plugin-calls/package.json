@@ -60,6 +60,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
     "effect": "^3.12.3",
     "extendable-media-recorder": "^9.2.19",
@@ -67,7 +68,6 @@
     "react-resize-detector": "^12.0.2",
     "react-router-dom": "^6.4.0",
     "react-use": "^17.5.1",
-    "rxjs": "^7.8.1",
     "wavefile": "^11.0.0"
   },
   "devDependencies": {

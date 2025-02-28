@@ -7,7 +7,7 @@ import React, { type FC } from 'react';
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useSubscribedState, useCallContext } from '../../hooks';
+import { useCallContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
@@ -15,14 +15,14 @@ import { ResponsiveContainer } from '../ResponsiveGrid';
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const { call, userMedia, peer, setJoined } = useCallContext()!;
-  const session = useSubscribedState(peer.session$);
-  const sessionError = useSubscribedState(peer.sessionError$);
-  const numUsers = new Set(call.room.users?.filter((user) => user.tracks?.audio).map((user) => user.name)).size;
+  const session = peer?.session;
+  const sessionError = peer?.sessionError;
+  const numUsers = call.room.users?.filter((user) => user.joined).length ?? 0;
 
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
       <ResponsiveContainer>
-        <VideoObject flip muted videoTrack={userMedia.videoTrack} />
+        <VideoObject flip muted videoTrack={userMedia.state.videoTrack} />
       </ResponsiveContainer>
 
       <Toolbar.Root classNames='justify-between'>
