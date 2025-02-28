@@ -5712,9 +5712,6 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
-      preact:
-        specifier: 8.5.2
-        version: 8.5.2
       tailwindcss:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3))
@@ -29137,9 +29134,6 @@ packages:
 
   preact@10.24.3:
     resolution: {integrity: sha512-Z2dPnBnMUfyQfSQ+GBdsGa16hz35YmLmtTLhM169uW944hYL6xzTYkJjC07j+Wosz733pMWx0fgON3JNw1jJQA==}
-
-  preact@8.5.2:
-    resolution: {integrity: sha512-37tlDJGq5IQKqGUbqPZ7qPtsTOWFyxe+ojAOFfzKo0dEPreenqrqgJuS83zGpeGAqD9h9L9Yr7QuxH2W4ZrKxg==}
 
   prebuild-install@7.1.1:
     resolution: {integrity: sha512-jAXscXWMcCK8GgCoHOfIr0ODh5ai8mj63L2nWrjuAgXE6tDyYGnx4/8o/rCgU+B4JSyZBKbeZqzhtwtC3ovxjw==}
@@ -54298,8 +54292,6 @@ snapshots:
   preact@10.11.2: {}
 
   preact@10.24.3: {}
-
-  preact@8.5.2: {}
 
   prebuild-install@7.1.1:
     dependencies:
