@@ -55,13 +55,15 @@ const meta: Meta<ResponsiveGridProps<TestItem>> = {
     const [items, setItems] = useState<TestItem[]>(args.items);
     useEffect(() => {
       const interval = setInterval(() => {
-        return;
         setItems((items) => {
-          if (items.length >= 20) {
+          const p = Math.random();
+          if (p < 0.5) {
             return items;
+          } else if (p < 0.99 && items.length > 1) {
+            return items.slice(0, -1);
+          } else {
+            return [...items, createItem(items[0]?.type)];
           }
-
-          return [...items, createItem(items[0]?.type)];
         });
       }, 3_000);
 
