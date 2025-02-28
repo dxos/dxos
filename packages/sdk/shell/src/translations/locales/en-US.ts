@@ -135,6 +135,8 @@ export const os = {
   'fuchsia label': 'Fuchsia',
   'pink label': 'Pink',
   'rose label': 'Rose',
+  'select a hue label': 'Select a hue',
+  'hue label': 'Hue',
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',

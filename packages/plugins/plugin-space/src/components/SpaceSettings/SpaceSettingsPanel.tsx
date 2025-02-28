@@ -8,16 +8,17 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { type ThemedClassName, Input, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
+import { HuePickerBlock } from '@dxos/react-ui-pickers';
 
 import { SPACE_PLUGIN } from '../../meta';
 
-export type SpaceSettingsPanelProps = ThemedClassName<{
+export type SpaceSettingsPanelProps = {
   space: Space;
-}>;
+};
 
-export const SpaceSettingsPanel = ({ classNames, space }: SpaceSettingsPanelProps) => {
+export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   const client = useClient();
@@ -48,6 +49,13 @@ export const SpaceSettingsPanel = ({ classNames, space }: SpaceSettingsPanelProp
           onChange={(event) => {
             space.properties.name = event.target.value;
           }}
+        />
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('hue label')}>
+        <HuePickerBlock
+          hue={space.properties.hue}
+          onChangeHue={(nextHue) => (space.properties.hue = nextHue)}
+          onClickClear={() => (space.properties.hue = undefined)}
         />
       </DeprecatedFormInput>
       {edgeEnabled && (

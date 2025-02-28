@@ -14,9 +14,9 @@ export const peerSememes: ColorSememes = Object.keys(huePalettes).reduce((acc: C
     light: [palette, 550],
     dark: [palette, 300],
   };
-  acc[`${palette}TextHover`] = {
-    light: [palette, 450],
-    dark: [palette, 200],
+  acc[`${palette}Shadow`] = {
+    light: [palette, '500/.5'],
+    dark: [palette, '500/.5'],
   };
   acc[`${palette}Fill`] = {
     light: [palette, 500],
