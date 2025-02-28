@@ -42,12 +42,8 @@ const Microphone = () => {
 
   // Transcriber.
   const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
-
   useEffect(() => {
-    if (transcriber) {
-      void transcriber.open();
-    }
-
+    void transcriber?.open();
     return () => {
       void transcriber?.close();
     };
