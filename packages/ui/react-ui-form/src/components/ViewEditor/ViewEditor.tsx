@@ -21,7 +21,7 @@ const ViewMetaSchema = S.Struct({
   name: S.String.annotations({
     [AST.TitleAnnotationId]: 'View',
   }),
-  typename: Format.DXN.annotations({
+  typename: Format.URL.annotations({
     [AST.TitleAnnotationId]: 'Typename',
   }),
 }).pipe(S.mutable);
@@ -103,7 +103,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
+      <Form<ViewMetaType> autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}

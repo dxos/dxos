@@ -5,6 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {},
-    "lint": {}
+    "lint": {},
+    "pack": {}
   }
 }
