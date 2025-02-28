@@ -92,7 +92,8 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
 
     const ctx = new Context();
     scheduleTask(ctx, async () => {
-      // Wait for the track to be available.
+      // TODO(mykola): Add retry logic. Delete delay.
+      // Wait for the track to be available on CF.
       await cancelWithContext(ctx, sleep(500));
       audioTrack.current = await peer?.pullTrack(trackObject);
     });
