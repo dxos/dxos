@@ -22,7 +22,7 @@ export type ThreadProps = {
 export const Thread = ({
   messages,
   processing,
-  collapse,
+  collapse = true,
   debug,
   onSubmit,
   onCancel,
@@ -67,9 +67,7 @@ export const Thread = ({
         ))}
       </ScrollContainer>
 
-      {onSubmit && (
-        <PromptBar classNames='p-1' microphone processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />
-      )}
+      {onSubmit && <PromptBar microphone processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />}
     </div>
   );
 };

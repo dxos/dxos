@@ -45,8 +45,6 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
       ],
     });
 
-    console.log('view', onSubmit);
-
     // Expose editor view.
     useImperativeHandle(
       forwardRef,

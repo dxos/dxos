@@ -3,3 +3,4 @@
 //
 
 export * from './Thread';
+export * from './ThreadContainer';

@@ -6,21 +6,13 @@ import React, { useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { useChatProcessor, useMessageQueue } from '../../hooks';
 import { type AIChatType } from '../../types';
 import { Thread } from '../Thread';
 
-export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
-  return (
-    <StackItem.Content toolbar={false} role={role}>
-      <ThreadContainer chat={chat} />
-    </StackItem.Content>
-  );
-};
-
-const ThreadContainer = ({ chat }: { chat?: AIChatType }) => {
+// TODO(burdon): Since this only wraps Thread, just separate out hook?
+export const ThreadContainer = ({ chat }: { chat?: AIChatType }) => {
   const space = getSpace(chat);
   const processor = useChatProcessor(space);
   const messageQueue = useMessageQueue(chat);

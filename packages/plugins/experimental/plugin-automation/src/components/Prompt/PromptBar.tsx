@@ -60,7 +60,7 @@ export const PromptBar = ({ classNames, placeholder, processing, microphone, onC
             )}
             {!processing && microphone && (
               <IconButton
-                classNames={mx(recording && 'bg-primary-500')}
+                classNames={mx('p-0', recording && 'bg-primary-500')}
                 variant='ghost'
                 size={5}
                 icon='ph--microphone--regular'
