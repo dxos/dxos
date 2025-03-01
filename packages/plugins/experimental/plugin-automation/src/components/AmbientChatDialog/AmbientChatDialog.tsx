@@ -35,6 +35,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
   log.info('creating chat', { space: space.id });
   const { data } = await dispatch(createIntent(AutomationAction.CreateChat));
   if (!data?.object) {
+    log.error('failed to create chat', { space: space.id });
     return;
   }
 
@@ -124,8 +125,8 @@ const ChatDialog = ({ children }: PropsWithChildren) => {
 const Header = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   return (
-    <div className='flex shrink-0 w-full grid grid-cols-[2rem_1fr_2rem] gap-2 h-[40px] items-center overflow-hidden'>
-      <div className='flex items-center justify-center'>
+    <div className='flex shrink-0 w-full grid grid-cols-[40px_1fr_40px] items-center overflow-hidden'>
+      <div className='flex w-[40px] h-[40px] items-center justify-center'>
         <Dialog.Close>
           <Icon icon='ph--x--regular' />
         </Dialog.Close>
@@ -133,7 +134,7 @@ const Header = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => 
       <div className='grow'>
         <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
       </div>
-      <div className='flex items-center justify-center'>
+      <div className='flex w-[40px] h-[40px] items-center justify-center'>
         <IconButton
           variant='ghost'
           icon={open ? 'ph--caret-down--regular' : 'ph--caret-up--regular'}
