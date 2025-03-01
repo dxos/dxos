@@ -17,7 +17,7 @@ export type HuePickerProps = {
   onReset?: ButtonProps['onClick'];
 } & Pick<ToolbarPickerProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset'>;
 
-export const HuePicker = ({ disabled, value, onChange, ...props }: ThemedClassName<HuePickerProps>) => {
+export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
   const { t } = useTranslation('os');
 
   return (
@@ -32,19 +32,11 @@ export const HuePicker = ({ disabled, value, onChange, ...props }: ThemedClassNa
 };
 
 const HuePreview = ({ value }: { value: string }) => {
-  const size = 20;
+  const size = 16;
   return (
-    <div className='!p-1'>
+    <div className='flex p-[2px] justify-center items-center'>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <rect
-          x={0}
-          y={0}
-          width={size}
-          height={size}
-          fill={`var(--dx-${value}Surface)`}
-          stroke={`var(--dx-${value}SurfaceText)`}
-          strokeWidth={4}
-        />
+        <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${value}Surface)`} strokeWidth={4} />
       </svg>
     </div>
   );

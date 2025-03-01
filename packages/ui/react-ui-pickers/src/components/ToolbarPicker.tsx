@@ -3,7 +3,7 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type FC, useRef, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { DropdownMenu, Icon, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -37,6 +37,8 @@ export const ToolbarPickerButton = ({
     defaultProp: _defaultValue,
     onChange,
   });
+  // TODO(burdon): useControllableState doesn't update the prop when the value is changed. Replace it.
+  useEffect(() => setValue(_value), [_value]);
 
   const [open, setOpen] = useState<boolean>(false);
 
@@ -67,7 +69,7 @@ export const ToolbarPickerButton = ({
           <DropdownMenu.Trigger asChild>
             <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
               <span className='sr-only'>{label}</span>
-              <Icon icon={icon} size={5} />
+              {(value && <Component value={value} />) || <Icon icon={icon} size={5} />}
             </Toolbar.Button>
           </DropdownMenu.Trigger>
         </Tooltip.Trigger>

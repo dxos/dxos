@@ -119,19 +119,28 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
             role='none'
             className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
           />
-          {type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-            <span
-              role='img'
-              className='place-self-center text-3xl font-light'
-              {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
-            >
-              {avatarValue}
-            </span>
-          ) : (
-            item.properties.icon && (
-              <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
-            )
+          {item.properties.icon && (
+            <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
           )}
+
+          {false && (
+            <>
+              {type === 'tab' && item.properties.disposition !== 'pin-end' ? (
+                <span
+                  role='img'
+                  className='place-self-center text-3xl font-light'
+                  {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
+                >
+                  {avatarValue}
+                </span>
+              ) : (
+                item.properties.icon && (
+                  <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
+                )
+              )}
+            </>
+          )}
+
           <span id={`${item.id}__label`} className='sr-only'>
             {localizedString}
           </span>

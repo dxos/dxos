@@ -16,7 +16,7 @@ export type IconPickerProps = {
   onReset?: ButtonProps['onClick'];
 } & Pick<ToolbarPickerProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset'>;
 
-export const IconPicker = ({ disabled, value, onChange, ...props }: ThemedClassName<IconPickerProps>) => {
+export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
   const { t } = useTranslation('os');
 
   return (
@@ -24,14 +24,14 @@ export const IconPicker = ({ disabled, value, onChange, ...props }: ThemedClassN
       Component={IconPreview}
       label={t('select icon label')}
       icon='ph--selection--regular'
-      values={icons}
+      values={iconValues}
       {...props}
     />
   );
 };
 
 const IconPreview = ({ value }: { value: string }) => {
-  return <Icon icon={value} size={6} classNames='!p-0' />;
+  return <Icon icon={`ph--${value}--regular`} size={6} classNames='!p-0' />;
 };
 
 /**
@@ -88,3 +88,5 @@ const icons = [
   'ph--users-three--regular',
   'ph--yin-yang--regular',
 ];
+
+const iconValues = icons.map((icon) => icon.match(/ph--(.+)--regular/)?.[1] ?? icon);

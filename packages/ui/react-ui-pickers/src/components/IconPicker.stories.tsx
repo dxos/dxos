@@ -13,7 +13,8 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { IconPicker, type IconPickerProps } from './IconPicker';
 
 const ToolbarStory = (props: IconPickerProps) => {
-  const [icon, setIcon] = useState<string | undefined>(props.defaultValue);
+  const [icon, setIcon] = useState<string | undefined>(props.value ?? props.defaultValue);
+  console.log(icon);
 
   return (
     <Toolbar.Root>

@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
-import { HuePicker } from '@dxos/react-ui-pickers';
+import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { SPACE_PLUGIN } from '../../meta';
 
@@ -50,6 +50,11 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
             space.properties.name = event.target.value;
           }}
         />
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('icon label')}>
+        <Toolbar.Root>
+          <IconPicker value={space.properties.icon} onChange={(nextIcon) => (space.properties.icon = nextIcon)} />
+        </Toolbar.Root>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('hue label')}>
         <Toolbar.Root>
