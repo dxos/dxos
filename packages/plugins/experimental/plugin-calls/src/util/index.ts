@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './cf-calls-peer';
+export * from './calls-service';
 export * from './get-device-list';
 export * from './get-screenshare';
 export * from './get-user-media';
-export * from './merge-float-64-array';
-export * from './random-queue-dxn';
 export * from './monitor-audio-level';

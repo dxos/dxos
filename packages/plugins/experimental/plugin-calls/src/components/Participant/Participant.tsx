@@ -8,7 +8,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { useCallContext, usePulledAudioTrack, usePulledVideoTrack } from '../../hooks';
 import { type UserState } from '../../types';
-import { type CloudflareCallsPeer } from '../../utils';
+import { type CallsServicePeer } from '../../util';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 
@@ -69,7 +69,7 @@ Participant.displayName = 'Participant';
 /**
  * Get the track's media ID.
  */
-const useMid = ({ track, peer }: { track?: MediaStreamTrack; peer?: CloudflareCallsPeer }) => {
+const useMid = ({ track, peer }: { track?: MediaStreamTrack; peer?: CallsServicePeer }) => {
   const transceivers = useMemo(() => peer?.session?.peerConnection.getTransceivers(), [peer?.session?.peerConnection]);
 
   if (!track) {

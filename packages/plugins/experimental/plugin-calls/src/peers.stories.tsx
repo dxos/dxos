@@ -16,7 +16,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { useCfCallsConnection } from './hooks';
+import { useCallsService } from './hooks';
 // @ts-ignore
 import video from './tests/assets/video.mp4';
 import { CALLS_URL } from './types';
@@ -55,8 +55,8 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
     apiBase: `${CALLS_URL}/api/calls`,
   };
 
-  const { peer: peerPush } = useCfCallsConnection(cfCallsConfig);
-  const { peer: peerPull } = useCfCallsConnection(cfCallsConfig);
+  const { peer: peerPush } = useCallsService(cfCallsConfig);
+  const { peer: peerPull } = useCallsService(cfCallsConfig);
 
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);

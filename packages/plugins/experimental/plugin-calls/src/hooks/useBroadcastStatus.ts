@@ -12,11 +12,11 @@ import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge
 import { type CallContextType } from './useCallContext';
 import { type UserMedia } from './useUserMedia';
 import { type UserState } from '../types';
-import { type CloudflareCallsPeer } from '../util';
+import { type CallsServicePeer } from '../util';
 
 type UseBroadcastStatus = {
   transcription: TranscriptionState;
-  peer?: CloudflareCallsPeer;
+  peer?: CallsServicePeer;
   userMedia: UserMedia;
   pushedTracks: CallContextType['pushedTracks'];
   user?: UserState;
