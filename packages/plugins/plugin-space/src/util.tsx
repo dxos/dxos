@@ -206,7 +206,7 @@ export const constructSpaceNode = ({
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
-      icon: space.properties.icon ? `ph--${space.properties.icon}--regular` : 'ph--planet--regular',
+      icon: space.properties.icon ? `ph--${space.properties.icon}--regular` : undefined,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
