@@ -19,18 +19,11 @@ export type ThreadMessageProps = ThemedClassName<{
   message: Message;
   collapse?: boolean;
   debug?: boolean;
-  onSuggest?: (text: string) => void;
+  onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({
-  classNames,
-  message,
-  collapse,
-  debug,
-  onSuggest,
-  onDelete,
-}) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, collapse, debug, onPrompt, onDelete }) => {
   if (typeof message !== 'object') {
     return <div className={mx(classNames)}>{message}</div>;
   }
@@ -88,7 +81,7 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
       )}
       {content.map((block, idx) => (
         <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
-          <Block role={role} block={block} onSuggest={onSuggest ?? (() => {})} />
+          <Block role={role} block={block} onPrompt={onPrompt ?? (() => {})} />
         </div>
       ))}
     </div>
@@ -98,8 +91,8 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
 const Block = ({
   block,
   role,
-  onSuggest,
-}: Pick<Message, 'role'> & { block: MessageContentBlock; onSuggest: (text: string) => void }) => {
+  onPrompt,
+}: Pick<Message, 'role'> & { block: MessageContentBlock; onPrompt: (text: string) => void }) => {
   const Component = componentMap[block.type] ?? componentMap.default;
   return (
     <div
@@ -109,7 +102,7 @@ const Block = ({
         block.type === 'text' && role === 'user' && 'bg-primary-200 dark:bg-primary-500',
       )}
     >
-      <Component block={block} onSuggest={onSuggest} />
+      <Component block={block} onPrompt={onPrompt} />
     </div>
   );
 };
@@ -121,7 +114,7 @@ const titles: Record<string, string> = {
   ['tool_result' as const]: 'Tool result',
 };
 
-type BlockComponent = FC<{ block: MessageContentBlock; onSuggest: (text: string) => void }>;
+type BlockComponent = FC<{ block: MessageContentBlock; onPrompt: (text: string) => void }>;
 
 const componentMap: Record<string, BlockComponent> = {
   text: ({ block }) => {
@@ -148,13 +141,13 @@ const componentMap: Record<string, BlockComponent> = {
     );
   },
 
-  json: ({ block, onSuggest }) => {
+  json: ({ block, onPrompt }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
-        return <Button onClick={() => onSuggest(text)}>{text}</Button>;
+        return <Button onClick={() => onPrompt(text)}>{text}</Button>;
       }
 
       case 'select': {
@@ -162,7 +155,7 @@ const componentMap: Record<string, BlockComponent> = {
         return (
           <ButtonGroup>
             {options.map((option) => (
-              <Button key={option} onClick={() => onSuggest(option)}>
+              <Button key={option} onClick={() => onPrompt(option)}>
                 {option}
               </Button>
             ))}

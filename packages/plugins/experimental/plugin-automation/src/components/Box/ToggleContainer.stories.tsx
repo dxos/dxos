@@ -58,7 +58,7 @@ const Render = ({ shrinkX, ...props }: ToggleContainerProps) => {
   }, [running]);
 
   return (
-    <div className='flex flex-col w-[500px]'>
+    <div className='flex flex-col w-[30rem]'>
       <Toolbar.Root classNames='p-4'>
         <Input.Root>
           <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />

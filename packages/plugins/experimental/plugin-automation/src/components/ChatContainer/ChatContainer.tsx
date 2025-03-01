@@ -31,7 +31,7 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
     [processor, messageQueue],
   );
 
-  const handleStop = useCallback(() => {
+  const handleCancel = useCallback(() => {
     if (processor.streaming.value) {
       void processor.cancel();
     }
@@ -41,11 +41,10 @@ export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }
     <StackItem.Content toolbar={false} role={role}>
       <Thread
         messages={messages}
-        streaming={processor.streaming.value}
+        processing={processor.streaming.value}
         collapse={true}
         onSubmit={handleSubmit}
-        onSuggest={handleSubmit}
-        onStop={handleStop}
+        onCancel={handleCancel}
       />
     </StackItem.Content>
   );

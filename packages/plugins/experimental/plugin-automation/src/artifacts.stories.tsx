@@ -111,7 +111,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
       }
     : undefined;
 
-  const handleSuggest = useCallback(
+  const handlePrompt = useCallback(
     (text: string) => {
       void handleSubmit?.(text);
     },
@@ -157,9 +157,9 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
 
         <Thread
           messages={messages}
-          streaming={processor?.streaming.value}
+          processing={processor?.streaming.value}
           onSubmit={processor ? handleSubmit : undefined}
-          onSuggest={processor ? handleSuggest : undefined}
+          onPrompt={processor ? handlePrompt : undefined}
           onDelete={processor ? handleDelete : undefined}
           {...props}
         />

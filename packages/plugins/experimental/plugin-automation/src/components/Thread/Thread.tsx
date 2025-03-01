@@ -2,49 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { type Message } from '@dxos/artifact';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
-import { Spinner } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
 
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { messageReducer } from './reducer';
-import { useTextInputEvents } from '../../hooks';
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { PromptBar, type PromptBarProps } from '../Prompt';
 
 export type ThreadProps = {
   messages?: Message[];
-  streaming?: boolean;
-  onSubmit?: (message: string) => void;
-  onStop?: () => void;
-} & Pick<ThreadMessageProps, 'collapse' | 'debug' | 'onSuggest' | 'onDelete'>;
+} & Pick<PromptBarProps, 'processing' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
+  Pick<ThreadMessageProps, 'collapse' | 'debug' | 'onPrompt' | 'onDelete'>;
 
 /**
  * Chat thread component.
  */
 export const Thread = ({
   messages,
-  streaming,
+  processing,
   collapse,
   debug,
   onSubmit,
-  onStop,
-  onSuggest,
+  onCancel,
+  onPrompt,
   onDelete,
 }: ThreadProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scroller = useRef<ScrollController>(null);
 
-  const [inputProps] = useTextInputEvents({
-    onEnter: (value) => {
+  const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
+    (value: string) => {
       onSubmit?.(value);
       scroller.current?.scrollToBottom();
       return true;
     },
-  });
+    [onSubmit],
+  );
 
   // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
   const { messages: lines = [] } = useMemo(() => {
@@ -67,36 +61,21 @@ export const Thread = ({
             message={message}
             collapse={collapse}
             debug={debug}
-            onSuggest={onSuggest}
+            onPrompt={onPrompt}
             onDelete={onDelete}
           />
         ))}
       </ScrollContainer>
 
       {onSubmit && (
-        <div className='flex p-4 gap-3 items-center'>
-          <Spinner active={streaming} />
-          <Input.Root>
-            <Input.TextInput
-              autoFocus
-              classNames='px-2 baseSurface rounded'
-              placeholder={t('chat input placeholder')}
-              {...inputProps}
-            />
-          </Input.Root>
-          {onStop && (
-            <IconButton
-              disabled={!streaming}
-              classNames={mx('!p-1 !opacity-20 transition', streaming && '!opacity-80')}
-              variant='ghost'
-              size={5}
-              onClick={onStop}
-              icon='ph--x--regular'
-              label={t('chat stop')}
-              iconOnly
-            />
-          )}
-        </div>
+        <PromptBar
+          classNames='p-1'
+          microphone
+          processing={processing}
+          onSubmit={handleSubmit}
+          // onSuggest={onSuggest}
+          onCancel={onCancel}
+        />
       )}
     </div>
   );

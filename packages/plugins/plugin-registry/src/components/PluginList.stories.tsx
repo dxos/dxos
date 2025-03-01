@@ -71,6 +71,6 @@ export const Default = {};
 
 export const Column = {
   args: {
-    classNames: 'w-[400px]',
+    classNames: 'w-[30rem]',
   },
 };

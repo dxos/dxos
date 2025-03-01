@@ -2,16 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
-import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
   createThemeExtensions,
-  type EditorView,
-  keymap,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -21,70 +18,59 @@ import { createAutocompleteExtension, type AutocompleteOptions } from './prompt-
 
 // TODO(burdon): Handle object references.
 
+export interface PromptController {
+  focus(): void;
+  setText(text: string): void;
+}
+
 export type PromptProps = ThemedClassName<
-  { value: string } & AutocompleteOptions &
+  AutocompleteOptions &
     Pick<UseTextEditorProps, 'autoFocus'> &
-    Pick<BasicExtensionsOptions, 'lineWrapping'>
+    Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
-export const Prompt = forwardRef<EditorView | undefined, PromptProps>(
-  ({ classNames, value, autoFocus, lineWrapping = false, onEnter, onSuggest }, forwardRef) => {
+export const Prompt = forwardRef<PromptController, PromptProps>(
+  ({ classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest }, forwardRef) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor({
       autoFocus,
       extensions: [
         createBasicExtensions({
-          lineWrapping,
           bracketMatching: false,
-          placeholder: 'Ask a question...',
+          lineWrapping,
+          placeholder,
         }),
         createThemeExtensions({ themeMode }),
-        createAutocompleteExtension({ onEnter, onSuggest }),
-        Prec.highest(
-          keymap.of([
-            {
-              key: 'Mod-k', // Command-k
-              run: (view) => {
-                view.dispatch({
-                  changes: {
-                    from: 0,
-                    to: view.state.doc.length,
-                    insert: '',
-                  },
-                  selection: {
-                    anchor: 0,
-                  },
-                });
-                return true;
-              },
-            },
-          ]),
-        ),
+        createAutocompleteExtension({ onSubmit, onSuggest }),
       ],
     });
 
     // Expose editor view.
-    useImperativeHandle(forwardRef, () => view, [view]);
-
-    // Update text.
-    useEffect(() => {
-      if (value) {
-        view?.dispatch({
-          changes: {
-            from: 0,
-            to: view.state.doc.length,
-            insert: value,
+    useImperativeHandle(
+      forwardRef,
+      () => {
+        return {
+          focus: () => {
+            view?.focus();
           },
-          selection: {
-            anchor: value.length,
-            head: value.length,
+          setText: (text: string) => {
+            view?.dispatch({
+              changes: {
+                from: 0,
+                to: view.state.doc.length,
+                insert: text,
+              },
+              selection: {
+                anchor: text.length,
+                head: text.length,
+              },
+            });
           },
-        });
+        };
+      },
+      [view],
+    );
 
-        view?.focus();
-      }
-    }, [view, value]);
-
-    return <div ref={parentRef} className={mx('w-full', classNames)} />;
+    return <div ref={parentRef} className={mx('w-full overflow-hidden', classNames)} />;
   },
 );

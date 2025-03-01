@@ -18,7 +18,7 @@ export type AutocompleteOptions = {
    * Callback triggered when Enter is pressed.
    * @param text The current text in the editor
    */
-  onEnter?: (text: string) => void;
+  onSubmit?: (text: string) => void;
 
   /**
    * Function that returns a list of suggestions based on the current text.
@@ -49,7 +49,7 @@ class InlineSuggestionWidget extends WidgetType {
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
  */
-export const createAutocompleteExtension = ({ onEnter, onSuggest }: AutocompleteOptions): Extension => {
+export const createAutocompleteExtension = ({ onSubmit, onSuggest }: AutocompleteOptions): Extension => {
   const suggestionPlugin = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
@@ -153,8 +153,8 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
           preventDefault: true,
           run: (view) => {
             const text = view.state.doc.toString();
-            if (onEnter) {
-              onEnter(text);
+            if (onSubmit) {
+              onSubmit(text);
               // Clear the document after calling onEnter
               view.dispatch({
                 changes: {
