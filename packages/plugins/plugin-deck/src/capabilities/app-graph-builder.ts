@@ -98,6 +98,9 @@ export default (context: PluginsContext) =>
               { ns: DECK_PLUGIN },
             ],
             icon: 'ph--sidebar--regular',
+            keyBinding: {
+              macos: 'meta+b',
+            },
             disposition: 'pin-end',
             l0Breakpoint: 'lg',
           },

@@ -33,48 +33,48 @@ export const PromptBar = ({ classNames, placeholder, processing, microphone, onC
     },
   });
 
+  // TODO(burdon): Use rail/toolbar definition for height.
   return (
-    <div className={mx('w-full grid grid-cols-[2rem_1fr_2rem] gap-2', classNames)}>
-      <div className='flex h-8 items-center justify-center'>
+    <div className={mx('flex shrink-0 w-full grid grid-cols-[2rem_1fr_2rem] gap-2 overflow-hidden', classNames)}>
+      <div className='flex h-[40px] items-center justify-center'>
         <Spinner active={processing} />
       </div>
       <Prompt
         ref={promptRef}
         autoFocus
-        classNames='pbs-1'
+        classNames='pbs-2'
+        lineWrapping={true}
         placeholder={placeholder ?? t('prompt placeholder')}
         {...props}
       />
       {(onCancel || microphone) && (
-        <>
-          <div className='flex h-8 items-center justify-center'>
-            {processing && onCancel && (
-              <IconButton
-                variant='ghost'
-                size={5}
-                icon='ph--x--regular'
-                iconOnly
-                label={t('cancel processing button')}
-                onClick={onCancel}
-              />
-            )}
-            {!processing && microphone && (
-              <IconButton
-                classNames={mx('p-0', recording && 'bg-primary-500')}
-                variant='ghost'
-                size={5}
-                icon='ph--microphone--regular'
-                iconOnly
-                noTooltip
-                label={t('microphone button')}
-                onMouseDown={() => setActive(true)}
-                onMouseUp={() => setActive(false)}
-                onTouchStart={() => setActive(true)}
-                onTouchEnd={() => setActive(false)}
-              />
-            )}
-          </div>
-        </>
+        <div className='flex h-[40px] items-center justify-center'>
+          {processing && onCancel && (
+            <IconButton
+              variant='ghost'
+              size={5}
+              icon='ph--x--regular'
+              iconOnly
+              label={t('cancel processing button')}
+              onClick={onCancel}
+            />
+          )}
+          {!processing && microphone && (
+            <IconButton
+              classNames={mx('p-0', recording && 'bg-primary-500')}
+              variant='ghost'
+              size={5}
+              icon='ph--microphone--regular'
+              iconOnly
+              noTooltip
+              label={t('microphone button')}
+              onMouseDown={() => setActive(true)}
+              onMouseUp={() => setActive(false)}
+              onTouchStart={() => setActive(true)}
+              onTouchEnd={() => setActive(false)}
+            />
+          )}
+        </div>
       )}
     </div>
   );

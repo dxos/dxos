@@ -98,11 +98,11 @@ const Block = ({
   onPrompt,
 }: Pick<Message, 'role'> & { block: MessageContentBlock; onPrompt: (text: string) => void }) => {
   const Component = componentMap[block.type] ?? componentMap.default;
+
   return (
     <div
       className={mx(
         'p-1 px-2 overflow-hidden rounded-md',
-        (block.type !== 'text' || block.disposition) && 'w-full bg-baseSurface',
         block.type === 'text' && role === 'user' && 'bg-primary-200 dark:bg-primary-500',
       )}
     >
@@ -151,7 +151,7 @@ const componentMap: Record<string, BlockComponent> = {
     switch (block.disposition) {
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
-        return <Button onClick={() => onPrompt(text)}>{text}</Button>;
+        return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt(text)} />;
       }
 
       case 'select': {

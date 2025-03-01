@@ -53,11 +53,11 @@ export const Thread = ({
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <ScrollContainer ref={scroller} classNames='py-2 gap-2 overflow-x-hidden'>
+      <ScrollContainer ref={scroller}>
         {lines.map((message) => (
           <ThreadMessage
             key={message.id}
-            classNames='px-4'
+            classNames='px-4 pbs-2'
             message={message}
             collapse={collapse}
             debug={debug}
@@ -65,6 +65,8 @@ export const Thread = ({
             onDelete={onDelete}
           />
         ))}
+
+        <div className='pbe-6' />
       </ScrollContainer>
 
       {onSubmit && <PromptBar microphone processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />}
