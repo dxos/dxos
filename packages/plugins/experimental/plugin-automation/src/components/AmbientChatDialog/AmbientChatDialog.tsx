@@ -15,8 +15,6 @@ import { Prompt, type PromptProps } from '../Prompt';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
-// TODO(budon): Voice and suggest.
-
 export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');

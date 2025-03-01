@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEventHandler, useCallback, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { type Message } from '@dxos/artifact';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
@@ -11,6 +11,8 @@ import { Spinner } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
+import { messageReducer } from './reducer';
+import { useTextInputEvents } from '../../hooks';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type ThreadProps = {
@@ -20,7 +22,9 @@ export type ThreadProps = {
   onStop?: () => void;
 } & Pick<ThreadMessageProps, 'collapse' | 'debug' | 'onSuggest' | 'onDelete'>;
 
-// TODO(burdon): Factor out scroll logic.
+/**
+ * Chat thread component.
+ */
 export const Thread = ({
   messages,
   streaming,
@@ -34,78 +38,23 @@ export const Thread = ({
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scroller = useRef<ScrollController>(null);
 
-  const [text, setText] = useState('');
-  const handleKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
-    (ev) => {
-      switch (ev.key) {
-        case 'Escape': {
-          setText('');
-          break;
-        }
-
-        case 'Enter': {
-          const value = text.trim();
-          if (value.length > 0) {
-            scroller.current?.scrollToBottom();
-            onSubmit?.(value);
-            setText('');
-          }
-          break;
-        }
-      }
+  const [inputProps] = useTextInputEvents({
+    onEnter: (value) => {
+      onSubmit?.(value);
+      scroller.current?.scrollToBottom();
+      return true;
     },
-    [text],
-  );
+  });
 
-  /**
-   * Reduce message blocks into collections of messages that contain related contiguous blocks.
-   * For example, collapse all tool request/response pairs into a single message.
-   */
   // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
   const { messages: lines = [] } = useMemo(() => {
-    if (!collapse) {
+    if (collapse) {
+      return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(messageReducer, {
+        messages: [],
+      });
+    } else {
       return { messages: messages ?? [] };
     }
-
-    return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(
-      ({ current, messages }, message) => {
-        let i = 0;
-        for (const block of message.content) {
-          switch (block.type) {
-            case 'tool_use':
-            case 'tool_result': {
-              if (current) {
-                current.content.push(block);
-              } else {
-                current = {
-                  id: [message.id, i].join('_'),
-                  role: message.role,
-                  content: [block],
-                };
-                messages.push(current);
-              }
-              break;
-            }
-
-            case 'text':
-            default: {
-              current = undefined;
-              messages.push({
-                id: [message.id, i].join('_'),
-                role: message.role,
-                content: [block],
-              });
-              break;
-            }
-          }
-
-          i++;
-        }
-
-        return { current, messages };
-      },
-      { messages: [] as Message[] },
-    );
   }, [messages, collapse]);
 
   return (
@@ -132,9 +81,7 @@ export const Thread = ({
               autoFocus
               classNames='px-2 baseSurface rounded'
               placeholder={t('chat input placeholder')}
-              value={text}
-              onChange={(ev) => setText(ev.target.value)}
-              onKeyDown={handleKeyDown}
+              {...inputProps}
             />
           </Input.Root>
           {onStop && (
