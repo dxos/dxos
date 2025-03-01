@@ -31,7 +31,7 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
 };
 
 const IconPreview = ({ value }: { value: string }) => {
-  return <Icon icon={`ph--${value}--regular`} size={6} classNames='!p-0' />;
+  return <Icon icon={`ph--${value}--regular`} size={5} />;
 };
 
 /**
