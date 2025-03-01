@@ -124,6 +124,8 @@ export default [
         'advanced settings label': 'Advanced',
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
+        'icon label': 'Icon',
+        'hue label': 'Color',
       },
     },
   },
