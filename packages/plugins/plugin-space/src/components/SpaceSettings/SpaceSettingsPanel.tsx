@@ -53,12 +53,24 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('icon label')}>
         <Toolbar.Root>
-          <IconPicker value={space.properties.icon} onChange={(nextIcon) => (space.properties.icon = nextIcon)} />
+          <IconPicker
+            value={space.properties.icon}
+            onChange={(nextIcon) => (space.properties.icon = nextIcon)}
+            onReset={() => {
+              space.properties.icon = undefined;
+            }}
+          />
         </Toolbar.Root>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('hue label')}>
         <Toolbar.Root>
-          <HuePicker value={space.properties.hue} onChange={(nextHue) => (space.properties.hue = nextHue)} />
+          <HuePicker
+            value={space.properties.hue}
+            onChange={(nextHue) => (space.properties.hue = nextHue)}
+            onReset={() => {
+              space.properties.hue = undefined;
+            }}
+          />
         </Toolbar.Root>
       </DeprecatedFormInput>
       {edgeEnabled && (
