@@ -17,9 +17,9 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useCallsService } from './hooks';
-// @ts-ignore
-import video from './tests/assets/video.mp4';
 import { CALLS_URL } from './types';
+// @ts-ignore
+import video from '../testing/video.mp4';
 
 const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
   // Get video stream track
@@ -30,9 +30,10 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
     if (!videoElement || hadRun.current || !video) {
       return;
     }
-    hadRun.current = true;
-    videoElement.src = video;
 
+    hadRun.current = true;
+
+    videoElement.src = video;
     videoElement.addEventListener('playing', () => {
       const stream = (videoElement as any).captureStream();
       log.info('Captured stream', { stream });
@@ -62,10 +63,11 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
   const pullVideoElement = useRef<HTMLVideoElement>(null);
   const [metrics, setMetrics] = useState<Record<string, any>>({});
 
-  // Get video stream track
+  // Get video stream track.
   const videoStreamTrack = useVideoStreamTrack(pushVideoElement.current);
 
   const hadRun = useRef(false);
+
   // Push/pull video stream track to cloudflare.
   useEffect(() => {
     if (hadRun.current || !videoStreamTrack || !peerPush || !peerPull) {
