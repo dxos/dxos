@@ -10,20 +10,21 @@ import React, { useState } from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { HuePicker, type HuePickerProps } from './HuePicker';
+import { IconPicker, type IconPickerProps } from './IconPicker';
 
-const ToolbarStory = (props: HuePickerProps) => {
-  const [hue, setHue] = useState<string | undefined>(props.defaultValue);
+const ToolbarStory = (props: IconPickerProps) => {
+  const [icon, setIcon] = useState<string | undefined>(props.value ?? props.defaultValue);
+  console.log(icon);
 
   return (
     <Toolbar.Root>
-      <HuePicker {...props} value={hue} onChange={setHue} onReset={() => setHue(undefined)} />
+      <IconPicker {...props} value={icon} onChange={setIcon} onReset={() => setIcon(undefined)} />
     </Toolbar.Root>
   );
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-pickers/HuePicker',
+  title: 'ui/react-ui-pickers/IconPicker',
   decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: {
     layout: 'centered',
@@ -32,9 +33,7 @@ const meta: Meta = {
 
 export default meta;
 
-export const Default: StoryObj<HuePickerProps> = {
+export const Default: StoryObj<IconPickerProps> = {
   render: ToolbarStory,
-  args: {
-    defaultValue: 'red',
-  },
+  args: {},
 };

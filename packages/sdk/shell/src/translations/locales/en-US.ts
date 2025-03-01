@@ -140,6 +140,7 @@ export const os = {
 
   'select a hue label': 'Select color',
   'hue label': 'Hue',
+  'icon label': 'Icon',
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',
