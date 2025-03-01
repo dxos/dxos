@@ -1,0 +1,32 @@
+---
+description: Working in the DXOS codebase
+globs: 
+alwaysApply: false
+---
+# DXOS Rules
+
+Key preferences:
+- Write in TypeScript by default.
+- Prefer functional programming patterns.
+- Follow React best practices and hooks patterns.
+- Use TailwindCSS for React styles.
+- Unit test examples when relevant.
+
+When writing code:
+- Include type definitions.
+- Add JSDoc comments for public functions.
+- Keep components pure and composable.
+- Use proper error handling with Effect.
+- Include proper event handler types for React components.
+- All comments should be in English and end with a period.
+
+Technologies to consider:
+- Use Effect-TS for schema validation.
+- Automerge for state management.
+- Codemirror v6 for editor integrations.
+
+Monorepo tools:
+- NX for monorepo management.
+- pnpm for package management.
+- vitest
+- vite
