@@ -23,7 +23,7 @@ const Render = () => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   return (
     <div>
-      <Toolbox artifacts={artifactDefinitions} classNames='w-[30rem] h-[20rem] rounded-md _border border-neutral-500' />
+      <Toolbox artifacts={artifactDefinitions} classNames='w-[30rem] h-[15rem] rounded-md border border-neutral-500' />
     </div>
   );
 };
@@ -50,7 +50,7 @@ const meta: Meta<typeof Toolbox> = {
       capabilities,
     }),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ tooltips: true }),
   ],
   parameters: {
     layout: 'centered',

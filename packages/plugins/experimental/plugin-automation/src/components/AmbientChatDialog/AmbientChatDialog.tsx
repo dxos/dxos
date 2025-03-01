@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 
-import { scheduleMicroTask } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
-import { type TranscriberParams, useAudioTrack, useTranscriber } from '@dxos/plugin-transcription';
+import { useVoiceInput } from '@dxos/plugin-transcription';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 import { type EditorView } from '@dxos/react-ui-editor';
-import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -25,59 +21,19 @@ export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
   const [iter, setIter] = useState(0);
-  const soundStart = useSoundEffect('StartRecording');
-  const soundStop = useSoundEffect('StopRecording');
 
   const [prompt, setPrompt] = useState('');
   const promptRef = useRef<EditorView>();
 
-  // TODO(burdon): Get acitve space for queue.
-  // const space = useSpace();
-  // const queueDxn = useMemo(() => {
-  //   return space ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, ObjectId.random()]) : undefined;
-  // }, [space]);
-
-  // Audio/transcription.
-  // TODO(mykola): Do not recreate track on every state change. Or make it possible to substitute track in transcriber.
   const [active, setActive] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const track = useAudioTrack(active);
-
-  // Transcriber.
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
-    const text = segments.map((str) => str.text.trim().replace(/[^\w\s]/g, '')).join(' ');
-    setPrompt(text);
-  }, []);
-  const transcriber = useTranscriber({
-    audioStreamTrack: track,
-    onSegments: handleSegments,
+  const { recording } = useVoiceInput({
+    active,
+    onUpdate: (text) => {
+      setPrompt(text);
+      promptRef.current?.focus();
+    },
   });
 
-  // Start/stop transcription.
-  useEffect(() => {
-    const ctx = new Context();
-    scheduleMicroTask(ctx, async () => {
-      if (active && transcriber) {
-        await transcriber.open();
-        log.info('starting...');
-        setRecording(true);
-        void soundStart.play();
-        transcriber.startChunksRecording();
-      } else if (!active && transcriber?.isOpen) {
-        transcriber?.stopChunksRecording();
-        await transcriber?.close();
-        log.info('stopped');
-        setRecording(false);
-        void soundStop.play();
-      }
-    });
-
-    return () => {
-      void ctx.dispose();
-    };
-  }, [active, transcriber]);
-
-  // Suggest.
   // TODO(burdon): Suggestions.
   const handleSuggest = useCallback<NonNullable<PromptProps['onSuggest']>>((text) => {
     return [];

@@ -14,7 +14,7 @@ export type ToolboxProps = ThemedClassName<{
 
 export const Toolbox = ({ classNames, artifacts }: ToolboxProps) => {
   return (
-    <div className={mx('flex overflow-hidden box-content', classNames)}>
+    <div className={mx('flex overflow-hidden box-content py-2', classNames)}>
       <div className='grid grid-cols-[6rem_8rem_1fr] overflow-y-auto'>
         {artifacts?.map(({ id, tools, ...rest }) =>
           tools.map(({ name, description }, i) => (

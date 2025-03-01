@@ -6667,6 +6667,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../../ui/react-ui-components
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
