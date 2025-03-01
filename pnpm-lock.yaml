@@ -5715,6 +5715,9 @@ importers:
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
+      preact:
+        specifier: ~10.11.0
+        version: 10.11.2
       tailwindcss:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3))
