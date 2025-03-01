@@ -21,10 +21,18 @@ const HuePreview = ({ hue }: { hue: string }) => {
   const size = 20;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <rect x={0} y={0} width={size} height={size} fill={`var(--dx-${hue}Surface)`} />
-      <text x='10' y='15' textAnchor='middle' fontSize='14' fontWeight='bold' fill={`var(--dx-${hue}SurfaceText)`}>
+      <rect
+        x={0}
+        y={0}
+        width={size}
+        height={size}
+        fill={`var(--dx-${hue}Surface)`}
+        stroke={`var(--dx-${hue}SurfaceText)`}
+        strokeWidth={4}
+      />
+      {/* <text x='10' y='15' textAnchor='middle' fontSize='14' fontWeight='bold' fill={`var(--dx-${hue}SurfaceText)`}>
         T
-      </text>
+      </text> */}
     </svg>
   );
 };
@@ -103,9 +111,11 @@ export const HuePickerToolbarButton = ({
                     key={hue}
                     checked={hue === hueValue}
                     onCheckedChange={() => setHueValue(hue)}
-                    classNames={'px-0 py-2 items-center justify-center'}
+                    classNames={'!p-0 items-center justify-center'}
                   >
-                    <HuePreview hue={hue} />
+                    <div className='!p-1'>
+                      <HuePreview hue={hue} />
+                    </div>
                   </DropdownMenu.CheckboxItem>
                 );
               })}

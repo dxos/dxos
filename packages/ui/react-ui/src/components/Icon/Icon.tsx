@@ -12,7 +12,10 @@ import { type ThemedClassName } from '../../util';
 
 const ICONS_URL = '/icons.svg';
 
-export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.svg>> & { icon: string; size?: Size };
+export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.svg>> & {
+  icon: string;
+  size?: Size;
+};
 
 export const Icon = memo(
   forwardRef<SVGSVGElement, IconProps>(({ icon, classNames, size, ...props }, forwardedRef) => {

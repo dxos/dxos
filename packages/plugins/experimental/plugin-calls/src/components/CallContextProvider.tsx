@@ -13,7 +13,7 @@ import {
   CallContext,
   type CallContextType,
   useIsSpeaking,
-  useCfCallsConnection,
+  useCallsService,
   useCallState,
   useStablePojo,
   useUserMedia,
@@ -25,8 +25,6 @@ export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, '
 /**
  * Global context provider for calls.
  */
-// TODO(burdon): Need to provide global state for plugin and provider.
-// - First create simple plugin context that tracks the current roomId.
 export const CallContextProvider: FC<CallContextProviderProps> = ({ children, roomId, onTranscription }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];
@@ -36,7 +34,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const call = useCallState({ roomId });
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.state.audioTrack);
-  const { peer, iceConnectionState } = useCfCallsConnection({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
+  const { peer, iceConnectionState } = useCallsService({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);

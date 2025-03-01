@@ -119,6 +119,9 @@
     },
     {
       "path": "../../plugin-space"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }

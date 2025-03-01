@@ -1,6 +1,6 @@
-# @dxos/plugin-chess
+# @dxos/plugin-calls
 
-Surface plugin for Stack entities.
+Surface plugin for Video meetings.
 
 ## DXOS Resources
 

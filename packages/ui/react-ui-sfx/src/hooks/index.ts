@@ -3,3 +3,4 @@
 //
 
 export * from './useAudioStream';
+export * from './useSoundEffect';

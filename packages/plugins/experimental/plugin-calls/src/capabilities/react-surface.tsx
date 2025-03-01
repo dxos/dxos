@@ -7,9 +7,9 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
-import { CallContainer, TranscriptionContainer } from '../components';
+import { CallContainer } from '../components';
 import { CALLS_PLUGIN } from '../meta';
-import { type Call, isCall, isTranscript, type TranscriptType } from '../types';
+import { type Call, isCall } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -24,11 +24,5 @@ export default () =>
       role: 'complementary--calls',
       filter: (data): data is { subject: Space } => isSpace(data.subject),
       component: ({ data, role }) => <CallContainer space={data.subject} roomId={data.subject.key} />,
-    }),
-    createSurface({
-      id: CALLS_PLUGIN,
-      role: 'article',
-      filter: (data): data is { subject: TranscriptType } => isTranscript(data.subject),
-      component: ({ data, role }) => <TranscriptionContainer transcript={data.subject} />,
     }),
   ]);

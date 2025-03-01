@@ -41,6 +41,7 @@ message RoomState {
  */
 message Transcription {
   bool enabled = 1;
+
   /**
    * Lamport timestamp of when the state was set.
    * @see https://en.wikipedia.org/wiki/Lamport_timestamp
@@ -48,7 +49,7 @@ message Transcription {
   int32 lamport_timestamp = 2;
 
   /**
-   * Object DXN of where the transcription should be stored.
+   * Transcription queue DXN.
    */
-  string object_dxn = 3;
+  string queue_dxn = 3;
 }

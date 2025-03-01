@@ -7,18 +7,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Stream } from '@dxos/codec-protobuf';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
+import { CallTranscription } from '@dxos/plugin-transcription';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
-import { type Ai, useAi } from './useAi';
 import { codec, type RoomState, type UserState } from '../types';
 
 // TODO(burdon): Disambiguate room and call.
 export type CallState = {
-  ai: Ai;
   room: RoomState;
   user: UserState;
+  transcription: CallTranscription;
   updateUserState: (user: UserState) => void;
 };
 
@@ -31,8 +31,10 @@ export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
     users: [],
   });
 
+  // TODO(burdon): Move to context.
+  const [transcription] = useState<CallTranscription>(new CallTranscription());
+
   const client = useClient();
-  const ai = useAi();
   const haloIdentity = useIdentity();
   const identityKey = haloIdentity!.identityKey.toHex();
   const displayName = haloIdentity?.profile?.displayName ?? generateName(haloIdentity!.identityKey.toHex());
@@ -48,17 +50,18 @@ export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
           meetingId: roomId.toHex(),
         });
 
-        const users = event.peers?.map((p) => codec.decode(p.state!)) ?? [];
+        const users = event.peers?.map((peer) => codec.decode(peer.state!)) ?? [];
         setRoom({ meetingId: roomId.toHex(), users });
 
         // Note: Small CRDT for merging transcription states.
+        // TODO(burdon): Move to plugin-transcription.
         const maxTimestamp = Math.max(...users.map((user) => user.transcription?.lamportTimestamp ?? 0));
         const newTranscriptionState = users
           .filter((user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp)
           .sort((user1, user2) => user1.id.localeCompare(user2.id));
 
-        if (maxTimestamp > ai.transcription.lamportTimestamp! && newTranscriptionState.length > 0) {
-          ai.setTranscription(newTranscriptionState[0].transcription || {});
+        if (maxTimestamp > transcription.state.value.lamportTimestamp! && newTranscriptionState.length > 0) {
+          transcription.setState(newTranscriptionState[0].transcription || {});
         }
       });
 
@@ -73,7 +76,7 @@ export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
               name: displayName,
               joined: false,
               tracks: {},
-              transcription: ai.transcription,
+              transcription: transcription.state.value,
             }),
           },
         })
@@ -109,9 +112,9 @@ export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
   );
 
   return {
-    ai,
     room,
     user,
+    transcription,
     updateUserState: (user: UserState) => {
       client.services.services
         .NetworkService!.joinSwarm({
