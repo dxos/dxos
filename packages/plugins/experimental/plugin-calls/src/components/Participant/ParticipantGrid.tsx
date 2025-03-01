@@ -53,10 +53,8 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
     }
   }, [pinned, allUsers]);
 
-  // TODO(burdon): Auto expand if screenshare is enabled.
-  // TODO(burdon): Auto expand when second user joins call?
+  // TODO(burdon): Show ghost view of user for a second before leaving.
 
-  // Filter out currently expanded and sort screenshare first.
   // TODO(burdon): Put self last.
   const sortedUsers: UserState[] = allUsers.sort((a, b) => {
     if (a.self) {

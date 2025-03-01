@@ -8,7 +8,7 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { useCallContext, usePulledAudioTrack, usePulledVideoTrack } from '../../hooks';
 import { type UserState } from '../../types';
-import { type CloudflareCallsPeer } from '../../utils';
+import { type CallsServicePeer } from '../../util';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 
@@ -38,9 +38,11 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
       {...props}
       item={user}
       name={user.name}
-      speaking={user.speaking}
-      wave={user.raisedHand}
+      self={isSelf}
+      screenshare={!!isScreenshare}
       mute={audioTrack ? !audioTrack.enabled : false}
+      wave={user.raisedHand}
+      speaking={user.speaking}
       debug={debug}
     >
       <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
@@ -67,7 +69,7 @@ Participant.displayName = 'Participant';
 /**
  * Get the track's media ID.
  */
-const useMid = ({ track, peer }: { track?: MediaStreamTrack; peer?: CloudflareCallsPeer }) => {
+const useMid = ({ track, peer }: { track?: MediaStreamTrack; peer?: CallsServicePeer }) => {
   const transceivers = useMemo(() => peer?.session?.peerConnection.getTransceivers(), [peer?.session?.peerConnection]);
 
   if (!track) {

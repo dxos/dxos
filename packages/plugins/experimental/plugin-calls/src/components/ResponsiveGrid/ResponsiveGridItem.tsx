@@ -4,7 +4,7 @@
 
 import React, { type CSSProperties, type PropsWithChildren } from 'react';
 
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -14,15 +14,17 @@ const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-
 
 export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
   ThemedClassName<{
-    style?: CSSProperties;
     item: T;
+    style?: CSSProperties;
     pinned?: boolean;
     name?: string;
+    self?: boolean;
+    screenshare?: boolean;
     mute?: boolean;
     wave?: boolean;
     speaking?: boolean;
     debug?: boolean;
-    onClick?: () => void;
+    onClick?: (item: T) => void;
   }>
 >;
 
@@ -32,9 +34,12 @@ export type ResponsiveGridItemProps<T extends object = any> = PropsWithChildren<
 export const ResponsiveGridItem = <T extends object = any>({
   children,
   classNames,
+  item,
   style,
   name,
+  self,
   pinned,
+  screenshare,
   mute,
   wave,
   speaking,
@@ -50,10 +55,6 @@ export const ResponsiveGridItem = <T extends object = any>({
     mute: {
       icon: 'ph--microphone-slash--regular',
       label: t('icon muted'),
-    },
-    speaking: {
-      icon: 'ph--waveform--regular',
-      label: t('icon speaking'),
     },
   };
 
@@ -72,7 +73,7 @@ export const ResponsiveGridItem = <T extends object = any>({
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 3}
             label={pinned ? t('icon unpin') : t('icon pin')}
-            onClick={onClick}
+            onClick={() => onClick?.(item)}
           />
         </div>
       )}
@@ -80,6 +81,8 @@ export const ResponsiveGridItem = <T extends object = any>({
       {/* Name. */}
       {name && (
         <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
+          {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 3} />}
+          {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 3} />}
           <div
             className={mx('bg-neutral-800 text-neutral-100 py-0.5 truncate rounded', pinned ? 'px-2' : 'px-1 text-xs')}
           >

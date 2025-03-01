@@ -2,13 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { Prec } from '@codemirror/state';
+import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
   createThemeExtensions,
+  type EditorView,
+  keymap,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -16,24 +19,72 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { createAutocompleteExtension, type AutocompleteOptions } from './prompt-autocomplete';
 
+// TODO(burdon): Handle object references.
+
 export type PromptProps = ThemedClassName<
-  AutocompleteOptions & Pick<UseTextEditorProps, 'autoFocus'> & Pick<BasicExtensionsOptions, 'lineWrapping'>
+  { value: string } & AutocompleteOptions &
+    Pick<UseTextEditorProps, 'autoFocus'> &
+    Pick<BasicExtensionsOptions, 'lineWrapping'>
 >;
 
-export const Prompt = ({ classNames, autoFocus, lineWrapping = false, onEnter, onSuggest }: PromptProps) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor({
-    autoFocus,
-    extensions: [
-      createBasicExtensions({
-        bracketMatching: false,
-        lineWrapping,
-        placeholder: 'Ask a question...',
-      }),
-      createThemeExtensions({ themeMode }),
-      createAutocompleteExtension({ onEnter, onSuggest }),
-    ],
-  });
+export const Prompt = forwardRef<EditorView | undefined, PromptProps>(
+  ({ classNames, value, autoFocus, lineWrapping = false, onEnter, onSuggest }, forwardRef) => {
+    const { themeMode } = useThemeContext();
+    const { parentRef, view } = useTextEditor({
+      autoFocus,
+      extensions: [
+        createBasicExtensions({
+          lineWrapping,
+          bracketMatching: false,
+          placeholder: 'Ask a question...',
+        }),
+        createThemeExtensions({ themeMode }),
+        createAutocompleteExtension({ onEnter, onSuggest }),
+        Prec.highest(
+          keymap.of([
+            {
+              key: 'Mod-k', // Command-k
+              run: (view) => {
+                view.dispatch({
+                  changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: '',
+                  },
+                  selection: {
+                    anchor: 0,
+                  },
+                });
+                return true;
+              },
+            },
+          ]),
+        ),
+      ],
+    });
 
-  return <div ref={parentRef} className={mx(classNames)} />;
-};
+    // Expose editor view.
+    useImperativeHandle(forwardRef, () => view, [view]);
+
+    // Update text.
+    useEffect(() => {
+      if (value) {
+        view?.dispatch({
+          changes: {
+            from: 0,
+            to: view.state.doc.length,
+            insert: value,
+          },
+          selection: {
+            anchor: value.length,
+            head: value.length,
+          },
+        });
+
+        view?.focus();
+      }
+    }, [view, value]);
+
+    return <div ref={parentRef} className={mx('w-full', classNames)} />;
+  },
+);

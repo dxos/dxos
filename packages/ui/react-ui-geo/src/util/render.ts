@@ -11,7 +11,17 @@ import { type LatLng, geoLine, geoPoint } from './path';
 
 export type Styles = Record<string, any>;
 
-export type Style = 'water' | 'graticule' | 'land' | 'border' | 'dots' | 'point' | 'line' | 'cursor' | 'arc';
+export type Style =
+  | 'background'
+  | 'water'
+  | 'graticule'
+  | 'land'
+  | 'border'
+  | 'dots'
+  | 'point'
+  | 'line'
+  | 'cursor'
+  | 'arc';
 
 export type StyleSet = Partial<Record<Style, Styles>>;
 
@@ -108,16 +118,20 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
 /**
  * Render layers created above.
  */
-export const renderLayers = (generator: GeoPath, layers: Layer[] = [], scale: number) => {
+export const renderLayers = (generator: GeoPath, layers: Layer[] = [], scale: number, styles: StyleSet) => {
   const context: CanvasRenderingContext2D = generator.context();
   const {
     canvas: { width, height },
   } = context;
   context.reset();
 
-  // TODO(burdon): Option.
   // Clear background.
-  context.clearRect(0, 0, width, height);
+  if (styles.background) {
+    context.fillStyle = styles.background.fillStyle;
+    context.fillRect(0, 0, width, height);
+  } else {
+    context.clearRect(0, 0, width, height);
+  }
 
   // Render features.
   // https://github.com/d3/d3-geo#_path

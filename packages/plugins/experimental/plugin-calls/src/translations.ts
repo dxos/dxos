@@ -37,9 +37,6 @@ export default [
         'transcription off': 'Stop transcription',
         'screenshare on': 'Start screen sharing',
         'screenshare off': 'Stop screen sharing',
-
-        'delete button': 'Delete',
-        'bookmark button': 'Bookmark',
       },
     },
   },

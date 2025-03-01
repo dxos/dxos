@@ -2,20 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 
+import { useVoiceInput } from '@dxos/plugin-transcription';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
+import { type EditorView } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
-import { Prompt } from '../Prompt';
+import { Prompt, type PromptProps } from '../Prompt';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
-export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
+// TODO(budon): Voice and suggest.
+
+export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
   const [iter, setIter] = useState(0);
+
+  const [prompt, setPrompt] = useState('');
+  const promptRef = useRef<EditorView>();
+
+  const [active, setActive] = useState(false);
+  const { recording } = useVoiceInput({
+    active,
+    onUpdate: (text) => {
+      setPrompt(text);
+      promptRef.current?.focus();
+    },
+  });
+
+  // TODO(burdon): Suggestions.
+  const handleSuggest = useCallback<NonNullable<PromptProps['onSuggest']>>((text) => {
+    return [];
+  }, []);
+
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
@@ -56,7 +79,28 @@ export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
           />
         </div>
 
-        <Prompt autoFocus lineWrapping />
+        <div className='grid grid-cols-[1fr_auto] w-full'>
+          <Prompt
+            ref={promptRef}
+            autoFocus
+            lineWrapping
+            classNames='pt-1'
+            value={prompt}
+            onEnter={setPrompt}
+            onSuggest={handleSuggest}
+          />
+          <div className='flex flex-col h-full'>
+            <IconButton
+              classNames={mx(recording && 'bg-primary-500')}
+              icon='ph--microphone--regular'
+              iconOnly
+              noTooltip
+              label='Microphone'
+              onMouseDown={() => setActive(true)}
+              onMouseUp={() => setActive(false)}
+            />
+          </div>
+        </div>
       </Dialog.Content>
     </div>
   );
