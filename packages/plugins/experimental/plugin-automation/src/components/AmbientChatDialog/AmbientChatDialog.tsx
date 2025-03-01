@@ -4,14 +4,48 @@
 
 import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
+import { useAppGraph, useLayout } from '@dxos/app-framework';
+import { Filter, getSpace } from '@dxos/client/echo';
 import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
+import { AIChatType } from '../../types';
+import { ThreadContainer } from '../Thread';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
 export const AmbientChatDialog = ({ children }: PropsWithChildren) => {
+  // TODO(burdon): Get active space.
+  // TODO(burdon): Use last chat or create new one.
+  const layout = useLayout();
+  const { graph } = useAppGraph();
+  const [chat, setChat] = useState<AIChatType | undefined>();
+  if (layout.active.length > 0) {
+    const node = graph.findNode(layout.active[0]);
+    if (node) {
+      const space = getSpace(node.data);
+      if (space) {
+        void space.db
+          .query(Filter.schema(AIChatType))
+          .run()
+          .then(({ objects }) => {
+            if (objects.length > 0) {
+              setChat(objects[objects.length - 1]);
+            }
+          });
+      }
+    }
+  }
+
+  return (
+    <ChatDialog>
+      <ThreadContainer chat={chat} />
+    </ChatDialog>
+  );
+};
+
+const ChatDialog = ({ children }: PropsWithChildren) => {
   // TODO(burdon): Hack to make ResizeHandle re-render.
   const [iter, setIter] = useState(0);
   const [size, setSize] = useState<Size>('min-content');
