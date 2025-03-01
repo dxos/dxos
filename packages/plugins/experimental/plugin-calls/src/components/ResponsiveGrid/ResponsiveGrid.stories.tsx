@@ -47,13 +47,21 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
   );
 };
 
-const meta: Meta<ResponsiveGridProps<TestItem>> = {
+type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean };
+
+const meta: Meta<StoryProps> = {
   title: 'plugins/plugin-calls/ResponsiveGrid',
   component: ResponsiveGrid,
   render: (args) => {
-    const [pinned, setPinned] = useState<string | undefined>(args.pinned ?? args.items[0]?.id);
+    const [pinned, setPinned] = useState<string | undefined>(
+      args.pinned ?? args.items.length > 1 ? args.items[0]?.id : undefined,
+    );
     const [items, setItems] = useState<TestItem[]>(args.items);
     useEffect(() => {
+      if (!args.random) {
+        return;
+      }
+
       const interval = setInterval(() => {
         setItems((items) => {
           const p = Math.random();
@@ -105,16 +113,30 @@ const createItem = (type?: 'image' | 'video') => {
 
 export default meta;
 
-type Story = StoryObj<ResponsiveGridProps<TestItem>>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
+    random: true,
     items: Array.from({ length: 8 }, (_, i) => createItem('video')),
   },
 };
 
 export const Images: Story = {
   args: {
+    random: true,
     items: Array.from({ length: 8 }, (_, i) => createItem('image')),
+  },
+};
+
+export const Solo: Story = {
+  args: {
+    items: Array.from({ length: 1 }, (_, i) => createItem('image')),
+  },
+};
+
+export const Dual: Story = {
+  args: {
+    items: Array.from({ length: 2 }, (_, i) => createItem('image')),
   },
 };

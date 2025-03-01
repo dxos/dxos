@@ -79,10 +79,10 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
     scheduleTask(ctx, async () => {
       log.info('starting push/pull', { videoStreamTrack });
 
-      performance.mark('webrtc:begin');
-      performance.mark('webrtc:end');
-      const webrtcTime = performance.measure('webrtc', 'webrtc:begin', 'webrtc:end').duration;
-      setMetrics((prev) => ({ ...prev, 'time to open webrtc [ms]': webrtcTime }));
+      // performance.mark('webrtc:begin');
+      // performance.mark('webrtc:end');
+      // const webrtcTime = performance.measure('webrtc', 'webrtc:begin', 'webrtc:end').duration;
+      // setMetrics((prev) => ({ ...prev, 'time to open webrtc [ms]': Math.round(webrtcTime) }));
 
       // Push track to cloudflare.
       performance.mark('push:begin');
@@ -90,7 +90,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
       performance.mark('push:end');
       const pushTime = performance.measure('push', 'push:begin', 'push:end').duration;
       log.info('successfully pushed track', { pushTime, pushedTrack });
-      setMetrics((prev) => ({ ...prev, 'time to push track [ms]': pushTime }));
+      setMetrics((prev) => ({ ...prev, 'time to push track [ms]': Math.round(pushTime) }));
 
       // Wait for cloudflare to process the track.
       await sleep(500);
@@ -100,7 +100,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
       const pulledTrack = await peerPull.pullTrack({ ...pushedTrack, mid: undefined });
       performance.mark('pullTrack:end');
       const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
-      setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': pullTime }));
+      setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': Math.round(pullTime) }));
       log.info('successfully pulled track', { pullTime, pulledTrack });
 
       invariant(pulledTrack);
@@ -111,7 +111,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
       await pullVideoElement.current.play();
       performance.mark('playVideo:end');
       const playTime = performance.measure('playVideo', 'playVideo:begin', 'playVideo:end').duration;
-      setMetrics((prev) => ({ ...prev, 'time to play pulled video [ms]': playTime }));
+      setMetrics((prev) => ({ ...prev, 'time to play pulled video [ms]': Math.round(playTime) }));
     });
 
     return () => {
@@ -120,10 +120,10 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
   }, [videoStreamTrack, peerPush, peerPull]);
 
   return (
-    <div className='flex flex-col gap-4 w-[400px] justify-center'>
+    <div className='grid grid-cols-3 gap-4 items-center'>
       <video ref={pushVideoElement} muted autoPlay src={video} />
-      <video ref={pullVideoElement} muted />
       <Json data={metrics} />
+      <video ref={pullVideoElement} muted />
     </div>
   );
 };

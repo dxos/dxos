@@ -101,6 +101,17 @@ export const ResponsiveGrid = <T extends object = any>({
     [pinned, onPinnedChange],
   );
 
+  const SoloItem = ({ item }: { item: T }) => {
+    return (
+      <ResponsiveContainer>
+        <div {...{ 'data-grid-item': getId(item) }} className='aspect-video overflow-hidden'>
+          {/* Placeholder image. */}
+          <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
+        </div>
+      </ResponsiveContainer>
+    );
+  };
+
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
       {pinnedItem && (
@@ -108,19 +119,14 @@ export const ResponsiveGrid = <T extends object = any>({
           {/* Pinned item. */}
           <div
             {...resizeAttributes}
-            className='relative flex w-full overflow-hidden border-be border-separator'
+            className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
             style={{
               ...sizeStyle(dividerHeight, 'vertical'),
               paddingTop: gap,
               paddingBottom: gap,
             }}
           >
-            <ResponsiveContainer>
-              <div {...{ 'data-grid-item': getId(pinnedItem) }} className='aspect-video overflow-hidden'>
-                {/* Placeholder image. */}
-                <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
-              </div>
-            </ResponsiveContainer>
+            <SoloItem item={pinnedItem} />
 
             <ResizeHandle
               side='block-end'
@@ -139,13 +145,14 @@ export const ResponsiveGrid = <T extends object = any>({
       {/* Placeholder grid. */}
       <div
         ref={gridContainerRef}
-        className='flex w-full grow overflow-hidden items-center justify-center'
+        className='flex w-full grow overflow-hidden items-center'
         style={{
           paddingTop: gap,
           paddingBottom: gap,
         }}
       >
-        {columns > 0 && (
+        {mainItems.length === 1 && <SoloItem item={mainItems[0]} />}
+        {mainItems.length > 1 && columns > 0 && (
           <div
             role='grid'
             style={{
@@ -155,7 +162,11 @@ export const ResponsiveGrid = <T extends object = any>({
             }}
           >
             {mainItems.map((item) => (
-              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='aspect-video' />
+              <div
+                key={getId(item)}
+                {...{ 'data-grid-item': getId(item) }}
+                className='aspect-video max-h-full max-w-full w-auto h-auto'
+              />
             ))}
           </div>
         )}

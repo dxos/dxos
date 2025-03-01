@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import 'preact/debug';
 import '@dxos-theme';
+
+import 'preact/debug';
 
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
