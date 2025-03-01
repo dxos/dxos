@@ -31,8 +31,6 @@
     "src"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
@@ -50,6 +48,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-transcription": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
@@ -78,6 +77,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/react": "~18.2.0",
+    "preact": "~10.11.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "tailwindcss": "~3.4.1"

@@ -89,6 +89,7 @@ const Graph = ({ size = 64, n = 10, range = defaultRange, data = [], grid, trail
 
 export type OscilloscopeProps = Pick<GraphProps, 'size'> & { active?: boolean };
 
+// TODO(burdon): Should pass in audio stream.
 export const Oscilloscope = ({ active, size }: OscilloscopeProps) => {
   const { getData } = useAudioStream(true);
   const [data, setData] = useState<number[]>([]);

@@ -75,12 +75,5 @@ export const useChatProcessor = (chat: AIChatType) => {
     [aiClient, tools, space, dispatch, systemPrompt],
   );
 
-  // Update processor.
-  // useEffect(() => {
-  //   if (processor) {
-  //     processor.setTools(tools.flat());
-  //   }
-  // }, [processor, tools]);
-
   return processor;
 };

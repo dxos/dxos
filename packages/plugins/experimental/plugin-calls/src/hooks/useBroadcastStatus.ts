@@ -5,17 +5,18 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
+import { type TranscriptionState } from '@dxos/plugin-transcription/types';
 import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { type CallContextType } from './useCallContext';
 import { type UserMedia } from './useUserMedia';
-import { type TranscriptionState, type UserState } from '../types';
-import { type CloudflareCallsPeer } from '../utils';
+import { type UserState } from '../types';
+import { type CallsServicePeer } from '../util';
 
 type UseBroadcastStatus = {
   transcription: TranscriptionState;
-  peer?: CloudflareCallsPeer;
+  peer?: CallsServicePeer;
   userMedia: UserMedia;
   pushedTracks: CallContextType['pushedTracks'];
   user?: UserState;

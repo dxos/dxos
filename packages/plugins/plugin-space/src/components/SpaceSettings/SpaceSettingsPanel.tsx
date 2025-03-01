@@ -8,9 +8,9 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
-import { HuePickerBlock } from '@dxos/react-ui-pickers';
+import { HuePickerToolbarButton } from '@dxos/react-ui-pickers';
 
 import { SPACE_PLUGIN } from '../../meta';
 
@@ -52,11 +52,12 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
         />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('hue label')}>
-        <HuePickerBlock
-          hue={space.properties.hue}
-          onChangeHue={(nextHue) => (space.properties.hue = nextHue)}
-          onClickClear={() => (space.properties.hue = undefined)}
-        />
+        <Toolbar.Root>
+          <HuePickerToolbarButton
+            hue={space.properties.hue}
+            onChangeHue={(nextHue) => (space.properties.hue = nextHue)}
+          />
+        </Toolbar.Root>
       </DeprecatedFormInput>
       {edgeEnabled && (
         <DeprecatedFormInput label={t('edge replication label')}>

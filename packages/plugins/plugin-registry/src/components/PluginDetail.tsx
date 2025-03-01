@@ -29,7 +29,7 @@ export const PluginDetail = ({ plugin, enabled, onEnable }: PluginDetailProps) =
         </Input.Root>
       </div>
 
-      {screenshots && (
+      {screenshots && screenshots.length > 0 && (
         <div role='none'>
           <h1 className='text-lg mb-2'>Preview</h1>
           <img src={screenshots[0]} alt={name} className='aspect-video object-fit' />

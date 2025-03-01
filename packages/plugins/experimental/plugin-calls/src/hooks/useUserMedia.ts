@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
-import { getScreenshare, getUserMediaTrack } from '../utils';
+import { getScreenshare, getUserMediaTrack } from '../util';
 
 export type UserMedia = {
   state: {

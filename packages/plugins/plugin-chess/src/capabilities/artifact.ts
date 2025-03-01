@@ -34,7 +34,7 @@ export default () => {
     tools: [
       defineTool({
         name: 'chess_new',
-        description: 'Create a new chess game. Returns the artifact definition for the game',
+        description: 'Create a new chess game. Returns the artifact definition for the game.',
         schema: S.Struct({
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
         }),
