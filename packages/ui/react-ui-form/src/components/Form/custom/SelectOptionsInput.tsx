@@ -8,7 +8,7 @@ import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, Icon, IconButton, Input, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { HuePickerToolbarButton } from '@dxos/react-ui-pickers';
+import { HuePicker } from '@dxos/react-ui-pickers';
 import { hues, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../../translations';
@@ -154,7 +154,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               data-no-submit
                             />
                             <Toolbar.Root classNames='p-0 m-0 !is-auto'>
-                              <HuePickerToolbarButton hue={item.color} onChangeHue={handleColorChange(item.id)} />
+                              <HuePicker value={item.color} onChange={handleColorChange(item.id)} />
                             </Toolbar.Root>
                             <IconButton
                               icon='ph--trash--fill'
