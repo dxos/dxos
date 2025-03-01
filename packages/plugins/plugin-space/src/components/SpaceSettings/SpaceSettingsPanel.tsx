@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
-import { HuePickerToolbarButton } from '@dxos/react-ui-pickers';
+import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { SPACE_PLUGIN } from '../../meta';
 
@@ -53,10 +53,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('hue label')}>
         <Toolbar.Root>
-          <HuePickerToolbarButton
-            hue={space.properties.hue}
-            onChangeHue={(nextHue) => (space.properties.hue = nextHue)}
-          />
+          <HuePicker value={space.properties.hue} onChange={(nextHue) => (space.properties.hue = nextHue)} />
         </Toolbar.Root>
       </DeprecatedFormInput>
       {edgeEnabled && (

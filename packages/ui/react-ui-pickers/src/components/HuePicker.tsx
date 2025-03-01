@@ -2,200 +2,50 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
-import {
-  Button,
-  type ButtonProps,
-  DropdownMenu,
-  Icon,
-  type ThemedClassName,
-  Toolbar,
-  Tooltip,
-  useTranslation,
-} from '@dxos/react-ui';
-import { hues, mx } from '@dxos/react-ui-theme';
+import { type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { hues } from '@dxos/react-ui-theme';
 
-const HuePreview = ({ hue }: { hue: string }) => {
-  const size = 20;
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <rect
-        x={0}
-        y={0}
-        width={size}
-        height={size}
-        fill={`var(--dx-${hue}Surface)`}
-        stroke={`var(--dx-${hue}SurfaceText)`}
-        strokeWidth={4}
-      />
-      {/* <text x='10' y='15' textAnchor='middle' fontSize='14' fontWeight='bold' fill={`var(--dx-${hue}SurfaceText)`}>
-        T
-      </text> */}
-    </svg>
-  );
-};
+import { ToolbarPickerButton, type ToolbarPickerProps } from './ToolbarPicker';
 
 export type HuePickerProps = {
   disabled?: boolean;
-  defaultHue?: string;
-  hue?: string;
-  onChangeHue?: (nextHue: string) => void;
-  onClickClear?: ButtonProps['onClick'];
-};
+  defaultValue?: string;
+  value?: string;
+  onChange?: (nextHue: string) => void;
+  onReset?: ButtonProps['onClick'];
+} & Pick<ToolbarPickerProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset'>;
 
-/**
- * A toolbar button for picking hue. Use only in `role=toolbar` elements. Unable to unset the value.
- */
-export const HuePickerToolbarButton = ({
-  disabled,
-  hue,
-  onChangeHue,
-  classNames,
-  defaultHue,
-}: ThemedClassName<Omit<HuePickerProps, 'onClickClear'>>) => {
+export const HuePicker = ({ disabled, value, onChange, ...props }: ThemedClassName<HuePickerProps>) => {
   const { t } = useTranslation('os');
 
-  const [hueValue, setHueValue] = useControllableState<string>({
-    prop: hue,
-    onChange: onChangeHue,
-    defaultProp: defaultHue,
-  });
-
-  const [huePickerOpen, setHuePickerOpen] = useState<boolean>(false);
-
-  const suppressNextTooltip = useRef<boolean>(false);
-  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
-
   return (
-    <Tooltip.Root
-      open={triggerTooltipOpen}
-      onOpenChange={(nextOpen) => {
-        if (suppressNextTooltip.current) {
-          setTriggerTooltipOpen(false);
-          suppressNextTooltip.current = false;
-        } else {
-          setTriggerTooltipOpen(nextOpen);
-        }
-      }}
-    >
-      <DropdownMenu.Root
-        modal={false}
-        open={huePickerOpen}
-        onOpenChange={(nextOpen) => {
-          setHuePickerOpen(nextOpen);
-          suppressNextTooltip.current = true;
-        }}
-      >
-        <Tooltip.Trigger asChild>
-          <DropdownMenu.Trigger asChild>
-            <Toolbar.Button classNames={mx('gap-2 plb-1', classNames)} disabled={disabled}>
-              <span className='sr-only'>{t('select hue label')}</span>
-              <Icon icon='ph--palette--regular' size={5} />
-            </Toolbar.Button>
-          </DropdownMenu.Trigger>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content side='bottom'>
-            {t('select hue label')}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content side='bottom' classNames='!w-40'>
-            <DropdownMenu.Viewport classNames='grid grid-cols-6'>
-              {hues.map((hue) => {
-                return (
-                  <DropdownMenu.CheckboxItem
-                    key={hue}
-                    checked={hue === hueValue}
-                    onCheckedChange={() => setHueValue(hue)}
-                    classNames={'!p-0 items-center justify-center'}
-                  >
-                    <div className='!p-1'>
-                      <HuePreview hue={hue} />
-                    </div>
-                  </DropdownMenu.CheckboxItem>
-                );
-              })}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
-    </Tooltip.Root>
+    <ToolbarPickerButton
+      Component={HuePreview}
+      label={t('select hue label')}
+      icon='ph--palette--regular'
+      values={hues}
+      {...props}
+    />
   );
 };
 
-/**
- * A button for picking hue alongside a button for unsetting it.
- */
-export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClickClear }: HuePickerProps) => {
-  const { t } = useTranslation('os');
-
-  const [hueValue, setHueValue] = useControllableState<string>({
-    prop: hue,
-    onChange: onChangeHue,
-    defaultProp: defaultHue,
-  });
-
+const HuePreview = ({ value }: { value: string }) => {
+  const size = 20;
   return (
-    <>
-      <DropdownMenu.Root modal={false}>
-        <DropdownMenu.Trigger asChild>
-          <Button variant='ghost' classNames='gap-2 plb-1' disabled={disabled}>
-            <span className='sr-only'>{t('select hue label')}</span>
-            <div role='none' className='pis-14 grow flex items-center justify-center gap-2'>
-              {hue ? (
-                <>
-                  <HuePreview hue={hueValue!} />
-                  <span>{t(`${hueValue} label`)}</span>
-                </>
-              ) : (
-                <span>{t('select a hue label')}</span>
-              )}
-            </div>
-            <Icon icon='ph--caret-down--regular' size={4} />
-          </Button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content side='right'>
-            <DropdownMenu.Viewport>
-              {hues.map((hue) => {
-                return (
-                  <DropdownMenu.CheckboxItem
-                    key={hue}
-                    checked={hue === hueValue}
-                    onCheckedChange={() => setHueValue(hue)}
-                  >
-                    <HuePreview hue={hue} />
-                    <span className='grow'>{t(`${hue} label`)}</span>
-                    <DropdownMenu.ItemIndicator>
-                      <Icon icon='ph--check--regular' size={4} />
-                    </DropdownMenu.ItemIndicator>
-                  </DropdownMenu.CheckboxItem>
-                );
-              })}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <Button variant='ghost' onClick={onClickClear} disabled={disabled}>
-            <span className='sr-only'>{t('clear label')}</span>
-            <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content side='right'>
-            {t('clear label')}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    </>
+    <div className='!p-1'>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <rect
+          x={0}
+          y={0}
+          width={size}
+          height={size}
+          fill={`var(--dx-${value}Surface)`}
+          stroke={`var(--dx-${value}SurfaceText)`}
+          strokeWidth={4}
+        />
+      </svg>
+    </div>
   );
 };
