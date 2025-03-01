@@ -15,13 +15,14 @@ const preventDefault = (event: Event) => event.preventDefault();
 export const AmbientChatDialog = () => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
+  // TODO(burdon): Hack to make resize handle re-render.
   const [iter, setIter] = useState(0);
 
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
         onInteractOutside={preventDefault}
-        classNames='pointer-events-auto relative overflow-hidden is-[500px] max-is-none'
+        classNames='pointer-events-auto relative overflow-hidden p-2 is-[30rem] max-is-none'
         inOverlayLayout
         {...resizeAttributes}
         style={{
@@ -39,12 +40,15 @@ export const AmbientChatDialog = () => {
           onSizeChange={setSize}
         />
 
-        <div className='flex w-full items-center'>
-          <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
+        <div className='w-full grid grid-cols-[2rem_1fr_2rem] gap-2'>
           <Dialog.Close>
-            <Icon icon='ph--x--regular' size={4} />
+            <div className='flex h-8 items-center justify-center'>
+              <Icon icon='ph--x--regular' />
+            </div>
           </Dialog.Close>
-          <div className='grow' />
+          <div className='grow'>
+            <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
+          </div>
           <IconButton
             variant='ghost'
             icon='ph--caret-down--regular'
@@ -57,7 +61,7 @@ export const AmbientChatDialog = () => {
           />
         </div>
 
-        <PromptBar microphone />
+        <PromptBar microphone lineWrapping onSubmit={() => true} />
       </Dialog.Content>
     </div>
   );

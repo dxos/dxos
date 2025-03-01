@@ -68,14 +68,7 @@ export const Thread = ({
       </ScrollContainer>
 
       {onSubmit && (
-        <PromptBar
-          classNames='p-1'
-          microphone
-          processing={processing}
-          onSubmit={handleSubmit}
-          // onSuggest={onSuggest}
-          onCancel={onCancel}
-        />
+        <PromptBar classNames='p-1' microphone processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />
       )}
     </div>
   );

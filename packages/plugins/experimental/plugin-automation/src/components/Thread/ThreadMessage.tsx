@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState, type FC } from 'react';
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -71,11 +71,15 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, col
     <div className={mx('flex flex-col shrink-0 gap-2')}>
       {debug && (
         <div className='text-xs text-subdued'>
-          {message.id}{' '}
           {onDelete && (
-            <span className='cursor-pointer underline' onClick={() => onDelete(message.id)}>
-              delete
-            </span>
+            <IconButton
+              variant='ghost'
+              size={5}
+              icon='ph--x--regular'
+              iconOnly
+              label={`Delete ${message.id}`}
+              onClick={() => onDelete(message.id)}
+            />
           )}
         </div>
       )}

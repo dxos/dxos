@@ -156,6 +156,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         </Toolbar.Root>
 
         <Thread
+          collapse
           messages={messages}
           processing={processor?.streaming.value}
           onSubmit={processor ? handleSubmit : undefined}

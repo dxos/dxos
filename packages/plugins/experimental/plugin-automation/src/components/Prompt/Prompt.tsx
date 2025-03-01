@@ -14,7 +14,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { createAutocompleteExtension, type AutocompleteOptions } from './prompt-autocomplete';
+import { createAutocompleteExtension, type AutocompleteOptions } from './autocomplete';
 
 // TODO(burdon): Handle object references.
 
@@ -45,6 +45,8 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
       ],
     });
 
+    console.log('view', onSubmit);
+
     // Expose editor view.
     useImperativeHandle(
       forwardRef,
@@ -68,7 +70,7 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
           },
         };
       },
-      [view],
+      [view, onSubmit],
     );
 
     return <div ref={parentRef} className={mx('w-full overflow-hidden', classNames)} />;
