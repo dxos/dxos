@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { useChatProcessor, useMessageQueue } from '../../hooks';
@@ -20,9 +21,9 @@ export const ThreadContainer = ({ chat }: { chat?: AIChatType }) => {
 
   const handleSubmit = useCallback(
     (text: string) => {
-      // TODO(burdon): Don't accept input if still processing.
+      // Don't accept input if still processing.
       if (processor.streaming.value) {
-        // await processor.cancel();
+        log.warn('still processing');
         return false;
       }
 
@@ -30,7 +31,9 @@ export const ThreadContainer = ({ chat }: { chat?: AIChatType }) => {
         invariant(messageQueue);
         await processor.request(text, {
           history: messageQueue.items,
-          onComplete: (messages) => messageQueue.append(messages),
+          onComplete: (messages) => {
+            messageQueue.append(messages);
+          },
         });
       });
 

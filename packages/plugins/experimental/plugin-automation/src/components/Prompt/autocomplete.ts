@@ -138,8 +138,8 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest }: Autocomplet
           key: 'Enter',
           preventDefault: true,
           run: (view) => {
-            const text = view.state.doc.toString();
-            if (onSubmit) {
+            const text = view.state.doc.toString().trim();
+            if (text.length > 0 && onSubmit) {
               const reset = onSubmit(text);
 
               // Clear the document after calling onEnter.
@@ -152,10 +152,9 @@ export const createAutocompleteExtension = ({ onSubmit, onSuggest }: Autocomplet
                   },
                 });
               }
-              return true;
             }
 
-            return false;
+            return true;
           },
         },
         {

@@ -162,7 +162,7 @@ export class ChatProcessor {
     try {
       let more = false;
       do {
-        log.info('requesting...', { history: this._history.length, messages: this._pending.value.length });
+        log.info('requesting', { history: this._history.length, messages: this._pending.value.length });
         this._stream = await this._client.generate({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
@@ -200,8 +200,7 @@ export class ChatProcessor {
         }
       } while (more);
     } catch (err) {
-      // TODO(burdon): Handle error.
-      log.catch('request failed', { err });
+      log.catch(err);
     } finally {
       log.info('done');
       this._stream = undefined;
