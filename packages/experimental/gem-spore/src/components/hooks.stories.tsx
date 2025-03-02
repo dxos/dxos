@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import * as d3 from 'd3';
+import { select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { defaultGridStyles, useGrid, useSvgContext, useZoom, SVGRoot } from '@dxos/gem-core';
@@ -175,7 +175,7 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   }, []);
 
   useEffect(() => {
-    d3.select(markersRef.current).call(createMarkers());
+    select(markersRef.current).call(createMarkers());
   }, [markersRef]);
 
   return (

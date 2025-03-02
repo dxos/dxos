@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GeoStream } from 'd3';
-import * as d3 from 'd3';
+import { geoPath, select, type GeoStream } from 'd3';
 import React, { type PropsWithChildren, useEffect } from 'react';
-import * as topojson from 'topojson-client';
+import { feature, mesh } from 'topojson-client';
 import { type GeometryCollection, type GeometryObject, type Objects, type Topology } from 'topojson-specification';
 
 import { SVG } from './SVG';
@@ -28,32 +27,28 @@ const Hex = ({ radius = 16 }: HexProps) => {
       // TODO(burdon): Resize doesn't trigger.
       const topology = hexTopology(size, radius);
       const projection = hexProjection(radius);
-      const path = d3.geoPath().projection(projection);
+      const path = geoPath().projection(projection);
 
-      d3.select(svg)
+      select(svg)
         .append('g')
         .attr('class', 'hexagon')
         .selectAll('path')
         .data(topology.objects.hexagons.geometries)
         .enter()
         .append('path')
-        .attr('d', (d) => path(topojson.feature(topology, d)))
+        .attr('d', (d) => path(feature(topology, d)))
         .attr('class', (d) => ((d.properties as Custom)?.fill ? 'fill' : null));
       // .on('mousedown', mousedown)
       // .on('mousemove', mousemove)
       // .on('mouseup', mouseup);
 
-      d3.select(svg)
-        .append('path')
-        .datum(topojson.mesh(topology, topology.objects.hexagons))
-        .attr('class', 'mesh')
-        .attr('d', path);
+      select(svg).append('path').datum(mesh(topology, topology.objects.hexagons)).attr('class', 'mesh').attr('d', path);
 
       const redraw = (border: any) => {
         border.attr(
           'd',
           path(
-            topojson.mesh(
+            mesh(
               topology,
               topology.objects.hexagons,
               (a, b) => (a.properties as Custom).fill !== (b.properties as Custom).fill,
@@ -62,7 +57,7 @@ const Hex = ({ radius = 16 }: HexProps) => {
         );
       };
 
-      d3.select(svg).append('path').attr('class', 'border').call(redraw);
+      select(svg).append('path').attr('class', 'border').call(redraw);
     }
   }, [size]);
 

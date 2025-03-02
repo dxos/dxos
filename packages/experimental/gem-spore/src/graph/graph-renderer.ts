@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { line, select } from 'd3';
 
 import { type D3Callable, type D3Selection, type Point } from '@dxos/gem-core';
 
@@ -10,6 +10,8 @@ import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 import { type GraphGuide, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
+
+const createLine = line<Point>();
 
 export type LabelOptions<N> = {
   text: (node: GraphLayoutNode<N>, highlight?: boolean) => string | undefined;
@@ -43,8 +45,6 @@ export type GraphRendererOptions<N> = RendererOptions &
     transition?: () => any;
   }>;
 
-const line = d3.line();
-
 /**
  * Create node elements.
  * @param group
@@ -70,7 +70,7 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   // Click.
   if (options.onNodeClick) {
     circle.on('click', (event: MouseEvent) => {
-      const node = d3.select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
+      const node = select<SVGElement, GraphLayoutNode<N>>(event.target as SVGGElement).datum();
       options.onNodeClick(node, event);
     });
   }
@@ -80,9 +80,9 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     circle
       .on('mouseover', function () {
         // console.log(d3.select(this).datum());
-        d3.select(this).classed('highlight', true);
+        select(this).classed('highlight', true);
         if (options.labels) {
-          d3.select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
+          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
             .raise()
             .select('text')
             .text((d) => options.labels.text(d, true));
@@ -90,9 +90,9 @@ const createNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       })
       .on('mouseout', function () {
         // console.log(d3.select(this).datum());
-        d3.select(this).classed('highlight', false);
+        select(this).classed('highlight', false);
         if (options.labels) {
-          d3.select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
+          select<SVGGElement, GraphLayoutNode<N>>(this.closest('g'))
             .select('text')
             .text((d) => options.labels.text(d));
         }
@@ -110,7 +110,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   if (options.attributes?.node) {
     group.each((d, i, nodes) => {
       const { class: className } = options.attributes?.node(d);
-      d3.select(nodes[i]).attr('class', className);
+      select(nodes[i]).attr('class', className);
     });
   }
 
@@ -123,7 +123,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   groupOrTransition
     .select<SVGCircleElement>('circle')
     .attr('class', function () {
-      return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.circle;
+      return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.circle;
     })
     .attr('cx', (d) => d.x)
     .attr('cy', (d) => d.y)
@@ -134,7 +134,7 @@ const updateNode: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     groupOrTransition
       .select<SVGTextElement>('text')
       .attr('class', function () {
-        return (d3.select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
+        return (select(this.parentNode as any).datum() as GraphLayoutNode<N>).classes?.text;
       })
       .style('text-anchor', (d) => (d.x > 0 ? 'start' : 'end'))
       .text((d) => options.labels.text(d))
@@ -156,7 +156,7 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   //   group.append('path')
   //     .attr('class', 'click')
   //     .on('click', (event: MouseEvent) => {
-  //       const link = d3.select<SVGLineElement, GraphLayoutLink<N>>(event.target as SVGLineElement).datum();
+  //       const link = select<SVGLineElement, GraphLayoutLink<N>>(event.target as SVGLineElement).datum();
   //       options.onLinkClick(link, event);
   //     });
   // }
@@ -168,7 +168,7 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
     .attr('marker-start', () => (options.arrows?.start ? 'url(#marker-arrow-start)' : undefined))
     .attr('marker-end', () => (options.arrows?.end ? 'url(#marker-arrow-end)' : undefined))
     .attr('class', function () {
-      return (d3.select(this.parentNode as any).datum() as GraphLayoutLink<N>).classes?.path;
+      return (select(this.parentNode as any).datum() as GraphLayoutLink<N>).classes?.path;
     })
     .attr('d', (d) => {
       const { source, target } = d;
@@ -179,20 +179,16 @@ const createLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       const getPoint = (el): Point => [parseFloat(el.attr('cx')), parseFloat(el.attr('cy'))];
       nodes.selectAll('g').each(function (d) {
         if (options.idAccessor(d) === source.id) {
-          initSource = getPoint(d3.select(this).select('circle'));
+          initSource = getPoint(select(this).select('circle'));
         } else if (options.idAccessor(d) === target.id) {
-          initTarget = getPoint(d3.select(this).select('circle'));
+          initTarget = getPoint(select(this).select('circle'));
         }
       });
 
-      return line(
-        getCircumferencePoints(
-          initSource ?? source.last ?? [source.x, source.y],
-          initTarget ?? target.last ?? [target.x, target.y],
-          source.r,
-          target.r,
-        ),
-      );
+      const p1: Point = initSource ?? source.last ?? [source.x, source.y];
+      const p2: Point = initTarget ?? target.last ?? [target.x, target.y];
+
+      return createLine(getCircumferencePoints(p1, p2, source.r, target.r));
     });
 };
 
@@ -206,7 +202,7 @@ const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
   if (options.attributes?.link) {
     group.each((d, i, nodes) => {
       const { class: className } = options.attributes?.link(d);
-      d3.select(nodes[i]).attr('class', className);
+      select(nodes[i]).attr('class', className);
     });
   }
 
@@ -221,7 +217,7 @@ const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
       return;
     }
 
-    return line(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
+    return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
   });
 };
 
@@ -230,7 +226,7 @@ const updateLink: D3Callable = <N>(group: D3Selection, options: GraphRendererOpt
  */
 export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOptions<N>> {
   update(layout: GraphLayout<N>) {
-    const root = d3.select(this.root);
+    const root = select(this.root);
 
     //
     // Guides
@@ -288,6 +284,6 @@ export class GraphRenderer<N> extends Renderer<GraphLayout<N>, GraphRendererOpti
    * @param node
    */
   fireBullet(node: GraphLayoutNode<N>) {
-    d3.select(this.root).selectAll('g.links').selectAll('path').call(createBullets(this.root, node.id));
+    select(this.root).selectAll('g.links').selectAll('path').call(createBullets(this.root, node.id));
   }
 }

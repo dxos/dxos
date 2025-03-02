@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { line, select } from 'd3';
 
 import { type D3Callable } from '@dxos/gem-core';
+
+const createLine = line();
 
 export type MarkerOptions = {
   arrowSize?: number;
@@ -14,7 +16,7 @@ const createArrow =
   (length: number, offset: number, start: boolean): D3Callable =>
   (el) => {
     const height = length * 0.5;
-    const path = d3.line()([
+    const path = createLine([
       start ? [length, height] : [-length, -height],
       [0, 0],
       start ? [length, -height] : [-length, height],
@@ -72,6 +74,6 @@ export const createMarkers =
       .attr('markerUnits', 'strokeWidth')
       .attr('class', (d) => d.className)
       .each((d, i, nodes) => {
-        d3.select(nodes[i]).call(d.generator);
+        select(nodes[i]).call(d.generator);
       });
   };

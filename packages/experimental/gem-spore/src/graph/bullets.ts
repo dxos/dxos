@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { easeLinear, interpolate, select } from 'd3';
 
 import { type D3Callable, type D3Selection } from '@dxos/gem-core';
 
@@ -30,11 +30,10 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
 
       // Match source node.
       if (source.id === nodeId) {
-        const path = d3.select(links[i]);
+        const path = select(links[i]);
         const p = path.node().getPointAtLength(0);
 
-        const bullet = d3
-          .select(group)
+        const bullet = select(group)
           .append('circle')
           .attr('class', 'bullet')
           .attr('cx', p.x)
@@ -46,23 +45,23 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
           .transition()
           .delay(delay)
           .duration(minDuration + Math.random() * maxDuration)
-          .ease(d3.easeLinear)
+          .ease(easeLinear)
           .tween('pathTween', function () {
             const length = path.node().getTotalLength();
-            const r = d3.interpolate(0, length);
+            const r = interpolate(0, length);
 
             return (t) => {
               const point = path.node().getPointAtLength(r(t));
-              d3.select(this).attr('cx', point.x).attr('cy', point.y);
+              select(this).attr('cx', point.x).attr('cy', point.y);
             };
           })
 
           // End of transition.
           .on('end', function () {
-            d3.select(this).remove();
+            select(this).remove();
 
             // Propagate with circuit breaker to prevent infinite recursion.
-            const num = d3.select(group).selectAll('circle.bullet').size();
+            const num = select(group).selectAll('circle.bullet').size();
             if (num < max) {
               selection.call(createBullets(group, target.id));
             }

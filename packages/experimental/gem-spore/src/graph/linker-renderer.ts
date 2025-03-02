@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { line, select } from 'd3';
 
 import { type Point } from '@dxos/gem-core';
 
 import { type GraphLayoutNode } from './types';
 import { getCircumferencePoints } from './util';
 
-const line = d3.line();
+const createLine = line();
 
 /**
  * Render linker while dragging.
@@ -25,18 +25,17 @@ export const linkerRenderer = (
   target?: GraphLayoutNode<any>,
   point?: Point,
 ) => {
-  d3.select(root)
+  select(root)
     .selectAll('g.linker')
     .data([{ id: 'linker' }])
     .join('g')
     .attr('class', 'linker')
-
     .selectAll<SVGPathElement, any>('path')
     .data(source ? [{ id: 'link' }] : [])
     .join('path')
     .attr('marker-end', () => (target ? 'url(#marker-arrow-end)' : 'url(#marker-dot)'))
     .attr('d', () => {
-      return line(
+      return createLine(
         getCircumferencePoints(
           [source.x, source.y],
           target ? [target.x, target.y] : point,

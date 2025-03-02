@@ -3,7 +3,7 @@
 // Copyright 2022 Observable, Inc.
 //
 
-import * as d3 from 'd3';
+import { hierarchy, linkRadial, select, tree } from 'd3';
 
 import { type TreeOptions } from '../Tree';
 
@@ -11,7 +11,7 @@ import { type TreeOptions } from '../Tree';
 // https://observablehq.com/@d3/radial-tree
 // https://observablehq.com/@d3/tree
 const RadialTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
-  const svg = d3.select(s);
+  const svg = select(s);
   svg.selectAll('*').remove();
 
   const {
@@ -23,7 +23,7 @@ const RadialTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
 
   const arc = 2 * Math.PI;
 
-  const root = d3.hierarchy(data);
+  const root = hierarchy(data);
 
   // Sort the nodes.
   // if (sort) {
@@ -35,8 +35,7 @@ const RadialTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
   const getLabel = label === null ? null : descendants.map((d) => label(d.data));
 
   // Compute the layout.
-  const layout = d3
-    .tree()
+  const layout = tree()
     .size([arc, radius])
     .separation((a: any, b: any) => (a.parent === b.parent ? 1 : 2) / a.depth);
   layout(root);
@@ -50,8 +49,7 @@ const RadialTree = (s: SVGSVGElement, data: any, options: TreeOptions) => {
     .attr('class', slots?.path ?? '')
     .attr(
       'd',
-      d3
-        .linkRadial()
+      linkRadial()
         .angle((d: any) => d.x + Math.PI / 2)
         .radius((d: any) => d.y) as any,
     );

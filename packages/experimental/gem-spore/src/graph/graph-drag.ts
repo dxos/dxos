@@ -2,8 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type Simulation } from 'd3-force';
+import { drag, pointer, select, type Simulation } from 'd3';
 
 import { type D3DragEvent, type Point, type SVGContext } from '@dxos/gem-core';
 
@@ -46,10 +45,8 @@ export const createSimulationDrag = <N>(
     return modKey === undefined || event[modKey];
   };
 
-  return d3
-    .drag()
+  return drag()
     .filter((event: MouseEvent) => !event.ctrlKey)
-
     .on('start', (event: D3DragEvent) => {
       source = event.subject;
       if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
@@ -58,12 +55,11 @@ export const createSimulationDrag = <N>(
         mode = Mode.MOVE;
       }
     })
-
     .on('drag', function (event: D3DragEvent) {
       // d3.select(this).style('pointer-events', 'none');
       switch (mode) {
         case Mode.MOVE: {
-          d3.select(context.svg).attr('cursor', 'grabbing');
+          select(context.svg).attr('cursor', 'grabbing');
 
           // Freeze node while dragging.
           event.subject.fx = event.x;
@@ -75,23 +71,21 @@ export const createSimulationDrag = <N>(
         case Mode.LINK: {
           // Get drop target.
           if (options?.onDrag) {
-            const point: Point = d3.pointer(event, this);
+            const point: Point = pointer(event, this);
             target = simulation.find(event.x, event.y, 16);
             if (source === target) {
-              d3.select(context.svg).attr('cursor', undefined);
+              select(context.svg).attr('cursor', undefined);
               options?.onDrag?.();
             } else {
-              d3.select(context.svg).attr('cursor', 'none');
+              select(context.svg).attr('cursor', 'none');
               options?.onDrag?.(source, target, point);
             }
           }
         }
       }
     })
-
     .on('end', (event: D3DragEvent) => {
       // d3.select(this).style('pointer-events', undefined);
-
       switch (mode) {
         case Mode.LINK: {
           options?.onDrop?.(source, target);
@@ -107,6 +101,6 @@ export const createSimulationDrag = <N>(
 
       mode = undefined;
       source = undefined;
-      d3.select(context.svg).attr('cursor', undefined);
+      select(context.svg).attr('cursor', undefined);
     });
 };

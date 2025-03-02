@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
-import type { ZoomTransform } from 'd3';
+import { select, type ZoomTransform, zoom, zoomIdentity } from 'd3';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
@@ -40,7 +39,7 @@ export class ZoomHandler {
     this._enabled = this._options.enabled ?? true;
 
     // https://github.com/d3/d3-zoom#zoom
-    this._zoom = d3.zoom().scaleExtent(this._options.extent ?? (defaultOptions.extent as any));
+    this._zoom = zoom().scaleExtent(this._options.extent ?? (defaultOptions.extent as any));
   }
 
   /**
@@ -62,7 +61,7 @@ export class ZoomHandler {
 
   setEnabled(enable: boolean) {
     if (enable) {
-      d3.select(this._context.svg)
+      select(this._context.svg)
         .call(this._zoom as any)
         .on(
           'dblclick.zoom',
@@ -75,7 +74,7 @@ export class ZoomHandler {
             : null,
         );
     } else {
-      d3.select(this._context.svg).on('.zoom', null); // Unbind the internal event handler.
+      select(this._context.svg).on('.zoom', null); // Unbind the internal event handler.
     }
 
     this._enabled = enable;
@@ -85,8 +84,8 @@ export class ZoomHandler {
   reset(duration = 500) {
     // TODO(burdon): Scale to midpoint in extent.
     const scale = 1; // this._options.extent?.[0] ?? 1;
-    const transform = d3.zoomIdentity.scale(scale);
-    d3.select(this._context.svg)
+    const transform = zoomIdentity.scale(scale);
+    select(this._context.svg)
       .transition()
       .duration(duration)
       .call(this._zoom.transform as any, transform);
@@ -109,7 +108,7 @@ export const useZoom = (options: ZoomOptions = defaultOptions): ZoomHandler => {
     // TODO(burdon): Implement momentum.
     handler.zoom.on('zoom', ({ transform }: { transform: ZoomTransform }) => {
       context.setTransform(transform); // Fires the resize event (e.g., to update grid).
-      d3.select(ref.current!).attr('transform', transform as any);
+      select(ref.current!).attr('transform', transform as any);
     });
 
     handler.init();

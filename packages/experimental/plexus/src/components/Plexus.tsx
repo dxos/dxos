@@ -3,7 +3,7 @@
 //
 
 import { Aperture } from '@phosphor-icons/react';
-import * as d3 from 'd3';
+import { transition, easeLinear } from 'd3';
 import defaulstDeep from 'lodash.defaultsdeep';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -73,7 +73,7 @@ export const Plexus = <N,>({ model, slots, onSelect, onTransition }: PlexusProps
         graphRef,
         defaulstDeep({}, slots?.renderer, {
           idAccessor: model.idAccessor,
-          transition: () => d3.transition().duration(transitionDuration).ease(d3.easeLinear),
+          transition: () => transition().duration(transitionDuration).ease(easeLinear),
           labels: {
             text: (node: GraphLayoutNode<N>) => node.id.slice(0, 8), // + `[${node.data.label}]`
           },
