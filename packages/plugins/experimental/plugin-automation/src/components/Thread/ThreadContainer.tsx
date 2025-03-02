@@ -27,14 +27,12 @@ export const ThreadContainer = ({ chat }: { chat?: AIChatType }) => {
         return false;
       }
 
-      requestAnimationFrame(async () => {
-        invariant(messageQueue);
-        await processor.request(text, {
-          history: messageQueue.items,
-          onComplete: (messages) => {
-            messageQueue.append(messages);
-          },
-        });
+      invariant(messageQueue);
+      void processor.request(text, {
+        history: messageQueue.items,
+        onComplete: (messages) => {
+          messageQueue.append(messages);
+        },
       });
 
       return true;

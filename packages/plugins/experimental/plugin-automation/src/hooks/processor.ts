@@ -199,10 +199,12 @@ export class ChatProcessor {
           }
         }
       } while (more);
-    } catch (err) {
-      log.catch(err);
-    } finally {
+
       log.info('done');
+    } catch (err) {
+      log.catch(err); // TODO(burdon): Silent!
+      console.log('!!!!', err);
+    } finally {
       this._stream = undefined;
     }
   }
