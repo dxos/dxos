@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { line, curveNatural } from 'd3';
+import { curveNatural, line, select } from 'd3';
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -11,30 +11,65 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type SineProps = ThemedClassName;
 
+const phaser = (min: number, max: number, period: number) => {
+  if (min === max) {
+    return () => min;
+  }
+
+  const mid = (min + max) / 2;
+  const range = (max - min) / 2;
+  return (t: number) => Math.floor(mid + Math.sin(t * period) * range);
+};
+
+// TODO(burdon): Create sliders.
 export const Sine = ({ classNames }: SineProps) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();
   const svgRef = useRef<SVGSVGElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
 
-  const n = 30;
-  const dx = width / (n - 1);
-  const dt = (4 * Math.PI * 2) / n;
+  // Options.
+  const period = 1 / 200;
+  const numWaves = 3;
+  // const numPointsRange = [5, 7, 10, 15, 30];
+  const huePhaser = phaser(20, 50, 1 / 1000);
+  const lineGenerator = line<[number, number]>()
+    .x((d) => d[0])
+    .y((d) => d[1])
+    .curve(curveNatural);
+  // .curve(curveLinear);
+  // .curve(curveStep);
 
-  const phase = useRef(0);
   const handleAnimationFrame = useCallback(
     (time: number) => {
-      let amplitude = height / 2;
-      const points: [number, number][] = Array.from({ length: n }, (_, i) => {
-        amplitude *= 0.9;
-        return [-width / 2 + i * dx, Math.sin(phase.current + i * dt) * amplitude];
+      // const n = Math.floor(time / 2_000) % numPointsRange.length;
+      // const numPoints = numPointsRange[n];
+      const numPoints = 7;
+
+      const phase = time * period;
+      const dx = width / (numPoints - 1);
+      const waves = Array.from({ length: numWaves }, (_, i) => {
+        const maxAmplitude = height / (i + 3);
+
+        const dt = ((i + 2) * 2 * Math.PI * 2) / numPoints;
+        const points: [number, number][] = Array.from({ length: numPoints }, (_, i) => {
+          const amplitude = maxAmplitude * Math.sin((i * Math.PI) / (numPoints - 1));
+          const x = -width / 2 + i * dx;
+          const y = Math.sin(phase + i * dt) * amplitude;
+          return [x, y];
+        });
+
+        const baseHue = huePhaser(time);
+        return { path: lineGenerator(points)!, color: `hsl(${baseHue + i * 10}, 100%, 50%)` };
       });
 
-      const path = lineGenerator(points);
-      if (path) {
-        pathRef.current!.setAttribute('d', path);
-      }
+      select(svgRef.current)
+        .selectAll('path')
+        .data(waves)
+        .join('path')
+        .attr('d', (d) => d.path)
+        .attr('fill', 'none')
+        .attr('stroke', (d) => d.color)
+        .attr('stroke-width', 0.5);
 
-      phase.current -= 0.1;
       requestAnimationFrame(handleAnimationFrame);
     },
     [width, height],
@@ -47,15 +82,7 @@ export const Sine = ({ classNames }: SineProps) => {
 
   return (
     <div ref={ref} className={mx(classNames)}>
-      <svg ref={svgRef} className='w-full h-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`}>
-        <path ref={pathRef} fill='none' stroke='currentColor' strokeWidth='1' />
-      </svg>
+      <svg ref={svgRef} className='w-full h-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
     </div>
   );
 };
-
-// Create D3 line generator with natural curve interpolation.
-const lineGenerator = line<[number, number]>()
-  .x((d) => d[0])
-  .y((d) => d[1])
-  .curve(curveNatural);
