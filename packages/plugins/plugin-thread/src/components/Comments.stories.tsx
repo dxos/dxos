@@ -44,7 +44,7 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
 
   return (
     <div className='flex justify-center overflow-y-auto bg-white dark:bg-black'>
-      <div className='flex flex-col w-[400px]'>
+      <div className='flex flex-col w-[30rem]'>
         <CommentsContainer threads={threads} detached={detached} onThreadDelete={console.log} />
       </div>
     </div>

@@ -32,7 +32,7 @@ export const Default: Story = {
   render: () => {
     const [selected, setSelected] = useState(0);
     return (
-      <div className='flex flex-col w-[500px] p-4 bg-attention'>
+      <div className='flex flex-col w-[30rem] p-4 bg-attention'>
         <ToggleContainer
           open
           title={content[selected].title}

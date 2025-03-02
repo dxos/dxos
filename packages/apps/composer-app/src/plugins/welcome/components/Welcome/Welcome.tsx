@@ -46,7 +46,7 @@ export const Welcome = ({
       >
         <div
           className={mx(
-            'relative grid grid-cols-1 md:w-[600px] max-w-[600px] h-full md:h-[675px] overflow-hidden',
+            'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
             'rounded-xl shadow-lg lg:translate-x-[-40%]',
           )}
           style={{

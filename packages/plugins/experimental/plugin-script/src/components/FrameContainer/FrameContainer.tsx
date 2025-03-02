@@ -59,7 +59,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
           <div
             className={mx(
               baseSurface,
-              'flex absolute right-2 bottom-2 w-[400px] h-[200px] ring rounded',
+              'flex absolute right-2 bottom-2 w-[30rem] h-[200px] ring rounded',
               'z-20 overflow-x-hidden overflow-y-auto',
             )}
           >
