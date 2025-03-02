@@ -8,7 +8,7 @@ import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { MarkdownViewer, ToggleContainer, StatusLine, NumericTabs } from '@dxos/react-ui-components';
+import { MarkdownViewer, NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -210,7 +210,7 @@ const TabbedContainer = ({ items }: { items: { title: string; block: any }[] }) 
   };
 
   return (
-    <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} open={open} onChangeOpen={setOpen}>
+    <ToggleContainer title={<StatusRoll lines={lines} autoAdvance />} open={open} onChangeOpen={setOpen}>
       <div className='flex gap-2 w-full'>
         <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
         <Json data={items[selected].block} classNames='!p-1 text-xs' />
