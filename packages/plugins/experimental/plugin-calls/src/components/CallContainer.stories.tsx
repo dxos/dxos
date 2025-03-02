@@ -39,10 +39,10 @@ const Render = (props: CallContainerProps) => {
 
   return (
     <div className='flex grow gap-8 justify-center'>
-      <div className='flex h-full w-[400px] border border-neutral-500'>
+      <div className='flex h-full w-[30rem] border border-neutral-500'>
         <CallContainer {...props} space={space} />
       </div>
-      <div className='flex h-full w-[400px] border border-neutral-500'>
+      <div className='flex h-full w-[30rem] border border-neutral-500'>
         <ScrollContainer>
           <Transcript blocks={queue?.items} />
         </ScrollContainer>

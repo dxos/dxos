@@ -3,3 +3,4 @@
 //
 
 export * from './Prompt';
+export * from './PromptBar';

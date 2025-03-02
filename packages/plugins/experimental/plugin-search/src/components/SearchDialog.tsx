@@ -44,8 +44,8 @@ export type SearchDialogProps = {
 
 export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const layout = useLayout();
   const { graph } = useAppGraph();
+  const layout = useLayout();
   const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
     .map((id) => graph?.findNode(id))
     .filter(Boolean);
