@@ -28,10 +28,10 @@ import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
-import { Thread, type ThreadProps } from './components';
-import { ChatProcessor } from './hooks';
-import { createProcessorOptions } from './testing';
-import translations from './translations';
+import { Thread, type ThreadProps } from './Thread';
+import { ChatProcessor } from '../../hooks';
+import { createProcessorOptions } from '../../testing';
+import translations from '../../translations';
 
 const endpoints = localServiceEndpoints;
 
@@ -95,23 +95,27 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const messages = [...(queue?.items ?? []), ...(processor?.messages.value ?? [])];
 
   const handleSubmit = processor
-    ? async (message: string) => {
-        invariant(processor);
-        if (processor.streaming.value) {
-          await processor.cancel();
-        }
+    ? (message: string) => {
+        requestAnimationFrame(async () => {
+          invariant(processor);
+          if (processor.streaming.value) {
+            await processor.cancel();
+          }
 
-        invariant(queue);
-        await processor.request(message, {
-          history: queue.items,
-          onComplete: (messages) => {
-            queue.append(messages);
-          },
+          invariant(queue);
+          await processor.request(message, {
+            history: queue.items,
+            onComplete: (messages) => {
+              queue.append(messages);
+            },
+          });
         });
+
+        return true;
       }
     : undefined;
 
-  const handleSuggest = useCallback(
+  const handlePrompt = useCallback(
     (text: string) => {
       void handleSubmit?.(text);
     },
@@ -136,7 +140,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
               spellCheck={false}
               placeholder='Queue DXN'
               value={queueDxn}
-              // onClick={() => setQueueDxn('')} Why?????
               onChange={(ev) => setQueueDxn(ev.target.value)}
             />
             <IconButton
@@ -155,11 +158,12 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
           </Input.Root>
         </Toolbar.Root>
 
+        {/* TODO(burdon): Replace with ThreadContainer. */}
         <Thread
           messages={messages}
-          streaming={processor?.streaming.value}
+          processing={processor?.streaming.value}
           onSubmit={processor ? handleSubmit : undefined}
-          onSuggest={processor ? handleSuggest : undefined}
+          onPrompt={processor ? handlePrompt : undefined}
           onDelete={processor ? handleDelete : undefined}
           {...props}
         />
@@ -191,7 +195,7 @@ const randomQueueDxn = () =>
   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString();
 
 const meta: Meta<typeof Render> = {
-  title: 'plugins/plugin-automation/artifacts',
+  title: 'plugins/plugin-automation/ThreadContainer',
   render: Render,
   decorators: [
     withSignals,

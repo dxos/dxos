@@ -37,7 +37,7 @@ export const AutomationPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(AutomationAction.Create, props),
+            createObject: (props: { name?: string }) => createIntent(AutomationAction.CreateChat, props),
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },

@@ -38,7 +38,7 @@ const UX: FC<{
   blocks?: TranscriptBlock[];
 }> = ({ playing, setPlaying, blocks }) => {
   return (
-    <div className='flex flex-col w-[400px]'>
+    <div className='flex flex-col w-[30rem]'>
       <Toolbar.Root>
         <IconButton
           iconOnly

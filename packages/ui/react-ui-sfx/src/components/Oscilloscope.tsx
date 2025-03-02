@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { curveCatmullRom, line, scaleLinear } from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAudioStream } from '../hooks';
@@ -11,11 +11,10 @@ export type Point = { x: number; y: number };
 
 const defaultRange: [number, number] = [0, 256];
 
-const curveGenerator = d3
-  .line<Point>()
-  // .curve(d3.curveBasis)
-  // .curve(d3.curveBundle)
-  .curve(d3.curveCatmullRom.alpha(0.5))
+const curveGenerator = line<Point>()
+  // .curve(curveBasis)
+  // .curve(curveBundle)
+  .curve(curveCatmullRom.alpha(0.5))
   .x((d) => d.x)
   .y((d) => d.y);
 
@@ -29,8 +28,8 @@ type GraphProps = {
 };
 
 const Graph = ({ size = 64, n = 10, range = defaultRange, data = [], grid, trail = 8 }: GraphProps) => {
-  const scaleX = useMemo(() => d3.scaleLinear([0, n - 1], [-size / 2, size / 2]), [size, n]);
-  const scaleY = useMemo(() => d3.scaleLinear(range, [size / 2, -size / 2]), [size, range]);
+  const scaleX = useMemo(() => scaleLinear([0, n - 1], [-size / 2, size / 2]), [size, n]);
+  const scaleY = useMemo(() => scaleLinear(range, [size / 2, -size / 2]), [size, range]);
 
   const i = useRef(0);
   const paths = useRef<string[]>([]);

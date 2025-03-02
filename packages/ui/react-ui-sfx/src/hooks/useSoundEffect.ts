@@ -4,6 +4,15 @@
 
 import { useMemo } from 'react';
 
+//
+// TODO(burdon): Event types.
+// Notifications: Message, Incoming Ring, Error
+// Audio: Deafen, Undeafen, Mute, Unmute
+// Call: User Join, User Leave, Stream Started, Stream Ended, Question
+// General: Activity Start, Activity End
+// AI: Thinking, Answered
+//
+
 export type SoundEffect = 'Click' | 'StartRecording' | 'StopRecording' | 'JoinCall' | 'LeaveCall';
 
 /**

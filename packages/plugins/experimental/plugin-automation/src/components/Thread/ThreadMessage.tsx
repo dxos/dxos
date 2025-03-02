@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState, type FC } from 'react';
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -19,18 +19,11 @@ export type ThreadMessageProps = ThemedClassName<{
   message: Message;
   collapse?: boolean;
   debug?: boolean;
-  onSuggest?: (text: string) => void;
+  onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({
-  classNames,
-  message,
-  collapse,
-  debug,
-  onSuggest,
-  onDelete,
-}) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, collapse, debug, onPrompt, onDelete }) => {
   if (typeof message !== 'object') {
     return <div className={mx(classNames)}>{message}</div>;
   }
@@ -78,17 +71,21 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
     <div className={mx('flex flex-col shrink-0 gap-2')}>
       {debug && (
         <div className='text-xs text-subdued'>
-          {message.id}{' '}
           {onDelete && (
-            <span className='cursor-pointer underline' onClick={() => onDelete(message.id)}>
-              delete
-            </span>
+            <IconButton
+              variant='ghost'
+              size={5}
+              icon='ph--x--regular'
+              iconOnly
+              label={`Delete ${message.id}`}
+              onClick={() => onDelete(message.id)}
+            />
           )}
         </div>
       )}
       {content.map((block, idx) => (
         <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
-          <Block role={role} block={block} onSuggest={onSuggest ?? (() => {})} />
+          <Block role={role} block={block} onPrompt={onPrompt ?? (() => {})} />
         </div>
       ))}
     </div>
@@ -98,18 +95,18 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({
 const Block = ({
   block,
   role,
-  onSuggest,
-}: Pick<Message, 'role'> & { block: MessageContentBlock; onSuggest: (text: string) => void }) => {
+  onPrompt,
+}: Pick<Message, 'role'> & { block: MessageContentBlock; onPrompt: (text: string) => void }) => {
   const Component = componentMap[block.type] ?? componentMap.default;
+
   return (
     <div
       className={mx(
         'p-1 px-2 overflow-hidden rounded-md',
-        (block.type !== 'text' || block.disposition) && 'w-full bg-baseSurface',
         block.type === 'text' && role === 'user' && 'bg-primary-200 dark:bg-primary-500',
       )}
     >
-      <Component block={block} onSuggest={onSuggest} />
+      <Component block={block} onPrompt={onPrompt} />
     </div>
   );
 };
@@ -121,7 +118,7 @@ const titles: Record<string, string> = {
   ['tool_result' as const]: 'Tool result',
 };
 
-type BlockComponent = FC<{ block: MessageContentBlock; onSuggest: (text: string) => void }>;
+type BlockComponent = FC<{ block: MessageContentBlock; onPrompt: (text: string) => void }>;
 
 const componentMap: Record<string, BlockComponent> = {
   text: ({ block }) => {
@@ -148,13 +145,13 @@ const componentMap: Record<string, BlockComponent> = {
     );
   },
 
-  json: ({ block, onSuggest }) => {
+  json: ({ block, onPrompt }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
-        return <Button onClick={() => onSuggest(text)}>{text}</Button>;
+        return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt(text)} />;
       }
 
       case 'select': {
@@ -162,7 +159,7 @@ const componentMap: Record<string, BlockComponent> = {
         return (
           <ButtonGroup>
             {options.map((option) => (
-              <Button key={option} onClick={() => onSuggest(option)}>
+              <Button key={option} onClick={() => onPrompt(option)}>
                 {option}
               </Button>
             ))}

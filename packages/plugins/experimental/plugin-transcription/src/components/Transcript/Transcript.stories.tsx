@@ -18,7 +18,7 @@ const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
   component: Transcript,
   render: (args) => (
-    <div className='flex w-[500px] p-2'>
+    <div className='flex w-[30rem] p-2'>
       <ScrollContainer>
         <Transcript {...args} />
       </ScrollContainer>

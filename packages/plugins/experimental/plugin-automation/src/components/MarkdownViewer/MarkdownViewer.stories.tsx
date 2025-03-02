@@ -50,7 +50,7 @@ ${faker.lorem.paragraphs(1)}
 
 export const Default: Story = {
   args: {
-    classNames: 'w-[500px] border border-border rounded-md p-4',
+    classNames: 'w-[30rem] border border-border rounded-md p-4',
     content,
   },
 };

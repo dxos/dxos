@@ -17,8 +17,9 @@ export type AutocompleteOptions = {
   /**
    * Callback triggered when Enter is pressed.
    * @param text The current text in the editor
+   * @returns true if the editor should reset the document.
    */
-  onEnter?: (text: string) => void;
+  onSubmit?: (text: string) => boolean | void;
 
   /**
    * Function that returns a list of suggestions based on the current text.
@@ -28,28 +29,11 @@ export type AutocompleteOptions = {
   onSuggest?: (text: string) => string[];
 };
 
-class InlineSuggestionWidget extends WidgetType {
-  constructor(private suffix: string) {
-    super();
-  }
-
-  override toDOM() {
-    const span = document.createElement('span');
-    span.textContent = this.suffix;
-    span.className = 'cm-inline-suggestion';
-    return span;
-  }
-
-  override eq(other: InlineSuggestionWidget) {
-    return other.suffix === this.suffix;
-  }
-}
-
 /**
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
  */
-export const createAutocompleteExtension = ({ onEnter, onSuggest }: AutocompleteOptions): Extension => {
+export const createAutocompleteExtension = ({ onSubmit, onSuggest }: AutocompleteOptions): Extension => {
   const suggestionPlugin = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
@@ -131,6 +115,7 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
       keymap.of([
         {
           key: 'Tab',
+          preventDefault: true,
           run: (view) => {
             const plugin = view.plugin(suggestionPlugin);
             return plugin?.completeSuggestion(view) ?? false;
@@ -138,6 +123,7 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
         },
         {
           key: 'ArrowRight',
+          preventDefault: true,
           run: (view) => {
             // Only complete if cursor is at the end
             if (view.state.selection.main.head !== view.state.doc.length) {
@@ -152,29 +138,37 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
           key: 'Enter',
           preventDefault: true,
           run: (view) => {
-            const text = view.state.doc.toString();
-            if (onEnter) {
-              onEnter(text);
-              // Clear the document after calling onEnter
-              view.dispatch({
-                changes: {
-                  from: 0,
-                  to: view.state.doc.length,
-                  insert: '',
-                },
-              });
-              return true;
+            const text = view.state.doc.toString().trim();
+            if (text.length > 0 && onSubmit) {
+              const reset = onSubmit(text);
+
+              // Clear the document after calling onEnter.
+              if (reset) {
+                view.dispatch({
+                  changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: '',
+                  },
+                });
+              }
             }
-            return false;
+
+            return true;
           },
         },
         {
           key: 'Shift-Enter',
+          preventDefault: true,
           run: (view) => {
             view.dispatch({
               changes: {
                 from: view.state.selection.main.head,
                 insert: '\n',
+              },
+              selection: {
+                anchor: view.state.selection.main.head + 1,
+                head: view.state.selection.main.head + 1,
               },
             });
             return true;
@@ -182,6 +176,7 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
         },
         {
           key: 'Escape',
+          preventDefault: true,
           run: (view) => {
             // Clear the entire document.
             view.dispatch({
@@ -198,3 +193,20 @@ export const createAutocompleteExtension = ({ onEnter, onSuggest }: Autocomplete
     ),
   ];
 };
+
+class InlineSuggestionWidget extends WidgetType {
+  constructor(private suffix: string) {
+    super();
+  }
+
+  override toDOM() {
+    const span = document.createElement('span');
+    span.textContent = this.suffix;
+    span.className = 'cm-inline-suggestion';
+    return span;
+  }
+
+  override eq(other: InlineSuggestionWidget) {
+    return other.suffix === this.suffix;
+  }
+}
