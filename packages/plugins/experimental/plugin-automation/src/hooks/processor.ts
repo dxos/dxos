@@ -202,8 +202,7 @@ export class ChatProcessor {
 
       log.info('done');
     } catch (err) {
-      log.catch(err); // TODO(burdon): Silent!
-      console.log('!!!!', err);
+      log.catch(err);
     } finally {
       this._stream = undefined;
     }
