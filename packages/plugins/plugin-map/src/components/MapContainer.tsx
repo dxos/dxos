@@ -28,7 +28,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   const space = getSpace(map);
 
   const schema = useSchema(space, map?.view?.target?.query.type);
-  const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
+  const objects = useQuery(space, schema ? Filter.schema(schema) : undefined);
 
   useEffect(() => {
     const locationProperty = getLocationProperty(map?.view?.target);
@@ -36,7 +36,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
       return;
     }
 
-    const newMarkers: MapMarker[] = (rowsForType ?? [])
+    const newMarkers: MapMarker[] = (objects ?? [])
       .map((row) => {
         const geopoint = row[locationProperty];
         if (!geopoint) {
@@ -57,7 +57,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
       .filter(isNotNullable);
 
     setMarkers(newMarkers);
-  }, [rowsForType, map?.view?.target]);
+  }, [objects, map?.view?.target]);
 
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
