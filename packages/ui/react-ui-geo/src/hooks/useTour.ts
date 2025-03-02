@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { selection, geoPath, geoInterpolate, geoDistance } from 'd3';
 import { useEffect, useState } from 'react';
 import versor from 'versor';
 
@@ -24,11 +24,11 @@ export type TourOptions = {
  * Inspired by: https://observablehq.com/@mbostock/top-100-cities
  */
 export const useTour = (controller?: GlobeController | null, features?: Features, options: TourOptions = {}) => {
-  const selection = d3.selection();
+  const sel = selection();
   const [running, setRunning] = useState(false);
   useEffect(() => {
     if (!running) {
-      selection.interrupt(TRANSITION_NAME);
+      sel.interrupt(TRANSITION_NAME);
       return;
     }
 
@@ -37,7 +37,7 @@ export const useTour = (controller?: GlobeController | null, features?: Features
       t = setTimeout(async () => {
         const { canvas, projection, setRotation } = controller;
         const context = canvas.getContext('2d', { alpha: false });
-        const path = d3.geoPath(projection, context).pointRadius(2);
+        const path = geoPath(projection, context).pointRadius(2);
 
         const tilt = 0;
         let last: LatLng;
@@ -50,15 +50,15 @@ export const useTour = (controller?: GlobeController | null, features?: Features
             // Points.
             const p1 = last ? geoToPosition(last) : undefined;
             const p2 = geoToPosition(next);
-            const ip = d3.geoInterpolate(p1 || p2, p2);
-            const distance = d3.geoDistance(p1 || p2, p2);
+            const ip = geoInterpolate(p1 || p2, p2);
+            const distance = geoDistance(p1 || p2, p2);
 
             // Rotation.
             const r1 = p1 ? positionToRotation(p1, tilt) : controller.projection.rotate();
             const r2 = positionToRotation(p2, tilt);
             const iv = versor.interpolate(r1, r2);
 
-            const transition = selection
+            const transition = sel
               .transition(TRANSITION_NAME)
               .duration(Math.max(options.duration ?? defaultDuration, distance * 2_000))
               .tween('render', () => (t) => {
@@ -98,7 +98,7 @@ export const useTour = (controller?: GlobeController | null, features?: Features
 
       return () => {
         clearTimeout(t);
-        selection.interrupt(TRANSITION_NAME);
+        sel.interrupt(TRANSITION_NAME);
       };
     }
   }, [controller, running]);
