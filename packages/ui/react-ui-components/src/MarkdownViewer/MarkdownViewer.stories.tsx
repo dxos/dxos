@@ -14,7 +14,7 @@ import { MarkdownViewer } from './MarkdownViewer';
 faker.seed(0);
 
 const meta: Meta<typeof MarkdownViewer> = {
-  title: 'plugins/plugin-automation/MarkdownViewer',
+  title: 'ui/react-ui-components/MarkdownViewer',
   component: MarkdownViewer,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };

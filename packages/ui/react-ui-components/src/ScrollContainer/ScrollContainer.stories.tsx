@@ -13,7 +13,7 @@ import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 import { ScrollContainer, type ScrollController } from './ScrollContainer';
 
 const meta: Meta<typeof ScrollContainer> = {
-  title: 'plugins/plugin-automation/ScrollContainer',
+  title: 'ui/react-ui-components/ScrollContainer',
   component: ScrollContainer,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   render: (args) => {

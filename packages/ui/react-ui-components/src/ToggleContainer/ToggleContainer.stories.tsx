@@ -86,7 +86,7 @@ const Render = ({ shrinkX, ...props }: ToggleContainerProps) => {
 };
 
 const meta: Meta<typeof ToggleContainer> = {
-  title: 'plugins/plugin-automation/ToggleContainer',
+  title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer,
   render: Render,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
