@@ -11,11 +11,11 @@ import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 
-import { StatusLine } from './StatusLine';
+import { StatusRoll } from './StatusRoll';
 
-const meta: Meta<typeof StatusLine> = {
-  title: 'plugins/plugin-automation/StatusLine',
-  component: StatusLine,
+const meta: Meta<typeof StatusRoll> = {
+  title: 'ui/react-ui-components/StatusRoll',
+  component: StatusRoll,
   decorators: [withSignals, withTheme, withLayout()],
   parameters: {
     layout: 'centered',
@@ -24,7 +24,7 @@ const meta: Meta<typeof StatusLine> = {
 
 export default meta;
 
-type Story = StoryObj<typeof StatusLine>;
+type Story = StoryObj<typeof StatusRoll>;
 
 export const Default: Story = {
   args: {
@@ -40,7 +40,7 @@ export const Demo: Story = {
 
     return (
       <div className='flex flex-col w-96 gap-4'>
-        <StatusLine lines={lines} autoAdvance advance={500} />
+        <StatusRoll lines={lines} autoAdvance advance={500} />
         <div>
           <Button onClick={() => setLines((lines) => [...lines, `${lines.length + 1}. ${faker.lorem.paragraph()}`])}>
             Add

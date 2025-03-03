@@ -20,13 +20,17 @@ const numbers = [
   { regular: 'ph--number-circle-nine--thin', active: 'ph--number-circle-nine--duotone' },
 ];
 
-export type TabsProps = ThemedClassName<{
+export type NumericTabsProps = ThemedClassName<{
   length: number;
   selected?: number;
   onSelect?: (index: number) => void;
 }>;
 
-export const Tabs = forwardRef<HTMLDivElement, TabsProps>(
+/**
+ * @deprecated
+ */
+// TODO(burdon): Integrate with react-ui-tabs.
+export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
   ({ classNames, length, selected = 0, onSelect }, forwardedRef) => {
     return (
       <div
