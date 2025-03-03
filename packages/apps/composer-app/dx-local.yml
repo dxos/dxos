@@ -5,15 +5,11 @@ runtime:
     # devtoolsProxy: wss://192.168.50.25:8080/host
     # disableP2pReplication: true
 
-      agents: true
-
   services:
     edge:
-      url: wss://edge.dxos.workers.dev/
-    iceProviders:
-      - urls: https://edge.dxos.workers.dev/ice
-    ipfs:
-      server: https://api.ipfs.dxos.network/api/v0
-      gateway: https://gateway.ipfs.dxos.network/ipfs
+#      url: https://edge-main.dxos.workers.dev/
+      url: http://localhost:8787
+    agentHosting:
+      type: LOCAL_TESTING
     ai:
-      server: https://ai-service.dxos.workers.dev
+      server: http://localhost:8788
