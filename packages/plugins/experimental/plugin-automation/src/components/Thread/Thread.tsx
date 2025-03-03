@@ -62,22 +62,18 @@ export const Thread = ({
 
   return (
     <div role='list' className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      {filteredMessages.length > 0 && (
-        <ScrollContainer ref={scroller}>
-          {filteredMessages.map((message) => (
-            <ThreadMessage
-              key={message.id}
-              classNames='px-4 pbe-4'
-              message={message}
-              debug={debug}
-              onPrompt={onPrompt}
-              onDelete={onDelete}
-            />
-          ))}
-
-          <div className='pbe-6' />
-        </ScrollContainer>
-      )}
+      <ScrollContainer ref={scroller} classNames={mx(filteredMessages.length > 0 && 'pbs-2 pbe-6')}>
+        {filteredMessages.map((message) => (
+          <ThreadMessage
+            key={message.id}
+            classNames='px-4 pbe-4'
+            message={message}
+            debug={debug}
+            onPrompt={onPrompt}
+            onDelete={onDelete}
+          />
+        ))}
+      </ScrollContainer>
 
       {onSubmit && (
         <PromptBar microphone={hasTrascription} processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />

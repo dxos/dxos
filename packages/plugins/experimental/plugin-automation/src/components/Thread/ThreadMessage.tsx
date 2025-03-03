@@ -14,12 +14,14 @@ import { safeParseJson } from '@dxos/util';
 
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 
-const panelClassNames = 'flex flex-col w-full bg-baseSurface rounded-md';
+// TODO(burdon): Create secondary token.
+const userClassNames = 'bg-teal-200 dark:bg-teal-500';
+const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
 
 const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   return (
     <div role='list-item' className={mx('flex w-full', user && 'justify-end', classNames)}>
-      <div className={mx(user ? 'px-2 py-1 bg-primary-200 dark:bg-primary-500 rounded-md' : 'w-full')}>{children}</div>
+      <div className={mx(user ? ['px-2 py-1 rounded-md', userClassNames] : 'w-full')}>{children}</div>
     </div>
   );
 };
