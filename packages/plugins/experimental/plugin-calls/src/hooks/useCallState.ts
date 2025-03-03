@@ -17,7 +17,7 @@ import { codec, type RoomState, type UserState } from '../types';
 // TODO(burdon): Disambiguate room and call.
 export type CallState = {
   room: RoomState;
-  user: UserState;
+  self: UserState;
   transcription: CallTranscription;
   updateUserState: (user: UserState) => void;
 };
@@ -102,18 +102,17 @@ export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
   }, [roomId]);
 
   // Current user.
-  const user = useMemo<UserState>(
+  const self = useMemo<UserState>(
     () => ({
       ...room.users!.find((user) => user.id === peerKey),
       name: displayName,
-      self: true,
     }),
     [room.users, peerKey, displayName],
   );
 
   return {
     room,
-    user,
+    self,
     transcription,
     updateUserState: (user: UserState) => {
       client.services.services

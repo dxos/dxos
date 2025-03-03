@@ -26,6 +26,7 @@ export class FIFOScheduler {
   }
 }
 
+// TODO(mykola): Reconcile with @dxos/async task scheduling.
 export class BulkRequestDispatcher<RequestEntryParams, BulkResponse> {
   #currentBatch: RequestEntryParams[];
   #currentBulkResponse: Promise<BulkResponse> | null;

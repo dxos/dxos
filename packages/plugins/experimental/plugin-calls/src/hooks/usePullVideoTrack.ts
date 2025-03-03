@@ -14,7 +14,7 @@ export const usePulledVideoTrack = (video: string | undefined) => {
   const { peer } = useCallContext();
 
   const [sessionId, trackName] = video?.split('/') ?? [];
-  const trackObject = useMemo(
+  const trackData = useMemo(
     () =>
       sessionId && trackName
         ? ({
@@ -28,22 +28,23 @@ export const usePulledVideoTrack = (video: string | undefined) => {
 
   const [pulledTrack, setPulledTrack] = useState<MediaStreamTrack>();
   useEffect(() => {
-    if (!trackObject || !peer) {
+    if (!trackData || !peer) {
       return;
     }
 
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       // TODO(mykola): Add retry logic. Delete delay.
-      // Wait for the track to be available on CF.
+      // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
-      setPulledTrack(await peer.pullTrack(trackObject));
+      const track = await peer.pullTrack({ trackData, ctx });
+      setPulledTrack(track);
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [trackObject, peer?.session]);
+  }, [trackData, peer?.session]);
 
   return pulledTrack;
 };

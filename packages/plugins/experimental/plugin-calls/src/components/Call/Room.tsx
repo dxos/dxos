@@ -15,10 +15,10 @@ import { ParticipantGrid } from '../Participant';
 export const CallRoom: FC<ThemedClassName> = ({ classNames }) => {
   const debug = useDebugMode();
   const {
-    call: { room, user: self },
+    call: { room, self },
   } = useCallContext();
 
-  return <ParticipantGrid user={self} users={room.users ?? []} debug={debug} />;
+  return <ParticipantGrid self={self} users={room.users ?? []} debug={debug} />;
 };
 
 CallRoom.displayName = 'CallRoom';

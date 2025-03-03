@@ -26,7 +26,6 @@ message UserState {
   bool joined = 6;
   Tracks tracks = 7;
   optional Transcription transcription = 8;
-  optional bool self = 9;
 }
 
 message RoomState {
