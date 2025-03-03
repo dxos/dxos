@@ -64,7 +64,7 @@ export const presets = {
             const triggerShape = createTrigger({ triggerKind: TriggerKind.Webhook, ...position({ x: -18, y: -2 }) });
             const trigger = canvasModel.createNode(triggerShape);
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-            const { queueId } = setupQueue(canvasModel);
+            const { queueId } = setupQueue(space, canvasModel);
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
@@ -92,6 +92,7 @@ export const presets = {
       async (space, n, cb) => {
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
+            space,
             TriggerKind.Subscription,
             (triggerSpec) => (triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' }),
             'type',
@@ -108,6 +109,7 @@ export const presets = {
       async (space, n, cb) => {
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
+            space,
             TriggerKind.Timer,
             (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
             'result',
@@ -192,7 +194,7 @@ export const presets = {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const chat = canvasModel.createNode(createChat(position({ x: -18, y: -2 })));
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-            const { queueId } = setupQueue(canvasModel);
+            const { queueId } = setupQueue(space, canvasModel);
 
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
@@ -247,7 +249,7 @@ export const presets = {
             });
             const trigger = canvasModel.createNode(triggerShape);
 
-            const { queueId } = setupQueue(canvasModel, {
+            const { queueId } = setupQueue(space, canvasModel, {
               idPosition: { centerX: -720, centerY: 224, width: 192, height: 256 },
               queuePosition: { centerX: -144, centerY: 416, width: 320, height: 448 },
             });
@@ -431,6 +433,7 @@ export const presets = {
 };
 
 const createQueueSinkPreset = <SpecType extends TriggerKind>(
+  space: Space,
   triggerKind: SpecType,
   initSpec: (spec: Extract<TriggerType, { type: SpecType }>) => void,
   triggerOutputName: string,
@@ -451,7 +454,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
       ...rawPosition({ centerX: -578, centerY: -187, height: 320, width: 320 }),
     });
     const trigger = canvasModel.createNode(triggerShape);
-    const { queueId } = setupQueue(canvasModel, {
+    const { queueId } = setupQueue(space, canvasModel, {
       queuePosition: { centerX: -80, centerY: 378, width: 320, height: 448 },
     });
     const append = canvasModel.createNode(
@@ -500,12 +503,13 @@ const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, comput
 };
 
 const setupQueue = (
+  space: Space,
   canvasModel: CanvasGraphModel,
   args?: { idPosition?: RawPositionInput; queuePosition?: RawPositionInput },
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+      value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );
