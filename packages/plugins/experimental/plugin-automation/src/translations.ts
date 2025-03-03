@@ -12,6 +12,7 @@ export default [
         'typename label': 'AI Chat',
       },
       [AUTOMATION_PLUGIN]: {
+        'open ambient chat label': 'Open AI chat',
         'plugin name': 'Automation',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',

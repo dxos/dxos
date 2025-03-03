@@ -62,9 +62,9 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <div role='list' className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <div role='none' className='overflow-hidden'>
-        <ScrollContainer ref={scroller} classNames={mx(filteredMessages.length > 0 && 'pbs-2 pbe-6')}>
+    <>
+      <ScrollContainer ref={scroller}>
+        <div role='none' className={mx(filteredMessages.length > 0 && 'pbs-2 pbe-6')}>
           {filteredMessages.map((message) => (
             <ThreadMessage
               key={message.id}
@@ -75,8 +75,8 @@ export const Thread = ({
               onDelete={onDelete}
             />
           ))}
-        </ScrollContainer>
-      </div>
+        </div>
+      </ScrollContainer>
 
       {onSubmit && (
         <PromptBar
@@ -87,6 +87,6 @@ export const Thread = ({
           onCancel={onCancel}
         />
       )}
-    </div>
+    </>
   );
 };

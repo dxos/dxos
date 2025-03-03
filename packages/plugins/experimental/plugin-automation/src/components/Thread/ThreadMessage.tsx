@@ -15,7 +15,7 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 
 // TODO(burdon): Create secondary token.
-const userClassNames = 'bg-teal-200 dark:bg-teal-500';
+const userClassNames = 'bg-sky-200 dark:bg-sky-500';
 const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
 
 const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
