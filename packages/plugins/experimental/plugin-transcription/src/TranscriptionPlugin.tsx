@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { type Space } from '@dxos/client/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
@@ -25,9 +24,7 @@ export const TranscriptionPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TranscriptType.typename,
           metadata: {
-            // TODO(burdon): Options not used?
-            createObject: (props: { name?: string }, options: { space: Space }) =>
-              createIntent(TranscriptionAction.Create, { ...props }),
+            createObject: (props: { name?: string }) => createIntent(TranscriptionAction.Create, { ...props }),
             placeholder: ['transcript title placeholder', { ns: TRANSCRIPTION_PLUGIN }],
             icon: 'ph--subtitles--regular',
           },

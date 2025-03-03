@@ -12,8 +12,8 @@ export namespace AutomationAction {
 
   export class CreateChat extends S.TaggedClass<CreateChat>()(`${AUTOMATION_ACTION}/create-chat`, {
     input: S.Struct({
+      spaceId: S.optional(S.String),
       name: S.optional(S.String),
-      queue: S.optional(S.String),
     }),
     output: S.Struct({
       object: AIChatType,
