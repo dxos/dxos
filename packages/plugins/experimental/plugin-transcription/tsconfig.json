@@ -76,13 +76,25 @@
       "path": "../../../core/protocols"
     },
     {
+      "path": "../../../experimental/artifact"
+    },
+    {
+      "path": "../../../experimental/assistant"
+    },
+    {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"
     },
     {
       "path": "../../../sdk/react-edge-client"
+    },
+    {
+      "path": "../../../sdk/schema"
     },
     {
       "path": "../../../ui/react-ui"
@@ -104,6 +116,9 @@
     },
     {
       "path": "../../plugin-graph"
+    },
+    {
+      "path": "../../plugin-markdown"
     },
     {
       "path": "../../plugin-space"
