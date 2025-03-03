@@ -14,7 +14,7 @@ import { type CancellableInvitationObservable } from '@dxos/react-client/invitat
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import { getSize } from '@dxos/react-ui-theme';
+import { errorText, getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import {
@@ -118,7 +118,7 @@ const IdentityHeading = ({
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
-                classNames={['bs-[--rail-action]', !isConnected && 'text-error-500']}
+                classNames={['bs-[--rail-action]', !isConnected && errorText]}
                 onClick={() =>
                   onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
                 }

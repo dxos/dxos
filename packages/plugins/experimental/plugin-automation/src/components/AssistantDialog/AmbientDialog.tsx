@@ -2,19 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Dialog, Icon, IconButton } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
-
-import { AUTOMATION_PLUGIN } from '../../meta';
 
 const preventDefault = (event: Event) => event.preventDefault();
 
 // TODO(burdon): Factor out.
-export const AmbientDialog = ({ children }: PropsWithChildren) => {
+export const AmbientDialog = ({ children, title }: PropsWithChildren<{ title?: string }>) => {
+  const [resizeKey, setReizeKey] = useState(0);
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    setOpen(true);
+  }, []);
 
   // TODO(burdon): Animate open/close.
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px each.
@@ -23,6 +25,7 @@ export const AmbientDialog = ({ children }: PropsWithChildren) => {
   const handleToggle = useCallback(() => {
     setOpen((open) => {
       setSize(open ? minSize : 'min-content');
+      setReizeKey((key) => key + 1);
       return !open;
     });
   }, []);
@@ -40,6 +43,7 @@ export const AmbientDialog = ({ children }: PropsWithChildren) => {
         onInteractOutside={preventDefault}
       >
         <ResizeHandle
+          key={resizeKey}
           side='block-start'
           defaultSize='min-content'
           minSize={minSize}
@@ -48,7 +52,7 @@ export const AmbientDialog = ({ children }: PropsWithChildren) => {
           onSizeChange={setSize}
         />
 
-        <DialogHeader open={open} onToggle={handleToggle} />
+        <DialogHeader open={open} title={title} onToggle={handleToggle} />
 
         {children}
       </Dialog.Content>
@@ -59,8 +63,7 @@ export const AmbientDialog = ({ children }: PropsWithChildren) => {
 /**
  * Matches same layout grid as PromptBar.
  */
-const DialogHeader = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+const DialogHeader = ({ open, title, onToggle }: { open: boolean; title?: string; onToggle: () => void }) => {
   return (
     <div className='flex shrink-0 w-full grid grid-cols-[40px_1fr_40px] items-center overflow-hidden'>
       <div className='flex w-[40px] h-[40px] items-center justify-center'>
@@ -69,12 +72,13 @@ const DialogHeader = ({ open, onToggle }: { open: boolean; onToggle: () => void 
         </Dialog.Close>
       </div>
       <div className='grow'>
-        <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
+        <Dialog.Title classNames='flex justify-center text-xs text-subdued'>{title}</Dialog.Title>
       </div>
       <div className='flex w-[40px] h-[40px] items-center justify-center'>
         <IconButton
           variant='ghost'
-          icon={open ? 'ph--caret-down--regular' : 'ph--caret-up--regular'}
+          icon={'ph--caret-down--regular'}
+          classNames={mx()}
           iconOnly
           label='Shrink'
           onClick={onToggle}

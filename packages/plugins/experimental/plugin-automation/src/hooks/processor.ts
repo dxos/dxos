@@ -68,6 +68,12 @@ export class ChatProcessor {
   public readonly streaming: Signal<boolean> = computed(() => this._block.value !== undefined);
 
   /**
+   * Last error.
+   * @reactive
+   */
+  public readonly error: Signal<Error | undefined> = signal(undefined);
+
+  /**
    * Array of Messages (incl. the current message being streamed).
    * @reactive
    */
@@ -202,12 +208,11 @@ export class ChatProcessor {
 
       log.info('done');
     } catch (err) {
-      // TODO(burdon): show error in UI.
-      // No error logged if _client.generate throws.
-      console.error('ERROR', err);
       log.catch(err);
+      this.error.value = new Error('AI service error', { cause: err });
     } finally {
       this._stream = undefined;
+      this.error.value = undefined;
     }
   }
 }

@@ -52,6 +52,7 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType }>> = ({ cl
       classNames={classNames}
       messages={messages}
       processing={processor.streaming.value}
+      error={processor.error.value}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
     />
