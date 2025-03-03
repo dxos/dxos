@@ -7,7 +7,6 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
 import { resizeAttributes, ResizeHandle, sizeStyle, type Size } from '@dxos/react-ui-dnd';
-import { isNonNullable } from '@dxos/util';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
@@ -96,7 +95,7 @@ export const ResponsiveGrid = <T extends object = any>({
             const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
             return [item, bounds];
           })
-          .filter(isNonNullable),
+          .filter((item): item is [T, DOMRectBounds] => item !== null),
       );
     });
     return () => clearTimeout(t);

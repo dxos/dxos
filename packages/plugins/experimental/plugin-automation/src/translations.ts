@@ -25,7 +25,7 @@ export default [
         'automation panel label': 'Automations',
         'service registry label': 'Service Registry',
 
-        'open ambient chat label': 'Open assistant',
+        'open assistant label': 'Open assistant',
 
         'chat input placeholder': 'Ask a question...',
         'chat stop': 'Cancel request.',
