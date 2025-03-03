@@ -39,8 +39,8 @@ export const useBroadcastStatus = ({
   const { audio, video, screenshare } = pushedTracks;
   const sessionId = peer?.session?.sessionId;
   useEffect(() => {
-    // Note: It is important to check for self.id to ensure that we join with stable id.
-    if (!self || !self.id) {
+    // Note: It is important to check for self.id to ensure that we join with id, and id should be stable.
+    if (!self?.id) {
       return;
     }
 
@@ -80,7 +80,7 @@ export const useBroadcastStatus = ({
   ]);
 
   useUnmount(() => {
-    if (!self) {
+    if (!self?.id) {
       return;
     }
 
