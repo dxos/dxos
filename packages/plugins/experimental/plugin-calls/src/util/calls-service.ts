@@ -30,7 +30,7 @@ export type CallsServiceConfig = {
 };
 
 /**
- * Client for Cloudflare Calls.
+ * Client for Cloudflare Calls service.
  * API: https://developers.cloudflare.com/calls/https-api/
  * Inspired by client from https://github.com/threepointone/partyserver/tree/main/packages/partytracks
  */
