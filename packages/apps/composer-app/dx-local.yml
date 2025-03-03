@@ -12,4 +12,4 @@ runtime:
     edge:
       url: https://edge-main.dxos.workers.dev
     ai:
-      server: https://ai-service-main.dxos.workers.dev
+      server: https://ai-service.dxos.workers.dev
