@@ -10,6 +10,7 @@ import {
   type PromiseIntentDispatcher,
   type PluginsContext,
 } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, type Node, ROOT_ID, toSignal } from '@dxos/plugin-graph';
@@ -37,6 +38,7 @@ export default (context: PluginsContext) => {
             const { graph } = context.requestCapability(Capabilities.AppGraph);
 
             // TODO(burdon): Get space from workspace.
+            // TODO(burdon): If need to create chat, then add to dispatch stack below.
             let chat: AIChatType | undefined;
             if (layout.active.length > 0) {
               const node = graph.findNode(layout.active[0]);
@@ -222,25 +224,15 @@ export default (context: PluginsContext) => {
   ]);
 };
 
-//
 // TODO(burdon): Factor out.
-//
-
-// TODO(burdon): Add to side panel?
 const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
   const { objects } = await space.db.query(Filter.schema(AIChatType)).run();
-  log.info('finding chat', { space: space.id, objects: objects.length });
   if (objects.length > 0) {
     // TODO(burdon): Is this the most recent?
     return objects[objects.length - 1];
   }
 
-  log.info('creating chat', { space: space.id });
   const { data } = await dispatch(createIntent(AutomationAction.CreateChat, { spaceId: space.id }));
-  if (!data?.object) {
-    log.error('failed to create chat', { space: space.id });
-    return;
-  }
-
+  invariant(data?.object);
   return space.db.add(data.object as AIChatType);
 };
