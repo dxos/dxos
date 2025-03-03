@@ -160,12 +160,19 @@ export class CallsServicePeer extends Resource {
     }
   }
 
-  private async _pushTrackInBulk(
-    peerConnection: RTCPeerConnection,
-    transceiver: RTCRtpTransceiver,
-    sessionId: string,
-    trackName: string,
-  ): Promise<TrackObject | void> {
+  private async _pushTrackInBulk({
+    ctx,
+    peerConnection,
+    transceiver,
+    sessionId,
+    trackName,
+  }: {
+    peerConnection: RTCPeerConnection;
+    transceiver: RTCRtpTransceiver;
+    sessionId: string;
+    trackName: string;
+    ctx?: Context;
+  }): Promise<TrackObject | void> {
     log.verbose('pushing track ', trackName);
     const pushedTrackPromise = this.pushTrackDispatcher
       .doBulkRequest({ trackName, transceiver }, (tracks) =>
@@ -218,19 +225,26 @@ export class CallsServicePeer extends Resource {
         log.catch(err);
       });
 
-    this._ctx.onDispose(() => {
-      this._closeTrack(peerConnection, transceiver.mid, sessionId).catch((err) => log.catch(err));
-    });
+    const onDispose = () => this._closeTrack(peerConnection, transceiver.mid, sessionId).catch((err) => log.catch(err));
+
+    ctx?.onDispose(() => onDispose());
+    this._ctx.onDispose(() => onDispose());
 
     return pushedTrackPromise;
   }
 
   // TODO(mykola): Add cleanup logic if the track is not used anymore.
-  async pushTrack(
-    track: MediaStreamTrack | null,
-    encodings: RTCRtpEncodingParameters[] = [],
-    previousTrack?: TrackObject,
-  ): Promise<TrackObject | undefined> {
+  async pushTrack({
+    track,
+    encodings = [],
+    ctx,
+    previousTrack,
+  }: {
+    track: MediaStreamTrack | null;
+    encodings?: RTCRtpEncodingParameters[];
+    ctx?: Context;
+    previousTrack?: TrackObject;
+  }): Promise<TrackObject | undefined> {
     await this.waitUntilOpen();
 
     invariant(this.session);
@@ -248,12 +262,13 @@ export class CallsServicePeer extends Resource {
     const transceiver = this.session.peerConnection!.addTransceiver(track, { direction: 'sendonly' });
     log.verbose('creating transceiver');
 
-    const pushedTrackData = await this._pushTrackInBulk(
-      this.session.peerConnection!,
+    const pushedTrackData = await this._pushTrackInBulk({
+      ctx,
+      peerConnection: this.session.peerConnection!,
       transceiver,
-      this.session.sessionId!,
-      stableId,
-    );
+      sessionId: this.session.sessionId!,
+      trackName: stableId,
+    });
     invariant(pushedTrackData);
 
     const parameters = transceiver.sender.getParameters();
@@ -267,11 +282,17 @@ export class CallsServicePeer extends Resource {
   }
 
   // TODO(mykola): Add retry logic if the tracks fails to pull.
-  private async _pullTrackInBulk(
-    peerConnection: RTCPeerConnection,
-    sessionId: string,
-    trackData: TrackObject,
-  ): Promise<MediaStreamTrack | undefined> {
+  private async _pullTrackInBulk({
+    peerConnection,
+    sessionId,
+    trackData,
+    ctx,
+  }: {
+    peerConnection: RTCPeerConnection;
+    sessionId: string;
+    trackData: TrackObject;
+    ctx?: Context;
+  }): Promise<MediaStreamTrack | undefined> {
     let mid = '';
     log.debug('pulling track', { trackName: trackData.trackName });
     const pulledTrackPromise = this.pullTrackDispatcher
@@ -344,22 +365,37 @@ export class CallsServicePeer extends Resource {
         }
       });
 
-    this._ctx.onDispose(() => {
+    const onDispose = async () => {
       if (mid) {
         log.debug('closing pulled track ', trackData.trackName);
-        this._closeTrack(peerConnection, mid, sessionId).catch((err) => log.catch(err));
+        await this._closeTrack(peerConnection, mid, sessionId);
+        mid = '';
       }
-    });
+    };
+
+    this._ctx.onDispose(() => onDispose());
+    ctx?.onDispose(() => onDispose());
 
     return pulledTrackPromise as Promise<MediaStreamTrack | undefined>;
   }
 
-  async pullTrack(trackData: TrackObject): Promise<MediaStreamTrack | undefined> {
+  async pullTrack({
+    ctx,
+    trackData,
+  }: {
+    trackData: TrackObject;
+    ctx?: Context;
+  }): Promise<MediaStreamTrack | undefined> {
     await this.waitUntilOpen();
 
     invariant(this.session);
     const session = this.session;
-    return this._pullTrackInBulk(session.peerConnection!, session.sessionId!, trackData);
+    return this._pullTrackInBulk({
+      peerConnection: session.peerConnection,
+      sessionId: session.sessionId,
+      trackData,
+      ctx,
+    });
   }
 
   private async _closeTrack(peerConnection: RTCPeerConnection, mid: string | null, sessionId: string) {

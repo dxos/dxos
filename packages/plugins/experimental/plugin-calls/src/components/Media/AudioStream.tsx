@@ -97,7 +97,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
       // TODO(mykola): Add retry logic. Delete delay.
       // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
-      audioTrack.current = await peer?.pullTrack(trackObject);
+      audioTrack.current = await peer?.pullTrack({ trackData: trackObject, ctx });
     });
 
     return () => {

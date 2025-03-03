@@ -85,7 +85,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
       // Push track to cloudflare.
       performance.mark('push:begin');
-      const pushedTrack = await peerPush.pushTrack(videoStreamTrack);
+      const pushedTrack = await peerPush.pushTrack({ track: videoStreamTrack });
       performance.mark('push:end');
       const pushTime = performance.measure('push', 'push:begin', 'push:end').duration;
       log.info('successfully pushed track', { pushTime, pushedTrack });
@@ -96,7 +96,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
       // Pull track from cloudflare.
       performance.mark('pullTrack:begin');
-      const pulledTrack = await peerPull.pullTrack({ ...pushedTrack, mid: undefined });
+      const pulledTrack = await peerPull.pullTrack({ trackData: { ...pushedTrack, mid: undefined } });
       performance.mark('pullTrack:end');
       const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
       setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': Math.round(pullTime) }));
