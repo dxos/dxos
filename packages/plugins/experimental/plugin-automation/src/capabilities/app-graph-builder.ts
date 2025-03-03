@@ -35,8 +35,8 @@ export default (context: PluginsContext) => {
             const client = context.requestCapability(ClientCapabilities.Client);
             const layout = context.requestCapability(Capabilities.Layout);
             const { graph } = context.requestCapability(Capabilities.AppGraph);
-            console.log('################');
 
+            // TODO(burdon): Get space from workspace.
             let chat: AIChatType | undefined;
             if (layout.active.length > 0) {
               const node = graph.findNode(layout.active[0]);
@@ -51,8 +51,8 @@ export default (context: PluginsContext) => {
               chat = await getOrCreateChat(dispatch, space);
             }
 
-            console.log('################', { chat });
             if (!chat) {
+              log.warn('no chat found');
               return;
             }
 
