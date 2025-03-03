@@ -23,8 +23,8 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TextType } from '@dxos/schema';
 
-import { TranscriptBlock, type TranscriptType } from '../types';
 import { Transcript } from './Transcript';
+import { TranscriptBlock, type TranscriptType } from '../types';
 
 export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
   const edge = useEdgeClient();
