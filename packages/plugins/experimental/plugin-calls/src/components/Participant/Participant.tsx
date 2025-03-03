@@ -14,7 +14,7 @@ import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveG
 
 export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
   const {
-    call: { user: self },
+    call: { self },
     dataSaverMode,
     userMedia,
     peer,

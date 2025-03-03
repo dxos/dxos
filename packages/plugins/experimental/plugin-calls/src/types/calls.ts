@@ -39,6 +39,11 @@ export interface ErrorResponse {
   errorDescription?: string;
 }
 
+export interface SessionResponse extends ErrorResponse {
+  sessionId: string;
+  sessionDescription: SessionDescription;
+}
+
 export interface TracksResponse extends ErrorResponse {
   sessionDescription: SessionDescription;
   requiresImmediateRenegotiation: boolean;

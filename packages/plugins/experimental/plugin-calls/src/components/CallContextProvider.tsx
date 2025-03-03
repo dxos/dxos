@@ -55,6 +55,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     if (!peer) {
       return;
     }
+
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       if (!peer || (!userMedia.state.videoTrack && !pushedVideoTrack)) {
@@ -63,7 +64,11 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
 
       log('push video track', { userMedia: userMedia.state.videoTrack, pushedVideoTrack });
       const track = userMedia.state.videoTrack;
-      const pushedTrack = await peer.pushTrack(track ?? null, videoEncodingParams, pushedVideoTrack);
+      const pushedTrack = await peer.pushTrack({
+        track: track ?? null,
+        encodings: videoEncodingParams,
+        previousTrack: pushedVideoTrack,
+      });
       setPushedVideoTrack(pushedTrack);
     });
     return () => {
@@ -79,6 +84,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     if (!peer) {
       return;
     }
+
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       if (!peer || (!userMedia.state.audioTrack && !pushedAudioTrack)) {
@@ -87,7 +93,11 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
 
       log('push audio track', { userMedia: userMedia.state.audioTrack, pushedAudioTrack });
       const track = userMedia.state.audioTrack;
-      const pushedTrack = await peer.pushTrack(track ?? null, [{ networkPriority: 'high' }], pushedAudioTrack);
+      const pushedTrack = await peer.pushTrack({
+        track: track ?? null,
+        encodings: [{ networkPriority: 'high' }],
+        previousTrack: pushedAudioTrack,
+      });
       setPushedAudioTrack(pushedTrack);
     });
     return () => {
@@ -103,6 +113,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     if (!peer || !userMedia.state.screenshareVideoTrack) {
       return;
     }
+
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       if (!peer || !userMedia.state.screenshareVideoTrack) {
@@ -111,7 +122,11 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
 
       log('push screenshare track', { userMedia: userMedia.state.screenshareVideoTrack });
       const track = userMedia.state.screenshareVideoTrack;
-      const pushedTrack = await peer.pushTrack(track, undefined, pushedScreenshareTrack);
+      const pushedTrack = await peer.pushTrack({
+        track,
+        encodings: undefined,
+        previousTrack: pushedScreenshareTrack,
+      });
       setPushedScreenshareTrack(pushedTrack);
     });
     return () => {
