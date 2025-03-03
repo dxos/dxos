@@ -17,7 +17,7 @@ import { createExtension, type Node, ROOT_ID, toSignal } from '@dxos/plugin-grap
 import { memoizeQuery } from '@dxos/plugin-space';
 import { type Space, Filter, getSpace, getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
 
-import { AMBIENT_CHAT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
+import { ASSISTANT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
 import { AIChatType, AutomationAction } from '../types';
 
 export default (context: PluginsContext) => {
@@ -26,11 +26,11 @@ export default (context: PluginsContext) => {
 
   return contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${AUTOMATION_PLUGIN}/ambient-chat`,
+      id: `${AUTOMATION_PLUGIN}/assistant`,
       filter: (node): node is Node<null> => node.id === ROOT_ID,
       actions: () => [
         {
-          id: `${LayoutAction.UpdateDialog._tag}/ambient-chat/open`,
+          id: `${LayoutAction.UpdateDialog._tag}/assistant/open`,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             const client = context.requestCapability(ClientCapabilities.Client);
@@ -61,7 +61,7 @@ export default (context: PluginsContext) => {
             await dispatch(
               createIntent(LayoutAction.UpdateDialog, {
                 part: 'dialog',
-                subject: AMBIENT_CHAT_DIALOG,
+                subject: ASSISTANT_DIALOG,
                 options: {
                   state: true,
                   blockAlign: 'end',
@@ -73,7 +73,7 @@ export default (context: PluginsContext) => {
             );
           },
           properties: {
-            label: ['open ambient chat label', { ns: AUTOMATION_PLUGIN }],
+            label: ['open assistant label', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--chat-centered-text--regular',
             disposition: 'pin-end',
             keyBinding: {

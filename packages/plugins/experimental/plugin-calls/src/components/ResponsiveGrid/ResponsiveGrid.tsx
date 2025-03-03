@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useMemo, type ComponentType, useCallback } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useMemo, type ComponentType, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
@@ -77,7 +77,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
   // Absolutely positioned items.
   const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!gridContainerRef.current) {
       return;
     }
@@ -85,14 +85,19 @@ export const ResponsiveGrid = <T extends object = any>({
     // TODO(burdon): Consider directly setting bounds instead of state update.
     const t = setTimeout(() => {
       setBounds(
-        items.map((item) => {
-          invariant(containerRef.current);
-          const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
-          const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
-          return [item, bounds];
-        }),
+        items
+          .map((item) => {
+            invariant(containerRef.current);
+            const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
+            if (!el) {
+              return null;
+            }
+            const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
+            return [item, bounds];
+          })
+          .filter((item): item is [T, DOMRectBounds] => item !== null),
       );
-    }, 100); // Wait until layout has been updated.
+    });
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
 

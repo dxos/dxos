@@ -14,7 +14,11 @@ import { type AIChatType } from '../../types';
 import { Thread } from '../Thread';
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
-export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType }>> = ({ classNames, chat }) => {
+export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType; onOpenChange?: (open: boolean) => void }>> = ({
+  classNames,
+  chat,
+  onOpenChange,
+}) => {
   const space = getSpace(chat);
   const processor = useChatProcessor(space);
   const messageQueue = useMessageQueue(chat);
@@ -28,6 +32,8 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType }>> = ({ cl
         return false;
       }
 
+      onOpenChange?.(true);
+
       invariant(messageQueue);
       void processor.request(text, {
         history: messageQueue.items,
@@ -38,7 +44,7 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType }>> = ({ cl
 
       return true;
     },
-    [processor, messageQueue],
+    [processor, messageQueue, onOpenChange],
   );
 
   const handleCancel = useCallback(() => {
@@ -52,6 +58,7 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType }>> = ({ cl
       classNames={classNames}
       messages={messages}
       processing={processor.streaming.value}
+      error={processor.error.value}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
     />
