@@ -29,6 +29,7 @@ export const useCallsService = (config: CallsServiceConfig): PeerConnectionState
       await newPeer.open();
       setPeer(newPeer);
     });
+
     return () => {
       void ctx.dispose();
     };
@@ -38,13 +39,14 @@ export const useCallsService = (config: CallsServiceConfig): PeerConnectionState
     if (!peer?.session?.peerConnection) {
       return;
     }
-    const peerConnection = peer.session.peerConnection;
 
+    const peerConnection = peer.session.peerConnection;
     setIceConnectionState(peerConnection.iceConnectionState);
     const iceConnectionStateChangeHandler = () => {
       setIceConnectionState(peerConnection.iceConnectionState);
     };
     peerConnection.addEventListener('iceconnectionstatechange', iceConnectionStateChangeHandler);
+
     return () => {
       peerConnection.removeEventListener('connectionstatechange', iceConnectionStateChangeHandler);
     };

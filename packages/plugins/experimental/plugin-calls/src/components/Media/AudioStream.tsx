@@ -24,6 +24,7 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
     if (!audio) {
       return;
     }
+
     const mediaStream = mediaStreamRef.current;
     audio.srcObject = mediaStream;
   }, []);
@@ -34,6 +35,7 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
     if (!audio || !mediaStream) {
       return;
     }
+
     // Need to set srcObject again in Chrome and call play() again for Safari
     // https://www.youtube.com/live/Tkx3OGrwVk8?si=K--P_AzNnAGrjraV&t=2533
     // Calling play() this way to make Chrome happy otherwise it throws an error.
@@ -75,7 +77,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
   onTrackRemovedRef.current = onTrackRemoved;
 
   const { peer } = useCallContext();
-  const trackObject = useMemo(() => {
+  const trackData = useMemo(() => {
     const [sessionId, trackName] = track.split('/');
     return {
       sessionId,
@@ -86,29 +88,30 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
 
   const audioTrack = useRef<MediaStreamTrack>();
   useEffect(() => {
-    if (!trackObject) {
+    if (!trackData) {
       return;
     }
 
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       // TODO(mykola): Add retry logic. Delete delay.
-      // Wait for the track to be available on CF.
+      // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
-      audioTrack.current = await peer?.pullTrack(trackObject);
+      const track = await peer?.pullTrack({ trackData, ctx });
+      audioTrack.current = track;
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [trackObject, peer?.session]);
+  }, [trackData, peer?.session]);
 
   useEffect(() => {
     if (!audioTrack.current) {
       return;
     }
-    const currentAudioTrack = audioTrack.current;
 
+    const currentAudioTrack = audioTrack.current;
     mediaStream.addTrack(currentAudioTrack);
     onTrackAddedRef.current(track, currentAudioTrack);
     return () => {

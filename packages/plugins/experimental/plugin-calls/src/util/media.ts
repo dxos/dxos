@@ -4,13 +4,6 @@
 
 import { log } from '@dxos/log';
 
-class DevicesExhaustedError extends Error {
-  constructor(message?: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
 export const getUserMediaTrack = async (
   kind: MediaDeviceKind,
   constraints: MediaTrackConstraints = {},
@@ -19,7 +12,7 @@ export const getUserMediaTrack = async (
   deviceList ??= (await getDeviceList()).filter((device) => device.kind === kind);
   const firstDevice = deviceList[0];
   if (!firstDevice) {
-    throw new DevicesExhaustedError();
+    throw new Error('No devices found');
   }
 
   return acquireTrack(firstDevice, constraints);

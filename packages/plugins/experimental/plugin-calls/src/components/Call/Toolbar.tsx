@@ -23,7 +23,7 @@ const STOP_TRANSCRIPTION_TIMEOUT = 250;
 export const CallToolbar = () => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const {
-    call: { user: self, transcription, updateUserState },
+    call: { self, transcription, updateUserState },
     userMedia,
     peer,
     isSpeaking,
@@ -41,7 +41,7 @@ export const CallToolbar = () => {
   const [raisedHand, setRaisedHand] = useState(false);
   useBroadcastStatus({
     peer,
-    user: self,
+    self,
     userMedia,
     pushedTracks,
     raisedHand,
