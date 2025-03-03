@@ -18,13 +18,13 @@ export type ParticipantGridProps = {
 
 export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) => {
   const allUsers = useMemo(() => {
-    const allUsers: UserState[] = [];
+    const allUsers: (UserState & { isSelf?: boolean })[] = [];
     users.forEach((user) => {
       if (!user.joined) {
         return;
       }
 
-      allUsers.push(user);
+      allUsers.push(user, { isSelf: user.id === self.id });
       if (user.tracks?.screenshareEnabled) {
         const screenshare: UserState = {
           ...user,
@@ -41,7 +41,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
     });
 
     return allUsers;
-  }, [self, users]) as UserState[];
+  }, [self, users]);
 
   const [pinned, setPinned] = useState<string | undefined>();
   useEffect(() => {
@@ -57,9 +57,9 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
 
   // TODO(burdon): Put self last.
   const sortedUsers: UserState[] = allUsers.sort((a, b) => {
-    if (a.id === self.id) {
+    if (a.isSelf) {
       return 1;
-    } else if (b.id === self.id) {
+    } else if (b.isSelf) {
       return -1;
     } else if (a.tracks?.screenshareEnabled) {
       return -1;
