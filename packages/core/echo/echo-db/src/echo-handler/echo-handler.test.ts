@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { EchoObject, Expando, TypedObject, S, foreignKey, getTypeReference, Ref } from '@dxos/echo-schema';
+import { EchoObject, Expando, TypedObject, S, foreignKey, getTypeReference, Ref, ObjectId } from '@dxos/echo-schema';
 import {
   Contact,
   Task,
@@ -19,9 +19,9 @@ import {
   TestType,
 } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { getMeta, getSchema, create, getType, isDeleted, makeRef } from '@dxos/live-object';
+import { getMeta, getSchema, create, getType, isDeleted, makeRef, refFromDXN } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
@@ -674,5 +674,13 @@ describe('Reactive Object with ECHO database', () => {
     obj.other = makeRef(another);
 
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
+  });
+
+  test('able to create queue references', async () => {
+    const { db } = await builder.createDatabase();
+    const dxn = new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]);
+    const obj = create({ queue: refFromDXN(dxn) });
+    const dbObj = db.add(obj);
+    expect(dbObj.queue.dxn.toString()).to.eq(dxn.toString());
   });
 });

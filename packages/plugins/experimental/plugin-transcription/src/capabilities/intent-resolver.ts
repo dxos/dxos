@@ -14,8 +14,8 @@ export default (context: PluginsContext) =>
       intent: TranscriptionAction.Create,
       resolve: ({ name }) => {
         const transcript = create(TranscriptType, {
+          queue: randomQueueDxn().toString(), // TODO(burdon): Associate with space.
           name: name ?? `Transcript ${getTimeStr(Date.now())}`,
-          queue: randomQueueDxn().toString(),
         });
 
         return { data: { object: transcript } };

@@ -29,8 +29,8 @@ export default () =>
     createSurface({
       id: AMBIENT_CHAT_DIALOG,
       role: 'dialog',
-      filter: (data): data is any => data.component === AMBIENT_CHAT_DIALOG,
-      component: () => <AmbientChatDialog />,
+      filter: (data): data is { props: { chat: AIChatType } } => data.component === AMBIENT_CHAT_DIALOG,
+      component: ({ data }) => <AmbientChatDialog {...data.props} />,
     }),
     createSurface({
       id: `${AUTOMATION_PLUGIN}/automation`,
