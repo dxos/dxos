@@ -77,7 +77,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
   onTrackRemovedRef.current = onTrackRemoved;
 
   const { peer } = useCallContext();
-  const trackObject = useMemo(() => {
+  const trackData = useMemo(() => {
     const [sessionId, trackName] = track.split('/');
     return {
       sessionId,
@@ -88,7 +88,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
 
   const audioTrack = useRef<MediaStreamTrack>();
   useEffect(() => {
-    if (!trackObject) {
+    if (!trackData) {
       return;
     }
 
@@ -97,13 +97,14 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
       // TODO(mykola): Add retry logic. Delete delay.
       // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
-      audioTrack.current = await peer?.pullTrack({ trackData: trackObject, ctx });
+      const track = await peer?.pullTrack({ trackData, ctx });
+      audioTrack.current = track;
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [trackObject, peer?.session]);
+  }, [trackData, peer?.session]);
 
   useEffect(() => {
     if (!audioTrack.current) {
