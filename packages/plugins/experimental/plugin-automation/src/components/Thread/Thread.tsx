@@ -52,14 +52,13 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div role='list' className='flex flex-col grow overflow-hidden'>
       <ScrollContainer ref={scroller}>
         {lines.map((message) => (
           <ThreadMessage
             key={message.id}
-            classNames='px-4 pbs-2'
+            classNames='px-4 pbe-4'
             message={message}
-            collapse={collapse}
             debug={debug}
             onPrompt={onPrompt}
             onDelete={onDelete}
