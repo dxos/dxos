@@ -15,13 +15,13 @@ const preventDefault = (event: Event) => event.preventDefault();
 
 export const AmbientChatDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
   return (
-    <ChatDialog>
+    <AmbientDialog>
       <ThreadContainer chat={chat} />
-    </ChatDialog>
+    </AmbientDialog>
   );
 };
 
-const ChatDialog = ({ children }: PropsWithChildren) => {
+const AmbientDialog = ({ children }: PropsWithChildren) => {
   const [size, setSize] = useState<Size>('min-content');
   const [open, setOpen] = useState(true);
 
@@ -39,7 +39,7 @@ const ChatDialog = ({ children }: PropsWithChildren) => {
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
-        classNames='pointer-events-auto relative overflow-hidden box-content py-0 px-2 is-[35rem] max-is-none'
+        classNames='relative box-content py-0 px-2 is-[35rem] max-is-none overflow-hidden pointer-events-auto'
         inOverlayLayout
         {...resizeAttributes}
         style={{
@@ -57,7 +57,7 @@ const ChatDialog = ({ children }: PropsWithChildren) => {
           onSizeChange={setSize}
         />
 
-        <Header open={open} onToggle={handleToggle} />
+        <DialogHeader open={open} onToggle={handleToggle} />
 
         {children}
       </Dialog.Content>
@@ -68,7 +68,7 @@ const ChatDialog = ({ children }: PropsWithChildren) => {
 /**
  * Matches same layout grid as PromptBar.
  */
-const Header = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => {
+const DialogHeader = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   return (
     <div className='flex shrink-0 w-full grid grid-cols-[40px_1fr_40px] items-center overflow-hidden'>

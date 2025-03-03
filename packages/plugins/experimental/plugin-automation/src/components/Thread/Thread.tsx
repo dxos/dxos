@@ -50,7 +50,7 @@ export const Thread = ({
   );
 
   // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
-  const { messages: lines = [] } = useMemo(() => {
+  const { messages: filteredMessages = [] } = useMemo(() => {
     if (collapse) {
       return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(messageReducer, {
         messages: [],
@@ -62,20 +62,22 @@ export const Thread = ({
 
   return (
     <div role='list' className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <ScrollContainer ref={scroller}>
-        {lines.map((message) => (
-          <ThreadMessage
-            key={message.id}
-            classNames='px-4 pbe-4'
-            message={message}
-            debug={debug}
-            onPrompt={onPrompt}
-            onDelete={onDelete}
-          />
-        ))}
+      {filteredMessages.length > 0 && (
+        <ScrollContainer ref={scroller}>
+          {filteredMessages.map((message) => (
+            <ThreadMessage
+              key={message.id}
+              classNames='px-4 pbe-4'
+              message={message}
+              debug={debug}
+              onPrompt={onPrompt}
+              onDelete={onDelete}
+            />
+          ))}
 
-        <div className='pbe-6' />
-      </ScrollContainer>
+          <div className='pbe-6' />
+        </ScrollContainer>
+      )}
 
       {onSubmit && (
         <PromptBar microphone={hasTrascription} processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />
