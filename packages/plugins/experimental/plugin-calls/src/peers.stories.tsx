@@ -22,7 +22,7 @@ import { CALLS_URL } from './types';
 import video from '../testing/video.mp4';
 
 const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
-  // Get video stream track
+  // Get video stream track.
   const [videoStreamTrack, setVideoStreamTrack] = useState<MediaStreamTrack | undefined>(undefined);
   const hadRun = useRef(false);
   useEffect(() => {
@@ -30,13 +30,12 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
     if (!videoElement || hadRun.current || !video) {
       return;
     }
-
     hadRun.current = true;
 
     videoElement.src = video;
     videoElement.addEventListener('playing', () => {
       const stream = (videoElement as any).captureStream();
-      log.info('Captured stream', { stream });
+      log.info('captured stream', { stream });
       stream.onaddtrack = (event: MediaStreamTrackEvent) => {
         if (event.track.kind === 'video') {
           log.info('video stream track state', { state: event.track.readyState });
@@ -51,13 +50,13 @@ const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
 
 const Render = ({ videoSrc }: { videoSrc: string }) => {
   const config = useConfig();
-  const cfCallsConfig = {
+  const callsConfig = {
     iceServers: config.get('runtime.services.ice'),
     apiBase: `${CALLS_URL}/api/calls`,
   };
 
-  const { peer: peerPush } = useCallsService(cfCallsConfig);
-  const { peer: peerPull } = useCallsService(cfCallsConfig);
+  const { peer: peerPush } = useCallsService(callsConfig);
+  const { peer: peerPull } = useCallsService(callsConfig);
 
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);
@@ -86,7 +85,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
       // Push track to cloudflare.
       performance.mark('push:begin');
-      const pushedTrack = await peerPush.pushTrack(videoStreamTrack);
+      const pushedTrack = await peerPush.pushTrack({ track: videoStreamTrack });
       performance.mark('push:end');
       const pushTime = performance.measure('push', 'push:begin', 'push:end').duration;
       log.info('successfully pushed track', { pushTime, pushedTrack });
@@ -97,7 +96,7 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
 
       // Pull track from cloudflare.
       performance.mark('pullTrack:begin');
-      const pulledTrack = await peerPull.pullTrack({ ...pushedTrack, mid: undefined });
+      const pulledTrack = await peerPull.pullTrack({ trackData: { ...pushedTrack, mid: undefined } });
       performance.mark('pullTrack:end');
       const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
       setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': Math.round(pullTime) }));
