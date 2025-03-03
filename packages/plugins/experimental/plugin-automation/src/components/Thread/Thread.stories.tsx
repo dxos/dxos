@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -71,7 +73,12 @@ const meta: Meta<ThreadProps> = {
   title: 'plugins/plugin-automation/Thread',
   render: Render,
   component: Thread,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [
+    withSignals,
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+    withPluginManager({ plugins: [IntentPlugin()] }),
+  ],
   parameters: {
     translations,
   },
