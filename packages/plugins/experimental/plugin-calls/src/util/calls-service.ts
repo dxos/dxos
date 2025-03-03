@@ -293,7 +293,7 @@ export class CallsServicePeer extends Resource {
     ctx?: Context;
   }): Promise<MediaStreamTrack | undefined> {
     let mid = '';
-    log.debug('pulling track', { trackName: trackData.trackName });
+    log('pulling track', { trackName: trackData.trackName });
     const pulledTrackPromise = this.pullTrackDispatcher
       .doBulkRequest(trackData, (tracks) =>
         this.taskScheduler.schedule(async () => {
@@ -366,7 +366,7 @@ export class CallsServicePeer extends Resource {
 
     const onDispose = async () => {
       if (mid) {
-        log.debug('closing pulled track ', trackData.trackName);
+        log('closing pulled track ', trackData.trackName);
         await this._closeTrack(peerConnection, mid, sessionId);
         mid = '';
       }
