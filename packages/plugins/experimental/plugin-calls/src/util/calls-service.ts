@@ -7,8 +7,14 @@ import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { BulkRequestDispatcher, FIFOScheduler } from './util';
-import { type RenegotiationResponse, type TrackObject, type TracksResponse } from '../types';
+import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling';
+import {
+  type SessionResponse,
+  type ErrorResponse,
+  type RenegotiationResponse,
+  type TrackObject,
+  type TracksResponse,
+} from '../types';
 
 const NETWORK_TIMEOUT = 5_000;
 
@@ -18,9 +24,9 @@ export type Session = {
 };
 
 export type CallsServiceConfig = {
+  apiBase: string;
   apiExtraParams?: string;
   iceServers?: RTCIceServer[];
-  apiBase: string;
 };
 
 /**
@@ -104,15 +110,16 @@ export class CallsServicePeer extends Resource {
         log.warn('calls connection to ICEs failed', { state: peerConnection.iceConnectionState });
         this._persistentLifecycle.scheduleRestart();
       } else if (peerConnection.iceConnectionState === 'disconnected') {
-        // TODO: we should start to inspect the connection stats from here on for
+        // TODO(mykola): we should start to inspect the connection stats from here on for
         // any other signs of trouble to guide what to do next (instead of just hoping
         // for the best like we do here for now)
         const timeoutSeconds = 7;
         iceTimeout = window.setTimeout(() => {
           if (peerConnection.iceConnectionState === 'connected') {
-            log.info('Calls iceConnectionState is connected');
+            log.info('calls iceConnectionState is connected');
             return;
           }
+
           log.warn('calls iceConnectionState timed out', { state: peerConnection.iceConnectionState, timeoutSeconds });
           this._persistentLifecycle.scheduleRestart();
         }, timeoutSeconds * 1_000);
@@ -123,31 +130,34 @@ export class CallsServicePeer extends Resource {
   }
 
   private async _initiateCallSession() {
-    log.debug('creating new session');
-    const { apiBase } = this._config;
-    const response = await this._fetch(`${apiBase}/sessions/new?SESSION`, { method: 'POST' });
-    if (response.status > 400) {
-      throw new Error('Error creating Calls session');
+    log('creating new session');
+    const { sessionId } = await this._fetch<SessionResponse>('/sessions/new?SESSION', { method: 'POST' });
+    return sessionId;
+  }
+
+  private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit) {
+    // TODO(mykola): Handle access control. Use EdgeClient.
+    const response = await fetch(`${this._config.apiBase}${relativePath}`, { ...requestInit, redirect: 'manual' });
+    if (response.status >= 400) {
+      log.error('error while fetching from Calls service', { status: response.status, text: await response.text() });
+      throw new Error('Error while fetching from Calls service');
     }
 
     try {
-      const { sessionId } = (await response.clone().json()) as any;
-      return sessionId;
+      const data = (await response.clone().json()) as T;
+      if (data.errorCode) {
+        throw new Error(data.errorDescription);
+      }
+
+      return data;
     } catch (error) {
-      throw new Error(response.status + ': ' + (await response.text()));
+      log.error('Error parsing response from Calls service', {
+        error,
+        text: await response.text(),
+        status: response.status,
+      });
+      throw error;
     }
-  }
-
-  // TODO(mykola): Rename, no history is being recorded here.
-  private async _fetch(path: string, requestInit?: RequestInit) {
-    const response = await fetch(path, { ...requestInit, redirect: 'manual' });
-    // handle Access redirect
-    if (response.status === 0) {
-      alert('Access session is expired, reloading page.');
-      location.reload();
-    }
-
-    return response;
   }
 
   private async _pushTrackInBulk(
@@ -156,7 +166,7 @@ export class CallsServicePeer extends Resource {
     sessionId: string,
     trackName: string,
   ): Promise<TrackObject | void> {
-    log.verbose('📤 pushing track ', trackName);
+    log.verbose('pushing track ', trackName);
     const pushedTrackPromise = this.pushTrackDispatcher
       .doBulkRequest({ trackName, transceiver }, (tracks) =>
         this.taskScheduler.schedule(async () => {
@@ -166,7 +176,7 @@ export class CallsServicePeer extends Resource {
           offer.sdp = offer.sdp?.replace('useinbandfec=1', 'usedtx=1;useinbandfec=1');
           await peerConnection.setLocalDescription(offer);
 
-          const response = await this._fetch(`${this._config.apiBase}/sessions/${sessionId}/tracks/new?PUSHING`, {
+          const response = await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/new?PUSHING`, {
             method: 'POST',
             body: JSON.stringify({
               sessionDescription: {
@@ -179,7 +189,7 @@ export class CallsServicePeer extends Resource {
                 location: 'local',
               })),
             }),
-          }).then((res) => res.json() as Promise<TracksResponse>);
+          });
 
           invariant(response.tracks !== undefined);
           if (!response.errorCode) {
@@ -215,7 +225,7 @@ export class CallsServicePeer extends Resource {
     return pushedTrackPromise;
   }
 
-  // TODO(mykola): Add cleanup.
+  // TODO(mykola): Add cleanup logic if the track is not used anymore.
   async pushTrack(
     track: MediaStreamTrack | null,
     encodings: RTCRtpEncodingParameters[] = [],
@@ -256,7 +266,7 @@ export class CallsServicePeer extends Resource {
     return pushedTrackData;
   }
 
-  // TODO(mykola): Add retry logic.
+  // TODO(mykola): Add retry logic if the tracks fails to pull.
   private async _pullTrackInBulk(
     peerConnection: RTCPeerConnection,
     sessionId: string,
@@ -267,15 +277,11 @@ export class CallsServicePeer extends Resource {
     const pulledTrackPromise = this.pullTrackDispatcher
       .doBulkRequest(trackData, (tracks) =>
         this.taskScheduler.schedule(async () => {
-          const newTrackResponse: TracksResponse = await this._fetch(
-            `${this._config.apiBase}/sessions/${sessionId}/tracks/new?PULLING`,
-            {
-              method: 'POST',
-              body: JSON.stringify({
-                tracks,
-              }),
-            },
-          ).then((res) => res.json() as Promise<TracksResponse>);
+          const newTrackResponse = await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/new?PULLING`, {
+            method: 'POST',
+            body: JSON.stringify({ tracks }),
+          });
+
           if (newTrackResponse.errorCode) {
             throw new Error(newTrackResponse.errorDescription);
           }
@@ -301,8 +307,8 @@ export class CallsServicePeer extends Resource {
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
 
-            const renegotiationResponse = await this._fetch(
-              `${this._config.apiBase}/sessions/${sessionId}/renegotiate`,
+            const renegotiationResponse = await this._fetch<RenegotiationResponse>(
+              `/sessions/${sessionId}/renegotiate`,
               {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -312,7 +318,8 @@ export class CallsServicePeer extends Resource {
                   },
                 }),
               },
-            ).then((res) => res.json() as Promise<RenegotiationResponse>);
+            );
+
             if (renegotiationResponse.errorCode) {
               throw new Error(renegotiationResponse.errorDescription);
             } else {
@@ -333,7 +340,7 @@ export class CallsServicePeer extends Resource {
             })
             .catch((err) => log.catch(err));
         } else {
-          log.catch(new Error('Missing Track Info'));
+          log.error('missing track info');
         }
       });
 
@@ -356,22 +363,20 @@ export class CallsServicePeer extends Resource {
   }
 
   private async _closeTrack(peerConnection: RTCPeerConnection, mid: string | null, sessionId: string) {
-    // TODO: Close tracks in bulk.
-    const { apiBase } = this._config;
+    // TODO(mykola): Close tracks in bulk.
     const transceiver = peerConnection.getTransceivers().find((t) => t.mid === mid);
     if (peerConnection.connectionState !== 'connected' || transceiver === undefined) {
       return;
     }
 
     transceiver.direction = 'inactive';
-
     // Create an offer.
     // Turn on Opus DTX to save bandwidth and set the offer as the local description
     const offer = await peerConnection.createOffer();
     offer.sdp = offer.sdp?.replace('useinbandfec=1', 'usedtx=1;useinbandfec=1');
     await peerConnection.setLocalDescription(offer);
 
-    const response = await this._fetch(`${apiBase}/sessions/${sessionId}/tracks/close`, {
+    const response = await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/close`, {
       method: 'PUT',
       body: JSON.stringify({
         tracks: [{ mid: transceiver.mid }],
@@ -381,7 +386,7 @@ export class CallsServicePeer extends Resource {
         },
         force: false,
       }),
-    }).then((res) => res.json() as Promise<TracksResponse>);
+    });
 
     await peerConnection.setRemoteDescription(new RTCSessionDescription(response.sessionDescription));
   }

@@ -35,7 +35,7 @@ export const usePulledVideoTrack = (video: string | undefined) => {
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       // TODO(mykola): Add retry logic. Delete delay.
-      // Wait for the track to be available on CF.
+      // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
       setPulledTrack(await peer.pullTrack(trackObject));
     });

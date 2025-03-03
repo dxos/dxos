@@ -55,6 +55,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     if (!peer) {
       return;
     }
+
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       if (!peer || (!userMedia.state.videoTrack && !pushedVideoTrack)) {
@@ -79,6 +80,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     if (!peer) {
       return;
     }
+
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       if (!peer || (!userMedia.state.audioTrack && !pushedAudioTrack)) {
@@ -103,6 +105,7 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     if (!peer || !userMedia.state.screenshareVideoTrack) {
       return;
     }
+
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       if (!peer || !userMedia.state.screenshareVideoTrack) {

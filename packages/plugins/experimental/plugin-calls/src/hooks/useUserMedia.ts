@@ -60,7 +60,7 @@ export const useUserMedia = (): UserMedia => {
   };
 
   //
-  // Audio
+  // Obtain audio track.
   //
   useEffect(() => {
     const ctx = new Context();
@@ -81,7 +81,7 @@ export const useUserMedia = (): UserMedia => {
   }, [state.audioEnabled]);
 
   //
-  // Video
+  // Obtain video track.
   //
   const blackCanvasStreamTrack = useBlackCanvasStreamTrack();
   useEffect(() => {
@@ -103,7 +103,7 @@ export const useUserMedia = (): UserMedia => {
   }, [state.videoEnabled]);
 
   //
-  // Screenshare
+  // Obtain screenshare track.
   //
   useEffect(() => {
     const ctx = new Context();
