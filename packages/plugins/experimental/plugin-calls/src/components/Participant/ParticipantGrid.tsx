@@ -57,9 +57,9 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
 
   // TODO(burdon): Put self last.
   const sortedUsers: UserState[] = allUsers.sort((a, b) => {
-    if (a.self) {
+    if (a.id === self.id) {
       return 1;
-    } else if (b.self) {
+    } else if (b.id === self.id) {
       return -1;
     } else if (a.tracks?.screenshareEnabled) {
       return -1;
