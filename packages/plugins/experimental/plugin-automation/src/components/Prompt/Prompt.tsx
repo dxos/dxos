@@ -32,18 +32,21 @@ export type PromptProps = ThemedClassName<
 export const Prompt = forwardRef<PromptController, PromptProps>(
   ({ classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest }, forwardRef) => {
     const { themeMode } = useThemeContext();
-    const { parentRef, view } = useTextEditor({
-      autoFocus,
-      extensions: [
-        createBasicExtensions({
-          bracketMatching: false,
-          lineWrapping,
-          placeholder,
-        }),
-        createThemeExtensions({ themeMode }),
-        createAutocompleteExtension({ onSubmit, onSuggest }),
-      ],
-    });
+    const { parentRef, view } = useTextEditor(
+      {
+        autoFocus,
+        extensions: [
+          createBasicExtensions({
+            bracketMatching: false,
+            lineWrapping,
+            placeholder,
+          }),
+          createThemeExtensions({ themeMode }),
+          createAutocompleteExtension({ onSubmit, onSuggest }),
+        ],
+      },
+      [themeMode, onSubmit, onSuggest],
+    );
 
     // Expose editor view.
     useImperativeHandle(

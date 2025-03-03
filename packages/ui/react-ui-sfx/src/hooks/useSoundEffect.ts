@@ -18,6 +18,7 @@ export type SoundEffect = 'Click' | 'StartRecording' | 'StopRecording' | 'JoinCa
 /**
  * https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/r2/default/buckets/media
  */
+// TODO(burdon): Package assets.
 const SOUND_EFFECTS: Record<SoundEffect, string> = {
   Click: 'https://dxos.network/sound-click.wav',
   StartRecording: 'https://dxos.network/sound-on.wav',

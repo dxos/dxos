@@ -5,9 +5,9 @@
 import React, { useRef, useState } from 'react';
 
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { Prompt, type PromptController, type PromptProps } from './Prompt';
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -15,12 +15,21 @@ import { AUTOMATION_PLUGIN } from '../../meta';
 export type PromptBarProps = ThemedClassName<
   Pick<PromptProps, 'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest'> & {
     processing?: boolean;
+    error?: Error;
     microphone?: boolean;
     onCancel?: () => void;
   }
 >;
 
-export const PromptBar = ({ classNames, placeholder, processing, microphone, onCancel, ...props }: PromptBarProps) => {
+export const PromptBar = ({
+  classNames,
+  placeholder,
+  processing,
+  error,
+  microphone,
+  onCancel,
+  ...props
+}: PromptBarProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
 
   const promptRef = useRef<PromptController>(null);
@@ -35,7 +44,7 @@ export const PromptBar = ({ classNames, placeholder, processing, microphone, onC
     },
   });
 
-  // TODO(burdon): Use rail/toolbar definition for height.
+  // TODO(burdon): Tooltip for error.
   return (
     <div
       className={mx(
@@ -44,7 +53,9 @@ export const PromptBar = ({ classNames, placeholder, processing, microphone, onC
       )}
     >
       <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
-        <Spinner active={processing} />
+        {(error && <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />) || (
+          <Spinner active={processing} />
+        )}
       </div>
       <Prompt
         ref={promptRef}
