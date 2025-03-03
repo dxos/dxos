@@ -11,12 +11,12 @@ import { ResponsiveGrid } from '../ResponsiveGrid';
 const getId = (user: UserState): string => user.id!;
 
 export type ParticipantGridProps = {
-  user: UserState;
+  self: UserState;
   users: UserState[];
   debug: boolean;
 };
 
-export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridProps) => {
+export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) => {
   const allUsers = useMemo(() => {
     const allUsers: UserState[] = [];
     users.forEach((user) => {

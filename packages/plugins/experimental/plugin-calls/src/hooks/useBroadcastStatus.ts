@@ -19,7 +19,7 @@ type UseBroadcastStatus = {
   peer?: CallsServicePeer;
   userMedia: UserMedia;
   pushedTracks: CallContextType['pushedTracks'];
-  user?: UserState;
+  self?: UserState;
   raisedHand?: boolean;
   speaking?: boolean;
   onUpdateUserState: (state: UserState) => void;
@@ -30,7 +30,7 @@ export const useBroadcastStatus = ({
   peer,
   userMedia,
   pushedTracks,
-  user,
+  self,
   raisedHand,
   speaking,
   onUpdateUserState,
@@ -39,13 +39,14 @@ export const useBroadcastStatus = ({
   const { audio, video, screenshare } = pushedTracks;
   const sessionId = peer?.session?.sessionId;
   useEffect(() => {
-    if (!user) {
+    // Note: It is important to check for self.id to ensure that we join with stable id.
+    if (!self || !self.id) {
       return;
     }
 
     const state: UserState = {
-      id: user.id,
-      name: user.name,
+      id: self.id,
+      name: self.name,
       joined: true,
       raisedHand,
       speaking,
@@ -63,9 +64,9 @@ export const useBroadcastStatus = ({
 
     onUpdateUserState(state);
   }, [
-    user?.id,
-    user?.name,
-    user?.joined,
+    self?.id,
+    self?.name,
+    self?.joined,
     sessionId,
     audio,
     video,
@@ -79,13 +80,13 @@ export const useBroadcastStatus = ({
   ]);
 
   useUnmount(() => {
-    if (!user) {
+    if (!self) {
       return;
     }
 
     onUpdateUserState({
-      id: user.id,
-      name: user.name,
+      id: self.id,
+      name: self.name,
       joined: false,
       raisedHand: false,
       speaking: false,

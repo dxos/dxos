@@ -15,7 +15,7 @@ import { AudioTrackContextProvider } from '../Media';
 
 const CallRoot: FC<PropsWithChildren<ThemedClassName>> = ({ children, classNames }) => {
   const {
-    call: { room, user: self },
+    call: { room, self },
   } = useCallContext();
 
   // Filter out self.
