@@ -2,13 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginsContext } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  LayoutAction,
+  type PromiseIntentDispatcher,
+  type PluginsContext,
+} from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, type Node, ROOT_ID, toSignal } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
-import { getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
+import { type Space, Filter, getSpace, getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
 
 import { AMBIENT_CHAT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
+import { AIChatType, AutomationAction } from '../types';
 
 export default (context: PluginsContext) => {
   const resolve = (typename: string) =>
@@ -23,6 +32,30 @@ export default (context: PluginsContext) => {
           id: `${LayoutAction.UpdateDialog._tag}/ambient-chat/open`,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const client = context.requestCapability(ClientCapabilities.Client);
+            const layout = context.requestCapability(Capabilities.Layout);
+            const { graph } = context.requestCapability(Capabilities.AppGraph);
+            console.log('################');
+
+            let chat: AIChatType | undefined;
+            if (layout.active.length > 0) {
+              const node = graph.findNode(layout.active[0]);
+              if (node) {
+                const space = getSpace(node.data);
+                if (space) {
+                  chat = await getOrCreateChat(dispatch, space);
+                }
+              }
+            } else {
+              const space = client.spaces.default;
+              chat = await getOrCreateChat(dispatch, space);
+            }
+
+            console.log('################', { chat });
+            if (!chat) {
+              return;
+            }
+
             await dispatch(
               createIntent(LayoutAction.UpdateDialog, {
                 part: 'dialog',
@@ -30,6 +63,9 @@ export default (context: PluginsContext) => {
                 options: {
                   state: true,
                   blockAlign: 'end',
+                  props: {
+                    chat,
+                  },
                 },
               }),
             );
@@ -184,4 +220,27 @@ export default (context: PluginsContext) => {
       },
     }),
   ]);
+};
+
+//
+// TODO(burdon): Factor out.
+//
+
+// TODO(burdon): Add to side panel?
+const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
+  const { objects } = await space.db.query(Filter.schema(AIChatType)).run();
+  log.info('finding chat', { space: space.id, objects: objects.length });
+  if (objects.length > 0) {
+    // TODO(burdon): Is this the most recent?
+    return objects[objects.length - 1];
+  }
+
+  log.info('creating chat', { space: space.id });
+  const { data } = await dispatch(createIntent(AutomationAction.CreateChat, { spaceId: space.id }));
+  if (!data?.object) {
+    log.error('failed to create chat', { space: space.id });
+    return;
+  }
+
+  return space.db.add(data.object as AIChatType);
 };

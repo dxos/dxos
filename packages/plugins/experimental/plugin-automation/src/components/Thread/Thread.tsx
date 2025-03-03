@@ -4,7 +4,9 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -34,6 +36,8 @@ export const Thread = ({
   onPrompt,
   onDelete,
 }: ThreadProps) => {
+  const hasTrascription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
+
   const scroller = useRef<ScrollController>(null);
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
@@ -73,7 +77,9 @@ export const Thread = ({
         <div className='pbe-6' />
       </ScrollContainer>
 
-      {onSubmit && <PromptBar microphone processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />}
+      {onSubmit && (
+        <PromptBar microphone={hasTrascription} processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />
+      )}
     </div>
   );
 };

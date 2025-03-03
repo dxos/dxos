@@ -5,7 +5,7 @@
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, ReactSurface, TranscriptionCapabilities } from './capabilities';
 import { meta, TRANSCRIPTION_PLUGIN } from './meta';
 import translations from './translations';
 import { TranscriptType, TranscriptionAction } from './types';
@@ -16,6 +16,11 @@ export const TranscriptionPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/transcription`,
+      activatesOn: Events.Startup,
+      activate: () => contributes(TranscriptionCapabilities.Transcription, null),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
