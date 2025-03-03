@@ -83,7 +83,6 @@
     "@preact/signals-core": "^1.6.0",
     "jsonpointer": "^5.0.1",
     "lodash.get": "^4.4.2",
-    "react-markdown": "^8.0.5",
     "unified": "^11.0.0"
   },
   "devDependencies": {

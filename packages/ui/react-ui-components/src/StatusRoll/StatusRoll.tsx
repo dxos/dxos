@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];
 
-export type StatusLineProps = ThemedClassName<{
+export type StatusRollProps = ThemedClassName<{
   line?: number;
   lines?: string[];
   transition?: number;
@@ -17,14 +17,17 @@ export type StatusLineProps = ThemedClassName<{
   autoAdvance?: boolean;
 }>;
 
-export const StatusLine = ({
+/**
+ * Single line of text that scrolls.
+ */
+export const StatusRoll = ({
   classNames,
   line = -1,
   lines = emptyLines,
   transition = 300,
   advance = 1_000,
   autoAdvance,
-}: StatusLineProps) => {
+}: StatusRollProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentLine, setCurrentLine] = useState(line);
   useEffect(() => {

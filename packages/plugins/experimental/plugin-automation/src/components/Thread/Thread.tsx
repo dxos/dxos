@@ -5,24 +5,29 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { type Message } from '@dxos/artifact';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { mx } from '@dxos/react-ui-theme';
 
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { messageReducer } from './reducer';
 import { PromptBar, type PromptBarProps } from '../Prompt';
 
-export type ThreadProps = {
+export type ThreadProps = ThemedClassName<{
   messages?: Message[];
-} & Pick<PromptBarProps, 'processing' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
-  Pick<ThreadMessageProps, 'collapse' | 'debug' | 'onPrompt' | 'onDelete'>;
+  collapse?: boolean;
+}> &
+  Pick<PromptBarProps, 'processing' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
+  Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
 
 /**
  * Chat thread component.
  */
 export const Thread = ({
+  classNames,
   messages,
-  processing,
   collapse = true,
+  processing,
   debug,
   onSubmit,
   onCancel,
@@ -52,14 +57,13 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <div className='flex flex-col grow overflow-hidden'>
+    <div role='list' className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <ScrollContainer ref={scroller}>
         {lines.map((message) => (
           <ThreadMessage
             key={message.id}
-            classNames='px-4 pbs-2'
+            classNames='px-4 pbe-4'
             message={message}
-            collapse={collapse}
             debug={debug}
             onPrompt={onPrompt}
             onDelete={onDelete}

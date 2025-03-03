@@ -10,23 +10,23 @@ import React, { useState } from 'react';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 
-import { Tabs } from './Tabbed';
-import { ToggleContainer } from './ToggleContainer';
+import { NumericTabs } from './NumericTabs';
+import { ToggleContainer } from '../ToggleContainer';
 
 const content = Array.from({ length: 4 }, (_, i) => ({
   title: faker.lorem.paragraph(),
   content: faker.lorem.paragraphs(3),
 }));
 
-const meta: Meta<typeof Tabs> = {
-  title: 'plugins/plugin-automation/Tabbed',
-  component: Tabs,
+const meta: Meta<typeof NumericTabs> = {
+  title: 'ui/react-ui-components/NumericTabs',
+  component: NumericTabs,
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;
 
-type Story = StoryObj<typeof Tabs>;
+type Story = StoryObj<typeof NumericTabs>;
 
 export const Default: Story = {
   render: () => {
@@ -39,7 +39,7 @@ export const Default: Story = {
           classNames='p-1 rounded-lg bg-baseSurface border border-neutral-500'
         >
           <div className='flex w-full overflow-hidden'>
-            <Tabs length={content.length} selected={selected} onSelect={setSelected} />
+            <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
             <div className='flex-1 pis-2 pie-2 overflow-y-auto'>
               <div>{content[selected].content}</div>
             </div>

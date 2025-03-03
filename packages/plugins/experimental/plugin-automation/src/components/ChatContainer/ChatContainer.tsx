@@ -9,10 +9,11 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { type AIChatType } from '../../types';
 import { ThreadContainer } from '../Thread';
 
+// TODO(burdon): Attention.
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   return (
     <StackItem.Content toolbar={false} role={role}>
-      <ThreadContainer chat={chat} />
+      <ThreadContainer chat={chat} classNames='mli-auto w-full max-w-[50rem]' />
     </StackItem.Content>
   );
 };
