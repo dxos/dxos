@@ -233,7 +233,6 @@ export class CallsServicePeer extends Resource {
     return pushedTrackPromise;
   }
 
-  // TODO(mykola): Add cleanup logic if the track is not used anymore.
   async pushTrack({
     track,
     encodings = [],
