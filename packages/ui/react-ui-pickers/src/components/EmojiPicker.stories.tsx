@@ -53,7 +53,10 @@ export const Block: StoryObj<EmojiPickerProps> = {
 
 const meta: Meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',
-  decorators: [withTheme, withLayout({ fullscreen: false, tooltips: true })],
+  decorators: [withTheme, withLayout({ tooltips: true })],
+  parameters: {
+    layout: 'centered',
+  },
 };
 
 export default meta;

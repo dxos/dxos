@@ -19,7 +19,6 @@ export default [
         'delete channel label': 'Delete channel',
         'create channel label': 'Create channel',
         'message placeholder': 'Reply…',
-        'settings standalone label': 'Enable channel creation (experimental)',
         'activity message': 'Processing…',
         'anonymous label': 'Anonymous',
         'delete message block label': 'Delete message block',

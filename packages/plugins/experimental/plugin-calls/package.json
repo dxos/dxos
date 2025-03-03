@@ -31,8 +31,6 @@
     "src"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/app-framework": "workspace:*",
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -53,6 +51,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-transcription": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
@@ -64,6 +63,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
     "effect": "^3.12.3",
     "extendable-media-recorder": "^9.2.19",
@@ -71,7 +71,6 @@
     "react-resize-detector": "^12.0.2",
     "react-router-dom": "^6.4.0",
     "react-use": "^17.5.1",
-    "rxjs": "^7.8.1",
     "wavefile": "^11.0.0"
   },
   "devDependencies": {
@@ -82,6 +81,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/react": "~18.2.0",
+    "preact": "~10.11.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "tailwindcss": "~3.4.1"

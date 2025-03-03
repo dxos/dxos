@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
+import { Config } from '@dxos/client';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog, Toolbar } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
@@ -31,7 +33,23 @@ const meta: Meta<typeof AmbientChatDialog> = {
       </>
     );
   },
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [
+    withClientProvider({
+      config: new Config({
+        runtime: {
+          client: { edgeFeatures: { signaling: true } },
+          services: {
+            edge: { url: 'https://edge.dxos.workers.dev/' },
+            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+          },
+        },
+      }),
+      createIdentity: true,
+      createSpace: true,
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
   parameters: {
     translations,
   },

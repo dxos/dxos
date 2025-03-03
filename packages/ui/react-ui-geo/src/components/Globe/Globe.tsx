@@ -17,7 +17,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
+import { type ThemedClassName, type ThemeMode, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -28,7 +28,6 @@ import {
 } from '../../hooks';
 import {
   type Features,
-  type Styles,
   type StyleSet,
   createLayers,
   geoToPosition,
@@ -38,35 +37,57 @@ import {
 } from '../../util';
 import { ZoomControls, ActionControls, type ControlProps, controlPositions } from '../Toolbar';
 
-// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
-const defaultStyles: Styles = {
-  background: {
-    fillStyle: '#111111',
-  },
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
+ */
+const defaultStyles: Record<ThemeMode, StyleSet> = {
+  light: {
+    background: {
+      fillStyle: '#EEE',
+    },
 
-  water: {
-    fillStyle: '#123E6A',
-  },
+    water: {
+      fillStyle: '#555',
+    },
 
-  hex: {
-    strokeStyle: 'green',
-    fillStyle: 'gray',
-    pointRadius: 1,
-  },
+    land: {
+      fillStyle: '#999',
+    },
 
-  land: {
-    fillStyle: '#032153',
-  },
+    line: {
+      strokeStyle: 'darkred',
+    },
 
-  line: {
-    strokeStyle: '#111111',
+    point: {
+      fillStyle: '#111111',
+      strokeStyle: '#111111',
+      strokeWidth: 1,
+      pointRadius: 0.5,
+    },
   },
+  dark: {
+    background: {
+      fillStyle: '#111111',
+    },
 
-  point: {
-    fillStyle: '#111111',
-    strokeStyle: '#111111',
-    strokeWidth: 1,
-    pointRadius: 0.5,
+    water: {
+      fillStyle: '#123E6A',
+    },
+
+    land: {
+      fillStyle: '#032153',
+    },
+
+    line: {
+      strokeStyle: '#111111',
+    },
+
+    point: {
+      fillStyle: '#111111',
+      strokeStyle: '#111111',
+      strokeWidth: 1,
+      pointRadius: 0.5,
+    },
   },
 };
 
@@ -125,7 +146,10 @@ type GlobeCanvasProps = {
  * https://github.com/topojson/world-atlas
  */
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: _projection, topology, features, styles = defaultStyles }, forwardRef) => {
+  ({ projection: _projection, topology, features, styles: _styles }, forwardRef) => {
+    const { themeMode } = useThemeContext();
+    const styles = useMemo(() => _styles ?? defaultStyles[themeMode], [_styles, themeMode]);
+
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
@@ -207,7 +231,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
             .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
             .rotate(rotation ?? [0, 0, 0]);
 
-          renderLayers(generator, layers, scale);
+          renderLayers(generator, layers, scale, styles);
         });
       }
     }, [generator, size, scale, translation, rotation, layers]);

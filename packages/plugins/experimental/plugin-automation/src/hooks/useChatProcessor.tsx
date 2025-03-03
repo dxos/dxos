@@ -8,23 +8,22 @@ import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } fro
 import { createSystemPrompt, type Tool } from '@dxos/artifact';
 import { FunctionType } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { ServiceType, type AIChatType } from '../types';
+import { ServiceType } from '../types';
 
 /**
  * Creates a processor for the chat.
  */
-export const useChatProcessor = (chat: AIChatType) => {
+export const useChatProcessor = (space?: Space): ChatProcessor => {
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(chat);
 
   // Services.
   const services = useQuery(space, Filter.schema(ServiceType));
@@ -74,13 +73,6 @@ export const useChatProcessor = (chat: AIChatType) => {
       ),
     [aiClient, tools, space, dispatch, systemPrompt],
   );
-
-  // Update processor.
-  // useEffect(() => {
-  //   if (processor) {
-  //     processor.setTools(tools.flat());
-  //   }
-  // }, [processor, tools]);
 
   return processor;
 };

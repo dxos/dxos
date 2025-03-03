@@ -8,9 +8,9 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
-import { HuePickerBlock } from '@dxos/react-ui-pickers';
+import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { SPACE_PLUGIN } from '../../meta';
 
@@ -51,12 +51,27 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
           }}
         />
       </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('icon label')}>
+        <Toolbar.Root>
+          <IconPicker
+            value={space.properties.icon}
+            onChange={(nextIcon) => (space.properties.icon = nextIcon)}
+            onReset={() => {
+              space.properties.icon = undefined;
+            }}
+          />
+        </Toolbar.Root>
+      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('hue label')}>
-        <HuePickerBlock
-          hue={space.properties.hue}
-          onChangeHue={(nextHue) => (space.properties.hue = nextHue)}
-          onClickClear={() => (space.properties.hue = undefined)}
-        />
+        <Toolbar.Root>
+          <HuePicker
+            value={space.properties.hue}
+            onChange={(nextHue) => (space.properties.hue = nextHue)}
+            onReset={() => {
+              space.properties.hue = undefined;
+            }}
+          />
+        </Toolbar.Root>
       </DeprecatedFormInput>
       {edgeEnabled && (
         <DeprecatedFormInput label={t('edge replication label')}>

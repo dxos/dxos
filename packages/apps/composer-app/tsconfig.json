@@ -108,6 +108,9 @@
       "path": "../../plugins/experimental/plugin-theme-editor"
     },
     {
+      "path": "../../plugins/experimental/plugin-transcription"
+    },
+    {
       "path": "../../plugins/plugin-attention"
     },
     {

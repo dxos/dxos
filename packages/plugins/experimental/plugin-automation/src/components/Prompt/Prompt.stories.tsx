@@ -5,17 +5,21 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
+import React, { useEffect, useState } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Prompt } from './Prompt';
+import { PromptBar } from './PromptBar';
+import translations from '../../translations';
 
 const meta: Meta<typeof Prompt> = {
   title: 'plugins/plugin-automation/Prompt',
   component: Prompt,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ tooltips: true })],
   parameters: {
     layout: 'centered',
+    translations,
   },
 };
 
@@ -27,7 +31,7 @@ export const Default: Story = {
   args: {
     classNames: 'w-96 p-4 rounded outline outline-gray-200',
     autoFocus: true,
-    onEnter: (text) => {
+    onSubmit: (text) => {
       console.log('onEnter', text);
     },
     onSuggest: (text) => {
@@ -37,7 +41,7 @@ export const Default: Story = {
       }
 
       const suggestions = [
-        'Create a CRM',
+        'Create a kanban board',
         'Create a new project',
         'Find flights to Tokyo',
         "Let's play chess",
@@ -46,5 +50,30 @@ export const Default: Story = {
 
       return suggestions.filter((s) => s.toLowerCase().startsWith(text));
     },
+  },
+};
+
+export const Toolbar: Story = {
+  render: (args) => {
+    const [processing, setProcessing] = useState(false);
+    useEffect(() => {
+      let t: NodeJS.Timeout;
+      if (processing) {
+        t = setTimeout(() => setProcessing(false), 10_000);
+      }
+      return () => clearTimeout(t);
+    }, [processing]);
+    console.log('processing', processing);
+
+    return (
+      <PromptBar
+        classNames='w-[25rem] p-1 overflow-hidden border border-gray-200 rounded'
+        microphone
+        processing={processing}
+        onSubmit={() => setProcessing(true)}
+        onCancel={() => setProcessing(false)}
+        {...args}
+      />
+    );
   },
 };

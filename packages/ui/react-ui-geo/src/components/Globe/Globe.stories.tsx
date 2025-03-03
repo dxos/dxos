@@ -138,7 +138,7 @@ const Story = ({
   translation,
   rotation = [0, 0, 0],
   projection,
-  styles = defaultStyles,
+  styles,
   drag = false,
   spin = false,
   tour = false,
@@ -205,7 +205,7 @@ const Story = ({
     <Globe.Root classNames='absolute inset-0' scale={_scale} translation={translation} rotation={rotation}>
       <Globe.Canvas
         ref={controller}
-        topology={styles.dots ? dots : topology}
+        topology={styles?.dots ? dots : topology}
         projection={projection}
         styles={styles}
         features={tour ? { points: features?.points ?? [] } : features}
@@ -298,15 +298,15 @@ export const Globe1 = () => {
 };
 
 export const Globe2 = () => {
-  return <Story drag projection='transverse-mercator' scale={0.8} rotation={initialRotation} />;
+  return <Story drag projection='transverse-mercator' scale={0.8} rotation={initialRotation} styles={defaultStyles} />;
 };
 
 export const Globe3 = () => {
-  return <Story drag spin scale={1.5} rotation={initialRotation} />;
+  return <Story drag spin scale={1.5} rotation={initialRotation} styles={defaultStyles} />;
 };
 
 export const Globe4 = () => {
-  return <Story drag tour scale={2} rotation={initialRotation} />;
+  return <Story drag tour scale={2} rotation={initialRotation} styles={defaultStyles} />;
 };
 
 export const Globe5 = () => {

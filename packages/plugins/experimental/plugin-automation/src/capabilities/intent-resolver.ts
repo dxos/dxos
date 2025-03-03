@@ -12,12 +12,12 @@ export default () =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AutomationAction.Create,
+      intent: AutomationAction.CreateChat,
       resolve: ({ name }) => ({
         data: {
           object: create(AIChatType, {
             name,
-            // TODO(burdon): ???
+            // TODO(burdon): Need space id.
             // new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
             queue: makeRef({ id: ObjectId.random() }),
           }),

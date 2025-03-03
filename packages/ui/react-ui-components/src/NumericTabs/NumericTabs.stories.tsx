@@ -1,0 +1,51 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import '@dxos-theme';
+
+import { type StoryObj, type Meta } from '@storybook/react';
+import React, { useState } from 'react';
+
+import { faker } from '@dxos/random';
+import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
+
+import { NumericTabs } from './NumericTabs';
+import { ToggleContainer } from '../ToggleContainer';
+
+const content = Array.from({ length: 4 }, (_, i) => ({
+  title: faker.lorem.paragraph(),
+  content: faker.lorem.paragraphs(3),
+}));
+
+const meta: Meta<typeof NumericTabs> = {
+  title: 'ui/react-ui-components/NumericTabs',
+  component: NumericTabs,
+  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+};
+
+export default meta;
+
+type Story = StoryObj<typeof NumericTabs>;
+
+export const Default: Story = {
+  render: () => {
+    const [selected, setSelected] = useState(0);
+    return (
+      <div className='flex flex-col w-[30rem] p-4 bg-attention'>
+        <ToggleContainer
+          open
+          title={content[selected].title}
+          classNames='p-1 rounded-lg bg-baseSurface border border-neutral-500'
+        >
+          <div className='flex w-full overflow-hidden'>
+            <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
+            <div className='flex-1 pis-2 pie-2 overflow-y-auto'>
+              <div>{content[selected].content}</div>
+            </div>
+          </div>
+        </ToggleContainer>
+      </div>
+    );
+  },
+};

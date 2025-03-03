@@ -6,74 +6,124 @@ import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
-import { of, tap, type Subscription } from 'rxjs';
 
+import { scheduleTask, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { usePeerConnection } from './hooks';
+import { useCallsService } from './hooks';
 import { CALLS_URL } from './types';
+// @ts-ignore
+import video from '../testing/video.mp4';
 
-const Render = ({ videoUrl }: { videoUrl: string }) => {
-  const config = useConfig();
-
-  const { peer: peerPush } = usePeerConnection({
-    iceServers: config.get('runtime.services.ice'),
-    apiBase: `${CALLS_URL}/api/calls`,
-  });
-
-  const { peer: peerPull } = usePeerConnection({
-    iceServers: config.get('runtime.services.ice'),
-    apiBase: `${CALLS_URL}/api/calls`,
-  });
-
-  const pushVideoElement = useRef<HTMLVideoElement>(null);
-  const pullVideoElement = useRef<HTMLVideoElement>(null);
-
+const useVideoStreamTrack = (videoElement: HTMLVideoElement | null) => {
+  // Get video stream track
   const [videoStreamTrack, setVideoStreamTrack] = useState<MediaStreamTrack | undefined>(undefined);
-
+  const hadRun = useRef(false);
   useEffect(() => {
-    let subscription: Subscription | undefined;
-    if (pushVideoElement.current) {
-      const stream = (pushVideoElement.current as any).captureStream();
-      stream.onaddtrack = () => {
-        setVideoStreamTrack(stream.getVideoTracks()[0]);
-        log.info('videoStreamTrack');
-      };
-    }
-
-    return () => subscription?.unsubscribe();
-  }, [pushVideoElement.current]);
-
-  useEffect(() => {
-    if (!videoStreamTrack) {
-      log.info('no videoStreamTrack');
+    // This is done to capture only one video stream.
+    if (!videoElement || hadRun.current || !video) {
       return;
     }
 
-    log.info('starting push/pull', { videoStreamTrack });
-    const pushedTrackObservable = peerPush.pushTrack(
-      of(videoStreamTrack).pipe(tap((track) => log.info('start push track', { track }))),
-    );
-    const pulledTrackObservable = peerPull.pullTrack(
-      pushedTrackObservable.pipe(tap((track) => log.info('start pull track', { track }))),
-    );
-    const subscription = pulledTrackObservable.subscribe((track) => {
-      log.info('successfully pulled track', { track });
+    hadRun.current = true;
+
+    videoElement.src = video;
+    videoElement.addEventListener('playing', () => {
+      const stream = (videoElement as any).captureStream();
+      log.info('Captured stream', { stream });
+      stream.onaddtrack = (event: MediaStreamTrackEvent) => {
+        if (event.track.kind === 'video') {
+          log.info('video stream track state', { state: event.track.readyState });
+          setVideoStreamTrack(event.track);
+        }
+      };
+    });
+  }, [videoElement]);
+
+  return videoStreamTrack;
+};
+
+const Render = ({ videoSrc }: { videoSrc: string }) => {
+  const config = useConfig();
+  const cfCallsConfig = {
+    iceServers: config.get('runtime.services.ice'),
+    apiBase: `${CALLS_URL}/api/calls`,
+  };
+
+  const { peer: peerPush } = useCallsService(cfCallsConfig);
+  const { peer: peerPull } = useCallsService(cfCallsConfig);
+
+  const pushVideoElement = useRef<HTMLVideoElement>(null);
+  const pullVideoElement = useRef<HTMLVideoElement>(null);
+  const [metrics, setMetrics] = useState<Record<string, any>>({});
+
+  // Get video stream track.
+  const videoStreamTrack = useVideoStreamTrack(pushVideoElement.current);
+
+  const hadRun = useRef(false);
+
+  // Push/pull video stream track to cloudflare.
+  useEffect(() => {
+    if (hadRun.current || !videoStreamTrack || !peerPush || !peerPull) {
+      return;
+    }
+    hadRun.current = true;
+
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      log.info('starting push/pull', { videoStreamTrack });
+
+      // performance.mark('webrtc:begin');
+      // performance.mark('webrtc:end');
+      // const webrtcTime = performance.measure('webrtc', 'webrtc:begin', 'webrtc:end').duration;
+      // setMetrics((prev) => ({ ...prev, 'time to open webrtc [ms]': Math.round(webrtcTime) }));
+
+      // Push track to cloudflare.
+      performance.mark('push:begin');
+      const pushedTrack = await peerPush.pushTrack(videoStreamTrack);
+      performance.mark('push:end');
+      const pushTime = performance.measure('push', 'push:begin', 'push:end').duration;
+      log.info('successfully pushed track', { pushTime, pushedTrack });
+      setMetrics((prev) => ({ ...prev, 'time to push track [ms]': Math.round(pushTime) }));
+
+      // Wait for cloudflare to process the track.
+      await sleep(500);
+
+      // Pull track from cloudflare.
+      performance.mark('pullTrack:begin');
+      const pulledTrack = await peerPull.pullTrack({ ...pushedTrack, mid: undefined });
+      performance.mark('pullTrack:end');
+      const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
+      setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': Math.round(pullTime) }));
+      log.info('successfully pulled track', { pullTime, pulledTrack });
+
+      invariant(pulledTrack);
       invariant(pullVideoElement.current);
-      pullVideoElement.current.srcObject = new MediaStream([track]);
+
+      performance.mark('playVideo:begin');
+      pullVideoElement.current.srcObject = new MediaStream([pulledTrack]);
+      await pullVideoElement.current.play();
+      performance.mark('playVideo:end');
+      const playTime = performance.measure('playVideo', 'playVideo:begin', 'playVideo:end').duration;
+      setMetrics((prev) => ({ ...prev, 'time to play pulled video [ms]': Math.round(playTime) }));
     });
 
-    return () => subscription?.unsubscribe();
-  }, [videoStreamTrack]);
+    return () => {
+      void ctx.dispose();
+    };
+  }, [videoStreamTrack, peerPush, peerPull]);
 
   return (
-    <div className='flex flex-col gap-4 w-[400px] justify-center'>
-      <video ref={pushVideoElement} autoPlay muted src={videoUrl} />
-      <video ref={pullVideoElement} autoPlay muted />
+    <div className='grid grid-cols-3 gap-4 items-center'>
+      <video ref={pushVideoElement} muted autoPlay src={video} />
+      <Json data={metrics} />
+      <video ref={pullVideoElement} muted />
     </div>
   );
 };
@@ -99,6 +149,6 @@ type Story = StoryObj<typeof Render>;
 
 export const Default: Story = {
   args: {
-    videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    videoSrc: video,
   },
 };

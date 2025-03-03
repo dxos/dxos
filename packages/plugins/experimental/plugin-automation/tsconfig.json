@@ -167,6 +167,9 @@
     },
     {
       "path": "../plugin-script"
+    },
+    {
+      "path": "../plugin-transcription"
     }
   ]
 }

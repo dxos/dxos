@@ -5,18 +5,18 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
+import { type TranscriptionState } from '@dxos/plugin-transcription/types';
 import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { type CallContextType } from './useCallContext';
 import { type UserMedia } from './useUserMedia';
-import { useSubscribedState } from './utils';
-import { type TranscriptionState, type UserState } from '../types';
-import { type RxjsPeer } from '../utils';
+import { type UserState } from '../types';
+import { type CallsServicePeer } from '../util';
 
 type UseBroadcastStatus = {
   transcription: TranscriptionState;
-  peer: RxjsPeer;
+  peer?: CallsServicePeer;
   userMedia: UserMedia;
   pushedTracks: CallContextType['pushedTracks'];
   user?: UserState;
@@ -35,9 +35,9 @@ export const useBroadcastStatus = ({
   speaking,
   onUpdateUserState,
 }: UseBroadcastStatus): void => {
-  const { audioEnabled, videoEnabled, screenshareEnabled } = userMedia;
+  const { audioEnabled, videoEnabled, screenshareEnabled } = userMedia.state;
   const { audio, video, screenshare } = pushedTracks;
-  const { sessionId } = useSubscribedState(peer.session$) ?? {};
+  const sessionId = peer?.session?.sessionId;
   useEffect(() => {
     if (!user) {
       return;

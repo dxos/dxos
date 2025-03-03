@@ -121,6 +121,7 @@ export const EmojiPickerToolbarButton = ({
 
 /**
  * A button for picking an emoji alongside a button for unsetting it.
+ * @deprecated
  */
 export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji, onClickClear }: EmojiPickerProps) => {
   const { t } = useTranslation('os');

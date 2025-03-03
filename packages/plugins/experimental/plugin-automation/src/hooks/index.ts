@@ -8,3 +8,4 @@ export * from './useChatProcessor';
 export * from './useLocalTriggerManager';
 export * from './useMessageQueue';
 export * from './useServices';
+export * from './useTextInputEvents';

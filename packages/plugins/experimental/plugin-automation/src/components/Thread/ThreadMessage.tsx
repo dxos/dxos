@@ -2,135 +2,74 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useRef, useState, type FC } from 'react';
+import React, { type PropsWithChildren, type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { Button, ButtonGroup, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { ToggleContainer, StatusLine, Tabs } from '../Box';
-import { MarkdownViewer } from '../MarkdownViewer';
+import { ToolBlock, isToolMessage } from './ToolInvocations';
+
+const panelClassNames = 'flex flex-col w-full bg-baseSurface rounded-md';
+
+const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
+  return (
+    <div role='list-item' className={mx('flex w-full', user && 'justify-end', classNames)}>
+      <div className={mx(user ? 'px-2 py-1 bg-primary-200 dark:bg-primary-500 rounded-md' : 'w-full')}>{children}</div>
+    </div>
+  );
+};
 
 export type ThreadMessageProps = ThemedClassName<{
   message: Message;
-  collapse?: boolean;
   debug?: boolean;
-  onSuggest?: (text: string) => void;
+  onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({
-  classNames,
-  message,
-  collapse,
-  debug,
-  onSuggest,
-  onDelete,
-}) => {
-  if (typeof message !== 'object') {
-    return <div className={mx(classNames)}>{message}</div>;
-  }
-
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, onPrompt }) => {
   const { role, content = [] } = message;
 
-  // TODO(burdon): Factor out tool blocks.
-  const toolBlocks = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
-  if (collapse && toolBlocks.length > 0) {
-    let request: (MessageContentBlock & { type: 'tool_use' }) | undefined;
-    const items = toolBlocks.map((block) => {
-      switch (block.type) {
-        case 'tool_use': {
-          request = block;
-          // TODO(burdon): Get plugin name.
-          return { title: `Calling ${block.name}...`, block };
-        }
-
-        case 'tool_result': {
-          if (!request) {
-            log.warn('unexpected message', { block });
-            return { title: 'Error', block };
-          }
-
-          return { title: `Processed ${request.name}`, block };
-        }
-
-        default: {
-          request = undefined;
-          return { title: 'Error', block };
-        }
-      }
-    });
-
+  // TODO(burdon): Restructure types to make check unnecessary.
+  if (isToolMessage(message)) {
     return (
-      <div className={mx('flex', classNames)}>
-        <div className='w-full p-1 px-2 overflow-hidden rounded-md bg-baseSurface'>
-          <TabbedContainer items={items} />
-        </div>
-      </div>
+      <MessageContainer classNames={classNames}>
+        <ToolBlock classNames={panelClassNames} message={message} />
+      </MessageContainer>
     );
   }
 
   return (
-    <div className={mx('flex flex-col shrink-0 gap-2')}>
-      {debug && (
-        <div className='text-xs text-subdued'>
-          {message.id}{' '}
-          {onDelete && (
-            <span className='cursor-pointer underline' onClick={() => onDelete(message.id)}>
-              delete
-            </span>
-          )}
-        </div>
-      )}
+    <div role='none' className='flex flex-col gap-2'>
       {content.map((block, idx) => (
-        <div key={idx} className={mx('flex', classNames, block.type === 'text' && role === 'user' && 'justify-end')}>
-          <Block role={role} block={block} onSuggest={onSuggest ?? (() => {})} />
-        </div>
+        <MessageContainer key={idx} classNames={classNames} user={block.type === 'text' && role === 'user'}>
+          <Block block={block} onPrompt={onPrompt} />
+        </MessageContainer>
       ))}
     </div>
   );
 };
 
-const Block = ({
-  block,
-  role,
-  onSuggest,
-}: Pick<Message, 'role'> & { block: MessageContentBlock; onSuggest: (text: string) => void }) => {
-  const Component = componentMap[block.type] ?? componentMap.default;
-  return (
-    <div
-      className={mx(
-        'p-1 px-2 overflow-hidden rounded-md',
-        (block.type !== 'text' || block.disposition) && 'w-full bg-baseSurface',
-        block.type === 'text' && role === 'user' && 'bg-primary-200 dark:bg-primary-500',
-      )}
-    >
-      <Component block={block} onSuggest={onSuggest} />
-    </div>
-  );
+const Block: FC<{ block: MessageContentBlock; onPrompt?: (text: string) => void }> = ({ block, onPrompt }) => {
+  const Component = components[block.type] ?? components.default;
+  return <Component block={block} onPrompt={onPrompt} />;
 };
 
-const titles: Record<string, string> = {
-  ['cot' as const]: 'Chain of thought',
-  ['artifact' as const]: 'Artifact',
-  ['tool_use' as const]: 'Tool request',
-  ['tool_result' as const]: 'Tool result',
-};
+type BlockComponent = FC<{ block: MessageContentBlock; onPrompt?: (text: string) => void }>;
 
-type BlockComponent = FC<{ block: MessageContentBlock; onSuggest: (text: string) => void }>;
-
-const componentMap: Record<string, BlockComponent> = {
-  text: ({ block }) => {
+const components: Record<string, BlockComponent> = {
+  //
+  // Text
+  //
+  ['text' as const]: ({ block }) => {
     invariant(block.type === 'text');
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
-      return (
-        <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
-      );
+      return <MarkdownViewer content={block.text} />;
     }
 
     return (
@@ -142,19 +81,27 @@ const componentMap: Record<string, BlockComponent> = {
           ) : undefined
         }
         open={block.disposition === 'cot'}
+        classNames={block.disposition === 'cot' && panelClassNames}
       >
-        <MarkdownViewer content={block.text} classNames={[block.disposition === 'cot' && 'text-sm text-subdued']} />
+        <MarkdownViewer
+          content={block.text}
+          classNames={['pbe-2', block.disposition === 'cot' && 'text-sm text-subdued']}
+        />
       </ToggleContainer>
     );
   },
 
-  json: ({ block, onSuggest }) => {
+  //
+  // JSON
+  //
+  ['json' as const]: ({ block, onPrompt }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
+      // TODO(burdon): Make propts optional.
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
-        return <Button onClick={() => onSuggest(text)}>{text}</Button>;
+        return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt?.(text)} />;
       }
 
       case 'select': {
@@ -162,7 +109,7 @@ const componentMap: Record<string, BlockComponent> = {
         return (
           <ButtonGroup>
             {options.map((option) => (
-              <Button key={option} onClick={() => onSuggest(option)}>
+              <Button key={option} onClick={() => onPrompt?.(option)}>
                 {option}
               </Button>
             ))}
@@ -181,6 +128,9 @@ const componentMap: Record<string, BlockComponent> = {
     }
   },
 
+  //
+  // Default
+  //
   default: ({ block }) => {
     let title = titles[block.type];
     if (block.type === 'tool_use') {
@@ -195,31 +145,9 @@ const componentMap: Record<string, BlockComponent> = {
   },
 };
 
-const TabbedContainer = ({ items }: { items: { title: string; block: any }[] }) => {
-  const lines = items.map((item) => item.title);
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState(0);
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (open) {
-      tabsRef.current?.focus();
-    }
-  }, [open]);
-
-  const handleSelect = (index: number) => {
-    if (index === selected) {
-      setOpen(false);
-    } else {
-      setSelected(index);
-    }
-  };
-
-  return (
-    <ToggleContainer title={<StatusLine lines={lines} autoAdvance />} open={open} onChangeOpen={setOpen}>
-      <div className='flex gap-2 w-full'>
-        <Tabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json data={items[selected].block} classNames='!p-1 text-xs' />
-      </div>
-    </ToggleContainer>
-  );
+const titles: Record<string, string> = {
+  ['cot' as const]: 'Chain of thought',
+  ['artifact' as const]: 'Artifact',
+  ['tool_use' as const]: 'Tool request',
+  ['tool_result' as const]: 'Tool result',
 };
