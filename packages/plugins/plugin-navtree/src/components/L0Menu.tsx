@@ -6,7 +6,15 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Icon, toLocalizedString, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
+import {
+  Icon,
+  ScrollArea,
+  toLocalizedString,
+  Tooltip,
+  useMediaQuery,
+  useSidebars,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -186,18 +194,25 @@ export const L0Menu = ({
 }) => {
   return (
     <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag'>
-      <div
-        role='none'
-        className='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
-      >
-        {topLevelItems.map((item) => {
-          if (l0ItemType(item) === 'collection') {
-            return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-          } else {
-            return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-          }
-        })}
-      </div>
+      <ScrollArea.Root>
+        <ScrollArea.Viewport>
+          <div
+            role='none'
+            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
+          >
+            {topLevelItems.map((item) => {
+              if (l0ItemType(item) === 'collection') {
+                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
+              } else {
+                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+              }
+            })}
+          </div>
+          <ScrollArea.Scrollbar orientation='vertical'>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')
