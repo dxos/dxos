@@ -16,11 +16,11 @@ export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
   if (typeof obj !== 'object' || obj === null) {
     throw new TypeError('Invalid parameter `obj`. Expected: ECHO object.');
   }
+
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
   const dxn = Reference.localObjectReference(id).toDXN();
-
   return new RefImpl(dxn, obj);
 };
 
