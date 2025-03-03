@@ -37,8 +37,13 @@ export const PromptBar = ({ classNames, placeholder, processing, microphone, onC
 
   // TODO(burdon): Use rail/toolbar definition for height.
   return (
-    <div className={mx('flex shrink-0 w-full grid grid-cols-[40px_1fr_40px] overflow-hidden', classNames)}>
-      <div className='flex w-[40px] h-[40px] items-center justify-center'>
+    <div
+      className={mx(
+        'flex shrink-0 w-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] overflow-hidden',
+        classNames,
+      )}
+    >
+      <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
         <Spinner active={processing} />
       </div>
       <Prompt
@@ -50,7 +55,7 @@ export const PromptBar = ({ classNames, placeholder, processing, microphone, onC
         {...props}
       />
       {(onCancel || microphone) && (
-        <div className='flex w-[40px] h-[40px] items-center justify-center'>
+        <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
           {processing && onCancel && (
             <IconButton
               classNames='px-1.5'
