@@ -33,7 +33,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
   }
 
   log.info('creating chat', { space: space.id });
-  const { data } = await dispatch(createIntent(AutomationAction.CreateChat));
+  const { data } = await dispatch(createIntent(AutomationAction.CreateChat, { queue: undefined }));
   if (!data?.object) {
     log.error('failed to create chat', { space: space.id });
     return;

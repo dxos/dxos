@@ -25,6 +25,7 @@ export const TranscriptionPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TranscriptType.typename,
           metadata: {
+            // TODO(burdon): Options not used?
             createObject: (props: { name?: string }, options: { space: Space }) =>
               createIntent(TranscriptionAction.Create, { ...props }),
             placeholder: ['transcript title placeholder', { ns: TRANSCRIPTION_PLUGIN }],

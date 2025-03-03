@@ -13,13 +13,15 @@ export default () =>
     Capabilities.IntentResolver,
     createResolver({
       intent: AutomationAction.CreateChat,
-      resolve: ({ name }) => ({
+      resolve: ({ queue, name }) => ({
         data: {
           object: create(AIChatType, {
             name,
-            // TODO(burdon): Need space id.
-            // new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, SpaceId.random(), ObjectId.random()]).toString(),
+            // TODO(burdon): Pass in reference? Dima?
             queue: makeRef({ id: ObjectId.random() }),
+            // queue: makeRefFromDXN(
+            //   new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, spaceId, ObjectId.random()]).toString(),
+            // ),
           }),
         },
       }),

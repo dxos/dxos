@@ -37,7 +37,9 @@ export const AutomationPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(AutomationAction.CreateChat, props),
+            // TODO(burdon): Why is props type needed to be defined since it's already defined in the action?
+            createObject: (props: { queue?: string; name?: string }) =>
+              createIntent(AutomationAction.CreateChat, props),
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },
