@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
-import { Dialog, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -14,8 +14,8 @@ const preventDefault = (event: Event) => event.preventDefault();
 const minSize = 5;
 
 export const AmbientDialog = ({ children }: PropsWithChildren) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = useState(true);
   // TODO(thure): This seems like a smell, but ResizeHandle uses a ref internally in order to avoid rerendering while dragging. Consider refactoring to use Lit.
   const [iter, setIter] = useState(0);
 
@@ -23,12 +23,9 @@ export const AmbientDialog = ({ children }: PropsWithChildren) => {
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.
   const handleToggle = useCallback(() => {
-    setOpen((open) => {
-      setSize(open ? minSize : 'min-content');
-      setIter((iter) => iter + 1);
-      return !open;
-    });
-  }, [iter]);
+    setSize(size === 'min-content' ? minSize : 'min-content');
+    setIter((iter) => iter + 1);
+  }, [iter, size]);
 
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
@@ -52,38 +49,30 @@ export const AmbientDialog = ({ children }: PropsWithChildren) => {
           onSizeChange={setSize}
         />
 
-        <DialogHeader open={open} onToggle={handleToggle} />
+        {/* Matches same layout grid as PromptBar. */}
+        <div className='flex shrink-0 w-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] items-center overflow-hidden'>
+          <div className='flex is-[--rail-action] bs-[--rail-action] items-center justify-center'>
+            <Dialog.Close asChild>
+              <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close label', { ns: 'os' })} />
+            </Dialog.Close>
+          </div>
+          <div className='grow'>
+            <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
+          </div>
+          <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
+            <IconButton
+              variant='ghost'
+              icon='ph--caret-down--regular'
+              iconOnly
+              disabled={size === 'min-content'}
+              label={t('collapse label')}
+              onClick={handleToggle}
+            />
+          </div>
+        </div>
 
         {children}
       </Dialog.Content>
-    </div>
-  );
-};
-
-/**
- * Matches same layout grid as PromptBar.
- */
-const DialogHeader = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
-  return (
-    <div className='flex shrink-0 w-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] items-center overflow-hidden'>
-      <div className='flex is-[--rail-action] bs-[--rail-action] items-center justify-center'>
-        <Dialog.Close>
-          <Icon icon='ph--x--regular' />
-        </Dialog.Close>
-      </div>
-      <div className='grow'>
-        <Dialog.Title classNames='sr-only'>{t('ambient chat dialog title')}</Dialog.Title>
-      </div>
-      <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
-        <IconButton
-          variant='ghost'
-          icon={open ? 'ph--caret-down--regular' : 'ph--caret-up--regular'}
-          iconOnly
-          label={t('collapse label')}
-          onClick={onToggle}
-        />
-      </div>
     </div>
   );
 };
