@@ -6622,9 +6622,18 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../../experimental/artifact
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../../common/codec-protobuf
@@ -6661,6 +6670,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
@@ -6682,6 +6694,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
