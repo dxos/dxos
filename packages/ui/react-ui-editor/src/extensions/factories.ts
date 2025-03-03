@@ -124,6 +124,13 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
         ...(props.history ? historyKeymap : []),
         // https://codemirror.net/docs/ref/#search.searchKeymap
         ...(props.search ? searchKeymap : []),
+        // Disable bindings that conflict with system shortcuts.
+        // TODO(burdon): Catalog global shortcuts.
+        {
+          key: 'Mod-Shift-k',
+          preventDefault: true,
+          run: () => true,
+        },
       ].filter(isNotFalsy),
     ),
   ].filter(isNotFalsy);

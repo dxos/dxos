@@ -202,6 +202,9 @@ export class ChatProcessor {
 
       log.info('done');
     } catch (err) {
+      // TODO(burdon): show error in UI.
+      // No error logged if _client.generate throws.
+      console.error('ERROR', err);
       log.catch(err);
     } finally {
       this._stream = undefined;
