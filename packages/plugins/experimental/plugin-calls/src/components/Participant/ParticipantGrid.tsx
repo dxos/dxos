@@ -24,7 +24,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
         return;
       }
 
-      allUsers.push(user, { isSelf: user.id === self.id });
+      allUsers.push({ ...user, isSelf: user.id === self.id });
       if (user.tracks?.screenshareEnabled) {
         const screenshare: UserState = {
           ...user,
