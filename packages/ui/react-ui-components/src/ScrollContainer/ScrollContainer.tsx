@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export interface ScrollController {
@@ -82,10 +82,12 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     }, []);
 
     // Detect scroll to end.
+    const [, forceUpdate] = useState({});
     useEffect(() => {
       invariant(containerRef.current);
       const handleScrollEnd = () => {
         autoScrollRef.current = false;
+        forceUpdate({});
       };
 
       containerRef.current.addEventListener('scrollend', handleScrollEnd);
@@ -103,20 +105,25 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       setSticky(sticky);
     }, []);
 
-    // TOOD(burdon): Wrap with ScrollArea.
     return (
-      <div className={mx('relative flex flex-col grow overflow-x-hidden', classNames)}>
+      <div className='relative flex flex-col grow overflow-hidden'>
         {fadeClassNames && containerRef.current && containerRef.current.scrollTop > 0 && (
           <div
             className={mx(
-              'z-10 absolute top-0 left-0 right-0 pointer-events-none bg-gradient-to-b to-transparent',
+              'z-10 absolute top-0 left-0 right-0 pointer-events-none',
+              'bg-gradient-to-b to-transparent',
               fadeClassNames,
             )}
           />
         )}
-        <div ref={containerRef} onScroll={handleScroll} className='overflow-y-auto scrollbar-none contain-layout'>
-          <div>{children}</div>
-        </div>
+        <ScrollArea.Root classNames={mx('grow', classNames)}>
+          <ScrollArea.Viewport ref={containerRef} onScroll={handleScroll}>
+            {children}
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation='vertical'>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
       </div>
     );
   },
