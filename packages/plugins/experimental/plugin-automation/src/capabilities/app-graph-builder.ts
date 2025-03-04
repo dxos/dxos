@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, type Node, ROOT_ID, toSignal } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space, Filter, getSpace, getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
@@ -233,6 +234,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
   }
 
   const { data } = await dispatch(createIntent(AutomationAction.CreateChat, { spaceId: space.id }));
-  invariant(data?.object);
-  return space.db.add(data.object as AIChatType);
+  invariant(data?.object instanceof AIChatType);
+  await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
+  return data.object;
 };

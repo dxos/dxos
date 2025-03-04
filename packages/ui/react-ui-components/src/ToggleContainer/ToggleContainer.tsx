@@ -12,6 +12,7 @@ export type ToggleContainerProps = ThemedClassName<
     title?: string | JSX.Element;
     icon?: JSX.Element;
     open?: boolean;
+    defaultOpen?: boolean;
     duration?: number;
     /** Should shrink the width when closed. */
     shrinkX?: boolean;
@@ -24,12 +25,13 @@ export const ToggleContainer = ({
   title,
   icon,
   open: _open,
+  defaultOpen,
   duration = 400,
   shrinkX = false,
   children,
   onChangeOpen,
 }: ToggleContainerProps) => {
-  const [open, setOpen] = useControlledState(_open);
+  const [open, setOpen] = useControlledState(_open ?? defaultOpen);
   const [expandX, setExpandX] = useState(shrinkX ? open : true);
   const [expandY, setExpandY] = useState(open);
 
