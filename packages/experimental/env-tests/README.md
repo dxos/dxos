@@ -1,3 +1,2 @@
-# @dxos/artifact-testing
+# @dxos/env-tests
 
-Artifacts testing utilities.
