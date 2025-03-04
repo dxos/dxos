@@ -110,8 +110,12 @@ export const useUserMedia = (): UserMedia => {
     let ms: MediaStream | undefined;
     scheduleTask(ctx, async () => {
       if (state.screenshareEnabled) {
-        ms = await getScreenshare({ contentHint: 'text' });
-        state.screenshareVideoTrack = ms?.getVideoTracks()[0];
+        try {
+          ms = await getScreenshare({ contentHint: 'text' });
+          state.screenshareVideoTrack = ms?.getVideoTracks()[0];
+        } catch {
+          state.screenshareEnabled = false;
+        }
       } else {
         state.screenshareVideoTrack = undefined;
       }

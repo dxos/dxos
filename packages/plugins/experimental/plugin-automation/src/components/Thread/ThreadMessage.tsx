@@ -90,6 +90,7 @@ const components: Record<string, BlockComponent> = {
       return <MarkdownViewer content={block.text} />;
     }
 
+    // TOOD(burdon): Store last time user opened/closed COT.
     // Autoclose when streaming ends.
     // useEffect(() => {
     //   if (block.disposition === 'cot' && !block.pending) {

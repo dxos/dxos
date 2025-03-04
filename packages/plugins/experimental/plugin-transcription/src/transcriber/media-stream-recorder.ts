@@ -54,10 +54,9 @@ export class MediaStreamRecorder implements AudioRecorder {
   }
 
   async start() {
-    if (!initializingPromise) {
-      initializingPromise = initializeExtendableMediaRecorder();
-    }
-    await initializingPromise;
+    await (initializingPromise ??= initializeExtendableMediaRecorder()).catch((err) =>
+      log.info('initializeExtendableMediaRecorder', { err }),
+    );
 
     if (!this._mediaRecorder) {
       const stream = new MediaStream([this._mediaStreamTrack]);
