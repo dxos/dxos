@@ -14,6 +14,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { VideoObject } from './VideoObject';
 import { useUserMedia } from '../../hooks';
+import { ResponsiveContainer } from '../ResponsiveGrid';
 
 const meta: Meta<typeof VideoObject> = {
   title: 'plugins/plugin-calls/VideoObject',
@@ -25,7 +26,11 @@ const meta: Meta<typeof VideoObject> = {
       media.turnCameraOn();
     }, []);
 
-    return <VideoObject videoTrack={media.state.videoTrack} {...args} />;
+    return (
+      <ResponsiveContainer>
+        <VideoObject videoTrack={media.state.videoTrack} {...args} />;
+      </ResponsiveContainer>
+    );
   },
   decorators: [
     withTheme,

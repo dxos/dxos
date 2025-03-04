@@ -19,7 +19,7 @@ export type ThreadProps = ThemedClassName<{
   messages?: Message[];
   collapse?: boolean;
 }> &
-  Pick<PromptBarProps, 'processing' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
+  Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
   Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
 
 /**
@@ -30,6 +30,7 @@ export const Thread = ({
   messages,
   collapse = true,
   processing,
+  error,
   debug,
   onSubmit,
   onCancel,
@@ -61,23 +62,31 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <div role='list' className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <ScrollContainer ref={scroller} classNames={mx(filteredMessages.length > 0 && 'pbs-2 pbe-6')}>
-        {filteredMessages.map((message) => (
-          <ThreadMessage
-            key={message.id}
-            classNames='px-4 pbe-4'
-            message={message}
-            debug={debug}
-            onPrompt={onPrompt}
-            onDelete={onDelete}
-          />
-        ))}
+    <>
+      <ScrollContainer ref={scroller}>
+        <div role='none' className={mx(filteredMessages.length > 0 && 'pbs-2 pbe-6')}>
+          {filteredMessages.map((message) => (
+            <ThreadMessage
+              key={message.id}
+              classNames='px-4 pbe-4'
+              message={message}
+              debug={debug}
+              onPrompt={onPrompt}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
       </ScrollContainer>
 
       {onSubmit && (
-        <PromptBar microphone={hasTrascription} processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />
+        <PromptBar
+          microphone={hasTrascription}
+          processing={processing}
+          error={error}
+          onSubmit={handleSubmit}
+          onCancel={onCancel}
+        />
       )}
-    </div>
+    </>
   );
 };
