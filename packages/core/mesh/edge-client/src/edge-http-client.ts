@@ -49,6 +49,10 @@ export class EdgeHttpClient {
     log('created', { url: this._baseUrl });
   }
 
+  get baseUrl() {
+    return this._baseUrl;
+  }
+
   setIdentity(identity: EdgeIdentity) {
     if (this._edgeIdentity?.identityKey !== identity.identityKey || this._edgeIdentity?.peerKey !== identity.peerKey) {
       this._edgeIdentity = identity;

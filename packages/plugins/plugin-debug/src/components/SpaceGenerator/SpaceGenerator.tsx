@@ -28,7 +28,13 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType, Testing.EmailType];
+  const mutableTypes = [
+    Testing.OrgType,
+    Testing.ProjectType,
+    Testing.ContactType,
+    Testing.EmailType,
+    Testing.MessageType,
+  ];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
