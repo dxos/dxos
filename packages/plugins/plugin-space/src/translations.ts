@@ -14,6 +14,7 @@ export default [
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',
         'first run message': 'Nothing selected.',
+        'add space label': 'Create or join a space',
         'create space label': 'Create space',
         'join space label': 'Join space',
         'empty space message': 'No documents',
