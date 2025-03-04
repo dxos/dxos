@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC, useState, useEffect } from 'react';
+import React, { type PropsWithChildren, type FC, useState } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
@@ -76,11 +76,11 @@ const components: Record<string, BlockComponent> = {
     }
 
     // Autoclose when streaming ends.
-    useEffect(() => {
-      if (block.disposition === 'cot' && !block.pending) {
-        setOpen(false);
-      }
-    }, [block.disposition, block.pending]);
+    // useEffect(() => {
+    //   if (block.disposition === 'cot' && !block.pending) {
+    //     setOpen(false);
+    //   }
+    // }, [block.disposition, block.pending]);
 
     return (
       <ToggleContainer

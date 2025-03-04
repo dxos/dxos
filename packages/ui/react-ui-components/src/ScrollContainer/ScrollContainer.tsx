@@ -21,14 +21,14 @@ export interface ScrollController {
   scrollToBottom: () => void;
 }
 
-export type ScrollContainerProps = ThemedClassName<PropsWithChildren>;
+export type ScrollContainerProps = ThemedClassName<PropsWithChildren<{ fadeClassNames?: string }>>;
 
 /**
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
 // TODO(burdon): Custom scrollbar.
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
-  ({ children, classNames }, forwardedRef) => {
+  ({ children, classNames, fadeClassNames }, forwardedRef) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Determines if user scrolled.
@@ -83,12 +83,18 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
 
     // TOOD(burdon): Wrap with ScrollArea.
     return (
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className={mx('flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-none contain-layout', classNames)}
-      >
-        {children}
+      <div className={mx('relative flex flex-col grow overflow-x-hidden', classNames)}>
+        {fadeClassNames && (
+          <div
+            className={mx(
+              'z-10 absolute top-0 left-0 right-0 pointer-events-none bg-gradient-to-b to-transparent',
+              fadeClassNames,
+            )}
+          />
+        )}
+        <div ref={containerRef} onScroll={handleScroll} className='overflow-y-auto scrollbar-none contain-layout'>
+          <div>{children}</div>
+        </div>
       </div>
     );
   },
