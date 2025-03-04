@@ -12,7 +12,12 @@ import { trace } from '@dxos/tracing';
 
 import { type WavConfig, type AudioChunk, type AudioRecorder } from './audio-recorder';
 
-let wavEncoderInitialized = false;
+let initializingPromise: Promise<void> | undefined;
+
+const initializeExtendableMediaRecorder = async () => {
+  const { connect } = await import('extendable-media-recorder-wav-encoder');
+  await register(await connect());
+};
 
 /**
  * Recorder that uses the MediaContext API and AudioNode API to record audio.
@@ -49,11 +54,10 @@ export class MediaStreamRecorder implements AudioRecorder {
   }
 
   async start() {
-    if (!wavEncoderInitialized) {
-      wavEncoderInitialized = true;
-      const { connect } = await import('extendable-media-recorder-wav-encoder');
-      await register(await connect());
+    if (!initializingPromise) {
+      initializingPromise = initializeExtendableMediaRecorder();
     }
+    await initializingPromise;
 
     if (!this._mediaRecorder) {
       const stream = new MediaStream([this._mediaStreamTrack]);
