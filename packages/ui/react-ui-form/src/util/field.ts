@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, GeoLocation, TypeEnum } from '@dxos/echo-schema';
 import { type ValidationError } from '@dxos/schema';
 
 /**
@@ -79,6 +79,24 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
     case FormatEnum.Timestamp: {
       const date = new Date(value as string | number);
       return isNaN(date.getTime()) ? null : date;
+    }
+
+    case FormatEnum.LatLong: {
+      // Parse string in format "lat,long" to GeoPoint [longitude, latitude].
+      if (typeof value === 'string') {
+        // Only keep digits, decimal points, minus signs, and commas.
+        const cleaned = value.replace(/[^0-9.,-]+/g, '');
+        const parts = cleaned.split(',');
+        if (parts.length === 2) {
+          const lat = parseFloat(parts[0]);
+          const long = parseFloat(parts[1]);
+          if (!isNaN(lat) && !isNaN(long)) {
+            return GeoLocation.toGeoPoint({ latitude: lat, longitude: long });
+          }
+        }
+      }
+
+      return [0, 0];
     }
 
     default: {

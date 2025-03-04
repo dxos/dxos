@@ -29,9 +29,57 @@ export const GeoPoint = S.Tuple(
     [AST.TitleAnnotationId]: 'Height ASL (m)',
   }),
 ).annotations({
-  [FormatAnnotationId]: FormatEnum.LatLng,
+  [FormatAnnotationId]: FormatEnum.LatLong,
   [AST.TitleAnnotationId]: 'GeoPoint',
   [AST.DescriptionAnnotationId]: 'GeoJSON Position',
 });
 
 export type GeoPoint = S.Schema.Type<typeof GeoPoint>;
+
+export type GeoLocation = {
+  latitude: number;
+  longitude: number;
+  height?: number;
+};
+
+/**
+ * Geolocation utilities for working with GeoPoint format.
+ */
+export namespace GeoLocation {
+  /**
+   * Convert latitude and longitude to GeoPoint (GeoJSON format [longitude, latitude, height?]).
+   */
+  export const toGeoPoint = ({
+    latitude,
+    longitude,
+    height,
+  }: {
+    latitude: number;
+    longitude: number;
+    height?: number;
+  }): GeoPoint => {
+    return height !== undefined ? [longitude, latitude, height] : [longitude, latitude];
+  };
+
+  /**
+   * Extract latitude and longitude from GeoPoint (GeoJSON format [longitude, latitude, height?]).
+   */
+  export const fromGeoPoint = (
+    geoPoint: GeoPoint | undefined,
+  ): { latitude: number; longitude: number; height?: number } => {
+    if (!geoPoint) {
+      return { latitude: 0, longitude: 0 };
+    }
+    const result: GeoLocation = {
+      longitude: geoPoint[0],
+      latitude: geoPoint[1],
+    };
+
+    // Add height if defined.
+    if (geoPoint[2] !== undefined) {
+      result.height = geoPoint[2];
+    }
+
+    return result;
+  };
+}

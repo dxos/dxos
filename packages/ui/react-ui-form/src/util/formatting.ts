@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, GeoLocation, TypeEnum } from '@dxos/echo-schema';
 
 type ValueFormatProps = {
   type: TypeEnum;
@@ -73,6 +73,20 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
         return date.toLocaleTimeString(locale);
       }
     }
+    case FormatEnum.LatLong: {
+      // Handle null or undefined
+      if (value === null || value === undefined) {
+        return '';
+      }
+
+      // For GeoPoint format [longitude, latitude]
+      if (Array.isArray(value) && value.length >= 2 && value.every(Number.isFinite)) {
+        const { latitude, longitude } = GeoLocation.fromGeoPoint(value as [number, number]);
+        return `${latitude},${longitude}`;
+      }
+
+      return String(value);
+    }
     default: {
       if (value === null || value === 'undefined') {
         return '';
@@ -125,6 +139,21 @@ export const formatForEditing = ({ type, format, value, locale = undefined }: Va
       const date = new Date(value as number);
       return date.toISOString().split('T')[1].split('.')[0];
     }
+    case FormatEnum.LatLong: {
+      // Handle null or undefined
+      if (value === null || value === undefined) {
+        return '';
+      }
+
+      // For GeoPoint format [longitude, latitude]
+      if (Array.isArray(value) && value.length >= 2 && value.every(Number.isFinite)) {
+        const { latitude, longitude } = GeoLocation.fromGeoPoint(value as [number, number]);
+        return `${latitude},${longitude}`;
+      }
+
+      return String(value);
+    }
+
     default: {
       return String(value);
     }
