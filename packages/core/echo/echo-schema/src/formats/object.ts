@@ -1,8 +1,9 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { AST, S } from '@dxos/effect';
+import { clamp } from '@dxos/util';
 
 import { FormatAnnotationId, FormatEnum } from './types';
 
@@ -48,6 +49,7 @@ export type GeoLocation = {
 export namespace GeoLocation {
   /**
    * Convert latitude and longitude to GeoPoint (GeoJSON format [longitude, latitude, height?]).
+   * Clamps values to valid ranges: latitude [-90, 90], longitude [-180, 180].
    */
   export const toGeoPoint = ({
     latitude,
@@ -58,7 +60,10 @@ export namespace GeoLocation {
     longitude: number;
     height?: number;
   }): GeoPoint => {
-    return height !== undefined ? [longitude, latitude, height] : [longitude, latitude];
+    const clampedLatitude = clamp(latitude, -90, 90);
+    const clampedLongitude = clamp(longitude, -180, 180);
+
+    return height !== undefined ? [clampedLongitude, clampedLatitude, height] : [clampedLongitude, clampedLatitude];
   };
 
   /**
