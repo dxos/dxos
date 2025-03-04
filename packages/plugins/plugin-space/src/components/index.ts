@@ -11,6 +11,7 @@ export * from './CollectionSection';
 export * from './JoinDialog';
 export * from './MenuFooter';
 export * from './PersistenceStatus';
+export * from './PopoverAddSpace';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
 export * from './ShareSpaceButton';

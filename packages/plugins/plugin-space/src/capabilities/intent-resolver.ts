@@ -31,6 +31,7 @@ import {
   CREATE_OBJECT_DIALOG,
   type CreateObjectDialogProps,
   POPOVER_RENAME_OBJECT,
+  POPOVER_ADD_SPACE,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';
@@ -206,6 +207,22 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
               options: {
                 anchorId: `dxos.org/ui/${caller}/${space.id}`,
                 props: space,
+              },
+            }),
+          ],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.AddSpace,
+      resolve: () => {
+        return {
+          intents: [
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              subject: POPOVER_ADD_SPACE,
+              options: {
+                anchorId: SpaceAction.AddSpace._tag,
               },
             }),
           ],

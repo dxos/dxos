@@ -105,7 +105,6 @@ export default (context: PluginsContext) => {
             icon: 'ph--plus--regular',
             testId: 'spacePlugin.addSpace',
             disposition: 'item',
-            menuRoot: SpaceAction.AddSpaceMenuGroup._tag,
           },
         },
         {
