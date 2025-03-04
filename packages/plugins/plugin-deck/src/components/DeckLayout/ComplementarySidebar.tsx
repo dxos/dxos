@@ -82,7 +82,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
       >
         <div
           role='none'
-          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
+          className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
             {panels.map((panel) => (
@@ -119,7 +119,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
           <Tabs.Tabpanel
             key={panel.id}
             value={panel.id}
-            classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content]'
+            classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
             {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
           >
             {panel.id === activePanelId && node && (
@@ -148,7 +148,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                 {!hoistStatusbar && (
                   <div
                     role='contentinfo'
-                    className='flex flex-wrap justify-center items-center border-bs border-separator plb-1'
+                    className='flex flex-wrap justify-center items-center border-bs border-separator plb-1 pbe-[env(safe-area-inset-bottom)]'
                   >
                     <Surface role='status-bar--r1-footer' limit={1} />
                   </div>

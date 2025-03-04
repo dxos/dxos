@@ -27,7 +27,7 @@ const L1Panel = ({ item, path, currentItemId }: L1PanelProps) => {
       key={item.id}
       value={item.id}
       classNames={[
-        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr]',
+        'absolute inset-block-0 inline-end-0 is-[calc(100%-var(--l0-size))] lg:is-[--l1-size] grid-cols-1 grid-rows-[var(--rail-size)_1fr] pbs-[env(safe-area-inset-top)]',
         item.id === currentItemId && 'grid',
       ]}
       tabIndex={-1}
