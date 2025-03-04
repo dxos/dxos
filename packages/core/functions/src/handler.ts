@@ -29,6 +29,13 @@ export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
 }) => Promise<Response | FunctionResponse | void>;
 
 /**
+ * Helper to define a function handler.
+ */
+// TODO(wittjosiah): Need either better defaults or clear options for typing data/meta.
+//  e.g. by default currently most functions data is a request.
+export const defineFunction = <TData = {}, TMeta = {}>(handler: FunctionHandler<TData, TMeta>) => handler;
+
+/**
  * Function context.
  */
 export interface FunctionContext {
