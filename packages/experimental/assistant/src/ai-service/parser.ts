@@ -322,6 +322,14 @@ export const mergeMessageBlock = (
             }),
           };
         }
+
+        case 'tool-list': {
+          return {
+            type: 'json',
+            disposition: 'tool_list',
+            json: JSON.stringify({}),
+          };
+        }
       }
 
       break;

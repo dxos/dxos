@@ -12,8 +12,8 @@ import { ThreadContainer } from '../Thread';
 // TODO(burdon): Attention.
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   return (
-    <StackItem.Content toolbar={false} role={role}>
-      <ThreadContainer chat={chat} classNames='mli-auto w-full max-w-[50rem]' />
+    <StackItem.Content toolbar={false} role={role} classNames='mli-auto w-full max-w-[50rem]'>
+      <ThreadContainer chat={chat} />
     </StackItem.Content>
   );
 };
