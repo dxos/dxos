@@ -119,6 +119,7 @@ const summarizeTranscript = async (
     hour: '2-digit',
     minute: '2-digit',
   })}`;
+
   return create(DocumentType, {
     name,
     content: makeRef(create(TextType, { content: summary })),

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC, useState, useEffect } from 'react';
+import React, { type PropsWithChildren, type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
@@ -84,22 +84,23 @@ const components: Record<string, BlockComponent> = {
   //
   ['text' as const]: ({ block }) => {
     invariant(block.type === 'text');
-    const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
+    // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
       return <MarkdownViewer content={block.text} />;
     }
 
     // Autoclose when streaming ends.
-    useEffect(() => {
-      if (block.disposition === 'cot' && !block.pending) {
-        setOpen(false);
-      }
-    }, [block.disposition, block.pending]);
+    // useEffect(() => {
+    //   if (block.disposition === 'cot' && !block.pending) {
+    //     setOpen(false);
+    //   }
+    // }, [block.disposition, block.pending]);
 
     return (
       <ToggleContainer
-        open={open}
+        // open={open}
+        defaultOpen={block.disposition === 'cot' && block.pending}
         title={title}
         icon={
           block.pending ? (
