@@ -7,11 +7,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Stream } from '@dxos/codec-protobuf';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { CallTranscription } from '@dxos/plugin-transcription';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { CallTranscription } from './transcription';
 import { codec, type RoomState, type UserState } from '../types';
 
 // TODO(burdon): Disambiguate room and call.
@@ -52,17 +52,7 @@ export const useCallState = ({ roomId }: { roomId: PublicKey }): CallState => {
 
         const users = event.peers?.map((peer) => codec.decode(peer.state!)) ?? [];
         setRoom({ meetingId: roomId.toHex(), users });
-
-        // Note: Small CRDT for merging transcription states.
-        // TODO(burdon): Move to plugin-transcription.
-        const maxTimestamp = Math.max(...users.map((user) => user.transcription?.lamportTimestamp ?? 0));
-        const newTranscriptionState = users
-          .filter((user) => user.transcription && user.transcription.lamportTimestamp === maxTimestamp)
-          .sort((user1, user2) => user1.id.localeCompare(user2.id));
-
-        if (maxTimestamp > transcription.state.value.lamportTimestamp! && newTranscriptionState.length > 0) {
-          transcription.setState(newTranscriptionState[0].transcription || {});
-        }
+        transcription.saveNetworkState(users);
       });
 
       client.services.services

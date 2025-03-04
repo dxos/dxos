@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Participant } from './Participant';
 import { type UserState } from '../../types';
 import { ResponsiveGrid } from '../ResponsiveGrid';
+import { log } from '@dxos/log';
 
 const getId = (user: UserState): string => user.id!;
 
@@ -45,6 +46,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
 
   const [pinned, setPinned] = useState<string | undefined>();
   useEffect(() => {
+    log.info('pinned', { pinned, allUsers });
     if (pinned) {
       // Check expanded user is still in call.
       if (!allUsers.find((user) => user.id === pinned)) {
