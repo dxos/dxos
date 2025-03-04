@@ -9,8 +9,7 @@ import { type EdgeClient, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
 import { consoleLogger, noopLogger } from './logger';
-import { EventLogger, GptService, SpaceService, QueueService } from '../services';
-import { FunctionCallService } from '../services/function-call-service';
+import { EventLogger, GptService, SpaceService, QueueService, FunctionCallService } from '../services';
 import { MockGpt } from '../services/testing';
 import type { ComputeRequirements } from '../types';
 
