@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -21,14 +21,24 @@ export const PopoverAddSpace = () => {
         variant='ghost'
         label={t('join space label')}
         icon='ph--sign-in--regular'
-        onClick={() => dispatch(createIntent(SpaceAction.Join))}
+        onClick={() => {
+          void dispatch(createIntent(SpaceAction.Join));
+          void dispatch(
+            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+          );
+        }}
         data-testid='spacePlugin.joinSpace'
       />
       <IconButton
         variant='ghost'
         label={t('create space label')}
         icon='ph--plus--regular'
-        onClick={() => dispatch(createIntent(SpaceAction.OpenCreateSpace))}
+        onClick={() => {
+          void dispatch(createIntent(SpaceAction.OpenCreateSpace));
+          void dispatch(
+            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+          );
+        }}
         data-testid='spacePlugin.createSpace'
       />
     </div>
