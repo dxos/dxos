@@ -13,6 +13,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
 import { ToolBlock, isToolMessage } from './ToolInvocations';
+import { ToolboxContainer } from '../Toolbox';
 
 // TODO(burdon): Create secondary token.
 const userClassNames = 'bg-sky-200 dark:bg-sky-500';
@@ -108,7 +109,14 @@ const components: Record<string, BlockComponent> = {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
-      // TODO(burdon): Make propts optional.
+      case 'tool_list': {
+        return (
+          <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
+            <ToolboxContainer />
+          </ToggleContainer>
+        );
+      }
+
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt?.(text)} />;
@@ -155,9 +163,11 @@ const components: Record<string, BlockComponent> = {
   },
 };
 
+// TODO(burdon): Translations.
 const titles: Record<string, string> = {
   ['cot' as const]: 'Chain of thought',
   ['artifact' as const]: 'Artifact',
   ['tool_use' as const]: 'Tool request',
   ['tool_result' as const]: 'Tool result',
+  ['tool_list' as const]: 'Tools',
 };

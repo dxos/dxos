@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { useCapabilities, Capabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -31,4 +32,9 @@ export const Toolbox = ({ classNames, artifacts }: ToolboxProps) => {
       </div>
     </div>
   );
+};
+
+export const ToolboxContainer = ({ classNames }: ThemedClassName) => {
+  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+  return <Toolbox classNames={classNames} artifacts={artifactDefinitions} />;
 };
