@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, ObjectId, S, TypedObject, AST } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { Ref, ObjectId, S, TypedObject, AST, Expando } from '@dxos/echo-schema';
+// import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
 export const KanbanSchema = S.Struct({
@@ -29,7 +29,7 @@ export const KanbanSchema = S.Struct({
     ).pipe(S.mutable),
   ),
   // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
-  threads: S.optional(S.Array(Ref(ThreadType))),
+  threads: S.optional(S.Array(Ref(Expando /* ThreadType */))),
 });
 
 export const KanbanSettingsSchema = S.Struct({
