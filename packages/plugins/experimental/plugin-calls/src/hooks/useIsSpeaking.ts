@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { monitorAudioLevel } from '../utils';
+import { monitorAudioLevel } from '../util';
 
 export const useIsSpeaking = (mediaStreamTrack?: MediaStreamTrack) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -15,20 +15,23 @@ export const useIsSpeaking = (mediaStreamTrack?: MediaStreamTrack) => {
   // to track the state and then sync it using another effect.
   const isSpeakingRef = useRef(isSpeaking);
 
-  // this effect syncs the state on a 50ms interval
+  // This effect syncs the state on a 50ms interval.
   useEffect(() => {
     if (!mediaStreamTrack) {
+      setIsSpeaking(false);
       return;
     }
 
     isSpeakingRef.current = isSpeaking;
+
+    // Update reactive state with debounce.
     const interval = window.setInterval(() => {
-      // state is already in sync do nothing
+      // If state is already in sync do nothing.
       if (isSpeaking === isSpeakingRef.current) {
         return;
       }
 
-      // sync state
+      // Update reactive state with current live state.
       setIsSpeaking(isSpeakingRef.current);
     }, 50);
 
@@ -48,19 +51,18 @@ export const useIsSpeaking = (mediaStreamTrack?: MediaStreamTrack) => {
       onMeasure: (vol) => {
         // Once the user has been determined to be speaking, we want
         // to lower the threshold because speech patterns don't always
-        // kick up above 0.05
+        // kick up above 0.05.
         const audioLevelAboveThreshold = vol > (isSpeakingRef.current ? 0.02 : 0.05);
         if (audioLevelAboveThreshold) {
-          // user is still speaking, clear timeout & reset.
+          // User is still speaking, clear timeout & reset.
           clearTimeout(timeout);
           timeout = -1;
-          // track state.
+          // Live state of the media stream track.
           isSpeakingRef.current = true;
         } else if (timeout === -1) {
-          // user is not speaking and timeout is not set.
+          // User is not speaking and timeout is not set.
           timeout = window.setTimeout(() => {
             isSpeakingRef.current = false;
-            // reset timeout
             timeout = -1;
           }, 1_000);
         }

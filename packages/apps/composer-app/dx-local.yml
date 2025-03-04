@@ -6,9 +6,10 @@ runtime:
     # disableP2pReplication: true
 
   services:
-    edge:
-      url: wss://edge-main.dxos.workers.dev/
     agentHosting:
       type: LOCAL_TESTING
+    # NOTE: For local testing use the DX_EDGE_BASE_URL environment variable.
+    edge:
+      url: https://edge-main.dxos.workers.dev
     ai:
-      server: http://localhost:8788
+      server: https://ai-service.dxos.workers.dev

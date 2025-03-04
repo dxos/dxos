@@ -10,7 +10,7 @@ import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type StackContextValue, StackContext } from './StackContext';
-import { useStackDropForElements } from '../hooks/useStackDropForElements';
+import { useStackDropForElements } from '../hooks';
 
 export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';

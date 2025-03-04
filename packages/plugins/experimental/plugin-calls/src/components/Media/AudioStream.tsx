@@ -3,9 +3,11 @@
 //
 
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
-import { of } from 'rxjs';
 
-import { useCallContext, useSubscribedState } from '../../hooks';
+import { scheduleTask, sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
+
+import { useCallContext } from '../../hooks';
 
 export type AudioStreamProps = {
   tracksToPull: string[];
@@ -22,6 +24,7 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
     if (!audio) {
       return;
     }
+
     const mediaStream = mediaStreamRef.current;
     audio.srcObject = mediaStream;
   }, []);
@@ -32,6 +35,7 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
     if (!audio || !mediaStream) {
       return;
     }
+
     // Need to set srcObject again in Chrome and call play() again for Safari
     // https://www.youtube.com/live/Tkx3OGrwVk8?si=K--P_AzNnAGrjraV&t=2533
     // Calling play() this way to make Chrome happy otherwise it throws an error.
@@ -73,7 +77,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
   onTrackRemovedRef.current = onTrackRemoved;
 
   const { peer } = useCallContext();
-  const trackObject = useMemo(() => {
+  const trackData = useMemo(() => {
     const [sessionId, trackName] = track.split('/');
     return {
       sessionId,
@@ -82,23 +86,39 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
     } as const;
   }, [track]);
 
-  const pulledTrack$ = useMemo(() => {
-    return peer.pullTrack(of(trackObject));
-  }, [peer, trackObject]);
-
-  const audioTrack = useSubscribedState(pulledTrack$);
+  const audioTrack = useRef<MediaStreamTrack>();
   useEffect(() => {
-    if (!audioTrack) {
+    if (!trackData) {
       return;
     }
 
-    mediaStream.addTrack(audioTrack);
-    onTrackAddedRef.current(track, audioTrack);
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      // TODO(mykola): Add retry logic. Delete delay.
+      // Wait for the track to be available on CallsService.
+      await cancelWithContext(ctx, sleep(500));
+      const track = await peer?.pullTrack({ trackData, ctx });
+      audioTrack.current = track;
+    });
+
     return () => {
-      mediaStream.removeTrack(audioTrack);
-      onTrackRemovedRef.current(track, audioTrack);
+      void ctx.dispose();
     };
-  }, [audioTrack, mediaStream, track]);
+  }, [trackData, peer?.session]);
+
+  useEffect(() => {
+    if (!audioTrack.current) {
+      return;
+    }
+
+    const currentAudioTrack = audioTrack.current;
+    mediaStream.addTrack(currentAudioTrack);
+    onTrackAddedRef.current(track, currentAudioTrack);
+    return () => {
+      mediaStream.removeTrack(currentAudioTrack);
+      onTrackRemovedRef.current(track, currentAudioTrack);
+    };
+  }, [audioTrack.current, mediaStream, track]);
 
   return null;
 };

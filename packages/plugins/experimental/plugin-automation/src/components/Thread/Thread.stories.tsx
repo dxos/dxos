@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -18,7 +20,7 @@ import translations from '../../translations';
 faker.seed(1);
 
 const Render = ({ messages: _messages, ...props }: ThreadProps) => {
-  const [streaming, setStreaming] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [messages, setMessages] = useState<Message[]>(_messages ?? []);
   useEffect(() => {
     setMessages(_messages ?? []);
@@ -33,7 +35,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
         content: [{ type: 'text', disposition: 'cot', pending: true, text: faker.lorem.paragraphs(1) }],
       };
       setMessages([...messages, request, response]);
-      setStreaming(true);
+      setProcessing(true);
       setTimeout(() => {
         response.content[0].pending = false;
         setMessages([
@@ -46,7 +48,7 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
             content: [{ type: 'text', text: faker.lorem.paragraphs(1) }],
           },
         ]);
-        setStreaming(false);
+        setProcessing(false);
       }, 3_000);
     },
     [messages],
@@ -54,8 +56,14 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
 
   return (
     <div className='flex grow justify-center overflow-center bg-baseSurface'>
-      <div className='flex w-[500px] bg-white dark:bg-black'>
-        <Thread {...props} messages={messages} streaming={streaming} onSubmit={handleSubmit} onStop={() => {}} />
+      <div className='flex w-[30rem] bg-white dark:bg-black'>
+        <Thread
+          {...props}
+          messages={messages}
+          processing={processing}
+          onSubmit={handleSubmit}
+          onCancel={() => setProcessing(false)}
+        />
       </div>
     </div>
   );
@@ -65,7 +73,12 @@ const meta: Meta<ThreadProps> = {
   title: 'plugins/plugin-automation/Thread',
   render: Render,
   component: Thread,
-  decorators: [withSignals, withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [
+    withSignals,
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+    withPluginManager({ plugins: [IntentPlugin()] }),
+  ],
   parameters: {
     translations,
   },
@@ -166,7 +179,7 @@ export const Default: Story = {
 
 export const Input: Story = {
   args: {
-    streaming: true,
+    processing: true,
   },
 };
 

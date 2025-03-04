@@ -116,6 +116,7 @@ export class AppManager {
     name,
     timeout = 10_000,
   }: { type?: string; name?: string; timeout?: number } = {}) {
+    await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
 
@@ -132,6 +133,7 @@ export class AppManager {
   }
 
   async joinSpace() {
+    await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 

@@ -13,8 +13,8 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
-import { EmojiPickerToolbarButton, HuePickerToolbarButton } from '@dxos/react-ui-pickers';
-import { getSize } from '@dxos/react-ui-theme';
+import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
+import { errorText, getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import {
@@ -92,7 +92,7 @@ const IdentityHeading = ({
 
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
-          <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
+          <HuePicker value={hue} onChange={setHue} classNames='bs-[--rail-action]' />
           <Clipboard.IconButton
             classNames='bs-[--rail-action]'
             data-testid='update-profile-form-copy-key'
@@ -118,7 +118,7 @@ const IdentityHeading = ({
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
-                classNames={['bs-[--rail-action]', !isConnected && 'text-error-500']}
+                classNames={['bs-[--rail-action]', !isConnected && errorText]}
                 onClick={() =>
                   onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
                 }

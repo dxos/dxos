@@ -11,20 +11,20 @@ import { ResponsiveGrid } from '../ResponsiveGrid';
 const getId = (user: UserState): string => user.id!;
 
 export type ParticipantGridProps = {
-  user: UserState;
+  self: UserState;
   users: UserState[];
   debug: boolean;
 };
 
-export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridProps) => {
+export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) => {
   const allUsers = useMemo(() => {
-    const allUsers: UserState[] = [];
+    const allUsers: (UserState & { isSelf?: boolean })[] = [];
     users.forEach((user) => {
       if (!user.joined) {
         return;
       }
 
-      allUsers.push(user);
+      allUsers.push(user, { isSelf: user.id === self.id });
       if (user.tracks?.screenshareEnabled) {
         const screenshare: UserState = {
           ...user,
@@ -41,7 +41,7 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
     });
 
     return allUsers;
-  }, [self, users]) as UserState[];
+  }, [self, users]);
 
   const [pinned, setPinned] = useState<string | undefined>();
   useEffect(() => {
@@ -53,15 +53,13 @@ export const ParticipantGrid = ({ user: self, users, debug }: ParticipantGridPro
     }
   }, [pinned, allUsers]);
 
-  // TODO(burdon): Auto expand if screenshare is enabled.
-  // TODO(burdon): Auto expand when second user joins call?
+  // TODO(burdon): Show ghost view of user for a second before leaving.
 
-  // Filter out currently expanded and sort screenshare first.
   // TODO(burdon): Put self last.
   const sortedUsers: UserState[] = allUsers.sort((a, b) => {
-    if (a.self) {
+    if (a.isSelf) {
       return 1;
-    } else if (b.self) {
+    } else if (b.isSelf) {
       return -1;
     } else if (a.tracks?.screenshareEnabled) {
       return -1;

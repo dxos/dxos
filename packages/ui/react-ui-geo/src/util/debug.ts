@@ -12,5 +12,6 @@ export const timer = <T = void>(cb: () => T): T => {
     // eslint-disable-next-line no-console
     console.log({ t, data });
   }
+
   return data;
 };

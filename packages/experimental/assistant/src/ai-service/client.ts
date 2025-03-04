@@ -7,6 +7,7 @@ import { Schema as S } from '@effect/schema';
 import { Message, type Space, type Thread } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { createGenerationStream, type GenerationStream } from './stream';
 import { type GenerateRequest } from './types';
@@ -74,6 +75,13 @@ export class AIServiceClientImpl implements AIServiceClient {
    * Open message stream.
    */
   async generate(request: GenerateRequest): Promise<GenerationStream> {
+    // TODO(dmaretskyi): Errors if tools are not provided.
+    request = {
+      tools: request.tools ?? [],
+      ...request,
+    };
+
+    log.info('requesting', { endpoint: this._endpoint });
     const controller = new AbortController();
     const response = await fetch(`${this._endpoint}/generate`, {
       signal: controller.signal,

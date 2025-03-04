@@ -534,6 +534,16 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-transcription/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/experimental/plugin-transformer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },

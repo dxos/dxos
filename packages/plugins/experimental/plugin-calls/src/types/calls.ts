@@ -7,14 +7,11 @@ import {
   UserStateSchema,
   type RoomStateSchema,
   type UserState as UserStateProto,
-  type TranscriptionSchema,
 } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
 
 export type RoomState = buf.MessageInitShape<typeof RoomStateSchema>;
-
-export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
 
 export const codec = {
   encode: (message: UserState): Uint8Array => {
@@ -40,6 +37,11 @@ export type TrackObject = {
 export interface ErrorResponse {
   errorCode?: string;
   errorDescription?: string;
+}
+
+export interface SessionResponse extends ErrorResponse {
+  sessionId: string;
+  sessionDescription: SessionDescription;
 }
 
 export interface TracksResponse extends ErrorResponse {

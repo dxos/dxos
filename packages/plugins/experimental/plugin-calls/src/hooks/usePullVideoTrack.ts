@@ -2,18 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useMemo } from 'react';
-import { of, switchMap } from 'rxjs';
+import { useEffect, useMemo, useState } from 'react';
+
+import { scheduleTask, sleep } from '@dxos/async';
+import { cancelWithContext, Context } from '@dxos/context';
 
 import { useCallContext } from './useCallContext';
-import { useSubscribedState, useStateObservable } from './utils';
 import { type TrackObject } from '../types';
 
 export const usePulledVideoTrack = (video: string | undefined) => {
   const { peer } = useCallContext();
 
   const [sessionId, trackName] = video?.split('/') ?? [];
-  const trackObject = useMemo(
+  const trackData = useMemo(
     () =>
       sessionId && trackName
         ? ({
@@ -25,11 +26,25 @@ export const usePulledVideoTrack = (video: string | undefined) => {
     [sessionId, trackName],
   );
 
-  const trackObject$ = useStateObservable(trackObject);
-  const pulledTrack$ = useMemo(
-    () => trackObject$.pipe(switchMap((track) => (track ? peer.pullTrack(of(track)) : of(undefined)))),
-    [peer, trackObject$],
-  );
+  const [pulledTrack, setPulledTrack] = useState<MediaStreamTrack>();
+  useEffect(() => {
+    if (!trackData || !peer) {
+      return;
+    }
 
-  return useSubscribedState(pulledTrack$);
+    const ctx = new Context();
+    scheduleTask(ctx, async () => {
+      // TODO(mykola): Add retry logic. Delete delay.
+      // Wait for the track to be available on CallsService.
+      await cancelWithContext(ctx, sleep(500));
+      const track = await peer.pullTrack({ trackData, ctx });
+      setPulledTrack(track);
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }, [trackData, peer?.session]);
+
+  return pulledTrack;
 };

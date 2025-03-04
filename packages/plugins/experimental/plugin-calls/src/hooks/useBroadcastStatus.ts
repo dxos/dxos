@@ -5,21 +5,21 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
+import { type TranscriptionState } from '@dxos/plugin-transcription/types';
 import { buf } from '@dxos/protocols/buf';
 import { TracksSchema, TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 import { type CallContextType } from './useCallContext';
 import { type UserMedia } from './useUserMedia';
-import { useSubscribedState } from './utils';
-import { type TranscriptionState, type UserState } from '../types';
-import { type RxjsPeer } from '../utils';
+import { type UserState } from '../types';
+import { type CallsServicePeer } from '../util';
 
 type UseBroadcastStatus = {
   transcription: TranscriptionState;
-  peer: RxjsPeer;
+  peer?: CallsServicePeer;
   userMedia: UserMedia;
   pushedTracks: CallContextType['pushedTracks'];
-  user?: UserState;
+  self?: UserState;
   raisedHand?: boolean;
   speaking?: boolean;
   onUpdateUserState: (state: UserState) => void;
@@ -30,22 +30,23 @@ export const useBroadcastStatus = ({
   peer,
   userMedia,
   pushedTracks,
-  user,
+  self,
   raisedHand,
   speaking,
   onUpdateUserState,
 }: UseBroadcastStatus): void => {
-  const { audioEnabled, videoEnabled, screenshareEnabled } = userMedia;
+  const { audioEnabled, videoEnabled, screenshareEnabled } = userMedia.state;
   const { audio, video, screenshare } = pushedTracks;
-  const { sessionId } = useSubscribedState(peer.session$) ?? {};
+  const sessionId = peer?.session?.sessionId;
   useEffect(() => {
-    if (!user) {
+    // Note: It is important to check for self.id to ensure that we join with id, and id should be stable.
+    if (!self?.id) {
       return;
     }
 
     const state: UserState = {
-      id: user.id,
-      name: user.name,
+      id: self.id,
+      name: self.name,
       joined: true,
       raisedHand,
       speaking,
@@ -63,9 +64,9 @@ export const useBroadcastStatus = ({
 
     onUpdateUserState(state);
   }, [
-    user?.id,
-    user?.name,
-    user?.joined,
+    self?.id,
+    self?.name,
+    self?.joined,
     sessionId,
     audio,
     video,
@@ -79,13 +80,13 @@ export const useBroadcastStatus = ({
   ]);
 
   useUnmount(() => {
-    if (!user) {
+    if (!self?.id) {
       return;
     }
 
     onUpdateUserState({
-      id: user.id,
-      name: user.name,
+      id: self.id,
+      name: self.name,
       joined: false,
       raisedHand: false,
       speaking: false,

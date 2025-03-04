@@ -9,7 +9,7 @@ import { Reference } from '@dxos/echo-protocol';
 import { RuntimeSchemaRegistry, type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId, DXN } from '@dxos/keys';
 import type { RefResolver } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -152,6 +152,10 @@ export class Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn, load, onLoad) => {
+        if (dxn.kind !== DXN.kind.ECHO) {
+          throw new Error('Unsupported DXN kind');
+        }
+
         const ref = Reference.fromDXN(dxn);
         const res = this._lookupRef(hostDb, ref, onLoad ?? (() => {}));
 
@@ -162,6 +166,10 @@ export class Hypergraph {
         }
       },
       resolve: async (dxn) => {
+        if (dxn.kind !== DXN.kind.ECHO) {
+          throw new Error('Unsupported DXN kind');
+        }
+
         if (!dxn.isLocalObjectId()) {
           throw new Error('Cross-space references are not supported');
         }

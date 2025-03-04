@@ -2,13 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginsContext } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  LayoutAction,
+  type PromiseIntentDispatcher,
+  type PluginsContext,
+} from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, type Node, ROOT_ID, toSignal } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
-import { getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
+import { type Space, Filter, getSpace, getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
 
-import { AMBIENT_CHAT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
+import { ASSISTANT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
+import { AIChatType, AutomationAction } from '../types';
 
 export default (context: PluginsContext) => {
   const resolve = (typename: string) =>
@@ -16,26 +26,54 @@ export default (context: PluginsContext) => {
 
   return contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${AUTOMATION_PLUGIN}/ambient-chat`,
+      id: `${AUTOMATION_PLUGIN}/assistant`,
       filter: (node): node is Node<null> => node.id === ROOT_ID,
       actions: () => [
         {
-          id: `${LayoutAction.UpdateDialog._tag}/ambient-chat/open`,
+          id: `${LayoutAction.UpdateDialog._tag}/assistant/open`,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            const client = context.requestCapability(ClientCapabilities.Client);
+            const layout = context.requestCapability(Capabilities.Layout);
+            const { graph } = context.requestCapability(Capabilities.AppGraph);
+
+            // TODO(burdon): Get space from workspace.
+            // TODO(burdon): If need to create chat, then add to dispatch stack below.
+            let chat: AIChatType | undefined;
+            if (layout.active.length > 0) {
+              const node = graph.findNode(layout.active[0]);
+              if (node) {
+                const space = getSpace(node.data);
+                if (space) {
+                  chat = await getOrCreateChat(dispatch, space);
+                }
+              }
+            } else {
+              const space = client.spaces.default;
+              chat = await getOrCreateChat(dispatch, space);
+            }
+
+            if (!chat) {
+              log.warn('no chat found');
+              return;
+            }
+
             await dispatch(
               createIntent(LayoutAction.UpdateDialog, {
                 part: 'dialog',
-                subject: AMBIENT_CHAT_DIALOG,
+                subject: ASSISTANT_DIALOG,
                 options: {
                   state: true,
                   blockAlign: 'end',
+                  props: {
+                    chat,
+                  },
                 },
               }),
             );
           },
           properties: {
-            label: ['open ambient chat label', { ns: AUTOMATION_PLUGIN }],
+            label: ['open assistant label', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--chat-centered-text--regular',
             disposition: 'pin-end',
             keyBinding: {
@@ -184,4 +222,17 @@ export default (context: PluginsContext) => {
       },
     }),
   ]);
+};
+
+// TODO(burdon): Factor out.
+const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
+  const { objects } = await space.db.query(Filter.schema(AIChatType)).run();
+  if (objects.length > 0) {
+    // TODO(burdon): Is this the most recent?
+    return objects[objects.length - 1];
+  }
+
+  const { data } = await dispatch(createIntent(AutomationAction.CreateChat, { spaceId: space.id }));
+  invariant(data?.object);
+  return space.db.add(data.object as AIChatType);
 };

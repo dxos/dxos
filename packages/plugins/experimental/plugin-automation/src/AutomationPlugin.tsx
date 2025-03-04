@@ -6,7 +6,7 @@ import { Capabilities, contributes, createIntent, defineModule, definePlugin, Ev
 import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { RefArray } from '@dxos/react-client/echo';
+import { RefArray, type Space } from '@dxos/react-client/echo';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
@@ -37,7 +37,8 @@ export const AutomationPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(AutomationAction.Create, props),
+            createObject: (props: { name?: string }, options: { space: Space }) =>
+              createIntent(AutomationAction.CreateChat, { ...props, spaceId: options.space.id }),
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },

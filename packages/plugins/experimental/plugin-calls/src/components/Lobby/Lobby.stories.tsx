@@ -23,7 +23,7 @@ const meta: Meta<typeof Lobby> = {
     const roomId = useMemo(() => PublicKey.random(), []);
     return (
       <CallContextProvider roomId={roomId}>
-        <div className='flex w-[400px] h-full overflow-hidden'>
+        <div className='flex w-[30rem] h-full overflow-hidden'>
           <Lobby />
         </div>
       </CallContextProvider>

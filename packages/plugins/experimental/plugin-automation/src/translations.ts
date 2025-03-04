@@ -12,6 +12,7 @@ export default [
         'typename label': 'AI Chat',
       },
       [AUTOMATION_PLUGIN]: {
+        'open ambient chat label': 'Open AI chat',
         'plugin name': 'Automation',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
@@ -24,6 +25,9 @@ export default [
         'open automation panel label': 'Show Automations',
         'automation panel label': 'Automations',
         'service registry label': 'Service Registry',
+
+        'assistant dialog title': 'Assistant',
+        'open assistant label': 'Open assistant',
 
         'chat input placeholder': 'Ask a question...',
         'chat stop': 'Cancel request.',
@@ -53,6 +57,10 @@ export default [
         'trigger meta add': 'Add',
         'trigger meta remove': 'Remove',
         'trigger meta prop name placeholder': 'New meta property name',
+
+        'prompt placeholder': 'Ask a question...',
+        'microphone button': 'Click to speak',
+        'cancel processing button': 'Stop processing',
       },
     },
   },

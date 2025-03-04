@@ -118,6 +118,8 @@ export const os = {
   'select emoji label': 'Avatar emoji',
   'select hue label': 'Avatar background color',
   'resetting message': 'One moment while the device is reset…',
+
+  // TODO(burdon): Factor out.
   'red label': 'Red',
   'orange label': 'Orange',
   'amber label': 'Amber',
@@ -135,8 +137,10 @@ export const os = {
   'fuchsia label': 'Fuchsia',
   'pink label': 'Pink',
   'rose label': 'Rose',
-  'select a hue label': 'Select a hue',
+
+  'select a hue label': 'Select color',
   'hue label': 'Hue',
+  'icon label': 'Icon',
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',

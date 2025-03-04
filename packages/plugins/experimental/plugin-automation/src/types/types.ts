@@ -10,8 +10,9 @@ import { AUTOMATION_PLUGIN } from '../meta';
 export namespace AutomationAction {
   const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${AUTOMATION_ACTION}/create`, {
+  export class CreateChat extends S.TaggedClass<CreateChat>()(`${AUTOMATION_ACTION}/create-chat`, {
     input: S.Struct({
+      spaceId: S.optional(S.String),
       name: S.optional(S.String),
     }),
     output: S.Struct({

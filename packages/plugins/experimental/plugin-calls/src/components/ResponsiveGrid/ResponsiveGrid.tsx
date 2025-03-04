@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, useMemo, type ComponentType } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useMemo, type ComponentType, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
@@ -13,6 +13,7 @@ import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
 const MIN_HEIGHT_REM = 15;
 const DEFAULT_HEIGHT_REM = 30;
+
 /**
  * Props for the ResponsiveGrid component.
  */
@@ -76,7 +77,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
   // Absolutely positioned items.
   const [bounds, setBounds] = useState<[T, DOMRectBounds][]>([]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!gridContainerRef.current) {
       return;
     }
@@ -84,16 +85,37 @@ export const ResponsiveGrid = <T extends object = any>({
     // TODO(burdon): Consider directly setting bounds instead of state update.
     const t = setTimeout(() => {
       setBounds(
-        items.map((item) => {
-          invariant(containerRef.current);
-          const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
-          const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
-          return [item, bounds];
-        }),
+        items
+          .map((item) => {
+            invariant(containerRef.current);
+            const el = containerRef.current.querySelector(`[data-grid-item="${getId(item)}"]`);
+            if (!el) {
+              return null;
+            }
+            const bounds = getRelativeBounds(containerRef.current, el as HTMLElement);
+            return [item, bounds];
+          })
+          .filter((item): item is [T, DOMRectBounds] => item !== null),
       );
-    }, 100); // Wait until layout has been updated.
+    });
     return () => clearTimeout(t);
   }, [mainItems, width, height]);
+
+  const handleClick = useCallback(
+    (item: T) => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item)),
+    [pinned, onPinnedChange],
+  );
+
+  const SoloItem = ({ item }: { item: T }) => {
+    return (
+      <ResponsiveContainer>
+        <div {...{ 'data-grid-item': getId(item) }} className='aspect-video overflow-hidden'>
+          {/* Placeholder image. */}
+          <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
+        </div>
+      </ResponsiveContainer>
+    );
+  };
 
   return (
     <div ref={containerRef} className='relative flex flex-col w-full h-full overflow-hidden'>
@@ -102,19 +124,14 @@ export const ResponsiveGrid = <T extends object = any>({
           {/* Pinned item. */}
           <div
             {...resizeAttributes}
-            className='relative flex w-full overflow-hidden border-be border-separator'
+            className='relative flex shrink-0 w-full overflow-hidden border-be border-separator'
             style={{
               ...sizeStyle(dividerHeight, 'vertical'),
               paddingTop: gap,
               paddingBottom: gap,
             }}
           >
-            <ResponsiveContainer>
-              <div {...{ 'data-grid-item': getId(pinnedItem) }} className='aspect-video overflow-hidden'>
-                {/* Placeholder image. */}
-                <img className='opacity-0 w-[1280px] h-[720px]' alt='placeholder video' />
-              </div>
-            </ResponsiveContainer>
+            <SoloItem item={pinnedItem} />
 
             <ResizeHandle
               side='block-end'
@@ -133,13 +150,14 @@ export const ResponsiveGrid = <T extends object = any>({
       {/* Placeholder grid. */}
       <div
         ref={gridContainerRef}
-        className='flex w-full grow overflow-hidden items-center justify-center'
+        className='flex w-full grow overflow-hidden items-center'
         style={{
           paddingTop: gap,
           paddingBottom: gap,
         }}
       >
-        {columns > 0 && (
+        {mainItems.length === 1 && <SoloItem item={mainItems[0]} />}
+        {mainItems.length > 1 && columns > 0 && (
           <div
             role='grid'
             style={{
@@ -149,7 +167,11 @@ export const ResponsiveGrid = <T extends object = any>({
             }}
           >
             {mainItems.map((item) => (
-              <div key={getId(item)} {...{ 'data-grid-item': getId(item) }} className='aspect-video' />
+              <div
+                key={getId(item)}
+                {...{ 'data-grid-item': getId(item) }}
+                className='aspect-video max-h-full max-w-full w-auto h-auto'
+              />
             ))}
           </div>
         )}
@@ -160,11 +182,11 @@ export const ResponsiveGrid = <T extends object = any>({
         {bounds.map(([item, bounds]) => (
           <Cell
             key={getId(item)}
-            pinned={getId(item) === pinned}
+            classNames='absolute transition-all duration-500'
             item={item}
             style={bounds}
-            classNames='absolute transition-all duration-500'
-            onClick={() => onPinnedChange?.(getId(item) === pinned ? undefined : getId(item))}
+            pinned={getId(item) === pinned}
+            onClick={items.length > 1 ? handleClick : undefined}
           />
         ))}
       </div>

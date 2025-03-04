@@ -21,7 +21,7 @@ import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadSettings, ThreadState } from './capabilities';
 import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
-import { ThreadAction, type ThreadSettingsProps } from './types';
+import { ThreadAction } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -97,16 +97,8 @@ export const ThreadPlugin = () =>
       activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
       activate: (context: PluginsContext) => {
         const client = context.requestCapability(ClientCapabilities.Client);
-        const settings = context
-          .requestCapability(Capabilities.SettingsStore)
-          .getStore<ThreadSettingsProps>(THREAD_PLUGIN)!.value;
-        if (settings.standalone) {
-          // TODO(wittjosiah): Requires reload to disable.
-          client.addTypes([ChannelType]);
-          return contributes(ClientCapabilities.Schema, [ChannelType]);
-        }
-
-        return [];
+        client.addTypes([ChannelType]);
+        return contributes(ClientCapabilities.Schema, [ChannelType]);
       },
     }),
     defineModule({

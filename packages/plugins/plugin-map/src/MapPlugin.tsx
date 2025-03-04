@@ -4,11 +4,12 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { type Space } from '@dxos/react-client/echo';
 
 import { AppGraphBuilder, MapState, IntentResolver, ReactSurface, Artifact } from './capabilities';
 import { MAP_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { MapType, MapAction } from './types';
+import { MapType, MapAction, type CreateMapType, CreateMapSchema } from './types';
 
 export const MapPlugin = () =>
   definePlugin(meta, [
@@ -29,7 +30,9 @@ export const MapPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MapType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(MapAction.Create, props),
+            creationSchema: CreateMapSchema,
+            createObject: (props: CreateMapType, options: { space: Space }) =>
+              createIntent(MapAction.Create, { ...props, space: options.space }),
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: 'ph--compass--regular',
           },

@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const AUTOMATION_PLUGIN = 'dxos.org/plugin/automation';
 
-export const AMBIENT_CHAT_DIALOG = `${AUTOMATION_PLUGIN}/ambient-chat/dialog`;
+export const ASSISTANT_DIALOG = `${AUTOMATION_PLUGIN}/assistant/dialog`;
 
 export const meta = {
   id: AUTOMATION_PLUGIN,

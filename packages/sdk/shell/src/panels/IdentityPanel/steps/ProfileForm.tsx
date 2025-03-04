@@ -8,7 +8,7 @@ import { type Event, type SingleOrArray } from 'xstate';
 import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
 import { useClipboard, useTranslation } from '@dxos/react-ui';
-import { EmojiPickerBlock, HuePickerBlock } from '@dxos/react-ui-pickers';
+import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { Action, Actions, StepHeading, Input } from '../../../components';
@@ -75,12 +75,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
             disabled={disabled}
             onClickClear={() => setEmoji(getEmojiValue(identity))}
           />
-          <HuePickerBlock
-            hue={hue}
-            onChangeHue={setHue}
-            disabled={disabled}
-            onClickClear={() => setHue(getHueValue(identity))}
-          />
+          <HuePicker disabled={disabled} value={hue} onChange={setHue} onReset={() => setHue(getHueValue(identity))} />
         </div>
       </div>
       <Actions>
