@@ -20,7 +20,7 @@ import {
 import { getTypename, isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
+import { createExtension, toSignal, type Node, type InvokeParams } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -85,28 +85,15 @@ export default (context: PluginsContext) => {
       filter: (node): node is Node<null> => node.id === 'root',
       actions: () => [
         {
-          id: SpaceAction.OpenCreateSpace._tag,
-          data: async () => {
+          id: SpaceAction.AddSpace._tag,
+          data: async (params: InvokeParams) => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(SpaceAction.OpenCreateSpace));
+            await dispatch(createIntent(SpaceAction.AddSpace));
           },
           properties: {
-            label: ['create space label', { ns: SPACE_PLUGIN }],
+            label: ['add space label', { ns: SPACE_PLUGIN }],
             icon: 'ph--plus--regular',
-            testId: 'spacePlugin.createSpace',
-            disposition: 'item',
-          },
-        },
-        {
-          id: SpaceAction.Join._tag,
-          data: async () => {
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(SpaceAction.Join));
-          },
-          properties: {
-            label: ['join space label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--sign-in--regular',
-            testId: 'spacePlugin.joinSpace',
+            testId: 'spacePlugin.addSpace',
             disposition: 'item',
           },
         },
