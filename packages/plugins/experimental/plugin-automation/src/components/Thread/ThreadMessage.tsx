@@ -2,21 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC, useState, useEffect } from 'react';
+import React, { type PropsWithChildren, type FC } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
+import { type Space } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
+import {
+  MarkdownViewer,
+  ToggleContainer as NativeToggleContainer,
+  type ToggleContainerProps,
+} from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
 import { ToolBlock, isToolMessage } from './ToolInvocations';
+import { ToolboxContainer } from '../Toolbox';
 
 // TODO(burdon): Create secondary token.
 const userClassNames = 'bg-sky-200 dark:bg-sky-500';
 const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
+
+const ToggleContainer = (props: ToggleContainerProps) => {
+  return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
+};
 
 const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   return (
@@ -27,20 +37,21 @@ const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsW
 };
 
 export type ThreadMessageProps = ThemedClassName<{
+  space?: Space;
   message: Message;
   debug?: boolean;
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, onPrompt }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, onPrompt }) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
   if (isToolMessage(message)) {
     return (
       <MessageContainer classNames={classNames}>
-        <ToolBlock classNames={panelClassNames} message={message} />
+        <ToolBlock space={space} classNames={panelClassNames} message={message} />
       </MessageContainer>
     );
   }
@@ -56,12 +67,16 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, onP
   );
 };
 
-const Block: FC<{ block: MessageContentBlock; onPrompt?: (text: string) => void }> = ({ block, onPrompt }) => {
+const Block: FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }> = ({
+  space,
+  block,
+  onPrompt,
+}) => {
   const Component = components[block.type] ?? components.default;
-  return <Component block={block} onPrompt={onPrompt} />;
+  return <Component space={space} block={block} onPrompt={onPrompt} />;
 };
 
-type BlockComponent = FC<{ block: MessageContentBlock; onPrompt?: (text: string) => void }>;
+type BlockComponent = FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }>;
 
 const components: Record<string, BlockComponent> = {
   //
@@ -69,29 +84,30 @@ const components: Record<string, BlockComponent> = {
   //
   ['text' as const]: ({ block }) => {
     invariant(block.type === 'text');
-    const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
+    // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
       return <MarkdownViewer content={block.text} />;
     }
 
+    // TOOD(burdon): Store last time user opened/closed COT.
     // Autoclose when streaming ends.
-    useEffect(() => {
-      if (block.disposition === 'cot' && !block.pending) {
-        setOpen(false);
-      }
-    }, [block.disposition, block.pending]);
+    // useEffect(() => {
+    //   if (block.disposition === 'cot' && !block.pending) {
+    //     setOpen(false);
+    //   }
+    // }, [block.disposition, block.pending]);
 
     return (
       <ToggleContainer
-        open={open}
+        // open={open}
+        defaultOpen={block.disposition === 'cot' && block.pending}
         title={title}
         icon={
           block.pending ? (
             <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
           ) : undefined
         }
-        classNames={block.disposition === 'cot' && panelClassNames}
       >
         <MarkdownViewer
           content={block.text}
@@ -104,11 +120,18 @@ const components: Record<string, BlockComponent> = {
   //
   // JSON
   //
-  ['json' as const]: ({ block, onPrompt }) => {
+  ['json' as const]: ({ space, block, onPrompt }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
-      // TODO(burdon): Make propts optional.
+      case 'tool_list': {
+        return (
+          <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
+            <ToolboxContainer space={space} />
+          </ToggleContainer>
+        );
+      }
+
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt?.(text)} />;
@@ -155,9 +178,11 @@ const components: Record<string, BlockComponent> = {
   },
 };
 
+// TODO(burdon): Translations.
 const titles: Record<string, string> = {
   ['cot' as const]: 'Chain of thought',
   ['artifact' as const]: 'Artifact',
   ['tool_use' as const]: 'Tool request',
   ['tool_result' as const]: 'Tool result',
+  ['tool_list' as const]: 'Tools',
 };

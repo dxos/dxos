@@ -3,39 +3,53 @@
 //
 
 // @ts-ignore
+import { defineFunction, S } from 'dxos:functions';
+// @ts-ignore
 import { Chess } from 'https://esm.sh/chess.js@0.13.1';
 
-/**
- * Plays a random move in a chess game.
- */
-export default async ({
-  event: {
-    data: { request },
-  },
-  context: { space },
-}: any) => {
-  const {
-    data: {
-      objects: [gameId],
-      player = 'b',
+export default defineFunction({
+  description: 'Plays a random move in a chess game.',
+
+  inputSchema: S.Struct({
+    objects: S.Array(S.String).annotations({
+      description: 'The objects to play the game on.',
+    }),
+    player: S.optional(S.Literal('w', 'b')).annotations({
+      description: 'The player to play the game as.',
+    }),
+  }),
+
+  outputSchema: S.Struct({
+    state: S.String.annotations({
+      description: 'The state of the game as an ASCII art board.',
+    }),
+  }),
+
+  handler: async ({
+    event: {
+      data: {
+        objects: [gameId],
+        player = 'b',
+      },
     },
-  } = await request.json();
+    context: { space },
+  }: any) => {
+    const { pgn } = await space.db.query({ id: gameId }).first();
+    const game = new Chess();
+    game.load_pgn(pgn);
+    if (game.turn() !== player) {
+      return new Response('Invalid turn', { status: 409 });
+    }
 
-  const { pgn } = await space.crud.query({ id: gameId }).first();
-  const game = new Chess();
-  game.load_pgn(pgn);
-  if (game.turn() !== player) {
-    return new Response('Invalid turn', { status: 409 });
-  }
+    const moves = game.moves();
+    const move = moves[Math.floor(Math.random() * moves.length)];
+    if (!move) {
+      return new Response('No legal moves', { status: 406 });
+    }
 
-  const moves = game.moves();
-  const move = moves[Math.floor(Math.random() * moves.length)];
-  if (!move) {
-    return new Response('No legal moves', { status: 406 });
-  }
-
-  game.move(move);
-  const newPgn = game.pgn();
-  await space.crud.update({ id: gameId }, { pgn: newPgn });
-  return new Response(game.ascii());
-};
+    game.move(move);
+    const newPgn = game.pgn();
+    await space.db.update({ id: gameId }, { pgn: newPgn, fen: game.fen() });
+    return { state: game.ascii() };
+  },
+});

@@ -56,6 +56,7 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType; onOpenChan
   return (
     <Thread
       classNames={classNames}
+      space={space}
       messages={messages}
       processing={processor.streaming.value}
       error={processor.error.value}

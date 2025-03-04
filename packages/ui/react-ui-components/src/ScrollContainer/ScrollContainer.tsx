@@ -14,21 +14,26 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export interface ScrollController {
   scrollToBottom: () => void;
 }
 
-export type ScrollContainerProps = ThemedClassName<PropsWithChildren>;
+export type ScrollContainerProps = ThemedClassName<
+  PropsWithChildren<{
+    fadeClassNames?: string;
+    autoScroll?: boolean;
+    scrollInterval?: number;
+  }>
+>;
 
 /**
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
-// TODO(burdon): Custom scrollbar.
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
-  ({ children, classNames }, forwardedRef) => {
+  ({ children, classNames, fadeClassNames, autoScroll = true, scrollInterval = 1_000 }, forwardedRef) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Determines if user scrolled.
@@ -49,21 +54,40 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     );
 
     // Auto scroll.
+    // Scroll based on an interval rather than continuously (which causes jitter).
     const [sticky, setSticky] = useState(true);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-      if (!sticky || !containerRef.current) {
+      if (!autoScroll || !sticky || !containerRef.current) {
         return;
       }
 
       autoScrollRef.current = true;
-      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+      if (timerRef.current == null && containerRef.current.scrollTop < containerRef.current.scrollHeight) {
+        timerRef.current = setTimeout(() => {
+          timerRef.current = null;
+          if (containerRef.current) {
+            containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+          }
+        }, scrollInterval);
+      }
     }, [children]);
+    useEffect(() => {
+      return () => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+      };
+    }, []);
 
     // Detect scroll to end.
+    const [, forceUpdate] = useState({});
     useEffect(() => {
       invariant(containerRef.current);
       const handleScrollEnd = () => {
         autoScrollRef.current = false;
+        forceUpdate({});
       };
 
       containerRef.current.addEventListener('scrollend', handleScrollEnd);
@@ -81,14 +105,25 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       setSticky(sticky);
     }, []);
 
-    // TOOD(burdon): Wrap with ScrollArea.
     return (
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className={mx('flex flex-col grow overflow-x-hidden overflow-y-auto scrollbar-none contain-layout', classNames)}
-      >
-        {children}
+      <div className='relative flex flex-col grow overflow-hidden'>
+        {fadeClassNames && containerRef.current && containerRef.current.scrollTop > 0 && (
+          <div
+            className={mx(
+              'z-10 absolute top-0 left-0 right-0 pointer-events-none',
+              'bg-gradient-to-b to-transparent',
+              fadeClassNames,
+            )}
+          />
+        )}
+        <ScrollArea.Root classNames={mx('grow', classNames)}>
+          <ScrollArea.Viewport ref={containerRef} onScroll={handleScroll}>
+            {children}
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation='vertical'>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
       </div>
     );
   },
