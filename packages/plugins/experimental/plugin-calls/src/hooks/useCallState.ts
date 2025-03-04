@@ -7,11 +7,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Stream } from '@dxos/codec-protobuf';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { CallTranscription } from '@dxos/plugin-transcription';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { useClient, type PublicKey } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 
+import { CallTranscription } from '../state';
 import { codec, type RoomState, type UserState } from '../types';
 
 // TODO(burdon): Disambiguate room and call.

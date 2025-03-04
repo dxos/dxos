@@ -16,7 +16,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Call } from './Call';
 import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
 import { Lobby } from './Lobby';
-import { type CallContextType, useCallContext, useCallGlobalContext } from '../hooks';
+import { type CallContextType, useCallContext } from '../hooks';
 
 export type CallContainerProps = {
   space: Space;
@@ -26,12 +26,6 @@ export type CallContainerProps = {
 export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const target = space?.properties[CollectionType.typename]?.target;
-
-  // TODO(burdon): Test context.
-  const { call } = useCallGlobalContext();
-  if (call.spaceKey !== space.key) {
-    call.spaceKey = space.key;
-  }
 
   const handleTranscription = useCallback<NonNullable<CallContextProviderProps['onTranscription']>>(async () => {
     invariant(target);

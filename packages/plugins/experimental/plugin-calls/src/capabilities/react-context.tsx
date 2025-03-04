@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 
-import { CallManager } from '../call';
 import { CallsGlobalContext } from '../hooks';
 import { CALLS_PLUGIN } from '../meta';
+import { CallManager } from '../state';
 
 export type CallsPluginOptions = {};
 
