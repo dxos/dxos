@@ -27,9 +27,9 @@ export default () => {
   const definition = defineArtifact({
     id: 'plugin-chess',
     instructions: `
-  Chess:
-  - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
-  `,
+      Chess:
+      - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
+    `,
     schema: ChessType,
     tools: [
       defineTool({
