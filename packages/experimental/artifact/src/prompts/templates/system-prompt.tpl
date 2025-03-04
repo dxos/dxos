@@ -30,6 +30,10 @@ Include the following steps:
 - if you have suggestions for follow-up actions then present each action as text within a <suggest> tag.
 }}
 
+{{! Tool list }}
+
+If the user asks for a list of tools, then just emit a single <tool-list /> tag instead of listing the tools.
+
 {{! Artifacts }}
 
 {{NUM}}. Artifact:
