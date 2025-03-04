@@ -7,10 +7,11 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { isInstanceOf, ObjectId, S, toEffectSchema, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { create, getMeta } from '@dxos/live-object';
+import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -31,7 +32,7 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { GptService, QueueService, SpaceService } from '../services';
+import { FunctionCallService, GptService, QueueService, SpaceService } from '../services';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -255,6 +256,21 @@ export const registry: Record<NodeType, Executable> = {
                 spaceService.db.add(create(schema, rest));
               }
               yield* Effect.promise(() => spaceService.db.flush());
+            } else if (isInstanceOf(KanbanType, container)) {
+              const schema = yield* Effect.promise(async () =>
+                spaceService.db.schemaRegistry
+                  .query({
+                    typename: (await container.cardView?.load())?.query.type,
+                  })
+                  .first(),
+              );
+
+              for (const item of items) {
+                const { id: _id, '@type': _type, ...rest } = item as any;
+                // TODO(dmaretskyi): Forbid type on create.
+                spaceService.db.add(create(schema, rest));
+              }
+              yield* Effect.promise(() => spaceService.db.flush());
             } else {
               throw new Error('Unsupported ECHO container type');
             }
@@ -334,6 +350,29 @@ export const registry: Record<NodeType, Executable> = {
   ['function' as const]: defineComputeNode({
     input: AnyInput,
     output: AnyOutput,
+    exec: synchronizedComputeFunction((input, node) =>
+      Effect.gen(function* (): any {
+        const fn = yield* Effect.tryPromise(async () => node?.function?.load());
+        if (!node || !fn) {
+          return {};
+        }
+
+        const functionCallService = yield* FunctionCallService;
+
+        const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
+        const path = getUserFunctionUrlInMetadata(getMeta(fn));
+        if (!path) {
+          throw new Error('Function not resolved');
+        }
+
+        const result = yield* Effect.tryPromise({
+          try: () => functionCallService.callFunction(path, input),
+          catch: (e) => e,
+        });
+
+        return yield* S.decodeUnknown(outputSchema)(result);
+      }),
+    ),
   }),
 
   ['gpt' as const]: defineComputeNode({
@@ -383,4 +422,11 @@ const textToImageTool: Tool = {
     // TODO(burdon): Testing.
     // model: '@testing/kitten-in-bubble',
   },
+};
+
+// TODO(dmaretskyi): Reconcile with `getUserFunctionUrlInMetadata` in `@dxos/functions/edge`.
+const FUNCTIONS_META_KEY = 'dxos.org/service/function';
+
+const getUserFunctionUrlInMetadata = (meta: ObjectMeta) => {
+  return meta.keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
 };

@@ -3,4 +3,5 @@
 //
 
 export * from './echo-schema';
+export * from './snapshot';
 export * from './stored-schema';
