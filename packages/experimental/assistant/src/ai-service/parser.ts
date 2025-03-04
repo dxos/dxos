@@ -326,7 +326,7 @@ export const mergeMessageBlock = (
         case 'tool-list': {
           return {
             type: 'json',
-            disposition: 'tool-list',
+            disposition: 'tool_list',
             json: JSON.stringify({}),
           };
         }
