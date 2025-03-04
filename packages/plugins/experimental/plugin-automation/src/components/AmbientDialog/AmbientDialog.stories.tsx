@@ -7,19 +7,23 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Config } from '@dxos/client';
+import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Dialog, Toolbar } from '@dxos/react-ui';
+import { Dialog, Toolbar, Button } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { AmbientChatDialog } from './AmbientChatDialog';
+import { AmbientDialog } from './AmbientDialog';
 import translations from '../../translations';
 
-const meta: Meta<typeof AmbientChatDialog> = {
-  title: 'plugins/plugin-automation/AmbientChatDialog',
-  component: AmbientChatDialog,
+const meta: Meta<typeof AmbientDialog> = {
+  title: 'plugins/plugin-automation/AmbientDialog',
+  component: AmbientDialog,
   render: () => {
     const [open, setOpen] = useState(true);
+    const [items, setItems] = useState<string[]>([]);
     return (
       <>
         <div>
@@ -28,7 +32,21 @@ const meta: Meta<typeof AmbientChatDialog> = {
           </Toolbar.Root>
         </div>
         <Dialog.Root open={open} onOpenChange={setOpen}>
-          <AmbientChatDialog />
+          <AmbientDialog>
+            <div className='flex flex-col h-full overflow-hidden'>
+              <div className='flex flex-col h-full gap-2 overflow-auto'>
+                {items.map((item) => (
+                  <div key={item} className='px-2'>
+                    {item}
+                  </div>
+                ))}
+                {items.length > 0 && <div className='pbe-2' />}
+              </div>
+              <div className='shrink-0 h-[40px]'>
+                <Button onClick={() => setItems([...items, faker.lorem.word()])}>Add</Button>
+              </div>
+            </div>
+          </AmbientDialog>
         </Dialog.Root>
       </>
     );
@@ -47,6 +65,7 @@ const meta: Meta<typeof AmbientChatDialog> = {
       createIdentity: true,
       createSpace: true,
     }),
+    withPluginManager({ plugins: [IntentPlugin()] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
   ],
@@ -57,6 +76,6 @@ const meta: Meta<typeof AmbientChatDialog> = {
 
 export default meta;
 
-type Story = StoryObj<typeof AmbientChatDialog>;
+type Story = StoryObj<typeof AmbientDialog>;
 
 export const Default: Story = {};

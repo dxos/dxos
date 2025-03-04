@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC } from 'react';
+import React, { type PropsWithChildren, type FC, useState, useEffect } from 'react';
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
@@ -14,12 +14,14 @@ import { safeParseJson } from '@dxos/util';
 
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 
-const panelClassNames = 'flex flex-col w-full bg-baseSurface rounded-md';
+// TODO(burdon): Create secondary token.
+const userClassNames = 'bg-sky-200 dark:bg-sky-500';
+const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
 
 const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   return (
     <div role='list-item' className={mx('flex w-full', user && 'justify-end', classNames)}>
-      <div className={mx(user ? 'px-2 py-1 bg-primary-200 dark:bg-primary-500 rounded-md' : 'w-full')}>{children}</div>
+      <div className={mx(user ? ['px-2 py-1 rounded-md', userClassNames] : 'w-full')}>{children}</div>
     </div>
   );
 };
@@ -67,20 +69,28 @@ const components: Record<string, BlockComponent> = {
   //
   ['text' as const]: ({ block }) => {
     invariant(block.type === 'text');
+    const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
       return <MarkdownViewer content={block.text} />;
     }
 
+    // Autoclose when streaming ends.
+    useEffect(() => {
+      if (block.disposition === 'cot' && !block.pending) {
+        setOpen(false);
+      }
+    }, [block.disposition, block.pending]);
+
     return (
       <ToggleContainer
+        open={open}
         title={title}
         icon={
           block.pending ? (
             <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
           ) : undefined
         }
-        open={block.disposition === 'cot'}
         classNames={block.disposition === 'cot' && panelClassNames}
       >
         <MarkdownViewer
