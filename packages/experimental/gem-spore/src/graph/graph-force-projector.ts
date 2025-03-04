@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceRadial, forceSimulation, forceX, forceY } from 'd3';
 
 import { Projector, type ProjectorOptions } from './projector';
 import { emptyGraph, type GraphData, type GraphLayout, type GraphLayoutLink, type GraphLayoutNode } from './types';
@@ -108,7 +108,7 @@ export type GraphForceProjectorOptions = ProjectorOptions &
  */
 export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<N>, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
-  _simulation = d3.forceSimulation<GraphLayoutNode<N>, GraphLayoutLink<N>>();
+  _simulation = forceSimulation<GraphLayoutNode<N>, GraphLayoutLink<N>>();
 
   // Current layout.
   _layout: GraphLayout<N> = {
@@ -185,8 +185,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
         maybeCreate<ForceLinkOptions>(
           forces?.link,
           (config: ForceLinkOptions) => {
-            const force = d3
-              .forceLink()
+            const force = forceLink()
               .id((d: GraphLayoutNode<N>) => d.id)
               .links(this._layout.graph.links);
 
@@ -282,7 +281,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
         maybeCreate<ForceManyBodyOptions>(
           forces?.manyBody,
           (config: ForceManyBodyOptions) => {
-            const force = d3.forceManyBody();
+            const force = forceManyBody();
             if (config.distanceMax) {
               force.distanceMax(config.distanceMax);
             }
@@ -300,7 +299,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       .force(
         'center',
         maybeCreate<ForcesCenterOptions>(forces?.center, (config: ForcesCenterOptions) => {
-          const force = d3.forceCenter();
+          const force = forceCenter();
           if (config.strength) {
             force.strength(config.strength);
           }
@@ -313,7 +312,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       .force(
         'collide',
         maybeCreate<ForceCollideOptions>(forces?.collide, (config: ForceCollideOptions) => {
-          const force = d3.forceCollide();
+          const force = forceCollide();
           force.radius(16);
           if (config.strength) {
             force.strength(config.strength);
@@ -327,7 +326,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       .force(
         'radial',
         maybeCreate<ForceRadialOptions>(forces?.radial, (config: ForceRadialOptions) => {
-          const force = d3.forceRadial(config.radius ?? 0, config.x ?? 0, config.y ?? 0);
+          const force = forceRadial(config.radius ?? 0, config.x ?? 0, config.y ?? 0);
           if (config.strength) {
             force.strength(config.strength);
           }
@@ -340,7 +339,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       .force(
         'x',
         maybeCreate<ForcePositioningOptions>(forces?.x, (config: ForcePositioningOptions) => {
-          const force = d3.forceX(config.value ?? 0);
+          const force = forceX(config.value ?? 0);
           if (config.strength) {
             force.strength(config.strength);
           }
@@ -350,7 +349,7 @@ export class GraphForceProjector<N> extends Projector<GraphData<N>, GraphLayout<
       .force(
         'y',
         maybeCreate<ForcePositioningOptions>(forces?.y, (config: ForcePositioningOptions) => {
-          const force = d3.forceY(config.value ?? 0);
+          const force = forceY(config.value ?? 0);
           if (config.strength) {
             force.strength(config.strength);
           }

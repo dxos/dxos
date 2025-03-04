@@ -2,15 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type GeoGeometryObjects } from 'd3';
+import { type GeoGeometryObjects, geoCircle as d3GeoCircle } from 'd3';
 import { type Point, type Polygon, type Position } from 'geojson';
 
 import type { Vector } from '../hooks';
 
 export type LatLng = { lat: number; lng: number };
-
-// TODO(burdon): Clean-up.
 
 export const positionToRotation = ([lng, lat]: [number, number], tilt = 0): Vector => [-lng, tilt - lat, 0];
 
@@ -20,7 +17,7 @@ export const geoPoint = (point: LatLng): Point => ({ type: 'Point', coordinates:
 
 // https://github.com/d3/d3-geo#geoCircle
 export const geoCircle = ({ lat, lng }: LatLng, radius: number): Polygon =>
-  d3.geoCircle().radius(radius).center([lng, lat])();
+  d3GeoCircle().radius(radius).center([lng, lat])();
 
 export const geoLine = (p1: LatLng, p2: LatLng): GeoGeometryObjects => ({
   type: 'LineString',

@@ -2,8 +2,17 @@
 // Copyright 2018 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type GeoProjection } from 'd3';
+import {
+  type GeoProjection,
+  geoMercator,
+  geoOrthographic,
+  geoPath,
+  geoTransverseMercator,
+  interpolateNumber,
+  transition,
+  easeLinear,
+  easeSinOut,
+} from 'd3';
 import { type ControlPosition } from 'leaflet';
 import React, {
   type PropsWithChildren,
@@ -99,18 +108,18 @@ export type GlobeController = {
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
-  orthographic: d3.geoOrthographic,
-  mercator: d3.geoMercator,
-  'transverse-mercator': d3.geoTransverseMercator,
+  orthographic: geoOrthographic,
+  mercator: geoMercator,
+  'transverse-mercator': geoTransverseMercator,
 };
 
 const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): GeoProjection => {
   if (typeof type === 'string') {
-    const constructor = projectionMap[type] ?? d3.geoOrthographic;
+    const constructor = projectionMap[type] ?? geoOrthographic;
     return constructor();
   }
 
-  return type ?? d3.geoOrthographic();
+  return type ?? geoOrthographic();
 };
 
 //
@@ -194,10 +203,10 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           setCenter,
           setScale: (s) => {
             if (typeof s === 'function') {
-              const is = d3.interpolateNumber(scaleRef.current, s(scaleRef.current));
+              const is = interpolateNumber(scaleRef.current, s(scaleRef.current));
               // Stop easing if already zooming.
-              d3.transition()
-                .ease(zooming.current ? d3.easeLinear : d3.easeSinOut)
+              transition()
+                .ease(zooming.current ? easeLinear : easeSinOut)
                 .duration(200)
                 .tween('scale', () => (t) => setScale(is(t)))
                 .on('end', () => {
@@ -217,7 +226,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     const generator = useMemo(
-      () => canvas && projection && d3.geoPath(projection, canvas.getContext('2d', { alpha: false })),
+      () => canvas && projection && geoPath(projection, canvas.getContext('2d', { alpha: false })),
       [canvas, projection],
     );
 

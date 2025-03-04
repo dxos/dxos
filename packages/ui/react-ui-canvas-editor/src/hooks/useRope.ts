@@ -2,8 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type D3DragEvent, type SimulationNodeDatum } from 'd3';
-import * as d3 from 'd3';
+import {
+  type D3DragEvent,
+  type Simulation,
+  type SimulationNodeDatum,
+  drag,
+  forceLink,
+  forceSimulation,
+  select,
+} from 'd3';
 import { useEffect, useMemo, useState } from 'react';
 
 import { GraphModel, type GraphNode } from '@dxos/graph';
@@ -42,7 +49,7 @@ const endSize = 4;
 const midSize = 3;
 
 export type RopeResult = {
-  simulation: d3.Simulation<any, any>;
+  simulation: Simulation<any, any>;
 };
 
 export const useRope = (
@@ -77,7 +84,7 @@ export const useRope = (
       return;
     }
 
-    const group = d3.select(g);
+    const group = select(g);
 
     const paths = group
       .selectAll('path')
@@ -133,7 +140,7 @@ export const useRope = (
     return () => {
       setResult(undefined);
       simulation.stop();
-      d3.select(g).selectAll('*').remove();
+      select(g).selectAll('*').remove();
     };
   }, [g, graph, elements]);
 
@@ -184,12 +191,10 @@ const createGraph = (
  * The graph nodes are copied into the simulation since the simulation mutates them.
  */
 export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum>>, options: RopeOptions) => {
-  const simulation = d3
-    .forceSimulation<any>(graph.nodes.map((node) => ({ id: node.id, ...node.data, data: node })))
+  const simulation = forceSimulation<any>(graph.nodes.map((node) => ({ id: node.id, ...node.data, data: node })))
     .force(
       'link',
-      d3
-        .forceLink(graph.edges.map((edge) => ({ ...edge })))
+      forceLink(graph.edges.map((edge) => ({ ...edge })))
         .id((d: any) => d.id)
         .distance(options.linkLength)
         .strength(options.linkStrength),
@@ -214,8 +219,7 @@ export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum
  * Drag behavior.
  */
 export const createDrag = (cb: (event: 'start' | 'drag' | 'end') => void) =>
-  d3
-    .drag<SVGCircleElement, any>()
+  drag<SVGCircleElement, any>()
     .on('start', ((event: D3DragEvent<SVGCircleElement, any, any>) => {
       cb('start');
       event.subject.fx = event.subject.x;

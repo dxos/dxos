@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { select } from 'd3';
 import { useEffect } from 'react';
 
 import { type GlobeController } from '../components';
@@ -31,7 +31,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
     }
 
     geoInertiaDrag(
-      d3.select(canvas),
+      select(canvas),
       () => {
         controller.setRotation(controller.projection.rotate());
         options.onUpdate?.({ type: 'move', controller });
@@ -47,7 +47,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
 
     // TODO(burdon): Cancel drag timer.
     return () => {
-      cancelDrag(d3.select(canvas));
+      cancelDrag(select(canvas));
     };
   }, [controller, options]);
 };
