@@ -74,12 +74,11 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
       }
     }
     case FormatEnum.LatLong: {
-      // Handle null or undefined
       if (value === null || value === undefined) {
         return '';
       }
 
-      // For GeoPoint format [longitude, latitude]
+      // For GeoPoint format [longitude, latitude].
       if (Array.isArray(value) && value.length >= 2 && value.every(Number.isFinite)) {
         const { latitude, longitude } = GeoLocation.fromGeoPoint(value as [number, number]);
         return `${latitude},${longitude}`;
@@ -145,7 +144,7 @@ export const formatForEditing = ({ type, format, value, locale = undefined }: Va
         return '';
       }
 
-      // For GeoPoint format [longitude, latitude]
+      // For GeoPoint format [longitude, latitude].
       if (Array.isArray(value) && value.length >= 2 && value.every(Number.isFinite)) {
         const { latitude, longitude } = GeoLocation.fromGeoPoint(value as [number, number]);
         return `${latitude},${longitude}`;
