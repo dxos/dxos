@@ -165,19 +165,22 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
+  const handlePopoverOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen && popoverAnchorId) {
+        context.popoverOpen = true;
+      } else {
+        context.popoverOpen = false;
+        context.popoverAnchorId = undefined;
+        context.popoverSide = undefined;
+      }
+    },
+    [context],
+  );
+  const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
+
   return (
-    <Popover.Root
-      modal
-      open={!!(popoverAnchorId && popoverOpen)}
-      onOpenChange={(nextOpen) => {
-        if (nextOpen && popoverAnchorId) {
-          context.popoverOpen = true;
-        } else {
-          context.popoverOpen = false;
-          context.popoverAnchorId = undefined;
-        }
-      }}
-    >
+    <Popover.Root modal open={!!(popoverAnchorId && popoverOpen)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
 
       {fullscreen && <Fullscreen id={solo} />}
@@ -276,12 +279,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
       {/* Global popovers. */}
       <Popover.Portal>
-        <Popover.Content
-          onEscapeKeyDown={() => {
-            context.popoverOpen = false;
-            context.popoverAnchorId = undefined;
-          }}
-        >
+        <Popover.Content side={context.popoverSide} onEscapeKeyDown={handlePopoverClose}>
           <Popover.Viewport>
             <Surface role='popover' data={popoverContent} limit={1} />
           </Popover.Viewport>

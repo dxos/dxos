@@ -64,6 +64,7 @@ export const DeckState = S.mutable(
     dialogType: S.optional(S.Literal('default', 'alert')),
 
     popoverOpen: S.Boolean,
+    popoverSide: S.optional(S.Literal('top', 'right', 'bottom', 'left')),
     /**
      * Data to be passed to the popover Surface.
      */

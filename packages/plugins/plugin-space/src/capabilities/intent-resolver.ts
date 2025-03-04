@@ -223,6 +223,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
               subject: POPOVER_ADD_SPACE,
               options: {
                 anchorId: SpaceAction.AddSpace._tag,
+                side: 'right',
               },
             }),
           ],
