@@ -1,8 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "react-ui-kanban",
+  "name": "env-tests",
   "tags": [
-    "scope:ui"
+    "scope:experimental",
+    "scope:sdk"
   ],
   "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
@@ -11,17 +12,15 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/defs/kanban.ts",
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/testing/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
     "lint": {},
-    "pack": {}
+    "pack": {},
+    "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }
