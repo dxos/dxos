@@ -58,7 +58,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         if (fn.inputSchema) {
           const schema = toEffectSchema(fn.inputSchema);
           AST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
-            body[name] = args[index];
+            body[name.toString()] = args[index];
           });
         } else {
           body.args = args.filter(isNonNullable);
