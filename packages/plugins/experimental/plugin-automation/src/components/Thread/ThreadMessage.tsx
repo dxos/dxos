@@ -106,7 +106,6 @@ const components: Record<string, BlockComponent> = {
             <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
           ) : undefined
         }
-        classNames={block.disposition === 'cot' && panelClassNames}
       >
         <MarkdownViewer
           content={block.text}
@@ -125,7 +124,7 @@ const components: Record<string, BlockComponent> = {
     switch (block.disposition) {
       case 'tool_list': {
         return (
-          <ToggleContainer title={titles[block.disposition]} defaultOpen={true} classNames={panelClassNames}>
+          <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
             <ToolboxContainer space={space} />
           </ToggleContainer>
         );
