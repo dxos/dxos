@@ -16,5 +16,5 @@ export const useHoistStatusbar = (breakpoint: string) => {
   const { safeAreaPadding } = useThemeContext();
   return useMemo(() => {
     return breakpoint === 'desktop' && enableIdeStyleStatusbar && safeAreaPadding?.bottom === 0;
-  }, [enableIdeStyleStatusbar, breakpoint]);
+  }, [enableIdeStyleStatusbar, breakpoint, safeAreaPadding?.bottom]);
 };
