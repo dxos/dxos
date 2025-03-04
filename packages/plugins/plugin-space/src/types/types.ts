@@ -145,6 +145,16 @@ export namespace SpaceAction {
     output: S.Void,
   }) {}
 
+  export class AddSpace extends S.TaggedClass<AddSpace>()(`${SPACE_ACTION}/add-space`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+
+  export class AddSpaceMenuGroup extends S.TaggedClass<AddSpaceMenuGroup>()(`${SPACE_ACTION}/add-space-menu-group`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+
   export class OpenSettings extends S.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
     input: S.Struct({
       space: SpaceSchema,

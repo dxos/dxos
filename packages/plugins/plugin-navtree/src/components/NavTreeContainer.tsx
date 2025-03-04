@@ -64,7 +64,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       return graph.nodes(node ?? graph.root, {
         filter: (node): node is Node => {
           return untracked(() => {
-            const action = isActionLike(node);
+            const action = isAction(node);
             if (!disposition) {
               return !action || node.properties.disposition === 'item';
             }

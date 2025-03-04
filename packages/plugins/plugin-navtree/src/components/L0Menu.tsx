@@ -8,6 +8,7 @@ import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-frame
 import { type Node } from '@dxos/app-graph';
 import {
   Icon,
+  Popover,
   ScrollArea,
   toLocalizedString,
   Tooltip,
@@ -82,7 +83,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const type = l0ItemType(item);
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { getProps } = useNavTreeContext();
+  const { getProps, popoverAnchorId } = useNavTreeContext();
   const { id, testId } = getProps?.(item, path) ?? {};
   const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
   const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
@@ -99,55 +100,59 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
     [type, item.properties.label, t],
   );
 
-  return (
-    <Tooltip.Root delayDuration={0}>
-      <Tooltip.Trigger asChild>
-        <Root
-          {...(rootProps as any)}
-          data-type={type}
+  const l0ItemTrigger = (
+    <Root
+      {...(rootProps as any)}
+      data-type={type}
+      className={mx(
+        'group/l0i dx-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
+        l0Breakpoints[item.properties.l0Breakpoint],
+      )}
+    >
+      {type !== 'collection' && (
+        <div
+          role='none'
           className={mx(
-            'group/l0i dx-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
-            l0Breakpoints[item.properties.l0Breakpoint],
+            'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
+            type === 'tab' || pinned ? 'rounded' : 'rounded-full',
+            pinned
+              ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
+              : 'bg-groupSurface inset-inline-3 inset-block-2',
           )}
-        >
-          {type !== 'collection' && (
-            <div
-              role='none'
-              className={mx(
-                'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
-                type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-                pinned
-                  ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
-                  : 'bg-groupSurface inset-inline-3 inset-block-2',
-              )}
-              {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
-            />
-          )}
-          <div
-            role='none'
-            className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
-          />
-          {(item.properties.icon && (
-            <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
-          )) ||
-            (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-              <span
-                role='img'
-                className='place-self-center text-3xl font-light'
-                {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
-              >
-                {avatarValue}
-              </span>
-            ) : (
-              item.properties.icon && (
-                <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' />
-              )
-            ))}
-          <span id={`${item.id}__label`} className='sr-only'>
-            {localizedString}
+          {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        />
+      )}
+      <div
+        role='none'
+        className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+      />
+      {(item.properties.icon && (
+        <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
+      )) ||
+        (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
+          <span
+            role='img'
+            className='place-self-center text-3xl font-light'
+            {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
+          >
+            {avatarValue}
           </span>
-        </Root>
-      </Tooltip.Trigger>
+        ) : (
+          item.properties.icon && (
+            <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' />
+          )
+        ))}
+      <span id={`${item.id}__label`} className='sr-only'>
+        {localizedString}
+      </span>
+    </Root>
+  );
+
+  return popoverAnchorId === id ? (
+    <Popover.Anchor asChild>{l0ItemTrigger}</Popover.Anchor>
+  ) : (
+    <Tooltip.Root delayDuration={0}>
+      <Tooltip.Trigger asChild>{l0ItemTrigger}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='right'>
           {localizedString}
