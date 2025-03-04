@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { Transcript } from '@dxos/plugin-transcription';
+import { Transcript, TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { TranscriptType, type TranscriptBlock } from '@dxos/plugin-transcription/types';
 import { Config, PublicKey, useClient } from '@dxos/react-client';
 import { create, Filter, makeRef, useQuery } from '@dxos/react-client/echo';
@@ -78,6 +78,7 @@ const meta: Meta<CallContainerProps> = {
         SpacePlugin({ observability: false }),
         IntentPlugin(),
         CallsPlugin(),
+        TranscriptionPlugin(),
       ],
     }),
     withLayout({ fullscreen: true, tooltips: true }),

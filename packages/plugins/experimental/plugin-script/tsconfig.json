@@ -9,6 +9,7 @@
     ],
     "module": "ESNext",
     "outDir": "./dist/types",
+    "target": "ES2020",
     "types": [
       "node"
     ]

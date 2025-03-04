@@ -24,6 +24,7 @@ export type FunctionBodyProps = {
   outputSchema?: S.Schema.Any;
 } & Pick<BoxProps, 'status'>;
 
+// TODO(wittjosiah): Rename, not used for functions.
 export const FunctionBody = ({
   shape,
   name,

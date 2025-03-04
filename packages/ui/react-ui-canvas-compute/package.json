@@ -48,6 +48,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform": "0.75.1",
     "chess.js": "^1.0.0"
   },
   "devDependencies": {
@@ -59,7 +60,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect/ai": "^0.5.1",
+    "@effect/ai": "0.8.0",
     "@effect/platform": "^0.72.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
