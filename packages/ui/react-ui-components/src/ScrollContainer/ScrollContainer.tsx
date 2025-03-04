@@ -82,9 +82,10 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     }, []);
 
     // TOOD(burdon): Wrap with ScrollArea.
+    // TODO(burdon): Only fade when scrolling.
     return (
       <div className={mx('relative flex flex-col grow overflow-x-hidden', classNames)}>
-        {fadeClassNames && (
+        {fadeClassNames && containerRef.current?.scrollTop > 0 && (
           <div
             className={mx(
               'z-10 absolute top-0 left-0 right-0 pointer-events-none bg-gradient-to-b to-transparent',
