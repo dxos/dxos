@@ -4,10 +4,11 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
+
 import { Participant } from './Participant';
 import { type UserState } from '../../types';
 import { ResponsiveGrid } from '../ResponsiveGrid';
-import { log } from '@dxos/log';
 
 const getId = (user: UserState): string => user.id!;
 
@@ -25,7 +26,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
         return;
       }
 
-      allUsers.push(user, { isSelf: user.id === self.id });
+      allUsers.push({ ...user, isSelf: user.id === self.id });
       if (user.tracks?.screenshareEnabled) {
         const screenshare: UserState = {
           ...user,
