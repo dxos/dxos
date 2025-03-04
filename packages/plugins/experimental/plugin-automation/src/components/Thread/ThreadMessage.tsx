@@ -6,6 +6,7 @@ import React, { type PropsWithChildren, type FC, useState, useEffect } from 'rea
 
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
+import { type Space } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import {
   MarkdownViewer,
@@ -36,20 +37,21 @@ const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsW
 };
 
 export type ThreadMessageProps = ThemedClassName<{
+  space?: Space;
   message: Message;
   debug?: boolean;
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, onPrompt }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, onPrompt }) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
   if (isToolMessage(message)) {
     return (
       <MessageContainer classNames={classNames}>
-        <ToolBlock classNames={panelClassNames} message={message} />
+        <ToolBlock space={space} classNames={panelClassNames} message={message} />
       </MessageContainer>
     );
   }
@@ -65,12 +67,16 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, message, onP
   );
 };
 
-const Block: FC<{ block: MessageContentBlock; onPrompt?: (text: string) => void }> = ({ block, onPrompt }) => {
+const Block: FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }> = ({
+  space,
+  block,
+  onPrompt,
+}) => {
   const Component = components[block.type] ?? components.default;
-  return <Component block={block} onPrompt={onPrompt} />;
+  return <Component space={space} block={block} onPrompt={onPrompt} />;
 };
 
-type BlockComponent = FC<{ block: MessageContentBlock; onPrompt?: (text: string) => void }>;
+type BlockComponent = FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }>;
 
 const components: Record<string, BlockComponent> = {
   //
@@ -113,14 +119,14 @@ const components: Record<string, BlockComponent> = {
   //
   // JSON
   //
-  ['json' as const]: ({ block, onPrompt }) => {
+  ['json' as const]: ({ space, block, onPrompt }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
       case 'tool_list': {
         return (
           <ToggleContainer title={titles[block.disposition]} defaultOpen={true} classNames={panelClassNames}>
-            <ToolboxContainer />
+            <ToolboxContainer space={space} />
           </ToggleContainer>
         );
       }

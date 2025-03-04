@@ -137,7 +137,7 @@ const SUMMARIZE_PROMPT = `
 `;
 
 // TODO(dmaretskyi): Extract?
-//                   Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.
+//  Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.
 const useAiServiceClient = (): AIServiceClient => {
   const config = useConfig();
   const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788';

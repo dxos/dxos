@@ -6,7 +6,8 @@ import React, { Fragment } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import type { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -47,8 +48,8 @@ export const Toolbox = ({ classNames, artifacts, functions, striped }: ToolboxPr
   );
 };
 
-export const ToolboxContainer = ({ classNames }: ThemedClassName) => {
+export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  const functions: FunctionType[] = []; // useQuery(space, Filter.schema(FunctionType)); // no access to space
+  const functions = useQuery(space, Filter.schema(FunctionType));
   return <Toolbox classNames={classNames} artifacts={artifactDefinitions} functions={functions} />;
 };
