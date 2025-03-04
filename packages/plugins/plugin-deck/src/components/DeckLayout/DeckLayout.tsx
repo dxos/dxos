@@ -80,7 +80,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
   //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
   const [delayedPopoverVisibility, setDelayedPopoverVisibility] = useState(false);
   useEffect(() => {
-    popoverOpen ? setTimeout(() => setDelayedPopoverVisibility(true), 0) : setDelayedPopoverVisibility(false);
+    popoverOpen ? setTimeout(() => setDelayedPopoverVisibility(true), 40) : setDelayedPopoverVisibility(false);
   }, [popoverOpen]);
 
   // Ensure the first plank is attended when the deck is first rendered.
