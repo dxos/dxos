@@ -198,7 +198,7 @@ export const L0Menu = ({
         <ScrollArea.Viewport>
           <div
             role='none'
-            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[calc(env(safe-area-inset-top)+0.25rem)]'
+            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[min(env(safe-area-inset-top),0.25rem)]'
           >
             {topLevelItems.map((item) => {
               if (l0ItemType(item) === 'collection') {

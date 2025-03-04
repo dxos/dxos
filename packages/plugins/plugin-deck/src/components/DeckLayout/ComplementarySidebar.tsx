@@ -148,7 +148,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                 {!hoistStatusbar && (
                   <div
                     role='contentinfo'
-                    className='flex flex-wrap justify-center items-center border-bs border-separator plb-1 pbe-[env(safe-area-inset-bottom)]'
+                    className='flex flex-wrap justify-center items-center border-bs border-separator plb-1 pbe-[min(env(safe-area-inset-bottom),0.25rem)]'
                   >
                     <Surface role='status-bar--r1-footer' limit={1} />
                   </div>
