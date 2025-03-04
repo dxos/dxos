@@ -216,7 +216,7 @@ type TabsTabpanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
 const TabsTabpanel = ({ classNames, children, ...props }: TabsTabpanelProps) => {
   return (
-    <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset', classNames)}>
+    <TabsPrimitive.Content {...props} className={mx('dx-focus-ring-inset-over-all', classNames)}>
       {children}
     </TabsPrimitive.Content>
   );

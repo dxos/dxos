@@ -21,14 +21,19 @@ export interface ScrollController {
   scrollToBottom: () => void;
 }
 
-export type ScrollContainerProps = ThemedClassName<PropsWithChildren>;
+export type ScrollContainerProps = ThemedClassName<
+  PropsWithChildren<{
+    autoScroll?: boolean;
+    scrollInterval?: number;
+  }>
+>;
 
 /**
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
 // TODO(burdon): Custom scrollbar.
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
-  ({ children, classNames }, forwardedRef) => {
+  ({ children, classNames, autoScroll = true, scrollInterval = 1_000 }, forwardedRef) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Determines if user scrolled.
@@ -49,15 +54,32 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     );
 
     // Auto scroll.
+    // Scroll based on an interval rather than continuously (which causes jitter).
     const [sticky, setSticky] = useState(true);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-      if (!sticky || !containerRef.current) {
+      if (!autoScroll || !sticky || !containerRef.current) {
         return;
       }
 
       autoScrollRef.current = true;
-      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+      if (timerRef.current == null && containerRef.current.scrollTop < containerRef.current.scrollHeight) {
+        timerRef.current = setTimeout(() => {
+          timerRef.current = null;
+          if (containerRef.current) {
+            containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+          }
+        }, scrollInterval);
+      }
     }, [children]);
+    useEffect(() => {
+      return () => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+      };
+    }, []);
 
     // Detect scroll to end.
     useEffect(() => {

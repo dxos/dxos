@@ -18,15 +18,17 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { useConfig } from '@dxos/react-client';
 import { useEdgeClient, useQueue, type EdgeHttpClient } from '@dxos/react-edge-client';
-import { Button } from '@dxos/react-ui';
+import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TextType } from '@dxos/schema';
 
 import { Transcript } from './Transcript';
+import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { TranscriptBlock, type TranscriptType } from '../types';
 
 export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
+  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const edge = useEdgeClient();
   const aiService = useAiServiceClient();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -54,13 +56,21 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
     }
   }, [transcript, edge]);
 
-  // TODO(dmaretskyi): Move action to deck?
+  // TODO(dmaretskyi): Move action to menu.
   return (
     <StackItem.Content toolbar={true}>
       <StackItem.Heading>
-        <Button onClick={handleSummarize} disabled={isSummarizing}>
-          {isSummarizing ? 'Summarizing...' : 'Summarize'}
-        </Button>
+        <Toolbar.Root classNames='flex gap-2'>
+          <IconButton
+            icon='ph--subtitles--regular'
+            iconOnly
+            size={5}
+            disabled={isSummarizing}
+            onClick={handleSummarize}
+            label={t('summary button')}
+          />
+          {isSummarizing && <div className='text-sm'>{t('summarizing label')}</div>}
+        </Toolbar.Root>
       </StackItem.Heading>
       <ScrollContainer>
         <Transcript blocks={queue?.items} />
@@ -127,7 +137,7 @@ const SUMMARIZE_PROMPT = `
 `;
 
 // TODO(dmaretskyi): Extract?
-//                   Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.
+//  Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.
 const useAiServiceClient = (): AIServiceClient => {
   const config = useConfig();
   const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788';

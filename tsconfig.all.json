@@ -241,6 +241,9 @@
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
+      "path": "packages/experimental/env-tests/tsconfig.json"
+    },
+    {
       "path": "packages/experimental/gem-core/tsconfig.json"
     },
     {

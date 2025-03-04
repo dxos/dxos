@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 
@@ -21,8 +22,8 @@ const meta: Meta<typeof ScrollContainer> = {
     const scroller = useRef<ScrollController>(null);
     useEffect(() => {
       const i = setInterval(() => {
-        setLines((lines) => [...lines, `Line ${lines.length + 1}`]);
-      }, 250);
+        setLines((lines) => [...lines, faker.lorem.paragraph()]);
+      }, 500);
 
       return () => clearInterval(i);
     }, []);

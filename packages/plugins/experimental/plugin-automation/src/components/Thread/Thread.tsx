@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { useCapabilities } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { type Space } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -16,6 +17,7 @@ import { messageReducer } from './reducer';
 import { PromptBar, type PromptBarProps } from '../Prompt';
 
 export type ThreadProps = ThemedClassName<{
+  space?: Space;
   messages?: Message[];
   collapse?: boolean;
 }> &
@@ -27,6 +29,7 @@ export type ThreadProps = ThemedClassName<{
  */
 export const Thread = ({
   classNames,
+  space,
   messages,
   collapse = true,
   processing,
@@ -69,6 +72,7 @@ export const Thread = ({
             <ThreadMessage
               key={message.id}
               classNames='px-4 pbe-4'
+              space={space}
               message={message}
               debug={debug}
               onPrompt={onPrompt}
