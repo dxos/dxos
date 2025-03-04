@@ -23,7 +23,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true"
+    "check": "shx true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
