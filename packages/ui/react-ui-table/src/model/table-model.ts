@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
