@@ -90,7 +90,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  LatLng = 'latlng',
+  LatLong = 'latlng',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -146,7 +146,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.LatLng]: TypeEnum.Object,
+  [FormatEnum.LatLong]: TypeEnum.Object,
 };
 
 /**
