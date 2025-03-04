@@ -46,7 +46,7 @@ export const initializeMap = async ({
       if (schema.jsonSchema?.properties) {
         // Look for properties that use the LatLng format enum.
         const properties = Object.entries(schema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-          if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
+          if (typeof value === 'object' && value?.format === FormatEnum.LatLong) {
             acc.push(key);
           }
           return acc;

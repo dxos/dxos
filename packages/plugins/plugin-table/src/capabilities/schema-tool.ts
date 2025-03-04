@@ -136,8 +136,8 @@ export const schemaTools = [
           );
         }
 
-        if (prop.format === FormatEnum.LatLng) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLng;
+        if (prop.format === FormatEnum.LatLong) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLong;
           registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
         }
       }
