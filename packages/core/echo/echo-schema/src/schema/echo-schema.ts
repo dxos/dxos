@@ -12,6 +12,7 @@ import {
   updateFieldNameInSchema,
   updateFieldsInSchema,
 } from './manipulation';
+import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
 import { SchemaMetaSymbol, schemaVariance, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
@@ -263,24 +264,4 @@ const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignatu
     ...property,
     type: property.type.types.find((type) => !AST.isUndefinedKeyword(type))!,
   } as any;
-};
-
-/**
- * Returns a non-reactive snapshot of the given live object.
- */
-// TODO(wittjosiah): Types.
-export const getSnapshot = (jsonSchema: any): any => {
-  if (typeof jsonSchema !== 'object') {
-    return jsonSchema;
-  }
-  if (Array.isArray(jsonSchema)) {
-    return jsonSchema.map(getSnapshot);
-  }
-
-  const result: any = {};
-  for (const key in jsonSchema) {
-    result[key] = getSnapshot(jsonSchema[key]);
-  }
-
-  return result;
 };

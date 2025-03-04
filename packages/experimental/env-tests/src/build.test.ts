@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { build } from 'esbuild';
 import { writeFile } from 'node:fs/promises';
 import { describe, test } from 'vitest';
@@ -47,7 +51,7 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
     plugins: [
       {
         name: 'test-plugin',
-        setup(build) {
+        setup: (build) => {
           build.onResolve({ filter: /^test:entry$/ }, async (args) => {
             return {
               path: args.path,
