@@ -53,18 +53,18 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
           type='text'
           pattern='^-?[0-9]*\.?[0-9]*$'
           disabled={disabled}
-          placeholder={t('placeholder longitude')}
-          value={longitudeText}
-          onChange={handleCoordinateChange('longitude', setLongitudeText)}
+          placeholder={t('placeholder latitude')}
+          value={latitudeText}
+          onChange={handleCoordinateChange('latitude', setLatitudeText)}
           onBlur={onBlur}
         />
         <Input.TextInput
           type='text'
           pattern='^-?[0-9]*\.?[0-9]*$'
           disabled={disabled}
-          placeholder={t('placeholder latitude')}
-          value={latitudeText}
-          onChange={handleCoordinateChange('latitude', setLatitudeText)}
+          placeholder={t('placeholder longitude')}
+          value={longitudeText}
+          onChange={handleCoordinateChange('longitude', setLongitudeText)}
           onBlur={onBlur}
         />
       </div>
