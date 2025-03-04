@@ -7,7 +7,11 @@ import React, { type PropsWithChildren, type FC, useState, useEffect } from 'rea
 import { type MessageContentBlock, type Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
+import {
+  MarkdownViewer,
+  ToggleContainer as NativeToggleContainer,
+  type ToggleContainerProps,
+} from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
@@ -18,6 +22,10 @@ import { ToolboxContainer } from '../Toolbox';
 // TODO(burdon): Create secondary token.
 const userClassNames = 'bg-sky-200 dark:bg-sky-500';
 const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
+
+const ToggleContainer = (props: ToggleContainerProps) => {
+  return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
+};
 
 const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   return (
@@ -111,7 +119,7 @@ const components: Record<string, BlockComponent> = {
     switch (block.disposition) {
       case 'tool_list': {
         return (
-          <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
+          <ToggleContainer title={titles[block.disposition]} defaultOpen={true} classNames={panelClassNames}>
             <ToolboxContainer />
           </ToggleContainer>
         );
