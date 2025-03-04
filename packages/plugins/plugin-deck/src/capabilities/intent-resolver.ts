@@ -113,6 +113,7 @@ export default (context: PluginsContext) =>
         layout.popoverOpen = options.state ?? Boolean(subject);
         layout.popoverContent = subject ? { component: subject, props: options.props } : null;
         layout.popoverAnchorId = options.anchorId;
+        layout.popoverSide = options.side;
       },
     }),
     createResolver({

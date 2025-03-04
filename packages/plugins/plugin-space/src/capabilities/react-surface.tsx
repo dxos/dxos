@@ -53,6 +53,8 @@ import {
   SyncStatus,
   type CreateObjectDialogProps,
   type SpaceSettingsDialogProps,
+  POPOVER_ADD_SPACE,
+  PopoverAddSpace,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -156,6 +158,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       filter: (data): data is { props: ReactiveEchoObject<any> } =>
         data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
+    }),
+    createSurface({
+      id: POPOVER_ADD_SPACE,
+      role: 'popover',
+      filter: (data): data is any => data.component === POPOVER_ADD_SPACE,
+      component: () => <PopoverAddSpace />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,

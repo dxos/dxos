@@ -3,7 +3,7 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment, useState } from 'react';
 
 import {
   LayoutAction,
@@ -75,6 +75,13 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
+
+  // TODO(thure): This is a workaround for the difference in `React`ion time between displaying a Popover and rendering
+  //  the anchor further down the tree. Refactor to use VirtualTrigger or some other approach which does not cause a lag.
+  const [delayedPopoverVisibility, setDelayedPopoverVisibility] = useState(false);
+  useEffect(() => {
+    popoverOpen ? setTimeout(() => setDelayedPopoverVisibility(true), 40) : setDelayedPopoverVisibility(false);
+  }, [popoverOpen]);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
@@ -165,19 +172,22 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
   const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
+  const handlePopoverOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen && popoverAnchorId) {
+        context.popoverOpen = true;
+      } else {
+        context.popoverOpen = false;
+        context.popoverAnchorId = undefined;
+        context.popoverSide = undefined;
+      }
+    },
+    [context],
+  );
+  const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
+
   return (
-    <Popover.Root
-      modal
-      open={!!(popoverAnchorId && popoverOpen)}
-      onOpenChange={(nextOpen) => {
-        if (nextOpen && popoverAnchorId) {
-          context.popoverOpen = true;
-        } else {
-          context.popoverOpen = false;
-          context.popoverAnchorId = undefined;
-        }
-      }}
-    >
+    <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
 
       {fullscreen && <Fullscreen id={solo} />}
@@ -276,12 +286,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
 
       {/* Global popovers. */}
       <Popover.Portal>
-        <Popover.Content
-          onEscapeKeyDown={() => {
-            context.popoverOpen = false;
-            context.popoverAnchorId = undefined;
-          }}
-        >
+        <Popover.Content side={context.popoverSide} onEscapeKeyDown={handlePopoverClose}>
           <Popover.Viewport>
             <Surface role='popover' data={popoverContent} limit={1} />
           </Popover.Viewport>
