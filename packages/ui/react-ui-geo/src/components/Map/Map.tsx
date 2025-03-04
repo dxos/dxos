@@ -5,7 +5,7 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 
-import type L from 'leaflet';
+import L from 'leaflet';
 import { type ControlPosition, Control, DomEvent, DomUtil, type LatLngExpression, latLngBounds } from 'leaflet';
 import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -127,10 +127,24 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(
         />
 
         {/* Markers. */}
-        {/* TODO(burdon): Marker icon doesn't load on mobile? */}
         {markers.map(({ id, title, location: { lat, lng } }) => {
           return (
-            <Marker key={id} position={{ lat, lng }}>
+            <Marker
+              key={id}
+              position={{ lat, lng }}
+              icon={
+                // TODO(burdon): Create custom icon from bundled assets.
+                new L.Icon({
+                  iconUrl: 'https://dxos.network/marker-icon.png',
+                  iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
+                  shadowUrl: 'https://dxos.network/marker-shadow.png',
+                  iconSize: [25, 41],
+                  iconAnchor: [12, 41],
+                  popupAnchor: [1, -34],
+                  shadowSize: [41, 41],
+                })
+              }
+            >
               {title && <Popup>{title}</Popup>}
             </Marker>
           );
