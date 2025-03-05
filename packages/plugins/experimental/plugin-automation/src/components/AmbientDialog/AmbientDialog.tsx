@@ -47,11 +47,11 @@ export const AmbientDialog = ({
   return (
     <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
       <Dialog.Content
-        classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-hidden pointer-events-auto'
+        classNames='relative box-content py-0 px-2 md:is-[35rem] md:max-is-none overflow-hidden pointer-events-auto transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200'
         inOverlayLayout
         {...resizeAttributes}
         style={{
-          ...sizeStyle(size, 'vertical'),
+          ...sizeStyle(size, 'vertical', true),
           maxBlockSize: 'calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 8rem)',
         }}
         onInteractOutside={preventDefault}
@@ -92,7 +92,7 @@ const DialogHeader = ({ open, title, onToggle }: { open?: boolean; title?: strin
         <IconButton
           variant='ghost'
           icon={'ph--caret-up--regular'}
-          classNames={mx('transition duration-200', open && 'rotate-180')}
+          classNames={mx('[&>svg]:transition [&>svg]:duration-200', open && '[&>svg]:rotate-180')}
           iconOnly
           label='Shrink'
           onClick={onToggle}
