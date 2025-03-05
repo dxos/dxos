@@ -2,19 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type PropsWithChildren,
-  type UIEventHandler,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, forwardRef, useImperativeHandle, useState, useEffect, Children } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, AnchoredOverflow, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export interface ScrollController {
@@ -23,9 +14,8 @@ export interface ScrollController {
 
 export type ScrollContainerProps = ThemedClassName<
   PropsWithChildren<{
-    fadeClassNames?: string;
-    autoScroll?: boolean;
-    scrollInterval?: number;
+    fade?: boolean;
+    // TODO(thure): Restore autoScroll prop.
   }>
 >;
 
@@ -33,98 +23,48 @@ export type ScrollContainerProps = ThemedClassName<
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
-  ({ children, classNames, fadeClassNames, autoScroll = true, scrollInterval = 1_000 }, forwardedRef) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    // Determines if user scrolled.
-    const autoScrollRef = useRef(false);
+  ({ children, classNames, fade }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
     // Controller.
     useImperativeHandle(
       forwardedRef,
       () => ({
         scrollToBottom: () => {
-          invariant(containerRef.current);
+          invariant(viewport);
           // NOTE: Should be instant otherwise scrollHeight might be out of date.
-          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'instant' });
-          autoScrollRef.current = false;
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'instant' });
         },
       }),
-      [],
+      [viewport],
     );
 
-    // Auto scroll.
-    // Scroll based on an interval rather than continuously (which causes jitter).
-    const [sticky, setSticky] = useState(true);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-      if (!autoScroll || !sticky || !containerRef.current) {
-        return;
+      if (viewport) {
+        // debugger;
       }
+    }, [viewport]);
 
-      autoScrollRef.current = true;
-      if (timerRef.current == null && containerRef.current.scrollTop < containerRef.current.scrollHeight) {
-        timerRef.current = setTimeout(() => {
-          timerRef.current = null;
-          if (containerRef.current) {
-            containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
-          }
-        }, scrollInterval);
-      }
-    }, [children]);
     useEffect(() => {
-      return () => {
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
-      };
-    }, []);
-
-    // Detect scroll to end.
-    const [, forceUpdate] = useState({});
-    useEffect(() => {
-      invariant(containerRef.current);
-      const handleScrollEnd = () => {
-        autoScrollRef.current = false;
-        forceUpdate({});
-      };
-
-      containerRef.current.addEventListener('scrollend', handleScrollEnd);
-      return () => containerRef.current?.removeEventListener('scrollend', handleScrollEnd);
-    }, []);
-
-    // User scrolling.
-    const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>((ev) => {
-      if (autoScrollRef.current) {
-        return;
-      }
-
-      const { scrollTop, clientHeight, scrollHeight } = ev.currentTarget;
-      const sticky = scrollTop + clientHeight >= scrollHeight;
-      setSticky(sticky);
-    }, []);
+      console.log('[child added]');
+    }, [Children.count(children)]);
 
     return (
-      <div className='relative flex flex-col grow overflow-hidden'>
-        {fadeClassNames && containerRef.current && containerRef.current.scrollTop > 0 && (
+      <ScrollArea.Root classNames={mx('relative flex flex-col grow overflow-hidden', classNames)}>
+        {fade && viewport && (
           <div
-            className={mx(
-              'z-10 absolute top-0 left-0 right-0 pointer-events-none',
-              'bg-gradient-to-b to-transparent',
-              fadeClassNames,
-            )}
+            role='none'
+            className='z-10 absolute block-start-0 inset-inline-0 bs-24 pointer-events-none bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none'
           />
         )}
-        <ScrollArea.Root classNames={mx('grow', classNames)}>
-          <ScrollArea.Viewport ref={containerRef} onScroll={handleScroll}>
-            {children}
-          </ScrollArea.Viewport>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
-        </ScrollArea.Root>
-      </div>
+        <ScrollArea.Viewport ref={setViewport} classNames='overflow-anchored'>
+          {children}
+          <AnchoredOverflow.Anchor />
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation='vertical'>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
     );
   },
 );
