@@ -60,6 +60,7 @@ export namespace GeoLocation {
     longitude: number;
     height?: number;
   }): GeoPoint => {
+    // TODO(ZaymonFC): Use schema validation instead of doing this manually.
     const clampedLatitude = clamp(latitude, -90, 90);
     const clampedLongitude = clamp(longitude, -180, 180);
 
