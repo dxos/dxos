@@ -39,14 +39,19 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     );
 
     return (
-      <div className={mx('relative flex flex-col-reverse grow overflow-y-auto', classNames)} ref={setViewport}>
+      <div className='relative flex-1 min-bs-0 grid'>
         {fade && (
           <div
             role='none'
             className='z-10 absolute block-start-0 inset-inline-0 bs-24 pointer-events-none bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none'
           />
         )}
-        {[...Children.toArray(children)].reverse()}
+        <div
+          className={mx('flex flex-col-reverse min-bs-0 overflow-y-auto scrollbar-thin', classNames)}
+          ref={setViewport}
+        >
+          {[...Children.toArray(children)].reverse()}
+        </div>
       </div>
     );
   },
