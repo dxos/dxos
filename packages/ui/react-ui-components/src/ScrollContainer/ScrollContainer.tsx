@@ -10,6 +10,7 @@ import React, {
   Children,
   useEffect,
   useCallback,
+  useMemo,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -34,6 +35,8 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
     const [isOverflowing, setIsOverflowing] = useState(false);
     const [scrolledAtTop, setScrolledAtTop] = useState(false);
+
+    const reversedChildren = useMemo(() => [...Children.toArray(children)].reverse(), [children]);
 
     // Scroll controller imperative ref
     useImperativeHandle(
@@ -62,13 +65,13 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
         return;
       }
 
-      // Initial check
+      // Initial check.
       updateScrollState();
 
-      // Listen for scroll events
+      // Listen for scroll events.
       viewport.addEventListener('scroll', updateScrollState);
 
-      // Setup resize observer to detect content changes
+      // Setup resize observer to detect content changes.
       const resizeObserver = new ResizeObserver(updateScrollState);
       resizeObserver.observe(viewport);
 
@@ -88,14 +91,18 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
           <div
             role='none'
             data-visible={isOverflowing && !scrolledAtTop}
-            className='opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100 z-10 absolute block-start-0 inset-inline-0 bs-24 pointer-events-none bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none'
+            className={mx(
+              'opacity-0 duration-200 transition-opacity',
+              'data-[visible="true"]:opacity-100 z-10 absolute block-start-0 inset-inline-0 bs-24',
+              'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
+            )}
           />
         )}
         <div
           className={mx('flex flex-col-reverse min-bs-0 overflow-y-auto scrollbar-thin', classNames)}
           ref={setViewport}
         >
-          {[...Children.toArray(children)].reverse()}
+          {reversedChildren}
         </div>
       </div>
     );
