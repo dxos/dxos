@@ -3,14 +3,14 @@
 //
 
 import React, {
+  Children,
   type PropsWithChildren,
   forwardRef,
-  useImperativeHandle,
-  useState,
-  Children,
-  useEffect,
   useCallback,
+  useEffect,
+  useImperativeHandle,
   useMemo,
+  useState,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -38,7 +38,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
 
     const reversedChildren = useMemo(() => [...Children.toArray(children)].reverse(), [children]);
 
-    // Scroll controller imperative ref
+    // Scroll controller imperative ref.
     useImperativeHandle(
       forwardedRef,
       () => ({
