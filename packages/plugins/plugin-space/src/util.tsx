@@ -416,6 +416,8 @@ export const constructObjectActions = ({
   navigable?: boolean;
 }) => {
   const object = node.data;
+  const space = getSpace(object);
+  invariant(space, 'Space not found');
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
     ...(object instanceof CollectionType
@@ -478,7 +480,7 @@ export const constructObjectActions = ({
             id: getId('copy-link'),
             type: ACTION_TYPE,
             data: async () => {
-              const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+              const url = `${window.location.origin}/${space.id}/${fullyQualifiedId(object)}`;
               await navigator.clipboard.writeText(url);
             },
             properties: {

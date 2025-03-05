@@ -41,9 +41,9 @@ export default (context: PluginsContext) =>
           },
           nodes: [
             {
-              id: `${REGISTRY_KEY}:all`,
+              id: `${REGISTRY_KEY}~all`,
               type: 'category',
-              data: `${REGISTRY_KEY}:all`,
+              data: `${REGISTRY_KEY}~all`,
               properties: {
                 label: ['all plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--squares-four--regular',
@@ -52,9 +52,9 @@ export default (context: PluginsContext) =>
               },
             },
             {
-              id: `${REGISTRY_KEY}:installed`,
+              id: `${REGISTRY_KEY}~installed`,
               type: 'category',
-              data: `${REGISTRY_KEY}:installed`,
+              data: `${REGISTRY_KEY}~installed`,
               properties: {
                 label: ['installed plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--check--regular',
@@ -63,9 +63,9 @@ export default (context: PluginsContext) =>
               },
             },
             {
-              id: `${REGISTRY_KEY}:recommended`,
+              id: `${REGISTRY_KEY}~recommended`,
               type: 'category',
-              data: `${REGISTRY_KEY}:recommended`,
+              data: `${REGISTRY_KEY}~recommended`,
               properties: {
                 label: ['recommended plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--star--regular',
@@ -74,9 +74,9 @@ export default (context: PluginsContext) =>
               },
             },
             {
-              id: `${REGISTRY_KEY}:experimental`,
+              id: `${REGISTRY_KEY}~experimental`,
               type: 'category',
-              data: `${REGISTRY_KEY}:experimental`,
+              data: `${REGISTRY_KEY}~experimental`,
               properties: {
                 label: ['experimental plugins label', { ns: REGISTRY_PLUGIN }],
                 icon: 'ph--flask--regular',
