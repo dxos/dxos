@@ -5,8 +5,8 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { RefArray, type Space } from '@dxos/react-client/echo';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
+import { isEchoObject, getSpace, RefArray, type Space } from '@dxos/react-client/echo';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
@@ -55,7 +55,7 @@ export const AutomationPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
-      activatesOn: Events.Startup,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () => [
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'service-registry',
@@ -66,6 +66,7 @@ export const AutomationPlugin = () =>
           id: 'automation',
           label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],
           icon: 'ph--magic-wand--regular',
+          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
         }),
       ],
     }),

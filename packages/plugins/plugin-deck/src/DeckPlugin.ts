@@ -53,6 +53,7 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/react-root`,
       activatesOn: Events.Startup,
+      activatesBefore: [DeckEvents.SetupComplementaryPanels],
       activate: ReactRoot,
     }),
     defineModule({
