@@ -6,6 +6,8 @@ import { Capabilities, contributes, createIntent, defineModule, definePlugin, Ev
 import { type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { TextType } from '@dxos/schema';
 
@@ -46,7 +48,6 @@ export const MarkdownPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DocumentType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(MarkdownAction.Create, props),
             label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
@@ -61,12 +62,21 @@ export const MarkdownPlugin = () =>
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DocumentType,
+            getIntent: () => createIntent(MarkdownAction.Create),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [TextType]),
-        contributes(ClientCapabilities.Schema, [DocumentType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [TextType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

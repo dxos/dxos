@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, S, type Expando } from '@dxos/echo-schema';
+import { type AnyIntentChain } from '@dxos/app-framework';
+import { AST, S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
+// TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { type ComplexMap } from '@dxos/util';
 
@@ -90,6 +92,14 @@ export const SpaceForm = S.Struct({
   // TODO(wittjosiah): Make optional with default value.
   edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
 });
+
+export type ObjectForm<T extends BaseObject = BaseObject> = {
+  objectSchema: TypedObject;
+  formSchema?: S.Schema<T, any>;
+  getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
+};
+
+export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
 
 export const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 

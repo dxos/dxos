@@ -40,9 +40,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
   parameters: {
     translations: [...translations, osTranslations],
   },
-  args: {
-    schemas: [CollectionType],
-  },
+  args: {},
 };
 
 export default meta;

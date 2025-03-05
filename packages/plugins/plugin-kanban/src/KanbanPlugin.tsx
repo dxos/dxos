@@ -3,14 +3,15 @@
 //
 
 import { createIntent, defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type Space } from '@dxos/react-client/echo';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 
 import { Artifact, IntentResolver, ReactSurface } from './capabilities';
 import { KANBAN_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { CreateKanbanSchema, type CreateKanbanType, KanbanAction } from './types';
+import { CreateKanbanSchema, KanbanAction } from './types';
 
 export const KanbanPlugin = () =>
   definePlugin(meta, [
@@ -26,18 +27,23 @@ export const KanbanPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: KanbanType.typename,
           metadata: {
-            creationSchema: CreateKanbanSchema,
-            createObject: (props: CreateKanbanType, options: { space: Space }) =>
-              createIntent(KanbanAction.Create, { ...props, space: options.space }),
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
           },
         }),
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
+      id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [KanbanType]),
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: KanbanType,
+            formSchema: CreateKanbanSchema,
+            getIntent: (props, options) => createIntent(KanbanAction.Create, { ...props, space: options.space }),
+          }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
