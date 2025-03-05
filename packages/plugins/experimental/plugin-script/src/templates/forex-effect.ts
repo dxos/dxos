@@ -13,10 +13,9 @@ import {
 // @ts-ignore
 import { Effect, Schedule } from 'https://esm.sh/effect@3.13.3';
 
-/**
- * Returns the exchange rate between two currencies.
- */
 export default defineFunction({
+  description: 'Returns the exchange rate between two currencies.',
+
   inputSchema: S.Struct({
     from: S.String.annotations({ description: 'The source currency' }),
     to: S.String.annotations({ description: 'The target currency' }),

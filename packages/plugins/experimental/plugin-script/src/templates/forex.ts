@@ -5,10 +5,9 @@
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 
-/**
- * Returns the exchange rate between two currencies.
- */
 export default defineFunction({
+  description: 'Returns the exchange rate between two currencies.',
+
   inputSchema: S.Struct({
     from: S.String.annotations({ description: 'The source currency' }),
     to: S.String.annotations({ description: 'The target currency' }),

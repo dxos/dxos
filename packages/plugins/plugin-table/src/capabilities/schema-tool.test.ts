@@ -10,7 +10,7 @@ import { TypeNameSchema } from './schema-tool';
 
 describe('TypeNameSchema format', () => {
   const valid = [
-    'example.com/us-cities',
+    'example.com/usCities',
     'dxos.org/Contact',
     'dxos.org/Table',
     'dxos.org/Table/Contact',
@@ -23,7 +23,8 @@ describe('TypeNameSchema format', () => {
   const invalid = [
     'http://dxos.org/Table', // No protocol allowed
     'dxos.org/', // Must have type path
-    'dxos.org/1Type', // Path segments must start with letter
+    // TODO(dmaretskyi): Decide if we want to ban numbers.
+    // 'dxos.org/1Type', // Path segments must start with letter
     'dxos.org/Type!', // Invalid character
     '.org/Type', // Must have domain
   ];
