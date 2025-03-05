@@ -21,7 +21,7 @@ export const TokenManagerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [AccessTokenType]),
+      activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType]),
     }),
     defineModule({
       id: `${meta.id}/module/space-settings`,

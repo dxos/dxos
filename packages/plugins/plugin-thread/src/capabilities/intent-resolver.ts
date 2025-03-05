@@ -55,7 +55,7 @@ export default (context: PluginsContext) =>
             ],
           };
         } else {
-          // NOTE: This is the standalone thread creation case.
+          // TODO(wittjosiah): Create separate intent for channel creation.
           return {
             data: { object: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }) },
           };
