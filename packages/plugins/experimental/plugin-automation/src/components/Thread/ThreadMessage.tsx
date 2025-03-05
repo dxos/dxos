@@ -60,7 +60,7 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
     <div role='none' className='flex flex-col gap-2'>
       {content.map((block, idx) => (
         <MessageContainer key={idx} classNames={classNames} user={block.type === 'text' && role === 'user'}>
-          <Block block={block} onPrompt={onPrompt} />
+          <Block space={space} block={block} onPrompt={onPrompt} />
         </MessageContainer>
       ))}
     </div>
