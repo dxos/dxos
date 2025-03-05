@@ -19,7 +19,7 @@ const numbers = [
   { regular: 'ph--number-circle-eight--thin', active: 'ph--number-circle-eight--duotone' },
   { regular: 'ph--number-circle-nine--thin', active: 'ph--number-circle-nine--duotone' },
 ];
-const outOfRange = { regular: 'ph--circle-check--thin', active: 'ph--circle-check--duotone' };
+const outOfRange = { regular: 'ph--circle--thin', active: 'ph--circle--duotone' };
 
 export type NumericTabsProps = ThemedClassName<{
   length: number;
