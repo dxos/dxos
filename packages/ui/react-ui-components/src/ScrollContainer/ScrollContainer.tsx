@@ -33,7 +33,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
   ({ children, classNames, fade }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
     const [isOverflowing, setIsOverflowing] = useState(false);
-    const [scrolledFromTop, setScrolledFromTop] = useState(false);
+    const [scrolledAtTop, setScrolledAtTop] = useState(false);
 
     // Scroll controller imperative ref
     useImperativeHandle(
@@ -53,7 +53,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
         // Check if content is overflowing
         setIsOverflowing(viewport.scrollHeight > viewport.clientHeight);
         // In flex-col-reverse, scrollTop > 0 means we're not at the visual top, also the value will be negative.
-        setScrolledFromTop(-viewport.scrollTop + 16 >= viewport.scrollHeight - viewport.clientHeight);
+        setScrolledAtTop(-viewport.scrollTop + 16 >= viewport.scrollHeight - viewport.clientHeight);
       }
     }, [viewport]);
 
@@ -87,7 +87,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
         {fade && (
           <div
             role='none'
-            data-visible={isOverflowing && !scrolledFromTop}
+            data-visible={isOverflowing && !scrolledAtTop}
             className='opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100 z-10 absolute block-start-0 inset-inline-0 bs-24 pointer-events-none bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none'
           />
         )}
