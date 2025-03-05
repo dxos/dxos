@@ -23,10 +23,10 @@ import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
-import { setActive } from './set-active';
 import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode } from '../types';
+import { setActive } from '../util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
