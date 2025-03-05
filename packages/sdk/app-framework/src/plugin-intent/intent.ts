@@ -17,8 +17,6 @@ export type IntentResultData<Fields extends IntentParams> =
 
 export type IntentSchema<Tag extends string, Fields extends IntentParams> = S.TaggedClass<any, Tag, Fields>;
 
-export type AnyIntentSchema = IntentSchema<string, IntentParams>;
-
 /**
  * An intent is an abstract description of an operation to be performed.
  * Intents allow actions to be performed across plugins.
