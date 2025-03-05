@@ -5,7 +5,7 @@
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { ObjectId, type BaseObject, type TypedObject } from '@dxos/echo-schema';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
@@ -120,7 +120,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           .createNode({
             id: 'gpt-QUEUE_ID',
             type: 'constant',
-            value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+            value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
           })
           .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
