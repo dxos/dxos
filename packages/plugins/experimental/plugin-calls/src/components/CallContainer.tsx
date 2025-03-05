@@ -3,7 +3,7 @@
 //
 
 import { pipe } from 'effect';
-import React, { type PropsWithChildren, useCallback, type FC } from 'react';
+import React, { useCallback, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Call } from './Call';
 import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
 import { Lobby } from './Lobby';
-import { type CallContextType, useCallContext } from '../hooks';
+import { useCallGlobalContext } from '../hooks';
 
 export type CallContainerProps = {
   space: Space;
@@ -26,6 +26,7 @@ export type CallContainerProps = {
 export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const target = space?.properties[CollectionType.typename]?.target;
+  const { call } = useCallGlobalContext();
 
   const handleTranscription = useCallback<NonNullable<CallContextProviderProps['onTranscription']>>(async () => {
     invariant(target);
@@ -38,32 +39,19 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
 
   // TODO(burdon): Move RoomContextProvider to plugin.
   return (
-    <CallContextProvider roomId={roomId} onTranscription={target ? handleTranscription : undefined}>
+    <CallContextProvider onTranscription={target ? handleTranscription : undefined}>
       <StackItem.Content toolbar={false} classNames='w-full'>
-        <WithContext condition={(context) => !context.joined}>
-          <Lobby />
-        </WithContext>
-        <WithContext condition={(context) => context.joined}>
+        {call.joined ? (
           <Call.Root>
             <Call.Room />
             <Call.Toolbar />
           </Call.Root>
-        </WithContext>
+        ) : (
+          <Lobby roomId={roomId} />
+        )}
       </StackItem.Content>
     </CallContextProvider>
   );
 };
 
 export default CallContainer;
-
-const WithContext: FC<PropsWithChildren<{ condition: (context: CallContextType) => boolean }>> = ({
-  children,
-  condition,
-}) => {
-  const context = useCallContext();
-  if (!condition(context)) {
-    return null;
-  }
-
-  return <>{children}</>;
-};

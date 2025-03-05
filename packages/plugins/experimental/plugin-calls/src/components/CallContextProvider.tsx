@@ -20,12 +20,12 @@ import {
 } from '../hooks';
 import { CALLS_URL, TrackNameCodec, type TrackObject } from '../types';
 
-export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, 'roomId' | 'onTranscription'>>;
+export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, 'onTranscription'>>;
 
 /**
  * Global context provider for calls.
  */
-export const CallContextProvider: FC<CallContextProviderProps> = ({ children, roomId, onTranscription }) => {
+export const CallContextProvider: FC<CallContextProviderProps> = ({ children, onTranscription }) => {
   const config = useConfig();
   const iceServers = config.get('runtime.services.ice') ?? [];
   const maxWebcamFramerate = 24;
@@ -135,18 +135,23 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
 
   // TODO(mykola!): Temporary
   useEffect(() => {
+    if ((!pushedVideoTrack && !pushedAudioTrack && !pushedScreenshareTrack) || !call.joined) {
+      return;
+    }
+
     call.tracks = {
       video: pushedVideoTrack ? TrackNameCodec.encode(pushedVideoTrack) : undefined,
       audio: pushedAudioTrack ? TrackNameCodec.encode(pushedAudioTrack) : undefined,
       screenshare: pushedScreenshareTrack ? TrackNameCodec.encode(pushedScreenshareTrack) : undefined,
     };
-  }, [pushedVideoTrack, pushedAudioTrack, pushedScreenshareTrack]);
+  }, [pushedVideoTrack, pushedAudioTrack, pushedScreenshareTrack, call.joined]);
 
   // TODO(burdon): Split root context vs. local call context.
   const context: CallContextType = {
     userMedia,
     isSpeaking,
 
+    peer,
     iceConnectionState,
     dataSaverMode,
     setDataSaverMode,

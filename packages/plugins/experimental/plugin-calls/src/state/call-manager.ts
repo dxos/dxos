@@ -7,7 +7,7 @@ import { Resource } from '@dxos/context';
 import { create } from '@dxos/live-object';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
-import { type EncodedTrackName } from '../types';
+import { type TranscriptionState, type EncodedTrackName } from '../types';
 
 export type GlobalState = { call: CallState };
 
@@ -34,16 +34,28 @@ export class CallManager extends Resource {
     return this._state.call.joined ?? false;
   }
 
+  get self() {
+    return this._state.call.self ?? {};
+  }
+
   get tracks() {
     return this._state.call.tracks ?? {};
   }
 
-  set raisedHand(raisedHand: boolean) {
-    this._swarmSynchronizer.setRaisedHand(raisedHand);
+  get transcription() {
+    return this._state.call.transcription ?? {};
+  }
+
+  get users() {
+    return this._state.call.users ?? [];
   }
 
   set speaking(speaking: boolean) {
     this._swarmSynchronizer.setSpeaking(speaking);
+  }
+
+  set raisedHand(raisedHand: boolean) {
+    this._swarmSynchronizer.setRaisedHand(raisedHand);
   }
 
   set joined(joined: boolean) {
@@ -52,6 +64,10 @@ export class CallManager extends Resource {
 
   set tracks(tracks: { screenshare?: EncodedTrackName; video?: EncodedTrackName; audio?: EncodedTrackName }) {
     this._swarmSynchronizer.setTracks(tracks);
+  }
+
+  set transcription(transcription: TranscriptionState) {
+    this._swarmSynchronizer.setTranscription(transcription);
   }
 
   constructor(private readonly _client: Client) {
@@ -79,9 +95,11 @@ export class CallManager extends Resource {
   async join(roomId: PublicKey) {
     this._swarmSynchronizer._setRoomId(roomId);
     await this._swarmSynchronizer.open();
+    this._swarmSynchronizer.setJoined(true);
   }
 
   async leave() {
+    this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.close();
     this._swarmSynchronizer._setRoomId(undefined);
   }

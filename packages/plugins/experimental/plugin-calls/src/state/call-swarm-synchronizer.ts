@@ -9,14 +9,13 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { type TranscriptionState } from '@dxos/plugin-transcription/types';
 import { buf } from '@dxos/protocols/buf';
 import { TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
-import { codec, type EncodedTrackName, type UserState } from '../types';
+import { codec, type TranscriptionState, type EncodedTrackName, type UserState } from '../types';
 
 export type CallState = {
   /**
@@ -55,7 +54,7 @@ export type CallSwarmSynchronizerParams = { networkService: NetworkService };
 export class CallSwarmSynchronizer extends Resource {
   public readonly stateUpdated = new Event();
 
-  private readonly _state: CallState = {};
+  private readonly _state: CallState = { transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } } };
   private readonly _networkService: NetworkService;
 
   private _identityKey?: string = undefined;
@@ -185,6 +184,10 @@ export class CallSwarmSynchronizer extends Resource {
   private _processSwarmEvent(swarmEvent: SwarmResponse) {
     const users = swarmEvent.peers?.map((peer) => codec.decode(peer.state!)) ?? [];
     this._state.users = users;
+    this._state.self = users.find((user) => user.id === this._deviceKey);
+    if (users.length === 0) {
+      return;
+    }
 
     const lastTranscription = LamportTimestampCrdt.getLastState(
       users.map((user) => user.transcription).filter(isNonNullable),

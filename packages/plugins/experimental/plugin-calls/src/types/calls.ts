@@ -3,9 +3,15 @@
 //
 
 import { buf } from '@dxos/protocols/buf';
-import { UserStateSchema, type UserState as UserStateProto } from '@dxos/protocols/buf/dxos/edge/calls_pb';
+import {
+  type TranscriptionSchema,
+  UserStateSchema,
+  type UserState as UserStateProto,
+} from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
+
+export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
 
 export const codec = {
   encode: (message: UserState): Uint8Array => {

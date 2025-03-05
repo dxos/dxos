@@ -6,19 +6,17 @@ import React, { useMemo } from 'react';
 
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
-import { useCallContext, usePulledAudioTrack, usePulledVideoTrack } from '../../hooks';
+import { useCallContext, useCallGlobalContext, usePulledAudioTrack, usePulledVideoTrack } from '../../hooks';
 import { type UserState } from '../../types';
 import { type CallsServicePeer } from '../../util';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 
 export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
+  const { dataSaverMode, userMedia, peer } = useCallContext();
   const {
     call: { self },
-    dataSaverMode,
-    userMedia,
-    peer,
-  } = useCallContext();
+  } = useCallGlobalContext();
   const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);
   const isScreenshare = user.tracks?.screenshare;
   const pulledAudioTrack = usePulledAudioTrack(isScreenshare ? undefined : user.tracks?.audio);

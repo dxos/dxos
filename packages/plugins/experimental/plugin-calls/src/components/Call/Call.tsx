@@ -10,16 +10,16 @@ import { isNonNullable } from '@dxos/util';
 
 import { CallRoom } from './Room';
 import { CallToolbar } from './Toolbar';
-import { useCallContext } from '../../hooks';
+import { useCallGlobalContext } from '../../hooks';
 import { AudioTrackContextProvider } from '../Media';
 
 const CallRoot: FC<PropsWithChildren<ThemedClassName>> = ({ children, classNames }) => {
   const {
-    call: { room, self },
-  } = useCallContext();
+    call: { users, self },
+  } = useCallGlobalContext();
 
   // Filter out self.
-  const otherUsers = (room.users ?? []).filter((user) => user.id !== self.id);
+  const otherUsers = (users ?? []).filter((user) => user.id !== self?.id);
 
   return (
     <AudioTrackContextProvider audioTracks={otherUsers.map((user) => user.tracks?.audio).filter(isNonNullable)}>

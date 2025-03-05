@@ -4,27 +4,29 @@
 
 import React, { type FC, useCallback } from 'react';
 
+import { type PublicKey } from '@dxos/keys';
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useCallContext } from '../../hooks';
+import { useCallContext, useCallGlobalContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
-export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
+export const Lobby: FC<ThemedClassName & { roomId: PublicKey }> = ({ classNames, roomId }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
-  const { call, userMedia, peer, setJoined } = useCallContext()!;
+  const { call } = useCallGlobalContext();
+  const { userMedia, peer } = useCallContext()!;
   const session = peer?.session;
   const sessionError = peer?.sessionError;
-  const numUsers = call.room.users?.filter((user) => user.joined).length ?? 0;
+  const numUsers = call.users?.filter((user) => user.joined).length ?? 0;
 
   const joinSound = useSoundEffect('JoinCall');
-  const handleJoin = useCallback(() => {
-    setJoined(true);
-    void joinSound.play();
-  }, [setJoined, joinSound]);
+  const handleJoin = useCallback(async () => {
+    await call.join(roomId);
+    await joinSound.play();
+  }, [joinSound, roomId]);
 
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>

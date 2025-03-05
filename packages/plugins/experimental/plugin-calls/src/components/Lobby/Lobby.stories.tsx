@@ -20,11 +20,12 @@ const meta: Meta<typeof Lobby> = {
   component: Lobby,
   // TODO(burdon): Create decorator for CallContextProvider.
   render: () => {
+    // TODO(mykola): Fix.
     const roomId = useMemo(() => PublicKey.random(), []);
     return (
-      <CallContextProvider roomId={roomId}>
+      <CallContextProvider>
         <div className='flex w-[30rem] h-full overflow-hidden'>
-          <Lobby />
+          <Lobby roomId={roomId} />
         </div>
       </CallContextProvider>
     );

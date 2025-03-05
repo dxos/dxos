@@ -13,8 +13,9 @@ import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { useCallContext, useBroadcastStatus } from '../../hooks';
+import { useCallContext, useCallGlobalContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
+import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
@@ -22,15 +23,10 @@ const STOP_TRANSCRIPTION_TIMEOUT = 250;
 // TODO(mykola): Move transcription related logic to a separate component.
 export const CallToolbar = () => {
   const { t } = useTranslation(CALLS_PLUGIN);
-  const {
-    call: { self, transcription, updateUserState },
-    userMedia,
-    peer,
-    isSpeaking,
-    pushedTracks,
-    setJoined,
-    onTranscription,
-  } = useCallContext();
+  const { userMedia, isSpeaking, onTranscription } = useCallContext();
+
+  //
+  const { call } = useCallGlobalContext();
 
   // Screen sharing.
   const isScreensharing = userMedia.state.screenshareVideoTrack !== undefined;
@@ -39,22 +35,12 @@ export const CallToolbar = () => {
 
   // Broadcast status over swarm.
   const [raisedHand, setRaisedHand] = useState(false);
-  useBroadcastStatus({
-    peer,
-    self,
-    userMedia,
-    pushedTracks,
-    raisedHand,
-    speaking: isSpeaking,
-    transcription: transcription.state.value,
-    onUpdateUserState: updateUserState,
-  });
 
   // Initialize transcriber.
   const edgeClient = useEdgeClient();
   const queue = useQueue<TranscriptBlock>(
     edgeClient,
-    transcription.state.value.queueDxn ? DXN.parse(transcription.state.value.queueDxn) : undefined,
+    call.transcription.queueDxn ? DXN.parse(call.transcription.queueDxn) : undefined,
   );
   const handleSegments = useCallback(
     async (segments: TranscriptSegment[]) => {
@@ -70,17 +56,17 @@ export const CallToolbar = () => {
 
   // Turn transcription on and off.
   useEffect(() => {
-    if (transcription.state.value.enabled && transcriber) {
+    if (call.transcription.enabled && transcriber) {
       void transcriber.open();
-    } else if (!transcription.state.value.enabled && transcriber) {
+    } else if (!call.transcription.enabled && transcriber) {
       void transcriber.close();
     }
-  }, [transcription.state.value.enabled, transcriber]);
+  }, [call.transcription.enabled, transcriber]);
 
   // If user is not speaking, stop transcription after STOP_TRANSCRIPTION_TIMEOUT. if speaking, start transcription.
   const disableTimeout = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    const transcriptionEnabled = transcription.state.value.enabled;
+    const transcriptionEnabled = call.transcription.enabled;
     log('transcription', {
       enabled: transcriptionEnabled,
       transcriber: !!transcriber,
@@ -113,23 +99,24 @@ export const CallToolbar = () => {
         disableTimeout.current = null;
       }
     };
-  }, [transcription.state.value.enabled, transcriber, transcriber?.isOpen, isSpeaking]);
+  }, [call.transcription.enabled, transcriber, transcriber?.isOpen, isSpeaking]);
 
   const leaveSound = useSoundEffect('LeaveCall');
   const handleLeave = () => {
     userMedia.turnScreenshareOff();
-    setJoined(false);
+    void call.leave();
     void leaveSound.play();
   };
 
   const handleToggleTranscription = async () => {
-    transcription.setEnabled(!transcription.state.value.enabled);
-    if (transcription.state.value.enabled && !transcription.state.value.queueDxn) {
+    const newTranscription: TranscriptionState = { enabled: !call.transcription.enabled };
+    if (call.transcription.enabled && !call.transcription.queueDxn) {
       const object = await onTranscription?.();
       if (object?.queue) {
-        transcription.setQueue(DXN.parse(object.queue));
+        newTranscription.queueDxn = object.queue;
       }
     }
+    call.transcription = newTranscription;
   };
 
   return (
@@ -139,8 +126,8 @@ export const CallToolbar = () => {
       {/* TODO(burdon): Capability test. */}
       <IconButton
         iconOnly
-        icon={transcription.state.value.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
-        label={transcription.state.value.enabled ? t('transcription off') : t('transcription on')}
+        icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
+        label={call.transcription.enabled ? t('transcription off') : t('transcription on')}
         onClick={handleToggleTranscription}
       />
       <IconButton
