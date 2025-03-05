@@ -184,6 +184,8 @@ export default (context: PluginsContext) => {
 
         if (space.state.get() === SpaceState.SPACE_INACTIVE) {
           return false;
+        } else if (space.state.get() !== SpaceState.SPACE_READY) {
+          return undefined;
         } else {
           const state = context.requestCapability(SpaceCapabilities.State);
           return constructSpaceNode({
