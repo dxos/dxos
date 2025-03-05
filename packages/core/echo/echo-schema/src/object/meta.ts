@@ -25,7 +25,24 @@ export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
 export const ObjectMetaSchema = S.Struct({
   keys: S.mutable(S.Array(ForeignKeySchema)),
-});
+  /**
+   * Globally unique DXNS name for the object.
+   * Used by the registry to resolve the object.
+   */
+  name: S.optional(S.String),
+
+  /**
+   * Semver version of the object.
+   * Used by the registry to resolve the object.
+   */
+  version: S.optional(S.String),
+
+  /**
+   * Space ID of the object.
+   * Used by the registry to track the space the object belongs to.
+   */
+  space: S.optional(S.String),
+}).pipe(S.mutable);
 
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 

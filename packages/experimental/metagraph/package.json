@@ -8,25 +8,26 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
-    "./testing.js": "./dist/lib/browser/testing/index.mjs"
-  },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "testing.d.ts",
     "testing.js",
     "dist"
   ],
+  "scripts": {
+    "push": "tsx src/bin/push.ts",
+    "query": "tsx src/bin/query.ts"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/plugin-automation": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "cross-fetch": "^3.1.5"
   }
 }

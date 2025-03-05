@@ -35,6 +35,10 @@ export const SpaceId = Object.freeze({
   random: (): SpaceId => {
     return SpaceId.encode(randomBytes(SpaceId.byteLength));
   },
+  fromString: (value: string): SpaceId => {
+    invariant(SpaceId.isValid(value), 'Invalid space id');
+    return value as SpaceId;
+  },
 });
 
 /**
