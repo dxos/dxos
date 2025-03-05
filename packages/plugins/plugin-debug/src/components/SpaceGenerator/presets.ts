@@ -6,7 +6,7 @@ import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/co
 import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
@@ -61,7 +61,11 @@ export const presets = {
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
-            const triggerShape = createTrigger({ triggerKind: TriggerKind.Webhook, ...position({ x: -18, y: -2 }) });
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Webhook,
+              ...position({ x: -18, y: -2 }),
+            });
             const trigger = canvasModel.createNode(triggerShape);
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
             const { queueId } = setupQueue(space, canvasModel);
@@ -141,7 +145,11 @@ export const presets = {
 
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
-            const triggerShape = createTrigger({ triggerKind: TriggerKind.Email, ...position({ x: -18, y: -2 }) });
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Email,
+              ...position({ x: -18, y: -2 }),
+            });
             const trigger = canvasModel.createNode(triggerShape);
 
             const tableId = canvasModel.createNode(
@@ -244,6 +252,7 @@ export const presets = {
               }),
             );
             const triggerShape = createTrigger({
+              spaceId: space.id,
               triggerKind: TriggerKind.Email,
               ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
             });
@@ -346,7 +355,11 @@ export const presets = {
 
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
-            const triggerShape = createTrigger({ triggerKind: TriggerKind.Timer, ...position({ x: -10, y: -5 }) });
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Timer,
+              ...position({ x: -10, y: -5 }),
+            });
             const trigger = canvasModel.createNode(triggerShape);
             // DXOS dev-null channel.
             const channelId = canvasModel.createNode(
@@ -354,7 +367,7 @@ export const presets = {
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+                value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -400,6 +413,7 @@ export const presets = {
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
             const triggerShape = createTrigger({
+              spaceId: space.id,
               triggerKind: TriggerKind.Queue,
               ...position({ x: -10, y: -5 }),
             });
@@ -450,6 +464,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   let functionTrigger: FunctionTrigger | undefined;
   canvasModel.builder.call((builder) => {
     const triggerShape = createTrigger({
+      spaceId: space.id,
       triggerKind,
       ...rawPosition({ centerX: -578, centerY: -187, height: 320, width: 320 }),
     });
