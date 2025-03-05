@@ -66,7 +66,7 @@ export const Thread = ({
 
   return (
     <>
-      <ScrollContainer ref={scroller} classNames='bg-baseSurface' fadeClassNames='from-baseSurface h-[6rem]'>
+      <ScrollContainer ref={scroller} fadeClassNames='from-[--surface-bg] h-[6rem]'>
         <div role='none' className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6', classNames)}>
           {filteredMessages.map((message) => (
             <ThreadMessage
