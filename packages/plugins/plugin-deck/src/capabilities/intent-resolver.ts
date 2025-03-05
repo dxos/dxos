@@ -200,7 +200,7 @@ export default (context: PluginsContext) =>
           }
         });
 
-        const first = state.decks[state.activeDeck].active[0];
+        const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
         if (first) {
           return {
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
@@ -268,7 +268,8 @@ export default (context: PluginsContext) =>
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const next = subject.reduce((acc, id) => closeEntry(acc, id), state.deck.active);
+        const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
+        const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
