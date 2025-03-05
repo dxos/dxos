@@ -1,7 +1,3 @@
-//
-// Copyright 2024 DXOS.org
-//
-
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 // @ts-ignore
@@ -11,7 +7,7 @@ export default defineFunction({
   description: 'Plays a random move in a chess game.',
 
   inputSchema: S.Struct({
-    objects: S.Array(S.String).annotations({
+    changedObjectId: S.String.annotations({
       description: 'The objects to play the game on.',
     }),
     player: S.optional(S.Literal('w', 'b')).annotations({
@@ -27,14 +23,11 @@ export default defineFunction({
 
   handler: async ({
     event: {
-      data: {
-        objects: [gameId],
-        player = 'b',
-      },
+      data: { changedObjectId, player = 'b' },
     },
     context: { space },
   }: any) => {
-    const { pgn } = await space.db.query({ id: gameId }).first();
+    const { pgn } = await space.db.query({ id: changedObjectId }).first();
     const game = new Chess();
     game.load_pgn(pgn);
     if (game.turn() !== player) {
@@ -49,7 +42,7 @@ export default defineFunction({
 
     game.move(move);
     const newPgn = game.pgn();
-    await space.db.update({ id: gameId }, { pgn: newPgn, fen: game.fen() });
+    await space.db.update({ id: changedObjectId }, { pgn: newPgn, fen: game.fen() });
     return { state: game.ascii() };
   },
 });
