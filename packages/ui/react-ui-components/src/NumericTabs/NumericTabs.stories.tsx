@@ -13,7 +13,7 @@ import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 import { NumericTabs } from './NumericTabs';
 import { ToggleContainer } from '../ToggleContainer';
 
-const content = Array.from({ length: 4 }, (_, i) => ({
+const content = Array.from({ length: 15 }, (_, i) => ({
   title: faker.lorem.paragraph(),
   content: faker.lorem.paragraphs(3),
 }));

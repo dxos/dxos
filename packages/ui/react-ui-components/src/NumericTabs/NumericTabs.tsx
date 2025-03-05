@@ -19,6 +19,7 @@ const numbers = [
   { regular: 'ph--number-circle-eight--thin', active: 'ph--number-circle-eight--duotone' },
   { regular: 'ph--number-circle-nine--thin', active: 'ph--number-circle-nine--duotone' },
 ];
+const outOfRange = { regular: 'ph--circle-check--thin', active: 'ph--circle-check--duotone' };
 
 export type NumericTabsProps = ThemedClassName<{
   length: number;
@@ -69,7 +70,8 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
         }}
       >
         {Array.from({ length }).map((_, i) => {
-          const icon = numbers[i + 1];
+          // TODO(mykola): Use text. It fails for anything larger than 9.
+          const icon = numbers[i + 1] ?? outOfRange;
           return (
             <div
               key={i}

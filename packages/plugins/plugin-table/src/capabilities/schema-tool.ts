@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
+import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import {
@@ -21,10 +21,12 @@ import { hues } from '@dxos/react-ui-theme';
 
 // TODO(ZaymonFC): Move this somewhere common.
 export const TypeNameSchema = S.String.pipe(
-  S.pattern(/^[\da-z.-]+\.[a-z]{2,6}(\/[A-Za-z][\w-]*)*$/i),
+  S.pattern(/^\w+\.\w{2,}\/[\w/]+$/i),
   S.annotations({
     [TitleAnnotationId]: 'TypeName',
-    [DescriptionAnnotationId]: 'Domain-style type name path',
+    [DescriptionAnnotationId]:
+      'Domain-style type name path. Dashes are not allowed. Use camel case for the final component of the type name.',
+    [ExamplesAnnotationId]: ['example.com/type/Document', 'example.com/type/FlightList'],
   }),
 );
 
