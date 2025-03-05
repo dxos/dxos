@@ -145,7 +145,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 <ScrollArea.Root>
                   <ScrollArea.Viewport>
                     <Surface
-                      // key={activeEntryId}
                       role={`complementary--${activePanelId}`}
                       data={data}
                       fallback={PlankContentError}
