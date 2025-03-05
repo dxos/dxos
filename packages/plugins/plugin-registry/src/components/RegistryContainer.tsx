@@ -2,9 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { createIntent, LayoutAction, type Plugin, useIntentDispatcher, usePluginManager } from '@dxos/app-framework';
+import {
+  Capabilities,
+  createIntent,
+  LayoutAction,
+  type Plugin,
+  SettingsAction,
+  useCapability,
+  useIntentDispatcher,
+  usePluginManager,
+} from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -16,36 +25,57 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   const manager = usePluginManager();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);
+  const settingsStore = useCapability(Capabilities.SettingsStore);
 
   // TODO(wittjosiah): Factor out to an intent?
-  const handleChange = async (id: string, enabled: boolean) => {
-    if (enabled) {
-      await manager.enable(id);
-    } else {
-      await manager.disable(id);
-    }
+  const handleChange = useCallback(
+    async (id: string, enabled: boolean) => {
+      if (enabled) {
+        await manager.enable(id);
+      } else {
+        await manager.disable(id);
+      }
 
-    await dispatch(
-      createIntent(ObservabilityAction.SendEvent, {
-        name: 'plugins.toggle',
-        properties: { plugin: id, enabled },
-      }),
-    );
-  };
+      await dispatch(
+        createIntent(ObservabilityAction.SendEvent, {
+          name: 'plugins.toggle',
+          properties: { plugin: id, enabled },
+        }),
+      );
+    },
+    [dispatch, manager],
+  );
 
-  const handleClick = (pluginId: string) =>
-    dispatch(
-      createIntent(LayoutAction.Open, {
-        part: 'main',
-        // TODO(wittjosiah): `/` currently is not supported in ids.
-        subject: [pluginId.replaceAll('/', ':')],
-        options: { pivotId: id, positioning: 'end' },
-      }),
-    );
+  const handleClick = useCallback(
+    (pluginId: string) =>
+      dispatch(
+        createIntent(LayoutAction.Open, {
+          part: 'main',
+          // TODO(wittjosiah): `/` currently is not supported in ids.
+          subject: [pluginId.replaceAll('/', ':')],
+          options: { pivotId: id, positioning: 'end' },
+        }),
+      ),
+    [dispatch, id],
+  );
+
+  const hasSettings = useCallback((pluginId: string) => !!settingsStore.getStore(pluginId), [settingsStore]);
+
+  const handleSettings = useCallback(
+    (pluginId: string) => dispatch(createIntent(SettingsAction.Open, { plugin: pluginId })),
+    [dispatch],
+  );
 
   return (
     <StackItem.Content toolbar={false} role='article' classNames='overflow-x-hidden overflow-y-auto'>
-      <PluginList plugins={plugins} enabled={manager.enabled} onClick={handleClick} onChange={handleChange} />
+      <PluginList
+        plugins={plugins}
+        enabled={manager.enabled}
+        onClick={handleClick}
+        onChange={handleChange}
+        hasSettings={hasSettings}
+        onSettings={handleSettings}
+      />
     </StackItem.Content>
   );
 };

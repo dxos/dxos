@@ -7,7 +7,6 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { type Ref } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -30,7 +29,7 @@ export default () =>
         if (!thread) {
           return null;
         }
-        log.info('thread', { thread });
+
         const currentPosition = layout.active.findIndex((id) => id === channel.id);
         if (currentPosition > 0) {
           const objectToTheLeft = layout.active[currentPosition - 1];

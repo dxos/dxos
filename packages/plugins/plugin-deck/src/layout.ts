@@ -20,7 +20,7 @@ export const openEntry = (deck: string[], entryId: string, options?: OpenLayoutE
     const pivotId = options?.pivotId;
 
     if (key) {
-      const index = draft.findIndex((id) => id.startsWith(key));
+      const index = draft.findIndex((id) => id.split('~')[0] === key);
       if (index !== -1) {
         draft.splice(index, 1, entryId);
         return;

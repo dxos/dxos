@@ -40,7 +40,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
       <Tooltip.Trigger asChild>
         <Button variant='ghost' {...props}>
           <span className='sr-only'>{label}</span>
-          <Icon icon={icon} size={4} />
+          <Icon icon={icon} size={5} />
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>

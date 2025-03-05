@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { isSpace, getSpace } from '@dxos/react-client/echo';
 
 import { CallContainer } from '../components';
 import { CALLS_PLUGIN } from '../meta';
@@ -22,7 +22,9 @@ export default () =>
     createSurface({
       id: `${CALLS_PLUGIN}/assistant`,
       role: 'complementary--calls',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data, role }) => <CallContainer space={data.subject} roomId={data.subject.key} />,
+      component: ({ data, role }) => {
+        const space = isSpace(data.subject) ? data.subject : getSpace(data.subject)!;
+        return <CallContainer space={space} roomId={space.key} />;
+      },
     }),
   ]);

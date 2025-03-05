@@ -27,7 +27,7 @@ import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-sta
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
-import { ComplementarySidebar, type ComplementarySidebarProps } from './ComplementarySidebar';
+import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
@@ -45,12 +45,12 @@ export type DeckLayoutProps = {
   overscroll: Overscroll;
   showHints: boolean;
   onDismissToast: (id: string) => void;
-} & Pick<ComplementarySidebarProps, 'panels'>;
+};
 
 const PlankSeparator = ({ index }: { index: number }) =>
   index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
 
-export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
+export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {
@@ -203,7 +203,7 @@ export const DeckLayout = ({ overscroll, showHints, panels, onDismissToast }: De
           <Sidebar />
 
           {/* Right sidebar. */}
-          <ComplementarySidebar panels={panels} current={complementarySidebarPanel} />
+          <ComplementarySidebar current={complementarySidebarPanel} />
 
           {/* Dialog overlay to dismiss dialogs. */}
           <Main.Overlay />
