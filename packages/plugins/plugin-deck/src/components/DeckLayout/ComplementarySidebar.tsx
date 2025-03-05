@@ -9,6 +9,7 @@ import {
   LayoutAction,
   Surface,
   useAppGraph,
+  useCapabilities,
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
@@ -20,31 +21,34 @@ import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
-import { useNode, useNodeActionExpander } from '../../hooks';
+import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
-import { SLUG_PATH_SEPARATOR, type Panel } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 
 export type ComplementarySidebarProps = {
-  panels: Panel[];
   current?: string;
 };
 
-export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarProps) => {
-  const layout = useCapability(DeckCapabilities.MutableDeckState);
-  const panelIds = useMemo(() => panels.map((panel) => panel.id), [panels]);
-  const activePanelId = panelIds.find((panelId) => panelId === current) ?? panels[0].id;
-  const attended = useAttended();
-  const activeEntryId = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${activePanelId}` : undefined;
-  const { graph } = useAppGraph();
-  const node = useNode(graph, activeEntryId);
+export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  useNodeActionExpander(node);
+  const layout = useCapability(DeckCapabilities.MutableDeckState);
+  const attended = useAttended();
+  const { graph } = useAppGraph();
+  const node = useNode(graph, attended[0]);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
 
+  const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
+  const availablePanels = panels.filter((panel) => {
+    if (!node || !panel.filter) {
+      return true;
+    }
+
+    return panel.filter(node);
+  });
+  const activePanelId = availablePanels.find((panel) => panel.id === current)?.id ?? availablePanels[0].id;
   const [internalValue, setInternalValue] = useState(activePanelId);
 
   useEffect(() => {
@@ -63,6 +67,17 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
       }
     },
     [layout, activePanelId, dispatch],
+  );
+
+  const data = useMemo(
+    () =>
+      node && {
+        id: node.id,
+        subject: node.data,
+        workspace: layout.activeDeck,
+        popoverAnchorId: layout.popoverAnchorId,
+      },
+    [node, layout.popoverAnchorId],
   );
 
   // TODO(burdon): Scroll area should be controlled by surface.
@@ -85,7 +100,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
           className='absolute z-[1] inset-block-0 inline-end-0 !is-[--r0-size] pbs-[env(safe-area-inset-top)] pbe-[env(safe-area-inset-bottom)] border-is border-separator grid grid-cols-1 grid-rows-[1fr_min-content] bg-baseSurface contain-layout app-drag'
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-[--rail-action] p-1 gap-1 !overflow-y-auto'>
-            {panels.map((panel) => (
+            {availablePanels.map((panel) => (
               <Tabs.Tab key={panel.id} value={panel.id} asChild>
                 <IconButton
                   label={toLocalizedString(panel.label, t)}
@@ -115,14 +130,14 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
             <ToggleComplementarySidebarButton />
           </div>
         </div>
-        {panels.map((panel) => (
+        {availablePanels.map((panel) => (
           <Tabs.Tabpanel
             key={panel.id}
             value={panel.id}
             classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
             {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
           >
-            {panel.id === activePanelId && node && (
+            {panel.id === activePanelId && data && (
               <>
                 <h2 className='flex items-center pli-2 border-separator border-be'>
                   {toLocalizedString(panel.label, t)}
@@ -130,13 +145,9 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
                 <ScrollArea.Root>
                   <ScrollArea.Viewport>
                     <Surface
-                      key={activeEntryId}
+                      // key={activeEntryId}
                       role={`complementary--${activePanelId}`}
-                      data={{
-                        id: activeEntryId,
-                        subject: node.properties.object ?? node.properties.space,
-                        popoverAnchorId: layout.popoverAnchorId,
-                      }}
+                      data={data}
                       fallback={PlankContentError}
                       placeholder={<PlankLoading />}
                     />

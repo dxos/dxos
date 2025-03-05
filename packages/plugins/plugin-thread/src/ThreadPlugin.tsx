@@ -13,12 +13,12 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
-import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadSettings, ThreadState } from './capabilities';
+import { IntentResolver, Markdown, ReactSurface, ThreadSettings, ThreadState } from './capabilities';
 import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction } from './types';
@@ -103,12 +103,20 @@ export const ThreadPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panel`,
-      activatesOn: Events.Startup,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'comments',
           label: ['comments panel label', { ns: THREAD_PLUGIN }],
           icon: 'ph--chat-text--regular',
+          // TODO(wittjosiah): Support comments on any object.
+          // filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
+          filter: (node) =>
+            !!node.data &&
+            typeof node.data === 'object' &&
+            'threads' in node.data &&
+            Array.isArray(node.data.threads) &&
+            !(node.data instanceof ChannelType),
         }),
     }),
     defineModule({
@@ -125,10 +133,5 @@ export const ThreadPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
     }),
   ]);

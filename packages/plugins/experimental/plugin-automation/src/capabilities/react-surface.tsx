@@ -20,6 +20,13 @@ export default () =>
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
+      id: `${AUTOMATION_PLUGIN}/automation`,
+      role: 'complementary--automation',
+      filter: (data): data is { subject: ReactiveEchoObject<any> } =>
+        isEchoObject(data.subject) && !!getSpace(data.subject),
+      component: ({ data }) => <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />,
+    }),
+    createSurface({
       id: `${AUTOMATION_PLUGIN}/service-registry`,
       role: 'complementary--service-registry',
       component: ({ data }) => (
@@ -31,12 +38,5 @@ export default () =>
       role: 'dialog',
       filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
       component: ({ data }) => <AssistantDialog {...data.props} />,
-    }),
-    createSurface({
-      id: `${AUTOMATION_PLUGIN}/automation`,
-      role: 'complementary--automation',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } =>
-        isEchoObject(data.subject) && !!getSpace(data.subject),
-      component: ({ data }) => <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />,
     }),
   ]);
