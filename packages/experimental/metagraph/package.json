@@ -25,6 +25,8 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "cross-fetch": "^3.1.5"
   }
 }
