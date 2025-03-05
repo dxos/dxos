@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { type CSSProperties, useCallback, useMemo, useRef } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { keyToFallback } from '@dxos/util';
 
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { messageReducer } from './reducer';
@@ -44,6 +46,10 @@ export const Thread = ({
 
   const scroller = useRef<ScrollController>(null);
 
+  const identity = useIdentity();
+  const fallbackValue = keyToFallback(identity!.identityKey);
+  const userHue = identity!.profile?.data?.hue || fallbackValue.hue;
+
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (value: string) => {
       onSubmit?.(value);
@@ -67,7 +73,11 @@ export const Thread = ({
   return (
     <>
       <ScrollContainer ref={scroller} fade>
-        <div role='none' className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6', classNames)}>
+        <div
+          role='none'
+          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6', classNames)}
+          style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+        >
           {filteredMessages.map((message) => (
             <ThreadMessage
               key={message.id}
