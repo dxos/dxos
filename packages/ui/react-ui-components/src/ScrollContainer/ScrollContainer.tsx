@@ -4,17 +4,16 @@
 
 import React, {
   type PropsWithChildren,
-  type UIEventHandler,
   forwardRef,
-  useCallback,
-  useEffect,
   useImperativeHandle,
-  useRef,
   useState,
+  Children,
+  useEffect,
+  useCallback,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export interface ScrollController {
@@ -23,9 +22,7 @@ export interface ScrollController {
 
 export type ScrollContainerProps = ThemedClassName<
   PropsWithChildren<{
-    fadeClassNames?: string;
-    autoScroll?: boolean;
-    scrollInterval?: number;
+    fade?: boolean;
   }>
 >;
 
@@ -33,97 +30,73 @@ export type ScrollContainerProps = ThemedClassName<
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
-  ({ children, classNames, fadeClassNames, autoScroll = true, scrollInterval = 1_000 }, forwardedRef) => {
-    const containerRef = useRef<HTMLDivElement>(null);
+  ({ children, classNames, fade }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const [scrolledAtTop, setScrolledAtTop] = useState(false);
 
-    // Determines if user scrolled.
-    const autoScrollRef = useRef(false);
-
-    // Controller.
+    // Scroll controller imperative ref
     useImperativeHandle(
       forwardedRef,
       () => ({
         scrollToBottom: () => {
-          invariant(containerRef.current);
+          invariant(viewport);
           // NOTE: Should be instant otherwise scrollHeight might be out of date.
-          containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'instant' });
-          autoScrollRef.current = false;
+          viewport.scrollTo({ top: 0, behavior: 'instant' });
         },
       }),
-      [],
+      [viewport],
     );
 
-    // Auto scroll.
-    // Scroll based on an interval rather than continuously (which causes jitter).
-    const [sticky, setSticky] = useState(true);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const updateScrollState = useCallback(() => {
+      if (viewport) {
+        // Check if content is overflowing
+        setIsOverflowing(viewport.scrollHeight > viewport.clientHeight);
+        // In flex-col-reverse, scrollTop > 0 means we're not at the visual top, also the value will be negative.
+        setScrolledAtTop(-viewport.scrollTop + 16 >= viewport.scrollHeight - viewport.clientHeight);
+      }
+    }, [viewport]);
+
     useEffect(() => {
-      if (!autoScroll || !sticky || !containerRef.current) {
+      if (!viewport || !fade) {
         return;
       }
 
-      autoScrollRef.current = true;
-      if (timerRef.current == null && containerRef.current.scrollTop < containerRef.current.scrollHeight) {
-        timerRef.current = setTimeout(() => {
-          timerRef.current = null;
-          if (containerRef.current) {
-            containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
-          }
-        }, scrollInterval);
-      }
-    }, [children]);
-    useEffect(() => {
+      // Initial check
+      updateScrollState();
+
+      // Listen for scroll events
+      viewport.addEventListener('scroll', updateScrollState);
+
+      // Setup resize observer to detect content changes
+      const resizeObserver = new ResizeObserver(updateScrollState);
+      resizeObserver.observe(viewport);
+
       return () => {
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
+        viewport.removeEventListener('scroll', updateScrollState);
+        resizeObserver.disconnect();
       };
-    }, []);
+    }, [viewport, fade]);
 
-    // Detect scroll to end.
-    const [, forceUpdate] = useState({});
     useEffect(() => {
-      invariant(containerRef.current);
-      const handleScrollEnd = () => {
-        autoScrollRef.current = false;
-        forceUpdate({});
-      };
-
-      containerRef.current.addEventListener('scrollend', handleScrollEnd);
-      return () => containerRef.current?.removeEventListener('scrollend', handleScrollEnd);
-    }, []);
-
-    // User scrolling.
-    const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>((ev) => {
-      if (autoScrollRef.current) {
-        return;
-      }
-
-      const { scrollTop, clientHeight, scrollHeight } = ev.currentTarget;
-      const sticky = scrollTop + clientHeight >= scrollHeight;
-      setSticky(sticky);
-    }, []);
+      updateScrollState();
+    }, [Children.count(children), viewport]);
 
     return (
-      <div className='relative flex flex-col grow overflow-hidden'>
-        {fadeClassNames && containerRef.current && containerRef.current.scrollTop > 0 && (
+      <div className='relative flex-1 min-bs-0 grid overflow-hidden'>
+        {fade && (
           <div
-            className={mx(
-              'z-10 absolute top-0 left-0 right-0 pointer-events-none',
-              'bg-gradient-to-b to-transparent',
-              fadeClassNames,
-            )}
+            role='none'
+            data-visible={isOverflowing && !scrolledAtTop}
+            className='opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100 z-10 absolute block-start-0 inset-inline-0 bs-24 pointer-events-none bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none'
           />
         )}
-        <ScrollArea.Root classNames={mx('grow', classNames)}>
-          <ScrollArea.Viewport ref={containerRef} onScroll={handleScroll}>
-            {children}
-          </ScrollArea.Viewport>
-          <ScrollArea.Scrollbar orientation='vertical'>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
-        </ScrollArea.Root>
+        <div
+          className={mx('flex flex-col-reverse min-bs-0 overflow-y-auto scrollbar-thin', classNames)}
+          ref={setViewport}
+        >
+          {[...Children.toArray(children)].reverse()}
+        </div>
       </div>
     );
   },
