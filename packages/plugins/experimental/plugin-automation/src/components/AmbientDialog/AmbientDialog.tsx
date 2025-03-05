@@ -92,7 +92,7 @@ const DialogHeader = ({ open, title, onToggle }: { open?: boolean; title?: strin
         <IconButton
           variant='ghost'
           icon={'ph--caret-up--regular'}
-          classNames={mx('transition duration-200', open && 'rotate-180')}
+          classNames={mx('[&>svg]:transition [&>svg]:duration-200', open && '[&>svg]:rotate-180')}
           iconOnly
           label='Shrink'
           onClick={onToggle}
