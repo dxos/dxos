@@ -10,6 +10,7 @@ export const IdentityCreated = lazy(() => import('./identity-created'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactRoot = lazy(() => import('./react-root'));
 export const ReactSurface = lazy(() => import('./react-surface'));
+export const Schema = lazy(() => import('./schema'));
 export const SpaceSettings = lazy(() => import('./settings'));
 export const SpaceState = lazy(() => import('./state'));
 export const SpacesReady = lazy(() => import('./spaces-ready'));

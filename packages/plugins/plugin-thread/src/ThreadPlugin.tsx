@@ -2,23 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  allOf,
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  type PluginsContext,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { ChannelType, defineObjectForm, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
-import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadSettings, ThreadState } from './capabilities';
+import { AppGraphBuilder, IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
 import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction } from './types';
@@ -27,11 +19,12 @@ import { ThreadAction } from './types';
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
 export const ThreadPlugin = () =>
   definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: ThreadSettings,
-    }),
+    // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
+    // defineModule({
+    //   id: `${meta.id}/module/settings`,
+    //   activatesOn: Events.SetupSettings,
+    //   activate: ThreadSettings,
+    // }),
     defineModule({
       id: `${meta.id}/module/state`,
       activatesOn: Events.Startup,
@@ -49,7 +42,6 @@ export const ThreadPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ChannelType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(ThreadAction.Create, props),
             placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -88,18 +80,21 @@ export const ThreadPlugin = () =>
       ],
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
+      id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [ThreadType, MessageType]),
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: ChannelType,
+            getIntent: () => createIntent(ThreadAction.Create),
+          }),
+        ),
     }),
     defineModule({
-      id: `${meta.id}/module/channel-schema`,
-      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
-      activate: (context: PluginsContext) => {
-        const client = context.requestCapability(ClientCapabilities.Client);
-        client.addTypes([ChannelType]);
-        return contributes(ClientCapabilities.Schema, [ChannelType]);
-      },
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType]),
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panel`,
