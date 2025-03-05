@@ -14,11 +14,11 @@ import {
   type CallContextType,
   useIsSpeaking,
   useCallsService,
-  useCallState,
   useStablePojo,
   useUserMedia,
+  useCallGlobalContext,
 } from '../hooks';
-import { CALLS_URL, type TrackObject } from '../types';
+import { CALLS_URL, TrackNameCodec, type TrackObject } from '../types';
 
 export type CallContextProviderProps = PropsWithChildren<Pick<CallContextType, 'roomId' | 'onTranscription'>>;
 
@@ -31,12 +31,11 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
   const maxWebcamFramerate = 24;
   const maxWebcamBitrate = 120_0000;
 
-  const call = useCallState({ roomId });
+  const { call } = useCallGlobalContext();
   const userMedia = useUserMedia();
   const isSpeaking = useIsSpeaking(userMedia.state.audioTrack);
   const { peer, iceConnectionState } = useCallsService({ iceServers, apiBase: `${CALLS_URL}/api/calls` });
 
-  const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
   const videoEncodingParams = useStablePojo<RTCRtpEncodingParameters[]>([
@@ -134,37 +133,26 @@ export const CallContextProvider: FC<CallContextProviderProps> = ({ children, ro
     };
   }, [peer?.session, userMedia.state.screenshareVideoTrack]);
 
+  // TODO(mykola!): Temporary
+  useEffect(() => {
+    call.tracks = {
+      video: pushedVideoTrack ? TrackNameCodec.encode(pushedVideoTrack) : undefined,
+      audio: pushedAudioTrack ? TrackNameCodec.encode(pushedAudioTrack) : undefined,
+      screenshare: pushedScreenshareTrack ? TrackNameCodec.encode(pushedScreenshareTrack) : undefined,
+    };
+  }, [pushedVideoTrack, pushedAudioTrack, pushedScreenshareTrack]);
+
   // TODO(burdon): Split root context vs. local call context.
   const context: CallContextType = {
-    roomId,
-    call,
-    peer,
     userMedia,
-
-    joined,
-    setJoined,
     isSpeaking,
 
     iceConnectionState,
     dataSaverMode,
     setDataSaverMode,
 
-    pushedTracks: {
-      video: trackObjectToString(pushedVideoTrack),
-      audio: trackObjectToString(pushedAudioTrack),
-      screenshare: trackObjectToString(pushedScreenshareTrack),
-    },
-
     onTranscription,
   };
 
   return <CallContext.Provider value={context}>{children}</CallContext.Provider>;
-};
-
-const trackObjectToString = (trackObject?: any): string | undefined => {
-  if (!trackObject) {
-    return undefined;
-  }
-
-  return trackObject.sessionId + '/' + trackObject.trackName;
 };

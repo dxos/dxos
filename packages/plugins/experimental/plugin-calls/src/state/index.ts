@@ -3,5 +3,4 @@
 //
 
 export * from './call-manager';
-export * from './transcription';
-export * from './users-manager';
+export * from './call-swarm-synchronizer';

@@ -2,83 +2,91 @@
 // Copyright 2025 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { type PublicKey, type Client } from '@dxos/client';
+import { Resource } from '@dxos/context';
+import { create } from '@dxos/live-object';
 
-import { type Context, Resource } from '@dxos/context';
-import { type TranscriptionState } from '@dxos/plugin-transcription/types';
+import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
+import { type EncodedTrackName } from '../types';
 
-import { type TrackObject, type RoomState, type UserState } from '../types';
-import { type CallsServicePeer } from '../util';
-
-export type GlobalState = {
-  /**
-   * Self media state.
-   */
-  media?: {
-    audioDeviceId?: string;
-    audioEnabled?: boolean;
-    audioTrack?: MediaStreamTrack;
-
-    videoDeviceId?: string;
-    videoEnabled?: boolean;
-    videoTrack?: MediaStreamTrack;
-
-    screenshareEnabled?: boolean;
-    screenshareVideoTrack?: MediaStreamTrack;
-  };
-
-  call?: {
-    room: RoomState;
-    self: UserState;
-    transcription: TranscriptionState;
-  };
-
-  
-};
+export type GlobalState = { call: CallState };
 
 /**
- * Manages the call state for the current call.
- * Stores it inside live object to ensure state is reactive.
+ * Top level manager for call state.
  */
 export class CallManager extends Resource {
-  private readonly _state = signal<GlobalState>({});
-  private _callsServicePeer?: CallsServicePeer;
+  /**
+   * Live object state. Is changed on internal events.
+   * CAUTION: Do not change directly.
+   */
+  private readonly _state = create<GlobalState>({ call: {} });
+  private readonly _swarmSynchronizer: CallSwarmSynchronizer;
 
-  private _pushedVideoTrack?: MediaStreamTrack;
-  private _pushedAudioTrack?: MediaStreamTrack;
-  private _pushedScreenshareTrack?: MediaStreamTrack;
-
-  get media() {
-    return this._state.value.media;
+  get raisedHand() {
+    return this._state.call.raisedHand ?? false;
   }
 
-  get call() {
-    return this._state.value.call;
+  get speaking() {
+    return this._state.call.speaking ?? false;
   }
 
-  async pullMediaStreamTrack({ ctx, trackName }: { ctx: Context; trackName: string }) {
-    const track = this._state.value.pulledTracks?.get(trackName);
-    if (track) {
-      return track;
-    }
+  get joined() {
+    return this._state.call.joined ?? false;
+  }
 
-    const trackData = TrackNameCodec.decode(trackName);
-    const pulledTrack = await this._callsServicePeer?.pullTrack({ ctx, trackData });
-    if (!pulledTrack) {
-      return;
-    }
+  get tracks() {
+    return this._state.call.tracks ?? {};
+  }
 
-    this._state.value.pulledTracks?.set(trackName, pulledTrack);
-    return track;
+  set raisedHand(raisedHand: boolean) {
+    this._swarmSynchronizer.setRaisedHand(raisedHand);
+  }
+
+  set speaking(speaking: boolean) {
+    this._swarmSynchronizer.setSpeaking(speaking);
+  }
+
+  set joined(joined: boolean) {
+    this._swarmSynchronizer.setJoined(joined);
+  }
+
+  set tracks(tracks: { screenshare?: EncodedTrackName; video?: EncodedTrackName; audio?: EncodedTrackName }) {
+    this._swarmSynchronizer.setTracks(tracks);
+  }
+
+  constructor(private readonly _client: Client) {
+    super();
+    this._swarmSynchronizer = new CallSwarmSynchronizer({
+      networkService: _client.services.services.NetworkService!,
+    });
+  }
+
+  protected override async _open() {
+    const subscription = this._client.halo.identity.subscribe((identity) => {
+      if (identity) {
+        this._swarmSynchronizer._setIdentity(identity);
+      }
+      if (this._client.halo.device) {
+        this._swarmSynchronizer._setDevice(this._client.halo.device);
+      }
+    });
+    this._swarmSynchronizer.stateUpdated.on(this._ctx, () => this._updateState());
+
+    this._ctx.onDispose(() => subscription.unsubscribe());
+  }
+
+  // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
+  async join(roomId: PublicKey) {
+    this._swarmSynchronizer._setRoomId(roomId);
+    await this._swarmSynchronizer.open();
+  }
+
+  async leave() {
+    await this._swarmSynchronizer.close();
+    this._swarmSynchronizer._setRoomId(undefined);
+  }
+
+  private _updateState() {
+    this._state.call = this._swarmSynchronizer.state;
   }
 }
-
-const TrackNameCodec = {
-  encode: (trackData: TrackObject): string => {
-    return trackData.sessionId + '/' + trackData.trackName;
-  },
-  decode: (name: string): TrackObject => {
-    const [sessionId, trackName] = name.split('/');
-    return { sessionId, trackName, location: 'remote' };
-  },
-};
