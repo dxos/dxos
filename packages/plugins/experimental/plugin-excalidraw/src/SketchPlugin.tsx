@@ -5,6 +5,8 @@
 import { createIntent, defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ExcalidrawSettings, IntentResolvers, ReactSurface } from './capabilities';
 import { meta, EXCALIDRAW_PLUGIN } from './meta';
@@ -30,19 +32,27 @@ export const ExcalidrawPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(SketchAction.Create, props),
             placeholder: ['object title placeholder', { ns: EXCALIDRAW_PLUGIN }],
             icon: 'ph--compass-tool--regular',
           },
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DiagramType,
+            getIntent: () => createIntent(SketchAction.Create),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [CanvasType]),
-        contributes(ClientCapabilities.Schema, [DiagramType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [CanvasType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
