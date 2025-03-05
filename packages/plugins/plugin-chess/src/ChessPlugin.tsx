@@ -3,8 +3,8 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Artifact, IntentResolver, ReactSurface } from './capabilities';
