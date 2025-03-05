@@ -27,7 +27,7 @@ export default () => {
     id: 'plugin-map',
     instructions: `
     Maps:
-    - If the user's message relates to a map, you must return the map as a valid GeoJSON Point with valid coordinates.
+    - If the user's message relates to a map, you must return the map as a valid GeoJSON Point (longitude, latitude) with valid coordinates.
     - If the user's message relates to a collection of points (like in a table) you can specify the typename and the map
         will render and center on those markers.
     `,
