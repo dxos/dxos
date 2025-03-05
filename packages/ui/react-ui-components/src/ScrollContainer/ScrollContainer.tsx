@@ -83,7 +83,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     }, [Children.count(children), viewport]);
 
     return (
-      <div className='relative flex-1 min-bs-0 grid'>
+      <div className='relative flex-1 min-bs-0 grid overflow-hidden'>
         {fade && (
           <div
             role='none'
