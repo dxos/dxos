@@ -4,3 +4,4 @@
 
 export * from './call-manager';
 export * from './call-swarm-synchronizer';
+export * from './media-manager';
