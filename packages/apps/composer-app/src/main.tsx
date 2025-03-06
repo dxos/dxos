@@ -10,11 +10,11 @@ import { createRoot } from 'react-dom/client';
 import { createApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getObservabilityGroup, isObservabilityDisabled, initializeAppObservability } from '@dxos/observability';
-import { Status, Tooltip, ThemeProvider } from '@dxos/react-ui';
+import { Tooltip, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { ResetDialog } from './components';
+import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey } from './constants';
 import { core, defaults, plugins, type PluginConfig } from './plugins';
@@ -92,14 +92,7 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    // TODO(burdon): Create skeleton.
-    placeholder: (
-      <ThemeProvider tx={defaultTx}>
-        <div className='flex flex-col justify-end bs-dvh'>
-          <Status variant='main-bottom' indeterminate aria-label='Initializing' />
-        </div>
-      </ThemeProvider>
-    ),
+    placeholder: <Placeholder />,
     plugins: plugins(conf),
     core: core(conf),
     defaults: defaults(conf),

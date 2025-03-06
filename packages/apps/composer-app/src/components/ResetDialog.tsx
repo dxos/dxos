@@ -67,7 +67,7 @@ export const ResetDialog = ({
 
   const handleReset = async () => {
     localStorage.clear();
-    window.location.pathname = '/';
+    window.location.href = window.location.origin;
   };
 
   const Caret = showStack ? CaretDown : CaretRight;
