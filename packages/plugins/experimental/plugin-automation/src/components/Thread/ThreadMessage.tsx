@@ -20,8 +20,7 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
-// TODO(burdon): Create secondary token.
-const userClassNames = 'bg-sky-200 dark:bg-sky-500';
+const userClassNames = 'bg-[--user-fill]';
 const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
 
 const ToggleContainer = (props: ToggleContainerProps) => {

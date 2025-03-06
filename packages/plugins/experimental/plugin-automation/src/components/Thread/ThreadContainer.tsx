@@ -9,9 +9,9 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 
+import { Thread } from './Thread';
 import { useChatProcessor, useMessageQueue } from '../../hooks';
 import { type AIChatType } from '../../types';
-import { Thread } from '../Thread';
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
 export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType; onOpenChange?: (open: boolean) => void }>> = ({
