@@ -6,7 +6,7 @@ import type { ExecutorContext } from '@nx/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { register } from 'module';
+import { register } from 'node:module';
 
 register('extensionless', `file://${__filename}`);
 
