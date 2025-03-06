@@ -5,21 +5,17 @@
 import { setAutoFreeze } from 'immer';
 
 import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
-import { AttentionEvents } from '@dxos/plugin-attention';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import {
   AppGraphBuilder,
   CheckAppScheme,
+  DeckSettings,
   DeckState,
   LayoutIntentResolver,
-  LayoutState,
-  LocationState,
-  NavigationIntentResolver,
-  ReactContext,
   ReactRoot,
-  DeckSettings,
   ReactSurface,
+  Tools,
   UrlHandler,
 } from './capabilities';
 import { DeckEvents } from './events';
@@ -33,35 +29,23 @@ setAutoFreeze(false);
 
 export const DeckPlugin = () =>
   definePlugin(meta, [
-    //
-    // Settings
-    //
-
+    defineModule({
+      id: `${meta.id}/module/check-app-scheme`,
+      activatesOn: Events.SettingsReady,
+      activate: CheckAppScheme,
+    }),
     defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
       activate: DeckSettings,
     }),
     defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
-      activate: ReactSurface,
-    }),
-
-    //
-    // Layout
-    //
-
-    defineModule({
       id: `${meta.id}/module/layout`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      activatesAfter: [Events.LayoutReady],
-      activate: LayoutState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/deck`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      activatesAfter: [DeckEvents.StateReady],
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
+      activatesAfter: [Events.LayoutReady, DeckEvents.StateReady],
       activate: DeckState,
     }),
     defineModule({
@@ -70,18 +54,19 @@ export const DeckPlugin = () =>
       activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-root`,
       activatesOn: Events.Startup,
+      activatesBefore: [DeckEvents.SetupComplementaryPanels],
       activate: ReactRoot,
     }),
     defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.SetupReactSurface,
+      activate: ReactSurface,
+    }),
+    defineModule({
       id: `${meta.id}/module/layout-intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: LayoutIntentResolver,
     }),
     defineModule({
@@ -89,35 +74,14 @@ export const DeckPlugin = () =>
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
-
-    //
-    // Navigation
-    //
-
     defineModule({
-      id: `${meta.id}/module/location`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      activatesAfter: [Events.LocationReady],
-      activate: LocationState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/check-app-scheme`,
-      activatesOn: Events.SettingsReady,
-      activate: CheckAppScheme,
+      id: `${meta.id}/module/tools`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: Tools,
     }),
     defineModule({
       id: `${meta.id}/module/url`,
-      activatesOn: allOf(
-        Events.DispatcherReady,
-        Events.LayoutReady,
-        Events.LocationReady,
-        AttentionEvents.AttentionReady,
-      ),
+      activatesOn: allOf(Events.DispatcherReady, DeckEvents.StateReady),
       activate: UrlHandler,
-    }),
-    defineModule({
-      id: `${meta.id}/module/navigation-intent-resolver`,
-      activatesOn: Events.SetupIntents,
-      activate: NavigationIntentResolver,
     }),
   ]);

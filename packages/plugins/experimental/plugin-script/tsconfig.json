@@ -9,6 +9,7 @@
     ],
     "module": "ESNext",
     "outDir": "./dist/types",
+    "target": "ES2020",
     "types": [
       "node"
     ]
@@ -27,9 +28,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/crypto"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
@@ -37,6 +35,9 @@
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/local-storage"
     },
     {
       "path": "../../../common/log"
@@ -72,6 +73,12 @@
       "path": "../../../core/protocols"
     },
     {
+      "path": "../../../experimental/artifact"
+    },
+    {
+      "path": "../../../experimental/assistant"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -99,7 +106,7 @@
       "path": "../../../ui/react-ui-form"
     },
     {
-      "path": "../../../ui/react-ui-mosaic"
+      "path": "../../../ui/react-ui-menu"
     },
     {
       "path": "../../../ui/react-ui-stack"

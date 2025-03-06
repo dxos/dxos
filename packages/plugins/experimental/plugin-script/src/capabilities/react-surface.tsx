@@ -6,6 +6,8 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions';
+import { SettingsStore } from '@dxos/local-storage';
+import { Clipboard } from '@dxos/react-ui';
 
 import { ScriptCapabilities } from './capabilities';
 import { AutomationPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
@@ -16,12 +18,10 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${SCRIPT_PLUGIN}/settings`,
-      role: 'settings',
-      filter: (data): data is any => data.subject === SCRIPT_PLUGIN,
-      component: () => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)!.value;
-        return <ScriptSettings settings={settings} />;
-      },
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === SCRIPT_PLUGIN,
+      component: ({ data: { subject } }) => <ScriptSettings settings={subject.value} />,
     }),
     createSurface({
       id: `${SCRIPT_PLUGIN}/article`,
@@ -29,14 +29,14 @@ export default () =>
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)!.value;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)?.value;
         return <ScriptContainer role={role} script={data.subject} settings={settings} compiler={compiler} />;
       },
     }),
     createSurface({
       id: `${SCRIPT_PLUGIN}/automation`,
       role: 'complementary--automation',
-      disposition: 'hoist',
+      position: 'hoist',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
       component: ({ data }) => <AutomationPanel subject={data.subject} />,
     }),
@@ -44,6 +44,10 @@ export default () =>
       id: `${SCRIPT_PLUGIN}/settings-panel`,
       role: 'complementary--settings',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
-      component: ({ data }) => <ScriptSettingsPanel script={data.subject} />,
+      component: ({ data }) => (
+        <Clipboard.Provider>
+          <ScriptSettingsPanel script={data.subject} />
+        </Clipboard.Provider>
+      ),
     }),
   ]);

@@ -19,7 +19,6 @@ export const WelcomePlugin = () =>
         Events.AppGraphReady,
         Events.SettingsReady,
         Events.LayoutReady,
-        Events.LocationReady,
         ClientEvents.ClientReady,
       ),
       activate: Onboarding,
@@ -31,7 +30,7 @@ export const WelcomePlugin = () =>
     }),
     defineModule({
       id: `${WELCOME_PLUGIN}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({

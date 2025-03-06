@@ -7,7 +7,7 @@ import React from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
@@ -29,7 +29,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
-    <>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput
         label={t('observability enabled label')}
         secondary={
@@ -43,6 +43,6 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
           onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
         />
       </DeprecatedFormInput>
-    </>
+    </DeprecatedFormContainer>
   );
 };

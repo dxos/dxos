@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, createIntent, openIds, type PluginsContext, Capabilities } from '@dxos/app-framework';
+import { contributes, createIntent, type PluginsContext, Capabilities, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -10,6 +10,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { DeckCapabilities } from '@dxos/plugin-deck';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
 import { Filter, FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
@@ -29,13 +30,17 @@ export default async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);
   const layout = context.requestCapability(Capabilities.Layout);
-  const location = context.requestCapability(Capabilities.Location);
+  const deck = context.requestCapability(DeckCapabilities.DeckState);
   const attention = context.requestCapability(AttentionCapabilities.Attention);
   const state = context.requestCapability(SpaceCapabilities.MutableState);
   const client = context.requestCapability(ClientCapabilities.Client);
 
   const defaultSpace = client.spaces.default;
   await defaultSpace.waitUntilReady();
+
+  if (deck.activeDeck === 'default') {
+    await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: defaultSpace.id }));
+  }
 
   // Initialize space sharing lock in default space.
   if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
@@ -54,21 +59,18 @@ export default async (context: PluginsContext) => {
   // Await missing objects.
   subscriptions.add(
     scheduledEffect(
-      () => ({
-        layoutMode: layout.layoutMode,
-        soloPart: location.active.solo?.[0],
-      }),
-      ({ layoutMode, soloPart }) => {
-        if (layoutMode !== 'solo' || !soloPart) {
+      () => ({ active: layout.active }),
+      ({ active }) => {
+        if (active.length !== 1) {
           return;
         }
 
-        const node = graph.findNode(soloPart.id);
-        if (!node && soloPart.id.length === FQ_ID_LENGTH) {
+        const node = graph.findNode(active[0]);
+        if (!node && active[0].length === FQ_ID_LENGTH) {
           const timeout = setTimeout(async () => {
-            const node = graph.findNode(soloPart.id);
+            const node = graph.findNode(active[0]);
             if (!node) {
-              await dispatch(createIntent(SpaceAction.WaitForObject, { id: soloPart.id }));
+              await dispatch(createIntent(SpaceAction.WaitForObject, { id: active[0] }));
             }
           }, WAIT_FOR_OBJECT_TIMEOUT);
 
@@ -102,17 +104,14 @@ export default async (context: PluginsContext) => {
   // Broadcast active node to other peers in the space.
   subscriptions.add(
     scheduledEffect(
-      () => ({
-        open: openIds(location.active, layout.layoutMode === 'solo' ? ['solo'] : ['main']),
-        closed: [...location.closed],
-      }),
-      ({ open, closed }) => {
+      () => ({ current: attention.current, active: layout.active, inactive: layout.inactive }),
+      ({ current, active, inactive }) => {
         const send = () => {
           const spaces = client.spaces.get();
           const identity = client.halo.identity.get();
-          if (identity && location.active) {
+          if (identity) {
             // Group parts by space for efficient messaging.
-            const idsBySpace = reduceGroupBy(open, (id) => {
+            const idsBySpace = reduceGroupBy(active, (id) => {
               try {
                 const [spaceId] = parseFullyQualifiedId(id);
                 return spaceId;
@@ -121,7 +120,7 @@ export default async (context: PluginsContext) => {
               }
             });
 
-            const removedBySpace = reduceGroupBy(closed, (id) => {
+            const removedBySpace = reduceGroupBy(inactive, (id) => {
               try {
                 const [spaceId] = parseFullyQualifiedId(id);
                 return spaceId;
@@ -147,7 +146,7 @@ export default async (context: PluginsContext) => {
               void space
                 .postMessage('viewing', {
                   identityKey: identity.identityKey.toHex(),
-                  attended: attention.current ? [...attention.current] : [],
+                  attended: current,
                   added,
                   removed,
                 })

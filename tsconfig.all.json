@@ -43,6 +43,9 @@
       "path": "packages/common/effect/tsconfig.json"
     },
     {
+      "path": "packages/common/errors/tsconfig.json"
+    },
+    {
       "path": "packages/common/esbuild-plugins/tsconfig.json"
     },
     {
@@ -122,6 +125,9 @@
     },
     {
       "path": "packages/core/compute/tsconfig.json"
+    },
+    {
+      "path": "packages/core/conductor/tsconfig.json"
     },
     {
       "path": "packages/core/echo/automerge/tsconfig.json"
@@ -220,7 +226,10 @@
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
     },
     {
-      "path": "packages/experimental/agent-functions/tsconfig.json"
+      "path": "packages/experimental/artifact/tsconfig.json"
+    },
+    {
+      "path": "packages/experimental/artifact-testing/tsconfig.json"
     },
     {
       "path": "packages/experimental/assistant/tsconfig.json"
@@ -232,10 +241,10 @@
       "path": "packages/experimental/discord-bot/tsconfig.json"
     },
     {
-      "path": "packages/experimental/gem-core/tsconfig.json"
+      "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
-      "path": "packages/experimental/gem-globe/tsconfig.json"
+      "path": "packages/experimental/gem-core/tsconfig.json"
     },
     {
       "path": "packages/experimental/gem-spore/tsconfig.json"
@@ -280,15 +289,6 @@
       "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-ipfs/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-map/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/experimental/plugin-native/tsconfig.json"
     },
     {
@@ -304,7 +304,13 @@
       "path": "packages/plugins/experimental/plugin-template/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-wnfs/tsconfig.json"
+      "path": "packages/plugins/experimental/plugin-theme-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-transcription/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-transformer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
@@ -331,6 +337,12 @@
       "path": "packages/plugins/plugin-help/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-kanban/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-map/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
@@ -350,9 +362,6 @@
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-settings-interface/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
@@ -382,7 +391,7 @@
       "path": "packages/plugins/plugin-token-manager/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-wildcard/tsconfig.json"
+      "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
@@ -415,6 +424,9 @@
       "path": "packages/sdk/react-client/tsconfig.json"
     },
     {
+      "path": "packages/sdk/react-edge-client/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/schema/tsconfig.json"
     },
     {
@@ -445,13 +457,31 @@
       "path": "packages/ui/react-ui-canvas/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-card/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-components/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-dnd/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-editor/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-form/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-gameboard/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-geo/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
@@ -466,10 +496,13 @@
       "path": "packages/ui/react-ui-menu/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-mosaic/tsconfig.json"
+      "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-searchlist/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-sfx/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-stack/tsconfig.json"
@@ -505,6 +538,9 @@
       "path": "tools/codemods/tsconfig.json"
     },
     {
+      "path": "tools/codemorph/tsconfig.json"
+    },
+    {
       "path": "tools/executors/esbuild/tsconfig.json"
     },
     {
@@ -515,6 +551,9 @@
     },
     {
       "path": "tools/lit-stories/tsconfig.json"
+    },
+    {
+      "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
       "path": "tools/log-hook/tsconfig.json"

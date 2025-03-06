@@ -109,4 +109,45 @@ export namespace Testing {
     typename: 'example.com/type/Project',
     version: '0.1.0',
   })(ProjectSchema.fields) {}
+
+  //
+  // Email
+  //
+
+  export const EmailSchema = S.Struct({
+    from: S.String,
+    to: S.String,
+    subject: S.String,
+    created: S.String,
+    body: S.String,
+    category: S.String,
+  }).annotations({
+    [LabelAnnotationId]: 'subject',
+  });
+
+  export type EmailSchemaType = S.Schema.Type<typeof EmailSchema>;
+
+  export class EmailType extends TypedObject({
+    typename: 'example.com/type/Email',
+    version: '0.1.0',
+  })(EmailSchema.fields, { partial: true }) {}
+
+  //
+  // Message
+  //
+
+  export const MessageSchema = S.Struct({
+    from: S.String,
+    created: S.String,
+    content: S.String,
+  }).annotations({
+    [LabelAnnotationId]: 'content',
+  });
+
+  export type MessageSchemaType = S.Schema.Type<typeof MessageSchema>;
+
+  export class MessageType extends TypedObject({
+    typename: 'example.com/type/Message',
+    version: '0.1.0',
+  })(MessageSchema.fields, { partial: true }) {}
 }

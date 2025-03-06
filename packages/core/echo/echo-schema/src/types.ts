@@ -5,12 +5,12 @@
 import { Schema as S } from '@effect/schema';
 
 import { Reference } from '@dxos/echo-protocol';
-import { AST, type JsonPath } from '@dxos/effect';
+import { AST, splitJsonPath, type JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
-import type { ObjectMeta } from './object/meta';
+import { type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
@@ -86,21 +86,17 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const splitPath = (path: JsonPath): string[] => {
-  return path.match(/[a-zA-Z_$][\w$]*|\[\d+\]/g) ?? [];
-};
-
 export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
   return getDeep(
     obj,
-    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
   );
 };
 
 export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
   return setDeep(
     obj,
-    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    splitJsonPath(path).map((p) => p.replace(/[[\]]/g, '')),
     value,
   );
 };
@@ -128,7 +124,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
 
-  return Reference.fromLegacyTypename(annotation.typename);
+  return Reference.fromDXN(DXN.fromTypenameAndVersion(annotation.typename, annotation.version));
 };
 
 /**
@@ -155,3 +151,36 @@ export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => 
 
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
+
+export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
+  schema: Schema,
+  object: any,
+): object is S.Schema.Type<Schema> => {
+  const schemaDXN = getSchemaDXN(schema);
+  if (!schemaDXN) {
+    throw new Error('Schema must have an object annotation.');
+  }
+
+  const objectTypename = getTypename(object);
+  if (!objectTypename) {
+    return false;
+  }
+
+  if (objectTypename.startsWith('dxn:')) {
+    return schemaDXN.toString() === objectTypename;
+  } else {
+    const typeDXN = schemaDXN.asTypeDXN();
+    if (!typeDXN) {
+      return false;
+    }
+
+    return typeDXN.type === objectTypename;
+  }
+};
+
+/**
+ * Object that has an associated typename.
+ * The typename is retrievable using {@link getTypename}.
+ * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
+ */
+export type HasTypename = {};

@@ -14,7 +14,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { AUTOMATION_PLUGIN } from '../../meta';
@@ -69,7 +69,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
 
     // Create map of unclaimed inputs.
     const unclaimed = new Map<string, ChainInput>(
-      prompt.inputs?.filter(nonNullable).map((input) => [input.name, input]),
+      prompt.inputs?.filter(isNonNullable).map((input) => [input.name, input]),
     );
     const missing: string[] = [];
     Array.from(variables.values()).forEach((name) => {
@@ -161,7 +161,7 @@ export const PromptEditor = ({ prompt, commandEditable = true }: PromptEditorPro
           {/* TODO(zan): Improve layout with grid */}
           <table className='w-full table-fixed border-collapse my-2'>
             <tbody>
-              {prompt.inputs?.filter(nonNullable).map((input) => (
+              {prompt.inputs?.filter(isNonNullable).map((input) => (
                 <tr key={input.name}>
                   <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
                     <code className='px-2'>{input.name}</code>

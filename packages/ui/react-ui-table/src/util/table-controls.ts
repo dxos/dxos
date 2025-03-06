@@ -23,8 +23,8 @@ export const CONTROL_IDENTIFIERS = {
 } as const;
 
 const BASE_CLASSES = {
-  checkbox: 'absolute inset-block-[.375rem] inline-end-[.375rem] ch-checkbox',
-  switch: 'absolute inset-block-[.25rem] inline-end-[.25rem] ch-checkbox--switch',
+  checkbox: 'absolute inset-block-[.375rem] inline-end-[.375rem] dx-checkbox',
+  switch: 'absolute inset-block-[.25rem] inline-end-[.25rem] dx-checkbox--switch',
 } as const;
 
 const renderAttributes = (data: Record<string, string>) => {

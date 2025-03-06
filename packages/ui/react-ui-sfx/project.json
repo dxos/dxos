@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-sfx",
+  "tags": [
+    "scope:ui"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "dependsOn": [
+        "gen"
+      ],
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
+      }
+    },
+    "gen": {
+      "cache": true,
+      "executor": "nx:run-script",
+      "inputs": [
+        "{projectRoot}/src/shaders/glsl/*.*"
+      ],
+      "options": {
+        "script": "glsl"
+      },
+      "outputs": [
+        "{projectRoot}/src/shaders/glsl/gen"
+      ]
+    },
+    "lint": {},
+    "pack": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

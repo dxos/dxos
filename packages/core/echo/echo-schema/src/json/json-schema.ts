@@ -23,8 +23,10 @@ import {
   PropertyMetaAnnotationId,
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
+  type JsonSchemaReferenceInfo,
+  Ref,
+  createEchoReferenceSchema,
 } from '../ast';
-import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
 
@@ -92,7 +94,7 @@ export const toPropType = (type?: PropType): string => {
  */
 export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
-  const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
+  const schemaWithRefinements = S.make(withEchoRefinements(schema.ast, '#'));
   let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
@@ -136,29 +138,56 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     'additionalProperties',
 
     'anyOf',
+    'oneOf',
   ]);
 
   return jsonSchema;
 };
 
-const withEchoRefinements = (ast: AST.AST): AST.AST => {
+const withEchoRefinements = (
+  ast: AST.AST,
+  path: string | undefined,
+  suspendCache = new Map<AST.AST, string>(),
+): AST.AST => {
+  if (path) {
+    suspendCache.set(ast, path);
+  }
+
   let recursiveResult: AST.AST;
   if (AST.isSuspend(ast)) {
     // Precompute JSON schema for suspended AST since effect serializer does not support it.
+
     const suspendedAst = ast.f();
-    const jsonSchema = toJsonSchema(S.make(suspendedAst));
-    recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
-      [AST.JSONSchemaAnnotationId]: jsonSchema,
-    });
+    const cachedPath = suspendCache.get(suspendedAst);
+    if (cachedPath) {
+      recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
+        [AST.JSONSchemaAnnotationId]: {
+          $ref: cachedPath,
+        },
+      });
+    } else {
+      const jsonSchema = toJsonSchema(S.make(suspendedAst));
+      recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
+        [AST.JSONSchemaAnnotationId]: jsonSchema,
+      });
+    }
   } else if (AST.isTypeLiteral(ast)) {
-    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = mapAst(ast, (ast, key) =>
+      withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
+    );
     recursiveResult = makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: {
         propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
       } satisfies JsonSchemaType,
     });
   } else {
-    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = mapAst(ast, (ast, key) =>
+      withEchoRefinements(
+        ast,
+        path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,
+        suspendCache,
+      ),
+    );
   }
 
   const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
@@ -205,6 +234,17 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     }
   } else if ('enum' in root) {
     result = S.Union(...root.enum!.map((e) => S.Literal(e)));
+  } else if ('oneOf' in root) {
+    if (root.oneOf?.every((schema) => 'const' in schema)) {
+      const literals = root.oneOf.map((schema) => {
+        const annotations = jsonSchemaFieldsToAnnotations(schema);
+        const literal = S.Literal(schema.const);
+        return Object.keys(annotations).length > 0 ? literal.pipe(S.annotations(annotations)) : literal;
+      });
+      result = S.Union(...literals);
+    } else {
+      result = S.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
+    }
   } else if ('anyOf' in root) {
     result = S.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('type' in root) {
@@ -230,7 +270,10 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
           result = S.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
         } else {
           invariant(root.items);
-          result = S.Array(toEffectSchema(root.items, defs));
+          const items = root.items;
+          result = Array.isArray(items)
+            ? S.Tuple(...items.map((v) => toEffectSchema(v, defs)))
+            : S.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
         break;
       }
@@ -351,7 +394,7 @@ const ECHO_REFINEMENTS = [
   ObjectAnnotationId,
   PropertyMetaAnnotationId,
   LabelAnnotationId,
-  FieldLookupAnnotationId,
+  FieldLookupAnnotationId, // TODO(burdon): ???
   GeneratorAnnotationId,
 ];
 

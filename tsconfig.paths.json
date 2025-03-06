@@ -16,11 +16,14 @@
       "@dxos/plugin-calls": [
         "packages/plugins/experimental/plugin-calls/src/index.ts"
       ],
+      "@dxos/plugin-calls/types": [
+        "packages/plugins/experimental/plugin-calls/src/types/index.ts"
+      ],
       "@dxos/plugin-canvas": [
         "packages/plugins/experimental/plugin-canvas/src/index.ts"
       ],
       "@dxos/plugin-canvas/types": [
-        "packages/plugins/experimental/plugin-canvas/src/types/index.ts"
+        "packages/plugins/experimental/plugin-canvas/src/types.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
@@ -39,27 +42,6 @@
       ],
       "@dxos/plugin-inbox/types": [
         "packages/plugins/experimental/plugin-inbox/src/types/index.ts"
-      ],
-      "@dxos/plugin-ipfs": [
-        "packages/plugins/experimental/plugin-ipfs/src/index.ts"
-      ],
-      "@dxos/plugin-ipfs/meta": [
-        "packages/plugins/experimental/plugin-ipfs/src/meta.ts"
-      ],
-      "@dxos/plugin-ipfs/types": [
-        "packages/plugins/experimental/plugin-ipfs/src/types/index.ts"
-      ],
-      "@dxos/plugin-kanban": [
-        "packages/plugins/experimental/plugin-kanban/src/index.ts"
-      ],
-      "@dxos/plugin-kanban/types": [
-        "packages/plugins/experimental/plugin-kanban/src/types.ts"
-      ],
-      "@dxos/plugin-map": [
-        "packages/plugins/experimental/plugin-map/src/index.ts"
-      ],
-      "@dxos/plugin-map/types": [
-        "packages/plugins/experimental/plugin-map/src/types/index.ts"
       ],
       "@dxos/plugin-native": [
         "packages/plugins/experimental/plugin-native/src/index.ts"
@@ -85,11 +67,20 @@
       "@dxos/plugin-template/types": [
         "packages/plugins/experimental/plugin-template/src/types.ts"
       ],
-      "@dxos/plugin-wnfs": [
-        "packages/plugins/experimental/plugin-wnfs/src/index.ts"
+      "@dxos/plugin-theme-editor": [
+        "packages/plugins/experimental/plugin-theme-editor/src/index.ts"
       ],
-      "@dxos/plugin-wnfs/types": [
-        "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
+      "@dxos/plugin-transcription": [
+        "packages/plugins/experimental/plugin-transcription/src/index.ts"
+      ],
+      "@dxos/plugin-transcription/types": [
+        "packages/plugins/experimental/plugin-transcription/src/types/index.ts"
+      ],
+      "@dxos/plugin-transformer": [
+        "packages/plugins/experimental/plugin-transformer/src/index.ts"
+      ],
+      "@dxos/plugin-transformer/types": [
+        "packages/plugins/experimental/plugin-transformer/src/types/index.ts"
       ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
@@ -130,6 +121,18 @@
       "@dxos/plugin-help/types": [
         "packages/plugins/plugin-help/src/types.ts"
       ],
+      "@dxos/plugin-kanban": [
+        "packages/plugins/plugin-kanban/src/index.ts"
+      ],
+      "@dxos/plugin-kanban/types": [
+        "packages/plugins/plugin-kanban/src/types.ts"
+      ],
+      "@dxos/plugin-map": [
+        "packages/plugins/plugin-map/src/index.ts"
+      ],
+      "@dxos/plugin-map/types": [
+        "packages/plugins/plugin-map/src/types/index.ts"
+      ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
       ],
@@ -156,9 +159,6 @@
       ],
       "@dxos/plugin-registry": [
         "packages/plugins/plugin-registry/src/index.ts"
-      ],
-      "@dxos/plugin-settings-interface": [
-        "packages/plugins/plugin-settings-interface/src/index.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"
@@ -211,14 +211,20 @@
       "@dxos/plugin-token-manager": [
         "packages/plugins/plugin-token-manager/src/index.ts"
       ],
-      "@dxos/plugin-wildcard": [
-        "packages/plugins/plugin-wildcard/src/index.ts"
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/plugin-wnfs/src/types/index.ts"
       ],
       "@dxos/app-framework": [
         "packages/sdk/app-framework/src/index.ts"
       ],
       "@dxos/app-framework/testing": [
         "packages/sdk/app-framework/src/testing/index.ts"
+      ],
+      "@dxos/app-framework/worker": [
+        "packages/sdk/app-framework/src/worker.ts"
       ],
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"

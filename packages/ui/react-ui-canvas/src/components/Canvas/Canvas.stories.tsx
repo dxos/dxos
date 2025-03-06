@@ -10,38 +10,62 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Canvas } from './Canvas';
-import { useProjection, useWheel } from '../../hooks';
+import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
 
+const size = 128;
+
+const points: Point[] = [0, (2 * Math.PI) / 3, (2 * Math.PI * 2) / 3].map((a, i) => ({
+  x: Math.round(Math.cos(a - Math.PI / 2) * size * 1.5),
+  y: Math.round(Math.sin(a - Math.PI / 2) * size * 1.5),
+}));
+
 const Render = (props: GridProps) => {
   return (
     <Canvas>
-      <Content {...props} />
+      <Grid {...props} />
+      <Content />
     </Canvas>
   );
 };
 
-const Content = (props: GridProps) => {
-  const { root, scale, offset, styles, setProjection } = useProjection();
-  useWheel(root, setProjection);
-
+const TwoCanvases = (props: GridProps) => {
   return (
-    <>
-      <Grid scale={scale} offset={offset} {...props} />
-      <div className='absolute' style={styles}>
-        <Item x={0} y={-128} />
-        <Item x={-128} y={128} />
-        <Item x={128} y={128} />
+    <div className='grid grid-cols-2 gap-2 w-full h-full'>
+      <div className='h-full relative'>
+        <Canvas>
+          <Grid {...props} />
+          <Content />
+        </Canvas>
       </div>
-    </>
+      <div className='h-full relative'>
+        <Canvas>
+          <Grid {...props} />
+          <Content />
+        </Canvas>
+      </div>
+    </div>
   );
 };
 
-const Item = ({ x, y }: Point) => {
-  const size = 128;
-  const pos = {
+const Content = () => {
+  useWheel();
+  return (
+    <div>
+      {points.map(({ x, y }, i) => (
+        <Item key={i} x={x} y={y} />
+      ))}
+    </div>
+  );
+};
+
+const Item = (p: Point) => {
+  const { projection } = useCanvasContext();
+  const r = (projection.scale * size) / 2;
+  const [{ x, y }] = projection.toScreen([p]);
+  const rect = {
     left: x - size / 2,
     top: y - size / 2,
     width: size,
@@ -50,14 +74,15 @@ const Item = ({ x, y }: Point) => {
 
   return (
     <div {...testId('dx-test', true)}>
-      <div className='absolute flex border border-red-500 justify-center items-center' style={pos}>
+      <div className='absolute flex justify-center items-center' style={rect}>
         <div className='font-mono'>
-          ({x},{y})
+          ({p.x},{p.y})
         </div>
       </div>
+
       {/* NOTE: Width and height are not important since overflow-visible. */}
-      <svg className='absolute overflow-visible' style={pos}>
-        <circle cx={64} cy={64} r={64} className='stroke-red-500 storke-width-2 fill-none' />
+      <svg className='absolute overflow-visible'>
+        <circle cx={x} cy={y} r={r} className='stroke-red-500 storke-width-2 fill-none' />
       </svg>
     </div>
   );
@@ -75,8 +100,10 @@ export default meta;
 type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
-  args: {
-    id: 'test',
-    size: 16,
-  },
+  args: { size: 16 },
+};
+
+export const SideBySide: Story = {
+  args: { size: 16 },
+  render: TwoCanvases,
 };

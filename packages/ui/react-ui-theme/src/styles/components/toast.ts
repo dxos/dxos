@@ -13,7 +13,7 @@ export type ToastStyleProps = Partial<{
 
 export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'z-40 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
+    'z-40 fixed block-end-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:inline-end-[calc(env(safe-area-inset-right)+1rem)] md:inline-start-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
     ...etc,
   );
 
@@ -38,7 +38,7 @@ export const toastActions: ComponentFunction<ToastStyleProps> = (_props, ...etc)
   mx('shrink-0 flex flex-col gap-1 justify-center', ...etc);
 
 export const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx('shrink-0 text-md font-medium', srOnly && 'sr-only', ...etc);
+  mx('shrink-0 font-medium', srOnly && 'sr-only', ...etc);
 
 export const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
   mx(descriptionText, 'shrink-0', srOnly && 'sr-only', ...etc);

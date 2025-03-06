@@ -5,10 +5,10 @@
 import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 
-import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { useThemeContext, useTranslation, ElevationProvider } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { createIntent, type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorAction,
   type DNDOptions,
@@ -31,12 +31,11 @@ import {
   useFormattingState,
   useTextEditor,
   stackItemContentEditorClassNames,
-  stackItemContentToolbarClassNames,
   useEditorToolbarState,
+  createEditorAction,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { textBlockWidth } from '@dxos/react-ui-theme';
-import { isNotFalsy, nonNullable } from '@dxos/util';
+import { isNotFalsy, isNonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -79,7 +78,6 @@ export const MarkdownEditor = ({
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const toolbarState = useEditorToolbarState({ viewMode });
   const formattingObserver = useFormattingState(toolbarState);
-  const { hasAttention } = useAttention(id);
 
   // Restore last selection and scroll point.
   const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
@@ -87,18 +85,24 @@ export const MarkdownEditor = ({
   // Extensions from other plugins.
   // TODO(burdon): Reconcile with DocumentEditor.useExtensions.
   const providerExtensions = useMemo(
-    () => extensionProviders?.flatMap((provider) => provider({})).filter(nonNullable),
+    () => extensionProviders?.flatMap((provider) => provider({})).filter(isNonNullable),
     [extensionProviders],
   );
 
-  // TODO(Zan): Move these into thread plugin as well?
+  // TODO(Zan): Factor out to thread plugin.
   const commentObserver = useCommentState(toolbarState);
   const onCommentClick = useCallback(async () => {
-    await dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }));
-    await dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true }));
+    await dispatch(
+      createIntent(LayoutAction.UpdateComplementary, {
+        part: 'complementary',
+        subject: 'comments',
+        options: { state: 'expanded' },
+      }),
+    );
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 
+  // TODO(wittjosiah): Factor out to file uploader plugin.
   // Drag files.
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const file = files[0];
@@ -150,6 +154,33 @@ export const MarkdownEditor = ({
   useTest(editorView);
   useSelectCurrentThread(editorView, id);
 
+  // https://react-dropzone.js.org/#src
+  const { acceptedFiles, getInputProps, open } = useDropzone({
+    multiple: false,
+    noDrag: true,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+    },
+  });
+
+  useEffect(() => {
+    if (editorView && onFileUpload && acceptedFiles.length) {
+      requestAnimationFrame(async () => {
+        // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
+        const f = acceptedFiles[0];
+        const file = new File([f], f.name, {
+          type: f.type,
+          lastModified: f.lastModified,
+        });
+
+        const info = await onFileUpload(file);
+        if (info) {
+          processEditorPayload(editorView, { type: 'image', data: info.url });
+        }
+      });
+    }
+  }, [acceptedFiles, editorView]);
+
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
   const handleAction = useCallback(
@@ -165,25 +196,30 @@ export const MarkdownEditor = ({
           onViewModeChange?.(id, action.properties.data);
           return;
         }
+        case 'image': {
+          open();
+          return;
+        }
       }
 
       handleToolbarAction?.(action);
     },
-    [editorView, onViewModeChange],
+    [editorView, onViewModeChange, open],
   );
 
   return (
     <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
-        <div role='none' className={stackItemContentToolbarClassNames(role)}>
-          <ElevationProvider elevation='positioned'>
-            <EditorToolbar
-              classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-              state={toolbarState}
-              onAction={handleAction}
-            />
-          </ElevationProvider>
-        </div>
+        <>
+          <EditorToolbar
+            attendableId={id}
+            role={role}
+            state={toolbarState}
+            customActions={onFileUpload ? createUploadAction : undefined}
+            onAction={handleAction}
+          />
+          <input {...getInputProps()} />
+        </>
       )}
       <div
         role='none'
@@ -207,3 +243,13 @@ const useTest = (view?: EditorView) => {
     }
   }, [view]);
 };
+
+export const createUploadAction = () => ({
+  nodes: [
+    createEditorAction({ type: 'image', testId: 'editor.toolbar.image' }, 'ph--image-square--regular', [
+      'upload image label',
+      { ns: MARKDOWN_PLUGIN },
+    ]),
+  ],
+  edges: [{ source: 'root', target: 'image' }],
+});

@@ -4,27 +4,36 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, firstIdInPart, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useLayout, useAppGraph } from '@dxos/app-framework';
 import { getActiveSpace } from '@dxos/plugin-space';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
+import { SearchContextProvider } from '../context';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: SEARCH_DIALOG,
       role: 'dialog',
-      filter: (data): data is { subject: SearchDialogProps } => data.component === SEARCH_DIALOG,
-      component: ({ data }) => <SearchDialog {...data.subject} />,
+      filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
+      component: ({ data }) => (
+        <SearchContextProvider>
+          <SearchDialog {...data.props} />
+        </SearchContextProvider>
+      ),
     }),
     createSurface({
       id: 'search-input',
       role: 'search-input',
       component: () => {
-        const location = useCapability(Capabilities.Location);
-        const { graph } = useCapability(Capabilities.AppGraph);
-        const space = graph && location ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
-        return space ? <SearchMain space={space} /> : null;
+        const layout = useLayout();
+        const { graph } = useAppGraph();
+        const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
+        return space ? (
+          <SearchContextProvider>
+            <SearchMain space={space} />
+          </SearchContextProvider>
+        ) : null;
       },
     }),
   ]);

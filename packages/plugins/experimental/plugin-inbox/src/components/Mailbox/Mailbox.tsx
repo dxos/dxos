@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { MessageState, type MessageType } from '@dxos/plugin-space/types';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
 import { type MailboxType } from '../../types';
@@ -54,7 +54,7 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
 
   const messages = [...(mailbox.messages ?? [])]
     .map((message) => message.target)
-    .filter(nonNullable) // TODO(burdon): [SDK] Why is filter needed?
+    .filter(isNonNullable) // TODO(burdon): [SDK] Why is filter needed?
     .filter(
       (message) =>
         message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,

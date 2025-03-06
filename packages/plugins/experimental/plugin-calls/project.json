@@ -12,14 +12,18 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/types/index.ts"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "pack": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

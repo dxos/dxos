@@ -4,17 +4,18 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities as AppCapabilities, contributes, useCapability } from '@dxos/app-framework';
-import { RootAttentionProvider } from '@dxos/react-ui-attention';
+import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
+import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities } from './capabilities';
 import { ATTENTION_PLUGIN } from '../meta';
 
 export default () =>
-  contributes(AppCapabilities.ReactContext, {
+  contributes(Capabilities.ReactContext, {
     id: ATTENTION_PLUGIN,
     context: (props: PropsWithChildren) => {
       const attention = useCapability(AttentionCapabilities.Attention);
+      const selection = useCapability(AttentionCapabilities.Selection);
 
       return (
         <RootAttentionProvider
@@ -26,7 +27,7 @@ export default () =>
             // }
           }}
         >
-          {props.children}
+          <SelectionProvider selection={selection}>{props.children}</SelectionProvider>
         </RootAttentionProvider>
       );
     },

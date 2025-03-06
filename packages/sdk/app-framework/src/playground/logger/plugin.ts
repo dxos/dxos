@@ -15,12 +15,15 @@ export const LoggerPlugin = () =>
   definePlugin({ id: 'dxos.org/test/logger' }, [
     defineModule({
       id: 'dxos.org/test/logger/intents',
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: () => [
         contributes(
           Capabilities.IntentResolver,
-          createResolver(Log, ({ message }) => {
-            log.info(message);
+          createResolver({
+            intent: Log,
+            resolve: ({ message }) => {
+              log.info(message);
+            },
           }),
         ),
       ],
@@ -28,6 +31,6 @@ export const LoggerPlugin = () =>
     defineModule({
       id: 'dxos.org/test/logger/surfaces',
       activatesOn: Events.Startup,
-      activate: () => Toolbar(),
+      activate: Toolbar,
     }),
   ]);

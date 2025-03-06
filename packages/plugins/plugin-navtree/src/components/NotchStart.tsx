@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher, useCapabilities } from '@dxos/app-framework';
+import { createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { ObservabilityCapabilities } from '@dxos/plugin-observability';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -19,7 +19,7 @@ export const NotchStart = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
     <HaloButton
-      size={8}
+      size={12}
       identityKey={identity?.identityKey.toHex()}
       hue={identity?.profile?.data?.hue}
       emoji={identity?.profile?.data?.emoji}

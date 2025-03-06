@@ -8,14 +8,13 @@
 import { Filter, RefArray } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
-import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { TextType } from '@dxos/schema';
-import { getDeep, isNode, nonNullable } from '@dxos/util';
+import { getDeep, isNode, isNonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
 
@@ -100,7 +99,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         }));
 
         // NOTE: Catching errors because some documents may not have comments.
-        await RefArray.loadAll(doc.comments?.map((comment) => comment.thread).filter(nonNullable) ?? []).catch(
+        await RefArray.loadAll(doc.comments?.map((comment) => comment.thread).filter(isNonNullable) ?? []).catch(
           () => {},
         );
         const threads: ReturnType<MigrationBuilder['createReference']>[] = [];
@@ -143,25 +142,6 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             name: data.title,
             content: data.content,
             threads,
-          },
-        }));
-      }
-
-      //
-      // Files
-      //
-
-      const { objects: files } = await space.db.query(Filter.schema(LegacyTypes.FileType)).run();
-
-      for (const file of files) {
-        await builder.migrateObject(file.id, ({ data }) => ({
-          schema: FileType,
-          props: {
-            filename: data.filename,
-            type: data.type,
-            timestamp: data.timestamp,
-            name: data.title,
-            cid: data.cid,
           },
         }));
       }
@@ -228,7 +208,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       const { objects: threads } = await space.db.query(Filter.schema(LegacyTypes.ThreadType)).run();
       const documentThreads = docs
         .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.target))
-        .filter(nonNullable);
+        .filter(isNonNullable);
       const standaloneThreads = threads.filter((thread) => !documentThreads.includes(thread));
 
       for (const thread of standaloneThreads) {

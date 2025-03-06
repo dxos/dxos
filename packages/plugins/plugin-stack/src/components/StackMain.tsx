@@ -9,18 +9,17 @@ import {
   Capabilities,
   createIntent,
   LayoutAction,
-  NavigationAction,
+  useAppGraph,
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { create, getType, fullyQualifiedId, isReactiveObject, makeRef } from '@dxos/client/echo';
-import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
@@ -41,7 +40,7 @@ type StackMainProps = {
 
 const StackMain = ({ id, collection }: StackMainProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { graph } = useGraph();
+  const { graph } = useAppGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const allMetadata = useCapabilities(Capabilities.Metadata);
   const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
@@ -59,7 +58,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       // TODO(wittjosiah): Should the database handle this differently?
       // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
       .map((object) => object.target)
-      .filter(nonNullable)
+      .filter(isNonNullable)
       .map((object) => {
         const metadata = allMetadata.find((m) => m.id === (getType(object)?.objectId ?? 'never'))
           ?.metadata as StackSectionMetadata;
@@ -76,7 +75,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
     async (id: string) => {
       const index = collection.objects
         .map((object) => object.target)
-        .filter(nonNullable)
+        .filter(isNonNullable)
         .findIndex((section) => fullyQualifiedId(section) === id);
       const object = collection.objects[index].target;
       if (isReactiveObject(object)) {
@@ -92,10 +91,18 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const handleAdd = useCallback(
     async (id: string, position: AddSectionPosition) => {
       await dispatch?.(
-        createIntent(LayoutAction.SetLayout, {
-          element: 'dialog',
-          component: `${STACK_PLUGIN}/AddSectionDialog`,
-          subject: { path: id, position, collection },
+        // TODO(wittjosiah): Use object creation dialog.
+        createIntent(LayoutAction.UpdateDialog, {
+          part: 'dialog',
+          subject: `${STACK_PLUGIN}/AddSectionDialog`,
+          options: {
+            blockAlign: 'start',
+            props: {
+              path: id,
+              position,
+              collection,
+            },
+          },
         }),
       );
     },
@@ -104,8 +111,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
 
   const handleNavigate = useCallback(
     async (id: string) => {
-      await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [id] } }));
-      await dispatch(createIntent(LayoutAction.ScrollIntoView, { id }));
+      await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [id] }));
     },
     [dispatch],
   );

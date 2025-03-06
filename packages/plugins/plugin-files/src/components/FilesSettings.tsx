@@ -7,7 +7,7 @@ import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
@@ -18,7 +18,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
-    <>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput
         label={t('save files to directory label')}
         secondary={
@@ -63,6 +63,6 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
           onCheckedChange={(checked) => (settings.openLocalFiles = !!checked)}
         />
       </DeprecatedFormInput>
-    </>
+    </DeprecatedFormContainer>
   );
 };

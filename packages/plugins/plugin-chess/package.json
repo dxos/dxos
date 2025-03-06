@@ -33,6 +33,8 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -42,12 +44,12 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-gameboard": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
-    "chess.js": "^1.0.0-beta.8",
-    "react-chessboard": "^4.7.1",
-    "react-resize-detector": "^11.0.1"
+    "chess.js": "^1.0.0",
+    "effect": "^3.12.3"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

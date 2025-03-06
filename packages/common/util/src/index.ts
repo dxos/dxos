@@ -1,8 +1,9 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 export * from './array';
+export * from './array-to-hex';
 export * from './binder';
 export * from './bitfield';
 export * from './callback';
@@ -14,7 +15,6 @@ export * from './complex';
 export * from './defer';
 export * from './defer-function';
 export * from './deep';
-export * from './disposition';
 export * from './entry';
 export * from './for-each-async';
 export * from './human-hash';
@@ -24,9 +24,12 @@ export * from './join-tables';
 export * from './json';
 export * from './map';
 export * from './map-values';
+export * from './no-infer';
 export * from './order';
+export * from './order-keys';
 export * from './pick';
 export * from './platform';
+export * from './position';
 export * from './random';
 export * from './range';
 export * from './reducers';
@@ -44,8 +47,5 @@ export * from './types';
 export * from './uint8array';
 export * from './weak';
 export * from './sliding-window-summary';
-export * from './chunk-array';
-export * from './array-to-hex';
+export * from './string';
 export * from './remove-undefined-keys';
-export * from './order-keys';
-export * from './no-infer';

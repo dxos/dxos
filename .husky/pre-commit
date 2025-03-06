@@ -9,5 +9,3 @@ SCRIPT="$(dirname -- "$0")/_/husky.sh"
 if [ -f "$SCRIPT" ]; then
   . "$SCRIPT"
 fi
-
-pnpm run check-dependencies

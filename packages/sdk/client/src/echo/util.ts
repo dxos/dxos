@@ -5,8 +5,9 @@
 
 import { type Space } from '@dxos/client-protocol';
 import { getDatabaseFromObject, isEchoObject, type ReactiveEchoObject } from '@dxos/echo-db';
-import { S } from '@dxos/echo-schema';
+import { type ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 import { isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
@@ -21,6 +22,8 @@ export const SpaceSchema: S.Schema<Space> = S.Any.pipe(
   S.filter((x) => isSpace(x)),
   S.annotations({ title: 'Space' }),
 );
+
+// TODO(dmaretskyi): Move to @dxos/echo-schema.
 export const ReactiveObjectSchema: S.Schema<ReactiveObject<any>> = S.Any.pipe(
   S.filter((x) => isReactiveObject(x)),
   S.annotations({ title: 'ReactiveObject' }),
@@ -69,7 +72,7 @@ export const parseId = (id: string) => {
     return { objectId: id };
   } else if (id.length === FQ_ID_LENGTH && id.indexOf(':') === SPACE_ID_LENGTH) {
     const [spaceId, objectId] = id.split(':');
-    return { spaceId, objectId };
+    return { spaceId: spaceId as SpaceId, objectId: objectId as ObjectId };
   } else {
     return {};
   }

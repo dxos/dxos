@@ -14,18 +14,13 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/types.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
         ]
       }
     },
     "lint": {},
-    "test": {}
+    "pack": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

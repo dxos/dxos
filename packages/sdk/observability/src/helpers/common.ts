@@ -16,7 +16,7 @@ export const getTelemetryIdentifier = (client: Client) => {
 
   const identity = client.halo.identity.get();
   if (identity) {
-    return identity.identityKey.truncate();
+    return identity.did;
   }
 
   return undefined;

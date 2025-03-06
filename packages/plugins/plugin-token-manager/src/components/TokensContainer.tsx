@@ -6,15 +6,12 @@ import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type S } from '@dxos/echo-schema';
-import { getSpaceDisplayName } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { useClient } from '@dxos/react-client';
-import { create, Filter, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { AccessTokenSchema, AccessTokenType } from '@dxos/schema';
 
-import { SpaceSelector } from './SpaceSelector';
 import { TokenManager } from './TokenManager';
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 
@@ -26,19 +23,11 @@ const initialValues = {
 
 type Form = S.Schema.Type<typeof AccessTokenSchema>;
 
-export const TokensContainer = () => {
+export const TokensContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const client = useClient();
-  const spaces = useSpaces();
   const [adding, setAdding] = useState(false);
-  const [space, setSpace] = useState(spaces[0]);
   const tokens = useQuery(space, Filter.schema(AccessTokenType));
-
-  const getLabel = useCallback(
-    (space: Space) => toLocalizedString(getSpaceDisplayName(space, { personal: space === client.spaces.default }), t),
-    [t, client],
-  );
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
@@ -54,7 +43,6 @@ export const TokensContainer = () => {
   return (
     <>
       <div className='flex mbe-4'>
-        <SpaceSelector spaces={spaces} value={space} getLabel={getLabel} onChange={setSpace} />
         <div className='grow' />
         {!adding && <IconButton icon='ph--plus--regular' label={t('add token')} onClick={handleNew} />}
       </div>

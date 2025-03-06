@@ -12,6 +12,6 @@ export const DebugPlugin = () =>
     defineModule({
       id: 'dxos.org/test/debug/main',
       activatesOn: Events.Startup,
-      activate: () => Debug(),
+      activate: Debug,
     }),
   ]);

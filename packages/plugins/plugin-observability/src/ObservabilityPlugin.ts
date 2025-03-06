@@ -32,6 +32,7 @@ export const ObservabilityPlugin = (options: { namespace: string; observability:
     defineModule({
       id: `${meta.id}/module/state`,
       activatesOn: Events.Startup,
+      activatesAfter: [ObservabilityEvents.StateReady],
       activate: () => ObservabilityState({ namespace: options.namespace }),
     }),
     defineModule({
@@ -41,12 +42,12 @@ export const ObservabilityPlugin = (options: { namespace: string; observability:
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: (context) => IntentResolver({ context, namespace: options.namespace }),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({

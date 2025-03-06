@@ -8,7 +8,9 @@ import { type Step } from '@dxos/plugin-help';
 
 const ensureSidebar: Step['before'] = async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-  await dispatch(createIntent(LayoutAction.SetLayout, { element: 'sidebar', state: true }));
+  await dispatch(
+    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: 'expanded' } }),
+  );
   return await sleep(200);
 };
 
@@ -29,7 +31,7 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createSpace"]',
+    target: '[data-testid="spacePlugin.addSpace"]',
     title: 'Sharing',
     content: 'Create shared spaces to collaborate with others.',
     placement: 'bottom',

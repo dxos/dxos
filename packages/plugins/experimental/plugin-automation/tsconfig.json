@@ -7,6 +7,8 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "outDir": "./dist/types",
     "types": [
       "node"
@@ -50,6 +52,9 @@
       "path": "../../../core/compute"
     },
     {
+      "path": "../../../core/conductor"
+    },
+    {
       "path": "../../../core/echo/echo-db"
     },
     {
@@ -62,19 +67,46 @@
       "path": "../../../core/functions"
     },
     {
+      "path": "../../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../../experimental/artifact"
+    },
+    {
+      "path": "../../../experimental/artifact-testing"
+    },
+    {
       "path": "../../../experimental/assistant"
     },
     {
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/client"
+    },
+    {
       "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../sdk/react-edge-client"
     },
     {
       "path": "../../../sdk/schema"
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../../ui/react-ui-canvas-editor"
+    },
+    {
+      "path": "../../../ui/react-ui-components"
+    },
+    {
+      "path": "../../../ui/react-ui-dnd"
     },
     {
       "path": "../../../ui/react-ui-editor"
@@ -84,6 +116,12 @@
     },
     {
       "path": "../../../ui/react-ui-list"
+    },
+    {
+      "path": "../../../ui/react-ui-sfx"
+    },
+    {
+      "path": "../../../ui/react-ui-stack"
     },
     {
       "path": "../../../ui/react-ui-syntax-highlighter"
@@ -104,6 +142,9 @@
       "path": "../../plugin-graph"
     },
     {
+      "path": "../../plugin-map"
+    },
+    {
       "path": "../../plugin-markdown"
     },
     {
@@ -116,13 +157,19 @@
       "path": "../../plugin-stack"
     },
     {
+      "path": "../../plugin-table"
+    },
+    {
+      "path": "../../plugin-wnfs"
+    },
+    {
       "path": "../plugin-inbox"
     },
     {
-      "path": "../plugin-ipfs"
+      "path": "../plugin-script"
     },
     {
-      "path": "../plugin-script"
+      "path": "../plugin-transcription"
     }
   ]
 }

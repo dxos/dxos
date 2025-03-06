@@ -10,8 +10,6 @@ export type MaybeProvider<T, V = void> = T | ((arg: V) => T);
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
-
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
 export type DeepReadonly<T> = {
@@ -25,6 +23,22 @@ export type DeepReadonly<T> = {
 export type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 
 /**
+ * Simplifies type (copied from effect).
+ */
+export type Simplify<A> = { [K in keyof A]: A[K] } extends infer B ? B : never;
+
+/**
+ * Replace types of specified keys.
+ */
+export type Specialize<T, U> = Simplify<Omit<T, keyof U> & U>;
+
+/**
+ * Make specified keys optional.
+ */
+// TODO(burdon): Wrapping with Simplify fails.
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+/**
  * All types that evaluate to false when cast to a boolean.
  */
 export type Falsy = false | 0 | '' | null | undefined;
@@ -34,12 +48,8 @@ export type Falsy = false | 0 | '' | null | undefined;
  * NOTE: To filter by type:
  * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
-// TODO(burdon): Reconcile names and variants.
 export const isNotFalsy = <T>(value: T): value is Exclude<T, Falsy> => !!value;
-export const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined;
-export const isNotNullOrUndefined = <T>(value: T): value is Exclude<T, null | undefined> => value != null;
-// export const isNotNullish = <T>(value: T | null | undefined): value is T => value !== undefined && value !== null;
-export const boolGuard = <T>(value: T | null | undefined): value is T => Boolean(value);
+export const isNonNullable = <T>(value: T | null | undefined): value is T => value != null;
 
 // TODO(burdon): Replace use of setTimeout everywhere?
 //  Would remove the need to cancel (and associated errors), but would change the operation of the code

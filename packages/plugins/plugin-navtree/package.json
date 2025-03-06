@@ -42,12 +42,13 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@radix-ui/react-use-controllable-state": "^1.0.0",
+    "@radix-ui/react-dismissable-layer": "1.1.5",
+    "@radix-ui/react-use-controllable-state": "1.1.0",
     "date-fns": "^3.3.1"
   },
   "devDependencies": {

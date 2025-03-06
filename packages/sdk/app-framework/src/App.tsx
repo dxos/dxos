@@ -3,8 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React from 'react';
-import { type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
@@ -12,11 +11,12 @@ import { create } from '@dxos/live-object';
 import { Capabilities, Events } from './common';
 import { PluginManager, type PluginManagerOptions, type Plugin } from './core';
 import { topologicalSort } from './helpers';
-import { ErrorBoundary, PluginManagerProvider } from './react';
+import { ErrorBoundary, PluginManagerProvider, useCapabilities } from './react';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
-export type HostPluginParams = {
+export type CreateAppOptions = {
+  pluginManager?: PluginManager;
   pluginLoader?: PluginManagerOptions['pluginLoader'];
   plugins?: Plugin[];
   core?: string[];
@@ -51,14 +51,15 @@ export type HostPluginParams = {
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  */
 export const createApp = ({
+  pluginManager,
   pluginLoader: _pluginLoader,
   plugins = [],
-  core = [],
+  core = plugins.map(({ meta }) => meta.id),
   defaults = [],
   placeholder = null,
   fallback = DefaultFallback,
   cacheEnabled = false,
-}: HostPluginParams) => {
+}: CreateAppOptions) => {
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader =
     _pluginLoader ??
@@ -71,10 +72,11 @@ export const createApp = ({
   const state = create({ ready: false, error: null });
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
   const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
-  const manager = new PluginManager({ pluginLoader, plugins, core, enabled });
+  const manager = pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {
-    if (event === Events.Startup.id) {
+    // Once the app is ready the first time, don't show the fallback again.
+    if (!state.ready && event === Events.Startup.id) {
       state.ready = _state === 'activated';
     }
 
@@ -95,21 +97,27 @@ export const createApp = ({
 
   setupDevtools(manager);
 
+  // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
+  void manager.activate(Events.SetupReactSurface);
   void manager.activate(Events.Startup);
 
   return () => (
     <ErrorBoundary fallback={fallback}>
-      <App placeholder={placeholder} manager={manager} state={state} />
+      <PluginManagerProvider value={manager}>
+        <App placeholder={placeholder} state={state} />
+      </PluginManagerProvider>
     </ErrorBoundary>
   );
 };
 
-type AppProps = Required<Pick<HostPluginParams, 'placeholder'>> & {
-  manager: PluginManager;
+type AppProps = Required<Pick<CreateAppOptions, 'placeholder'>> & {
   state: { ready: boolean; error: unknown };
 };
 
-const App = ({ placeholder, manager, state }: AppProps) => {
+const App = ({ placeholder, state }: AppProps) => {
+  const reactContexts = useCapabilities(Capabilities.ReactContext);
+  const reactRoots = useCapabilities(Capabilities.ReactRoot);
+
   if (state.error) {
     // This trigger the error boundary to provide UI feedback for the startup error.
     throw state.error;
@@ -120,18 +128,13 @@ const App = ({ placeholder, manager, state }: AppProps) => {
     return <>{placeholder}</>;
   }
 
-  const reactContexts = manager.context.requestCapabilities(Capabilities.ReactContext);
-  const reactRoots = manager.context.requestCapabilities(Capabilities.ReactRoot);
-
   const ComposedContext = composeContexts(reactContexts);
   return (
-    <PluginManagerProvider value={manager}>
-      <ComposedContext>
-        {reactRoots.map(({ id, root: Component }) => (
-          <Component key={id} />
-        ))}
-      </ComposedContext>
-    </PluginManagerProvider>
+    <ComposedContext>
+      {reactRoots.map(({ id, root: Component }) => (
+        <Component key={id} />
+      ))}
+    </ComposedContext>
   );
 };
 
@@ -147,6 +150,10 @@ const DefaultFallback = ({ error }: { error: Error }) => {
 };
 
 const composeContexts = (contexts: Capabilities.ReactContext[]) => {
+  if (contexts.length === 0) {
+    return ({ children }: PropsWithChildren) => <>{children}</>;
+  }
+
   return topologicalSort(contexts)
     .map(({ context }) => context)
     .reduce((Acc, Next) => ({ children }) => (

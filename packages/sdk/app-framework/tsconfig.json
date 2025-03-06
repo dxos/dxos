@@ -8,7 +8,7 @@
       "ESNext"
     ],
     "module": "ESNext",
-    "outDir": "dist"
+    "outDir": "./dist/types"
   },
   "exclude": [
     "/node_modules/"
@@ -19,9 +19,6 @@
   "references": [
     {
       "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
@@ -36,6 +33,12 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -46,6 +49,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../experimental/artifact"
     },
     {
       "path": "../../ui/primitives/react-hooks"

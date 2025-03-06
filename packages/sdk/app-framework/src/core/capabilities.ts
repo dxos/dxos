@@ -79,17 +79,20 @@ export const contributes = <T>(
   return { interface: interfaceDef, implementation, deactivate } satisfies Capability<T>;
 };
 
-type LazyCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
+type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
+type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<AnyCapability[]> }>;
+// TODO(wittjosiah): Not having the array be `any` causes type errors when using the lazy capability.
+type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> | AnyCapability[]>>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
  */
 export const lazy =
-  <T, U>(c: LazyCapability<T, U>) =>
-  (props?: T): Promise<Capability<U>> =>
-    c().then(({ default: getCapability }) => {
-      return getCapability(props as T);
-    });
+  <T, U>(c: LoadCapability<T, U> | LoadCapabilities<T>): LazyCapability<T, U> =>
+  async (props?: T) => {
+    const { default: getCapability } = await c();
+    return async () => getCapability(props as T);
+  };
 
 /**
  * Context which is passed to plugins, allowing them to interact with each other.
@@ -136,7 +139,11 @@ export class PluginsContext {
     }
 
     current.push(new CapabilityImpl(moduleId, implementation));
-    log('capability contributed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
+    log('capability contributed', {
+      id: interfaceDef.identifier,
+      moduleId,
+      count: untracked(() => current.length),
+    });
   }
 
   /**
@@ -152,6 +159,8 @@ export class PluginsContext {
     if (index !== -1) {
       current.splice(index, 1);
       log('capability removed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
+    } else {
+      log.warn('capability not removed', { id: interfaceDef.identifier });
     }
   }
 

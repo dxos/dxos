@@ -6,65 +6,57 @@ import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo,
 
 import {
   createIntent,
-  indexInPart,
   LayoutAction,
-  partLength,
   Surface,
+  useCapability,
+  useAppGraph,
   useIntentDispatcher,
-  type Layout,
-  type LayoutCoordinate,
-  type LayoutEntry,
-  type LayoutPart,
-  type LayoutParts,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { useGraph } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
-import { NodePlankHeading } from './NodePlankHeading';
+import { NodePlankHeading, type NodePlankHeadingProps } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
+import { DeckCapabilities } from '../../capabilities';
 import { useNode, useMainSize } from '../../hooks';
-import { DeckAction } from '../../types';
-import { useDeckContext } from '../DeckContext';
-import { useLayout } from '../LayoutContext';
+import { DeckAction, type LayoutMode } from '../../types';
 
 const UNKNOWN_ID = 'unknown_id';
 
 export type PlankProps = {
-  entry?: LayoutEntry;
-  layoutParts: LayoutParts;
-  // TODO(wittjosiah): Remove. Pass in LayoutCoordinate instead of LayoutEntry.
-  part: LayoutPart;
-  layoutMode: Layout['layoutMode'];
+  id?: string;
+  part: NodePlankHeadingProps['part'];
+  path?: string[];
   order?: number;
+  active?: string[];
+  layoutMode: LayoutMode;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
+export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
-  const { popoverAnchorId, scrollIntoView } = useLayout();
-  const { plankSizing } = useDeckContext();
-  const { graph } = useGraph();
-  const node = useNode(graph, entry?.id);
+  const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
+  const { graph } = useAppGraph();
+  const node = useNode(graph, id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
   const Root = part === 'solo' ? 'article' : StackItem.Root;
 
-  const attendableAttrs = useAttendableAttributes(coordinate.entryId);
-  const index = indexInPart(layoutParts, coordinate);
-  const length = partLength(layoutParts, part);
-  const canIncrementStart = part === 'main' && index !== undefined && index > 0 && length !== undefined && length > 1;
-  const canIncrementEnd = part === 'main' && index !== undefined && index < length - 1 && length !== undefined;
+  const attendableAttrs = useAttendableAttributes(id);
+  const index = active ? active.findIndex((entryId) => entryId === id) : 0;
+  const length = active?.length ?? 1;
+  const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
+  const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-  const size = plankSizing?.[coordinate.entryId] as number | undefined;
+  const key = id.split('+')[0];
+  const size = deck.plankSizing[key] as number | undefined;
   const setSize = useCallback(
     debounce((nextSize: number) => {
-      return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: coordinate.entryId, size: nextSize }));
+      return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: key, size: nextSize }));
     }, 200),
-    [dispatch, coordinate.entryId],
+    [dispatch, key],
   );
 
   // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
@@ -75,19 +67,19 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   }, []);
 
   useLayoutEffect(() => {
-    if (scrollIntoView === coordinate.entryId) {
+    if (scrollIntoView === id) {
       // TODO(wittjosiah): When focused on page load, the focus is always visible.
       //   Forcing focus to something smaller than the plank prevents large focus ring in the interim.
       const focusable = rootElement.current?.querySelector('button') || rootElement.current;
       focusable?.focus({ preventScroll: true });
       layoutMode === 'deck' && focusable?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       // Clear the scroll into view state once it has been actioned.
-      void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: undefined }));
+      void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: undefined }));
     }
-  }, [coordinate.entryId, scrollIntoView, layoutMode]);
+  }, [id, scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
-  const isAttendable = isSolo || (layoutMode === 'deck' && part === 'main');
+  const isAttendable = isSolo || (layoutMode === 'deck' && part === 'deck');
 
   const sizeAttrs = useMainSize();
 
@@ -95,11 +87,10 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
     () =>
       node && {
         subject: node.data,
-        path: entry?.path,
-        coordinate,
+        path,
         popoverAnchorId,
       },
-    [node, node?.data, entry?.path, coordinate, popoverAnchorId],
+    [node, node?.data, path, popoverAnchorId],
   );
 
   // TODO(wittjosiah): Change prop to accept a component.
@@ -120,7 +111,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
       {...(part === 'solo'
         ? ({ ...sizeAttrs, className } as any)
         : {
-            item: { id: entry?.id ?? 'never' },
+            item: { id },
             size,
             onSizeChange: setSize,
             classNames: className,
@@ -133,7 +124,8 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
       {node ? (
         <>
           <NodePlankHeading
-            coordinate={coordinate}
+            id={id}
+            part={part}
             node={node}
             canIncrementStart={canIncrementStart}
             canIncrementEnd={canIncrementEnd}
@@ -149,7 +141,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
           />
         </>
       ) : (
-        <PlankError layoutCoordinate={coordinate} />
+        <PlankError id={id} part={part} />
       )}
       {canResize && <StackItem.ResizeHandle />}
     </Root>

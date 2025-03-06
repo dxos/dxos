@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { type ReactiveObject, create } from '@dxos/live-object';
-import { Path } from '@dxos/react-ui-mosaic';
+import { Path } from '@dxos/react-ui-list';
 
 import { NavTreeCapabilities } from './capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
@@ -34,6 +34,8 @@ const getInitialState = () => {
 };
 
 export default (context: PluginsContext) => {
+  const layout = context.requestCapability(Capabilities.Layout);
+
   // TODO(wittjosiah): This currently needs to be not a ReactiveObject at the root.
   //   If it is a ReactiveObject then React errors when initializing new paths because of state change during render.
   //   Ideally this could be a ReactiveObject but be able to access and update the root level without breaking render.
@@ -67,15 +69,10 @@ export default (context: PluginsContext) => {
   const isOpen = (path: string[]) => getItem(path).open;
   const isCurrent = (path: string[]) => getItem(path).current;
 
-  const location = context.requestCapability(Capabilities.Location);
-  const layout = context.requestCapability(Capabilities.Layout);
-
   let previous: string[] = [];
   const unsubscribe = effect(() => {
-    const part = layout.layoutMode === 'solo' ? 'solo' : 'main';
-    const current = location.active[part]?.map(({ id }) => id) ?? [];
-    const removed = previous.filter((id) => !current.includes(id));
-    previous = current;
+    const removed = previous.filter((id) => !layout.active.includes(id));
+    previous = layout.active;
 
     // TODO(wittjosiah): This is setTimeout because there's a race between the keys be initialized.
     //   This could be avoided if the location was a path as well and not just an id.
@@ -87,7 +84,7 @@ export default (context: PluginsContext) => {
         });
       });
 
-      current.forEach((id) => {
+      layout.active.forEach((id) => {
         const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
         keys.forEach((key) => {
           setItem(Path.parts(key), 'current', true);

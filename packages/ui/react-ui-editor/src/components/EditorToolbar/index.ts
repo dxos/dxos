@@ -3,4 +3,4 @@
 //
 
 export * from './EditorToolbar';
-export { type EditorToolbarState, useEditorToolbarState } from './util';
+export { type EditorToolbarState, useEditorToolbarState, createEditorAction, createEditorActionGroup } from './util';

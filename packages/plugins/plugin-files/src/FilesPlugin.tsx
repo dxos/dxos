@@ -16,7 +16,7 @@ export const FilesPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/settings`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSettings,
       activate: FileSettings,
     }),
     defineModule({
@@ -36,12 +36,12 @@ export const FilesPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
@@ -51,13 +51,13 @@ export const FilesPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.AppGraphReady,
       activate: () =>
         contributes(Capabilities.AppGraphSerializer, [
           {
             inputType: ROOT_TYPE,
             outputType: 'text/directory',
-            disposition: 'fallback',
+            position: 'fallback',
             serialize: async () => ({
               name: 'root',
               data: 'root',

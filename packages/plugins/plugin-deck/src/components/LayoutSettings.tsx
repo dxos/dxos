@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { DECK_PLUGIN } from '../meta';
 import {
@@ -22,7 +22,7 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
   const { t } = useTranslation(DECK_PLUGIN);
 
   return (
-    <>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput label={t('select new plank positioning label')}>
         <Select.Root
           value={settings.newPlankPositioning ?? 'start'}
@@ -72,12 +72,12 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </DeprecatedFormInput>
       )}
-      <DeprecatedFormInput label={t('settings custom slots')}>
-        <Input.Switch checked={settings.customSlots} onCheckedChange={(checked) => (settings.customSlots = checked)} />
+      <DeprecatedFormInput label={t('settings enable ide-style statusbar label')}>
+        <Input.Switch
+          checked={settings.enableIdeStyleStatusbar}
+          onCheckedChange={(checked) => (settings.enableIdeStyleStatusbar = checked)}
+        />
       </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings flat deck')}>
-        <Input.Switch checked={settings.flatDeck} onCheckedChange={(checked) => (settings.flatDeck = checked)} />
-      </DeprecatedFormInput>
-    </>
+    </DeprecatedFormContainer>
   );
 };

@@ -28,7 +28,7 @@ import {
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type Compiler } from '../../compiler';
 
@@ -98,7 +98,7 @@ export const TypescriptEditor = ({
               ]
             : [],
         ],
-      ].filter(nonNullable),
+      ].filter(isNonNullable),
       selection,
       scrollTo,
     }),
@@ -132,7 +132,7 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
 
   return (info: HoverInfo) => {
     const div = document.createElement('div');
-    div.className = 'p-1 rounded border border-separator bg-base xs:max-w-80 max-w-lg';
+    div.className = 'p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg';
 
     if (info.quickInfo?.displayParts) {
       for (const part of info.quickInfo.displayParts) {

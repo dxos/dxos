@@ -2,17 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { INBOX_PLUGIN, meta } from './meta';
@@ -28,12 +22,11 @@ export const InboxPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
           id: MailboxType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(InboxAction.CreateMailbox, props),
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--envelope--regular',
           },
@@ -41,7 +34,6 @@ export const InboxPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ContactsType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(InboxAction.CreateContacts, props),
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--address-book--regular',
           },
@@ -49,7 +41,6 @@ export const InboxPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: CalendarType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(InboxAction.CreateCalendar, props),
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--calendar--regular',
           },
@@ -64,18 +55,40 @@ export const InboxPlugin = () =>
       ],
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
-      activate: () => contributes(ClientCapabilities.Schema, [MailboxType, ContactsType, CalendarType]),
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => [
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: MailboxType,
+            getIntent: () => createIntent(InboxAction.CreateMailbox),
+          }),
+        ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: ContactsType,
+            getIntent: () => createIntent(InboxAction.CreateContacts),
+          }),
+        ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: CalendarType,
+            getIntent: () => createIntent(InboxAction.CreateCalendar),
+          }),
+        ),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
   ]);

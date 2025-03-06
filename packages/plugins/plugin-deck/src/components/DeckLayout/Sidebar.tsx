@@ -4,17 +4,31 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, useCapability } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 
-import { useLayout } from '../LayoutContext';
+import { DeckCapabilities } from '../../capabilities';
+import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 
 export const Sidebar = () => {
-  const { popoverAnchorId } = useLayout();
-  const navigationData = useMemo(() => ({ popoverAnchorId }), [popoverAnchorId]);
+  const { popoverAnchorId, activeDeck: current } = useCapability(DeckCapabilities.DeckState);
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint);
+  const hoistStatusbar = useHoistStatusbar(breakpoint);
+
+  const navigationData = useMemo(
+    () => ({ popoverAnchorId, topbar, hoistStatusbar, current }),
+    [popoverAnchorId, topbar, hoistStatusbar, current],
+  );
 
   return (
-    <Main.NavigationSidebar>
+    <Main.NavigationSidebar
+      classNames={[
+        'grid',
+        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+        hoistStatusbar && 'block-end-[--statusbar-size]',
+      ]}
+    >
       <Surface role='navigation' data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );

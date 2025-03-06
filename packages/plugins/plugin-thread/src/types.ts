@@ -67,11 +67,7 @@ export namespace ThreadAction {
   }) {}
 }
 
-export const ThreadSettingsSchema = S.mutable(
-  S.Struct({
-    standalone: S.optional(S.Boolean),
-  }),
-);
+export const ThreadSettingsSchema = S.mutable(S.Struct({}));
 
 export type ThreadSettingsProps = S.Schema.Type<typeof ThreadSettingsSchema>;
 

@@ -20,10 +20,9 @@
       }
     },
     "lint": {},
-    "test": {}
+    "pack": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

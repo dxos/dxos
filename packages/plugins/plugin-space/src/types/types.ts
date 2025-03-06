@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActiveParts } from '@dxos/app-framework';
-import { AST, S, type Expando } from '@dxos/echo-schema';
+import { type AnyIntentChain } from '@dxos/app-framework';
+import { AST, S, type Expando, type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
+// TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { type ComplexMap } from '@dxos/util';
 
@@ -92,6 +93,14 @@ export const SpaceForm = S.Struct({
   edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
 });
 
+export type ObjectForm<T extends BaseObject = BaseObject> = {
+  objectSchema: TypedObject;
+  formSchema?: S.Schema<T, any>;
+  getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
+};
+
+export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
+
 export const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 
 export namespace SpaceAction {
@@ -104,7 +113,7 @@ export namespace SpaceAction {
     input: SpaceForm,
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
       space: SpaceSchema,
     }),
   }) {}
@@ -143,6 +152,16 @@ export namespace SpaceAction {
       space: SpaceSchema,
       caller: S.optional(S.String),
     }),
+    output: S.Void,
+  }) {}
+
+  export class AddSpace extends S.TaggedClass<AddSpace>()(`${SPACE_ACTION}/add-space`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+
+  export class AddSpaceMenuGroup extends S.TaggedClass<AddSpaceMenuGroup>()(`${SPACE_ACTION}/add-space-menu-group`, {
+    input: S.Void,
     output: S.Void,
   }) {}
 
@@ -190,7 +209,7 @@ export namespace SpaceAction {
     }),
     output: S.Struct({
       id: S.String,
-      activeParts: ActiveParts,
+      subject: S.Array(S.String),
       object: EchoObjectSchema,
     }),
   }) {}

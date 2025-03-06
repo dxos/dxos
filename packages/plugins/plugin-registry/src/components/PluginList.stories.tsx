@@ -7,9 +7,11 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { definePlugin, type Plugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';
 
@@ -24,18 +26,22 @@ const icons = [
   'ph--github-logo--regular',
 ];
 
-const DefaultStory = () => {
-  const [plugins] = useState<PluginMeta[]>(
+const Render = ({ classNames }: ThemedClassName<{}>) => {
+  const [plugins] = useState<Plugin[]>(
     faker.helpers.multiple(
-      () => ({
-        id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
-        name: `${faker.lorem.sentence(3)}`,
-        description: faker.datatype.boolean() ? `${faker.lorem.sentences()}` : undefined,
-        tags: faker.datatype.boolean({ probability: 0.6 })
-          ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
-          : undefined,
-        icon: faker.helpers.arrayElement(icons),
-      }),
+      () =>
+        definePlugin(
+          {
+            id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+            name: `${faker.commerce.productName()}`,
+            description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
+            tags: faker.datatype.boolean({ probability: 0.6 })
+              ? [faker.helpers.arrayElement(['experimental', 'beta', 'alpha', 'stable', 'new', '新発売'])]
+              : undefined,
+            icon: faker.helpers.arrayElement(icons),
+          },
+          [],
+        ),
       { count: 16 },
     ),
   );
@@ -46,22 +52,25 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className={'flex w-[400px] overflow-hidden'}>
+    <div className={mx('flex overflow-hidden', classNames)}>
       <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} />
     </div>
   );
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
-  render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'centered',
-  },
+  render: Render,
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
 };
 
 export default meta;
+
+export const Default = {};
+
+export const Column = {
+  args: {
+    classNames: 'w-[30rem]',
+  },
+};

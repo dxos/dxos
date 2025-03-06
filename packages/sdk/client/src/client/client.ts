@@ -15,7 +15,7 @@ import {
   type Halo,
   PropertiesType,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -336,7 +336,6 @@ export class Client {
     }
 
     log.trace('dxos.sdk.client.open', Trace.begin({ id: this._instanceId }));
-
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
 
     this._ctx = new Context();

@@ -2,34 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
-import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
-import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
-import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, InputHeader, type InputProps } from '@dxos/react-ui-form';
+import { getObjectAnnotation, type ObjectAnnotation, type S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { type SpaceId, type Space } from '@dxos/react-client/echo';
+import { Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Form, type InputProps } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { nonNullable, type MaybePromise } from '@dxos/util';
+import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable, type MaybePromise } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../../meta';
-import { type CollectionType } from '../../types';
+import { type ObjectForm, type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
-
-export type CreateObjectPanelProps = {
-  schemas: TypedObject[];
-  spaces: Space[];
-  typename?: string;
-  target?: Space | CollectionType;
-  name?: string;
-  defaultSpaceId?: SpaceId;
-  resolve?: (typename: string) => Record<string, any>;
-  onCreateObject?: (params: {
-    schema: TypedObject;
-    target: Space | CollectionType;
-    data: Record<string, any>;
-  }) => MaybePromise<void>;
-};
 
 // TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.
 /**
@@ -41,9 +28,8 @@ const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
   const pluginManager = usePluginManager();
 
   return useCallback(
-    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps<any> }) => {
+    ({ prop, schema, inputProps }: { prop: string; schema: S.Schema<any>; inputProps: InputProps }) => {
       const composedData = { prop, schema, ...baseData };
-
       if (!isSurfaceAvailable(pluginManager.context, { role: 'form-input', data: composedData })) {
         return undefined;
       }
@@ -54,8 +40,24 @@ const useInputSurfaceLookup = (baseData?: Record<string, any>) => {
   );
 };
 
+export type CreateObjectPanelProps = ThemedClassName<{
+  forms: ObjectForm[];
+  spaces: Space[];
+  typename?: string;
+  target?: Space | CollectionType;
+  name?: string;
+  defaultSpaceId?: SpaceId;
+  resolve?: (typename: string) => Record<string, any>;
+  onCreateObject?: (params: {
+    form: ObjectForm;
+    target: Space | CollectionType;
+    data?: Record<string, any>;
+  }) => MaybePromise<void>;
+}>;
+
 export const CreateObjectPanel = ({
-  schemas,
+  classNames,
+  forms,
   spaces,
   typename: initialTypename,
   target: initialTarget,
@@ -67,31 +69,113 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const schema = schemas.find((schema) => getObjectAnnotation(schema)?.typename === typename);
-  const options = schemas.map(getObjectAnnotation).filter(nonNullable);
-
-  const handleClearSchema = useCallback(() => setTypename(undefined), []);
-  const handleClearTarget = useCallback(() => setTarget(undefined), []);
+  const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
+  const options: ObjectAnnotation[] = forms
+    .map((form) => getObjectAnnotation(form.objectSchema))
+    .filter(isNonNullable)
+    .sort((a, b) => {
+      const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
+      const nameB = t('typename label', { ns: b.typename, defaultValue: b.typename });
+      return nameA.localeCompare(nameB);
+    });
 
   const handleCreateObject = useCallback(
     async (props: Record<string, any>) => {
-      if (!schema || !target) {
+      if (!form || !target) {
         return;
       }
-      await onCreateObject?.({ schema, target, data: props });
+      await onCreateObject?.({ form, target, data: props });
     },
-    [onCreateObject, schema, target],
+    [onCreateObject, form, target],
   );
 
-  const metadata = useMemo(() => {
-    if (!typename) {
-      return;
-    }
-    return resolve?.(typename);
-  }, [resolve, typename]);
+  const handleSetTypename = useCallback(
+    async (typename: string) => {
+      invariant(target, 'target is required');
+      const form = forms.find((form) => getObjectAnnotation(form.objectSchema)?.typename === typename);
+      if (form && !form.formSchema) {
+        await onCreateObject?.({ form, target });
+      } else {
+        setTypename(typename);
+      }
+    },
+    [forms, onCreateObject, target],
+  );
 
-  // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
-  const schemaInput = (
+  const inputSurfaceLookup = useInputSurfaceLookup({ target });
+
+  // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
+  return (
+    <div role='form' className={mx('flex flex-col gap-2', classNames)}>
+      {!form ? (
+        <SelectSchema options={options} resolve={resolve} onChange={handleSetTypename} />
+      ) : !target ? (
+        <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={setTarget} />
+      ) : form.formSchema ? (
+        <Form
+          classNames='!p-0'
+          autoFocus
+          values={{ name: initialName }}
+          schema={form.formSchema}
+          testId='create-object-form'
+          onSave={handleCreateObject}
+          lookupComponent={inputSurfaceLookup}
+        />
+      ) : undefined}
+    </div>
+  );
+};
+
+const SelectSpace = ({
+  spaces,
+  defaultSpaceId,
+  onChange,
+}: { onChange: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+
+  return (
+    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden'>
+      <SearchList.Input
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space input placeholder')}
+        classNames='px-1 my-2'
+      />
+      <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
+        {spaces
+          .sort((a, b) => {
+            const aName = toLocalizedString(getSpaceDisplayName(a, { personal: a.id === defaultSpaceId }), t);
+            const bName = toLocalizedString(getSpaceDisplayName(b, { personal: b.id === defaultSpaceId }), t);
+            return aName.localeCompare(bName);
+          })
+          .map((space) => (
+            <SearchList.Item
+              key={space.id}
+              value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              onSelect={() => onChange(space)}
+              classNames='flex items-center gap-2'
+            >
+              <span className='grow truncate'>
+                {toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              </span>
+            </SearchList.Item>
+          ))}
+      </SearchList.Content>
+    </SearchList.Root>
+  );
+};
+
+const SelectSchema = ({
+  options,
+  resolve,
+  onChange,
+}: {
+  options: ObjectAnnotation[];
+  onChange: (type: string) => void;
+} & Pick<CreateObjectPanelProps, 'resolve'>) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+
+  return (
     <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden'>
       <SearchList.Input
         autoFocus
@@ -104,7 +188,7 @@ export const CreateObjectPanel = ({
           <SearchList.Item
             key={option.typename}
             value={t('typename label', { ns: option.typename, defaultValue: option.typename })}
-            onSelect={() => setTypename(option.typename)}
+            onSelect={() => onChange(option.typename)}
             classNames='flex items-center gap-2'
           >
             <span className='flex gap-2 items-center grow truncate'>
@@ -115,92 +199,5 @@ export const CreateObjectPanel = ({
         ))}
       </SearchList.Content>
     </SearchList.Root>
-  );
-
-  const spaceInput = (
-    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden'>
-      <SearchList.Input
-        autoFocus
-        data-testid='create-object-form.space-input'
-        placeholder={t('space input placeholder')}
-        classNames='px-1 my-2'
-      />
-      <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
-        {spaces.map((space) => (
-          <SearchList.Item
-            key={space.id}
-            value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-            onSelect={() => setTarget(space)}
-            classNames='flex items-center gap-2'
-          >
-            <span className='grow truncate'>
-              {toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
-            </span>
-          </SearchList.Item>
-        ))}
-      </SearchList.Content>
-    </SearchList.Root>
-  );
-
-  const inputSurfaceLookup = useInputSurfaceLookup({ target });
-
-  const form = useMemo(() => {
-    // TODO(ZaymonFC): Move this default object creation schema somewhere?
-    const schema = (metadata?.creationSchema ?? S.Struct({ name: S.optional(S.String) })) as S.Schema<any>;
-
-    return (
-      <Form
-        autoFocus
-        values={{ name: initialName }}
-        schema={schema}
-        testId='create-object-form'
-        onSave={handleCreateObject}
-        lookupComponent={inputSurfaceLookup}
-      />
-    );
-  }, [initialName, handleCreateObject, metadata]);
-
-  return (
-    <div role='form' className='flex flex-col gap-2'>
-      {target && (
-        <div role='none'>
-          <Input.Root>
-            <InputHeader>
-              <Input.Label>
-                {t(isSpace(target) ? 'creating in space label' : 'creating in collection label')}
-              </Input.Label>
-            </InputHeader>
-            <div role='none' className='flex gap-2'>
-              <Input.TextInput
-                disabled
-                value={
-                  isSpace(target)
-                    ? toLocalizedString(getSpaceDisplayName(target, { personal: target.id === defaultSpaceId }), t)
-                    : target.name || t('unnamed collection label')
-                }
-              />
-              <IconButton iconOnly icon='ph--x--regular' label={t('clear input label')} onClick={handleClearTarget} />
-            </div>
-          </Input.Root>
-        </div>
-      )}
-      {schema && (
-        <div role='none'>
-          <Input.Root>
-            <InputHeader>
-              <Input.Label>{t('creating object type label')}</Input.Label>
-            </InputHeader>
-            <div role='none' className='flex gap-2'>
-              <Input.TextInput
-                disabled
-                value={t('typename label', { ns: schema.typename, defaultValue: schema.typename })}
-              />
-              <IconButton iconOnly icon='ph--x--regular' label={t('clear input label')} onClick={handleClearSchema} />
-            </div>
-          </Input.Root>
-        </div>
-      )}
-      {!schema ? schemaInput : !target ? spaceInput : form}
-    </div>
   );
 };

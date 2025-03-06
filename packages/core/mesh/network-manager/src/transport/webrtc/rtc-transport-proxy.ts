@@ -5,7 +5,7 @@
 import { Writable } from 'node:stream';
 
 import { Event, scheduleTask } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -245,7 +245,9 @@ export class RtcTransportProxyFactory implements TransportFactory {
     invariant(this._bridgeService, 'RtcTransportProxyFactory is not ready to open connections');
     const transport = new RtcTransportProxy({ ...options, bridgeService: this._bridgeService });
     this._connections.add(transport);
-    transport.closed.on(() => this._connections.delete(transport));
+    transport.closed.on(() => {
+      this._connections.delete(transport);
+    });
     return transport;
   }
 }

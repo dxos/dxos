@@ -31,7 +31,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
   const [validationMessage, setValidationMessage] = useState('');
   const handleConfirm = async (value: string) => {
     if (isRecover) {
-      await client.halo.recoverIdentity({ seedphrase: value }).then(
+      await client.halo.recoverIdentity({ recoveryCode: value }).then(
         (identity) => {
           send?.({ type: 'selectIdentity' as const, identity });
         },

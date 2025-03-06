@@ -4,14 +4,7 @@
 
 import { pipe } from 'effect';
 
-import {
-  Capabilities,
-  contributes,
-  type PluginsContext,
-  createIntent,
-  NavigationAction,
-  chain,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, type PluginsContext, createIntent, chain, LayoutAction } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { FileCapabilities } from './capabilities';
@@ -63,12 +56,14 @@ export default (context: PluginsContext) =>
         return settings?.openLocalFiles
           ? [
               {
-                id: FILES_PLUGIN,
+                // TODO(wittjosiah): Deck does not currently support `/` in ids.
+                id: 'dxos:plugin-files',
                 type: FILES_PLUGIN,
                 // TODO(burdon): Factor out palette constants.
                 properties: {
                   label: ['plugin name', { ns: FILES_PLUGIN }],
                   role: 'branch',
+                  disposition: 'workspace',
                 },
               },
             ]
@@ -85,7 +80,7 @@ export default (context: PluginsContext) =>
           id: LocalFilesAction.OpenFile._tag,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(pipe(createIntent(LocalFilesAction.OpenFile), chain(NavigationAction.Open, {})));
+            await dispatch(pipe(createIntent(LocalFilesAction.OpenFile), chain(LayoutAction.Open, { part: 'main' })));
           },
           properties: {
             label: ['open file label', { ns: FILES_PLUGIN }],
@@ -98,7 +93,9 @@ export default (context: PluginsContext) =>
                 id: 'open-directory',
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-                  await dispatch(pipe(createIntent(LocalFilesAction.OpenDirectory), chain(NavigationAction.Open, {})));
+                  await dispatch(
+                    pipe(createIntent(LocalFilesAction.OpenDirectory), chain(LayoutAction.Open, { part: 'main' })),
+                  );
                 },
                 properties: {
                   label: ['open directory label', { ns: FILES_PLUGIN }],
@@ -166,7 +163,6 @@ export default (context: PluginsContext) =>
                 properties: {
                   label: ['re-open label', { ns: FILES_PLUGIN }],
                   icon: 'ph--plugs--regular',
-                  disposition: 'default',
                 },
               },
             ]

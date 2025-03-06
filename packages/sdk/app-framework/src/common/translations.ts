@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { z } from 'zod';
+import { Schema as S } from '@effect/schema';
 
-// TODO(burdon): Replace zod with effect.
-export const ResourceKey = z.union([z.string(), z.record(z.any())]);
-export type ResourceKey = z.infer<typeof ResourceKey>;
+export const ResourceKey = S.Union(S.String, S.Record({ key: S.String, value: S.Any }));
+export type ResourceKey = S.Schema.Type<typeof ResourceKey>;
 
-export const ResourceLanguage = z.record(ResourceKey);
-export type ResourceLanguage = z.infer<typeof ResourceLanguage>;
+export const ResourceLanguage = S.Record({ key: S.String, value: ResourceKey });
+export type ResourceLanguage = S.Schema.Type<typeof ResourceLanguage>;
 
 /**
  * A resource is a collection of translations for a language.
  */
-export const Resource = z.record(ResourceLanguage);
-export type Resource = z.infer<typeof Resource>;
+export const Resource = S.Record({ key: S.String, value: ResourceLanguage });
+export type Resource = S.Schema.Type<typeof Resource>;

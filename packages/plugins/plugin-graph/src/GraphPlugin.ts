@@ -14,14 +14,9 @@ import { meta } from './meta';
 export const GraphPlugin = () =>
   definePlugin(meta, [
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: lazy(() => import('./GraphContext')),
-    }),
-    defineModule({
       id: `${meta.id}/module/graph`,
       activatesOn: Events.Startup,
-      activatesBefore: [Events.SetupAppGraph],
+      activatesBefore: [Events.SetupAppGraph, Events.SetupMetadata],
       activatesAfter: [Events.AppGraphReady],
       activate: lazy(() => import('./graph')),
     }),

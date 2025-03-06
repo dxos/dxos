@@ -181,8 +181,7 @@ export class ControlPipeline {
   }
 
   @trace.span()
-  private async _processMessage(ctx: Context, msg: FeedMessageBlock) {
-    // log('processing', { msg });
+  private async _processMessage(ctx: Context, msg: FeedMessageBlock): Promise<void> {
     log('processing', { key: msg.feedKey, seq: msg.seq });
     if (msg.data.payload.credential) {
       const timer = tracer.mark('dxos.echo.pipeline.control');

@@ -74,13 +74,14 @@ export const [ListItemProvider, useListItemContext] = createContext<ListItemCont
 export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<{
     item: T;
-  }>
+  }> &
+    HTMLAttributes<HTMLDivElement>
 >;
 
 /**
  * Draggable list item.
  */
-export const ListItem = <T extends ListItemRecord>({ children, classNames, item }: ListItemProps<T>) => {
+export const ListItem = <T extends ListItemRecord>({ children, classNames, item, ...props }: ListItemProps<T>) => {
   const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
@@ -164,8 +165,13 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
 
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
-      <div className='relative'>
-        <div ref={ref} role='listitem' className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}>
+      <div role='none' className='relative'>
+        <div
+          ref={ref}
+          role='listitem'
+          className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}
+          {...props}
+        >
           {children}
         </div>
         {state.type === 'is-dragging-over' && state.closestEdge && (

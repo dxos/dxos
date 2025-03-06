@@ -12,15 +12,16 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/testing/index.ts"
+          "{projectRoot}/src/testing/index.ts",
+          "{projectRoot}/src/worker.ts"
         ]
       }
     },
     "lint": {},
+    "pack": {},
     "test": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

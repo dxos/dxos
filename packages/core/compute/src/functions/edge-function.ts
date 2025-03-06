@@ -7,9 +7,10 @@ import { type InterpreterState } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
+import { AST, toEffectSchema } from '@dxos/echo-schema';
 import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
 import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
@@ -53,11 +54,20 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
           this.context.createSubscription(ast.procedureName, unsubscribe);
         }
 
+        const body: Record<string, any> = {};
+        if (fn.inputSchema) {
+          const schema = toEffectSchema(fn.inputSchema);
+          AST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
+            body[name.toString()] = args[index];
+          });
+        } else {
+          body.args = args.filter(isNonNullable);
+        }
         const path = getUserFunctionUrlInMetadata(getMeta(fn));
         const response = await fetch(`${this.context.remoteFunctionUrl}${path}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ args: args.filter(nonNullable) }),
+          body: JSON.stringify(body),
         });
         const result = await response.text();
         log('function executed', { result });

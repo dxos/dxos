@@ -12,6 +12,7 @@ import {
   updateFieldNameInSchema,
   updateFieldsInSchema,
 } from './manipulation';
+import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
 import { SchemaMetaSymbol, schemaVariance, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
@@ -169,7 +170,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
     return schema.annotations.bind(schema);
   }
 
-  public get pipe() {
+  public get pipe(): S.Schema.AnyNoContext['pipe'] {
     const schema = this._getSchema();
     return schema.pipe.bind(schema);
   }
@@ -243,7 +244,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
    */
   _rebuild() {
     if (this._isDirty || this._schema == null) {
-      this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
+      this._schema = toEffectSchema(getSnapshot(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
   }
@@ -263,21 +264,4 @@ const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignatu
     ...property,
     type: property.type.types.find((type) => !AST.isUndefinedKeyword(type))!,
   } as any;
-};
-
-// TODO(dmaretskyi): Change to `getSnapshot`.
-const unwrapProxy = (jsonSchema: any): any => {
-  if (typeof jsonSchema !== 'object') {
-    return jsonSchema;
-  }
-  if (Array.isArray(jsonSchema)) {
-    return jsonSchema.map(unwrapProxy);
-  }
-
-  const result: any = {};
-  for (const key in jsonSchema) {
-    result[key] = unwrapProxy(jsonSchema[key]);
-  }
-
-  return result;
 };

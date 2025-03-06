@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { runInContextAsync } from '@dxos/async';
+import { runInContextAsync, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -141,6 +141,7 @@ export class SpaceStateMachine implements SpaceState {
    * @param credential Message to process.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
+  @synchronized
   async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
     if (credential.id) {
       if (this._processedCredentials.has(credential.id)) {
@@ -210,12 +211,8 @@ export class SpaceStateMachine implements SpaceState {
           log.warn('Space must have a genesis credential before admitting feeds.');
           return false;
         }
-        if (!this._canAdmitFeeds(credential.issuer)) {
-          log.warn(`Space member is not authorized to admit feeds: ${credential.issuer}`);
-          return false;
-        }
 
-        // TODO(dmaretskyi): Check that the feed owner is a member of the space.
+        // We don't do any validation on feed admission since we would perform the same validation on the credentials inside .
         await this._feeds.process(credential, sourceFeed);
         break;
       }
@@ -262,11 +259,6 @@ export class SpaceStateMachine implements SpaceState {
       this._members.getRole(key) === SpaceMember.Role.ADMIN ||
       this._members.getRole(key) === SpaceMember.Role.OWNER
     );
-  }
-
-  private _canAdmitFeeds(key: PublicKey): boolean {
-    const role = this._members.getRole(key);
-    return role === SpaceMember.Role.EDITOR || role === SpaceMember.Role.ADMIN || role === SpaceMember.Role.OWNER;
   }
 }
 

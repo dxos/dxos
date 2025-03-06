@@ -14,7 +14,7 @@ message Tracks {
   optional string video = 3;
   optional bool video_enabled = 4;
   optional string screenshare = 5;
-  optional bool screen_share_enabled = 6;
+  optional bool screenshare_enabled = 6;
 }
 
 message UserState {
@@ -25,9 +25,30 @@ message UserState {
   bool speaking = 5;
   bool joined = 6;
   Tracks tracks = 7;
+  optional Transcription transcription = 8;
 }
 
 message RoomState {
   string meetingId = 1;
   repeated UserState users = 2;
+  optional Transcription transcription = 3;
+}
+
+/**
+ * Transcription settings.
+ * It will be merged across all users in the room based on the Lamport timestamp (last one wins).
+ */
+message Transcription {
+  bool enabled = 1;
+
+  /**
+   * Lamport timestamp of when the state was set.
+   * @see https://en.wikipedia.org/wiki/Lamport_timestamp
+   */
+  int32 lamport_timestamp = 2;
+
+  /**
+   * Transcription queue DXN.
+   */
+  string queue_dxn = 3;
 }

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect, type Signal, signal } from '@preact/signals-core';
+import { effect, type Signal, signal, untracked } from '@preact/signals-core';
 
 import { Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { byDisposition, type Disposition, isNode, type MaybePromise, nonNullable } from '@dxos/util';
+import { byPosition, type Position, isNode, type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
 import { type ActionData, actionGroupSymbol, type Node, type NodeArg, type Relation } from './node';
@@ -63,7 +63,7 @@ export type CreateExtensionOptions<T = any> = {
   id: string;
   relation?: Relation;
   type?: string;
-  disposition?: Disposition;
+  position?: Position;
   filter?: (node: Node) => node is Node<T>;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension<GuardedNodeType<CreateExtensionOptions<T>['filter']>>;
@@ -75,16 +75,16 @@ export type CreateExtensionOptions<T = any> = {
  * Create a graph builder extension.
  */
 export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): BuilderExtension[] => {
-  const { id, disposition = 'static', resolver, connector, actions, actionGroups, ...rest } = extension;
+  const { id, position = 'static', resolver, connector, actions, actionGroups, ...rest } = extension;
   const getId = (key: string) => `${id}/${key}`;
   return [
-    resolver ? { id: getId('resolver'), disposition, resolver } : undefined,
-    connector ? { ...rest, id: getId('connector'), disposition, connector } : undefined,
+    resolver ? { id: getId('resolver'), position, resolver } : undefined,
+    connector ? { ...rest, id: getId('connector'), position, connector } : undefined,
     actionGroups
       ? ({
           ...rest,
           id: getId('actionGroups'),
-          disposition,
+          position,
           type: ACTION_GROUP_TYPE,
           relation: 'outbound',
           connector: ({ node }) =>
@@ -95,13 +95,13 @@ export const createExtension = <T = any>(extension: CreateExtensionOptions<T>): 
       ? ({
           ...rest,
           id: getId('actions'),
-          disposition,
+          position,
           type: ACTION_TYPE,
           relation: 'outbound',
           connector: ({ node }) => actions({ node })?.map((arg) => ({ ...arg, type: ACTION_TYPE })),
         } satisfies BuilderExtension)
       : undefined,
-  ].filter(nonNullable);
+  ].filter(isNonNullable);
 };
 
 export type GraphBuilderTraverseOptions = {
@@ -174,7 +174,7 @@ export const toSignal = <T>(
 
 export type BuilderExtension = Readonly<{
   id: string;
-  disposition: Disposition;
+  position: Position;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   // Only for connector.
@@ -184,6 +184,14 @@ export type BuilderExtension = Readonly<{
 }>;
 
 type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
+
+export const flattenExtensions = (extension: ExtensionArg, acc: BuilderExtension[] = []): BuilderExtension[] => {
+  if (Array.isArray(extension)) {
+    return [...acc, ...extension.flatMap((ext) => flattenExtensions(ext, acc))];
+  } else {
+    return [...acc, extension];
+  }
+};
 
 /**
  * The builder provides an extensible way to compose the construction of the graph.
@@ -245,16 +253,23 @@ export class GraphBuilder {
   }
 
   /**
+   * @reactive
+   */
+  get extensions() {
+    return Object.values(this._extensions);
+  }
+
+  /**
    * Register a node builder which will be called in order to construct the graph.
    */
   addExtension(extension: ExtensionArg): GraphBuilder {
-    if (Array.isArray(extension)) {
-      extension.forEach((ext) => this.addExtension(ext));
-      return this;
-    }
-
-    this._dispatcher.state[extension.id] = [];
-    this._extensions[extension.id] = extension;
+    const extensions = flattenExtensions(extension);
+    untracked(() => {
+      extensions.forEach((extension) => {
+        this._dispatcher.state[extension.id] = [];
+        this._extensions[extension.id] = extension;
+      });
+    });
     return this;
   }
 
@@ -262,7 +277,9 @@ export class GraphBuilder {
    * Remove a node builder from the graph builder.
    */
   removeExtension(id: string): GraphBuilder {
-    delete this._extensions[id];
+    untracked(() => {
+      delete this._extensions[id];
+    });
     return this;
   }
 
@@ -326,7 +343,7 @@ export class GraphBuilder {
     this._resolverSubscriptions.set(
       nodeId,
       effect(() => {
-        const extensions = Object.values(this._extensions).toSorted(byDisposition);
+        const extensions = Object.values(this._extensions).toSorted(byPosition);
         for (const { id, resolver } of extensions) {
           if (!resolver) {
             continue;
@@ -384,7 +401,7 @@ export class GraphBuilder {
 
         // TODO(wittjosiah): Consider allowing extensions to collaborate on the same node by merging their results.
         const nodes: NodeArg<any>[] = [];
-        const extensions = Object.values(this._extensions).toSorted(byDisposition);
+        const extensions = Object.values(this._extensions).toSorted(byPosition);
         for (const { id, connector, filter, type, relation = 'outbound' } of extensions) {
           if (
             !connector ||

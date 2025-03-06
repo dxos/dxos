@@ -8,7 +8,7 @@ export const os = {
   'sidebar label': 'DXOS sidebar',
   'copy invitation code label': 'Copy URL',
   'copy success label': 'Copied',
-  'copy self public key label': 'Copy public key',
+  'copy self did label': 'Copy DID',
   'open share panel label': 'View QR code',
   'joining space heading': 'Joining space',
   'join space heading': 'Enter space invitation',
@@ -118,6 +118,8 @@ export const os = {
   'select emoji label': 'Avatar emoji',
   'select hue label': 'Avatar background color',
   'resetting message': 'One moment while the device is reset…',
+
+  // TODO(burdon): Factor out.
   'red label': 'Red',
   'orange label': 'Orange',
   'amber label': 'Amber',
@@ -135,6 +137,10 @@ export const os = {
   'fuchsia label': 'Fuchsia',
   'pink label': 'Pink',
   'rose label': 'Rose',
+
+  'select a hue label': 'Select color',
+  'hue label': 'Hue',
+  'icon label': 'Icon',
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',

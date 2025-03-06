@@ -9,13 +9,12 @@ import {
   createResolver,
   type SerializedNode,
   SettingsAction,
-  type NodeSerializer,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { isActionLike, type Node } from '@dxos/plugin-graph';
-import { type MaybePromise } from '@dxos/util';
+import { byPosition, type MaybePromise } from '@dxos/util';
 
 import { FileCapabilities } from './capabilities';
 import { FILES_PLUGIN } from '../meta';
@@ -85,160 +84,184 @@ export default (context: PluginsContext) => {
   };
 
   return contributes(Capabilities.IntentResolver, [
-    createResolver(LocalFilesAction.SelectRoot, async () => {
-      const state = context.requestCapability(FileCapabilities.MutableState);
-      const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-      if (rootDir) {
-        state.rootHandle = rootDir;
-      }
+    createResolver({
+      intent: LocalFilesAction.SelectRoot,
+      resolve: async () => {
+        const state = context.requestCapability(FileCapabilities.MutableState);
+        const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+        if (rootDir) {
+          state.rootHandle = rootDir;
+        }
+      },
     }),
-    createResolver(LocalFilesAction.Export, async () => {
-      const { explore } = context.requestCapability(Capabilities.AppGraph);
-      const state = context.requestCapability(FileCapabilities.MutableState);
-      if (!state.rootHandle) {
-        return { intents: [createIntent(SettingsAction.Open, { plugin: FILES_PLUGIN })] };
-      }
+    createResolver({
+      intent: LocalFilesAction.Export,
+      resolve: async () => {
+        const { explore } = context.requestCapability(Capabilities.AppGraph);
+        const state = context.requestCapability(FileCapabilities.MutableState);
+        if (!state.rootHandle) {
+          return { intents: [createIntent(SettingsAction.Open, { plugin: FILES_PLUGIN })] };
+        }
 
-      const serializers = context.requestCapabilities(Capabilities.AppGraphSerializer).flat();
+        const serializers = context.requestCapabilities(Capabilities.AppGraphSerializer).flat();
 
-      // TODO(wittjosiah): Export needs to include order of nodes as well.
-      //   Without this order is not guaranteed to be preserved on import.
-      //   This can be done by computing the relations of a node before visiting it.
-      //   The inverse needs to be done on import as well,
-      //   the files need to be deserialized first in order to restore the relations.
-      await explore({
-        visitor: async (node, path) => {
-          if (isActionLike(node)) {
-            return false;
-          }
+        // TODO(wittjosiah): Export needs to include order of nodes as well.
+        //   Without this order is not guaranteed to be preserved on import.
+        //   This can be done by computing the relations of a node before visiting it.
+        //   The inverse needs to be done on import as well,
+        //   the files need to be deserialized first in order to restore the relations.
+        await explore({
+          visitor: async (node, path) => {
+            if (isActionLike(node)) {
+              return false;
+            }
 
-          const [serializer] = serializers
-            .filter((serializer) => node.type === serializer.inputType)
-            .sort(byDisposition);
-          if (!serializer && node.data !== null) {
-            return false;
-          }
+            const [serializer] = serializers
+              .filter((serializer) => node.type === serializer.inputType)
+              .sort(byPosition);
+            if (!serializer && node.data !== null) {
+              return false;
+            }
 
-          const serialized = await serializer.serialize(node);
-          await exportFile({ node, path: path.slice(1), serialized });
-        },
-      });
+            const serialized = await serializer.serialize(node);
+            await exportFile({ node, path: path.slice(1), serialized });
+          },
+        });
 
-      state.lastExport = Date.now();
+        state.lastExport = Date.now();
+      },
     }),
-    createResolver(LocalFilesAction.Import, async (data) => {
-      const rootDir = data.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'read' }));
-      if (!rootDir) {
-        return;
-      }
-
-      const serializers = context.requestCapabilities(Capabilities.AppGraphSerializer).flat();
-
-      const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
-        const [name, ...extension] = handle.name.split('.');
-
-        let type = getFileType(extension.join('.'));
-        if (!type && handle.kind === 'directory') {
-          const metadataHandle = await (handle as any).getFileHandle('.composer.json');
-          if (metadataHandle) {
-            const file = await metadataHandle.getFile();
-            const metadata = JSON.parse(await file.text());
-            type = metadata.type;
-          }
-        } else if (!type) {
-          log('unsupported file type', { name, extension });
+    createResolver({
+      intent: LocalFilesAction.Import,
+      resolve: async (data) => {
+        const rootDir = data.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'read' }));
+        if (!rootDir) {
           return;
         }
-        const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
-        const [serializer] = serializers
-          .filter((serializer) =>
-            // For directories, the output type cannot be inferred from the file extension.
-            handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
-          )
-          .sort(byDisposition);
 
-        return serializer?.deserialize({ name, data, type }, ancestors);
-      };
+        const serializers = context.requestCapabilities(Capabilities.AppGraphSerializer).flat();
 
-      await traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors }));
+        const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
+          const [name, ...extension] = handle.name.split('.');
+
+          let type = getFileType(extension.join('.'));
+          if (!type && handle.kind === 'directory') {
+            const metadataHandle = await (handle as any).getFileHandle('.composer.json');
+            if (metadataHandle) {
+              const file = await metadataHandle.getFile();
+              const metadata = JSON.parse(await file.text());
+              type = metadata.type;
+            }
+          } else if (!type) {
+            log('unsupported file type', { name, extension });
+            return;
+          }
+          const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
+          const [serializer] = serializers
+            .filter((serializer) =>
+              // For directories, the output type cannot be inferred from the file extension.
+              handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
+            )
+            .sort(byPosition);
+
+          return serializer?.deserialize({ name, data, type }, ancestors);
+        };
+
+        await traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors }));
+      },
     }),
-    createResolver(LocalFilesAction.OpenFile, async () => {
-      const state = context.requestCapability(FileCapabilities.MutableState);
+    createResolver({
+      intent: LocalFilesAction.OpenFile,
+      resolve: async () => {
+        const state = context.requestCapability(FileCapabilities.MutableState);
 
-      if ('showOpenFilePicker' in window) {
-        const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
-          mode: 'readwrite',
-          types: [
-            {
-              description: 'Markdown',
-              accept: { 'text/markdown': ['.md'] },
-            },
-          ],
-        });
-        const file = await handleToLocalFile(handle);
-        state.files.push(file);
-
-        return { data: { id: file.id, activeParts: { main: [file.id] } } };
-      }
-
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.md,text/markdown';
-      const result = new Trigger<string>();
-      input.onchange = async () => {
-        const [legacyFile] = input.files ? Array.from(input.files) : [];
-        if (legacyFile) {
-          const file = await legacyFileToLocalFile(legacyFile);
+        if ('showOpenFilePicker' in window) {
+          const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
+            mode: 'readwrite',
+            types: [
+              {
+                description: 'Markdown',
+                accept: { 'text/markdown': ['.md'] },
+              },
+            ],
+          });
+          const file = await handleToLocalFile(handle);
           state.files.push(file);
-          result.wake(file.id);
-        }
-      };
-      input.click();
-      const id = await result.wait();
-      return { data: { id, activeParts: { main: [id] } } };
-    }),
-    createResolver(LocalFilesAction.OpenDirectory, async () => {
-      const state = context.requestCapability(FileCapabilities.MutableState);
-      const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-      const directory = await handleToLocalDirectory(handle);
-      state.files.push(directory);
-      return { data: { id: directory.id, activeParts: { main: [directory.id, directory.children[0]?.id] } } };
-    }),
-    createResolver(LocalFilesAction.Reconnect, async (data) => {
-      const state = context.requestCapability(FileCapabilities.MutableState);
-      const entity = state.files.find((entity) => entity.id === data.id);
-      if (!entity) {
-        return;
-      }
 
-      if ('children' in entity) {
-        const permission = await (entity.handle as any).requestPermission({ mode: 'readwrite' });
-        if (permission === 'granted') {
-          entity.children = await getDirectoryChildren(entity.handle, entity.handle.name);
-          entity.permission = permission;
+          return { data: { id: file.id, subject: [file.id] } };
         }
-      } else {
-        const permission = await (entity.handle as any)?.requestPermission({ mode: 'readwrite' });
-        if (permission === 'granted') {
-          const text = await (entity.handle as any).getFile?.().then((file: any) => file.text());
-          entity.text = text;
-          entity.permission = permission;
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.md,text/markdown';
+        const result = new Trigger<string>();
+        input.onchange = async () => {
+          const [legacyFile] = input.files ? Array.from(input.files) : [];
+          if (legacyFile) {
+            const file = await legacyFileToLocalFile(legacyFile);
+            state.files.push(file);
+            result.wake(file.id);
+          }
+        };
+        input.click();
+        const id = await result.wait();
+        return { data: { id, subject: [id] } };
+      },
+    }),
+    createResolver({
+      intent: LocalFilesAction.OpenDirectory,
+      resolve: async () => {
+        const state = context.requestCapability(FileCapabilities.MutableState);
+        const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+        const directory = await handleToLocalDirectory(handle);
+        state.files.push(directory);
+        return { data: { id: directory.id, subject: [directory.id] } };
+      },
+    }),
+    createResolver({
+      intent: LocalFilesAction.Reconnect,
+      resolve: async (data) => {
+        const state = context.requestCapability(FileCapabilities.MutableState);
+        const entity = state.files.find((entity) => entity.id === data.id);
+        if (!entity) {
+          return;
         }
-      }
+
+        if ('children' in entity) {
+          const permission = await (entity.handle as any).requestPermission({ mode: 'readwrite' });
+          if (permission === 'granted') {
+            entity.children = await getDirectoryChildren(entity.handle, entity.handle.name);
+            entity.permission = permission;
+          }
+        } else {
+          const permission = await (entity.handle as any)?.requestPermission({ mode: 'readwrite' });
+          if (permission === 'granted') {
+            const text = await (entity.handle as any).getFile?.().then((file: any) => file.text());
+            entity.text = text;
+            entity.permission = permission;
+          }
+        }
+      },
     }),
-    createResolver(LocalFilesAction.Save, async (data) => {
-      const state = context.requestCapability(FileCapabilities.MutableState);
-      const file = findFile(state.files, [data.id]);
-      if (file) {
-        await handleSave(file);
-      }
+    createResolver({
+      intent: LocalFilesAction.Save,
+      resolve: async (data) => {
+        const state = context.requestCapability(FileCapabilities.MutableState);
+        const file = findFile(state.files, [data.id]);
+        if (file) {
+          await handleSave(file);
+        }
+      },
     }),
-    createResolver(LocalFilesAction.Close, async (data) => {
-      const state = context.requestCapability(FileCapabilities.MutableState);
-      const index = state.files.findIndex((f) => f.id === data.id);
-      if (index >= 0) {
-        state.files.splice(index, 1);
-      }
+    createResolver({
+      intent: LocalFilesAction.Close,
+      resolve: async (data) => {
+        const state = context.requestCapability(FileCapabilities.MutableState);
+        const index = state.files.findIndex((f) => f.id === data.id);
+        if (index >= 0) {
+          state.files.splice(index, 1);
+        }
+      },
     }),
   ]);
 };
@@ -289,19 +312,4 @@ const traverseFileSystem = async (
       await traverseFileSystem(entry, visitor, [...ancestors, result]);
     }
   }
-};
-
-const byDisposition = (a: NodeSerializer, b: NodeSerializer) => {
-  const aDisposition = a.disposition ?? 'default';
-  const bDisposition = b.disposition ?? 'default';
-
-  if (aDisposition === bDisposition) {
-    return 0;
-  } else if (aDisposition === 'hoist' || bDisposition === 'fallback') {
-    return -1;
-  } else if (bDisposition === 'hoist' || aDisposition === 'fallback') {
-    return 1;
-  }
-
-  return 0;
 };

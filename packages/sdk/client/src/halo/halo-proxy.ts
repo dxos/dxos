@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 
 import { asyncTimeout, Event, EventSubscriptions, MulticastObservable, Trigger } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
-import type { Stream } from '@dxos/codec-protobuf';
+import type { Stream } from '@dxos/codec-protobuf/stream';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -227,7 +227,7 @@ export class HaloProxy implements Halo {
     return identity;
   }
 
-  async recoverIdentity(args: { seedphrase: string }): Promise<Identity> {
+  async recoverIdentity(args: { recoveryCode: string }): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(args, {
       timeout: RPC_TIMEOUT,

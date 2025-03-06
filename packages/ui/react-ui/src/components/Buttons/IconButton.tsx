@@ -8,25 +8,33 @@ import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon, type IconProps } from '../Icon';
-import { Tooltip } from '../Tooltip';
+import { Tooltip, type TooltipContentProps } from '../Tooltip';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Pick<IconProps, 'icon' | 'size'> & {
     label: NonNullable<ReactNode>;
     iconOnly?: boolean;
+    noTooltip?: boolean;
     caretDown?: boolean;
     // TODO(burdon): Create slots abstraction?
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipPortal?: boolean;
     tooltipZIndex?: string;
+    tooltipSide?: TooltipContentProps['side'];
     suppressNextTooltip?: MutableRefObject<boolean>;
   };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ tooltipPortal = true, tooltipZIndex: zIndex, suppressNextTooltip, ...props }, forwardedRef) => {
+  (
+    { noTooltip, tooltipPortal = true, tooltipZIndex: zIndex, tooltipSide, suppressNextTooltip, ...props },
+    forwardedRef,
+  ) => {
     const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+    if (noTooltip) {
+      return <LabelledIconButton {...props} ref={forwardedRef} />;
+    }
     const content = (
-      <Tooltip.Content {...(zIndex && { style: { zIndex } })}>
+      <Tooltip.Content {...(zIndex && { style: { zIndex } })} side={tooltipSide}>
         {props.label}
         <Tooltip.Arrow />
       </Tooltip.Content>
@@ -53,7 +61,10 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, size, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
+  (
+    { icon, size, iconOnly, label, classNames, iconClassNames, caretDown, suppressNextTooltip, ...props },
+    forwardedRef,
+  ) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', {}, classNames)} ref={forwardedRef}>

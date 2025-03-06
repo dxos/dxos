@@ -59,9 +59,6 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
       "path": "../../ui/react-ui-searchlist"
     },
     {
@@ -69,9 +66,6 @@
     },
     {
       "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../experimental/plugin-ipfs"
     },
     {
       "path": "../plugin-client"

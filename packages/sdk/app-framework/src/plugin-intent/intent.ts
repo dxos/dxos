@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Schema as S } from '@effect/schema';
 
 export type IntentParams = {
   readonly input: S.Schema.All;
@@ -25,9 +25,9 @@ export type Intent<Tag extends string, Fields extends IntentParams> = {
   _schema: IntentSchema<Tag, Fields>;
 
   /**
-   * The action to perform.
+   * The id of the intent.
    */
-  action: Tag;
+  id: Tag;
 
   /**
    * Any data needed to perform the desired action.
@@ -84,7 +84,7 @@ export const createIntent = <Tag extends string, Fields extends IntentParams>(
   const intent = {
     ...params,
     _schema: schema,
-    action: schema._tag,
+    id: schema._tag,
     data,
   } satisfies Intent<Tag, Fields>;
 
@@ -122,7 +122,7 @@ export const chain =
     const last = {
       ...params,
       _schema: schema,
-      action: schema._tag,
+      id: schema._tag,
       data,
     } satisfies Intent<NextTag, NextFields>;
 

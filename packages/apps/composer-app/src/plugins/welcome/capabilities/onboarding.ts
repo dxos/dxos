@@ -14,7 +14,7 @@ import { OnboardingManager } from '../onboarding-manager';
 
 export default async (context: PluginsContext) => {
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-  const layout = context.requestCapability(Capabilities.Layout);
+  const pluginManager = context.requestCapability(Capabilities.PluginManager);
   const client = context.requestCapability(ClientCapabilities.Client);
   const searchParams = new URLSearchParams(window.location.search);
   const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
@@ -22,7 +22,7 @@ export default async (context: PluginsContext) => {
   const manager = new OnboardingManager({
     dispatch,
     client,
-    layout,
+    context: pluginManager.context,
     hubUrl,
     token: searchParams.get('token') ?? undefined,
     recoverIdentity: searchParams.get('recoverIdentity') === 'true',
@@ -39,7 +39,7 @@ export default async (context: PluginsContext) => {
     (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
   );
   if (identity && !recoveryCredential) {
-    await dispatch(createIntent(ClientAction.CreateRecoveryCode));
+    await manager.setupRecovery();
   }
 
   const devices = client.halo.devices.get();

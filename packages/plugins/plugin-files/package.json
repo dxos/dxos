@@ -39,7 +39,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.12.1",
+    "effect": "^3.12.3",
     "localforage": "^1.10.0"
   },
   "devDependencies": {

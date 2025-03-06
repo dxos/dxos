@@ -2,21 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  Events,
-  oneOf,
-} from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { CHESS_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { ChessAction, GameType } from './types';
+import { ChessAction, ChessType } from './types';
 
 export const ChessPlugin = () =>
   definePlugin(meta, [
@@ -27,30 +21,41 @@ export const ChessPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: GameType.typename,
+          id: ChessType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(ChessAction.Create, props),
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: 'ph--shield-chevron--regular',
           },
         }),
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupClient,
-      activate: () => contributes(ClientCapabilities.Schema, [GameType]),
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: ChessType,
+            getIntent: () => createIntent(ChessAction.Create),
+          }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

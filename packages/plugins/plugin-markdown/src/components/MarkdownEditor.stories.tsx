@@ -7,10 +7,9 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
-import { IntentProvider, type AnyIntentChain, type IntentContext } from '@dxos/app-framework';
+import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { todo } from '@dxos/debug';
-import { createDocAccessor, createObject, create } from '@dxos/react-client/echo';
+import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -30,32 +29,19 @@ type StoryProps = MarkdownEditorProps & {
   toolbar?: boolean;
 };
 
-const storybookIntentValue = create<IntentContext>({
-  dispatch: () => todo(),
-  dispatchPromise: async (intentChain: AnyIntentChain): Promise<any> => {
-    console.log('[dispatch promise]', intentChain);
-  },
-  undo: () => todo(),
-  undoPromise: () => todo(),
-});
-
 const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
-
-  // TODO(thure,wittjosiah): Use IntentPlugin with withPluginManager
   return (
-    <IntentProvider value={storybookIntentValue}>
-      <Main.Content
-        bounce
-        data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
-      >
-        <AttendableContainer id='test'>
-          <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-        </AttendableContainer>
-      </Main.Content>
-    </IntentProvider>
+    <Main.Content
+      bounce
+      data-toolbar={toolbar ? 'enabled' : 'disabled'}
+      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
+    >
+      <AttendableContainer id='test'>
+        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+      </AttendableContainer>
+    </Main.Content>
   );
 };
 
@@ -76,7 +62,12 @@ const meta: Meta<typeof MarkdownEditor> = {
   title: 'plugins/plugin-markdown/EditorMain',
   component: MarkdownEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ tooltips: true }), withAttention, withPluginManager()],
+  decorators: [
+    withTheme,
+    withLayout({ tooltips: true }),
+    withAttention,
+    withPluginManager({ plugins: [IntentPlugin()] }),
+  ],
   parameters: { layout: 'fullscreen', translations: [...translations, ...editorTranslations] },
 };
 

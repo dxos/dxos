@@ -20,6 +20,11 @@
         "require": "./dist/lib/node/testing/index.cjs",
         "default": "./dist/lib/node-esm/testing/index.mjs"
       }
+    },
+    "./types": {
+      "types": "./dist/types/src/defs/kanban.d.ts",
+      "browser": "./dist/lib/browser/defs/kanban.mjs",
+      "node": "./dist/lib/node-esm/defs/kanban.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -27,6 +32,9 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/defs/kanban.d.ts"
       ]
     }
   },
@@ -37,9 +45,11 @@
   "dependencies": {
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",

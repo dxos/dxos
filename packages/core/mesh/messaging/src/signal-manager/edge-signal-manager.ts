@@ -29,7 +29,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   public onMessage = new Event<Message>();
 
   /**
-   * Swarm key -> { peer: <own peer info>, joinedPeers: <state of swarm> }.
+   * Swarm key -> { peer: <own state payload>, joinedPeers: <state of swarm> }.
    */
   // TODO(mykola): This class should not contain swarm state joinedPeers. Temporary before network-manager API changes to accept list of peers.
   private readonly _swarmPeers = new ComplexMap<
@@ -194,7 +194,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   private async _rejoinAllSwarms() {
     log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
-    // Clear all swarms. But leave keys in the map.
     for (const [topic, { lastState }] of this._swarmPeers.entries()) {
       await this.join({
         topic,

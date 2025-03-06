@@ -4,7 +4,7 @@
 
 import '@fontsource/poiret-one';
 
-import { CaretRight, Key, Planet, QrCode } from '@phosphor-icons/react';
+import { CaretRight, Key, Planet, QrCode, Receipt } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
@@ -21,6 +21,7 @@ export const Welcome = ({
   identity,
   error,
   onSignup,
+  onPasskey,
   onJoinIdentity,
   onRecoverIdentity,
   onSpaceInvitation,
@@ -45,7 +46,7 @@ export const Welcome = ({
       >
         <div
           className={mx(
-            'relative grid grid-cols-1 md:w-[600px] max-w-[600px] h-full md:h-[675px] overflow-hidden',
+            'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
             'rounded-xl shadow-lg lg:translate-x-[-40%]',
           )}
           style={{
@@ -119,6 +120,17 @@ export const Welcome = ({
                   <p className='text-subdued'>{t('new device description')}</p>
                 </div>
                 <div className='flex flex-col gap-2'>
+                  {onPasskey && (
+                    <CompoundButton
+                      slots={{ label: { className: 'text-sm' } }}
+                      after={<CaretRight className={getSize(4)} weight='bold' />}
+                      before={<Key className={getSize(6)} />}
+                      onClick={onPasskey}
+                      data-testid='welcome.redeem-passkey'
+                    >
+                      {t('redeem passkey button label')}
+                    </CompoundButton>
+                  )}
                   {onJoinIdentity && (
                     <CompoundButton
                       slots={{ label: { className: 'text-sm' } }}
@@ -134,7 +146,7 @@ export const Welcome = ({
                     <CompoundButton
                       slots={{ label: { className: 'text-sm' } }}
                       after={<CaretRight className={getSize(4)} weight='bold' />}
-                      before={<Key className={getSize(6)} />}
+                      before={<Receipt className={getSize(6)} />}
                       onClick={onRecoverIdentity}
                       data-testid='welcome.recover-identity'
                     >

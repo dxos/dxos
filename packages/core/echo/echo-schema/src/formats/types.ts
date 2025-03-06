@@ -64,6 +64,7 @@ export enum FormatEnum {
   JSON = 'json',
   Markdown = 'markdown',
   Regex = 'regex',
+  SingleSelect = 'single-select',
   URL = 'url',
   UUID = 'uuid',
 
@@ -89,7 +90,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  LatLng = 'latlng',
+  LatLong = 'latlng',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -115,6 +116,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.None]: undefined as any,
   [FormatEnum.String]: TypeEnum.String,
   [FormatEnum.Number]: TypeEnum.Number,
+  // Schema for options in the form
   [FormatEnum.Boolean]: TypeEnum.Boolean,
   [FormatEnum.Ref]: TypeEnum.Ref,
 
@@ -129,6 +131,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Regex]: TypeEnum.String,
   [FormatEnum.URL]: TypeEnum.String,
   [FormatEnum.UUID]: TypeEnum.String,
+  [FormatEnum.SingleSelect]: TypeEnum.String,
 
   // Dates
   [FormatEnum.Date]: TypeEnum.String,
@@ -143,7 +146,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.LatLng]: TypeEnum.Object,
+  [FormatEnum.LatLong]: TypeEnum.Object,
 };
 
 /**

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { createIntent, type PromiseIntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
@@ -205,7 +205,11 @@ export const constructSpaceNode = ({
       ...partials,
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
-      icon: 'ph--planet--regular',
+      hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
+      icon:
+        space.state.get() === SpaceState.SPACE_READY && space.properties.icon
+          ? `ph--${space.properties.icon}--regular`
+          : undefined,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
@@ -256,7 +260,7 @@ export const constructSpaceActions = ({
         properties: {
           label: ['create object in space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--plus--regular',
-          disposition: 'toolbar',
+          disposition: 'item',
           testId: 'spacePlugin.createObject',
         },
       },
@@ -273,6 +277,10 @@ export const constructSpaceActions = ({
           label: ['share space label', { ns: SPACE_PLUGIN }],
           icon: 'ph--users--regular',
           disabled: locked,
+          disposition: 'toolbar',
+          iconOnly: false,
+          variant: 'default',
+          testId: 'spacePlugin.shareSpace',
           keyBinding: {
             macos: 'meta+.',
             windows: 'alt+.',
@@ -411,6 +419,8 @@ export const constructObjectActions = ({
   navigable?: boolean;
 }) => {
   const object = node.data;
+  const space = getSpace(object);
+  invariant(space, 'Space not found');
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
     ...(object instanceof CollectionType
@@ -473,7 +483,7 @@ export const constructObjectActions = ({
             id: getId('copy-link'),
             type: ACTION_TYPE,
             data: async () => {
-              const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+              const url = `${window.location.origin}/${space.id}/${fullyQualifiedId(object)}`;
               await navigator.clipboard.writeText(url);
             },
             properties: {
@@ -486,10 +496,10 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: NavigationAction.Expose._tag,
+      id: getId(LayoutAction.Expose._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(object) }));
+        await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: fullyQualifiedId(object) }));
       },
       properties: {
         label: ['expose object label', { ns: SPACE_PLUGIN }],

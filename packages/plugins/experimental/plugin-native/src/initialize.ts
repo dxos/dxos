@@ -3,7 +3,7 @@
 //
 
 import type { PluginsContext } from '@dxos/app-framework';
-import { NavigationAction, SettingsAction, LayoutAction, createIntent, Capabilities } from '@dxos/app-framework';
+import { SettingsAction, LayoutAction, createIntent, Capabilities } from '@dxos/app-framework';
 import { HELP_PLUGIN } from '@dxos/plugin-help';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 import { safeParseJson } from '@dxos/util';
@@ -23,9 +23,11 @@ const loadSocketSupplyModules = async () => {
   const app = await import(/* @vite-ignore */ module);
   const windowModule = 'socket:window';
   const socketWindow = await import(/* @vite-ignore */ windowModule);
+  const osModule = 'socket:os';
+  const socketOs = await import(/* @vite-ignore */ osModule);
   const { meta_title: appName } = app.config;
 
-  return { app, socketWindow, appName };
+  return { app, socketWindow, socketOs, appName };
 };
 
 const configureDesktopWindowSizing = async (app: any) => {
@@ -84,10 +86,12 @@ const setupMenuItemListener = (dispatch: any, app: any) => {
     switch (id) {
       case 'App Name:Search commands': {
         void dispatch(
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: COMMANDS_DIALOG,
-            dialogBlockAlign: 'start',
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: COMMANDS_DIALOG,
+            options: {
+              blockAlign: 'start',
+            },
           }),
         );
         break;
@@ -98,9 +102,12 @@ const setupMenuItemListener = (dispatch: any, app: any) => {
       }
       case 'App Name:Show shortcuts': {
         void dispatch(
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            component: `${HELP_PLUGIN}/Shortcuts`,
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            subject: `${HELP_PLUGIN}/Shortcuts`,
+            options: {
+              blockAlign: 'center',
+            },
           }),
         );
         break;
@@ -126,13 +133,8 @@ const setupApplicationUrlListener = (app: any, dispatch: any) => {
       // Currently, the dialogs are controlled by Client Plugin and not the Layout Plugin.
       window.location.href = location;
     } else {
-      void dispatch(
-        createIntent(
-          NavigationAction.Open,
-          // TODO(thure): what is `location` and is this right?
-          { activeParts: { main: [location] } },
-        ),
-      );
+      // TODO(thure): What is `location` and is this right?
+      void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [location] }));
     }
   });
 };
@@ -144,20 +146,26 @@ const setupGlobalHotkey = async (socketWindow: any, appWindow: any, dispatch: an
   binding.addEventListener('hotkey', () => {
     appWindow.restore();
     void dispatch(
-      createIntent(LayoutAction.SetLayout, {
-        element: 'dialog',
-        component: COMMANDS_DIALOG,
-        dialogBlockAlign: 'start',
+      createIntent(LayoutAction.UpdateDialog, {
+        part: 'dialog',
+        subject: COMMANDS_DIALOG,
+        options: {
+          blockAlign: 'start',
+        },
       }),
     );
   });
 };
 
 export const initializeNativeApp = async (context: PluginsContext) => {
-  const { app, socketWindow, appName } = await loadSocketSupplyModules();
+  const { app, socketWindow, socketOs, appName } = await loadSocketSupplyModules();
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
 
-  if (process.platform === 'darwin' || process.platform === 'win32') {
+  const platform = socketOs.platform();
+
+  document.body.setAttribute('data-platform', platform);
+
+  if (platform === 'darwin' || platform === 'win32') {
     await configureDesktopWindowSizing(app);
     await configureSystemMenu(app, appName);
     setupMenuItemListener(dispatch, app);

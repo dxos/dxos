@@ -2,49 +2,70 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 
-import { type BaseObject, type GeoPoint } from '@dxos/echo-schema';
+import { type GeoPoint, GeoLocation } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
 
-export const GeoPointInput = <T extends BaseObject>({
-  property,
-  type,
-  label,
-  disabled,
-  getStatus,
-  getValue,
-  onValueChange,
-  onBlur,
-}: InputProps<T>) => {
+export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onValueChange, onBlur }: InputProps) => {
   const { t } = useTranslation(translationKey);
-  const { status, error } = getStatus?.(property);
-  const [lng = 0, lat = 0] = getValue<GeoPoint>(property) ?? [];
+  const { status, error } = getStatus();
+  const geoPoint = useMemo<GeoPoint>(() => getValue<GeoPoint>() ?? [0, 0], [getValue]);
+  const geoLocation = useMemo(() => GeoLocation.fromGeoPoint(geoPoint), [geoPoint]);
+
+  const [longitudeText, setLongitudeText] = useState(geoLocation.longitude?.toString());
+  const [latitudeText, setLatitudeText] = useState(geoLocation.latitude?.toString());
+
+  useEffect(() => {
+    const location = GeoLocation.fromGeoPoint(geoPoint);
+    setLongitudeText(location.longitude.toString());
+    setLatitudeText(location.latitude.toString());
+  }, [geoPoint]);
+
+  const handleCoordinateChange = useCallback(
+    (coordinateType: keyof Pick<GeoLocation, 'longitude' | 'latitude'>, setText: (text: string) => void) =>
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        const inputText = event.target.value;
+        setText(inputText);
+        if (inputText !== '' && inputText !== '-') {
+          const coord = safeParseFloat(inputText);
+          if (coord !== undefined && !isNaN(coord)) {
+            const currentLocation = GeoLocation.fromGeoPoint(getValue<GeoPoint>() ?? [0, 0]);
+            const newLocation = { ...currentLocation, [coordinateType]: coord };
+            const newValue = GeoLocation.toGeoPoint(newLocation);
+            onValueChange(type, newValue);
+          }
+        }
+      },
+    [getValue, onValueChange, type],
+  );
 
   return (
     <Input.Root validationValence={status}>
       <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
       </InputHeader>
-      <div className='grid grid-cols-2 gap-2'>
+      <div role='none' className='grid grid-cols-2 gap-2'>
         <Input.TextInput
-          type='number'
+          type='text'
+          pattern='^-?[0-9]*\.?[0-9]*$'
           disabled={disabled}
-          placeholder={t('placeholder longitude')}
-          value={lng}
-          onChange={(event) => onValueChange(property, type, [lat, safeParseFloat(event.target.value, 0)])}
+          placeholder={t('placeholder latitude')}
+          value={latitudeText}
+          onChange={handleCoordinateChange('latitude', setLatitudeText)}
           onBlur={onBlur}
         />
         <Input.TextInput
-          type='number'
+          type='text'
+          pattern='^-?[0-9]*\.?[0-9]*$'
           disabled={disabled}
-          placeholder={t('placeholder latitude')}
-          value={lat}
-          onChange={(event) => onValueChange(property, type, [safeParseFloat(event.target.value, 0), lng])}
+          placeholder={t('placeholder longitude')}
+          value={longitudeText}
+          onChange={handleCoordinateChange('longitude', setLongitudeText)}
           onBlur={onBlur}
         />
       </div>

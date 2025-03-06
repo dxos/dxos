@@ -4,14 +4,7 @@
 
 import { definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
 
-import {
-  AppGraphBuilder,
-  IntentResolver,
-  PresenterSettings,
-  PresenterState,
-  ReactContext,
-  ReactSurface,
-} from './capabilities';
+import { AppGraphBuilder, IntentResolver, PresenterSettings, PresenterState, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import translations from './translations';
 
@@ -27,7 +20,10 @@ export const PresenterPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
       activate: PresenterState,
     }),
     defineModule({
@@ -36,18 +32,13 @@ export const PresenterPlugin = () =>
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

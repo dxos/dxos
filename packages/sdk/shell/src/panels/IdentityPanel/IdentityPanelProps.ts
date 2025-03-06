@@ -29,6 +29,7 @@ export type IdentityPanelImplProps = {
   connectionState?: ConnectionState;
   onChangeConnectionState?: (nextState: ConnectionState) => Promise<void>;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
+  onManageCredentials?: () => Promise<void>;
   onResetStorage?: () => Promise<void>;
   onRecover?: () => Promise<void>;
   onJoinNewIdentity?: () => Promise<void>;
@@ -46,7 +47,13 @@ export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | '
 
 export type IdentityPanelHeadingProps = Pick<
   IdentityPanelImplProps,
-  'titleId' | 'identity' | 'onDone' | 'onUpdateProfile' | 'connectionState' | 'onChangeConnectionState'
+  | 'titleId'
+  | 'identity'
+  | 'onDone'
+  | 'onUpdateProfile'
+  | 'connectionState'
+  | 'onChangeConnectionState'
+  | 'onManageCredentials'
 > & {
   title: string;
 };

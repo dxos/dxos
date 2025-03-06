@@ -4,7 +4,7 @@
 
 import { type LogConfig, LogLevel, type LogOptions } from './config';
 import { type LogContext, type LogProcessor } from './context';
-import { createMethodLogDecorator } from './decorators';
+import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
 import { getConfig, DEFAULT_PROCESSORS } from './options';
 
@@ -27,6 +27,11 @@ export interface LogMethods {
   break: () => void;
   stack: (message?: string, context?: never, meta?: CallMetadata) => void;
   method: (arg0?: never, arg1?: never, meta?: CallMetadata) => MethodDecorator;
+  func: <F extends (...args: any[]) => any>(
+    name: string,
+    fn: F,
+    opts?: { transformOutput?: (result: ReturnType<F>) => Promise<any> | any },
+  ) => F;
 }
 
 /**
@@ -73,7 +78,8 @@ const createLog = (): LogImp => {
   log.error = (...params) => processLog(LogLevel.ERROR, ...params);
 
   // Catch only shows error message, not stacktrace.
-  log.catch = (error: Error | any, context, meta) => processLog(LogLevel.ERROR, error.message, context, meta, error);
+  log.catch = (error: Error | any, context, meta) =>
+    processLog(LogLevel.ERROR, error.message ?? String(error), context, meta, error);
 
   // Show break.
   log.break = () => log.info('——————————————————————————————————————————————————');
@@ -82,6 +88,7 @@ const createLog = (): LogImp => {
     processLog(LogLevel.INFO, `${message ?? 'Stack Dump'}\n${getFormattedStackTrace()}`, context, meta);
 
   log.method = createMethodLogDecorator(log);
+  log.func = createFunctionLogDecorator(log);
 
   /**
    * Process the current log call.

@@ -41,6 +41,12 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../experimental/artifact"
+    },
+    {
+      "path": "../../experimental/assistant"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -48,6 +54,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-gameboard"
     },
     {
       "path": "../../ui/react-ui-stack"

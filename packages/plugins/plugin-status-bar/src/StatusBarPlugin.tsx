@@ -4,10 +4,19 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createSurface,
+  defineModule,
+  definePlugin,
+  Events,
+  Surface,
+} from '@dxos/app-framework';
 
-import { StatusBarPanel } from './components';
-import { meta } from './meta';
+import { StatusBarActions, StatusBarPanel } from './components';
+import { VersionNumber } from './components/VersionNumber';
+import { meta, STATUS_BAR_PLUGIN } from './meta';
 import translations from './translations';
 
 export const StatusBarPlugin = () =>
@@ -19,15 +28,29 @@ export const StatusBarPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: () =>
-        contributes(
-          Capabilities.ReactSurface,
+        contributes(Capabilities.ReactSurface, [
           createSurface({
             id: meta.id,
             role: 'status-bar',
             component: () => <StatusBarPanel />,
           }),
-        ),
+          createSurface({
+            id: meta.id,
+            role: 'status-bar--r0-footer',
+            component: () => <Surface role='status' />,
+          }),
+          createSurface({
+            id: meta.id,
+            role: 'status-bar--r1-footer',
+            component: () => <StatusBarActions />,
+          }),
+          createSurface({
+            id: `${STATUS_BAR_PLUGIN}/header-end`,
+            role: 'header-end',
+            component: () => <VersionNumber />,
+          }),
+        ]),
     }),
   ]);

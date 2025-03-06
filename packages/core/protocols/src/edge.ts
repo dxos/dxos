@@ -44,6 +44,12 @@ export type GetNotarizationResponseBody = {
   awaitingNotarization: { credentials: string[] };
 };
 
+export type ExecuteWorkflowResponseBody = {
+  success: boolean;
+  reason?: string;
+  output?: any;
+};
+
 export type PostNotarizationRequestBody = {
   credentials: string[];
 };
@@ -64,10 +70,24 @@ export type JoinSpaceResponseBody = {
 };
 
 export type RecoverIdentityRequest = {
-  recoveryKey: string;
+  /**
+   * Required if recoveryKey is not provided.
+   */
+  identityDid?: string;
+  /**
+   * Required if identityDid is not provided.
+   */
+  recoveryKey?: string;
   deviceKey: string;
   controlFeedKey: string;
-  signature?: string;
+  signature?:
+    | string
+    // This is the format of the signature from the WebAuthn authenticator.
+    | {
+        signature: string;
+        clientDataJson: string;
+        authenticatorData: string;
+      };
 };
 
 export type RecoverIdentityResponseBody = {
@@ -105,7 +125,15 @@ export type UploadFunctionResponseBody = {
   functionId: string;
   version: string;
   meta: {
+    description?: string;
+    /**
+     * JSON Schema for the input of the function.
+     */
     inputSchema?: object;
+    /**
+     * JSON Schema for the output of the function.
+     */
+    outputSchema?: object;
   };
 };
 

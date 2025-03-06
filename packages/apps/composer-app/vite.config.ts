@@ -70,12 +70,14 @@ export default defineConfig((env) => ({
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
-          typescript: ['typescript'],
         },
       },
       external: [
         // Provided at runtime by socket supply shell.
         'socket:application',
+        'socket:process',
+        'socket:window',
+        'socket:os',
       ],
     },
   },
@@ -85,7 +87,7 @@ export default defineConfig((env) => ({
     },
   },
   worker: {
-    format: 'es',
+    format: 'es' as const,
     plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [
@@ -125,6 +127,7 @@ export default defineConfig((env) => ({
     isTrue(process.env.DX_INSPECT) && Inspect(),
     WasmPlugin(),
     ReactPlugin({
+      tsDecorators: true,
       plugins: [
         [
           '@dxos/swc-log-plugin',
@@ -175,29 +178,30 @@ export default defineConfig((env) => ({
       manifest: {
         name: 'DXOS Composer',
         short_name: 'Composer',
-        description: 'DXOS Composer Application',
+        description: 'DXOS Composer',
         theme_color: '#003E70',
         icons: [
           {
-            src: 'favicon-16x16.png',
-            sizes: '16x16',
-            type: 'image/png',
+            "src": "pwa-64x64.png",
+            "sizes": "64x64",
+            "type": "image/png"
           },
           {
-            src: 'favicon-32x32.png',
-            sizes: '32x32',
-            type: 'image/png',
+            "src": "pwa-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
           },
           {
-            src: 'android-chrome-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
+            "src": "pwa-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
           },
           {
-            src: 'android-chrome-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
+            "src": "maskable-icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+          }
         ],
       },
     }),

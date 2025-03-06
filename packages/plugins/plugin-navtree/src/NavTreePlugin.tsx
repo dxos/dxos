@@ -9,9 +9,8 @@ import {
   contributes,
   Capabilities,
   allOf,
-  oneOf,
-  NavigationAction,
   createIntent,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { type TreeData } from '@dxos/react-ui-list';
 
@@ -25,7 +24,7 @@ export const NavTreePlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: allOf(Events.LayoutReady, Events.LocationReady),
+      activatesOn: Events.LayoutReady,
       activatesAfter: [NavTreeEvents.StateReady],
       activate: State,
     }),
@@ -36,7 +35,7 @@ export const NavTreePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: NODE_TYPE,
@@ -56,14 +55,13 @@ export const NavTreePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/expose`,
-      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, Events.LocationReady, NavTreeEvents.StateReady),
+      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, NavTreeEvents.StateReady),
       activate: async (context) => {
-        const location = context.requestCapability(Capabilities.Location);
+        const layout = context.requestCapability(Capabilities.Layout);
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
 
-        const soloPart = location.active.solo?.[0];
-        if (dispatch && soloPart) {
-          await dispatch(createIntent(NavigationAction.Expose, { id: soloPart.id }));
+        if (dispatch && layout.active.length === 1) {
+          await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] }));
         }
 
         return [];
@@ -76,12 +74,12 @@ export const NavTreePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

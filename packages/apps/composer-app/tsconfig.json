@@ -90,15 +90,6 @@
       "path": "../../plugins/experimental/plugin-inbox"
     },
     {
-      "path": "../../plugins/experimental/plugin-ipfs"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-kanban"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-map"
-    },
-    {
       "path": "../../plugins/experimental/plugin-native"
     },
     {
@@ -114,7 +105,10 @@
       "path": "../../plugins/experimental/plugin-template"
     },
     {
-      "path": "../../plugins/experimental/plugin-wnfs"
+      "path": "../../plugins/experimental/plugin-theme-editor"
+    },
+    {
+      "path": "../../plugins/experimental/plugin-transcription"
     },
     {
       "path": "../../plugins/plugin-attention"
@@ -141,6 +135,12 @@
       "path": "../../plugins/plugin-help"
     },
     {
+      "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-map"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
     },
     {
@@ -160,9 +160,6 @@
     },
     {
       "path": "../../plugins/plugin-registry"
-    },
-    {
-      "path": "../../plugins/plugin-settings-interface"
     },
     {
       "path": "../../plugins/plugin-sheet"
@@ -192,7 +189,7 @@
       "path": "../../plugins/plugin-token-manager"
     },
     {
-      "path": "../../plugins/plugin-wildcard"
+      "path": "../../plugins/plugin-wnfs"
     },
     {
       "path": "../../sdk/app-framework"
@@ -229,9 +226,6 @@
     },
     {
       "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

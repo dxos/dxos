@@ -17,11 +17,23 @@
       "group": {
         "kind": "build",
         "isDefault": true
+      }
+    },
+    {
+      "label": "build current tsconfig",
+      "type": "typescript",
+      "tsconfig": "${relativeFile}",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "option": "watch",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
       },
-      "options": {
-        "env": {
-          "NODE_OPTIONS": "--max-old-space-size=12192"
-        }
+      "group": {
+        "kind": "build"
       }
     }
   ]
