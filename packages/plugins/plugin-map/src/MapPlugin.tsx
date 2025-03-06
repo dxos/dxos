@@ -3,19 +3,23 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type Space } from '@dxos/react-client/echo';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, MapState, IntentResolver, ReactSurface, Artifact } from './capabilities';
+import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
 import { MAP_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { MapType, MapAction, type CreateMapType, CreateMapSchema } from './types';
+import { MapType, MapAction, CreateMapSchema } from './types';
 
 export const MapPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
       activate: MapState,
     }),
     defineModule({
@@ -30,27 +34,32 @@ export const MapPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MapType.typename,
           metadata: {
-            creationSchema: CreateMapSchema,
-            createObject: (props: CreateMapType, options: { space: Space }) =>
-              createIntent(MapAction.Create, { ...props, space: options.space }),
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: 'ph--compass--regular',
           },
         }),
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
+      id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [MapType]),
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: MapType,
+            formSchema: CreateMapSchema,
+            getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
+          }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
@@ -59,8 +68,8 @@ export const MapPlugin = () =>
       activate: AppGraphBuilder,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact`,
-      activatesOn: Events.Startup,
-      activate: Artifact,
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

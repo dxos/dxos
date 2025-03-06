@@ -41,7 +41,10 @@ export const DeckPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/layout`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
       activatesAfter: [Events.LayoutReady, DeckEvents.StateReady],
       activate: DeckState,
     }),
@@ -53,16 +56,17 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/react-root`,
       activatesOn: Events.Startup,
+      activatesBefore: [DeckEvents.SetupComplementaryPanels],
       activate: ReactRoot,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/layout-intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: LayoutIntentResolver,
     }),
     defineModule({
@@ -72,7 +76,7 @@ export const DeckPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/tools`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupArtifactDefinition,
       activate: Tools,
     }),
     defineModule({

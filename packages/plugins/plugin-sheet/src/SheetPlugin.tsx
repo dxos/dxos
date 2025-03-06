@@ -5,6 +5,9 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionType } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Markdown, Thread, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
 import { meta, SHEET_PLUGIN } from './meta';
@@ -31,7 +34,6 @@ export const SheetPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: SheetType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(SheetAction.Create, props),
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
@@ -40,33 +42,42 @@ export const SheetPlugin = () =>
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: SheetType,
+            getIntent: (props, options) => createIntent(SheetAction.Create, { ...props, space: options.space }),
+          }),
+        ),
+    }),
+    // TODO(wittjosiah): Factor out to common package/plugin.
+    //  FunctionType is currently registered here in case script plugin isn't enabled.
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.Schema, [SheetType]),
-        // TODO(wittjosiah): Factor out to common package/plugin.
-        //  FunctionType is currently registered here in case script plugin isn't enabled.
-        contributes(ClientCapabilities.SystemSchema, [FunctionType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
-      activatesOn: Events.Startup,
+      activatesOn: MarkdownEvents.SetupExtensions,
       activate: Markdown,
     }),
     defineModule({
       id: `${meta.id}/module/thread`,
-      activatesOn: Events.Startup,
+      activatesOn: ThreadEvents.SetupThread,
       activate: Thread,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
   ]);

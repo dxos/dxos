@@ -21,9 +21,7 @@ export default defineFunction({
     to: S.String.annotations({ description: 'The target currency' }),
   }),
 
-  outputSchema: S.Struct({
-    rate: S.Number,
-  }),
+  outputSchema: S.String.annotations({ description: 'The exchange rate between the two currencies' }),
 
   handler: async ({
     event: {
@@ -38,6 +36,6 @@ export default defineFunction({
         Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
         Effect.scoped,
       );
-      return { rate: res.data.rates[to].toString() };
+      return res.data.rates[to].toString();
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });

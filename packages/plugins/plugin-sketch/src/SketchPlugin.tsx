@@ -4,6 +4,8 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
@@ -31,7 +33,6 @@ export const SketchPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(SketchAction.Create, props),
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -41,26 +42,35 @@ export const SketchPlugin = () =>
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DiagramType,
+            getIntent: () => createIntent(SketchAction.Create),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [CanvasType]),
-        contributes(ClientCapabilities.Schema, [DiagramType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [CanvasType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.AppGraphReady,
       activate: AppGraphSerializer,
     }),
   ]);

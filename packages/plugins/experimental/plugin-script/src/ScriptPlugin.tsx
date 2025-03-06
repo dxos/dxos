@@ -5,12 +5,14 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type Space } from '@dxos/client/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { Artifact, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import { ArtifactDefinition, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import { ScriptEvents } from './events';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
@@ -24,7 +26,7 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/compiler`,
-      activatesOn: Events.Startup,
+      activatesOn: ScriptEvents.SetupCompiler,
       activate: Compiler,
     }),
     defineModule({
@@ -39,9 +41,6 @@ export const ScriptPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
           metadata: {
-            creationSchema: ScriptAction.CreateScriptSchema,
-            createObject: (props: ScriptAction.CreateScriptProps, { space }: { space: Space }) =>
-              createIntent(ScriptAction.Create, { ...props, space }),
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -50,26 +49,38 @@ export const ScriptPlugin = () =>
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: ScriptType,
+            formSchema: ScriptAction.CreateScriptSchema,
+            getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [FunctionType]),
-        contributes(ClientCapabilities.Schema, [ScriptType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the script editor is loaded when surfaces activation is more granular.
+      activatesBefore: [ScriptEvents.SetupCompiler],
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact`,
-      activatesOn: Events.Startup,
-      activate: Artifact,
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

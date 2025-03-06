@@ -5,20 +5,21 @@
 import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { type TypedObject } from '@dxos/echo-schema';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { ClientCapabilities } from './capabilities';
+import { SpaceCapabilities } from './capabilities';
+import { type ObjectForm } from '../types';
 
 export default (context: PluginsContext) => {
   const client = context.requestCapability(ClientCapabilities.Client);
 
   // TODO(wittjosiah): Unregister schemas when they are disabled.
-  let previous: TypedObject[] = [];
+  let previous: ObjectForm[] = [];
   const unsubscribe = effect(() => {
-    const schemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.Schema).flat()));
+    const forms = Array.from(new Set(context.requestCapabilities(SpaceCapabilities.ObjectForm)));
     // TODO(wittjosiah): Filter out schemas which the client has already registered.
-    const newSchemas = schemas.filter((schema) => !previous.includes(schema));
-    previous = schemas;
+    const newSchemas = forms.filter((form) => !previous.includes(form)).map((form) => form.objectSchema);
+    previous = forms;
     client.addTypes(newSchemas);
   });
 

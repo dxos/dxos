@@ -53,11 +53,11 @@ export const StackPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [StackViewType]),
+      activate: () => contributes(ClientCapabilities.Schema, [StackViewType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: () =>
         contributes(
           Capabilities.ReactSurface,

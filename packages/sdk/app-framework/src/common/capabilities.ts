@@ -44,6 +44,10 @@ export namespace Capabilities {
     sidebarOpen: boolean;
     complementarySidebarOpen: boolean;
     /**
+     * The id of the active workspace, where a workspace is a set of active items.
+     */
+    workspace: string;
+    /**
      * Identifiers of items which are currently active in the application.
      */
     active: string[];

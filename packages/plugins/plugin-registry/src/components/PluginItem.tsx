@@ -16,9 +16,18 @@ export type PluginItemProps = {
   enabled?: readonly string[];
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;
+  hasSettings?: (id: string) => boolean;
+  onSettings?: (id: string) => void;
 };
 
-export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginItemProps) => {
+export const PluginItem = ({
+  plugin,
+  enabled = [],
+  onClick,
+  onChange,
+  hasSettings: _hasSettings,
+  onSettings,
+}: PluginItemProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
   const { id, name, description, homePage, source, icon = 'ph--circle--regular' } = plugin.meta;
   const isEnabled = enabled.includes(id);
@@ -26,6 +35,7 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
+
   const handleChange = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation();
@@ -33,6 +43,9 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
     },
     [id, isEnabled, onChange],
   );
+
+  const hasSettings = useCallback(() => _hasSettings?.(id) ?? false, [id, _hasSettings]);
+  const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
 
   return (
     <ListItem.Root
@@ -95,6 +108,16 @@ export const PluginItem = ({ plugin, enabled = [], onClick, onChange }: PluginIt
               >
                 {t('source label')}
                 <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
+              </Link>
+            )}
+
+            {hasSettings?.() && (
+              <Link
+                aria-describedby={descriptionId}
+                classNames='text-sm text-description cursor-pointer'
+                onClick={handleSettings}
+              >
+                {t('settings label')}
               </Link>
             )}
           </div>

@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { AccessTokenType } from '@dxos/schema';
 
 import { ReactSurface } from './capabilities';
@@ -21,11 +21,11 @@ export const TokenManagerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SystemSchema, [AccessTokenType]),
+      activate: () => contributes(ClientCapabilities.Schema, [AccessTokenType]),
     }),
     defineModule({
       id: `${meta.id}/module/space-settings`,
-      activatesOn: Events.Startup,
+      activatesOn: SpaceEvents.SetupSettingsPanel,
       activate: () =>
         contributes(SpaceCapabilities.SettingsPanel, {
           id: 'token-manager',
@@ -34,7 +34,7 @@ export const TokenManagerPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
   ]);
