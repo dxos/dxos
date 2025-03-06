@@ -7,6 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",

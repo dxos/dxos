@@ -6,6 +6,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "main": "index.js",
   "dependencies": {
     "@dxos/eslint-plugin-rules": "workspace:*",
