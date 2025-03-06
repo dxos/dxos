@@ -3,11 +3,11 @@
 //
 
 import React, {
+  Children,
   type PropsWithChildren,
   forwardRef,
   useImperativeHandle,
   useState,
-  Children,
   useEffect,
   useCallback,
   useMemo,
@@ -36,8 +36,6 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     const [isOverflowing, setIsOverflowing] = useState(false);
     const [scrolledAtTop, setScrolledAtTop] = useState(false);
 
-    const reversedChildren = useMemo(() => [...Children.toArray(children)].reverse(), [children]);
-
     // Scroll controller imperative ref
     useImperativeHandle(
       forwardedRef,
@@ -53,12 +51,18 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
 
     const updateScrollState = useCallback(() => {
       if (viewport) {
-        // Check if content is overflowing
+        // Check if content is overflowing.
         setIsOverflowing(viewport.scrollHeight > viewport.clientHeight);
         // In flex-col-reverse, scrollTop > 0 means we're not at the visual top, also the value will be negative.
         setScrolledAtTop(-viewport.scrollTop + 16 >= viewport.scrollHeight - viewport.clientHeight);
       }
     }, [viewport]);
+
+    const reversedChildren = useMemo(() => [...Children.toArray(children)].reverse(), [children]);
+
+    useEffect(() => {
+      updateScrollState();
+    }, [Children.count(children), viewport]);
 
     useEffect(() => {
       if (!viewport || !fade) {
@@ -80,10 +84,6 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
         resizeObserver.disconnect();
       };
     }, [viewport, fade]);
-
-    useEffect(() => {
-      updateScrollState();
-    }, [Children.count(children), viewport]);
 
     return (
       <div className='relative flex-1 min-bs-0 grid overflow-hidden'>
