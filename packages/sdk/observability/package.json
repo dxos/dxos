@@ -47,7 +47,7 @@
     "src"
   ],
   "scripts": {
-    "api-keys": "node ./scripts/inject_api_keys.js"
+    "api-keys": "./scripts/inject_api_keys.mjs"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
