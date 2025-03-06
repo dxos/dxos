@@ -82,7 +82,9 @@ export const AutomationPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
+      activatesBefore: [Events.SetupArtifactDefinition],
       activate: ReactSurface,
     }),
     defineModule({
@@ -92,7 +94,7 @@ export const AutomationPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

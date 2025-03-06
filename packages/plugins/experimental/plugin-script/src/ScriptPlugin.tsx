@@ -11,7 +11,8 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { Artifact, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import { ArtifactDefinition, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import { ScriptEvents } from './events';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
@@ -25,7 +26,7 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/compiler`,
-      activatesOn: Events.Startup,
+      activatesOn: ScriptEvents.SetupCompiler,
       activate: Compiler,
     }),
     defineModule({
@@ -67,17 +68,19 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the script editor is loaded when surfaces activation is more granular.
+      activatesBefore: [ScriptEvents.SetupCompiler],
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact`,
-      activatesOn: Events.Startup,
-      activate: Artifact,
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

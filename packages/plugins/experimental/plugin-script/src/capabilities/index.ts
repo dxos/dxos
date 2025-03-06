@@ -8,6 +8,6 @@ export const Compiler = lazy(() => import('./compiler'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const ScriptSettings = lazy(() => import('./settings'));
-export const Artifact = lazy(() => import('./artifact'));
+export const ArtifactDefinition = lazy(() => import('./artifact-definition'));
 
 export * from './capabilities';
