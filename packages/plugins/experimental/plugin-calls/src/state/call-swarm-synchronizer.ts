@@ -175,11 +175,12 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   async leave() {
-    await this._stream?.close();
+    const roomId = this._roomId;
+    void this._stream?.close();
     this._stream = undefined;
-    if (this._roomId && this._identityKey && this._deviceKey) {
-      await this._networkService.leaveSwarm({
-        topic: this._roomId,
+    if (roomId && this._identityKey && this._deviceKey) {
+      void this._networkService.leaveSwarm({
+        topic: roomId,
         peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
       });
     }
@@ -191,12 +192,10 @@ export class CallSwarmSynchronizer extends Resource {
    * Notify and schedule send state task.
    */
   private _notifyAndSchedule() {
-    if (!this._state.joined) {
-      return;
-    }
-
     this.stateUpdated.emit(this._state);
-    this._sendStateTask?.schedule();
+    if (this._state.joined) {
+      this._sendStateTask?.schedule();
+    }
   }
 
   private async _sendState() {

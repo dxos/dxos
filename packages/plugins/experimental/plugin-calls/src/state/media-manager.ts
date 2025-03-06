@@ -135,7 +135,7 @@ export class MediaManager extends Resource {
     const pushedVideoTrack = await this._pushTrack(this._state.videoTrack, this._state.pushedVideoTrack, [
       { maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE },
     ]);
-    if (pushedVideoTrack) {
+    if (pushedVideoTrack !== this._state.pushedVideoTrack) {
       this._state.pushedVideoTrack = pushedVideoTrack;
     }
 
@@ -143,7 +143,7 @@ export class MediaManager extends Resource {
     const pushedAudioTrack = await this._pushTrack(this._state.audioTrack, this._state.pushedAudioTrack, [
       { networkPriority: 'high' },
     ]);
-    if (pushedAudioTrack) {
+    if (pushedAudioTrack !== this._state.pushedAudioTrack) {
       this._state.pushedAudioTrack = pushedAudioTrack;
     }
 
@@ -152,7 +152,7 @@ export class MediaManager extends Resource {
       this._state.screenshareVideoTrack,
       this._state.pushedScreenshareTrack,
     );
-    if (pushedScreenshareTrack) {
+    if (pushedScreenshareTrack !== this._state.pushedScreenshareTrack) {
       this._state.pushedScreenshareTrack = pushedScreenshareTrack;
     }
 

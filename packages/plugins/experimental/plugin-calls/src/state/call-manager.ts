@@ -133,8 +133,6 @@ export class CallManager extends Resource {
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   async join() {
-    await this.leave();
-
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
