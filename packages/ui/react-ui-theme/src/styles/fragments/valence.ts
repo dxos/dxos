@@ -25,10 +25,10 @@ export const valenceColorText = (valence?: MessageValence) => {
 };
 
 export const neutralMessageColors = 'bg-neutral-25 dark:bg-neutral-850';
-export const successMessageColors = 'shadow-emeraldShadow text-emeraldSurfaceText bg-emeraldSurface';
-export const infoMessageColors = 'shadow-cyanShadow text-cyanSurfaceText bg-cyanSurface';
-export const warningMessageColors = 'shadow-amberShadow text-amberSurfaceText bg-amberSurface';
-export const errorMessageColors = 'shadow-roseShadow text-roseSurfaceText bg-roseSurface';
+export const successMessageColors = 'text-emeraldSurfaceText bg-emeraldSurface';
+export const infoMessageColors = 'text-cyanSurfaceText bg-cyanSurface';
+export const warningMessageColors = 'text-amberSurfaceText bg-amberSurface';
+export const errorMessageColors = 'text-roseSurfaceText bg-roseSurface';
 
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
