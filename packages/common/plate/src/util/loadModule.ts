@@ -8,7 +8,7 @@ export const isCodeModule = (file: string) => /\.[tj]sx?$/.test(file);
 
 export type LoadModuleOptions = {
   compilerOptions?: any;
-  moduleLoaderFunction?: (m: string) => any;
+  moduleLoaderFunction?: (m: string) => Promise<any>;
 };
 
 let tsnodeRegistered = false;
@@ -36,9 +36,9 @@ export const loadModule = async (p: string, options?: LoadModuleOptions) => {
     tsnode.register(r);
     tsnodeRegistered = true;
   }
-  const loader = options?.moduleLoaderFunction ?? ((m: string) => require(m));
+  const loader = options?.moduleLoaderFunction ?? ((m: string) => import(m));
   try {
-    return loader(p);
+    return await loader(p);
   } catch (err: any) {
     console.error('problem loading template ' + p);
     console.error(err);
