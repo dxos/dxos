@@ -79,7 +79,7 @@ export class ViewProjection {
     invariant(field.path.indexOf('.') === -1);
 
     const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, oneOf, ...rest } = jsonProperty;
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, echo, ...rest } = jsonProperty;
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
@@ -90,15 +90,9 @@ export class ViewProjection {
         : (schemaFormat as FormatEnum);
 
     const options =
-      format === FormatEnum.SingleSelect && oneOf
-        ? {
-            options: oneOf.map((opt) => ({
-              id: opt.const as string,
-              title: opt.title ?? (opt.const as string),
-              color: (opt as any).color,
-            })),
-          }
-        : {};
+      format === FormatEnum.SingleSelect && echo?.annotations?.singleSelect?.options
+        ? echo.annotations.singleSelect.options
+        : undefined;
 
     const values = {
       type,
@@ -106,7 +100,7 @@ export class ViewProjection {
       property: field.path as JsonProp,
       referenceSchema,
       referencePath: field.referencePath,
-      ...options,
+      options,
       ...rest,
     };
 
@@ -157,6 +151,7 @@ export class ViewProjection {
       invariant(format);
 
       const jsonProperty: JsonSchemaType = {};
+
       if (referenceSchema) {
         Object.assign(jsonProperty, createSchemaReference(referenceSchema));
         type = undefined;
@@ -166,7 +161,15 @@ export class ViewProjection {
       }
 
       if (format === FormatEnum.SingleSelect && options) {
-        jsonProperty.oneOf = options.map(({ id, title, color }) => ({ const: id, title, color }));
+        jsonProperty.enum = options.map(({ id }) => id);
+        jsonProperty.format = 'single-select';
+        jsonProperty.echo = {
+          annotations: {
+            singleSelect: {
+              options: options.map(({ id, title, color }) => ({ id, title, color })),
+            },
+          },
+        };
       }
 
       invariant(type !== TypeEnum.Ref);
