@@ -7,7 +7,7 @@ import React, { type FC, useEffect, useMemo, useRef } from 'react';
 import { scheduleTask, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 
-import { useCallContext } from '../../hooks';
+import { useCallGlobalContext } from '../../hooks';
 
 export type AudioStreamProps = {
   tracksToPull: string[];
@@ -76,7 +76,7 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
   const onTrackRemovedRef = useRef(onTrackRemoved);
   onTrackRemovedRef.current = onTrackRemoved;
 
-  const { peer } = useCallContext();
+  const { call } = useCallGlobalContext();
   const trackData = useMemo(() => {
     const [sessionId, trackName] = track.split('/');
     return {
@@ -97,14 +97,14 @@ const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioT
       // TODO(mykola): Add retry logic. Delete delay.
       // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
-      const track = await peer?.pullTrack({ trackData, ctx });
+      const track = await call.media.peer?.pullTrack({ trackData, ctx });
       audioTrack.current = track;
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [trackData, peer?.session]);
+  }, [trackData, call.media.peer?.session]);
 
   useEffect(() => {
     if (!audioTrack.current) {

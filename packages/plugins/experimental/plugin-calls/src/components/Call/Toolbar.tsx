@@ -4,32 +4,36 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 
+import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { createStatic } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranscriber } from '@dxos/plugin-transcription';
-import { TranscriptBlock, type TranscriptSegment } from '@dxos/plugin-transcription/types';
+import { TranscriptBlock, type TranscriptType, type TranscriptSegment } from '@dxos/plugin-transcription/types';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { useCallContext, useCallGlobalContext } from '../../hooks';
+import { useCallGlobalContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 
 const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
+export type CallToolbarProps = {
+  onTranscription?: () => Promise<ReactiveEchoObject<TranscriptType>>;
+};
+
 // TODO(mykola): Move transcription related logic to a separate component.
-export const CallToolbar = () => {
+export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
   const { t } = useTranslation(CALLS_PLUGIN);
-  const { userMedia, isSpeaking, onTranscription } = useCallContext();
 
   //
   const { call } = useCallGlobalContext();
 
   // Screen sharing.
-  const isScreensharing = userMedia.state.screenshareVideoTrack !== undefined;
+  const isScreensharing = call.media.screenshareVideoTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
@@ -50,7 +54,7 @@ export const CallToolbar = () => {
     [queue, self.name],
   );
   const transcriber = useTranscriber({
-    audioStreamTrack: userMedia.state.audioTrack,
+    audioStreamTrack: call.media.audioTrack,
     onSegments: handleSegments,
   });
 
@@ -71,14 +75,14 @@ export const CallToolbar = () => {
       enabled: transcriptionEnabled,
       transcriber: !!transcriber,
       isOpen: transcriber?.isOpen,
-      isSpeaking,
+      speaking: call.speaking,
     });
 
     if (!transcriptionEnabled) {
       return;
     }
 
-    if (isSpeaking) {
+    if (call.speaking) {
       log.info('starting transcription');
       if (disableTimeout.current) {
         clearTimeout(disableTimeout.current);
@@ -99,11 +103,11 @@ export const CallToolbar = () => {
         disableTimeout.current = null;
       }
     };
-  }, [call.transcription.enabled, transcriber, transcriber?.isOpen, isSpeaking]);
+  }, [call.transcription.enabled, transcriber, transcriber?.isOpen, call.speaking]);
 
   const leaveSound = useSoundEffect('LeaveCall');
   const handleLeave = () => {
-    userMedia.turnScreenshareOff();
+    void call.turnScreenshareOff();
     void call.leave();
     void leaveSound.play();
   };
@@ -116,7 +120,7 @@ export const CallToolbar = () => {
         newTranscription.queueDxn = object.queue;
       }
     }
-    call.transcription = newTranscription;
+    call.setTranscription(newTranscription);
   };
 
   return (
@@ -136,7 +140,7 @@ export const CallToolbar = () => {
         icon={isScreensharing ? 'ph--broadcast--regular' : 'ph--screencast--regular'}
         label={isScreensharing ? t('screenshare off') : t('screenshare on')}
         classNames={[isScreensharing && 'text-red-500']}
-        onClick={isScreensharing ? userMedia.turnScreenshareOff : userMedia.turnScreenshareOn}
+        onClick={isScreensharing ? call.turnScreenshareOff : call.turnScreenshareOn}
       />
       <IconButton
         iconOnly
@@ -145,7 +149,7 @@ export const CallToolbar = () => {
         classNames={[raisedHand && 'text-red-500']}
         onClick={() => setRaisedHand((raisedHand) => !raisedHand)}
       />
-      <MediaButtons userMedia={userMedia} />
+      <MediaButtons />
     </Toolbar.Root>
   );
 };

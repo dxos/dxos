@@ -252,7 +252,7 @@ export class CallsServicePeer extends Resource {
       const transceiver = this.session.peerConnection.getTransceivers().find((t) => t.mid === previousTrack.mid);
       if (transceiver) {
         transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
-        return previousTrack;
+        return;
       }
     }
 

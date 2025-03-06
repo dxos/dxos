@@ -7,9 +7,10 @@ import { Resource } from '@dxos/context';
 import { create } from '@dxos/live-object';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
-import { type TranscriptionState, type EncodedTrackName } from '../types';
+import { MediaManager, type MediaState } from './media-manager';
+import { type TranscriptionState, CALLS_URL, TrackNameCodec } from '../types';
 
-export type GlobalState = { call: CallState };
+export type GlobalState = { call: CallState; media: MediaState };
 
 /**
  * Top level manager for call state.
@@ -19,8 +20,9 @@ export class CallManager extends Resource {
    * Live object state. Is changed on internal events.
    * CAUTION: Do not change directly.
    */
-  private readonly _state = create<GlobalState>({ call: {} });
+  private readonly _state = create<GlobalState>({ call: {}, media: {} });
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
+  private readonly _mediaManager: MediaManager;
 
   get raisedHand() {
     return this._state.call.raisedHand ?? false;
@@ -50,34 +52,55 @@ export class CallManager extends Resource {
     return this._state.call.users ?? [];
   }
 
-  set speaking(speaking: boolean) {
+  get media() {
+    return this._state.media;
+  }
+
+  setSpeaking(speaking: boolean) {
     this._swarmSynchronizer.setSpeaking(speaking);
   }
 
-  set raisedHand(raisedHand: boolean) {
+  setRaisedHand(raisedHand: boolean) {
     this._swarmSynchronizer.setRaisedHand(raisedHand);
   }
 
-  set joined(joined: boolean) {
-    this._swarmSynchronizer.setJoined(joined);
-  }
-
-  set tracks(tracks: { screenshare?: EncodedTrackName; video?: EncodedTrackName; audio?: EncodedTrackName }) {
-    this._swarmSynchronizer.setTracks(tracks);
-  }
-
-  set transcription(transcription: TranscriptionState) {
+  setTranscription(transcription: TranscriptionState) {
     this._swarmSynchronizer.setTranscription(transcription);
+  }
+
+  turnAudioOn() {
+    return this._mediaManager.turnAudioOn();
+  }
+
+  turnAudioOff() {
+    return this._mediaManager.turnAudioOff();
+  }
+
+  turnVideoOn() {
+    return this._mediaManager.turnVideoOn();
+  }
+
+  turnVideoOff() {
+    return this._mediaManager.turnVideoOff();
+  }
+
+  turnScreenshareOn() {
+    return this._mediaManager.turnScreenshareOn();
+  }
+
+  turnScreenshareOff() {
+    return this._mediaManager.turnScreenshareOff();
   }
 
   constructor(private readonly _client: Client) {
     super();
-    this._swarmSynchronizer = new CallSwarmSynchronizer({
-      networkService: _client.services.services.NetworkService!,
-    });
+    this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: _client.services.services.NetworkService! });
+    this._mediaManager = new MediaManager();
   }
 
   protected override async _open() {
+    await this._mediaManager.open();
+    await this._swarmSynchronizer.open();
     const subscription = this._client.halo.identity.subscribe((identity) => {
       if (identity) {
         this._swarmSynchronizer._setIdentity(identity);
@@ -87,24 +110,43 @@ export class CallManager extends Resource {
       }
     });
     this._swarmSynchronizer.stateUpdated.on(this._ctx, () => this._updateState());
-
+    this._mediaManager.stateUpdated.on(this._ctx, (state) => {
+      this._swarmSynchronizer.setTracks({
+        video: TrackNameCodec.encode(state.pushedVideoTrack),
+        audio: TrackNameCodec.encode(state.pushedAudioTrack),
+        screenshare: TrackNameCodec.encode(state.pushedScreenshareTrack),
+      });
+      this._updateState();
+    });
     this._ctx.onDispose(() => subscription.unsubscribe());
+  }
+
+  protected override async _close() {
+    await this._swarmSynchronizer.leave();
+    await this._swarmSynchronizer.close();
+    await this._mediaManager.close();
   }
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   async join(roomId: PublicKey) {
-    this._swarmSynchronizer._setRoomId(roomId);
-    await this._swarmSynchronizer.open();
     this._swarmSynchronizer.setJoined(true);
+    this._swarmSynchronizer._setRoomId(roomId);
+    await this._swarmSynchronizer.join();
+    await this._mediaManager.join({
+      iceServers: this._client.config.get('runtime.services.ice'),
+      apiBase: `${CALLS_URL}/api/calls`,
+    });
   }
 
   async leave() {
     this._swarmSynchronizer.setJoined(false);
-    await this._swarmSynchronizer.close();
+    await this._mediaManager.leave();
     this._swarmSynchronizer._setRoomId(undefined);
+    await this._swarmSynchronizer.leave();
   }
 
   private _updateState() {
-    this._state.call = this._swarmSynchronizer.state;
+    this._state.call = this._swarmSynchronizer._getState();
+    this._state.media = this._mediaManager._getState();
   }
 }

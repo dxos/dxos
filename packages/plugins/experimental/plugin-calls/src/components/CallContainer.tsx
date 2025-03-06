@@ -14,7 +14,8 @@ import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Call } from './Call';
-import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
+import { type CallToolbarProps } from './Call/Toolbar';
+import { CallContextProvider } from './CallContextProvider';
 import { Lobby } from './Lobby';
 import { useCallGlobalContext } from '../hooks';
 
@@ -28,7 +29,7 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   const target = space?.properties[CollectionType.typename]?.target;
   const { call } = useCallGlobalContext();
 
-  const handleTranscription = useCallback<NonNullable<CallContextProviderProps['onTranscription']>>(async () => {
+  const handleTranscription = useCallback<NonNullable<CallToolbarProps['onTranscription']>>(async () => {
     invariant(target);
     const result = await dispatch(
       pipe(createIntent(TranscriptionAction.Create, {}), chain(SpaceAction.AddObject, { target })),
@@ -39,12 +40,12 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
 
   // TODO(burdon): Move RoomContextProvider to plugin.
   return (
-    <CallContextProvider onTranscription={target ? handleTranscription : undefined}>
+    <CallContextProvider>
       <StackItem.Content toolbar={false} classNames='w-full'>
         {call.joined ? (
           <Call.Root>
             <Call.Room />
-            <Call.Toolbar />
+            <Call.Toolbar onTranscription={handleTranscription} />
           </Call.Root>
         ) : (
           <Lobby roomId={roomId} />

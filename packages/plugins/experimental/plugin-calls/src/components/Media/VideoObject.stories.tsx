@@ -13,19 +13,19 @@ import { log } from '@dxos/log';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { VideoObject } from './VideoObject';
-import { useUserMedia } from '../../hooks';
+import { useCallGlobalContext } from '../../hooks';
 
 const meta: Meta<typeof VideoObject> = {
   title: 'plugins/plugin-calls/VideoObject',
   component: VideoObject,
   render: (args) => {
     log.info('render');
-    const media = useUserMedia();
+    const { call } = useCallGlobalContext();
     useEffect(() => {
-      media.turnCameraOn();
+      void call.turnVideoOn();
     }, []);
 
-    return <VideoObject videoTrack={media.state.videoTrack} {...args} />;
+    return <VideoObject videoTrack={call.media.videoTrack} {...args} />;
   },
   decorators: [
     withTheme,

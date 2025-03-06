@@ -7,11 +7,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { scheduleTask, sleep } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 
-import { useCallContext } from './useCallContext';
+import { useCallGlobalContext } from './useCallsGlobalContext';
 import { type TrackObject } from '../types';
 
 export const usePulledVideoTrack = (video: string | undefined) => {
-  const { peer } = useCallContext();
+  const { call } = useCallGlobalContext();
 
   const [sessionId, trackName] = video?.split('/') ?? [];
   const trackData = useMemo(
@@ -28,7 +28,7 @@ export const usePulledVideoTrack = (video: string | undefined) => {
 
   const [pulledTrack, setPulledTrack] = useState<MediaStreamTrack>();
   useEffect(() => {
-    if (!trackData || !peer) {
+    if (!trackData || !call.media.peer) {
       return;
     }
 
@@ -37,14 +37,14 @@ export const usePulledVideoTrack = (video: string | undefined) => {
       // TODO(mykola): Add retry logic. Delete delay.
       // Wait for the track to be available on CallsService.
       await cancelWithContext(ctx, sleep(500));
-      const track = await peer.pullTrack({ trackData, ctx });
+      const track = await call.media.peer!.pullTrack({ trackData, ctx });
       setPulledTrack(track);
     });
 
     return () => {
       void ctx.dispose();
     };
-  }, [trackData, peer?.session]);
+  }, [trackData, call.media.peer?.session]);
 
   return pulledTrack;
 };

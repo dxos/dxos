@@ -5,7 +5,7 @@
 import { DeferredTask, Event } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { LifecycleState, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -52,7 +52,7 @@ export type CallSwarmSynchronizerParams = { networkService: NetworkService };
  * Sends and receives state to/from Swarm network.
  */
 export class CallSwarmSynchronizer extends Resource {
-  public readonly stateUpdated = new Event();
+  public readonly stateUpdated = new Event<CallState>();
 
   private readonly _state: CallState = { transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } } };
   private readonly _networkService: NetworkService;
@@ -70,26 +70,49 @@ export class CallSwarmSynchronizer extends Resource {
     this._networkService = networkService;
   }
 
-  get state() {
+  /**
+   * @internal
+   */
+  _getState() {
     return this._state;
   }
 
   setRaisedHand(raisedHand: boolean) {
+    if (this._state.raisedHand === raisedHand) {
+      return;
+    }
+
     this._state.raisedHand = raisedHand;
     this._notifyAndSchedule();
   }
 
   setSpeaking(speaking: boolean) {
+    if (this._state.speaking === speaking) {
+      return;
+    }
+
     this._state.speaking = speaking;
     this._notifyAndSchedule();
   }
 
   setJoined(joined: boolean) {
+    if (this._state.joined === joined) {
+      return;
+    }
+
     this._state.joined = joined;
     this._notifyAndSchedule();
   }
 
   setTracks(tracks: { screenshare?: EncodedTrackName; video?: EncodedTrackName; audio?: EncodedTrackName }) {
+    if (
+      tracks.video === this._state.tracks?.video &&
+      tracks.audio === this._state.tracks?.audio &&
+      tracks.screenshare === this._state.tracks?.screenshare
+    ) {
+      return;
+    }
+
     this._state.tracks = { ...this._state.tracks, ...tracks };
     this._notifyAndSchedule();
   }
@@ -127,7 +150,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._roomId = roomId;
   }
 
-  protected override async _open() {
+  async join() {
     invariant(this._roomId);
     this._stream = this._networkService.subscribeSwarmState({ topic: this._roomId });
     this._stream.subscribe((event) => this._processSwarmEvent(event));
@@ -135,9 +158,10 @@ export class CallSwarmSynchronizer extends Resource {
     this._sendStateTask = new DeferredTask(this._ctx, async () => {
       await this._sendState();
     });
+    this._notifyAndSchedule();
   }
 
-  protected override async _close() {
+  async leave() {
     this._sendStateTask = undefined;
     void this._stream?.close();
     this._stream = undefined;
@@ -147,15 +171,19 @@ export class CallSwarmSynchronizer extends Resource {
         peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
       });
     }
+    this._state.users = undefined;
+    this._state.self = undefined;
   }
 
   /**
    * Notify and schedule send state task.
    */
   private _notifyAndSchedule() {
-    invariant(this._lifecycleState === LifecycleState.OPEN);
+    if (!this._state.joined) {
+      return;
+    }
 
-    this.stateUpdated.emit();
+    this.stateUpdated.emit(this._state);
     this._sendStateTask?.schedule();
   }
 
@@ -196,7 +224,7 @@ export class CallSwarmSynchronizer extends Resource {
       this._state.transcription = lastTranscription;
     }
 
-    this.stateUpdated.emit();
+    this.stateUpdated.emit(this._state);
   }
 }
 
