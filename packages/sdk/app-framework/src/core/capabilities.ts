@@ -104,14 +104,18 @@ export class PluginsContext {
    * Activates plugins based on the activation event.
    * @param event The activation event.
    * @returns Whether the activation was successful.
+   * @deprecated Activation events are automatically fired when a plugin is enabled/disabled.
    */
+  // TODO(wittjosiah): Remove.
   readonly activate: PluginsContextOptions['activate'];
 
   /**
    * Re-activates the modules that were activated by the event.
    * @param event The activation event.
    * @returns Whether the reset was successful.
+   * @deprecated Activation events are automatically fired when a plugin is enabled/disabled.
    */
+  // TODO(wittjosiah): Remove.
   readonly reset: PluginsContextOptions['reset'];
 
   constructor({ activate, reset }: PluginsContextOptions) {

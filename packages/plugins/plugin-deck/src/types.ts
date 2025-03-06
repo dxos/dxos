@@ -4,6 +4,7 @@
 
 import { LayoutAction } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
+import { type Node } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from './meta';
@@ -15,8 +16,12 @@ export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 export const OverscrollOptions = ['none', 'centering'] as const;
 export type Overscroll = (typeof OverscrollOptions)[number];
 
-// TODO(wittjosiah): Include a predicate for whether the panel is visible for the current subject.
-export type Panel = { id: string; label: Label; icon: string };
+export type Panel = {
+  id: string;
+  label: Label;
+  icon: string;
+  filter?: (node: Node) => boolean;
+};
 
 export const DeckSettingsSchema = S.mutable(
   S.Struct({

@@ -4,17 +4,19 @@
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { type Space } from '@dxos/react-client/echo';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
+import { isEchoObject } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
 import { ViewType } from '@dxos/schema';
 
-import { AppGraphBuilder, Artifact, IntentResolver, ReactSurface } from './capabilities';
+import { Artifact, IntentResolver, ReactSurface } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { CreateTableSchema, type CreateTableType, TableAction } from './types';
+import { CreateTableSchema, TableAction } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -31,10 +33,6 @@ export const TablePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
           metadata: {
-            // TODO(ZaymonFC): This should be shared with the create schema!
-            creationSchema: CreateTableSchema,
-            createObject: (props: CreateTableType, options: { space: Space }) =>
-              createIntent(TableAction.Create, { ...props, space: options.space }),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
@@ -45,12 +43,44 @@ export const TablePlugin = () =>
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/complementary-panel`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'selected-objects',
+          label: ['objects label', { ns: TABLE_PLUGIN }],
+          icon: 'ph--tree-view--regular',
+          filter: (node) => {
+            if (!node.data || !isEchoObject(node.data)) {
+              return false;
+            }
+
+            const subject = node.data;
+            // TODO(ZaymonFC): Unify the path of view between table and kanban.
+            const hasValidView = subject.view?.target instanceof ViewType;
+            const hasValidCardView = subject.cardView?.target instanceof ViewType;
+
+            return hasValidView || hasValidCardView;
+          },
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: TableType,
+            formSchema: CreateTableSchema,
+            getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [ViewType]),
-        contributes(ClientCapabilities.Schema, [TableType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [ViewType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
@@ -61,21 +91,6 @@ export const TablePlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/complementary-panel`,
-      activatesOn: Events.Startup,
-      activate: () =>
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'selected-objects',
-          label: ['objects label', { ns: TABLE_PLUGIN }],
-          icon: 'ph--tree-view--regular',
-        }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/artifact`,

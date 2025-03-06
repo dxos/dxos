@@ -31,15 +31,15 @@ export default async (context: PluginsContext) => {
     }
 
     const [_, nextDeck, nextSolo] = pathname.split('/');
-    if (nextDeck) {
+    if (nextDeck && nextDeck !== state.activeDeck) {
       await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: nextDeck }));
     }
 
-    if (nextSolo) {
+    if (nextSolo && nextSolo !== state.deck.solo) {
       await dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: nextSolo, options: { mode: 'solo' } }),
       );
-    } else {
+    } else if (!nextSolo && state.deck.solo) {
       await dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }));
     }
   };

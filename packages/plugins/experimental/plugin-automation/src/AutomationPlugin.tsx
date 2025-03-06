@@ -5,8 +5,10 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { RefArray, type Space } from '@dxos/react-client/echo';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
+import { RefArray, isEchoObject, getSpace } from '@dxos/react-client/echo';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
@@ -37,8 +39,6 @@ export const AutomationPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            createObject: (props: { name?: string }, options: { space: Space }) =>
-              createIntent(AutomationAction.CreateChat, { ...props, spaceId: options.space.id }),
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },
@@ -46,16 +46,26 @@ export const AutomationPlugin = () =>
       ],
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: AIChatType,
+            getIntent: (_, options) => createIntent(AutomationAction.CreateChat, { spaceId: options.space.id }),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [ChainType, ChainPromptType, FunctionTrigger, ServiceType]),
-        contributes(ClientCapabilities.Schema, [AIChatType]),
-      ],
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [ChainType, ChainPromptType, FunctionTrigger, ServiceType]),
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
-      activatesOn: Events.Startup,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () => [
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'service-registry',
@@ -66,6 +76,7 @@ export const AutomationPlugin = () =>
           id: 'automation',
           label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],
           icon: 'ph--magic-wand--regular',
+          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
         }),
       ],
     }),
