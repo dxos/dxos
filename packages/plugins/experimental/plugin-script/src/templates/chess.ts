@@ -1,7 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema as S } from '@effect/schema';
+// @version 0.13.1
+import { Chess } from 'chess.js';
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
-// @ts-ignore
-import { Chess } from 'https://esm.sh/chess.js@0.13.1';
+import { defineFunction } from 'dxos:functions';
 
 export default defineFunction({
   description: 'Plays a random move in a chess game.',

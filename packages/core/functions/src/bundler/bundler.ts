@@ -53,6 +53,8 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
  * ESBuild bundler.
  */
 export class Bundler {
+  private _moduleVersions: Map<string, string> = new Map();
+
   constructor(private readonly _options: BundlerOptions) {}
 
   async bundle({ path, source }: BundleOptions): Promise<BundleResult> {
@@ -168,12 +170,22 @@ export class Bundler {
     // TODO(dmaretskyi): Support import aliases and wildcard imports.
     const parsedImports = allMatches(IMPORT_REGEX, code);
     return parsedImports.map((capture) => {
+      const moduleIdentifier = capture[4];
+      const quotes = capture[5];
+
+      // Check for version comment before the import
+      const importLine = code.substring(0, code.indexOf(capture[0])).split('\n').pop()?.trim() ?? '';
+      const versionMatch = importLine.match(/\/\/\s*@version\s+([^\s]+)/);
+      if (versionMatch) {
+        this._moduleVersions.set(moduleIdentifier, versionMatch[1]);
+      }
+
       return {
         defaultImportName: capture[1],
         namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
         wildcardImportName: capture[3],
-        moduleIdentifier: capture[4],
-        quotes: capture[5],
+        moduleIdentifier,
+        quotes,
       };
     });
   }
@@ -232,11 +244,16 @@ const analyzeSourceFileImports = (code: string): ParsedImport[] => {
 const npmPlugin: Plugin = {
   name: 'npm',
   setup: (build) => {
-    // Intercept import paths starting with "npm:" so esbuild doesn't attempt to map them to a file system location.
-    // Map npm module to an esm.sh url.
-    build.onResolve({ filter: /^npm:/ }, (args) => {
+    // Handle all non-relative imports through esm.sh
+    build.onResolve({ filter: /^[^./]|^[.][^/]/ }, (args) => {
+      const moduleName = args.path;
+      const version = (build.initialOptions.plugins?.[0] as any)?._moduleVersions?.get(moduleName);
+      const url = new URL(moduleName, 'https://esm.sh/');
+      if (version) {
+        url.pathname = `${moduleName}@${version}`;
+      }
       return {
-        path: new URL(args.path.slice(4), 'https://esm.sh/').toString(),
+        path: url.toString(),
         namespace: 'http-url',
       };
     });

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(wittjosiah): Use @dxos packages from npm.
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
 

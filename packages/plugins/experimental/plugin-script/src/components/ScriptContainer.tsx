@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type ScriptType } from '@dxos/functions';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -17,8 +17,6 @@ import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettingsProps } from '../types';
-import { SCRIPT_PLUGIN } from '../meta';
-import { useClient } from '@dxos/react-client';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
@@ -28,8 +26,6 @@ export type ScriptEditorProps = ThemedClassName<{
   Pick<TypescriptEditorProps, 'compiler'>;
 
 export const ScriptContainer = ({ role, classNames, compiler, settings, script }: ScriptEditorProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
-  const client = useClient();
   const identity = useIdentity();
   const space = getSpace(script);
 

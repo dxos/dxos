@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+// @version 0.77.2?deps=effect@3.13.3
+import { FetchHttpClient } from '@effect/platform@0.77.2';
+// @version 0.113.0?deps=effect@3.13.3
+import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
+// TODO(wittjosiah): Use @dxos packages from npm.
 // @ts-ignore
 import { createStatic, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
-import {
-  FetchHttpClient,
-  // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
-// @ts-ignore
-import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.13.3';
-// @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
+// @version 3.13.3
+import { Effect, Config, Redacted, Ref } from 'effect';
 
 const MessageSchema = S.Struct({
   id: S.String,

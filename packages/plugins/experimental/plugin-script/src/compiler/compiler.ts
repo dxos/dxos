@@ -28,6 +28,7 @@ export class Compiler {
   private _fsMap: Map<string, string> | undefined;
   private _httpTypeCache: Map<string, string> = new Map();
   private _processedUrls: Set<string> = new Set();
+  private _moduleVersions: Map<string, string> = new Map();
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
 
@@ -99,7 +100,7 @@ export class Compiler {
       },
       resolveModuleNames: (moduleNames: string[], containingFile: string) => {
         return moduleNames.map((_moduleName) => {
-          const moduleName = _moduleName.replace(/^npm:/, 'https://esm.sh/');
+          const moduleName = this._parseImportToUrl(_moduleName) ?? _moduleName;
           if (moduleName.startsWith('https://')) {
             const typesUrl = moduleName.endsWith('.d.ts') ? moduleName : this._httpTypeCache.get(moduleName);
             if (typesUrl) {
@@ -142,6 +143,26 @@ export class Compiler {
         }
       }
 
+      // Check for version comments before imports
+      if (ts.isImportDeclaration(node) || (ts.isExportDeclaration(node) && node.moduleSpecifier)) {
+        const sourceFile = node.getSourceFile();
+        const start = node.getStart();
+        const lineStart = ts.getLineAndCharacterOfPosition(sourceFile, start).line;
+        if (lineStart > 0) {
+          const prevLineStart = ts.getPositionOfLineAndCharacter(sourceFile, lineStart - 1, 0);
+          const prevLineEnd = ts.getPositionOfLineAndCharacter(sourceFile, lineStart, 0);
+          const prevLine = sourceFile.text.substring(prevLineStart, prevLineEnd).trim();
+
+          const versionMatch = prevLine.match(/\/\/\s*@version\s+([^\s]+)/);
+          if (versionMatch) {
+            const moduleName = ts.isImportDeclaration(node)
+              ? (node.moduleSpecifier as ts.StringLiteral).text
+              : (node.moduleSpecifier as ts.StringLiteral).text;
+            this._moduleVersions.set(moduleName, versionMatch[1]);
+          }
+        }
+      }
+
       // Recursively visit all children
       ts.forEachChild(node, visit);
     };
@@ -152,8 +173,9 @@ export class Compiler {
   }
 
   private _parseImportToUrl(moduleName: string): string | undefined {
-    if (moduleName.startsWith('npm:')) {
-      return `https://esm.sh/${moduleName.slice(4)}`;
+    if (!moduleName.startsWith('.')) {
+      const version = this._moduleVersions.get(moduleName);
+      return `https://esm.sh/${moduleName}${version ? `@${version}` : ''}`;
     }
   }
 

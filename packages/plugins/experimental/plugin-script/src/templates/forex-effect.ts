@@ -2,16 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// @version 0.77.2?deps=effect@3.13.3
+import { HttpClient, HttpClientRequest, FetchHttpClient } from '@effect/platform';
+// TODO(wittjosiah): Use @dxos packages from npm.
 // @ts-ignore
 import { defineFunction, S } from 'dxos:functions';
-import {
-  HttpClient,
-  HttpClientRequest,
-  FetchHttpClient,
-  // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
-// @ts-ignore
-import { Effect, Schedule } from 'https://esm.sh/effect@3.13.3';
+// @version 3.13.3
+import { Effect, Schedule } from 'effect';
 
 export default defineFunction({
   description: 'Returns the exchange rate between two currencies.',

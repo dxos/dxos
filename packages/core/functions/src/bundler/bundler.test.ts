@@ -42,7 +42,7 @@ describe('Bundler', () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({
       source: `
-        import { Octokit } from 'npm:octokit';
+        import { Octokit } from 'octokit';
         const octokit = new Octokit();
       `,
     });

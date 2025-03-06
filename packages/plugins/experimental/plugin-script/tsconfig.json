@@ -79,6 +79,9 @@
       "path": "../../../experimental/assistant"
     },
     {
+      "path": "../../../experimental/script-toolbox"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
