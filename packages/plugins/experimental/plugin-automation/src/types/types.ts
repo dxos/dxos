@@ -4,7 +4,7 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { AIChatType } from './schema';
+import { AIChatType } from './chat';
 import { AUTOMATION_PLUGIN } from '../meta';
 
 export namespace AutomationAction {

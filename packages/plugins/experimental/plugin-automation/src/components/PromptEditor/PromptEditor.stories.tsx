@@ -20,12 +20,12 @@ const template = [
   '# Comment',
   '',
   'You are a machine that is an expert chess player.',
-  'The move history of the current game is: {history}',
+  'The move history of the current game is: {{history}}',
   'If asked to suggest a move explain why it is a good move.',
   '',
   '---',
   '',
-  '{input}',
+  '{{input}}',
 ].join('\n');
 
 const Render = () => {
@@ -40,7 +40,7 @@ const Render = () => {
   });
 
   return (
-    <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
+    <div role='none' className='flex w-[30rem] border border-separator overflow-hidden'>
       <PromptEditor prompt={chain.prompts![0]!.target!} />
     </div>
   );
@@ -52,7 +52,11 @@ const meta: Meta = {
   title: 'plugins/plugin-automation/PromptEditor',
   render: Render,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [ChainType, ChainPromptType] }),
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      types: [ChainType, ChainPromptType],
+    }),
     withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
     withTheme,
   ],

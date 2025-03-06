@@ -8,7 +8,7 @@ import { type Extension } from '@codemirror/state';
 import { tags } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-export const nameRegex = /\{([\w-]+)}/;
+export const nameRegex = /\{\{([\w-]+)\}\}/;
 
 const parser = StreamLanguage.define({
   token: (stream) => {

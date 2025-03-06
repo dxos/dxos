@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './registry';
-export * from './schema';
+export * from './chain';
+export * from './chat';
+export * from './service';
 export * from './types';

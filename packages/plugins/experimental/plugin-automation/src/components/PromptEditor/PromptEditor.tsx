@@ -101,8 +101,8 @@ const usePromptInputs = (prompt: ChainPromptType) => {
 
 export type PromptEditorProps = {
   prompt: ChainPromptType;
-  commandEditable?: boolean;
   schema?: S.Schema<any, any, any>;
+  commandEditable?: boolean;
 };
 
 export const PromptEditor = ({ prompt, commandEditable = true }: PromptEditorProps) => {
