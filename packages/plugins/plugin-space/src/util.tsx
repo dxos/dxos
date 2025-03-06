@@ -206,7 +206,10 @@ export const constructSpaceNode = ({
       label: getSpaceDisplayName(space, { personal, namesCache }),
       description: space.state.get() === SpaceState.SPACE_READY && space.properties.description,
       hue: space.state.get() === SpaceState.SPACE_READY && space.properties.hue,
-      icon: space.properties.icon ? `ph--${space.properties.icon}--regular` : undefined,
+      icon:
+        space.state.get() === SpaceState.SPACE_READY && space.properties.icon
+          ? `ph--${space.properties.icon}--regular`
+          : undefined,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
     },
@@ -416,6 +419,8 @@ export const constructObjectActions = ({
   navigable?: boolean;
 }) => {
   const object = node.data;
+  const space = getSpace(object);
+  invariant(space, 'Space not found');
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
     ...(object instanceof CollectionType
@@ -478,7 +483,7 @@ export const constructObjectActions = ({
             id: getId('copy-link'),
             type: ACTION_TYPE,
             data: async () => {
-              const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+              const url = `${window.location.origin}/${space.id}/${fullyQualifiedId(object)}`;
               await navigator.clipboard.writeText(url);
             },
             properties: {

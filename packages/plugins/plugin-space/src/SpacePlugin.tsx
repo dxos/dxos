@@ -12,10 +12,12 @@ import {
   Events,
   oneOf,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DeckCapabilities } from '@dxos/plugin-deck';
+import { ClientEvents } from '@dxos/plugin-client';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
+import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 import { osTranslations } from '@dxos/shell/react';
 
 import {
@@ -25,6 +27,8 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
+  Schema,
+  SpaceCapabilities,
   SpaceSettings,
   SpacesReady,
   SpaceState,
@@ -32,7 +36,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta, SPACE_PLUGIN } from './meta';
 import translations from './translations';
-import { CollectionAction, CollectionType } from './types';
+import { CollectionAction, CollectionType, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -65,7 +69,10 @@ export const SpacePlugin = ({
   return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
       activatesAfter: [SpaceEvents.StateReady],
       activate: SpaceState,
     }),
@@ -86,7 +93,6 @@ export const SpacePlugin = ({
         contributes(Capabilities.Metadata, {
           id: CollectionType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(CollectionAction.Create, props),
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -96,19 +102,34 @@ export const SpacePlugin = ({
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: CollectionType,
+            formSchema: S.Struct({ name: S.optional(S.String) }),
+            getIntent: (props) => createIntent(CollectionAction.Create, props),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/complementary-panel`,
-      activatesOn: Events.Startup,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'settings',
           label: ['settings panel label', { ns: SPACE_PLUGIN }],
           icon: 'ph--sliders--regular',
+          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
         }),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [CollectionType]),
+      activatesOn: ClientEvents.ClientReady,
+      activatesBefore: [ClientEvents.SetupSchema],
+      activate: Schema,
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,
@@ -117,12 +138,14 @@ export const SpacePlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
+      activatesBefore: [SpaceEvents.SetupSettingsPanel],
       activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: (context) => IntentResolver({ createInvitationUrl, context, observability }),
     }),
     defineModule({
@@ -133,7 +156,7 @@ export const SpacePlugin = ({
     // TODO(wittjosiah): This could probably be deferred.
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.AppGraphReady,
       activate: AppGraphSerializer,
     }),
     defineModule({

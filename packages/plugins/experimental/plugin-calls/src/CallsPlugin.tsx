@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { DeckCapabilities } from '@dxos/plugin-deck';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 
 import { AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { CALLS_PLUGIN, meta } from './meta';
@@ -23,12 +23,12 @@ export const CallsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
@@ -38,7 +38,7 @@ export const CallsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
-      activatesOn: Events.Startup,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
       activate: () => [
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'calls',

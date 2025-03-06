@@ -28,7 +28,7 @@ export const TransformerPlugin = () =>
     }),
     // defineModule({
     //   id: `${meta.id}/module/intent-resolver`,
-    //   activatesOn: Events.SetupIntents,
+    //   activatesOn: Events.SetupIntentResolver,
     //   activate: IntentResolver,
     // }),
   ]);

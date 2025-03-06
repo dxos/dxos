@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface, TranscriptionCapabilities } from './capabilities';
 import { meta, TRANSCRIPTION_PLUGIN } from './meta';
 import translations from './translations';
-import { TranscriptType, TranscriptionAction } from './types';
+import { TranscriptType } from './types';
 
 export const TranscriptionPlugin = () =>
   definePlugin(meta, [
@@ -29,7 +29,6 @@ export const TranscriptionPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TranscriptType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(TranscriptionAction.Create, { ...props }),
             placeholder: ['transcript title placeholder', { ns: TRANSCRIPTION_PLUGIN }],
             icon: 'ph--subtitles--regular',
           },
@@ -42,12 +41,12 @@ export const TranscriptionPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({

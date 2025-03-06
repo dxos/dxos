@@ -32,29 +32,6 @@ export default () =>
       component: ({ data }) => <TableViewEditor table={data.subject} />,
     }),
     createSurface({
-      id: `${TABLE_PLUGIN}/create-initial-schema-form`,
-      role: 'form-input',
-      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        if (data.prop !== 'initialSchema') {
-          return false;
-        }
-
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
-        return !!annotation;
-      },
-      component: ({ data: { target }, ...inputProps }) => {
-        const props = inputProps as any as InputProps;
-        const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
-        // TODO(ZaymonFC): Make this reactive.
-        const schemata = space?.db.schemaRegistry.query().runSync();
-
-        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
-      },
-    }),
-    createSurface({
       id: `${TABLE_PLUGIN}/complementary`,
       role: 'complementary--selected-objects',
       filter: (
@@ -80,6 +57,29 @@ export default () =>
           return null;
         }
         return <ObjectDetailsPanel objectId={data.subject.id} view={viewTarget} />;
+      },
+    }),
+    createSurface({
+      id: `${TABLE_PLUGIN}/create-initial-schema-form`,
+      role: 'form-input',
+      filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
+        if (data.prop !== 'initialSchema') {
+          return false;
+        }
+
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+        return !!annotation;
+      },
+      component: ({ data: { target }, ...inputProps }) => {
+        const props = inputProps as any as InputProps;
+        const space = isSpace(target) ? target : getSpace(target);
+        if (!space) {
+          return null;
+        }
+        // TODO(ZaymonFC): Make this reactive.
+        const schemata = space?.db.schemaRegistry.query().runSync();
+
+        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),
   ]);

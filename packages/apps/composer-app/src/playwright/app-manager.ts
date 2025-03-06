@@ -111,23 +111,13 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({
-    type = 'Document',
-    name,
-    timeout = 10_000,
-  }: { type?: string; name?: string; timeout?: number } = {}) {
+  async createSpace({ type = 'Document', timeout = 10_000 }: { type?: string; timeout?: number } = {}) {
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
 
     await this.page.getByTestId('create-object-form.schema-input').fill(type);
     await this.page.keyboard.press('Enter');
-
-    const objectForm = this.page.getByTestId('create-object-form');
-    if (name) {
-      await objectForm.getByLabel('Name').fill(name);
-    }
-    await objectForm.getByTestId('save-button').click();
 
     await this.waitForSpaceReady(timeout);
   }
@@ -170,6 +160,10 @@ export class AppManager {
     await this.page.keyboard.press('Enter');
 
     const objectForm = this.page.getByTestId('create-object-form');
+    if (!(await objectForm.isVisible())) {
+      return;
+    }
+
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
     }

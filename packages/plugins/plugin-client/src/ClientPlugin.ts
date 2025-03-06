@@ -42,7 +42,7 @@ export const ClientPlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({
@@ -52,7 +52,7 @@ export const ClientPlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: (context) => IntentResolver({ context, onReset }),
     }),
     defineModule({
