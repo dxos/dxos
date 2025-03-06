@@ -3,7 +3,7 @@
 //
 
 export { SpaceCapabilities, ThreadCapabilities } from './capabilities';
-export { SpaceEvents } from './events';
+export { SpaceEvents, ThreadEvents } from './events';
 
 export * from './components';
 export * from './meta';

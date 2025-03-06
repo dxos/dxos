@@ -8,7 +8,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 
-import { Artifact, IntentResolver, ReactSurface } from './capabilities';
+import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { KANBAN_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { CreateKanbanSchema, KanbanAction } from './types';
@@ -47,17 +47,17 @@ export const KanbanPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact`,
-      activatesOn: Events.Startup,
-      activate: Artifact,
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

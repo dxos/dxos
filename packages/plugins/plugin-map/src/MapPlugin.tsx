@@ -7,7 +7,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface, Artifact, MapState } from './capabilities';
+import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
 import { MAP_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { MapType, MapAction, CreateMapSchema } from './types';
@@ -16,7 +16,10 @@ export const MapPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
       activate: MapState,
     }),
     defineModule({
@@ -51,12 +54,12 @@ export const MapPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
@@ -65,8 +68,8 @@ export const MapPlugin = () =>
       activate: AppGraphBuilder,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact`,
-      activatesOn: Events.Startup,
-      activate: Artifact,
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

@@ -5,7 +5,8 @@
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { ChannelType, defineObjectForm, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -27,7 +28,10 @@ export const ThreadPlugin = () =>
     // }),
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
       activate: ThreadState,
     }),
     defineModule({
@@ -116,17 +120,19 @@ export const ThreadPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
-      activatesOn: Events.Startup,
+      activatesOn: MarkdownEvents.SetupExtensions,
       activate: Markdown,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the comments thread is loaded when surfaces activation is more granular.
+      activatesBefore: [ThreadEvents.SetupThread],
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
   ]);

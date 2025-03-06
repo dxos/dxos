@@ -6,7 +6,7 @@ import { Capabilities, contributes, createIntent, defineModule, definePlugin, Ev
 import { type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { TextType } from '@dxos/schema';
@@ -19,6 +19,7 @@ import {
   AppGraphSerializer,
   Thread,
 } from './capabilities';
+import { MarkdownEvents } from './events';
 import { MARKDOWN_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { DocumentType, MarkdownAction } from './types';
@@ -33,7 +34,10 @@ export const MarkdownPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: Events.Startup,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
       activate: MarkdownState,
     }),
     defineModule({
@@ -80,22 +84,24 @@ export const MarkdownPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the editor is loaded when surfaces activation is more granular.
+      activatesBefore: [MarkdownEvents.SetupExtensions],
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.AppGraphReady,
       activate: AppGraphSerializer,
     }),
     defineModule({
       id: `${meta.id}/module/thread`,
-      activatesOn: Events.Startup,
+      activatesOn: ThreadEvents.SetupThread,
       activate: Thread,
     }),
   ]);

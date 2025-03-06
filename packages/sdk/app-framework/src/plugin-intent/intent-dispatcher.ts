@@ -289,12 +289,12 @@ export default (context: PluginsContext) => {
   const manager = context.requestCapability(Capabilities.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
-      yield* manager._activate(Events.SetupIntents);
+      yield* manager._activate(Events.SetupIntentResolver);
       return yield* dispatch(intentChain, depth);
     });
   };
   state.dispatchPromise = async (intentChain) => {
-    await manager.activate(Events.SetupIntents);
+    await manager.activate(Events.SetupIntentResolver);
     return await dispatchPromise(intentChain);
   };
   state.undo = undo;

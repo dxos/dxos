@@ -14,6 +14,7 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -31,7 +32,7 @@ export const WnfsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/instances`,
-      activatesOn: Events.Startup,
+      activatesOn: ClientEvents.ClientReady,
       activate: () => {
         const instances: WnfsCapabilities.Instances = {};
         return contributes(WnfsCapabilities.Instances, instances);
@@ -77,17 +78,17 @@ export const WnfsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,
-      activatesOn: Events.Startup,
+      activatesOn: MarkdownEvents.SetupExtensions,
       activate: Markdown,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
   ]);

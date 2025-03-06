@@ -24,7 +24,7 @@ export const SettingsPlugin = () =>
     }),
     defineModule({
       id: `${SETTINGS_PLUGIN}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: lazy(() => import('./intent-resolver')),
     }),
     defineModule({
