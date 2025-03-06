@@ -48,7 +48,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
     return panel.filter(node);
   });
-  const activePanelId = availablePanels.find((panel) => panel.id === current)?.id ?? availablePanels[0].id;
+  const activePanelId = availablePanels.find((panel) => panel.id === current)?.id ?? availablePanels[0]?.id;
   const [internalValue, setInternalValue] = useState(activePanelId);
 
   useEffect(() => {
