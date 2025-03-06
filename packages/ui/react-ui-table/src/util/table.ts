@@ -46,7 +46,7 @@ export const initializeTable = async ({
     // We need to get the schema properties here. For now, only simple types and refs, not compound types
     // are going to be supported.
     const fields = getSchemaProperties(schema.ast)
-      .filter((prop) => prop.type !== 'object' || prop.format === FormatEnum.Ref)
+      .filter((prop) => prop.format !== FormatEnum.Ref)
       .map((prop) => prop.name);
 
     table.view = makeRef(

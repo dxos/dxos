@@ -11,16 +11,15 @@ import {
   isEchoObject,
   isSpace,
   OBJECT_ID_LENGTH,
-  parseId,
   type ReactiveEchoObject,
   SPACE_ID_LENGTH,
   SpaceState,
   type Space,
 } from '@dxos/client/echo';
-import { getTypename, isDeleted } from '@dxos/live-object';
+import { isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
+import { createExtension, toSignal, type Node, type InvokeParams } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -85,28 +84,15 @@ export default (context: PluginsContext) => {
       filter: (node): node is Node<null> => node.id === 'root',
       actions: () => [
         {
-          id: SpaceAction.OpenCreateSpace._tag,
-          data: async () => {
+          id: SpaceAction.AddSpace._tag,
+          data: async (params: InvokeParams) => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(SpaceAction.OpenCreateSpace));
+            await dispatch(createIntent(SpaceAction.AddSpace));
           },
           properties: {
-            label: ['create space label', { ns: SPACE_PLUGIN }],
+            label: ['add space label', { ns: SPACE_PLUGIN }],
             icon: 'ph--plus--regular',
-            testId: 'spacePlugin.createSpace',
-            disposition: 'item',
-          },
-        },
-        {
-          id: SpaceAction.Join._tag,
-          data: async () => {
-            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(SpaceAction.Join));
-          },
-          properties: {
-            label: ['join space label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--sign-in--regular',
-            testId: 'spacePlugin.joinSpace',
+            testId: 'spacePlugin.addSpace',
             disposition: 'item',
           },
         },
@@ -197,6 +183,8 @@ export default (context: PluginsContext) => {
 
         if (space.state.get() === SpaceState.SPACE_INACTIVE) {
           return false;
+        } else if (space.state.get() !== SpaceState.SPACE_READY) {
+          return undefined;
         } else {
           const state = context.requestCapability(SpaceCapabilities.State);
           return constructSpaceNode({
@@ -324,69 +312,6 @@ export default (context: PluginsContext) => {
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
         const state = context.requestCapability(SpaceCapabilities.State);
         return constructObjectActions({ node, dispatch, navigable: state.navigableCollections });
-      },
-    }),
-
-    // Create nodes for object settings.
-    createExtension({
-      id: `${SPACE_PLUGIN}/settings-for-subject`,
-      resolver: ({ id }) => {
-        if (!id.endsWith('~settings')) {
-          return;
-        }
-
-        const type = 'orphan-settings-for-subject';
-        const icon = 'ph--gear--regular';
-
-        const [subjectId] = id.split('~');
-        const { spaceId, objectId } = parseId(subjectId);
-        const client = context.requestCapability(ClientCapabilities.Client);
-        const spaces = toSignal(
-          (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-          () => client.spaces.get(),
-        );
-        const space = spaces?.find((space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY);
-        if (!objectId) {
-          const label = space
-            ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
-            : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
-
-          // TODO(wittjosiah): Support comments for arbitrary subjects.
-          //   This is to ensure that the comments panel is not stuck on an old object.
-          return {
-            id,
-            type,
-            data: null,
-            properties: {
-              icon,
-              label,
-              showResolvedThreads: false,
-              object: null,
-              space,
-            },
-          };
-        }
-
-        const [object] = memoizeQuery(space, { id: objectId });
-        if (!object || !subjectId) {
-          return;
-        }
-
-        const meta = resolve(getTypename(object) ?? '');
-        const label = meta.label?.(object) ||
-          object.name ||
-          meta.placeholder || ['unnamed object settings label', { ns: SPACE_PLUGIN }];
-
-        return {
-          id,
-          type,
-          data: null,
-          properties: {
-            icon,
-            label,
-            object,
-          },
-        };
       },
     }),
   ]);

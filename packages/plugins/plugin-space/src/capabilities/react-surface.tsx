@@ -2,19 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import {
-  Capabilities,
-  contributes,
-  createSurface,
-  Surface,
-  useCapability,
-  useCapabilities,
-  usePluginManager,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import {
   getSpace,
   isEchoObject,
@@ -53,6 +44,8 @@ import {
   SyncStatus,
   type CreateObjectDialogProps,
   type SpaceSettingsDialogProps,
+  POPOVER_ADD_SPACE,
+  PopoverAddSpace,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionType, type SpaceSettingsProps } from '../types';
@@ -126,23 +119,8 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: CREATE_OBJECT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: Partial<CreateObjectDialogProps> } => data.component === CREATE_OBJECT_DIALOG,
-      component: ({ data }) => {
-        const schemas = useCapabilities(ClientCapabilities.Schema).flat();
-        const manager = usePluginManager();
-
-        const resolve = useCallback(
-          (typename: string) => {
-            return (
-              manager.context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ??
-              {}
-            );
-          },
-          [manager],
-        );
-
-        return <CreateObjectDialog schemas={schemas} resolve={resolve} {...data.props} />;
-      },
+      filter: (data): data is { props: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
+      component: ({ data }) => <CreateObjectDialog {...data.props} />,
     }),
     createSurface({
       id: POPOVER_RENAME_SPACE,
@@ -156,6 +134,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       filter: (data): data is { props: ReactiveEchoObject<any> } =>
         data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
+    }),
+    createSurface({
+      id: POPOVER_ADD_SPACE,
+      role: 'popover',
+      filter: (data): data is any => data.component === POPOVER_ADD_SPACE,
+      component: () => <PopoverAddSpace />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/navtree-presence`,

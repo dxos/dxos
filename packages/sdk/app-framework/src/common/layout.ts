@@ -111,6 +111,9 @@ export namespace LayoutAction {
       subject: S.optional(S.String.annotations({ description: 'URI of the component to display in the popover.' })),
       options: S.Struct({
         anchorId: S.String.annotations({ description: 'The id of the element to anchor the popover to.' }),
+        side: S.optional(
+          S.Literal('top', 'right', 'bottom', 'left').annotations({ description: 'The side of the anchor.' }),
+        ),
         state: S.optional(S.Boolean.annotations({ description: 'Whether the popover is open or closed.' })),
         props: S.optional(
           S.Record({ key: S.String, value: S.Any }).annotations({

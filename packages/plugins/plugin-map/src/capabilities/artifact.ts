@@ -28,6 +28,8 @@ export default () => {
     instructions: `
     Maps:
     - If the user's message relates to a map, you must return the map as a valid GeoJSON Point with valid coordinates.
+    - If the user's message relates to a collection of points (like in a table) you can specify the typename and the map
+        will render and center on those markers.
     `,
     schema: MapType,
     tools: [
@@ -44,22 +46,56 @@ export default () => {
       }),
       defineTool({
         name: 'map_new',
-        description: 'Create a new map.',
+        description:
+          'Create a new map, optionally with a schema for data points. When creating a map, make sure to use the show tool to display the map to the user.',
         schema: S.Struct({
-          longitude: S.Number.annotations({ description: 'The longitude of the map.' }),
-          latitude: S.Number.annotations({ description: 'The latitude of the map.' }),
+          center: S.optional(
+            S.Struct({
+              longitude: S.Number.annotations({ description: 'The longitude of the map center.' }),
+              latitude: S.Number.annotations({ description: 'The latitude of the map center.' }),
+            }),
+          ).annotations({ description: 'Optional center coordinates for the map.' }),
+          typename: S.optional(S.String).annotations({
+            description: 'Optional fully qualified typename of the schema to use for map points.',
+          }),
+          locationProperty: S.optional(S.String).annotations({
+            description: 'Optional field name to use as the location property.',
+          }),
         }),
-        execute: async ({ longitude, latitude }, { extensions }) => {
+        execute: async ({ center, typename, locationProperty }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
+
+          // Validate schema if provided.
+          if (typename) {
+            const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
+          }
+
+          // Don't supply coordinates if typename is supplied.
+          const coordinates = typename
+            ? undefined
+            : center
+              ? ([center.longitude, center.latitude] as const)
+              : undefined;
+
           const intent = pipe(
-            createIntent(MapAction.Create, { space: extensions.space, coordinates: [longitude, latitude] as const }),
+            createIntent(MapAction.Create, {
+              space: extensions.space,
+              coordinates,
+              initialSchema: typename,
+              locationProperty,
+            }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
           );
+
           const { data, error } = await extensions.dispatch(intent);
           if (!data || error) {
             return ToolResult.Error(error?.message ?? 'Failed to create map');
           }
+
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),

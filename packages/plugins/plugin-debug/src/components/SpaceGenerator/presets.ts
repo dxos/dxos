@@ -6,7 +6,7 @@ import { type ComputeGraphModel, EmailTriggerOutput, NODE_INPUT } from '@dxos/co
 import { AST, ObjectId, S, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import {
@@ -15,8 +15,10 @@ import {
   createChat,
   createComputeGraph,
   createConstant,
+  createFunction,
   createGpt,
   createQueue,
+  createSurface,
   createRandom,
   createTemplate,
   createText,
@@ -40,7 +42,10 @@ export enum PresetName {
   CHAT_GPT = 'chat-gpt-text',
   EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
+  FOREX_FUNCTION_CALL = 'forex-function-call',
   TIMER_TICK_QUEUE = 'timerTick-queue',
+  DISCORD_MESSAGES = 'discord-messages',
+  KANBAN_QUEUE = 'kanban-queue',
 }
 
 export const presets = {
@@ -56,10 +61,14 @@ export const presets = {
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
-            const triggerShape = createTrigger({ triggerKind: TriggerKind.Webhook, ...position({ x: -18, y: -2 }) });
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Webhook,
+              ...position({ x: -18, y: -2 }),
+            });
             const trigger = canvasModel.createNode(triggerShape);
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-            const { queueId } = setupQueue(canvasModel);
+            const { queueId } = setupQueue(space, canvasModel);
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
@@ -87,6 +96,7 @@ export const presets = {
       async (space, n, cb) => {
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
+            space,
             TriggerKind.Subscription,
             (triggerSpec) => (triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' }),
             'type',
@@ -103,6 +113,7 @@ export const presets = {
       async (space, n, cb) => {
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
+            space,
             TriggerKind.Timer,
             (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
             'result',
@@ -134,7 +145,11 @@ export const presets = {
 
           let functionTrigger: FunctionTrigger | undefined;
           canvasModel.builder.call((builder) => {
-            const triggerShape = createTrigger({ triggerKind: TriggerKind.Email, ...position({ x: -18, y: -2 }) });
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Email,
+              ...position({ x: -18, y: -2 }),
+            });
             const trigger = canvasModel.createNode(triggerShape);
 
             const tableId = canvasModel.createNode(
@@ -187,7 +202,7 @@ export const presets = {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const chat = canvasModel.createNode(createChat(position({ x: -18, y: -2 })));
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
-            const { queueId } = setupQueue(canvasModel);
+            const { queueId } = setupQueue(space, canvasModel);
 
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
@@ -237,12 +252,13 @@ export const presets = {
               }),
             );
             const triggerShape = createTrigger({
+              spaceId: space.id,
               triggerKind: TriggerKind.Email,
               ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
             });
             const trigger = canvasModel.createNode(triggerShape);
 
-            const { queueId } = setupQueue(canvasModel, {
+            const { queueId } = setupQueue(space, canvasModel, {
               idPosition: { centerX: -720, centerY: 224, width: 192, height: 256 },
               queuePosition: { centerX: -144, centerY: 416, width: 320, height: 448 },
             });
@@ -299,10 +315,139 @@ export const presets = {
         return objects;
       },
     ],
+
+    [
+      PresetName.FOREX_FUNCTION_CALL,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          canvasModel.builder.call((builder) => {
+            const sourceCurrency = canvasModel.createNode(
+              createConstant({ value: 'USD', ...position({ x: -10, y: -5 }) }),
+            );
+            const targetCurrency = canvasModel.createNode(
+              createConstant({ value: 'EUR', ...position({ x: -10, y: 5 }) }),
+            );
+            const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
+            const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
+
+            builder
+              .createEdge({ source: sourceCurrency.id, target: converter.id, input: 'from' })
+              .createEdge({ source: targetCurrency.id, target: converter.id, input: 'to' })
+              .createEdge({ source: converter.id, target: view.id, output: 'rate' });
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+
+          return addToSpace(PresetName.FOREX_FUNCTION_CALL, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+
+    [
+      PresetName.DISCORD_MESSAGES,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          let functionTrigger: FunctionTrigger | undefined;
+          canvasModel.builder.call((builder) => {
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Timer,
+              ...position({ x: -10, y: -5 }),
+            });
+            const trigger = canvasModel.createNode(triggerShape);
+            // DXOS dev-null channel.
+            const channelId = canvasModel.createNode(
+              createConstant({ value: '1088569858767212554', ...position({ x: -10, y: 0 }) }),
+            );
+            const queueId = canvasModel.createNode(
+              createConstant({
+                value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
+                ...position({ x: -10, y: 5 }),
+              }),
+            );
+            const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
+            const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
+            const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
+
+            builder
+              .createEdge({ source: trigger.id, target: converter.id, input: 'tick' })
+              .createEdge({ source: channelId.id, target: converter.id, input: 'channelId' })
+              .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
+              .createEdge({ source: converter.id, target: view.id, output: 'newMessages' })
+              .createEdge({ source: queueId.id, target: queue.id, input: 'input' });
+
+            functionTrigger = triggerShape.functionTrigger!.target!;
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+          attachTrigger(functionTrigger, computeModel);
+
+          return addToSpace(PresetName.DISCORD_MESSAGES, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+
+    [
+      PresetName.KANBAN_QUEUE,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+
+          // TODO(wittjosiah): Integrate directly w/ Kanban.
+          // const results = space.db.query(Filter.schema(KanbanType)).runSync();
+          // const kanban = results.find((r) => r.object?.cardView?.target?.query?.type?.endsWith('Message'));
+          // invariant(kanban, 'Kanban not found.');
+
+          const results = space.db.query(Filter.schema(TableType)).runSync();
+          const messages = results.find((r) => r.object?.view?.target?.query?.type?.endsWith('Message'));
+          invariant(messages, 'Table not found.');
+
+          let functionTrigger: FunctionTrigger | undefined;
+          canvasModel.builder.call((builder) => {
+            const triggerShape = createTrigger({
+              spaceId: space.id,
+              triggerKind: TriggerKind.Queue,
+              ...position({ x: -10, y: -5 }),
+            });
+            const trigger = canvasModel.createNode(triggerShape);
+
+            const tableId = canvasModel.createNode(
+              createConstant({
+                value: DXN.fromLocalObjectId(messages.id).toString(),
+                ...position({ x: -10, y: 5 }),
+              }),
+            );
+            const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 0 })));
+
+            builder
+              .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
+              .createEdge({ source: trigger.id, target: appendToTable.id, input: 'items', output: 'item' });
+
+            functionTrigger = triggerShape.functionTrigger!.target!;
+          });
+
+          const computeModel = createComputeGraph(canvasModel);
+          attachTrigger(functionTrigger, computeModel);
+
+          return addToSpace(PresetName.KANBAN_QUEUE, space, canvasModel, computeModel);
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
   ] as [PresetName, ObjectGenerator<any>][],
 };
 
 const createQueueSinkPreset = <SpecType extends TriggerKind>(
+  space: Space,
   triggerKind: SpecType,
   initSpec: (spec: Extract<TriggerType, { type: SpecType }>) => void,
   triggerOutputName: string,
@@ -319,11 +464,12 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
   let functionTrigger: FunctionTrigger | undefined;
   canvasModel.builder.call((builder) => {
     const triggerShape = createTrigger({
+      spaceId: space.id,
       triggerKind,
       ...rawPosition({ centerX: -578, centerY: -187, height: 320, width: 320 }),
     });
     const trigger = canvasModel.createNode(triggerShape);
-    const { queueId } = setupQueue(canvasModel, {
+    const { queueId } = setupQueue(space, canvasModel, {
       queuePosition: { centerX: -80, centerY: 378, width: 320, height: 448 },
     });
     const append = canvasModel.createNode(
@@ -372,12 +518,13 @@ const addToSpace = (name: string, space: Space, canvas: CanvasGraphModel, comput
 };
 
 const setupQueue = (
+  space: Space,
   canvasModel: CanvasGraphModel,
   args?: { idPosition?: RawPositionInput; queuePosition?: RawPositionInput },
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+      value: new DXN(DXN.kind.QUEUE, ['data', space.id, ObjectId.random()]).toString(),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

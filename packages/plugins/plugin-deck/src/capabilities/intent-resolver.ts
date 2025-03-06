@@ -23,10 +23,10 @@ import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { isNonNullable } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
-import { setActive } from './set-active';
 import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode } from '../types';
+import { setActive } from '../util';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -113,6 +113,7 @@ export default (context: PluginsContext) =>
         layout.popoverOpen = options.state ?? Boolean(subject);
         layout.popoverContent = subject ? { component: subject, props: options.props } : null;
         layout.popoverAnchorId = options.anchorId;
+        layout.popoverSide = options.side;
       },
     }),
     createResolver({
@@ -199,7 +200,7 @@ export default (context: PluginsContext) =>
           }
         });
 
-        const first = state.decks[state.activeDeck].active[0];
+        const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
         if (first) {
           return {
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
@@ -267,7 +268,8 @@ export default (context: PluginsContext) =>
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         const attention = context.requestCapability(AttentionCapabilities.Attention);
-        const next = subject.reduce((acc, id) => closeEntry(acc, id), state.deck.active);
+        const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
+        const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
         return {
           intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],

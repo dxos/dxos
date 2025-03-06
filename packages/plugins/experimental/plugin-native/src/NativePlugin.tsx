@@ -13,7 +13,7 @@ export const NativePlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/startup`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.DispatcherReady,
       activate: async (context: PluginsContext) => {
         const { initializeNativeApp } = await import('./initialize');
         await initializeNativeApp(context);

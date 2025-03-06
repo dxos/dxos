@@ -104,7 +104,7 @@ export default () =>
           // Look for properties that use the LatLng format enum
           const properties = Object.entries(selectedSchema.jsonSchema.properties).reduce<string[]>(
             (acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === FormatEnum.LatLng) {
+              if (typeof value === 'object' && value?.format === FormatEnum.LatLong) {
                 acc.push(key);
               }
               return acc;

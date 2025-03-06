@@ -8,6 +8,7 @@ import React, { useCallback, type FC } from 'react';
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { TranscriptionAction, type TranscriptType } from '@dxos/plugin-transcription/types';
 import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
@@ -34,6 +35,7 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
     const result = await dispatch(
       pipe(createIntent(TranscriptionAction.Create, {}), chain(SpaceAction.AddObject, { target })),
     );
+    log.info('>>> handleTranscription', { result });
     invariant(result.data);
     return result.data.object as ReactiveEchoObject<TranscriptType>;
   }, [dispatch, space, target]);

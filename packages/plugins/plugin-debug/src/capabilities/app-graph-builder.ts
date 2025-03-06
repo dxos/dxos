@@ -3,21 +3,16 @@
 //
 
 import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
-import { memoizeQuery } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { getTypename, parseId, SpaceState } from '@dxos/react-client/echo';
+import { SpaceState } from '@dxos/react-client/echo';
 import { isSpace, type Space } from '@dxos/react-client/echo';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps } from '../types';
 
-export default (context: PluginsContext) => {
-  const resolve = (typename: string) =>
-    context.requestCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
-  return contributes(Capabilities.AppGraphBuilder, [
+export default (context: PluginsContext) =>
+  contributes(Capabilities.AppGraphBuilder, [
     // Devtools node.
     createExtension({
       id: 'dxos.org/plugin/debug/devtools',
@@ -102,6 +97,7 @@ export default (context: PluginsContext) => {
 
         return [
           {
+            // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
             id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
             type: 'dxos.org/plugin/debug/space',
             data: { space, type: 'dxos.org/plugin/debug/space' },
@@ -113,63 +109,4 @@ export default (context: PluginsContext) => {
         ];
       },
     }),
-
-    // Create nodes for debug sidebar.
-    createExtension({
-      id: `${DEBUG_PLUGIN}/debug-for-subject`,
-      resolver: ({ id }) => {
-        if (!id.endsWith('~debug')) {
-          return;
-        }
-
-        const type = 'orphan-settings-for-subject';
-        const icon = 'ph--bug--regular';
-
-        const client = context.requestCapability(ClientCapabilities.Client);
-        const [subjectId] = id.split('~');
-        const { spaceId, objectId } = parseId(subjectId);
-        const spaces = toSignal(
-          (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-          () => client.spaces.get(),
-        );
-        const space = spaces?.find((space) => space.state.get() === SpaceState.SPACE_READY && space.id === spaceId);
-        if (!objectId) {
-          // TODO(burdon): Ref SPACE_PLUGIN ns.
-          const label = space
-            ? space.properties.name || ['unnamed space label', { ns: DEBUG_PLUGIN }]
-            : ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
-
-          // TODO(wittjosiah): Support comments for arbitrary subjects.
-          //   This is to ensure that the comments panel is not stuck on an old object.
-          return {
-            id,
-            type,
-            data: null,
-            properties: { icon, label, object: null, space },
-          };
-        }
-
-        const [object] = memoizeQuery(space, { id: objectId });
-        if (!object || !subjectId) {
-          return;
-        }
-
-        const meta = resolve(getTypename(object) ?? '');
-        const label = meta.label?.(object) ||
-          object.name ||
-          meta.placeholder || ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
-
-        return {
-          id,
-          type,
-          data: null,
-          properties: {
-            icon,
-            label,
-            object,
-          },
-        };
-      },
-    }),
   ]);
-};

@@ -318,7 +318,13 @@ export class CoreDatabase {
       inactivityTimeout = 30_000,
       returnDeleted = false,
       returnWithUnsatisfiedDeps = false,
-    }: { inactivityTimeout?: number; returnDeleted?: boolean; returnWithUnsatisfiedDeps?: boolean } = {},
+      failOnTimeout = false,
+    }: {
+      inactivityTimeout?: number;
+      returnDeleted?: boolean;
+      returnWithUnsatisfiedDeps?: boolean;
+      failOnTimeout?: boolean;
+    } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');
@@ -351,7 +357,11 @@ export class CoreDatabase {
       const scheduleInactivityTimeout = () => {
         inactivityTimeoutTimer = setTimeout(() => {
           unsubscribe?.();
-          reject(new TimeoutError(inactivityTimeout));
+          if (failOnTimeout) {
+            reject(new TimeoutError(inactivityTimeout));
+          } else {
+            resolve(result);
+          }
         }, inactivityTimeout);
       };
       unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {

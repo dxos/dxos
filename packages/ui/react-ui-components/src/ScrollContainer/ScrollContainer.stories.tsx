@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme, withSignals } from '@dxos/storybook-utils';
 
@@ -18,25 +19,33 @@ const meta: Meta<typeof ScrollContainer> = {
   decorators: [withSignals, withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   render: (args) => {
     const [lines, setLines] = useState<string[]>([]);
+    const [running, setRunning] = useState(true);
     const scroller = useRef<ScrollController>(null);
     useEffect(() => {
-      const i = setInterval(() => {
-        setLines((lines) => [...lines, `Line ${lines.length + 1}`]);
-      }, 250);
+      if (!running) {
+        return;
+      }
 
-      return () => clearInterval(i);
-    }, []);
+      const i = setInterval(() => {
+        setLines((lines) => [...lines, faker.lorem.paragraph()]);
+      }, 500);
+
+      return () => {
+        clearInterval(i);
+      };
+    }, [running]);
 
     return (
       <div className='flex flex-col w-96 overflow-hidden'>
         <Toolbar.Root>
+          <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
           <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
           <div className='flex-1' />
           <div>{lines.length}</div>
         </Toolbar.Root>
-        <ScrollContainer {...args} ref={scroller} classNames='grow'>
+        <ScrollContainer fade {...args} ref={scroller}>
           {lines.map((line, index) => (
-            <div key={index} className='p-2 bg-gray-100'>
+            <div key={index} className='p-2'>
               {line}
             </div>
           ))}

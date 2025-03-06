@@ -50,12 +50,13 @@ export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutM
   const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
   const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-  const size = deck.plankSizing[id] as number | undefined;
+  const key = id.split('+')[0];
+  const size = deck.plankSizing[key] as number | undefined;
   const setSize = useCallback(
     debounce((nextSize: number) => {
-      return dispatch(createIntent(DeckAction.UpdatePlankSize, { id, size: nextSize }));
+      return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: key, size: nextSize }));
     }, 200),
-    [dispatch, id],
+    [dispatch, key],
   );
 
   // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.

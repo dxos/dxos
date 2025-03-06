@@ -6,6 +6,8 @@ import { Capabilities, contributes, createIntent, defineModule, definePlugin, Ev
 import { ComputeGraph } from '@dxos/conductor';
 import { FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { IntentResolver, ReactSurface } from './capabilities';
@@ -28,19 +30,27 @@ export const CanvasPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: CanvasBoardType.typename,
           metadata: {
-            createObject: (props: { name?: string }) => createIntent(CanvasAction.Create, props),
             placeholder: ['canvas title placeholder', { ns: CANVAS_PLUGIN }],
             icon: 'ph--infinity--regular',
           },
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: CanvasBoardType,
+            getIntent: () => createIntent(CanvasAction.Create),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [ComputeGraph, FunctionTrigger]),
-        contributes(ClientCapabilities.Schema, [CanvasBoardType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [ComputeGraph, FunctionTrigger]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

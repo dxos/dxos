@@ -6,7 +6,16 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
-import { Icon, toLocalizedString, Tooltip, useMediaQuery, useSidebars, useTranslation } from '@dxos/react-ui';
+import {
+  Icon,
+  Popover,
+  ScrollArea,
+  toLocalizedString,
+  Tooltip,
+  useMediaQuery,
+  useSidebars,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -74,7 +83,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const type = l0ItemType(item);
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
-  const { getProps } = useNavTreeContext();
+  const { getProps, popoverAnchorId } = useNavTreeContext();
   const { id, testId } = getProps?.(item, path) ?? {};
   const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
   const handleClick = useL0ItemClick({ item, path: itemPath, parent }, type);
@@ -90,56 +99,57 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('').toUpperCase() : []),
     [type, item.properties.label, t],
   );
+  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
 
-  return (
-    <Tooltip.Root delayDuration={0}>
-      <Tooltip.Trigger asChild>
-        <Root
-          {...(rootProps as any)}
-          data-type={type}
+  const l0ItemTrigger = (
+    <Root
+      {...(rootProps as any)}
+      data-type={type}
+      className={mx(
+        'group/l0i dx-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
+        l0Breakpoints[item.properties.l0Breakpoint],
+      )}
+    >
+      {type !== 'collection' && (
+        <div
+          role='none'
           className={mx(
-            'group/l0i dx-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
-            l0Breakpoints[item.properties.l0Breakpoint],
+            'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
+            type === 'tab' || pinned ? 'rounded' : 'rounded-full',
+            pinned
+              ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
+              : 'bg-groupSurface inset-inline-3 inset-block-2',
           )}
-        >
-          {type !== 'collection' && (
-            <div
-              role='none'
-              className={mx(
-                'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
-                type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-                pinned
-                  ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
-                  : 'bg-groupSurface inset-inline-3 inset-block-2',
-              )}
-              {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
-            />
-          )}
-          <div
-            role='none'
-            className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
-          />
-          {(item.properties.icon && (
-            <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
-          )) ||
-            (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-              <span
-                role='img'
-                className='place-self-center text-3xl font-light'
-                {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
-              >
-                {avatarValue}
-              </span>
-            ) : (
-              item.properties.icon && (
-                <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' />
-              )
-            ))}
-          <span id={`${item.id}__label`} className='sr-only'>
-            {localizedString}
+          {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+        />
+      )}
+      <div
+        role='none'
+        className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
+      />
+      {(item.properties.icon && (
+        <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+      )) ||
+        (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
+          <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
+            {avatarValue}
           </span>
-        </Root>
-      </Tooltip.Trigger>
+        ) : (
+          item.properties.icon && (
+            <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+          )
+        ))}
+      <span id={`${item.id}__label`} className='sr-only'>
+        {localizedString}
+      </span>
+    </Root>
+  );
+
+  return popoverAnchorId === id ? (
+    <Popover.Anchor asChild>{l0ItemTrigger}</Popover.Anchor>
+  ) : (
+    <Tooltip.Root delayDuration={0}>
+      <Tooltip.Trigger asChild>{l0ItemTrigger}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='right'>
           {localizedString}
@@ -185,19 +195,26 @@ export const L0Menu = ({
   path: string[];
 }) => {
   return (
-    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag'>
-      <div
-        role='none'
-        className='grid auto-rows-[calc(var(--l0-size)-.5rem)] min-bs-0 !overflow-y-auto plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]'
-      >
-        {topLevelItems.map((item) => {
-          if (l0ItemType(item) === 'collection') {
-            return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
-          } else {
-            return <L0Item key={item.id} item={item} parent={parent} path={path} />;
-          }
-        })}
-      </div>
+    <Tabs.Tablist classNames='group/l0 absolute z-[1] inset-block-0 inline-start-0 rounded-is-lg grid grid-cols-[var(--l0-size)] grid-rows-[1fr_min-content_var(--l0-size)] contain-layout !is-[--l0-size] bg-baseSurface border-ie border-separator app-drag  pbe-[env(safe-area-inset-bottom)]'>
+      <ScrollArea.Root>
+        <ScrollArea.Viewport>
+          <div
+            role='none'
+            className='grid auto-rows-[calc(var(--l0-size)-.5rem)] plb-1 [body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)] [body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]'
+          >
+            {topLevelItems.map((item) => {
+              if (l0ItemType(item) === 'collection') {
+                return <L0Collection key={item.id} item={item} parent={parent} path={path} />;
+              } else {
+                return <L0Item key={item.id} item={item} parent={parent} path={path} />;
+              }
+            })}
+          </div>
+          <ScrollArea.Scrollbar orientation='vertical'>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
       <div role='none' className='grid grid-cols-1 auto-rows-[--rail-action] pbs-2'>
         {pinnedItems
           .filter((item) => l0ItemType(item) !== 'collection')

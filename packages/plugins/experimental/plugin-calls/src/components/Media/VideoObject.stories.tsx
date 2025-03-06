@@ -7,25 +7,40 @@ import '@dxos-theme';
 import 'preact/debug';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { VideoObject } from './VideoObject';
-import { useCallGlobalContext } from '../../hooks';
+import { getUserMediaTrack } from '../../util';
+import { ResponsiveContainer } from '../ResponsiveGrid';
 
 const meta: Meta<typeof VideoObject> = {
   title: 'plugins/plugin-calls/VideoObject',
   component: VideoObject,
   render: (args) => {
     log.info('render');
-    const { call } = useCallGlobalContext();
+    const videoTrack = useRef<MediaStreamTrack>();
     useEffect(() => {
-      void call.turnVideoOn();
+      const ctx = new Context();
+      scheduleTask(ctx, async () => {
+        videoTrack.current = await getUserMediaTrack('videoinput');
+      });
+
+      return () => {
+        void ctx.dispose();
+        videoTrack.current?.stop();
+      };
     }, []);
 
-    return <VideoObject videoTrack={call.media.videoTrack} {...args} />;
+    return (
+      <ResponsiveContainer>
+        <VideoObject videoTrack={videoTrack.current} {...args} />;
+      </ResponsiveContainer>
+    );
   },
   decorators: [
     withTheme,

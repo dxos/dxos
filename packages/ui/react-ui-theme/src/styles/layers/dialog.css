@@ -24,10 +24,14 @@
   }
   .dx-dialog__content {
     /* TODO(thure): `flex` should not be default. */
-    @apply flex flex-col is-dvw sm:is-[95vw] max-is-full md:max-is-[24rem] p-4 animate-slideUpAndFade shadow-lg bg-modalSurface backdrop-blur;
+    @apply flex flex-col is-dvw max-is-full p-4 animate-slideUpAndFade shadow-lg bg-modalSurface backdrop-blur;
+    --surface-bg: var(--dx-modalSurface);
     will-change: opacity, transform;
     @media (min-width: theme('screens.sm')) {
-      @apply border rounded-lg border-separator;
+      @apply is-[95vw] border rounded-lg border-separator;
+    }
+    @media (min-width: theme('screens.md')) {
+      @apply max-is-[24rem]
     }
   }
   .dx-dialog__title {

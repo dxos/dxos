@@ -100,9 +100,9 @@
     "storybook-build": { "cache": true },
     "pack": {
       "executor": "nx:run-commands",
-      "dependsOn": ["^build"],
+      "dependsOn": ["build"],
       "cache": true,
-      "inputs": ["production", "^production"],
+      "inputs": ["production"],
       "outputs": ["{workspaceRoot}/dist/tarballs/{projectName}"],
       "options": {
         "command": "bash -c 'pnpm pack --pack-destination \"$(git rev-parse --show-toplevel)/dist/tarballs/{projectName}\"'",

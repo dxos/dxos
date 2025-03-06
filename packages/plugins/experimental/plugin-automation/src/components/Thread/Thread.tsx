@@ -2,22 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { type CSSProperties, useCallback, useMemo, useRef } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { type Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { keyToFallback } from '@dxos/util';
 
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { messageReducer } from './reducer';
 import { PromptBar, type PromptBarProps } from '../Prompt';
 
 export type ThreadProps = ThemedClassName<{
+  space?: Space;
   messages?: Message[];
   collapse?: boolean;
 }> &
-  Pick<PromptBarProps, 'processing' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
+  Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
   Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
 
 /**
@@ -25,16 +31,24 @@ export type ThreadProps = ThemedClassName<{
  */
 export const Thread = ({
   classNames,
+  space,
   messages,
   collapse = true,
   processing,
+  error,
   debug,
   onSubmit,
   onCancel,
   onPrompt,
   onDelete,
 }: ThreadProps) => {
+  const hasTrascription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
+
   const scroller = useRef<ScrollController>(null);
+
+  const identity = useIdentity();
+  const fallbackValue = keyToFallback(identity!.identityKey);
+  const userHue = identity!.profile?.data?.hue || fallbackValue.hue;
 
   const handleSubmit = useCallback<NonNullable<PromptBarProps['onSubmit']>>(
     (value: string) => {
@@ -46,7 +60,7 @@ export const Thread = ({
   );
 
   // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
-  const { messages: lines = [] } = useMemo(() => {
+  const { messages: filteredMessages = [] } = useMemo(() => {
     if (collapse) {
       return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(messageReducer, {
         messages: [],
@@ -57,23 +71,36 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <div role='list' className={mx('flex flex-col grow overflow-hidden', classNames)}>
-      <ScrollContainer ref={scroller}>
-        {lines.map((message) => (
-          <ThreadMessage
-            key={message.id}
-            classNames='px-4 pbe-4'
-            message={message}
-            debug={debug}
-            onPrompt={onPrompt}
-            onDelete={onDelete}
-          />
-        ))}
-
-        <div className='pbe-6' />
+    <>
+      <ScrollContainer ref={scroller} fade>
+        <div
+          role='none'
+          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6', classNames)}
+          style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+        >
+          {filteredMessages.map((message) => (
+            <ThreadMessage
+              key={message.id}
+              classNames='px-4 pbe-4'
+              space={space}
+              message={message}
+              debug={debug}
+              onPrompt={onPrompt}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
       </ScrollContainer>
 
-      {onSubmit && <PromptBar microphone processing={processing} onSubmit={handleSubmit} onCancel={onCancel} />}
-    </div>
+      {onSubmit && (
+        <PromptBar
+          microphone={hasTrascription}
+          processing={processing}
+          error={error}
+          onSubmit={handleSubmit}
+          onCancel={onCancel}
+        />
+      )}
+    </>
   );
 };

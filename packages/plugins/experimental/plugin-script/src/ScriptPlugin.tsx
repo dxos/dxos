@@ -5,10 +5,11 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type Space } from '@dxos/client/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { Artifact, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
 import { meta, SCRIPT_PLUGIN } from './meta';
@@ -39,9 +40,6 @@ export const ScriptPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
           metadata: {
-            creationSchema: ScriptAction.CreateScriptSchema,
-            createObject: (props: ScriptAction.CreateScriptProps, { space }: { space: Space }) =>
-              createIntent(ScriptAction.Create, { ...props, space }),
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -50,12 +48,22 @@ export const ScriptPlugin = () =>
         }),
     }),
     defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: ScriptType,
+            formSchema: ScriptAction.CreateScriptSchema,
+            getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
+          }),
+        ),
+    }),
+    defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [
-        contributes(ClientCapabilities.SystemSchema, [FunctionType]),
-        contributes(ClientCapabilities.Schema, [ScriptType]),
-      ],
+      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

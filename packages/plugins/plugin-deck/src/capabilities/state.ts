@@ -84,6 +84,9 @@ export default () => {
     get complementarySidebarOpen() {
       return state.values.complementarySidebarState === 'expanded';
     },
+    get workspace() {
+      return state.values.activeDeck;
+    },
     get active() {
       return state.values.deck.solo ? [state.values.deck.solo] : state.values.deck.active;
     },

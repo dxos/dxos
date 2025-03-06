@@ -7,8 +7,8 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AmbientChatDialog, AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
-import { AUTOMATION_PLUGIN, AMBIENT_CHAT_DIALOG } from '../meta';
+import { AssistantDialog, AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
+import { AUTOMATION_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType } from '../types';
 
 export default () =>
@@ -20,6 +20,13 @@ export default () =>
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
+      id: `${AUTOMATION_PLUGIN}/automation`,
+      role: 'complementary--automation',
+      filter: (data): data is { subject: ReactiveEchoObject<any> } =>
+        isEchoObject(data.subject) && !!getSpace(data.subject),
+      component: ({ data }) => <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />,
+    }),
+    createSurface({
       id: `${AUTOMATION_PLUGIN}/service-registry`,
       role: 'complementary--service-registry',
       component: ({ data }) => (
@@ -27,16 +34,9 @@ export default () =>
       ),
     }),
     createSurface({
-      id: AMBIENT_CHAT_DIALOG,
+      id: ASSISTANT_DIALOG,
       role: 'dialog',
-      filter: (data): data is any => data.component === AMBIENT_CHAT_DIALOG,
-      component: () => <AmbientChatDialog />,
-    }),
-    createSurface({
-      id: `${AUTOMATION_PLUGIN}/automation`,
-      role: 'complementary--automation',
-      filter: (data): data is { subject: ReactiveEchoObject<any> } =>
-        isEchoObject(data.subject) && !!getSpace(data.subject),
-      component: ({ data }) => <AutomationPanel space={getSpace(data.subject)!} object={data.subject} />,
+      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
+      component: ({ data }) => <AssistantDialog {...data.props} />,
     }),
   ]);

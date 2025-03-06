@@ -22,12 +22,12 @@ export class Reference {
         return new Reference(dxn.parts[0], Reference.TYPE_PROTOCOL, 'dxos.org', dxn);
       case DXN.kind.ECHO:
         if (dxn.parts[0] === LOCAL_SPACE_TAG) {
-          return new Reference(dxn.parts[1]);
+          return new Reference(dxn.parts[1], undefined, undefined, dxn);
         } else {
-          return new Reference(dxn.parts[1], undefined, dxn.parts[0]);
+          return new Reference(dxn.parts[1], undefined, dxn.parts[0], dxn);
         }
       default:
-        throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
+        return new Reference(dxn.parts[0], undefined, dxn.parts[0], dxn);
     }
   }
 

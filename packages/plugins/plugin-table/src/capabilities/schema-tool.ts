@@ -2,29 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
+import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
-import { FormatEnum, FormatEnums, formatToType, S, TypedObject, TypeEnum, SelectOptionSchema } from '@dxos/echo-schema';
+import {
+  FormatEnums,
+  formatToType,
+  S,
+  TypedObject,
+  TypeEnum,
+  SelectOptionSchema,
+  GeoPoint,
+  toJsonSchema,
+  FormatEnum,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
 
-const availableFormats = FormatEnums;
-
 // TODO(ZaymonFC): Move this somewhere common.
 export const TypeNameSchema = S.String.pipe(
-  S.pattern(/^[\da-z.-]+\.[a-z]{2,6}(\/[A-Za-z][\w-]*)*$/i),
+  S.pattern(/^\w+\.\w{2,}\/[\w/]+$/i),
   S.annotations({
     [TitleAnnotationId]: 'TypeName',
-    [DescriptionAnnotationId]: 'Domain-style type name path',
+    [DescriptionAnnotationId]:
+      'Domain-style type name path. Dashes are not allowed. Use camel case for the final component of the type name.',
+    [ExamplesAnnotationId]: ['example.com/type/Document', 'example.com/type/FlightList'],
   }),
 );
 
+const formatDescription = `The format of the property. Extra information about format schemas:
+  ${FormatEnum.LatLong}: ${JSON.stringify(toJsonSchema(GeoPoint))}
+  NOTE: In GeoJSON, Longitude is the first coordinate. Latitude is the second coordinate.`;
+
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
-  name: S.String.annotations({ description: 'The name of the property.' }),
-  format: S.Enums(FormatEnum).annotations({
-    description: 'The format of the property (call schema_formats for full list).',
+  name: S.String.annotations({ [DescriptionAnnotationId]: 'The name of the property.' }),
+  format: S.Union(...FormatEnums.map((format) => S.Literal(format))).annotations({
+    [DescriptionAnnotationId]: formatDescription,
   }),
   config: S.optional(
     S.Struct({
@@ -78,21 +92,8 @@ export const schemaTools = [
     },
   }),
   defineTool({
-    name: 'schema_formats',
-    description: 'Get the list of available property formats in schema definitions.',
-    schema: S.Any,
-    execute: async () => {
-      return ToolResult.Success({
-        formats: Object.entries(availableFormats).map(([name, format]) => ({
-          name,
-          value: format,
-        })),
-      });
-    },
-  }),
-  defineTool({
     name: 'schema_create',
-    description: 'Create a new schema with the provided definition.',
+    description: 'Use schema_formats before calling this!! Create a new schema with the provided definition.',
     schema: S.Struct({
       typename: TypeNameSchema.annotations({
         description:
@@ -136,8 +137,8 @@ export const schemaTools = [
           );
         }
 
-        if (prop.format === FormatEnum.LatLng) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLng;
+        if (prop.format === FormatEnum.LatLong) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLong;
           registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
         }
       }
