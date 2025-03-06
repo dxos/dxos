@@ -99,6 +99,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
     () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('').toUpperCase() : []),
     [type, item.properties.label, t],
   );
+  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
 
   const l0ItemTrigger = (
     <Root
@@ -127,19 +128,15 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
         className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
       />
       {(item.properties.icon && (
-        <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' />
+        <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
       )) ||
         (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-          <span
-            role='img'
-            className='place-self-center text-3xl font-light'
-            {...(hue && { style: { color: `var(--dx-${hue}SurfaceText)` } })}
-          >
+          <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
             {avatarValue}
           </span>
         ) : (
           item.properties.icon && (
-            <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' />
+            <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
           )
         ))}
       <span id={`${item.id}__label`} className='sr-only'>
