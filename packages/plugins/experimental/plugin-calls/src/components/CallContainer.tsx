@@ -3,7 +3,7 @@
 //
 
 import { pipe } from 'effect';
-import React, { useCallback, type FC } from 'react';
+import React, { useCallback, useEffect, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
@@ -30,6 +30,10 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   const target = space?.properties[CollectionType.typename]?.target;
   const { call } = useCallGlobalContext();
 
+  useEffect(() => {
+    call.setRoomId(roomId);
+  }, [roomId]);
+
   const handleTranscription = useCallback<NonNullable<CallToolbarProps['onTranscription']>>(async () => {
     invariant(target);
     const result = await dispatch(
@@ -50,7 +54,7 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
             <Call.Toolbar onTranscription={handleTranscription} />
           </Call.Root>
         ) : (
-          <Lobby roomId={roomId} />
+          <Lobby />
         )}
       </StackItem.Content>
     </CallContextProvider>

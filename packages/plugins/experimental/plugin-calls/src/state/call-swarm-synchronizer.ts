@@ -9,6 +9,7 @@ import { Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
@@ -147,6 +148,11 @@ export class CallSwarmSynchronizer extends Resource {
    * @internal
    */
   _setRoomId(roomId?: PublicKey) {
+    if (this._stream) {
+      log.verbose('joined to a different room', { roomId });
+      return;
+    }
+
     this._roomId = roomId;
   }
 

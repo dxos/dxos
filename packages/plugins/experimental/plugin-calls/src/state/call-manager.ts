@@ -56,6 +56,10 @@ export class CallManager extends Resource {
     return this._state.media;
   }
 
+  setRoomId(roomId: PublicKey) {
+    this._swarmSynchronizer._setRoomId(roomId);
+  }
+
   setSpeaking(speaking: boolean) {
     this._swarmSynchronizer.setSpeaking(speaking);
   }
@@ -128,9 +132,8 @@ export class CallManager extends Resource {
   }
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
-  async join(roomId: PublicKey) {
+  async join() {
     this._swarmSynchronizer.setJoined(true);
-    this._swarmSynchronizer._setRoomId(roomId);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
       iceServers: this._client.config.get('runtime.services.ice'),
@@ -141,7 +144,6 @@ export class CallManager extends Resource {
   async leave() {
     this._swarmSynchronizer.setJoined(false);
     await this._mediaManager.leave();
-    this._swarmSynchronizer._setRoomId(undefined);
     await this._swarmSynchronizer.leave();
   }
 
