@@ -34,7 +34,7 @@ export const createNumberPlugin = (id: string) => {
     }),
     defineModule({
       id: `${id}/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: () =>
         contributes(
           Capabilities.IntentResolver,

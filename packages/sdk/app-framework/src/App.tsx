@@ -75,7 +75,8 @@ export const createApp = ({
   const manager = pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {
-    if (event === Events.Startup.id) {
+    // Once the app is ready the first time, don't show the fallback again.
+    if (!state.ready && event === Events.Startup.id) {
       state.ready = _state === 'activated';
     }
 
@@ -97,7 +98,7 @@ export const createApp = ({
   setupDevtools(manager);
 
   // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
-  void manager.activate(Events.SetupSurfaces);
+  void manager.activate(Events.SetupReactSurface);
   void manager.activate(Events.Startup);
 
   return () => (

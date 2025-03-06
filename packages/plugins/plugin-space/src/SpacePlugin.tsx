@@ -69,7 +69,10 @@ export const SpacePlugin = ({
   return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
       activatesAfter: [SpaceEvents.StateReady],
       activate: SpaceState,
     }),
@@ -135,12 +138,14 @@ export const SpacePlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
+      // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
+      activatesBefore: [SpaceEvents.SetupSettingsPanel],
       activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: (context) => IntentResolver({ createInvitationUrl, context, observability }),
     }),
     defineModule({
@@ -151,7 +156,7 @@ export const SpacePlugin = ({
     // TODO(wittjosiah): This could probably be deferred.
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.AppGraphReady,
       activate: AppGraphSerializer,
     }),
     defineModule({
