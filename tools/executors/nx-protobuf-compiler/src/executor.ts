@@ -5,8 +5,8 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
 import { register } from 'node:module';
+import { join, resolve } from 'node:path';
 
 register('extensionless', `file://${__filename}`);
 
