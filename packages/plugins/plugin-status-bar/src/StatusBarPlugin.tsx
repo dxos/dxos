@@ -28,7 +28,7 @@ export const StatusBarPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: () =>
         contributes(Capabilities.ReactSurface, [
           createSurface({

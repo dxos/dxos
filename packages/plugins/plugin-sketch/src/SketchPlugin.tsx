@@ -60,17 +60,17 @@ export const SketchPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupSurfaces,
+      activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntents,
+      activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.AppGraphReady,
       activate: AppGraphSerializer,
     }),
   ]);

@@ -18,7 +18,7 @@ export namespace Events {
   /**
    * Fired to load any newly available surfaces.
    */
-  export const SetupSurfaces = defineEvent('dxos.org/app-framework/event/setup-surfaces');
+  export const SetupReactSurface = defineEvent('dxos.org/app-framework/event/setup-react-surface');
 
   /**
    * Fired to load any newly available metadata.
@@ -28,7 +28,7 @@ export namespace Events {
   /**
    * Fired before the intent dispatcher is activated.
    */
-  export const SetupIntents = defineEvent('dxos.org/app-framework/event/setup-intents');
+  export const SetupIntentResolver = defineEvent('dxos.org/app-framework/event/setup-intent-resolver');
 
   /**
    * Fired before the settings store is activated.
@@ -44,6 +44,11 @@ export namespace Events {
    * Fired before the translations provider is created.
    */
   export const SetupTranslations = defineEvent('dxos.org/app-framework/event/setup-translations');
+
+  /**
+   * Fired to load any newly available artifacts definitions.
+   */
+  export const SetupArtifactDefinition = defineEvent('dxos.org/app-framework/event/setup-artifact-definition');
 
   //
   // Triggered Events
