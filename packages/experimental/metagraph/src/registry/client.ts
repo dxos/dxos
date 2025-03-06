@@ -1,4 +1,6 @@
 import { getTypename, ObjectId, type HasId, type HasTypename } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+import { toPlainObject } from '@dxos/echo-schema';
 
 export type RegistryQuery = {
   /**
@@ -30,7 +32,10 @@ export class RegistryClient {
       }
     }
 
-    const { success, reason } = await this._call('/object', { method: 'POST', body: { objects } });
+    const { success, reason } = await this._call('/object', {
+      method: 'POST',
+      body: { objects: objects.map(toPlainObject) },
+    });
     if (!success) {
       throw new Error(`Failed to publish objects: ${reason}`);
     }
@@ -72,6 +77,7 @@ export class RegistryClient {
     if (query) {
       url.search = query.toString();
     }
+    log.info('call', { method, url: url.toString(), body });
     const response = await fetch(url, {
       method,
       headers:

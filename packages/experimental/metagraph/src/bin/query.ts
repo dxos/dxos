@@ -7,6 +7,6 @@ const client = new RegistryClient(REGISTRY_URL);
 
 console.log(
   await client.query({
-    type: getSchemaDXN(ServiceType)?.toString(),
+    // type: getSchemaDXN(ServiceType)?.toString(),
   }),
 );

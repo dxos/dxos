@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
+import { toPlainObject } from './plain-serializer';
 
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
@@ -20,10 +20,5 @@ export const attachTypedJsonSerializer = (obj: any) => {
 
 // NOTE: KEEP as function.
 const typedJsonSerializer = function (this: any, key: string, value: any) {
-  const { id, [TYPENAME_SYMBOL]: typename, ...rest } = this;
-  return {
-    id,
-    [ECHO_ATTR_TYPE]: typename,
-    ...rest,
-  };
+  return toPlainObject(this);
 };
