@@ -3,9 +3,9 @@
 //
 
 import { existsSync } from 'fs';
+import { createRequire } from 'node:module';
 import { basename, dirname, join } from 'path';
 import pb from 'protobufjs';
-import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 

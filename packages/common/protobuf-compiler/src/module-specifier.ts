@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createRequire } from 'node:module';
 import { isAbsolute, resolve, relative } from 'path';
-import { createRequire } from 'node:module';  
 
 import { invariant } from '@dxos/invariant';
 
