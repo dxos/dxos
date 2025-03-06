@@ -34,6 +34,9 @@ const getSubstitutionType = (substitutionProperty: Symbol, typeChecker: TypeChec
 export const parseSubstitutionsFile = (fileName: string): SubstitutionsMap => {
   const project = new Project({
     tsConfigFilePath: ts.findConfigFile(fileName, ts.sys.fileExists),
+    compilerOptions: {
+      moduleResolution: 99, // NodeNext
+    },
   });
 
   const sourceFile = project.addSourceFileAtPath(fileName);
