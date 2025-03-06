@@ -50,7 +50,7 @@ export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutM
   const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
   const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-  const key = id.split('~')[0];
+  const key = id.split('+')[0];
   const size = deck.plankSizing[key] as number | undefined;
   const setSize = useCallback(
     debounce((nextSize: number) => {
