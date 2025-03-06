@@ -6,10 +6,10 @@ import React, {
   Children,
   type PropsWithChildren,
   forwardRef,
-  useImperativeHandle,
   useState,
-  useEffect,
   useCallback,
+  useEffect,
+  useImperativeHandle,
   useMemo,
 } from 'react';
 
@@ -36,7 +36,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     const [isOverflowing, setIsOverflowing] = useState(false);
     const [scrolledAtTop, setScrolledAtTop] = useState(false);
 
-    // Scroll controller imperative ref
+    // Scroll controller imperative ref.
     useImperativeHandle(
       forwardedRef,
       () => ({
@@ -58,8 +58,8 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       }
     }, [viewport]);
 
+    // Scroll controller imperative ref.
     const reversedChildren = useMemo(() => [...Children.toArray(children)].reverse(), [children]);
-
     useEffect(() => {
       updateScrollState();
     }, [Children.count(children), viewport]);
