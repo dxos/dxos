@@ -29,7 +29,7 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
 
   useEffect(() => {
     call.setRoomId(roomId);
-  }, [roomId]);
+  }, [roomId, call.joined]);
 
   const handleTranscription = useCallback<NonNullable<CallToolbarProps['onTranscription']>>(async () => {
     invariant(target);

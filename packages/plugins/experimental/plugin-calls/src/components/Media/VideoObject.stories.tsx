@@ -7,7 +7,7 @@ import '@dxos-theme';
 import 'preact/debug';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -23,22 +23,22 @@ const meta: Meta<typeof VideoObject> = {
   component: VideoObject,
   render: (args) => {
     log.info('render');
-    const videoTrack = useRef<MediaStreamTrack>();
+    const [videoTrack, setVideoTrack] = useState<MediaStreamTrack>();
     useEffect(() => {
       const ctx = new Context();
       scheduleTask(ctx, async () => {
-        videoTrack.current = await getUserMediaTrack('videoinput');
+        setVideoTrack(await getUserMediaTrack('videoinput'));
       });
 
       return () => {
         void ctx.dispose();
-        videoTrack.current?.stop();
+        videoTrack?.stop();
       };
     }, []);
 
     return (
       <ResponsiveContainer>
-        <VideoObject videoTrack={videoTrack.current} {...args} />;
+        <VideoObject videoTrack={videoTrack} {...args} flip />
       </ResponsiveContainer>
     );
   },

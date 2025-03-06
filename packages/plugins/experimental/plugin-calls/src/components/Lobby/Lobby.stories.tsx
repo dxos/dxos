@@ -5,15 +5,14 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Lobby } from './Lobby';
 import translations from '../../translations';
-import { CallContextProvider } from '../CallContextProvider';
+import { CallGlobalContextProvider } from '../CallGlobalContextProvider';
 
 const meta: Meta<typeof Lobby> = {
   title: 'plugins/plugin-calls/Lobby',
@@ -21,13 +20,12 @@ const meta: Meta<typeof Lobby> = {
   // TODO(burdon): Create decorator for CallContextProvider.
   render: () => {
     // TODO(mykola): Fix.
-    const roomId = useMemo(() => PublicKey.random(), []);
     return (
-      <CallContextProvider>
+      <CallGlobalContextProvider>
         <div className='flex w-[30rem] h-full overflow-hidden'>
-          <Lobby roomId={roomId} />
+          <Lobby />
         </div>
-      </CallContextProvider>
+      </CallGlobalContextProvider>
     );
   },
   decorators: [

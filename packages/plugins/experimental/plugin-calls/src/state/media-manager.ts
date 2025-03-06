@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Event, scheduleTaskInterval } from '@dxos/async';
+import { DeferredTask, Event, scheduleTaskInterval } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
@@ -42,6 +42,7 @@ export class MediaManager extends Resource {
   private readonly _state: MediaState = {};
 
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
+  private _pushTracksTask?: DeferredTask = undefined;
 
   /**
    * @internal
@@ -53,22 +54,26 @@ export class MediaManager extends Resource {
   protected override async _open() {
     this._blackCanvasStreamTrack = createBlackCanvasStreamTrack(this._ctx, this._state.videoTrack);
     this._state.videoTrack = this._blackCanvasStreamTrack;
+    this._pushTracksTask = new DeferredTask(this._ctx, async () => {
+      await this._pushTracks();
+    });
   }
 
   protected override async _close() {
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareVideoTrack?.stop();
+    this._pushTracksTask = undefined;
   }
 
   async join(serviceConfig: CallsServiceConfig) {
     this._state.peer = new CallsServicePeer(serviceConfig);
     await this._state.peer!.open();
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async leave() {
-    await this._state.peer!.close();
+    await this._state.peer?.close();
     this._state.peer = undefined;
   }
 
@@ -76,7 +81,7 @@ export class MediaManager extends Resource {
     this._state.videoTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async turnVideoOff() {
@@ -87,14 +92,14 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = false;
     this.stateUpdated.emit(this._state);
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async turnAudioOn() {
     this._state.audioEnabled = true;
     this._state.audioTrack = await getUserMediaTrack('audioinput');
     this.stateUpdated.emit(this._state);
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async turnAudioOff() {
@@ -102,7 +107,7 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.audioTrack = undefined;
     this.stateUpdated.emit(this._state);
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async turnScreenshareOn() {
@@ -110,7 +115,7 @@ export class MediaManager extends Resource {
     this._state.screenshareVideoTrack = ms?.getVideoTracks()[0];
     this._state.screenshareEnabled = true;
     this.stateUpdated.emit(this._state);
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async turnScreenshareOff() {
@@ -118,7 +123,7 @@ export class MediaManager extends Resource {
     this._state.screenshareVideoTrack?.stop();
     this._state.screenshareVideoTrack = undefined;
     this.stateUpdated.emit(this._state);
-    await this._pushTracks();
+    this._pushTracksTask!.schedule();
   }
 
   async _pushTracks() {

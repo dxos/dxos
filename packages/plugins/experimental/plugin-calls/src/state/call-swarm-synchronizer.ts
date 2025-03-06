@@ -156,23 +156,29 @@ export class CallSwarmSynchronizer extends Resource {
     this._roomId = roomId;
   }
 
+  protected override async _open() {
+    this._sendStateTask = new DeferredTask(this._ctx, async () => {
+      await this._sendState();
+    });
+  }
+
+  protected override async _close() {
+    this._sendStateTask = undefined;
+  }
+
   async join() {
     invariant(this._roomId);
     this._stream = this._networkService.subscribeSwarmState({ topic: this._roomId });
     this._stream.subscribe((event) => this._processSwarmEvent(event));
 
-    this._sendStateTask = new DeferredTask(this._ctx, async () => {
-      await this._sendState();
-    });
     this._notifyAndSchedule();
   }
 
   async leave() {
-    this._sendStateTask = undefined;
-    void this._stream?.close();
+    await this._stream?.close();
     this._stream = undefined;
     if (this._roomId && this._identityKey && this._deviceKey) {
-      void this._networkService.leaveSwarm({
+      await this._networkService.leaveSwarm({
         topic: this._roomId,
         peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
       });
