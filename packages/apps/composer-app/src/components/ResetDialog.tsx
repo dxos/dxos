@@ -6,7 +6,7 @@ import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/react-client';
+import { type Config } from '@dxos/react-client';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -66,11 +66,6 @@ export const ResetDialog = ({
   }, [error]);
 
   const handleReset = async () => {
-    const config = new Config(await Storage(), Envs(), Local(), Defaults());
-
-    const { ClientServicesHost } = await import('@dxos/client-services');
-    const services = new ClientServicesHost({ config });
-    await services.reset();
     localStorage.clear();
     window.location.pathname = '/';
   };
@@ -124,14 +119,14 @@ export const ResetDialog = ({
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button data-testid='resetDialog.reset' variant='ghost'>
-                  {t('reset client label')}
+                  {t('reset app label')}
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content side='top'>
                   <DropdownMenu.Viewport>
                     <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
-                      {t('reset client confirm label')}
+                      {t('reset app confirm label')}
                     </DropdownMenu.Item>
                   </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
