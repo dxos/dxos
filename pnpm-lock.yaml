@@ -4664,6 +4664,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
     devDependencies:
       '@effect/schema':
         specifier: ^0.75.5
@@ -25992,6 +25995,11 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
+  handlebars@4.7.8:
+    resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
+
   happy-dom@13.3.4:
     resolution: {integrity: sha512-2BYMz3V0hUR8+Vgu9Oc6o5ScnlStD8iaamtSI3fw4yIOxZwypAw50EMRvUcKHAtabDVmL/cu2ITxgLubJpQZXQ==}
     engines: {node: '>=16.0.0'}
@@ -32180,6 +32188,11 @@ packages:
 
   ufo@1.5.4:
     resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
+
+  uglify-js@3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
 
   uint64be@2.0.2:
     resolution: {integrity: sha512-9QqdvpGQTXgxthP+lY4e/gIBy+RuqcBaC6JVwT5I3bDLgT/btL6twZMR0pI3/Fgah9G/pdwzIprE5gL6v9UvyQ==}
@@ -50613,6 +50626,15 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
+  handlebars@4.7.8:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
+
   happy-dom@13.3.4:
     dependencies:
       entities: 4.5.0
@@ -58211,6 +58233,9 @@ snapshots:
   uc.micro@1.0.6: {}
 
   ufo@1.5.4: {}
+
+  uglify-js@3.19.3:
+    optional: true
 
   uint64be@2.0.2:
     dependencies:
