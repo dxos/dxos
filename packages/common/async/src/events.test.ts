@@ -89,7 +89,7 @@ describe('Event', () => {
     expect(error.message).to.equal('test');
   });
 
-  test.skip('emitAsync', async () => {
+  test('emitAsync', async () => {
     const event = new Event<number>();
     let called = 0;
     event.on(async (num) => {
