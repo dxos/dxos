@@ -8,7 +8,8 @@ import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { useClient } from '@dxos/react-client';
 
-import { CallsGlobalContext } from '../hooks';
+import { Call } from './Call';
+import { CallsGlobalContext, useIsSpeaking } from '../hooks';
 import { CallManager } from '../state';
 
 export const CallGlobalContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -28,5 +29,17 @@ export const CallGlobalContextProvider: FC<PropsWithChildren> = ({ children }) =
     };
   }, [call]);
 
-  return <CallsGlobalContext.Provider value={{ call }}>{children}</CallsGlobalContext.Provider>;
+  // TODO(mykola): Move to CallManager.
+  const isSpeaking = useIsSpeaking(call.media.audioTrack);
+  useEffect(() => {
+    if (call.joined) {
+      call.setSpeaking(isSpeaking);
+    }
+  }, [isSpeaking, call.joined]);
+
+  return (
+    <CallsGlobalContext.Provider value={{ call }}>
+      <Call.Audio>{children}</Call.Audio>
+    </CallsGlobalContext.Provider>
+  );
 };
