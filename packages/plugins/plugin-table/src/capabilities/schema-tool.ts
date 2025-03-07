@@ -30,9 +30,9 @@ export const TypeNameSchema = S.String.pipe(
   }),
 );
 
-const formatDescription = `The format of the property. Extra information about format schemas:
+const formatDescription = `The format of the property. Additional information:
   ${FormatEnum.LatLong}: ${JSON.stringify(toJsonSchema(GeoPoint))}
-  NOTE: In GeoJSON, Longitude is the first coordinate. Latitude is the second coordinate.`;
+  This tuple is GeoJSON. YOU MUST SPECIFY \`${FormatEnum.LatLong}\` as [Longitude, Latitude]`;
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
