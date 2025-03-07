@@ -1,175 +1,161 @@
 {
-  "extends": [
-    "../../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../../tsconfig.base.json"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+
     "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/context"
+      "path": "../../../common/context",
     },
     {
-      "path": "../../../common/invariant"
+      "path": "../../../common/invariant",
     },
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/random"
+      "path": "../../../common/random",
     },
     {
-      "path": "../../../common/storybook-utils"
+      "path": "../../../common/storybook-utils",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../../core/compute"
+      "path": "../../../core/compute",
     },
     {
-      "path": "../../../core/conductor"
+      "path": "../../../core/conductor",
     },
     {
-      "path": "../../../core/echo/echo-db"
+      "path": "../../../core/echo/echo-db",
     },
     {
-      "path": "../../../core/echo/echo-schema"
+      "path": "../../../core/echo/echo-schema",
     },
     {
-      "path": "../../../core/echo/live-object"
+      "path": "../../../core/echo/live-object",
     },
     {
-      "path": "../../../core/functions"
+      "path": "../../../core/functions",
     },
     {
-      "path": "../../../core/mesh/edge-client"
+      "path": "../../../core/mesh/edge-client",
     },
     {
-      "path": "../../../experimental/artifact"
+      "path": "../../../experimental/artifact",
     },
     {
-      "path": "../../../experimental/artifact-testing"
+      "path": "../../../experimental/artifact-testing",
     },
     {
-      "path": "../../../experimental/assistant"
+      "path": "../../../experimental/assistant",
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../sdk/app-framework",
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/client",
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/react-client",
     },
     {
-      "path": "../../../sdk/react-edge-client"
+      "path": "../../../sdk/react-edge-client",
     },
     {
-      "path": "../../../sdk/schema"
+      "path": "../../../sdk/schema",
     },
     {
-      "path": "../../../ui/react-ui"
+      "path": "../../../ui/react-ui",
     },
     {
-      "path": "../../../ui/react-ui-canvas-compute"
+      "path": "../../../ui/react-ui-canvas-compute",
     },
     {
-      "path": "../../../ui/react-ui-canvas-editor"
+      "path": "../../../ui/react-ui-canvas-editor",
     },
     {
-      "path": "../../../ui/react-ui-components"
+      "path": "../../../ui/react-ui-components",
     },
     {
-      "path": "../../../ui/react-ui-dnd"
+      "path": "../../../ui/react-ui-dnd",
     },
     {
-      "path": "../../../ui/react-ui-editor"
+      "path": "../../../ui/react-ui-editor",
     },
     {
-      "path": "../../../ui/react-ui-form"
+      "path": "../../../ui/react-ui-form",
     },
     {
-      "path": "../../../ui/react-ui-list"
+      "path": "../../../ui/react-ui-list",
     },
     {
-      "path": "../../../ui/react-ui-sfx"
+      "path": "../../../ui/react-ui-sfx",
     },
     {
-      "path": "../../../ui/react-ui-stack"
+      "path": "../../../ui/react-ui-stack",
     },
     {
-      "path": "../../../ui/react-ui-syntax-highlighter"
+      "path": "../../../ui/react-ui-syntax-highlighter",
     },
     {
-      "path": "../../../ui/react-ui-theme"
+      "path": "../../../ui/react-ui-theme",
     },
     {
-      "path": "../../plugin-chess"
+      "path": "../../plugin-chess",
     },
     {
-      "path": "../../plugin-client"
+      "path": "../../plugin-client",
     },
     {
-      "path": "../../plugin-deck"
+      "path": "../../plugin-deck",
     },
     {
-      "path": "../../plugin-graph"
+      "path": "../../plugin-graph",
     },
     {
-      "path": "../../plugin-map"
+      "path": "../../plugin-map",
     },
     {
-      "path": "../../plugin-markdown"
+      "path": "../../plugin-markdown",
     },
     {
-      "path": "../../plugin-sketch"
+      "path": "../../plugin-sketch",
     },
     {
-      "path": "../../plugin-space"
+      "path": "../../plugin-space",
     },
     {
-      "path": "../../plugin-stack"
+      "path": "../../plugin-stack",
     },
     {
-      "path": "../../plugin-table"
+      "path": "../../plugin-table",
     },
     {
-      "path": "../../plugin-wnfs"
+      "path": "../../plugin-wnfs",
     },
     {
-      "path": "../plugin-inbox"
+      "path": "../plugin-inbox",
     },
     {
-      "path": "../plugin-script"
+      "path": "../plugin-script",
     },
     {
-      "path": "../plugin-transcription"
-    }
-  ]
+      "path": "../plugin-transcription",
+    },
+  ],
 }

@@ -5,20 +5,12 @@
     "composite": true,
     "emitDeclarationOnly": false,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+
     "outDir": "dist",
     "target": "ESNext",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
-  "include": [
-    "src/**/*"
-  ],
-  "references": []
+  "exclude": ["dist", "node_modules", "out"],
+  "include": ["src/**/*"],
+  "references": [],
 }

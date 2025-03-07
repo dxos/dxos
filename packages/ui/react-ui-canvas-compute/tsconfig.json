@@ -1,124 +1,115 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+
     "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/context"
+      "path": "../../common/context",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/graph"
+      "path": "../../common/graph",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute",
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/conductor",
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/echo/echo-signals",
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/live-object",
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/functions",
     },
     {
-      "path": "../../core/mesh/edge-client"
+      "path": "../../core/mesh/edge-client",
     },
     {
-      "path": "../../experimental/artifact"
+      "path": "../../experimental/artifact",
     },
     {
-      "path": "../../experimental/artifact-testing"
+      "path": "../../experimental/artifact-testing",
     },
     {
-      "path": "../../experimental/assistant"
+      "path": "../../experimental/assistant",
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/app-framework",
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/react-client",
     },
     {
-      "path": "../../sdk/react-edge-client"
+      "path": "../../sdk/react-edge-client",
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/schema",
     },
     {
-      "path": "../react-ui"
+      "path": "../react-ui",
     },
     {
-      "path": "../react-ui-attention"
+      "path": "../react-ui-attention",
     },
     {
-      "path": "../react-ui-canvas"
+      "path": "../react-ui-canvas",
     },
     {
-      "path": "../react-ui-canvas-editor"
+      "path": "../react-ui-canvas-editor",
     },
     {
-      "path": "../react-ui-editor"
+      "path": "../react-ui-editor",
     },
     {
-      "path": "../react-ui-form"
+      "path": "../react-ui-form",
     },
     {
-      "path": "../react-ui-sfx"
+      "path": "../react-ui-sfx",
     },
     {
-      "path": "../react-ui-stack"
+      "path": "../react-ui-stack",
     },
     {
-      "path": "../react-ui-syntax-highlighter"
+      "path": "../react-ui-syntax-highlighter",
     },
     {
-      "path": "../react-ui-theme"
-    }
-  ]
+      "path": "../react-ui-theme",
+    },
+  ],
 }

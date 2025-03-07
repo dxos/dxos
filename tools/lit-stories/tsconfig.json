@@ -2,24 +2,17 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "outDir": "./dist/types"
+
+    "outDir": "./dist/types",
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
-  "include": [
-    ".storybook/*.ts",
-    "config/**/*.mts"
-  ],
+  "exclude": ["dist", "node_modules", "out"],
+  "include": [".storybook/*.ts", "config/**/*.mts"],
   "references": [
     {
-      "path": "../../packages/ui/react-ui-theme"
+      "path": "../../packages/ui/react-ui-theme",
     },
     {
-      "path": "../vite-plugin-icons"
-    }
-  ]
+      "path": "../vite-plugin-icons",
+    },
+  ],
 }

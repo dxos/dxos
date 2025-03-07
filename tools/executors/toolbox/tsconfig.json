@@ -3,11 +3,9 @@
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "outDir": "dist"
+
+    "outDir": "dist",
   },
-  "include": [
-    "src"
-  ],
-  "references": []
+  "include": ["src"],
+  "references": [],
 }
