@@ -20,8 +20,8 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
+const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
 const userClassNames = 'bg-[--user-fill]';
-const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
 
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
