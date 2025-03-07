@@ -138,7 +138,7 @@ const SUMMARIZE_PROMPT = `
   - Use markdown formatting for headings and bullet points.
   - Format the summary as a list of key points and takeaways.
   - All names of people should be in bold.
-  </FORMATTING/>
+  </FORMATTING>
 
   <NOTE_TAKING>
   - Correlate items in the summary with the person of origin to build a coherent narrative.
