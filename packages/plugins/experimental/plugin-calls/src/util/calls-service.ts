@@ -411,7 +411,7 @@ export class CallsServicePeer extends Resource {
     offer.sdp = offer.sdp?.replace('useinbandfec=1', 'usedtx=1;useinbandfec=1');
     await peerConnection.setLocalDescription(offer);
 
-    const response = await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/close`, {
+    await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/close`, {
       method: 'PUT',
       body: JSON.stringify({
         tracks: [{ mid: transceiver.mid }],
@@ -422,8 +422,6 @@ export class CallsServicePeer extends Resource {
         force: false,
       }),
     });
-
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(response.sessionDescription));
   }
 }
 
