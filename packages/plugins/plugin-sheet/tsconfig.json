@@ -1,8 +1,6 @@
 {
   "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "module": "ESNext",
-
     "types": ["node"],
   },
   "exclude": ["vite.config.ts"],

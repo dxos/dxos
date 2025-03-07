@@ -1,8 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "ESNext",
-  },
+  "compilerOptions": {},
   "exclude": ["dist", "node_modules", "out"],
   "include": [".storybook/*.ts", "config/**/*.mts"],
   "references": [

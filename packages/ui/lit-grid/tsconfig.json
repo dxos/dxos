@@ -3,8 +3,6 @@
   "compilerOptions": {
     "emitDeclarationOnly": false,
 
-    "module": "esnext",
-
     "types": ["node"],
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],

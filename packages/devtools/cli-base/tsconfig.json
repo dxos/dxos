@@ -2,7 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["DOM", "ESNext"],
-    "module": "ESNext",
 
     "types": ["@dxos/typings", "node"],
   },

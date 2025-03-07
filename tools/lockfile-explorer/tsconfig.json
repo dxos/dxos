@@ -4,7 +4,6 @@
     "allowSyntheticDefaultImports": true,
 
     "emitDeclarationOnly": false,
-    "module": "ESNext",
 
     "outDir": "dist",
     "target": "ESNext",
