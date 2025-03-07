@@ -69,7 +69,7 @@ export const PluginItem = ({
 
       <div />
       {(description || homePage || source) && (
-        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pb-3 overflow-y-scroll'>
+        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pb-3'>
           <div className='grow'>
             <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-4')}>{description}</p>
           </div>
