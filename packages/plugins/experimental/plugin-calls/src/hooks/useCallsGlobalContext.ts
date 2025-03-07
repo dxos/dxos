@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type CallManager } from '../call';
+import { type CallManager } from '../state';
 
 export type CallsGlobalContextType = {
   call: CallManager;

@@ -7,40 +7,24 @@ import React, { forwardRef, useEffect, useRef } from 'react';
 import { mx } from '@dxos/react-ui-theme';
 
 export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'ref'> & {
-  videoTrack?: MediaStreamTrack;
+  videoStream?: MediaStream;
   flip?: boolean;
   // TODO(burdon): If screenshare then contain.
   contain?: boolean;
 };
 
 export const VideoObject = forwardRef<HTMLVideoElement, VideoObjectProps>(
-  ({ videoTrack, className, flip, contain, ...rest }, ref) => {
+  ({ videoStream, className, flip, contain, ...rest }, ref) => {
     const internalRef = useRef<HTMLVideoElement | null>(null);
 
     useEffect(() => {
-      const mediaStream = new MediaStream();
-      if (videoTrack) {
-        mediaStream.addTrack(videoTrack);
-      }
-
       const video = internalRef.current;
-      if (video) {
-        video.srcObject = mediaStream;
+      if (video && videoStream) {
+        video.srcObject = videoStream;
         video.setAttribute('autoplay', 'true');
         video.setAttribute('playsinline', 'true');
       }
-
-      return () => {
-        if (videoTrack) {
-          mediaStream.removeTrack(videoTrack);
-        }
-
-        const video = internalRef.current;
-        if (video) {
-          video.srcObject = null;
-        }
-      };
-    }, [videoTrack]);
+    }, [videoStream, internalRef.current]);
 
     return (
       <video

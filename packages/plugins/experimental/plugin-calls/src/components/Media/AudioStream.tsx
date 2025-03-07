@@ -2,20 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useRef } from 'react';
-
-import { scheduleTask, sleep } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
-
-import { useCallContext } from '../../hooks';
+import React, { type FC, useEffect, useRef } from 'react';
 
 export type AudioStreamProps = {
-  tracksToPull: string[];
-  onTrackAdded: (id: string, track: MediaStreamTrack) => void;
-  onTrackRemoved: (id: string, track: MediaStreamTrack) => void;
+  tracks: MediaStreamTrack[];
 };
 
-export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, onTrackRemoved }) => {
+export const AudioStream: FC<AudioStreamProps> = ({ tracks }) => {
   const mediaStreamRef = useRef(new MediaStream());
   const ref = useRef<HTMLAudioElement>(null);
 
@@ -46,79 +39,29 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracksToPull, onTrackAdded, 
   return (
     <>
       <audio ref={ref} autoPlay />
-      {tracksToPull.map((track) => (
-        <AudioTrack
-          key={track}
-          track={track}
-          mediaStream={mediaStreamRef.current}
-          onTrackAdded={(metadata, track) => {
-            onTrackAdded(metadata, track);
-            resetSrcObject();
-          }}
-          onTrackRemoved={(metadata, track) => {
-            onTrackRemoved(metadata, track);
-            resetSrcObject();
-          }}
-        />
+      {tracks.map((track) => (
+        <AudioTrack key={track.id} track={track} mediaStream={mediaStreamRef.current} resetSrcObject={resetSrcObject} />
       ))}
     </>
   );
 };
 
 type AudioTrackProps = {
-  track: string;
+  track: MediaStreamTrack;
   mediaStream: MediaStream;
-} & Pick<AudioStreamProps, 'onTrackAdded' | 'onTrackRemoved'>;
+  resetSrcObject: () => void;
+};
 
-const AudioTrack = ({ track, mediaStream, onTrackAdded, onTrackRemoved }: AudioTrackProps) => {
-  const onTrackAddedRef = useRef(onTrackAdded);
-  onTrackAddedRef.current = onTrackAdded;
-  const onTrackRemovedRef = useRef(onTrackRemoved);
-  onTrackRemovedRef.current = onTrackRemoved;
-
-  const { peer } = useCallContext();
-  const trackData = useMemo(() => {
-    const [sessionId, trackName] = track.split('/');
-    return {
-      sessionId,
-      trackName,
-      location: 'remote',
-    } as const;
-  }, [track]);
-
-  const audioTrack = useRef<MediaStreamTrack>();
+const AudioTrack = ({ track, mediaStream, resetSrcObject }: AudioTrackProps) => {
   useEffect(() => {
-    if (!trackData) {
-      return;
-    }
-
-    const ctx = new Context();
-    scheduleTask(ctx, async () => {
-      // TODO(mykola): Add retry logic. Delete delay.
-      // Wait for the track to be available on CallsService.
-      await cancelWithContext(ctx, sleep(500));
-      const track = await peer?.pullTrack({ trackData, ctx });
-      audioTrack.current = track;
-    });
-
+    const currentTrack = track;
+    mediaStream.addTrack(currentTrack);
+    resetSrcObject();
     return () => {
-      void ctx.dispose();
+      mediaStream.removeTrack(currentTrack);
+      resetSrcObject();
     };
-  }, [trackData, peer?.session]);
-
-  useEffect(() => {
-    if (!audioTrack.current) {
-      return;
-    }
-
-    const currentAudioTrack = audioTrack.current;
-    mediaStream.addTrack(currentAudioTrack);
-    onTrackAddedRef.current(track, currentAudioTrack);
-    return () => {
-      mediaStream.removeTrack(currentAudioTrack);
-      onTrackRemovedRef.current(track, currentAudioTrack);
-    };
-  }, [audioTrack.current, mediaStream, track]);
+  }, [track, mediaStream]);
 
   return null;
 };
