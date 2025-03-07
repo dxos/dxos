@@ -46,6 +46,7 @@ export default () => {
     toasts: [],
     currentUndoId: undefined,
     activeDeck: 'default',
+    previousDeck: 'default',
     decks: {
       default: {
         initialized: false,
@@ -69,7 +70,8 @@ export default () => {
     .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, Deck>>() })
-    .prop({ key: 'activeDeck', type: LocalStorageStore.string() });
+    .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
+    .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
 
   const layout = create<Capabilities.Layout>({
     get mode() {
