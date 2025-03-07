@@ -70,8 +70,8 @@ type GraphDebug = {
   graph: Graph;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
-const isGraphDebug = (data: any): data is GraphDebug => data.graph instanceof Graph;
+const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
+const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph;
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.ReactSurface, [
