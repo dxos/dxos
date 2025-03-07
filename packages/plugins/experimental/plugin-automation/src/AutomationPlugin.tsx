@@ -30,14 +30,14 @@ export const AutomationPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TemplateType.typename,
           metadata: {
-            placeholder: ['template placeholder', { ns: AUTOMATION_PLUGIN }],
+            placeholder: ['template title placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--code-block--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            placeholder: ['chat placeholder', { ns: AUTOMATION_PLUGIN }],
+            placeholder: ['chat title placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },
         }),
@@ -46,7 +46,7 @@ export const AutomationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
+      activate: () => [
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
@@ -54,6 +54,14 @@ export const AutomationPlugin = () =>
             getIntent: (_, options) => createIntent(AutomationAction.CreateChat, { spaceId: options.space.id }),
           }),
         ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: TemplateType,
+            getIntent: () => createIntent(AutomationAction.CreateTemplate),
+          }),
+        ),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
