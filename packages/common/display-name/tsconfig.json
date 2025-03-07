@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
     "types": ["@dxos/typings"],
   },
   "include": ["scripts", "src"],

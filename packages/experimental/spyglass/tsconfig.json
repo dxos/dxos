@@ -2,38 +2,30 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "composite": true,
+
     "module": "CommonJS",
     "moduleResolution": "Node",
     "outDir": "dist",
     "target": "ESNext",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
-  "include": [
-    "src/**/*"
-  ],
+  "exclude": ["dist", "node_modules", "out"],
+  "include": ["src/**/*"],
   "references": [
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/util"
-    }
-  ]
+      "path": "../../common/util",
+    },
+  ],
 }

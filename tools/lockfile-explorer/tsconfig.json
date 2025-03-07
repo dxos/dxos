@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "composite": true,
+
     "emitDeclarationOnly": false,
     "module": "ESNext",
 

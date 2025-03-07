@@ -3,7 +3,6 @@
   "compilerOptions": {
     "lib": ["DOM", "es2019"],
 
-    "skipLibCheck": true,
     "types": ["@dxos/typings", "node"],
   },
   "exclude": ["/dist/", "/node_modules/"],

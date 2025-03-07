@@ -1,10 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
-    ,
-
-    "skipLibCheck": true,
     "types": ["node"],
   },
   "exclude": ["plugin.d.ts", "vite.config.ts"],

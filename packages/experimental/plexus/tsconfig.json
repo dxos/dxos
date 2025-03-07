@@ -1,48 +1,39 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
     "module": "ESNext",
-    "outDir": "dist"
+    "outDir": "dist",
   },
-  "exclude": [
-    "/node_modules/"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["/node_modules/"],
+  "include": ["src"],
   "references": [
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-theme",
     },
     {
-      "path": "../gem-core"
+      "path": "../gem-core",
     },
     {
-      "path": "../gem-spore"
-    }
+      "path": "../gem-spore",
+    },
   ],
   "ts-node": {
     "compilerOptions": {
-      "module": "CommonJS"
+      "module": "CommonJS",
     },
     "files": true,
-    "transpileOnly": true
-  }
+    "transpileOnly": true,
+  },
 }

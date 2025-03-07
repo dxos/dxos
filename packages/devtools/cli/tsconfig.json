@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": ["DOM", "ESNext"],
+
     "module": "ESNext",
 
     "outDir": "dist/src",
