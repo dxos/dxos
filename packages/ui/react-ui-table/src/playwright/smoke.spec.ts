@@ -157,7 +157,7 @@ test.describe('Table', () => {
     await page.getByTestId('save-button').click();
 
     // Scroll to the left.
-    await page.getByRole('gridcell', { name: 'test' }).click();
+    await page.getByRole('gridcell', { name: 'test' }).first().click();
 
     await page.close();
   });
