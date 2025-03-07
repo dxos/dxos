@@ -1,21 +1,16 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist/types"
-  },
-  "include": [
-    "src",
-    "stories"
-  ],
+  "compilerOptions": {},
+  "include": ["src", "stories"],
   "references": [
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../sdk/config"
-    }
-  ]
+      "path": "../../sdk/config",
+    },
+  ],
 }

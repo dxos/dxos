@@ -1,15 +1,8 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
-  "references": []
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "references": [],
 }

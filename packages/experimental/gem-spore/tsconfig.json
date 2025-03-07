@@ -1,34 +1,30 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "strict": false
+    "strict": false,
   },
-  "include": [
-    "src",
-    "stories"
-  ],
+  "include": ["src", "stories"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui",
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-theme",
     },
     {
-      "path": "../gem-core"
-    }
-  ]
+      "path": "../gem-core",
+    },
+  ],
 }

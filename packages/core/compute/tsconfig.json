@@ -1,68 +1,57 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "lib": ["ESNext"],
+
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/context"
+      "path": "../../common/context",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/client",
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/schema",
     },
     {
-      "path": "../echo/echo-db"
+      "path": "../echo/echo-db",
     },
     {
-      "path": "../echo/echo-schema"
+      "path": "../echo/echo-schema",
     },
     {
-      "path": "../echo/live-object"
+      "path": "../echo/live-object",
     },
     {
-      "path": "../functions"
+      "path": "../functions",
     },
     {
-      "path": "../protocols"
-    }
-  ]
+      "path": "../protocols",
+    },
+  ],
 }

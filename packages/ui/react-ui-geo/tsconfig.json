@@ -2,34 +2,31 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "outDir": "./dist/types",
-    "strict": false
+
+    "strict": false,
   },
-  "include": [
-    "data/*.ts",
-    "src"
-  ],
+  "include": ["data/*.ts", "src"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../react-ui"
+      "path": "../react-ui",
     },
     {
-      "path": "../react-ui-theme"
-    }
-  ]
+      "path": "../react-ui-theme",
+    },
+  ],
 }

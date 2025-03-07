@@ -1,66 +1,60 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"],
   },
-  "include": [
-    "src",
-    "tools"
-  ],
+  "include": ["src", "tools"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/context"
+      "path": "../../common/context",
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/crypto",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/client",
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../sdk/schema",
     },
     {
-      "path": "../agent"
+      "path": "../agent",
     },
     {
-      "path": "../echo/echo-db"
+      "path": "../echo/echo-db",
     },
     {
-      "path": "../echo/echo-protocol"
+      "path": "../echo/echo-protocol",
     },
     {
-      "path": "../echo/echo-schema"
+      "path": "../echo/echo-schema",
     },
     {
-      "path": "../echo/live-object"
+      "path": "../echo/live-object",
     },
     {
-      "path": "../mesh/edge-client"
+      "path": "../mesh/edge-client",
     },
     {
-      "path": "../protocols"
-    }
-  ]
+      "path": "../protocols",
+    },
+  ],
 }

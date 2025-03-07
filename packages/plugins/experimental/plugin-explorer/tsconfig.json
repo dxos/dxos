@@ -1,87 +1,75 @@
 {
-  "extends": [
-    "../../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../../tsconfig.base.json"],
   "compilerOptions": {
     "allowJs": true,
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "data/*.js",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["data/*.js", "src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/random"
+      "path": "../../../common/random",
     },
     {
-      "path": "../../../common/storybook-utils"
+      "path": "../../../common/storybook-utils",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../../core/echo/echo-generator"
+      "path": "../../../core/echo/echo-generator",
     },
     {
-      "path": "../../../core/echo/echo-schema"
+      "path": "../../../core/echo/echo-schema",
     },
     {
-      "path": "../../../core/echo/live-object"
+      "path": "../../../core/echo/live-object",
     },
     {
-      "path": "../../../experimental/gem-core"
+      "path": "../../../experimental/gem-core",
     },
     {
-      "path": "../../../experimental/gem-spore"
+      "path": "../../../experimental/gem-spore",
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../sdk/app-framework",
     },
     {
-      "path": "../../../sdk/client"
+      "path": "../../../sdk/client",
     },
     {
-      "path": "../../../sdk/react-client"
+      "path": "../../../sdk/react-client",
     },
     {
-      "path": "../../../ui/react-ui"
+      "path": "../../../ui/react-ui",
     },
     {
-      "path": "../../../ui/react-ui-stack"
+      "path": "../../../ui/react-ui-stack",
     },
     {
-      "path": "../../../ui/react-ui-theme"
+      "path": "../../../ui/react-ui-theme",
     },
     {
-      "path": "../../plugin-client"
+      "path": "../../plugin-client",
     },
     {
-      "path": "../../plugin-graph"
+      "path": "../../plugin-graph",
     },
     {
-      "path": "../../plugin-space"
+      "path": "../../plugin-space",
     },
     {
-      "path": "../plugin-outliner"
+      "path": "../plugin-outliner",
     },
     {
-      "path": "../plugin-search"
-    }
-  ]
+      "path": "../plugin-search",
+    },
+  ],
 }

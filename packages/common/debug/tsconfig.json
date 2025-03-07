@@ -2,20 +2,14 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
-    "lib": [
-      "DOM"
-    ],
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "lib": ["DOM"],
+
+    "types": ["node"],
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
-      "path": "../node-std"
-    }
-  ]
+      "path": "../node-std",
+    },
+  ],
 }

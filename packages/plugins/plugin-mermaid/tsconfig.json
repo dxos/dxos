@@ -1,46 +1,34 @@
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/app-framework",
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui",
     },
     {
-      "path": "../../ui/react-ui-editor"
+      "path": "../../ui/react-ui-editor",
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-theme",
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../plugin-markdown",
     },
     {
-      "path": "../plugin-space"
-    }
-  ]
+      "path": "../plugin-space",
+    },
+  ],
 }

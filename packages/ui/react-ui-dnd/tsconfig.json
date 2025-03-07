@@ -1,22 +1,15 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../react-ui"
+      "path": "../react-ui",
     },
     {
-      "path": "../react-ui-theme"
-    }
-  ]
+      "path": "../react-ui-theme",
+    },
+  ],
 }

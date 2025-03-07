@@ -1,37 +1,25 @@
 {
-  "extends": [
-    "../../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../../tsconfig.base.json"],
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../sdk/app-framework",
     },
     {
-      "path": "../../plugin-help"
+      "path": "../../plugin-help",
     },
     {
-      "path": "../../plugin-navtree"
-    }
-  ]
+      "path": "../../plugin-navtree",
+    },
+  ],
 }

@@ -1,43 +1,31 @@
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/live-object",
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/app-framework",
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui",
     },
     {
-      "path": "../../ui/react-ui-theme"
-    }
-  ]
+      "path": "../../ui/react-ui-theme",
+    },
+  ],
 }

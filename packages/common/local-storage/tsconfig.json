@@ -1,38 +1,34 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist/types"
-  },
-  "include": [
-    "src"
-  ],
+  "compilerOptions": {},
+  "include": ["src"],
   "references": [
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/echo/echo-signals",
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/live-object",
     },
     {
-      "path": "../async"
+      "path": "../async",
     },
     {
-      "path": "../effect"
+      "path": "../effect",
     },
     {
-      "path": "../invariant"
+      "path": "../invariant",
     },
     {
-      "path": "../log"
+      "path": "../log",
     },
     {
-      "path": "../node-std"
+      "path": "../node-std",
     },
     {
-      "path": "../util"
-    }
-  ]
+      "path": "../util",
+    },
+  ],
 }

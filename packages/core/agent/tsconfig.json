@@ -1,77 +1,72 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"],
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/codec-protobuf",
     },
     {
-      "path": "../../common/context"
+      "path": "../../common/context",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/node-std"
+      "path": "../../common/node-std",
     },
     {
-      "path": "../../common/phoenix"
+      "path": "../../common/phoenix",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/client",
     },
     {
-      "path": "../../sdk/client-protocol"
+      "path": "../../sdk/client-protocol",
     },
     {
-      "path": "../../sdk/client-services"
+      "path": "../../sdk/client-services",
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/config",
     },
     {
-      "path": "../echo/echo-db"
+      "path": "../echo/echo-db",
     },
     {
-      "path": "../echo/echo-generator"
+      "path": "../echo/echo-generator",
     },
     {
-      "path": "../echo/echo-schema"
+      "path": "../echo/echo-schema",
     },
     {
-      "path": "../halo/credentials"
+      "path": "../halo/credentials",
     },
     {
-      "path": "../mesh/network-manager"
+      "path": "../mesh/network-manager",
     },
     {
-      "path": "../mesh/rpc"
+      "path": "../mesh/rpc",
     },
     {
-      "path": "../mesh/websocket-rpc"
+      "path": "../mesh/websocket-rpc",
     },
     {
-      "path": "../protocols"
-    }
-  ]
+      "path": "../protocols",
+    },
+  ],
 }

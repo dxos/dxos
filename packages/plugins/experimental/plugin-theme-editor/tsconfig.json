@@ -1,49 +1,37 @@
 {
-  "extends": [
-    "../../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../../tsconfig.base.json"],
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/storybook-utils"
+      "path": "../../../common/storybook-utils",
     },
     {
-      "path": "../../../sdk/app-framework"
+      "path": "../../../sdk/app-framework",
     },
     {
-      "path": "../../../ui/react-ui"
+      "path": "../../../ui/react-ui",
     },
     {
-      "path": "../../../ui/react-ui-editor"
+      "path": "../../../ui/react-ui-editor",
     },
     {
-      "path": "../../../ui/react-ui-menu"
+      "path": "../../../ui/react-ui-menu",
     },
     {
-      "path": "../../../ui/react-ui-stack"
+      "path": "../../../ui/react-ui-stack",
     },
     {
-      "path": "../../../ui/react-ui-theme"
+      "path": "../../../ui/react-ui-theme",
     },
     {
-      "path": "../../plugin-graph"
-    }
-  ]
+      "path": "../../plugin-graph",
+    },
+  ],
 }
