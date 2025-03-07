@@ -17,7 +17,9 @@ import { ResponsiveContainer } from '../ResponsiveGrid';
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(CALLS_PLUGIN);
   const { call } = useCallGlobalContext();
-  const sessionError = call.media.peer?.sessionError;
+  // const sessionError = call.media.peer?.sessionError;
+  // TODO(mykola): Users number is not correct now, we are joining swarm on press of join button.
+  // So we can not scan users list before joining.
   const numUsers = call.users?.filter((user) => user.joined).length ?? 0;
 
   const joinSound = useSoundEffect('JoinCall');
@@ -35,7 +37,7 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
       <Toolbar.Root classNames='justify-between'>
         <IconButton variant='primary' label={t('join call')} onClick={handleJoin} icon='ph--phone-incoming--regular' />
         <div className='grow text-sm text-subdued'>
-          {sessionError ?? `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
+          {/* sessionError ?? */ `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
         </div>
         <MediaButtons />
       </Toolbar.Root>
