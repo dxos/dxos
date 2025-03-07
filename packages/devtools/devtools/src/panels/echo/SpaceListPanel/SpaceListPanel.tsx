@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -26,17 +25,16 @@ type SpaceData = {
   isOpen: boolean;
 };
 
-export const SpaceListPanel: FC = () => {
+export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | undefined) => void }) => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
-  const navigate = useNavigate();
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
 
   const handleSelect = (selection: SpaceData | undefined) => {
     const space = selection && spaces.find((space) => space.key.equals(selection.key));
     setState((state) => ({ ...state, space }));
-    navigate('/echo/space');
+    onSelect?.(selection);
   };
 
   const handleToggleOpen = async (spaceKey: PublicKey) => {

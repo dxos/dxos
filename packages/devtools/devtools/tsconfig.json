@@ -2,122 +2,113 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "jsx": "react",
-    "lib": [
-      "DOM"
-    ],
+    "lib": ["DOM"],
     "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings",
-      "node"
-    ]
+    "types": ["@dxos/typings", "node"],
   },
-  "include": [
-    "scripts",
-    "src"
-  ],
+  "include": ["scripts", "src"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/codec-protobuf",
     },
     {
-      "path": "../../common/context"
+      "path": "../../common/context",
     },
     {
-      "path": "../../common/display-name"
+      "path": "../../common/display-name",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../common/timeframe"
+      "path": "../../common/timeframe",
     },
     {
-      "path": "../../common/tracing"
+      "path": "../../common/tracing",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/conductor",
     },
     {
-      "path": "../../core/echo/automerge"
+      "path": "../../core/echo/automerge",
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-db",
     },
     {
-      "path": "../../core/echo/echo-pipeline"
+      "path": "../../core/echo/echo-pipeline",
     },
     {
-      "path": "../../core/echo/echo-protocol"
+      "path": "../../core/echo/echo-protocol",
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/live-object",
     },
     {
-      "path": "../../core/mesh/edge-client"
+      "path": "../../core/mesh/edge-client",
     },
     {
-      "path": "../../core/mesh/messaging"
+      "path": "../../core/mesh/messaging",
     },
     {
-      "path": "../../core/mesh/network-manager"
+      "path": "../../core/mesh/network-manager",
     },
     {
-      "path": "../../core/mesh/rpc"
+      "path": "../../core/mesh/rpc",
     },
     {
-      "path": "../../core/protocols"
+      "path": "../../core/protocols",
     },
     {
-      "path": "../../experimental/gem-core"
+      "path": "../../experimental/gem-core",
     },
     {
-      "path": "../../experimental/gem-spore"
+      "path": "../../experimental/gem-spore",
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/client",
     },
     {
-      "path": "../../sdk/config"
+      "path": "../../sdk/config",
     },
     {
-      "path": "../../sdk/observability"
+      "path": "../../sdk/observability",
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../sdk/react-client",
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/primitives/react-hooks",
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui",
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui-syntax-highlighter",
     },
     {
-      "path": "../../ui/react-ui-table"
+      "path": "../../ui/react-ui-table",
     },
     {
-      "path": "../../ui/react-ui-theme"
-    }
-  ]
+      "path": "../../ui/react-ui-theme",
+    },
+  ],
 }

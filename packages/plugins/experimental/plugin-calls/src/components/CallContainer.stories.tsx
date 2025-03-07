@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -79,6 +79,7 @@ const meta: Meta<CallContainerProps> = {
         IntentPlugin(),
         CallsPlugin(),
         TranscriptionPlugin(),
+        SettingsPlugin(),
       ],
     }),
     withLayout({ fullscreen: true, tooltips: true }),
