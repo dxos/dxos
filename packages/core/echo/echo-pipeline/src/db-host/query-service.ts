@@ -162,11 +162,11 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     /** visited automerge handles */
     const visited = new Set<string>();
 
-    async function* getObjectsFromHandle(handle: DocHandle<any>): AsyncGenerator<ObjectSnapshot[]> {
+    async function* getObjectsFromHandle(handle: DocHandle<SpaceDoc>): AsyncGenerator<ObjectSnapshot[]> {
       if (visited.has(handle.documentId)) {
         return;
       }
-      const doc: Doc<SpaceDoc> = handle.docSync();
+      const doc = handle.docSync()!;
 
       const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 
@@ -186,7 +186,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(urlString)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc(Context.default(), urlString as DocumentId);
+          const linkHandle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), urlString as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }
