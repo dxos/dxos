@@ -172,6 +172,7 @@ export class MediaManager extends Resource {
 
   private async _reconcilePulledMedia() {
     log('reconciling tracks');
+    // TODO(mykola): Add retry logic, remove sleep.
     // Wait for cloudflare to process the track.
     await cancelWithContext(this._ctx, sleep(1000));
     const trackNames = this._trackToReconcile;

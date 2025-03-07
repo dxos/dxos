@@ -40,7 +40,6 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
     return result.data.object as ReactiveEchoObject<TranscriptType>;
   }, [dispatch, space, target]);
 
-  // TODO(burdon): Move RoomContextProvider to plugin.
   return (
     <StackItem.Content toolbar={false} classNames='w-full'>
       {call.joined ? (

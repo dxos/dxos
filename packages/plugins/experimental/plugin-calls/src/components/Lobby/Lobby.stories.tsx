@@ -19,7 +19,6 @@ const meta: Meta<typeof Lobby> = {
   component: Lobby,
   // TODO(burdon): Create decorator for CallContextProvider.
   render: () => {
-    // TODO(mykola): Fix.
     return (
       <CallGlobalContextProvider>
         <div className='flex w-[30rem] h-full overflow-hidden'>
