@@ -8,15 +8,34 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AssistantDialog, AutomationPanel, ChatContainer, ServiceRegistry, TemplateContainer } from '../components';
-import { AutomationSettings } from '../components/AutomationSettings/AutomationSettings';
+import {
+  AssistantDialog,
+  AutomationPanel,
+  AutomationSettings,
+  ChatContainer,
+  ServiceRegistry,
+  TemplateContainer,
+} from '../components';
 import { AUTOMATION_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType, type AutomationSettingsProps, TemplateType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${AUTOMATION_PLUGIN}/ai-chat`,
+      id: `${AUTOMATION_PLUGIN}/settings`,
+      role: 'article',
+      filter: (data): data is { subject: SettingsStore<AutomationSettingsProps> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === AUTOMATION_PLUGIN,
+      component: ({ data: { subject } }) => <AutomationSettings settings={subject.value} />,
+    }),
+    createSurface({
+      id: ASSISTANT_DIALOG,
+      role: 'dialog',
+      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
+      component: ({ data }) => <AssistantDialog {...data.props} />,
+    }),
+    createSurface({
+      id: `${AUTOMATION_PLUGIN}/chat`,
       role: 'article',
       filter: (data): data is { subject: AIChatType } => data.subject instanceof AIChatType,
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
@@ -40,18 +59,5 @@ export default () =>
       component: ({ data }) => (
         <ServiceRegistry space={isSpace(data.subject) ? data.subject : getSpace(data.subject)!} />
       ),
-    }),
-    createSurface({
-      id: `${AUTOMATION_PLUGIN}/settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<AutomationSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === AUTOMATION_PLUGIN,
-      component: ({ data: { subject } }) => <AutomationSettings settings={subject.value} />,
-    }),
-    createSurface({
-      id: ASSISTANT_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
-      component: ({ data }) => <AssistantDialog {...data.props} />,
     }),
   ]);
