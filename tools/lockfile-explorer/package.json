@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lockfile-explorer",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "private": true,
   "description": "Lockfile explorer.",
   "homepage": "https://dxos.org",
