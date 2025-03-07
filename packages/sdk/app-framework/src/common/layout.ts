@@ -159,6 +159,16 @@ export namespace LayoutAction {
     output: S.Void,
   }) {}
 
+  export class RevertWorkspace extends S.TaggedClass<RevertWorkspace>()(UPDATE_LAYOUT, {
+    input: S.Struct({
+      part: S.Literal('workspace').annotations({ description: 'Switching the workspace.' }),
+      options: S.Struct({
+        revert: S.Literal(true).annotations({ description: 'Revert to the previous workspace.' }),
+      }),
+    }),
+    output: S.Void,
+  }) {}
+
   export class Open extends S.TaggedClass<Open>()(UPDATE_LAYOUT, {
     input: S.Struct({
       part: S.Literal('main').annotations({ description: 'Opening an item in the main content area.' }),

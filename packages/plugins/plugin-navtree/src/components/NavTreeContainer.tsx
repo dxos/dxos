@@ -192,6 +192,11 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [graph, dispatch, isCurrent, isLg],
   );
 
+  const onBack = useCallback(
+    () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
+    [dispatch],
+  );
+
   // TODO(wittjosiah): Factor out hook.
   useEffect(() => {
     return monitorForElements({
@@ -255,6 +260,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     () => ({
       tab,
       onTabChange,
+      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -271,6 +277,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [
       tab,
       onTabChange,
+      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,

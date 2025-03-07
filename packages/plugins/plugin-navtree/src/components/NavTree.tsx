@@ -16,8 +16,8 @@ import { useLoadDescendents } from '../hooks';
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export const NavTree = ({ id, root }: NavTreeProps) => {
-  const { getItems, tab } = useNavTreeContext();
-  const topLevelActions = getItems(root, 'item');
+  const { tab, getItems, onBack } = useNavTreeContext();
+  const topLevelActions = getItems(root, 'item').toSorted((a, b) => byPosition(a.properties, b.properties));
   const topLevelCollections = getItems(root, 'collection');
   const topLevelWorkspaces = getItems(root, 'workspace');
   const topLevelNavigation = getItems(root, 'navigation');
@@ -35,7 +35,7 @@ export const NavTree = ({ id, root }: NavTreeProps) => {
     // NOTE(thure): 74px (rather than rem) is intentional in order to match the size of macOS windowing controls
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
       <L0Menu topLevelItems={l0Items} pinnedItems={pinnedItems} path={path} parent={root} />
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} />
+      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} />
     </Tabs.Root>
   );
 };
