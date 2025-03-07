@@ -53,6 +53,8 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
     },
     [queue, self.name],
   );
+
+  // TODO(mykola): Move to CallManager.
   const transcriber = useTranscriber({
     audioStreamTrack: call.media.audioTrack,
     onSegments: handleSegments,
