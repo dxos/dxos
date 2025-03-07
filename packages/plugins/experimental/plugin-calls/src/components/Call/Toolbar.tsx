@@ -102,7 +102,6 @@ export const CallToolbar = () => {
       transcriber?.startChunksRecording();
     } else {
       disableTimeout.current = setTimeout(() => {
-        log.info('stopping transcription', { transcriber });
         transcriber?.stopChunksRecording();
       }, STOP_TRANSCRIPTION_TIMEOUT);
     }
