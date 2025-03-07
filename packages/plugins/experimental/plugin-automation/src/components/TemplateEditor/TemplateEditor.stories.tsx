@@ -41,7 +41,7 @@ const Render = () => {
   });
 
   return (
-    <div role='none' className='flex w-[30rem] border border-separator overflow-hidden'>
+    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
       <TemplateEditor template={template} />
     </div>
   );

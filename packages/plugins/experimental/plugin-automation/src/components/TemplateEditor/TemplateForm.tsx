@@ -3,7 +3,7 @@
 //
 
 import { type Schema as S } from '@effect/schema';
-import React, { useEffect } from 'react';
+import React, { Fragment, useEffect } from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
@@ -45,64 +45,57 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
       <TemplateEditor template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
 
       {(template.inputs?.length ?? 0) > 0 && (
-        <div className='flex flex-col'>
-          {/* TODO(zan): Improve layout with grid */}
-          <table className='w-full table-fixed border-collapse my-2'>
-            <tbody>
-              {template.inputs?.filter(isNonNullable).map((input) => (
-                <tr key={input.name}>
-                  <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
-                    <code className='px-2'>{input.name}</code>
-                  </td>
-                  <td className='w-[120px] p-1'>
-                    <Input.Root>
-                      <Select.Root
-                        value={String(input.type)}
-                        onValueChange={(type) => {
-                          input.type = getInputType(type) ?? TemplateInputType.VALUE;
-                        }}
-                      >
-                        <Select.TriggerButton placeholder='Type' classNames='is-full' />
-                        <Select.Portal>
-                          <Select.Content>
-                            <Select.Viewport>
-                              {inputTypes.map(({ value, label }) => (
-                                <Select.Option key={value} value={String(value)}>
-                                  {label}
-                                </Select.Option>
-                              ))}
-                            </Select.Viewport>
-                          </Select.Content>
-                        </Select.Portal>
-                      </Select.Root>
-                    </Input.Root>
-                  </td>
-                  <td className='p-1 pr-2'>
-                    {input.type !== undefined &&
-                      [
-                        TemplateInputType.VALUE,
-                        TemplateInputType.CONTEXT,
-                        TemplateInputType.RESOLVER,
-                        TemplateInputType.SCHEMA,
-                      ].includes(input.type) && (
-                        <div>
-                          <Input.Root>
-                            <Input.TextInput
-                              placeholder={t('command placeholder')}
-                              classNames={mx('is-full bg-transparent')}
-                              value={input.value ?? ''}
-                              onChange={(event) => {
-                                input.value = event.target.value;
-                              }}
-                            />
-                          </Input.Root>
-                        </div>
-                      )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
+          {template.inputs?.filter(isNonNullable).map((input) => (
+            <Fragment key={input.name}>
+              <div className='pis-3 text-blueText'>{input.name}</div>
+
+              <Input.Root>
+                <Select.Root
+                  value={String(input.type)}
+                  onValueChange={(type) => {
+                    input.type = getInputType(type) ?? TemplateInputType.VALUE;
+                  }}
+                >
+                  <Select.TriggerButton placeholder='Type' classNames='is-full' />
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {inputTypes.map(({ value, label }) => (
+                          <Select.Option key={value} value={String(value)}>
+                            {label}
+                          </Select.Option>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </Input.Root>
+
+              <div>
+                {input.type !== undefined &&
+                  [
+                    TemplateInputType.VALUE,
+                    TemplateInputType.CONTEXT,
+                    TemplateInputType.RESOLVER,
+                    TemplateInputType.SCHEMA,
+                  ].includes(input.type) && (
+                    <div>
+                      <Input.Root>
+                        <Input.TextInput
+                          placeholder={t('command placeholder')}
+                          classNames={mx('is-full bg-transparent')}
+                          value={input.value ?? ''}
+                          onChange={(event) => {
+                            input.value = event.target.value;
+                          }}
+                        />
+                      </Input.Root>
+                    </div>
+                  )}
+              </div>
+            </Fragment>
+          ))}
         </div>
       )}
     </div>
