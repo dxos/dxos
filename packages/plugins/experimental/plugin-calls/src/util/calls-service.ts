@@ -34,6 +34,7 @@ export type CallsServiceConfig = {
  * API: https://developers.cloudflare.com/calls/https-api/
  * Inspired by client from https://github.com/threepointone/partyserver/tree/main/packages/partytracks
  */
+// TODO(mykola): Expose session errors.
 export class CallsServicePeer extends Resource {
   private readonly _persistentLifecycle = new PersistentLifecycle<Session>({
     start: () => this._startSession(),
@@ -74,11 +75,6 @@ export class CallsServicePeer extends Resource {
 
   get session() {
     return this._persistentLifecycle.state;
-  }
-
-  // TODO(mykola): Expose session errors.
-  get sessionError() {
-    return undefined;
   }
 
   private async _startSession() {
@@ -411,7 +407,7 @@ export class CallsServicePeer extends Resource {
     offer.sdp = offer.sdp?.replace('useinbandfec=1', 'usedtx=1;useinbandfec=1');
     await peerConnection.setLocalDescription(offer);
 
-    const response = await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/close`, {
+    await this._fetch<TracksResponse>(`/sessions/${sessionId}/tracks/close`, {
       method: 'PUT',
       body: JSON.stringify({
         tracks: [{ mid: transceiver.mid }],
@@ -422,8 +418,6 @@ export class CallsServicePeer extends Resource {
         force: false,
       }),
     });
-
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(response.sessionDescription));
   }
 }
 

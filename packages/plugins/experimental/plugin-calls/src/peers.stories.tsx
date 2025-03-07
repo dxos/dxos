@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -16,8 +16,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { useCallsService } from './hooks';
 import { CALLS_URL } from './types';
+import { CallsServicePeer } from './util';
 // @ts-ignore
 import video from '../testing/video.mp4';
 
@@ -55,8 +55,8 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
     apiBase: `${CALLS_URL}/api/calls`,
   };
 
-  const { peer: peerPush } = useCallsService(callsConfig);
-  const { peer: peerPull } = useCallsService(callsConfig);
+  const peerPush = useMemo(() => new CallsServicePeer(callsConfig), []);
+  const peerPull = useMemo(() => new CallsServicePeer(callsConfig), []);
 
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);
@@ -78,10 +78,12 @@ const Render = ({ videoSrc }: { videoSrc: string }) => {
     scheduleTask(ctx, async () => {
       log.info('starting push/pull', { videoStreamTrack });
 
-      // performance.mark('webrtc:begin');
-      // performance.mark('webrtc:end');
-      // const webrtcTime = performance.measure('webrtc', 'webrtc:begin', 'webrtc:end').duration;
-      // setMetrics((prev) => ({ ...prev, 'time to open webrtc [ms]': Math.round(webrtcTime) }));
+      await peerPush.open();
+      await peerPull.open();
+      ctx.onDispose(() => {
+        void peerPush.close();
+        void peerPull.close();
+      });
 
       // Push track to cloudflare.
       performance.mark('push:begin');

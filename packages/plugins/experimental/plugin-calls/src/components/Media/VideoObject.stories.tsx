@@ -7,13 +7,15 @@ import '@dxos-theme';
 import 'preact/debug';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { scheduleTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { VideoObject } from './VideoObject';
-import { useUserMedia } from '../../hooks';
+import { getUserMediaTrack } from '../../util';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
 const meta: Meta<typeof VideoObject> = {
@@ -21,14 +23,24 @@ const meta: Meta<typeof VideoObject> = {
   component: VideoObject,
   render: (args) => {
     log.info('render');
-    const media = useUserMedia();
+    const [videoStream, setVideoStream] = useState<MediaStream>();
     useEffect(() => {
-      media.turnCameraOn();
+      const ctx = new Context();
+      scheduleTask(ctx, async () => {
+        const stream = new MediaStream();
+        stream.addTrack(await getUserMediaTrack('videoinput'));
+        setVideoStream(stream);
+      });
+
+      return () => {
+        void ctx.dispose();
+        videoStream?.getTracks().forEach((track) => track.stop());
+      };
     }, []);
 
     return (
       <ResponsiveContainer>
-        <VideoObject videoTrack={media.state.videoTrack} {...args} />;
+        <VideoObject videoStream={videoStream} {...args} flip />
       </ResponsiveContainer>
     );
   },
