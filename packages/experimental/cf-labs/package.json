@@ -6,6 +6,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "scripts": {
     "dev": "wrangler dev"
   },

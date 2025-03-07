@@ -145,6 +145,7 @@ jobs:
       # - *codecov_upload
       - *store_test_results
 
+  # TODO(dmaretskyi): Remove.
   check_go:
     docker:
       - *docker_image_go
@@ -304,9 +305,9 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
-      - check_go:
-          context:
-            - Github
+      # - check_go:
+      #     context:
+      #       - Github
       - dead_links_check:
           context:
             - Github

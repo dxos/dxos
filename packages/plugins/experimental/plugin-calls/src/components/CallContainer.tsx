@@ -3,21 +3,19 @@
 //
 
 import { pipe } from 'effect';
-import React, { type PropsWithChildren, useCallback, type FC } from 'react';
+import React, { useCallback, useEffect, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { TranscriptionAction, type TranscriptType } from '@dxos/plugin-transcription/types';
 import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Call } from './Call';
-import { CallContextProvider, type CallContextProviderProps } from './CallContextProvider';
+import { Call, type CallToolbarProps } from './Call';
 import { Lobby } from './Lobby';
-import { type CallContextType, useCallContext } from '../hooks';
+import { useCallGlobalContext } from '../hooks';
 
 export type CallContainerProps = {
   space: Space;
@@ -27,45 +25,33 @@ export type CallContainerProps = {
 export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const target = space?.properties[CollectionType.typename]?.target;
+  const { call } = useCallGlobalContext();
 
-  const handleTranscription = useCallback<NonNullable<CallContextProviderProps['onTranscription']>>(async () => {
+  useEffect(() => {
+    call.setRoomId(roomId);
+  }, [roomId, call.joined]);
+
+  const handleTranscription = useCallback<NonNullable<CallToolbarProps['onTranscription']>>(async () => {
     invariant(target);
     const result = await dispatch(
       pipe(createIntent(TranscriptionAction.Create, {}), chain(SpaceAction.AddObject, { target })),
     );
-    log.info('>>> handleTranscription', { result });
     invariant(result.data);
     return result.data.object as ReactiveEchoObject<TranscriptType>;
   }, [dispatch, space, target]);
 
-  // TODO(burdon): Move RoomContextProvider to plugin.
   return (
-    <CallContextProvider roomId={roomId} onTranscription={target ? handleTranscription : undefined}>
-      <StackItem.Content toolbar={false} classNames='w-full'>
-        <WithContext condition={(context) => !context.joined}>
-          <Lobby />
-        </WithContext>
-        <WithContext condition={(context) => context.joined}>
-          <Call.Root>
-            <Call.Room />
-            <Call.Toolbar />
-          </Call.Root>
-        </WithContext>
-      </StackItem.Content>
-    </CallContextProvider>
+    <StackItem.Content toolbar={false} classNames='w-full'>
+      {call.joined ? (
+        <>
+          <Call.Room />
+          <Call.Toolbar onTranscription={handleTranscription} />
+        </>
+      ) : (
+        <Lobby />
+      )}
+    </StackItem.Content>
   );
 };
 
 export default CallContainer;
-
-const WithContext: FC<PropsWithChildren<{ condition: (context: CallContextType) => boolean }>> = ({
-  children,
-  condition,
-}) => {
-  const context = useCallContext();
-  if (!condition(context)) {
-    return null;
-  }
-
-  return <>{children}</>;
-};

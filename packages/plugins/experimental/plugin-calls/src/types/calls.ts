@@ -4,14 +4,14 @@
 
 import { buf } from '@dxos/protocols/buf';
 import {
+  type TranscriptionSchema,
   UserStateSchema,
-  type RoomStateSchema,
   type UserState as UserStateProto,
 } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 export type UserState = buf.MessageInitShape<typeof UserStateSchema>;
 
-export type RoomState = buf.MessageInitShape<typeof RoomStateSchema>;
+export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
 
 export const codec = {
   encode: (message: UserState): Uint8Array => {
@@ -22,16 +22,16 @@ export const codec = {
   },
 };
 
-export type SessionDescription = {
-  type: 'offer' | 'answer';
-  sdp: string;
-};
-
 export type TrackObject = {
   location?: 'local' | 'remote';
   trackName?: string;
   sessionId?: string;
   mid?: string | null;
+};
+
+export type SessionDescription = {
+  type: 'offer' | 'answer';
+  sdp: string;
 };
 
 export interface ErrorResponse {
@@ -51,3 +51,15 @@ export interface TracksResponse extends ErrorResponse {
 }
 
 export interface RenegotiationResponse extends ErrorResponse {}
+
+export type EncodedTrackName = string & { __brand: 'EncodedTrackName' };
+
+export const TrackNameCodec = {
+  encode: (trackData: TrackObject): EncodedTrackName => {
+    return (trackData.sessionId + '/' + trackData.trackName) as EncodedTrackName;
+  },
+  decode: (name: EncodedTrackName): TrackObject => {
+    const [sessionId, trackName] = name.split('/');
+    return { sessionId, trackName, location: 'remote' };
+  },
+};

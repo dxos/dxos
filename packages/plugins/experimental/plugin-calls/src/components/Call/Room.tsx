@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { useCallContext, useDebugMode } from '../../hooks';
+import { useCallGlobalContext, useDebugMode } from '../../hooks';
 import { ParticipantGrid } from '../Participant';
 
 /**
@@ -15,10 +15,10 @@ import { ParticipantGrid } from '../Participant';
 export const CallRoom: FC<ThemedClassName> = ({ classNames }) => {
   const debug = useDebugMode();
   const {
-    call: { room, self },
-  } = useCallContext();
+    call: { users, self },
+  } = useCallGlobalContext();
 
-  return <ParticipantGrid self={self} users={room.users ?? []} debug={debug} />;
+  return <ParticipantGrid self={self} users={users} debug={debug} />;
 };
 
 CallRoom.displayName = 'CallRoom';
