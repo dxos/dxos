@@ -12,7 +12,7 @@
     "jsx": "react-jsx",
     "lib": ["DOM", "ESNext"],
     "module": "Preserve",
-
+    "moduleResolution": "Bundler",
     "outDir": "${configDir}/dist/types",
     "isolatedModules": true,
     "noImplicitOverride": true,
