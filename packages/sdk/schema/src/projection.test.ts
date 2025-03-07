@@ -3,6 +3,7 @@
 //
 
 import { AST, Schema as S } from '@effect/schema';
+import { getPropertySignatures } from '@effect/schema/AST';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoSchemaRegistry } from '@dxos/echo-db';
@@ -17,6 +18,7 @@ import {
   type JsonPath,
   type JsonProp,
   EntityKind,
+  getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
@@ -344,8 +346,8 @@ describe('ViewProjection', () => {
         type: TypeEnum.String,
         format: FormatEnum.SingleSelect,
         options: [
-          { id: 'draft', title: 'Draft', color: '#gray' },
-          { id: 'published', title: 'Published', color: '#green' },
+          { id: 'draft', title: 'Draft', color: 'gray' },
+          { id: 'published', title: 'Published', color: 'green' },
         ],
       },
     });
@@ -353,19 +355,27 @@ describe('ViewProjection', () => {
     // Verify JSON Schema.
     expect(mutable.jsonSchema.properties?.status).to.deep.include({
       type: 'string',
-      format: FormatEnum.SingleSelect,
-      oneOf: [
-        { const: 'draft', title: 'Draft', color: '#gray' },
-        { const: 'published', title: 'Published', color: '#green' },
-      ],
+      format: 'single-select',
+      enum: ['draft', 'published'],
+      echo: {
+        annotations: {
+          singleSelect: {
+            options: [
+              { id: 'draft', title: 'Draft', color: 'gray' },
+              { id: 'published', title: 'Published', color: 'green' },
+            ],
+          },
+        },
+      },
     });
 
     // Verify projection.
     const { props } = projection.getFieldProjection(fieldId);
+
     expect(props.format).to.equal(FormatEnum.SingleSelect);
     expect(props.options).to.deep.equal([
-      { id: 'draft', title: 'Draft', color: '#gray' },
-      { id: 'published', title: 'Published', color: '#green' },
+      { id: 'draft', title: 'Draft', color: 'gray' },
+      { id: 'published', title: 'Published', color: 'green' },
     ]);
 
     // Update options.
@@ -382,11 +392,17 @@ describe('ViewProjection', () => {
     });
 
     // Verify updated JSON Schema.
-    expect(mutable.jsonSchema.properties?.status?.oneOf).to.deep.equal([
-      { const: 'draft', title: 'Draft', color: 'indigo' },
-      { const: 'published', title: 'Published', color: 'blue' },
-      { const: 'archived', title: 'Archived', color: 'amber' },
-    ]);
+    expect(mutable.jsonSchema.properties?.status?.echo).to.deep.include({
+      annotations: {
+        singleSelect: {
+          options: [
+            { id: 'draft', title: 'Draft', color: 'indigo' },
+            { id: 'published', title: 'Published', color: 'blue' },
+            { id: 'archived', title: 'Archived', color: 'amber' },
+          ],
+        },
+      },
+    });
 
     const effectSchema = mutable.getSchemaSnapshot();
 
@@ -394,6 +410,20 @@ describe('ViewProjection', () => {
     expect(() => S.validateSync(effectSchema)({ status: 'published' })).not.to.throw();
     expect(() => S.validateSync(effectSchema)({ status: 'archived' })).not.to.throw();
     expect(() => S.validateSync(effectSchema)({ status: 'invalid-status' })).to.throw();
+
+    const properties = getPropertySignatures(effectSchema.ast);
+    const statusProperty = properties.find((p) => p.name === 'status');
+    invariant(statusProperty);
+    const statusPropertyMeta = getPropertyMetaAnnotation(statusProperty, 'singleSelect');
+
+    // Ensure that the materialized schema contains option annotations.
+    expect(statusPropertyMeta).to.deep.equal({
+      options: [
+        { id: 'draft', title: 'Draft', color: 'indigo' },
+        { id: 'published', title: 'Published', color: 'blue' },
+        { id: 'archived', title: 'Archived', color: 'amber' },
+      ],
+    });
   });
 
   // TODO(burdon): Test changing format.
