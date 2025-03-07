@@ -1,19 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
     "resolveJsonModule": true,
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"],
   },
-  "include": [
-    "scripts",
-    "src"
-  ],
+  "include": ["scripts", "src"],
   "references": [
     {
-      "path": "../keys"
-    }
-  ]
+      "path": "../keys",
+    },
+  ],
 }

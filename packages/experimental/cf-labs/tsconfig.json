@@ -2,9 +2,8 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ESNext"],
-    "module": "Preserve",
+    ,
 
-    "outDir": "./dist/types",
     "types": ["@cloudflare/workers-types"],
   },
   "include": ["src", "vite.config.ts"],

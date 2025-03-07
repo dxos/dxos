@@ -1,113 +1,108 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"],
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/codec-protobuf"
+      "path": "../../../common/codec-protobuf",
     },
     {
-      "path": "../../../common/context"
+      "path": "../../../common/context",
     },
     {
-      "path": "../../../common/crypto"
+      "path": "../../../common/crypto",
     },
     {
-      "path": "../../../common/debug"
+      "path": "../../../common/debug",
     },
     {
-      "path": "../../../common/feed-store"
+      "path": "../../../common/feed-store",
     },
     {
-      "path": "../../../common/hypercore"
+      "path": "../../../common/hypercore",
     },
     {
-      "path": "../../../common/invariant"
+      "path": "../../../common/invariant",
     },
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../../common/kv-store"
+      "path": "../../../common/kv-store",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/node-std"
+      "path": "../../../common/node-std",
     },
     {
-      "path": "../../../common/random-access-storage"
+      "path": "../../../common/random-access-storage",
     },
     {
-      "path": "../../../common/test-utils"
+      "path": "../../../common/test-utils",
     },
     {
-      "path": "../../../common/timeframe"
+      "path": "../../../common/timeframe",
     },
     {
-      "path": "../../../common/tracing"
+      "path": "../../../common/tracing",
     },
     {
-      "path": "../../../common/typings"
+      "path": "../../../common/typings",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../halo/credentials",
     },
     {
-      "path": "../../halo/keyring"
+      "path": "../../halo/keyring",
     },
     {
-      "path": "../../mesh/edge-client"
+      "path": "../../mesh/edge-client",
     },
     {
-      "path": "../../mesh/messaging"
+      "path": "../../mesh/messaging",
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../mesh/network-manager",
     },
     {
-      "path": "../../mesh/teleport"
+      "path": "../../mesh/teleport",
     },
     {
-      "path": "../../mesh/teleport-extension-automerge-replicator"
+      "path": "../../mesh/teleport-extension-automerge-replicator",
     },
     {
-      "path": "../../mesh/teleport-extension-gossip"
+      "path": "../../mesh/teleport-extension-gossip",
     },
     {
-      "path": "../../mesh/teleport-extension-object-sync"
+      "path": "../../mesh/teleport-extension-object-sync",
     },
     {
-      "path": "../../mesh/teleport-extension-replicator"
+      "path": "../../mesh/teleport-extension-replicator",
     },
     {
-      "path": "../../protocols"
+      "path": "../../protocols",
     },
     {
-      "path": "../automerge"
+      "path": "../automerge",
     },
     {
-      "path": "../echo-protocol"
+      "path": "../echo-protocol",
     },
     {
-      "path": "../echo-schema"
+      "path": "../echo-schema",
     },
     {
-      "path": "../indexing"
-    }
-  ]
+      "path": "../indexing",
+    },
+  ],
 }

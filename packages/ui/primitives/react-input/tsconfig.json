@@ -1,23 +1,14 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "lib": ["DOM", "ESNext"],
+
+    "types": ["node"],
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../react-hooks"
-    }
-  ]
+      "path": "../react-hooks",
+    },
+  ],
 }

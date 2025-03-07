@@ -4,7 +4,6 @@
     "lib": ["DOM", "ESNext"],
     "module": "ESNext",
 
-    "outDir": "./dist/types",
     "types": ["node"],
   },
   "exclude": ["**/deprecated/**", "*.t.ts", "vite.config.ts"],

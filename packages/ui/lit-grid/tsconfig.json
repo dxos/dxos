@@ -2,24 +2,15 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "esnext",
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+
+    "types": ["node"],
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../common/test-utils"
-    }
-  ]
+      "path": "../../common/test-utils",
+    },
+  ],
 }

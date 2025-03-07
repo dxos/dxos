@@ -2,77 +2,69 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "esModuleInterop": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "ESNext",
-    "outDir": "./dist/types"
   },
-  "exclude": [
-    "/node_modules/"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["/node_modules/"],
+  "include": ["src"],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/async",
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/debug",
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/invariant",
     },
     {
-      "path": "../../common/local-storage"
+      "path": "../../common/local-storage",
     },
     {
-      "path": "../../common/log"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/random",
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/storybook-utils",
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/util",
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo-schema",
     },
     {
-      "path": "../../core/echo/echo-signals"
+      "path": "../../core/echo/echo-signals",
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/live-object",
     },
     {
-      "path": "../../experimental/artifact"
+      "path": "../../experimental/artifact",
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/primitives/react-hooks",
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../ui/react-ui",
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui-syntax-highlighter",
     },
     {
-      "path": "../app-graph"
+      "path": "../app-graph",
     },
     {
-      "path": "../client-protocol"
-    }
+      "path": "../client-protocol",
+    },
   ],
   "ts-node": {
     "compilerOptions": {
-      "module": "CommonJS"
+      "module": "CommonJS",
     },
     "files": true,
-    "transpileOnly": true
-  }
+    "transpileOnly": true,
+  },
 }

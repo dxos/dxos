@@ -1,27 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist/types"
-  },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
-  "include": [
-    ".storybook/*.ts",
-    ".storybook/*.tsx",
-    "config/**/*.mts"
-  ],
+  "compilerOptions": {},
+  "exclude": ["dist", "node_modules", "out"],
+  "include": [".storybook/*.ts", ".storybook/*.tsx", "config/**/*.mts"],
   "references": [
     {
-      "path": "../../packages/common/log"
+      "path": "../../packages/common/log",
     },
     {
-      "path": "../../packages/ui/react-ui-theme"
+      "path": "../../packages/ui/react-ui-theme",
     },
     {
-      "path": "../vite-plugin-icons"
-    }
-  ]
+      "path": "../vite-plugin-icons",
+    },
+  ],
 }

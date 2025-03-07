@@ -1,46 +1,34 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "es2019"
-    ],
-    "outDir": "./dist/types",
+    "lib": ["DOM", "es2019"],
+
     "skipLibCheck": true,
-    "types": [
-      "@dxos/typings",
-      "node",
-      "wicg-file-system-access"
-    ]
+    "types": ["@dxos/typings", "node", "wicg-file-system-access"],
   },
-  "exclude": [
-    "/dist/",
-    "/node_modules/"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["/dist/", "/node_modules/"],
+  "include": ["src"],
   "references": [
     {
-      "path": "../async"
+      "path": "../async",
     },
     {
-      "path": "../debug"
+      "path": "../debug",
     },
     {
-      "path": "../invariant"
+      "path": "../invariant",
     },
     {
-      "path": "../log"
+      "path": "../log",
     },
     {
-      "path": "../node-std"
+      "path": "../node-std",
     },
     {
-      "path": "../tracing"
+      "path": "../tracing",
     },
     {
-      "path": "../util"
-    }
-  ]
+      "path": "../util",
+    },
+  ],
 }
