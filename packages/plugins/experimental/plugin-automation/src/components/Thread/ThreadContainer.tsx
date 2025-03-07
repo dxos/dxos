@@ -9,18 +9,27 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Thread } from './Thread';
+import { Thread, type ThreadProps } from './Thread';
 import { useChatProcessor, useMessageQueue } from '../../hooks';
-import { type AIChatType } from '../../types';
+import { type AIChatType, type AutomationSettingsProps } from '../../types';
+
+export type ThreadContainerProps = {
+  chat?: AIChatType;
+  settings?: AutomationSettingsProps;
+  onOpenChange?: (open: boolean) => void;
+} & Pick<ThreadProps, 'debug' | 'transcription'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
-export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType; onOpenChange?: (open: boolean) => void }>> = ({
+export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   classNames,
   chat,
+  settings,
   onOpenChange,
+  ...props
 }) => {
+  // Push up capabilities hooks out of components.
   const space = getSpace(chat);
-  const processor = useChatProcessor(space);
+  const processor = useChatProcessor(space, settings);
   const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
@@ -28,7 +37,7 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType; onOpenChan
     (text: string) => {
       // Don't accept input if still processing.
       if (processor.streaming.value) {
-        log.warn('still processing');
+        log.warn('ignoring submit; still processing.');
         return false;
       }
 
@@ -62,6 +71,7 @@ export const ThreadContainer: FC<ThemedClassName<{ chat?: AIChatType; onOpenChan
       error={processor.error.value}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
+      {...props}
     />
   );
 };

@@ -67,6 +67,10 @@ export default [
         'prompt placeholder': 'Ask a question...',
         'microphone button': 'Click to speak',
         'cancel processing button': 'Stop processing',
+
+        'settings custom prompts label': 'Custom prompts',
+        'settings llm model label': 'LLM model',
+        'settings default llm model label': 'Default Model',
       },
     },
   },

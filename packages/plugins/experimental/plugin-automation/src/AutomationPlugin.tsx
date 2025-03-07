@@ -10,7 +10,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 
-import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, AutomationSettings } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { AutomationAction, AIChatType, ServiceType, TemplateType } from './types';
@@ -22,6 +22,11 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: AutomationSettings,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

@@ -9,7 +9,8 @@ import { ObjectId } from '@dxos/echo-schema';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(
+// TODO(burdon): Move to service config retrieved by HTTP?
+export const DEFAULT_LLM_MODELS = [
   '@anthropic/claude-3-5-haiku-20241022',
   '@anthropic/claude-3-5-sonnet-20241022',
   '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
@@ -17,7 +18,9 @@ export const LLMModel = S.Literal(
   '@ollama/llama-3-2-3b',
   '@ollama/llama-3-1-nemotron-70b-instruct',
   '@ollama/llama-3-1-nemotron-mini-4b-instruct',
-);
+];
+
+export const LLMModel = S.Literal(...DEFAULT_LLM_MODELS);
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 

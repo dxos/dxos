@@ -30,6 +30,7 @@ export const TypeNameSchema = S.String.pipe(
   }),
 );
 
+// when return a geopoint YOU MUST return in the form [Longitude, Latitude]
 const formatDescription = `The format of the property. Extra information about format schemas:
   ${FormatEnum.LatLong}: ${JSON.stringify(toJsonSchema(GeoPoint))}
   NOTE: In GeoJSON, Longitude is the first coordinate. Latitude is the second coordinate.`;

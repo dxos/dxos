@@ -6,6 +6,7 @@ import { lazy } from 'react';
 
 export * from './AssistantDialog';
 export * from './AutomationPanel';
+export * from './AutomationSettings';
 export * from './ChatContainer';
 export * from './ServiceRegistry';
 export * from './TemplateEditor';

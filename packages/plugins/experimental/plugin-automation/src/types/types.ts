@@ -30,3 +30,12 @@ export namespace AutomationAction {
     }),
   }) {}
 }
+
+export const AutomationSettingsSchema = S.mutable(
+  S.Struct({
+    llmModel: S.optional(S.String),
+    customPrompts: S.optional(S.Boolean),
+  }),
+);
+
+export type AutomationSettingsProps = S.Schema.Type<typeof AutomationSettingsSchema>;

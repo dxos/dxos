@@ -4,9 +4,7 @@
 
 import React, { type CSSProperties, useCallback, useMemo, useRef } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -22,6 +20,7 @@ export type ThreadProps = ThemedClassName<{
   space?: Space;
   messages?: Message[];
   collapse?: boolean;
+  transcription?: boolean;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
   Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
@@ -34,6 +33,7 @@ export const Thread = ({
   space,
   messages,
   collapse = true,
+  transcription,
   processing,
   error,
   debug,
@@ -42,8 +42,6 @@ export const Thread = ({
   onPrompt,
   onDelete,
 }: ThreadProps) => {
-  const hasTrascription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
-
   const scroller = useRef<ScrollController>(null);
 
   const identity = useIdentity();
@@ -94,7 +92,7 @@ export const Thread = ({
 
       {onSubmit && (
         <PromptBar
-          microphone={hasTrascription}
+          microphone={transcription}
           processing={processing}
           error={error}
           onSubmit={handleSubmit}

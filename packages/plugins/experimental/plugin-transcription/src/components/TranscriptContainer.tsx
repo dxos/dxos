@@ -101,6 +101,7 @@ const summarizeTranscript = async (
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
     await aiService.generate({
+      // TODO(burdon): Use settings.
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
