@@ -7,9 +7,9 @@ import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { create, refFromDXN } from '@dxos/live-object';
 
-import { AutomationAction, AIChatType } from '../types';
+import { AutomationAction, AIChatType, TemplateType } from '../types';
 
-export default () =>
+export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
@@ -23,4 +23,16 @@ export default () =>
         },
       }),
     }),
-  );
+  ),
+  contributes(
+    Capabilities.IntentResolver,
+    createResolver({
+      intent: AutomationAction.CreateTemplate,
+      resolve: ({ name }) => ({
+        data: {
+          object: create(TemplateType, { name, source: '{{! Template }}' }),
+        },
+      }),
+    }),
+  ),
+];

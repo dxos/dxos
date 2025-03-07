@@ -7,9 +7,9 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { AssistantDialog, AutomationPanel, ChatContainer, ServiceRegistry } from '../components';
+import { AssistantDialog, AutomationPanel, ChatContainer, ServiceRegistry, TemplateContainer } from '../components';
 import { AUTOMATION_PLUGIN, ASSISTANT_DIALOG } from '../meta';
-import { AIChatType } from '../types';
+import { AIChatType, TemplateType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -18,6 +18,12 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: AIChatType } => data.subject instanceof AIChatType,
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
+    }),
+    createSurface({
+      id: `${AUTOMATION_PLUGIN}/template`,
+      role: 'article',
+      filter: (data): data is { subject: TemplateType } => data.subject instanceof TemplateType,
+      component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
     }),
     createSurface({
       id: `${AUTOMATION_PLUGIN}/automation`,

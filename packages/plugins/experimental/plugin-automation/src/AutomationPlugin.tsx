@@ -8,12 +8,12 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { RefArray, isEchoObject, getSpace } from '@dxos/react-client/echo';
+import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { AUTOMATION_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { AutomationAction, ChainPromptType, ChainType, AIChatType, ServiceType } from './types';
+import { AutomationAction, AIChatType, ServiceType, TemplateType } from './types';
 
 // TODO(wittjosiah): Rename to AssistantPlugin?
 export const AutomationPlugin = () =>
@@ -28,18 +28,16 @@ export const AutomationPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: ChainType.typename,
+          id: TemplateType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
-            icon: 'ph--magic-wand--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (chain: ChainType) => await RefArray.loadAll(chain.prompts ?? []),
+            placeholder: ['template placeholder', { ns: AUTOMATION_PLUGIN }],
+            icon: 'ph--code-block--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
+            placeholder: ['chat placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--atom--regular',
           },
         }),
@@ -60,8 +58,7 @@ export const AutomationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(ClientCapabilities.Schema, [ChainType, ChainPromptType, FunctionTrigger, ServiceType]),
+      activate: () => contributes(ClientCapabilities.Schema, [FunctionTrigger, ServiceType, TemplateType]),
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,

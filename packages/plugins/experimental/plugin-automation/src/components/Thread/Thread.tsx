@@ -71,11 +71,11 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <>
+    <div role='none' className={mx('flex flex-col grow', classNames)}>
       <ScrollContainer ref={scroller} fade>
         <div
           role='none'
-          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6', classNames)}
+          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6')}
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
@@ -101,6 +101,6 @@ export const Thread = ({
           onCancel={onCancel}
         />
       )}
-    </>
+    </div>
   );
 };

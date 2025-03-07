@@ -5,6 +5,7 @@
 import { S } from '@dxos/echo-schema';
 
 import { AIChatType } from './chat';
+import { TemplateType } from './template';
 import { AUTOMATION_PLUGIN } from '../meta';
 
 export namespace AutomationAction {
@@ -17,6 +18,15 @@ export namespace AutomationAction {
     }),
     output: S.Struct({
       object: AIChatType,
+    }),
+  }) {}
+
+  export class CreateTemplate extends S.TaggedClass<CreateTemplate>()(`${AUTOMATION_ACTION}/create-template`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: TemplateType,
     }),
   }) {}
 }

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { IntentPlugin, Capabilities, useCapabilities } from '@dxos/app-framework';
+import { IntentPlugin, Capabilities, useCapabilities, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/artifact-testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -22,9 +22,7 @@ import { Toolbox } from './Toolbox';
 const Render = () => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   return (
-    <div>
-      <Toolbox artifacts={artifactDefinitions} classNames='w-[30rem] h-[15rem] rounded-md border border-neutral-500' />
-    </div>
+    <Toolbox artifacts={artifactDefinitions} classNames='w-[30rem] h-[15rem] rounded-md border border-separator' />
   );
 };
 
@@ -42,6 +40,7 @@ const meta: Meta<typeof Toolbox> = {
           },
         }),
         SpacePlugin({ observability: false }),
+        SettingsPlugin(),
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
