@@ -39,7 +39,8 @@ export const CallGlobalContextProvider: FC<PropsWithChildren> = ({ children }) =
 
   return (
     <CallsGlobalContext.Provider value={{ call }}>
-      <Call.Audio>{children}</Call.Audio>
+      <Call.Audio />
+      <div className={'flex flex-col w-full h-full overflow-hidden'}>{children}</div>
     </CallsGlobalContext.Provider>
   );
 };

@@ -4,27 +4,30 @@
 
 import React, { useMemo } from 'react';
 
-import { Json } from '@dxos/react-ui-syntax-highlighter';
-
-import { useCallGlobalContext, usePulledAudioTrack, usePulledVideoTrack } from '../../hooks';
-import { type UserState } from '../../types';
-import { type CallsServicePeer } from '../../util';
+import { useCallGlobalContext } from '../../hooks';
+import { type EncodedTrackName, type UserState } from '../../types';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
 
 export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
   const { call } = useCallGlobalContext();
   const isSelf: boolean = call.self.id !== undefined && user.id !== undefined && user.id.startsWith(call.self.id);
-  const isScreenshare = user.tracks?.screenshare;
-  const pulledAudioTrack = usePulledAudioTrack(isScreenshare ? undefined : user.tracks?.audio);
-  const pulledVideoTrack = usePulledVideoTrack(isScreenshare || !isSelf ? user.tracks?.video : undefined);
+  const isScreenshare = user.tracks?.screenshare as EncodedTrackName;
+  const pulledVideoStream = call.getVideoStream(
+    isScreenshare || !isSelf ? (user.tracks?.video as EncodedTrackName) : undefined,
+  );
 
-  const audioTrack = isSelf ? call.media.audioTrack : pulledAudioTrack;
-  const videoTrack = isSelf && !isScreenshare ? call.media.videoTrack : pulledVideoTrack;
+  const videoStream: MediaStream | undefined = useMemo(() => {
+    if (isSelf && call.media.videoTrack) {
+      const stream = new MediaStream();
+      stream.addTrack(call.media.videoTrack);
+      return stream;
+    }
 
-  // Debug.
-  const audioMid = useMid({ track: audioTrack, peer: call.media.peer });
-  const videoMid = useMid({ track: videoTrack, peer: call.media.peer });
+    if (!isSelf) {
+      return pulledVideoStream;
+    }
+  }, [isSelf, pulledVideoStream, call.media.videoTrack]);
 
   return (
     <ResponsiveGridItem
@@ -33,41 +36,14 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
       name={user.name}
       self={isSelf}
       screenshare={!!isScreenshare}
-      mute={audioTrack ? !audioTrack.enabled : false}
+      mute={user ? !user.tracks?.audioEnabled : false}
       wave={user.raisedHand}
       speaking={user.speaking}
       debug={debug}
     >
-      <VideoObject videoTrack={videoTrack} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
-
-      {debug && (
-        <div className='absolute top-1 left-1'>
-          <Json
-            classNames='text-xs'
-            data={{
-              audioMid,
-              videoMid,
-              audioSettings: audioTrack?.getSettings(),
-              videoSettings: videoTrack?.getSettings(),
-            }}
-          />
-        </div>
-      )}
+      <VideoObject videoStream={videoStream} flip={isSelf && !isScreenshare} contain={!!isScreenshare} />
     </ResponsiveGridItem>
   );
 };
 
 Participant.displayName = 'Participant';
-
-/**
- * Get the track's media ID.
- */
-const useMid = ({ track, peer }: { track?: MediaStreamTrack; peer?: CallsServicePeer }) => {
-  const transceivers = useMemo(() => peer?.session?.peerConnection.getTransceivers(), [peer?.session?.peerConnection]);
-
-  if (!track) {
-    return null;
-  }
-
-  return transceivers?.find((t) => t.sender.track === track || t.receiver.track === track)?.mid;
-};

@@ -5,10 +5,12 @@
 import { type PublicKey, type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { create } from '@dxos/live-object';
+import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
-import { type TranscriptionState, CALLS_URL, TrackNameCodec } from '../types';
+import { type TranscriptionState, CALLS_URL, type EncodedTrackName, TrackNameCodec } from '../types';
 
 export type GlobalState = { call: CallState; media: MediaState };
 
@@ -20,7 +22,11 @@ export class CallManager extends Resource {
    * Live object state. Is changed on internal events.
    * CAUTION: Do not change directly.
    */
-  private readonly _state = create<GlobalState>({ call: {}, media: {} });
+  private readonly _state = create<GlobalState>({
+    call: {},
+    media: { pulledAudioTracks: {}, pulledVideoStreams: {} },
+  });
+
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
 
@@ -56,6 +62,14 @@ export class CallManager extends Resource {
     return this._state.media;
   }
 
+  get pulledAudioTracks() {
+    return Object.values(this._state.media.pulledAudioTracks).map((track) => track.track);
+  }
+
+  getVideoStream(name?: EncodedTrackName): MediaStream | undefined {
+    return name ? this._state.media.pulledVideoStreams[name]?.stream : undefined;
+  }
+
   setRoomId(roomId: PublicKey) {
     this._swarmSynchronizer._setRoomId(roomId);
   }
@@ -69,6 +83,7 @@ export class CallManager extends Resource {
   }
 
   setTranscription(transcription: TranscriptionState) {
+    log.info('setTranscription', { transcription });
     this._swarmSynchronizer.setTranscription(transcription);
   }
 
@@ -113,15 +128,8 @@ export class CallManager extends Resource {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
       }
     });
-    this._swarmSynchronizer.stateUpdated.on(this._ctx, () => this._updateState());
-    this._mediaManager.stateUpdated.on(this._ctx, (state) => {
-      this._swarmSynchronizer.setTracks({
-        video: TrackNameCodec.encode(state.pushedVideoTrack),
-        audio: TrackNameCodec.encode(state.pushedAudioTrack),
-        screenshare: TrackNameCodec.encode(state.pushedScreenshareTrack),
-      });
-      this._updateState();
-    });
+    this._swarmSynchronizer.stateUpdated.on(this._ctx, (state) => this._onCallStateUpdated(state));
+    this._mediaManager.stateUpdated.on(this._ctx, (state) => this._onMediaStateUpdated(state));
     this._ctx.onDispose(() => subscription.unsubscribe());
   }
 
@@ -147,6 +155,30 @@ export class CallManager extends Resource {
     await this._mediaManager.leave();
   }
 
+  private _onCallStateUpdated(state: CallState) {
+    const tracksToPull = state.users
+      ?.filter((user) => user.joined && user.id !== state.self?.id)
+      ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
+      .filter(isNonNullable)
+      .map((track) => TrackNameCodec.decode(track as EncodedTrackName));
+    void this._mediaManager._schedulePullTracks(tracksToPull);
+
+    this._updateState();
+  }
+
+  private _onMediaStateUpdated(state: MediaState) {
+    this._swarmSynchronizer.setTracks({
+      video: state.pushedVideoTrack ? TrackNameCodec.encode(state.pushedVideoTrack) : undefined,
+      audio: state.pushedAudioTrack ? TrackNameCodec.encode(state.pushedAudioTrack) : undefined,
+      screenshare: state.pushedScreenshareTrack ? TrackNameCodec.encode(state.pushedScreenshareTrack) : undefined,
+    });
+
+    this._updateState();
+  }
+
+  /**
+   * Only this method is allowed to change state.
+   */
   private _updateState() {
     this._state.call = this._swarmSynchronizer._getState();
     this._state.media = this._mediaManager._getState();

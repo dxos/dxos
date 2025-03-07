@@ -55,10 +55,7 @@ export interface RenegotiationResponse extends ErrorResponse {}
 export type EncodedTrackName = string & { __brand: 'EncodedTrackName' };
 
 export const TrackNameCodec = {
-  encode: (trackData?: TrackObject): EncodedTrackName | undefined => {
-    if (!trackData) {
-      return undefined;
-    }
+  encode: (trackData: TrackObject): EncodedTrackName => {
     return (trackData.sessionId + '/' + trackData.trackName) as EncodedTrackName;
   },
   decode: (name: EncodedTrackName): TrackObject => {

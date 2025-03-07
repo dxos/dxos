@@ -53,9 +53,9 @@ export type CallSwarmSynchronizerParams = { networkService: NetworkService };
  * Sends and receives state to/from Swarm network.
  */
 export class CallSwarmSynchronizer extends Resource {
+  private readonly _state: CallState = { transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } } };
   public readonly stateUpdated = new Event<CallState>();
 
-  private readonly _state: CallState = { transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } } };
   private readonly _networkService: NetworkService;
 
   private _identityKey?: string = undefined;
@@ -83,6 +83,7 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
+    log.info('setRaisedHand', { raisedHand });
     this._state.raisedHand = raisedHand;
     this._notifyAndSchedule();
   }
@@ -92,6 +93,7 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
+    log.info('setSpeaking', { speaking });
     this._state.speaking = speaking;
     this._notifyAndSchedule();
   }
@@ -101,6 +103,7 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
+    log.info('setJoined', { joined });
     this._state.joined = joined;
     this._notifyAndSchedule();
   }
@@ -114,6 +117,7 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
+    log.info('setTracks', { tracks });
     this._state.tracks = { ...this._state.tracks, ...tracks };
     this._notifyAndSchedule();
   }
@@ -125,6 +129,8 @@ export class CallSwarmSynchronizer extends Resource {
       ...transcription,
       lamportTimestamp: LamportTimestampCrdt.increment(currentTranscription?.lamportTimestamp ?? {}) as any,
     };
+
+    log.info('setTranscription', { transcription });
     this._notifyAndSchedule();
   }
 
@@ -134,6 +140,7 @@ export class CallSwarmSynchronizer extends Resource {
   _setIdentity(identity: Identity) {
     this._identityKey = identity.identityKey.toHex();
     this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
+    log.info('setIdentity', { identity });
   }
 
   /**
@@ -142,6 +149,7 @@ export class CallSwarmSynchronizer extends Resource {
   _setDevice(device: Device) {
     this._deviceKey = device.deviceKey.toHex();
     this._state.transcription!.lamportTimestamp!.id = this._deviceKey;
+    log.info('setDevice', { device });
   }
 
   /**
@@ -153,6 +161,7 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
+    log.info('setRoomId', { roomId });
     this._roomId = roomId;
   }
 
@@ -192,6 +201,7 @@ export class CallSwarmSynchronizer extends Resource {
    * Notify and schedule send state task.
    */
   private _notifyAndSchedule() {
+    log.info('notifyAndSchedule', { state: this._state });
     this.stateUpdated.emit(this._state);
     if (this._state.joined) {
       this._sendStateTask?.schedule();

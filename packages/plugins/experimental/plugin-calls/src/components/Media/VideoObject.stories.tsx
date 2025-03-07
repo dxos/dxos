@@ -23,22 +23,24 @@ const meta: Meta<typeof VideoObject> = {
   component: VideoObject,
   render: (args) => {
     log.info('render');
-    const [videoTrack, setVideoTrack] = useState<MediaStreamTrack>();
+    const [videoStream, setVideoStream] = useState<MediaStream>();
     useEffect(() => {
       const ctx = new Context();
       scheduleTask(ctx, async () => {
-        setVideoTrack(await getUserMediaTrack('videoinput'));
+        const stream = new MediaStream();
+        stream.addTrack(await getUserMediaTrack('videoinput'));
+        setVideoStream(stream);
       });
 
       return () => {
         void ctx.dispose();
-        videoTrack?.stop();
+        videoStream?.getTracks().forEach((track) => track.stop());
       };
     }, []);
 
     return (
       <ResponsiveContainer>
-        <VideoObject videoTrack={videoTrack} {...args} flip />
+        <VideoObject videoStream={videoStream} {...args} flip />
       </ResponsiveContainer>
     );
   },

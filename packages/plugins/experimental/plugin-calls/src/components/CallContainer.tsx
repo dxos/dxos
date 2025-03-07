@@ -13,8 +13,8 @@ import { TranscriptionAction, type TranscriptType } from '@dxos/plugin-transcrip
 import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Call } from './Call';
-import { type CallToolbarProps } from './Call/Toolbar';
+import { Call, type CallToolbarProps } from './Call';
+import { Lobby } from './Lobby';
 import { useCallGlobalContext } from '../hooks';
 
 export type CallContainerProps = {
@@ -49,7 +49,7 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
           <Call.Toolbar onTranscription={handleTranscription} />
         </>
       ) : (
-        <Call.Lobby />
+        <Lobby />
       )}
     </StackItem.Content>
   );
