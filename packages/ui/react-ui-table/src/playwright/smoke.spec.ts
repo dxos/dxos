@@ -128,7 +128,7 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test.only('reference > reference / create new object', async ({ browser, browserName }) => {
+  test('reference > reference / create new object', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
