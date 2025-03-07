@@ -83,7 +83,6 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
     }
 
     if (call.speaking) {
-      log.info('starting transcription');
       if (disableTimeout.current) {
         clearTimeout(disableTimeout.current);
         disableTimeout.current = null;
@@ -92,7 +91,6 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
       transcriber?.startChunksRecording();
     } else {
       disableTimeout.current = setTimeout(() => {
-        log.info('stopping transcription');
         transcriber?.stopChunksRecording();
       }, STOP_TRANSCRIPTION_TIMEOUT);
     }
