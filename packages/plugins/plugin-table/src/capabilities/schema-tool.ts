@@ -18,6 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
+import { makeSingleSelectAnnotations } from '@dxos/schema';
 
 // TODO(ZaymonFC): Move this somewhere common.
 export const TypeNameSchema = S.String.pipe(
@@ -131,10 +132,7 @@ export const schemaTools = [
       //   to all formats.
       for (const prop of properties) {
         if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.SingleSelect;
-          registeredSchema.jsonSchema.properties![prop.name].oneOf = prop.config.options.map(
-            ({ id, title, color }) => ({ const: id, title, color }),
-          );
+          makeSingleSelectAnnotations(registeredSchema.jsonSchema.properties![prop.name], [...prop.config.options]);
         }
 
         if (prop.format === FormatEnum.LatLong) {
