@@ -7,6 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     "./_/config": {
       "import": "./dist/lib/browser/_/config.mjs",

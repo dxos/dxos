@@ -8,6 +8,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
