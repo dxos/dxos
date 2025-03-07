@@ -126,6 +126,7 @@ export class CallManager extends Resource {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
       }
     });
+
     this._swarmSynchronizer.stateUpdated.on(this._ctx, (state) => this._onCallStateUpdated(state));
     this._mediaManager.stateUpdated.on(this._ctx, (state) => this._onMediaStateUpdated(state));
     this._ctx.onDispose(() => subscription.unsubscribe());

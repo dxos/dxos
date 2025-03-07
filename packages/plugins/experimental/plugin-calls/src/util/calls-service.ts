@@ -34,6 +34,7 @@ export type CallsServiceConfig = {
  * API: https://developers.cloudflare.com/calls/https-api/
  * Inspired by client from https://github.com/threepointone/partyserver/tree/main/packages/partytracks
  */
+// TODO(mykola): Expose session errors.
 export class CallsServicePeer extends Resource {
   private readonly _persistentLifecycle = new PersistentLifecycle<Session>({
     start: () => this._startSession(),
@@ -74,11 +75,6 @@ export class CallsServicePeer extends Resource {
 
   get session() {
     return this._persistentLifecycle.state;
-  }
-
-  // TODO(mykola): Expose session errors.
-  get sessionError() {
-    return undefined;
   }
 
   private async _startSession() {

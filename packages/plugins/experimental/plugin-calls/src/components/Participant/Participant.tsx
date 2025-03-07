@@ -18,16 +18,14 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
   );
 
   const videoStream: MediaStream | undefined = useMemo(() => {
-    if (isSelf && call.media.videoTrack) {
-      const stream = new MediaStream();
-      stream.addTrack(call.media.videoTrack);
-      return stream;
+    if (isSelf && call.media.videoStream) {
+      return call.media.videoStream;
     }
 
     if (!isSelf) {
       return pulledVideoStream;
     }
-  }, [isSelf, pulledVideoStream, call.media.videoTrack]);
+  }, [isSelf, pulledVideoStream, call.media.videoStream]);
 
   return (
     <ResponsiveGridItem

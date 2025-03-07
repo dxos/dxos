@@ -18,6 +18,7 @@ export type MediaState = {
   videoDeviceId?: string;
   videoEnabled?: boolean;
   videoTrack?: MediaStreamTrack;
+  videoStream?: MediaStream;
 
   screenshareEnabled?: boolean;
   screenshareVideoTrack?: MediaStreamTrack;
@@ -48,7 +49,7 @@ export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
   private readonly _state: MediaState = { pulledVideoStreams: {}, pulledAudioTracks: {} };
 
-  private _tracksToPull: EncodedTrackName[] = [];
+  private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
@@ -63,6 +64,9 @@ export class MediaManager extends Resource {
   protected override async _open() {
     this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack(this._ctx);
     this._state.videoTrack = this._blackCanvasStreamTrack;
+    this._state.videoStream = new MediaStream();
+    this._state.videoStream.addTrack(this._state.videoTrack);
+
     this._pushTracksTask = new DeferredTask(this._ctx, async () => {
       await this._pushTracks();
     });
@@ -73,6 +77,7 @@ export class MediaManager extends Resource {
   }
 
   protected override async _close() {
+    this._state.videoTrack && this._state.videoStream?.removeTrack(this._state.videoTrack);
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareVideoTrack?.stop();
@@ -89,12 +94,15 @@ export class MediaManager extends Resource {
   async leave() {
     await Promise.all(Object.values(this._state.pulledAudioTracks).map(({ ctx }) => ctx.dispose()));
     await Promise.all(Object.values(this._state.pulledVideoStreams).map(({ ctx }) => ctx.dispose()));
+    this._trackToReconcile = [];
     await this._state.peer?.close();
     this._state.peer = undefined;
   }
 
   async turnVideoOn() {
+    this._state.videoStream!.removeTrack(this._state.videoTrack!);
     this._state.videoTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
+    this._state.videoStream!.addTrack(this._state.videoTrack);
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
@@ -102,8 +110,10 @@ export class MediaManager extends Resource {
 
   async turnVideoOff() {
     if (this._state.videoTrack !== this._blackCanvasStreamTrack) {
+      this._state.videoStream!.removeTrack(this._state.videoTrack!);
       this._state.videoTrack?.stop();
       this._state.videoTrack = this._blackCanvasStreamTrack;
+      this._state.videoStream!.addTrack(this._state.videoTrack!);
     }
 
     this._state.videoEnabled = false;
@@ -146,18 +156,22 @@ export class MediaManager extends Resource {
    * @internal
    */
   _schedulePullTracks(tracks?: EncodedTrackName[]) {
-    if (!tracks || tracks.length === 0) {
+    if (
+      !tracks ||
+      (this._trackToReconcile.every((name) => tracks.includes(name)) && this._trackToReconcile.length === tracks.length)
+    ) {
       return;
     }
 
-    this._tracksToPull = tracks;
+    this._trackToReconcile = tracks;
     this._pullTracksTask!.schedule();
   }
 
   private async _reconcilePulledMedia() {
+    log('reconciling tracks');
     // Wait for cloudflare to process the track.
-    await sleep(700);
-    const trackNames = this._tracksToPull;
+    await cancelWithContext(this._ctx, sleep(1000));
+    const trackNames = this._trackToReconcile;
 
     const tracksToPull = trackNames.filter(
       (name) => !this._state.pulledAudioTracks[name] && !this._state.pulledVideoStreams[name],
@@ -182,7 +196,9 @@ export class MediaManager extends Resource {
       tracksToPull.map(async (name) => {
         const ctx = this._ctx.derive();
         const trackData = TrackNameCodec.decode(name);
-        const track = await this._state.peer!.pullTrack({ trackData, ctx }).catch((err) => log.catch(err));
+        const track = await this._state
+          .peer!.pullTrack({ trackData, ctx })
+          .catch((err) => log.warn('Error while pulling track', { err }));
 
         if (track?.kind === 'audio') {
           this._state.pulledAudioTracks[name] = { track, ctx };
@@ -204,6 +220,10 @@ export class MediaManager extends Resource {
     // Close old tracks.
     await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
 
+    log('reconciled tracks', {
+      audioTracks: Object.keys(this._state.pulledAudioTracks),
+      videoStreams: Object.keys(this._state.pulledVideoStreams),
+    });
     this.stateUpdated.emit(this._state);
   }
 
@@ -269,17 +289,16 @@ const createBlackCanvasStreamTrack = async (ctx: Context) => {
 
   const canvasCtx = canvas.getContext('2d');
   invariant(canvasCtx);
-
   const drawFrame = () => {
     canvasCtx.fillStyle = 'black';
     canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
   };
-
   scheduleTaskInterval(ctx, async () => drawFrame(), 1_000);
 
   const track = canvas.captureStream().getVideoTracks()[0];
+  drawFrame();
 
   await cancelWithContext(ctx, waitForCondition({ condition: () => track.readyState === 'live', timeout: 1_000 }));
 
-  return canvas.captureStream().getVideoTracks()[0];
+  return track;
 };

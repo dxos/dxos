@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useCallback, useEffect, useMemo } from 'react';
+import React, { type FC, useCallback } from 'react';
 
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -26,12 +26,10 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
     void joinSound.play().catch((err) => log.catch(err));
   }, [joinSound]);
 
-  const videoStream = useMediaStream(call.media.videoTrack);
-
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
       <ResponsiveContainer>
-        <VideoObject flip muted videoStream={videoStream} />
+        <VideoObject flip muted videoStream={call.media.videoStream} />
       </ResponsiveContainer>
 
       <Toolbar.Root classNames='justify-between'>
@@ -46,19 +44,3 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
 };
 
 Lobby.displayName = 'Lobby';
-
-const useMediaStream = (track?: MediaStreamTrack) => {
-  const stream = useMemo(() => new MediaStream(), []);
-  useEffect(() => {
-    if (!track) {
-      return;
-    }
-
-    stream.addTrack(track);
-    return () => {
-      stream.removeTrack(track);
-    };
-  }, [stream, track]);
-
-  return stream;
-};
