@@ -244,6 +244,7 @@ export class CallSwarmSynchronizer extends Resource {
 
 type LamportTimestamp = TranscriptionState['lamportTimestamp'];
 
+// TODO(mykola): Factor out.
 class LamportTimestampCrdt {
   static getLastState<T extends { lamportTimestamp?: LamportTimestamp }>(states: T[]): T {
     const maxTimestamp = Math.max(...states.map((state) => state.lamportTimestamp?.version ?? 0));

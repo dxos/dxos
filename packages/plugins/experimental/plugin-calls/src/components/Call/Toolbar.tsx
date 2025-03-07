@@ -46,10 +46,10 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
   );
   const handleSegments = useCallback(
     async (segments: TranscriptSegment[]) => {
-      const block = createStatic(TranscriptBlock, { author: self.name, segments });
+      const block = createStatic(TranscriptBlock, { author: call.self.name, segments });
       queue?.append([block]);
     },
-    [queue, self.name],
+    [queue, call.self.name],
   );
 
   // TODO(mykola): Move to CallManager.
@@ -114,7 +114,7 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
 
   const handleToggleTranscription = async () => {
     const newTranscription: TranscriptionState = { enabled: !call.transcription.enabled };
-    if (call.transcription.enabled && !call.transcription.queueDxn) {
+    if (newTranscription.enabled && !call.transcription.queueDxn) {
       const object = await onTranscription?.();
       if (object?.queue) {
         newTranscription.queueDxn = object.queue;
