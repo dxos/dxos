@@ -13,7 +13,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
+import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../components';
 
 const MAX_LOGS = 2_000;
 
@@ -61,9 +61,11 @@ export const LoggingPanel = () => {
   }
 
   // Filtering.
+  const [text, setText] = useState('');
   // TODO(burdon): Store in context.
   const [query, setQuery] = useState<QueryLogsRequest>({});
   const onSearchChange = (text: string) => {
+    setText(text);
     if (!text) {
       setQuery({});
     }
@@ -83,11 +85,20 @@ export const LoggingPanel = () => {
     setLogs((logs) => [...logs.slice(-MAX_LOGS), logEntry]);
   }, [logEntry]);
 
+  const presets = [
+    { value: 'verbose', label: 'Verbose' },
+    { value: 'debug', label: 'Debug' },
+    { value: 'info', label: 'Info' },
+    { value: 'warn', label: 'Warn' },
+    { value: 'error', label: 'Error' },
+  ];
+
   return (
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' onChange={onSearchChange} />
+          <Select items={presets} onValueChange={onSearchChange} />
+          <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
           <Toolbar.Button onClick={() => setLogs([])}>
             <Trash className={getSize(5)} />
           </Toolbar.Button>

@@ -7,10 +7,11 @@ import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { type Client } from '@dxos/react-client';
 import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 
-import { AppGraphBuilder, DebugSettings, ReactSurface } from './capabilities';
+import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
 import { DEBUG_PLUGIN, meta } from './meta';
 import translations from './translations';
 
+// TODO(wittjosiah): Rename to DevtoolsPlugin?
 export const DebugPlugin = () => {
   setupDevtools();
 
@@ -35,6 +36,11 @@ export const DebugPlugin = () => {
           icon: 'ph--bug--regular',
           filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
         }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-context`,
+      activatesOn: Events.Startup,
+      activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
