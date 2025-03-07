@@ -11,7 +11,6 @@ import { type DebugSettingsProps, DebugSettingsSchema } from '../types';
 export default () => {
   const settings = create<DebugSettingsProps>({
     debug: true,
-    devtools: true,
   });
 
   return contributes(Capabilities.Settings, { schema: DebugSettingsSchema, prefix: DEBUG_PLUGIN, value: settings });

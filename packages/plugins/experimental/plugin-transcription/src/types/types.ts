@@ -3,15 +3,12 @@
 //
 
 import { S, isInstanceOf } from '@dxos/echo-schema';
-import { type buf } from '@dxos/protocols/buf';
-import { type TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { isReactiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptSchema, TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 
 // TODO(burdon): Move to separate proto.
-export type TranscriptionState = buf.MessageInitShape<typeof TranscriptionSchema>;
 
 /**
  * Endpoint to the calls service.

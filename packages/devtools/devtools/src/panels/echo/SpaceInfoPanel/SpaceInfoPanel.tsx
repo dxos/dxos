@@ -12,15 +12,20 @@ import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { FeedTable } from './FeedTable';
-import { PipelineTable } from './PipelineTable';
+import { FeedTable, type FeedTableProps } from './FeedTable';
+import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
 import { SyncStateInfo } from './SyncStateInfo';
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
-export const SpaceInfoPanel: FC = () => {
+export type SpaceInfoPanelProps = {
+  onSelectFeed?: FeedTableProps['onSelect'];
+  onSelectPipeline?: PipelineTableProps['onSelect'];
+};
+
+export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
   const [, forceUpdate] = useState({});
   const { space } = useDevtoolsState();
 
@@ -70,8 +75,8 @@ export const SpaceInfoPanel: FC = () => {
       {space && metadata && (
         <div className='flex flex-col gap-4'>
           <SpaceProperties space={space} metadata={metadata} />
-          <PipelineTable state={pipelineState ?? {}} metadata={metadata} />
-          <FeedTable />
+          <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+          <FeedTable onSelect={props.onSelectFeed} />
           <SyncStateInfo />
         </div>
       )}

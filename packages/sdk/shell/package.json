@@ -7,8 +7,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
-    ".": "./dist/bundle/shell.mjs",
+    ".": "./dist/bundle/shell.js",
     "./style.css": "./dist/bundle/style.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",

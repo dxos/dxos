@@ -7,6 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "imports": {
     "#node-datachannel": {
       "browser": "./module-stub.mjs",

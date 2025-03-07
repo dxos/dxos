@@ -81,9 +81,6 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
       <DeprecatedFormInput label={t('settings show debug panel')}>
         <Input.Switch checked={settings.debug} onCheckedChange={(checked) => (settings.debug = !!checked)} />
       </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings show devtools panel')}>
-        <Input.Switch checked={settings.devtools} onCheckedChange={(checked) => (settings.devtools = !!checked)} />
-      </DeprecatedFormInput>
       <DeprecatedFormInput label={t('settings wireframe')}>
         <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
       </DeprecatedFormInput>

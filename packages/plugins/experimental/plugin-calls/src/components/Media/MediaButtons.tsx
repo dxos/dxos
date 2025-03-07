@@ -2,27 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
+import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { type UserMedia } from '../../hooks';
+import { useCallGlobalContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 
-export const MediaButtons: FC<{ userMedia: UserMedia }> = ({ userMedia }) => {
+export const MediaButtons = () => {
   const { t } = useTranslation(CALLS_PLUGIN);
+  const { call } = useCallGlobalContext();
   return (
     <>
       <IconButton
-        icon={userMedia.state.audioEnabled ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
-        label={userMedia.state.audioEnabled ? t('mic off') : t('mic on')}
-        onClick={userMedia.state.audioEnabled ? userMedia.turnMicOff : userMedia.turnMicOn}
+        icon={call.media.audioEnabled ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
+        label={call.media.audioEnabled ? t('mic off') : t('mic on')}
+        onClick={
+          call.media.audioEnabled
+            ? () => call.turnAudioOff().catch((err) => log.catch(err))
+            : () => call.turnAudioOn().catch((err) => log.catch(err))
+        }
         iconOnly
       />
       <IconButton
-        icon={userMedia.state.videoEnabled ? 'ph--video-camera--regular' : 'ph--video-camera-slash--regular'}
-        label={userMedia.state.videoEnabled ? t('camera off') : t('camera on')}
-        onClick={userMedia.state.videoEnabled ? userMedia.turnCameraOff : userMedia.turnCameraOn}
+        icon={call.media.videoEnabled ? 'ph--video-camera--regular' : 'ph--video-camera-slash--regular'}
+        label={call.media.videoEnabled ? t('camera off') : t('camera on')}
+        onClick={
+          call.media.videoEnabled
+            ? () => call.turnVideoOff().catch((err) => log.catch(err))
+            : () => call.turnVideoOn().catch((err) => log.catch(err))
+        }
         iconOnly
       />
     </>
