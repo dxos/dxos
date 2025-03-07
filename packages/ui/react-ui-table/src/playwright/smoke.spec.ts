@@ -145,7 +145,7 @@ test.describe('Table', () => {
     await page.getByRole('option', { name: 'Anita Mayer' }).click();
 
     // Assert that the value is shown in the cell.
-    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toBeVisible();
+    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' }).first()).toBeVisible();
 
     // Create new object.
     await table.grid.cell(4, 1, 'grid').click();
@@ -157,7 +157,7 @@ test.describe('Table', () => {
     await page.getByTestId('save-button').click();
 
     // Scroll to the left.
-    await page.getByRole('gridcell', { name: 'test' }).click();
+    await page.getByRole('gridcell', { name: 'test' }).first().click();
 
     await page.close();
   });
@@ -173,7 +173,7 @@ test.describe('Table', () => {
     await page.getByTestId('table-switch').nth(7).click();
 
     // Test that checks are durable in the data model by sorting.
-    await table.sortColumn(1, 'descending');
+    await table.sortColumn(3, 'descending');
 
     // Assert the first two switch checkboxes are checked.
     await expect(page.getByTestId('table-switch').first()).toBeChecked();
