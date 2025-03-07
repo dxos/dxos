@@ -24,6 +24,10 @@ export default () =>
       role: 'complementary--calls',
       component: ({ data, role }) => {
         const space = isSpace(data.subject) ? data.subject : getSpace(data.subject)!;
+        if (!space) {
+          return null;
+        }
+
         return <CallContainer space={space} roomId={space.key} />;
       },
     }),
