@@ -1,56 +1,64 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
-
-    "types": ["@dxos/typings", "node"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../common/async",
+      "path": "../../common/async"
     },
     {
-      "path": "../../common/debug",
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/invariant",
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std",
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/agent",
+      "path": "../../core/agent"
     },
     {
-      "path": "../../core/echo/echo-schema",
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/protocols",
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../sdk/client",
+      "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-protocol",
+      "path": "../../sdk/client-protocol"
     },
     {
-      "path": "../../sdk/client-services",
+      "path": "../../sdk/client-services"
     },
     {
-      "path": "../../sdk/config",
+      "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/observability",
-    },
+      "path": "../../sdk/observability"
+    }
   ],
   "ts-node": {
-    "transpileOnly": true,
-  },
+    "transpileOnly": true
+  }
 }

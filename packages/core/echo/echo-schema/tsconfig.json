@@ -1,36 +1,41 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@dxos/typings"],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../../common/debug",
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/effect",
+      "path": "../../../common/effect"
     },
     {
-      "path": "../../../common/invariant",
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../../../common/keys",
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/log",
+      "path": "../../../common/log"
     },
     {
-      "path": "../../../common/node-std",
+      "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/util",
+      "path": "../../../common/util"
     },
     {
-      "path": "../echo-protocol",
+      "path": "../echo-protocol"
     },
     {
-      "path": "../echo-signals",
-    },
-  ],
+      "path": "../echo-signals"
+    }
+  ]
 }

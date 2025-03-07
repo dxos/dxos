@@ -2,19 +2,24 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "declarationDir": "dist/types",
-
-    "types": ["@dxos/typings", "node"],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../invariant",
+      "path": "../invariant"
     },
     {
-      "path": "../keys",
+      "path": "../keys"
     },
     {
-      "path": "../node-std",
-    },
-  ],
+      "path": "../node-std"
+    }
+  ]
 }

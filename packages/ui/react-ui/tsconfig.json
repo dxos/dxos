@@ -1,37 +1,47 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["plugin.d.ts", "vite.config.ts"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "exclude": [
+    "plugin.d.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/debug",
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/random",
+      "path": "../../common/random"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../primitives/react-hooks",
+      "path": "../primitives/react-hooks"
     },
     {
-      "path": "../primitives/react-input",
+      "path": "../primitives/react-input"
     },
     {
-      "path": "../primitives/react-list",
+      "path": "../primitives/react-list"
     },
     {
-      "path": "../react-ui-theme",
+      "path": "../react-ui-theme"
     },
     {
-      "path": "../react-ui-types",
-    },
-  ],
+      "path": "../react-ui-types"
+    }
+  ]
 }

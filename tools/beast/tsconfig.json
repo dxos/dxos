@@ -2,19 +2,26 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-
     "emitDeclarationOnly": false,
     "module": "CommonJS",
     "moduleResolution": "Node",
     "outDir": "dist",
     "target": "ESNext",
-    "types": ["node"],
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["dist", "node_modules", "out"],
-  "include": ["src/**/*"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "out"
+  ],
+  "include": [
+    "src/**/*"
+  ],
   "references": [
     {
-      "path": "../../packages/common/log",
-    },
-  ],
+      "path": "../../packages/common/log"
+    }
+  ]
 }

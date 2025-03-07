@@ -1,8 +1,14 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM"],
+    "lib": [
+      "DOM"
+    ],
+    "outDir": "./dist/types"
   },
-  "include": ["src", "test"],
-  "references": [],
+  "include": [
+    "src",
+    "test"
+  ],
+  "references": []
 }

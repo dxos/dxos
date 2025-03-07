@@ -1,25 +1,30 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {},
-  "include": ["src", "stories"],
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
   "references": [
     {
-      "path": "../../ui/react-ui",
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-theme",
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../invariant",
+      "path": "../invariant"
     },
     {
-      "path": "../node-std",
+      "path": "../node-std"
     },
     {
-      "path": "../storybook-utils",
+      "path": "../storybook-utils"
     },
     {
-      "path": "../util",
-    },
-  ],
+      "path": "../util"
+    }
+  ]
 }

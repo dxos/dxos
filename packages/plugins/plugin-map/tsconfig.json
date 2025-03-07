@@ -1,81 +1,92 @@
 {
-  "extends": ["../../../tsconfig.base.json"],
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["*.t.ts", "vite.config.ts"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/async",
+      "path": "../../common/async"
     },
     {
-      "path": "../../common/effect",
+      "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant",
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/local-storage",
+      "path": "../../common/local-storage"
     },
     {
-      "path": "../../common/storybook-utils",
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-schema",
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/live-object",
+      "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../experimental/artifact",
+      "path": "../../experimental/artifact"
     },
     {
-      "path": "../../experimental/assistant",
+      "path": "../../experimental/assistant"
     },
     {
-      "path": "../../sdk/app-framework",
+      "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/react-client",
+      "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema",
+      "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/react-ui",
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-form",
+      "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-geo",
+      "path": "../../ui/react-ui-geo"
     },
     {
-      "path": "../../ui/react-ui-stack",
+      "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme",
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../plugin-client",
+      "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph",
+      "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-space",
+      "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack",
+      "path": "../plugin-stack"
     },
     {
-      "path": "../plugin-table",
-    },
-  ],
+      "path": "../plugin-table"
+    }
+  ]
 }

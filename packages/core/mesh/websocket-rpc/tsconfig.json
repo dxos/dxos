@@ -1,22 +1,26 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {},
-  "include": ["src"],
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../../common/async",
+      "path": "../../../common/async"
     },
     {
-      "path": "../../../common/log",
+      "path": "../../../common/log"
     },
     {
-      "path": "../../../common/node-std",
+      "path": "../../../common/node-std"
     },
     {
-      "path": "../../protocols",
+      "path": "../../protocols"
     },
     {
-      "path": "../rpc",
-    },
-  ],
+      "path": "../rpc"
+    }
+  ]
 }

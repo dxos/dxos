@@ -2,13 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-
-    "outDir": "dist",
+    "outDir": "dist"
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../packages/common/log",
-    },
-  ],
+      "path": "../../packages/common/log"
+    }
+  ]
 }

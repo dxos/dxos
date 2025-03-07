@@ -1,13 +1,17 @@
 {
   "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {},
-  "include": ["src"],
+  "compilerOptions": {
+    "outDir": "./dist/types"
+  },
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../../common/log",
+      "path": "../../../common/log"
     },
     {
-      "path": "../rpc",
-    },
-  ],
+      "path": "../rpc"
+    }
+  ]
 }

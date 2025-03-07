@@ -1,15 +1,21 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@dxos/typings"],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings"
+    ]
   },
-  "include": ["scripts", "src"],
+  "include": [
+    "scripts",
+    "src"
+  ],
   "references": [
     {
-      "path": "../node-std",
+      "path": "../node-std"
     },
     {
-      "path": "../random",
-    },
-  ],
+      "path": "../random"
+    }
+  ]
 }
