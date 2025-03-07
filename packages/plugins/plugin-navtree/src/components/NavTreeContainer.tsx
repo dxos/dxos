@@ -130,7 +130,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(node).filter((node) => !isActionLike(node));
-        if (item) {
+        if (item && item.data) {
           await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] }));
         }
       }

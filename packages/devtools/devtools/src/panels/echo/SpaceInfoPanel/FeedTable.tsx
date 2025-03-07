@@ -3,7 +3,6 @@
 //
 
 import React, { type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -29,9 +28,12 @@ const columns: TableColumnDef<FeedInfo, any>[] = [
   }),
 ];
 
-export const FeedTable: FC = () => {
+export type FeedTableProps = {
+  onSelect?: (feed: FeedInfo | undefined) => void;
+};
+
+export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
   const { space } = useDevtoolsState();
-  const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
 
   // TODO(burdon): Constant updates.
@@ -47,7 +49,7 @@ export const FeedTable: FC = () => {
 
   const handleSelect = (selected: FeedInfo | undefined) => {
     setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
-    navigate('/echo/feeds');
+    onSelect?.(selected);
   };
 
   return (
