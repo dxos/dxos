@@ -18,7 +18,7 @@ import { covertFunctionToTool, createToolsFromService } from '../tools';
 import { type AutomationSettingsProps, ServiceType } from '../types';
 
 /**
- * Creates a processor for the chat.
+ * Configure and create ChatProcessor.
  */
 export const useChatProcessor = (space?: Space, settings?: AutomationSettingsProps): ChatProcessor => {
   const aiClient = useCapability(AutomationCapabilities.AiClient);
@@ -63,10 +63,10 @@ export const useChatProcessor = (space?: Space, settings?: AutomationSettingsPro
   // Create processor.
   // TODO(burdon): Updated on each query update above. Should just update current processor.
   const processor = useMemo(() => {
-    log.info('creating processor...');
+    log.info('creating processor...', { settings });
     return new ChatProcessor(aiClient, tools, extensions, {
       // TODO(burdon): Remove defualt (let backend decide if not specified).
-      model: settings?.llmModel ?? '@anthropic/claude-3-5-sonnet-20241022',
+      model: settings?.llmModel,
       // TOOD(burdon): Query.
       systemPrompt,
     });

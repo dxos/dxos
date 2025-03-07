@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState, type FC } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
-import { AIServiceClientImpl, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
+import { AIServiceClientImpl, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
 import { create, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
@@ -101,8 +101,7 @@ const summarizeTranscript = async (
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
     await aiService.generate({
-      // TODO(burdon): Use settings.
-      model: '@anthropic/claude-3-5-sonnet-20241022',
+      model: DEFAULT_LLM_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
     }),

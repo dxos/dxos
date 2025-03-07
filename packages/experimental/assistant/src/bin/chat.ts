@@ -10,7 +10,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, ToolTypes } from '../ai-service';
+import { AIServiceClientImpl, ToolTypes, DEFAULT_LLM_MODEL } from '../ai-service';
 import { runLLM } from '../conversation';
 import {
   AI_SERVICE_ENDPOINT,
@@ -49,7 +49,7 @@ while (true) {
   await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
-    model: '@anthropic/claude-3-5-sonnet-20241022',
+    model: DEFAULT_LLM_MODEL,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
