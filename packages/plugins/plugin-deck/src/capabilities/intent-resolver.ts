@@ -194,6 +194,11 @@ export default (context: PluginsContext) =>
       resolve: ({ subject }) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
+          // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+          //  Ideally this should be worked into the data model in a generic way.
+          if (!state.activeDeck.startsWith('!')) {
+            state.previousDeck = state.activeDeck;
+          }
           state.activeDeck = subject;
           if (!state.decks[subject]) {
             state.decks[subject] = { initialized: false, active: [], inactive: [], fullscreen: false, plankSizing: {} };
@@ -206,6 +211,17 @@ export default (context: PluginsContext) =>
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         }
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
+      filter: (data): data is S.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
+        S.is(LayoutAction.RevertWorkspace.fields.input)(data),
+      resolve: () => {
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        return {
+          intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck })],
+        };
       },
     }),
     createResolver({

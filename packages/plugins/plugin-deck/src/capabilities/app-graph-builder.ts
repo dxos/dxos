@@ -102,6 +102,7 @@ export default (context: PluginsContext) =>
               macos: 'meta+b',
             },
             disposition: 'pin-end',
+            position: 'hoist',
             l0Breakpoint: 'lg',
           },
         };
