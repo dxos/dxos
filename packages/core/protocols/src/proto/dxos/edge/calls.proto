@@ -28,12 +28,6 @@ message UserState {
   optional Transcription transcription = 8;
 }
 
-message RoomState {
-  string meetingId = 1;
-  repeated UserState users = 2;
-  optional Transcription transcription = 3;
-}
-
 /**
  * Transcription settings.
  * It will be merged across all users in the room based on the Lamport timestamp (last one wins).
@@ -41,14 +35,19 @@ message RoomState {
 message Transcription {
   bool enabled = 1;
 
-  /**
-   * Lamport timestamp of when the state was set.
-   * @see https://en.wikipedia.org/wiki/Lamport_timestamp
-   */
-  int32 lamport_timestamp = 2;
+  LamportTimestamp lamport_timestamp = 2;
 
   /**
    * Transcription queue DXN.
    */
   string queue_dxn = 3;
+}
+
+/**
+ * Lamport Timestamp.
+ * @see https://en.wikipedia.org/wiki/Lamport_timestamp
+ */
+message LamportTimestamp {
+  int32 version = 1;
+  string id = 2;
 }
