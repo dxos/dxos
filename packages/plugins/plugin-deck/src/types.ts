@@ -80,6 +80,7 @@ export const DeckState = S.mutable(
     currentUndoId: S.optional(S.String),
 
     activeDeck: S.String,
+    previousDeck: S.String,
     decks: S.mutable(S.Record({ key: S.String, value: S.mutable(Deck) })),
     previousMode: S.mutable(S.Record({ key: S.String, value: LayoutMode })),
     deck: S.mutable(Deck),
