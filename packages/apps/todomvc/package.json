@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

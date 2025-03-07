@@ -68,7 +68,7 @@
       "dependsOn": ["prebuild", "^compile"],
       "executor": "@nx/playwright:playwright",
       "inputs": ["default", "^production", { "env": "CI" }, { "env": "LOG_LEVEL" }, { "env": "LOG_PROCESSOR" }],
-      "options": { "config": "{projectRoot}/src/playwright/playwright.config.ts" }
+      "options": { "config": "{projectRoot}/src/playwright/playwright.config.cts" }
     },
     "lint": {
       "cache": true,
