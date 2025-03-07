@@ -4,8 +4,6 @@
 
 import React, { type FC, useEffect, useRef } from 'react';
 
-import { log } from '@dxos/log';
-
 export type AudioStreamProps = {
   tracks: MediaStreamTrack[];
 };
@@ -56,7 +54,6 @@ type AudioTrackProps = {
 
 const AudioTrack = ({ track, mediaStream, resetSrcObject }: AudioTrackProps) => {
   useEffect(() => {
-    log.info('AudioTrack');
     const currentTrack = track;
     mediaStream.addTrack(currentTrack);
     resetSrcObject();

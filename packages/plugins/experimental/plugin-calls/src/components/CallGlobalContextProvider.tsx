@@ -15,6 +15,7 @@ import { CallManager } from '../state';
 export const CallGlobalContextProvider: FC<PropsWithChildren> = ({ children }) => {
   // Create a global live object containing the call state.
   const client = useClient();
+  // TODO(mykola): Factor out to capability.
   const call = useMemo(() => new CallManager(client), [client]);
 
   useEffect(() => {

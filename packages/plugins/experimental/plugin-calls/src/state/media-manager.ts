@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTaskInterval, sleep, waitForCondition } from '@dxos/async';
+import { DeferredTask, Event, scheduleTaskInterval, sleep, synchronized, waitForCondition } from '@dxos/async';
 import { cancelWithContext, type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -85,12 +85,14 @@ export class MediaManager extends Resource {
     this._pullTracksTask = undefined;
   }
 
+  @synchronized
   async join(serviceConfig: CallsServiceConfig) {
     this._state.peer = new CallsServicePeer(serviceConfig);
     await this._state.peer!.open();
     this._pushTracksTask!.schedule();
   }
 
+  @synchronized
   async leave() {
     await Promise.all(Object.values(this._state.pulledAudioTracks).map(({ ctx }) => ctx.dispose()));
     await Promise.all(Object.values(this._state.pulledVideoStreams).map(({ ctx }) => ctx.dispose()));
@@ -121,6 +123,7 @@ export class MediaManager extends Resource {
     this._pushTracksTask!.schedule();
   }
 
+  // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
   async turnAudioOn() {
     this._state.audioEnabled = true;
     this._state.audioTrack = await getUserMediaTrack('audioinput');
@@ -282,6 +285,10 @@ export class MediaManager extends Resource {
   }
 }
 
+/**
+ * Creates a black canvas stream track.
+ * We need this to to have black rectangle video that is live (have frames) when video feed is disabled.
+ */
 const createBlackCanvasStreamTrack = async (ctx: Context) => {
   const canvas = document.createElement('canvas');
   canvas.width = VIDEO_WIDTH;

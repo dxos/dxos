@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { synchronized } from '@dxos/async';
 import { type PublicKey, type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { create } from '@dxos/live-object';
@@ -29,38 +30,47 @@ export class CallManager extends Resource {
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
 
+  /** @reactive */
   get raisedHand() {
     return this._state.call.raisedHand ?? false;
   }
 
+  /** @reactive */
   get speaking() {
     return this._state.call.speaking ?? false;
   }
 
+  /** @reactive */
   get joined() {
     return this._state.call.joined ?? false;
   }
 
+  /** @reactive */
   get self() {
     return this._state.call.self ?? {};
   }
 
+  /** @reactive */
   get tracks() {
     return this._state.call.tracks ?? {};
   }
 
+  /** @reactive */
   get transcription() {
     return this._state.call.transcription ?? {};
   }
 
+  /** @reactive */
   get users() {
     return this._state.call.users ?? [];
   }
 
+  /** @reactive */
   get media() {
     return this._state.media;
   }
 
+  /** @reactive */
   get pulledAudioTracks() {
     return Object.values(this._state.media.pulledAudioTracks).map((track) => track.track);
   }
@@ -126,10 +136,10 @@ export class CallManager extends Resource {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
       }
     });
+    this._ctx.onDispose(() => subscription.unsubscribe());
 
     this._swarmSynchronizer.stateUpdated.on(this._ctx, (state) => this._onCallStateUpdated(state));
     this._mediaManager.stateUpdated.on(this._ctx, (state) => this._onMediaStateUpdated(state));
-    this._ctx.onDispose(() => subscription.unsubscribe());
   }
 
   protected override async _close() {
@@ -139,6 +149,7 @@ export class CallManager extends Resource {
   }
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
+  @synchronized
   async join() {
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
@@ -148,6 +159,7 @@ export class CallManager extends Resource {
     });
   }
 
+  @synchronized
   async leave() {
     await this._swarmSynchronizer.leave();
     this._swarmSynchronizer.setJoined(false);

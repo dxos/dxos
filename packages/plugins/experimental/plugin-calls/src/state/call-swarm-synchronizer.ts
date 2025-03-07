@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, Event } from '@dxos/async';
+import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
@@ -167,6 +167,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._sendStateTask = undefined;
   }
 
+  @synchronized
   async join() {
     invariant(this._roomId);
     this._stream = this._networkService.subscribeSwarmState({ topic: this._roomId });
@@ -175,6 +176,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
+  @synchronized
   async leave() {
     const roomId = this._roomId;
     void this._stream?.close();

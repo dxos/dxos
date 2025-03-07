@@ -28,8 +28,6 @@ export type CallToolbarProps = {
 // TODO(mykola): Move transcription related logic to a separate component.
 export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
   const { t } = useTranslation(CALLS_PLUGIN);
-
-  //
   const { call } = useCallGlobalContext();
 
   // Screen sharing.

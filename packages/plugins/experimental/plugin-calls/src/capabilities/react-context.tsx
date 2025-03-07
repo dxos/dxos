@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 
-import { CallGlobalContextProvider } from '../components/CallGlobalContextProvider';
+import { CallGlobalContextProvider } from '../components';
 import { CALLS_PLUGIN } from '../meta';
 
 export type CallsPluginOptions = {};
