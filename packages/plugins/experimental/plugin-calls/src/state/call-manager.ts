@@ -5,7 +5,6 @@
 import { type PublicKey, type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { create } from '@dxos/live-object';
-import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
@@ -83,7 +82,6 @@ export class CallManager extends Resource {
   }
 
   setTranscription(transcription: TranscriptionState) {
-    log.info('setTranscription', { transcription });
     this._swarmSynchronizer.setTranscription(transcription);
   }
 
@@ -159,9 +157,8 @@ export class CallManager extends Resource {
     const tracksToPull = state.users
       ?.filter((user) => user.joined && user.id !== state.self?.id)
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
-      .filter(isNonNullable)
-      .map((track) => TrackNameCodec.decode(track as EncodedTrackName));
-    void this._mediaManager._schedulePullTracks(tracksToPull);
+      .filter(isNonNullable);
+    this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
 
     this._updateState();
   }

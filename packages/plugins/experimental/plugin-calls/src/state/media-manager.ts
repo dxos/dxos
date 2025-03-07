@@ -7,7 +7,7 @@ import { cancelWithContext, type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type EncodedTrackName, TrackNameCodec, type TrackObject } from '../types';
+import { TrackNameCodec, type EncodedTrackName, type TrackObject } from '../types';
 import { type CallsServiceConfig, CallsServicePeer, getScreenshare, getUserMediaTrack } from '../util';
 
 export type MediaState = {
@@ -48,7 +48,7 @@ export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
   private readonly _state: MediaState = { pulledVideoStreams: {}, pulledAudioTracks: {} };
 
-  private _tracksToPull: TrackObject[] = [];
+  private _tracksToPull: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
@@ -87,6 +87,8 @@ export class MediaManager extends Resource {
   }
 
   async leave() {
+    await Promise.all(Object.values(this._state.pulledAudioTracks).map(({ ctx }) => ctx.dispose()));
+    await Promise.all(Object.values(this._state.pulledVideoStreams).map(({ ctx }) => ctx.dispose()));
     await this._state.peer?.close();
     this._state.peer = undefined;
   }
@@ -143,7 +145,7 @@ export class MediaManager extends Resource {
   /**
    * @internal
    */
-  async _schedulePullTracks(tracks?: TrackObject[]) {
+  _schedulePullTracks(tracks?: EncodedTrackName[]) {
     if (!tracks || tracks.length === 0) {
       return;
     }
@@ -153,47 +155,45 @@ export class MediaManager extends Resource {
   }
 
   private async _reconcilePulledMedia() {
-    log.info('reconcilePulledMedia');
     // Wait for cloudflare to process the track.
-    await sleep(500);
-    const tracksWithNames: (TrackObject & { name: EncodedTrackName })[] = this._tracksToPull.map((track) => ({
-      ...track,
-      name: TrackNameCodec.encode(track),
-    }));
-    const tracksToPull = tracksWithNames.filter(
-      (track) => !this._state.pulledAudioTracks[track.name] && !this._state.pulledVideoStreams[track.name],
+    await sleep(700);
+    const trackNames = this._tracksToPull;
+
+    const tracksToPull = trackNames.filter(
+      (name) => !this._state.pulledAudioTracks[name] && !this._state.pulledVideoStreams[name],
     );
 
     const audioTracksToClose = Object.entries(this._state.pulledAudioTracks).filter(
-      ([key]) => !tracksWithNames.some((trackData) => trackData.name === key),
+      ([key]) => !trackNames.some((name) => name === key),
     );
 
     const videoStreamsToClose = Object.entries(this._state.pulledVideoStreams).filter(
-      ([key]) => !tracksWithNames.some((trackData) => trackData.name === key),
+      ([key]) => !trackNames.some((name) => name === key),
     );
 
-    log.info('pulling tracks', {
-      tracksToPull,
-      audioTracksToClose,
-      videoStreamsToClose,
+    log('reconciling tracks', {
+      trackNames,
+      pulledAudioTracks: Object.keys(this._state.pulledAudioTracks),
+      pulledVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
 
     // Pull new tracks.
     await Promise.all(
-      tracksToPull.map(async (trackData) => {
+      tracksToPull.map(async (name) => {
         const ctx = this._ctx.derive();
+        const trackData = TrackNameCodec.decode(name);
         const track = await this._state.peer!.pullTrack({ trackData, ctx }).catch((err) => log.catch(err));
 
         if (track?.kind === 'audio') {
-          this._state.pulledAudioTracks[trackData.name] = { track, ctx };
-          ctx.onDispose(() => delete this._state.pulledAudioTracks[trackData.name]);
+          this._state.pulledAudioTracks[name] = { track, ctx };
+          ctx.onDispose(() => delete this._state.pulledAudioTracks[name]);
         } else if (track?.kind === 'video') {
           const mediaStream = new MediaStream();
           mediaStream.addTrack(track);
-          this._state.pulledVideoStreams[trackData.name] = { stream: mediaStream, ctx };
+          this._state.pulledVideoStreams[name] = { stream: mediaStream, ctx };
           ctx.onDispose(() => {
             mediaStream.removeTrack(track);
-            delete this._state.pulledVideoStreams[trackData.name];
+            delete this._state.pulledVideoStreams[name];
           });
         } else {
           log.warn('failed to pull track', { trackData });
@@ -203,11 +203,6 @@ export class MediaManager extends Resource {
 
     // Close old tracks.
     await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
-
-    log.info('new state', {
-      audioTracks: this._state.pulledAudioTracks,
-      videoStreams: this._state.pulledVideoStreams,
-    });
 
     this.stateUpdated.emit(this._state);
   }
