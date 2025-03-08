@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ReactiveEchoObject, type Space, getType } from '@dxos/client/echo';
+import { getTypename, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
   defaultStyles,
@@ -45,9 +45,10 @@ const colors = [
 export type GraphProps = {
   space: Space;
   match?: RegExp;
+  grid?: boolean;
 };
 
-export const Graph: FC<GraphProps> = ({ space, match }) => {
+export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
   const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
   const [selected, setSelected] = useState<string>();
   const { themeMode } = useThemeContext();
@@ -61,15 +62,15 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
             strength: -100,
           },
           link: {
-            distance: 180,
+            distance: 120,
           },
           radial: {
-            radius: 200,
+            radius: 150,
             strength: 0.05,
           },
         },
         attributes: {
-          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 24 : 12),
+          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 12 : 8),
         },
       }),
     [],
@@ -95,7 +96,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     <SVGRoot context={context}>
       <SVG className={mx(defaultStyles, slots?.root?.className)}>
         <Markers arrowSize={6} />
-        <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />
+        {grid && <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />}
         <Zoom extent={[1 / 2, 4]}>
           <GraphComponent
             model={model}
@@ -117,12 +118,15 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
               node: (node: GraphLayoutNode<ReactiveEchoObject<any>>) => {
                 let className: string | undefined;
                 if (node.data) {
-                  const typename = getType(node.data)?.objectId;
-                  if (typename) {
-                    className = colorMap.get(typename);
-                    if (!className) {
-                      className = colors[colorMap.size % colors.length];
-                      colorMap.set(typename, className);
+                  const { object } = node.data;
+                  if (object) {
+                    const typename = getTypename(object);
+                    if (typename) {
+                      className = colorMap.get(typename);
+                      if (!className) {
+                        className = colors[colorMap.size % colors.length];
+                        colorMap.set(typename, className);
+                      }
                     }
                   }
                 }
@@ -139,7 +143,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
                 };
               },
               link: () => ({
-                class: '[&>path]:!stroke-neutral-300',
+                class: '[&>path]:!stroke-neutral-500',
               }),
             }}
           />

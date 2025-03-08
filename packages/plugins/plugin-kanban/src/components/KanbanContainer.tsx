@@ -74,11 +74,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
 
   return (
     <StackItem.Content toolbar={false}>
-      {model ? (
-        <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />
-      ) : (
-        <span>Loading</span>
-      )}
+      {model && <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} />}
     </StackItem.Content>
   );
 };
