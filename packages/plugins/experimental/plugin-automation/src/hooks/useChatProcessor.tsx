@@ -63,7 +63,7 @@ export const useChatProcessor = (space?: Space, settings?: AutomationSettingsPro
   // Create processor.
   // TODO(burdon): Updated on each query update above. Should just update current processor.
   const processor = useMemo(() => {
-    log.info('creating processor...', { settings });
+    log('creating processor...', { settings });
     return new ChatProcessor(aiClient, tools, extensions, {
       // TODO(burdon): Remove defualt (let backend decide if not specified).
       model: settings?.llmModel,
