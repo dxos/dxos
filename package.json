@@ -135,7 +135,7 @@
     "serve": "^14.1.2",
     "syncpack": "^8.2.4",
     "ts-node": "10.9.1",
-    "tsx": "^4.6.2",
+    "tsx": "^4.19.3",
     "types-package-json": "^2.0.39",
     "typescript": "^5.7.2",
     "unplugin": "^1.7.1",

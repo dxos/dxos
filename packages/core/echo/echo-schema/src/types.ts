@@ -184,3 +184,8 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
  * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
  */
 export type HasTypename = {};
+
+/**
+ * Object that has an associated metadata.
+ */
+export type HasMeta = { [ECHO_ATTR_META]?: ObjectMeta };

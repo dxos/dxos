@@ -1,5 +1,1 @@
-//
-// Copyright 2022 DXOS.org
-//
-
-export * from './metagraph';
+export * from './deprecated';
