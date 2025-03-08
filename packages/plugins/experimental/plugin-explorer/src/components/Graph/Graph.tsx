@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ReactiveEchoObject, type Space, getTypename } from '@dxos/client/echo';
+import { getTypename, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
   defaultStyles,
@@ -62,15 +62,15 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
             strength: -100,
           },
           link: {
-            distance: 180,
+            distance: 120,
           },
           radial: {
-            radius: 200,
+            radius: 150,
             strength: 0.05,
           },
         },
         attributes: {
-          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 16 : 8),
+          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 12 : 8),
         },
       }),
     [],
@@ -118,12 +118,15 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
               node: (node: GraphLayoutNode<ReactiveEchoObject<any>>) => {
                 let className: string | undefined;
                 if (node.data) {
-                  const typename = getTypename(node.data);
-                  if (typename) {
-                    className = colorMap.get(typename);
-                    if (!className) {
-                      className = colors[colorMap.size % colors.length];
-                      colorMap.set(typename, className);
+                  const { object } = node.data;
+                  if (object) {
+                    const typename = getTypename(object);
+                    if (typename) {
+                      className = colorMap.get(typename);
+                      if (!className) {
+                        className = colors[colorMap.size % colors.length];
+                        colorMap.set(typename, className);
+                      }
                     }
                   }
                 }
@@ -140,7 +143,7 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
                 };
               },
               link: () => ({
-                class: '[&>path]:!stroke-neutral-300',
+                class: '[&>path]:!stroke-neutral-500',
               }),
             }}
           />
