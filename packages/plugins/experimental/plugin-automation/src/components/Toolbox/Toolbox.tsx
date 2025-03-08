@@ -32,7 +32,7 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
       {artifacts && artifacts.length > 0 && (
         <div>
-          <h1 className='px-2'>Artifacts</h1>
+          <h1 className='px-2 text-sm'>Artifacts</h1>
           <div className={gridClassNames}>
             {artifacts.map(({ id, description, tools }) => (
               <Fragment key={id}>
@@ -55,7 +55,7 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
 
       {services && services.length > 0 && (
         <div>
-          <h1 className='px-2'>Services</h1>
+          <h1 className='px-2 text-sm'>Services</h1>
           <div className={gridClassNames}>
             {services.map(({ service, tools }) => (
               <Fragment key={service.serviceId}>
@@ -78,7 +78,7 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
 
       {functions && functions.length > 0 && (
         <div>
-          <h1 className='px-2'>Functions</h1>
+          <h1 className='px-2 text-sm'>Functions</h1>
           <div className={gridClassNames}>
             {functions.map(({ name, description }) => (
               <div key={name} className={mx(subGridClassNames, striped && stripeClassNames)}>
