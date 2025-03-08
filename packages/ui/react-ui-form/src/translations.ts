@@ -36,7 +36,7 @@ export default [
         'format hostname': 'Hostname',
         'format integer': 'Integer',
         'format json': 'JSON',
-        'format latlng': 'LatLng',
+        'format latlng': 'Geopoint',
         'format markdown': 'Markdown',
         'format percent': 'Percent',
         'format ref': 'Reference',

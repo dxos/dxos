@@ -28,7 +28,6 @@ export const ToolBlock: FC<ThemedClassName<ThreadMessageProps>> = ({ classNames,
         case 'tool_use': {
           // TODO(burdon): Skip these updates?
           if (block.id === request?.id && block.pending) {
-            log.info('skipping...', { block });
             return null;
           }
 

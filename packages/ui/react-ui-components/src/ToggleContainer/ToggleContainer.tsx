@@ -70,10 +70,7 @@ export const ToggleContainer = ({
   return (
     <div className={mx('overflow-hidden', classNames)}>
       {title && (
-        <div
-          className='flex gap-1 py-1 items-center text-sm text-subdued cursor-pointer select-none'
-          onClick={handleToggle}
-        >
+        <div className='flex py-1 items-center text-sm text-subdued cursor-pointer select-none' onClick={handleToggle}>
           <div className='flex w-[24px] h-[24px] items-center justify-center'>
             <Icon
               size={4}

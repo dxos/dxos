@@ -70,6 +70,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       error={processor.error.value}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
+      onPrompt={handleSubmit}
       onOpenChange={onOpenChange}
       {...props}
     />

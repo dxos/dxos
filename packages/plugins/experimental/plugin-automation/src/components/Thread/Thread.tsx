@@ -37,12 +37,10 @@ export const Thread = ({
   transcription,
   processing,
   error,
-  debug,
   onSubmit,
   onCancel,
-  onPrompt,
-  onDelete,
   onOpenChange,
+  ...props
 }: ThreadProps) => {
   const scroller = useRef<ScrollController>(null);
 
@@ -79,15 +77,7 @@ export const Thread = ({
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
-            <ThreadMessage
-              key={message.id}
-              classNames='px-4 pbe-4'
-              space={space}
-              message={message}
-              debug={debug}
-              onPrompt={onPrompt}
-              onDelete={onDelete}
-            />
+            <ThreadMessage key={message.id} classNames='px-4 pbe-4' space={space} message={message} {...props} />
           ))}
         </div>
       </ScrollContainer>

@@ -6,6 +6,7 @@ import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import {
+  FormatEnum,
   FormatEnums,
   formatToType,
   S,
@@ -14,7 +15,6 @@ import {
   SelectOptionSchema,
   GeoPoint,
   toJsonSchema,
-  FormatEnum,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
