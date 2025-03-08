@@ -14,7 +14,7 @@ import { GeoPointInput } from './custom';
  */
 export const getInputComponent = (type: SimpleType, format?: FormatEnum): InputComponent | undefined => {
   switch (format) {
-    case FormatEnum.LatLong:
+    case FormatEnum.GeoPoint:
       return GeoPointInput;
     case FormatEnum.Markdown:
       return MarkdownInput;

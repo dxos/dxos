@@ -154,7 +154,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   // Objects
   //
 
-  [FormatEnum.LatLong]: extend(FormatEnum.LatLong, TypeEnum.Object),
+  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Object),
 };
 
 /**
@@ -205,7 +205,7 @@ export const PropertySchema = S.Union(
   // Objects
   //
 
-  formatToSchema[FormatEnum.LatLong],
+  formatToSchema[FormatEnum.GeoPoint],
 );
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}

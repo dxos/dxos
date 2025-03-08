@@ -1,19 +1,25 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
-    "outDir": "./dist/types",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "./dist/types"
   },
-  "include": ["src", "stories"],
+  "include": [
+    "src",
+    "stories"
+  ],
   "references": [
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std",
+      "path": "../../common/node-std"
     },
     {
-      "path": "../../sdk/config",
-    },
-  ],
+      "path": "../../sdk/config"
+    }
+  ]
 }

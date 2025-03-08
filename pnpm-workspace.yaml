@@ -2,7 +2,7 @@ packages:
   - docs
   - packages/**/*
   - tools/**/*
-  - '!packages/experimental/agent-functions/**'
+  - '!packages/deprecated/**'
   - '!packages/sdk/examples/src/template'
   - '!**/build/**'
   - '!**/dist/**'

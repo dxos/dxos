@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
 import * as d3 from 'd3';
 import React, {
   type CSSProperties,
@@ -13,11 +14,23 @@ import React, {
   useMemo,
   useRef,
   useState,
+  type ReactElement,
 } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { Composer } from '../../icons';
+const weights = new Map<IconWeight, ReactElement>([
+  [
+    'regular',
+    <>
+      <path d='M202.206,23.705l-25.956,36.48c-14.091,-10.026 -30.956,-15.413 -48.25,-15.413c-45.935,-0 -83.228,37.293 -83.228,83.228c-0,45.935 37.293,83.228 83.228,83.228c17.294,0 34.159,-5.387 48.25,-15.413l25.956,36.48c-21.672,15.42 -47.609,23.705 -74.206,23.705c-70.645,-0 -128,-57.355 -128,-128c0,-70.645 57.355,-128 128,-128c26.597,0 52.534,8.285 74.206,23.705Z' />{' '}
+    </>,
+  ],
+]);
+
+const Composer = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+  <IconBase ref={ref} {...props} weights={weights} />
+));
 
 export interface AnimationController {
   spin: () => void;
@@ -57,7 +70,7 @@ const getLayers = (size: number, [a, b, c]: string[]): Props[] => {
   ];
 };
 
-export type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string[] } & Omit<
+type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string[] } & Omit<
   HTMLAttributes<HTMLDivElement>,
   'className'
 >;

@@ -29,6 +29,11 @@ import { serializer } from './util';
 export const MarkdownPlugin = () =>
   definePlugin(meta, [
     defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, [...translations, ...editorTranslations]),
+    }),
+    defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
       activate: MarkdownSettings,
@@ -40,11 +45,6 @@ export const MarkdownPlugin = () =>
       //   Should settings store be renamed to be more generic?
       activatesOn: Events.SetupSettings,
       activate: MarkdownState,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [...translations, ...editorTranslations]),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

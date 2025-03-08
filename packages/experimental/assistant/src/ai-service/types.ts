@@ -7,17 +7,11 @@ import { Schema as S } from '@effect/schema';
 import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 
+import { DEFAULT_LLM_MODELS } from './defs';
+
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(
-  '@anthropic/claude-3-5-haiku-20241022',
-  '@anthropic/claude-3-5-sonnet-20241022',
-  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
-  '@hf/nousresearch/hermes-2-pro-mistral-7b',
-  '@ollama/llama-3-2-3b',
-  '@ollama/llama-3-1-nemotron-70b-instruct',
-  '@ollama/llama-3-1-nemotron-mini-4b-instruct',
-);
+export const LLMModel = S.Literal(...DEFAULT_LLM_MODELS);
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
@@ -34,19 +28,21 @@ export const GenerateRequest = S.Struct({
   spaceId: S.optional(SpaceIdSchema),
   threadId: S.optional(ObjectId),
 
-  // TODO(burdon): Make optional with default.
-  model: LLMModel,
+  /**
+   * Preferred model or system default.
+   */
+  model: S.optional(LLMModel),
+
+  /**
+   * System instructions to the LLM.
+   */
+  systemPrompt: S.optional(S.String),
 
   /**
    * Current request.
    */
   // TODO(burdon): Remove from history.
   // prompt: Message,
-
-  /**
-   * System instructions to the LLM.
-   */
-  systemPrompt: S.optional(S.String),
 
   /**
    * History of messages to include in the context window.
