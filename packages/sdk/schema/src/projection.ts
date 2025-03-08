@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
+import { makeSingleSelectAnnotations } from './util';
 import { type ViewType, type FieldType } from './view';
 
 export const VIEW_FIELD_LIMIT = 32;
@@ -161,15 +162,7 @@ export class ViewProjection {
       }
 
       if (format === FormatEnum.SingleSelect && options) {
-        jsonProperty.enum = options.map(({ id }) => id);
-        jsonProperty.format = 'single-select';
-        jsonProperty.echo = {
-          annotations: {
-            singleSelect: {
-              options: options.map(({ id, title, color }) => ({ id, title, color })),
-            },
-          },
-        };
+        makeSingleSelectAnnotations(jsonProperty, options);
       }
 
       invariant(type !== TypeEnum.Ref);

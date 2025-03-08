@@ -18,6 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
+import { makeSingleSelectAnnotations } from '@dxos/schema';
 
 // TODO(ZaymonFC): Move this somewhere common.
 export const TypeNameSchema = S.String.pipe(
@@ -30,9 +31,9 @@ export const TypeNameSchema = S.String.pipe(
   }),
 );
 
-const formatDescription = `The format of the property. Extra information about format schemas:
+const formatDescription = `The format of the property. Additional information:
   ${FormatEnum.LatLong}: ${JSON.stringify(toJsonSchema(GeoPoint))}
-  NOTE: In GeoJSON, Longitude is the first coordinate. Latitude is the second coordinate.`;
+  This tuple is GeoJSON. YOU MUST SPECIFY \`${FormatEnum.LatLong}\` as [Longitude, Latitude]`;
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
@@ -131,10 +132,7 @@ export const schemaTools = [
       //   to all formats.
       for (const prop of properties) {
         if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.SingleSelect;
-          registeredSchema.jsonSchema.properties![prop.name].oneOf = prop.config.options.map(
-            ({ id, title, color }) => ({ const: id, title, color }),
-          );
+          makeSingleSelectAnnotations(registeredSchema.jsonSchema.properties![prop.name], [...prop.config.options]);
         }
 
         if (prop.format === FormatEnum.LatLong) {
