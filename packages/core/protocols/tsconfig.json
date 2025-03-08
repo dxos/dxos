@@ -2,8 +2,6 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "module": "Preserve",
-    "moduleResolution": "bundler",
     "outDir": "dist/esm",
     "target": "ESNext"
   },

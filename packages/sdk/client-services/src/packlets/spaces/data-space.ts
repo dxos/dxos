@@ -14,7 +14,7 @@ import {
   type MetadataStore,
   type Space,
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
@@ -446,7 +446,7 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    const handle = this._echoHost.automergeRepo.find(rootUrl as any);
+    const handle = this._echoHost.automergeRepo.find<SpaceDoc>(rootUrl as any);
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {

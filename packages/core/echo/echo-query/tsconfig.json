@@ -1,26 +1,21 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"],
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
-      "path": "../../../common/node-std"
+      "path": "../../../common/node-std",
     },
     {
-      "path": "../../../common/random"
+      "path": "../../../common/random",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../echo-generator"
-    }
-  ]
+      "path": "../echo-generator",
+    },
+  ],
 }

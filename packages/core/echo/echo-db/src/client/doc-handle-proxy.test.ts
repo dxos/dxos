@@ -26,7 +26,7 @@ describe('DocHandleProxy', () => {
 
     const mutation = clientHandle._getPendingChanges()!;
     docsSynchronizer.update([{ documentId, mutation, isNew: true }]);
-    const workerHandle = workerRepo.find(documentId);
+    const workerHandle = workerRepo.find<{ text: string }>(documentId);
     expect(workerHandle.docSync()?.text).to.equal(text);
   });
 
@@ -59,7 +59,7 @@ describe('DocHandleProxy', () => {
     type DocType = { clientText: string; foreignPeerText: string };
 
     const workerRepo = new Repo({ network: [] });
-    const workerHandle = workerRepo.create();
+    const workerHandle = workerRepo.create<DocType>();
     const synchronizer = new DocumentsSynchronizer({
       repo: workerRepo,
       sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),

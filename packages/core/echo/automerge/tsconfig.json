@@ -1,16 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"],
   },
-  "exclude": [
-    "scripts"
-  ],
-  "include": [
-    "src"
-  ],
-  "references": []
+  "exclude": ["scripts"],
+  "include": ["src"],
+  "references": [],
 }

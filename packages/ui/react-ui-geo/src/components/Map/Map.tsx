@@ -5,16 +5,15 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 
-import L from 'leaflet';
-import { type ControlPosition, Control, DomEvent, DomUtil, type LatLngExpression, latLngBounds } from 'leaflet';
-import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle } from 'react';
+import L, { Control, DomEvent, DomUtil, latLngBounds, type ControlPosition, type LatLngExpression } from 'leaflet';
+import { forwardRef, useEffect, useImperativeHandle, type PropsWithChildren } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { MapContainerProps } from 'react-leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
-import { type MapContainerProps } from 'react-leaflet/lib/MapContainer';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
-import { Tooltip, ThemeProvider, type ThemedClassName } from '@dxos/react-ui';
+import { ThemeProvider, Tooltip, type ThemedClassName } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
 import { ActionControls, controlPositions, ZoomControls, type ControlProps } from '../Toolbar';

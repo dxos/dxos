@@ -1,32 +1,18 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
-      "path": "../../common/invariant"
+      "path": "../../common/keys",
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/log",
     },
     {
-      "path": "../../common/log"
+      "path": "../../core/echo/echo-schema",
     },
-    {
-      "path": "../../core/echo/echo-schema"
-    }
-  ]
+  ],
 }

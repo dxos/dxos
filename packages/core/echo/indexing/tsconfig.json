@@ -1,63 +1,57 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist/types",
-    "types": [
-      "@dxos/typings",
-      "@types/node"
-    ]
+    "types": ["@dxos/typings", "@types/node"],
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/async",
     },
     {
-      "path": "../../../common/codec-protobuf"
+      "path": "../../../common/codec-protobuf",
     },
     {
-      "path": "../../../common/context"
+      "path": "../../../common/context",
     },
     {
-      "path": "../../../common/invariant"
+      "path": "../../../common/invariant",
     },
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/keys",
     },
     {
-      "path": "../../../common/kv-store"
+      "path": "../../../common/kv-store",
     },
     {
-      "path": "../../../common/log"
+      "path": "../../../common/log",
     },
     {
-      "path": "../../../common/node-std"
+      "path": "../../../common/node-std",
     },
     {
-      "path": "../../../common/random-access-storage"
+      "path": "../../../common/random-access-storage",
     },
     {
-      "path": "../../../common/test-utils"
+      "path": "../../../common/test-utils",
     },
     {
-      "path": "../../../common/tracing"
+      "path": "../../../common/tracing",
     },
     {
-      "path": "../../../common/util"
+      "path": "../../../common/util",
     },
     {
-      "path": "../../protocols"
+      "path": "../../protocols",
     },
     {
-      "path": "../automerge"
+      "path": "../automerge",
     },
     {
-      "path": "../echo-protocol"
+      "path": "../echo-protocol",
     },
     {
-      "path": "../echo-schema"
-    }
-  ]
+      "path": "../echo-schema",
+    },
+  ],
 }

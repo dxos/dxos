@@ -30,7 +30,7 @@ export class DatabaseRoot {
   }
 
   docSync(): A.Doc<SpaceDoc> | null {
-    return this._rootHandle.docSync();
+    return this._rootHandle.docSync() ?? null;
   }
 
   getVersion(): SpaceDocVersion | null {
