@@ -13,7 +13,7 @@ import { Prompt, type PromptController, type PromptProps } from './Prompt';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type PromptBarProps = ThemedClassName<
-  Pick<PromptProps, 'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest'> & {
+  Pick<PromptProps, 'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest' | 'onOpenChange'> & {
     processing?: boolean;
     error?: Error;
     microphone?: boolean;

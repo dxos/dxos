@@ -3,6 +3,7 @@
 //
 
 export * from './client';
+export * from './defs';
 export * from './parser';
 export * from './stream';
 export * from './transform';

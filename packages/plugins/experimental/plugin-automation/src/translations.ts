@@ -3,7 +3,7 @@
 //
 
 import { AUTOMATION_PLUGIN } from './meta';
-import { AIChatType } from './types';
+import { AIChatType, TemplateType } from './types';
 
 export default [
   {
@@ -11,7 +11,13 @@ export default [
       [AIChatType.typename]: {
         'typename label': 'AI Chat',
       },
+      [TemplateType.typename]: {
+        'typename label': 'Template',
+      },
       [AUTOMATION_PLUGIN]: {
+        'chat title placeholder': 'AI Chat',
+        'template title placeholder': 'Template',
+
         'open ambient chat label': 'Open AI chat',
         'plugin name': 'Automation',
         'object placeholder': 'New prompt',
@@ -61,6 +67,10 @@ export default [
         'prompt placeholder': 'Ask a question...',
         'microphone button': 'Click to speak',
         'cancel processing button': 'Stop processing',
+
+        'settings custom prompts label': 'Custom prompts',
+        'settings llm model label': 'LLM model',
+        'settings default llm model label': 'Default Model',
       },
     },
   },

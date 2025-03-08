@@ -68,7 +68,7 @@ export class RuntimeSchemaRegistry {
       const typename = getTypenameOrThrow(schema);
       const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version.'));
       const arr = defaultMap(this._schema, typename, () => []);
-      if (arr.some((s) => getSchemaVersion(s) === version)) {
+      if (arr.some((schema) => getSchemaVersion(schema) === version)) {
         throw new Error(`Schema version already registered: ${typename}:${version}`);
       }
 

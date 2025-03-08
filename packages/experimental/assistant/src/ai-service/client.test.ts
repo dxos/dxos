@@ -12,6 +12,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
+import { DEFAULT_LLM_MODEL } from './defs';
 import { ToolTypes } from './types';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
@@ -37,7 +38,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     const stream = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
+      model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a poet',
@@ -82,7 +83,7 @@ describe.skip('AI Service Client', () => {
 
     {
       const stream1 = await client.generate({
-        model: '@anthropic/claude-3-5-haiku-20241022',
+        model: DEFAULT_LLM_MODEL,
         spaceId,
         threadId,
         systemPrompt: 'You are a helpful assistant.',
@@ -116,7 +117,7 @@ describe.skip('AI Service Client', () => {
 
     {
       const stream2 = await client.generate({
-        model: '@anthropic/claude-3-5-haiku-20241022',
+        model: DEFAULT_LLM_MODEL,
         spaceId,
         threadId,
         systemPrompt: 'You are a helpful assistant.',
@@ -154,7 +155,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     const stream = await client.generate({
-      model: '@anthropic/claude-3-5-sonnet-20241022',
+      model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
       tools: [

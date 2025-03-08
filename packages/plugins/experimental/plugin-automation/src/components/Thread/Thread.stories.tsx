@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Message } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { Thread, type ThreadProps } from './Thread';
@@ -55,16 +56,14 @@ const Render = ({ messages: _messages, ...props }: ThreadProps) => {
   );
 
   return (
-    <div className='flex grow justify-center overflow-center bg-baseSurface'>
-      <div className='flex w-[30rem] bg-white dark:bg-black'>
-        <Thread
-          {...props}
-          messages={messages}
-          processing={processing}
-          onSubmit={handleSubmit}
-          onCancel={() => setProcessing(false)}
-        />
-      </div>
+    <div className='flex w-[30rem] bg-white dark:bg-black'>
+      <Thread
+        {...props}
+        messages={messages}
+        processing={processing}
+        onSubmit={handleSubmit}
+        onCancel={() => setProcessing(false)}
+      />
     </div>
   );
 };
@@ -75,9 +74,13 @@ const meta: Meta<ThreadProps> = {
   component: Thread,
   decorators: [
     withSignals,
-    withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+    }),
     withPluginManager({ plugins: [IntentPlugin()] }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center' }),
   ],
   parameters: {
     translations,
@@ -172,7 +175,6 @@ const TEST_MESSAGES: Message[] = [
 
 export const Default: Story = {
   args: {
-    // debug: true,
     messages: TEST_MESSAGES,
   },
 };

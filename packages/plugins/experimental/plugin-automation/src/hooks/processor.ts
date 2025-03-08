@@ -13,6 +13,7 @@ import {
   type GenerateRequest,
   type GenerationStream,
   MixedStreamParser,
+  DEFAULT_LLM_MODEL,
 } from '@dxos/assistant';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -35,7 +36,7 @@ type RequestOptions = {
 export type ChatProcessorOptions = Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: ChatProcessorOptions = {
-  model: '@anthropic/claude-3-5-sonnet-20241022',
+  model: DEFAULT_LLM_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
 

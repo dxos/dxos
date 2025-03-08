@@ -36,6 +36,7 @@
     "@codemirror/search": "^6.5.6",
     "@codemirror/view": "^6.34.1",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",

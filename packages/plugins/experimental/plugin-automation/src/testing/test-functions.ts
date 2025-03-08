@@ -3,11 +3,11 @@
 //
 
 import { createSystemPrompt } from '@dxos/artifact';
-import { type GenerateRequest } from '@dxos/assistant';
+import { DEFAULT_LLM_MODEL, type GenerateRequest } from '@dxos/assistant';
 import { AST, S, toJsonSchema } from '@dxos/echo-schema';
 
 export const createProcessorOptions = (artifacts: string[]): Pick<GenerateRequest, 'model' | 'systemPrompt'> => ({
-  model: '@anthropic/claude-3-5-sonnet-20241022',
+  model: DEFAULT_LLM_MODEL,
   systemPrompt: createSystemPrompt({ artifacts }),
 });
 

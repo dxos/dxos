@@ -8,7 +8,7 @@
 
 // test('extract objects from the DXOS explainer', async () => {
 //   const result = await runLLM({
-//     model: '@anthropic/claude-3-5-haiku-20241022',
+//     model: DEFAULT_LLM_MODEL,
 //     messages: [
 //       createUserMessage(`
 // # README

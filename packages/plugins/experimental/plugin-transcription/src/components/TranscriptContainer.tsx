@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState, type FC } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
-import { AIServiceClientImpl, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
+import { AIServiceClientImpl, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
 import { create, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
@@ -101,7 +101,7 @@ const summarizeTranscript = async (
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
     await aiService.generate({
-      model: '@anthropic/claude-3-5-sonnet-20241022',
+      model: DEFAULT_LLM_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
     }),
@@ -129,12 +129,33 @@ const summarizeTranscript = async (
 
 // TODO(dmaretskyi): Add example to set consistent structure for the summary.
 const SUMMARIZE_PROMPT = `
-  Create a summary of the transcript provided.
-  Reference specific people by name when possible.
-  Format the summary as a list of key points and takeaways.
-  Include action items in the summary.
-  Use markdown formatting for headings and bullet points.
-  Format the summary as a markdown document without extra comments like "Here is the summary of the transcript:".
+  # Goal
+  Create a markdown summary of the transcript provided.
+
+  # Formatting
+  - Format the summary as a markdown document without extra comments like "Here is the summary of the transcript:".
+  - Use markdown formatting for headings and bullet points.
+  - Format the summary as a list of key points and takeaways.
+  - All names of people should be in bold.
+
+  # Note Taking
+  - Correlate items in the summary with the person of origin to build a coherent narrative.
+  - Include short quotes verbatim where appropriate. Especially when concerned with design decisions and problem descriptions.
+
+  # Tasks
+  At the end of the summary include tasks.
+  Extract only the tasks that are:
+  - Directly actionable
+  - Clearly assigned to a person or team (or can easily be inferred)
+  - Strongly implied by the conversation and/or user note (no speculative tasks)
+  - Specific enough that someone reading them would know exactly what to do next
+
+  Format all tasks as markdown checkboxes using the syntax:
+  - [ ] Task description
+
+  Additional information can be included (indented).
+
+  If no actionable tasks are found, omit this tasks section.
 `;
 
 // TODO(dmaretskyi): Extract?

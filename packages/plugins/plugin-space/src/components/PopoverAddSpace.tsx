@@ -19,18 +19,6 @@ export const PopoverAddSpace = () => {
     <div role='none' className='grid grid-cols-1 gap-1 [&>button]:justify-start'>
       <IconButton
         variant='ghost'
-        label={t('join space label')}
-        icon='ph--sign-in--regular'
-        onClick={() => {
-          void dispatch(createIntent(SpaceAction.Join));
-          void dispatch(
-            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
-          );
-        }}
-        data-testid='spacePlugin.joinSpace'
-      />
-      <IconButton
-        variant='ghost'
         label={t('create space label')}
         icon='ph--plus--regular'
         onClick={() => {
@@ -40,6 +28,18 @@ export const PopoverAddSpace = () => {
           );
         }}
         data-testid='spacePlugin.createSpace'
+      />
+      <IconButton
+        variant='ghost'
+        label={t('join space label')}
+        icon='ph--sign-in--regular'
+        onClick={() => {
+          void dispatch(createIntent(SpaceAction.Join));
+          void dispatch(
+            createIntent(LayoutAction.UpdatePopover, { part: 'popover', options: { anchorId: '', state: false } }),
+          );
+        }}
+        data-testid='spacePlugin.joinSpace'
       />
     </div>
   );
