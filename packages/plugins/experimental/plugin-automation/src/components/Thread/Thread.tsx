@@ -4,9 +4,7 @@
 
 import React, { type CSSProperties, useCallback, useMemo, useRef } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework';
 import { type Message } from '@dxos/artifact';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -22,6 +20,8 @@ export type ThreadProps = ThemedClassName<{
   space?: Space;
   messages?: Message[];
   collapse?: boolean;
+  transcription?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
   Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
@@ -34,16 +34,14 @@ export const Thread = ({
   space,
   messages,
   collapse = true,
+  transcription,
   processing,
   error,
-  debug,
   onSubmit,
   onCancel,
-  onPrompt,
-  onDelete,
+  onOpenChange,
+  ...props
 }: ThreadProps) => {
-  const hasTrascription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
-
   const scroller = useRef<ScrollController>(null);
 
   const identity = useIdentity();
@@ -71,36 +69,29 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <>
+    <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <ScrollContainer ref={scroller} fade>
         <div
           role='none'
-          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6', classNames)}
+          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6')}
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
-            <ThreadMessage
-              key={message.id}
-              classNames='px-4 pbe-4'
-              space={space}
-              message={message}
-              debug={debug}
-              onPrompt={onPrompt}
-              onDelete={onDelete}
-            />
+            <ThreadMessage key={message.id} classNames='px-4 pbe-4' space={space} message={message} {...props} />
           ))}
         </div>
       </ScrollContainer>
 
       {onSubmit && (
         <PromptBar
-          microphone={hasTrascription}
+          microphone={transcription}
           processing={processing}
           error={error}
           onSubmit={handleSubmit}
           onCancel={onCancel}
+          onOpenChange={onOpenChange}
         />
       )}
-    </>
+    </div>
   );
 };

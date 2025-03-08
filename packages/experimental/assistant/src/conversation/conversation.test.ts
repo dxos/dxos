@@ -11,7 +11,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { AIServiceClientImpl } from '../ai-service';
+import { AIServiceClientImpl, DEFAULT_LLM_MODEL } from '../ai-service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // TODO(burdon): Local live LLM test.
@@ -25,7 +25,7 @@ describe.skip('Conversation tests', () => {
     const threadId = ObjectId.random();
 
     const result = await runLLM({
-      model: '@anthropic/claude-3-5-sonnet-20241022',
+      model: DEFAULT_LLM_MODEL,
       history: [createUserMessage(spaceId, threadId, 'Hello, how are you?')],
       tools: [],
       client,
@@ -56,7 +56,7 @@ describe.skip('Conversation tests', () => {
     const threadId = ObjectId.random();
 
     const result = await runLLM({
-      model: '@anthropic/claude-3-5-sonnet-20241022',
+      model: DEFAULT_LLM_MODEL,
       history: [createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')],
       tools: [custodian],
       client,

@@ -15,7 +15,7 @@ import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
-import { AIServiceClientImpl } from '../ai-service';
+import { AIServiceClientImpl, DEFAULT_LLM_MODEL } from '../ai-service';
 import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
 
@@ -41,7 +41,7 @@ test.skip('cypher query', async () => {
   ]);
 
   const result = await runLLM({
-    model: '@anthropic/claude-3-5-sonnet-20241022',
+    model: DEFAULT_LLM_MODEL,
     tools: [cypherTool],
     spaceId,
     threadId,
@@ -78,7 +78,7 @@ test.skip('query ECHO', async () => {
   ]);
 
   const result = await runLLM({
-    model: '@anthropic/claude-3-5-sonnet-20241022',
+    model: DEFAULT_LLM_MODEL,
     tools: [cypherTool],
     spaceId,
     threadId,

@@ -54,7 +54,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     }
 
     const columns = Object.entries(currentSchema.jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-      if (typeof value === 'object' && value?.format === FormatEnum.LatLong) {
+      if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
         acc.push(key);
       }
       return acc;

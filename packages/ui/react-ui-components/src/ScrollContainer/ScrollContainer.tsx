@@ -3,13 +3,14 @@
 //
 
 import React, {
+  Children,
   type PropsWithChildren,
   forwardRef,
-  useImperativeHandle,
   useState,
-  Children,
-  useEffect,
   useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -35,7 +36,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     const [isOverflowing, setIsOverflowing] = useState(false);
     const [scrolledAtTop, setScrolledAtTop] = useState(false);
 
-    // Scroll controller imperative ref
+    // Scroll controller imperative ref.
     useImperativeHandle(
       forwardedRef,
       () => ({
@@ -50,25 +51,31 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
 
     const updateScrollState = useCallback(() => {
       if (viewport) {
-        // Check if content is overflowing
+        // Check if content is overflowing.
         setIsOverflowing(viewport.scrollHeight > viewport.clientHeight);
         // In flex-col-reverse, scrollTop > 0 means we're not at the visual top, also the value will be negative.
         setScrolledAtTop(-viewport.scrollTop + 16 >= viewport.scrollHeight - viewport.clientHeight);
       }
     }, [viewport]);
 
+    // Scroll controller imperative ref.
+    const reversedChildren = useMemo(() => [...Children.toArray(children)].reverse(), [children]);
+    useEffect(() => {
+      updateScrollState();
+    }, [Children.count(children), viewport]);
+
     useEffect(() => {
       if (!viewport || !fade) {
         return;
       }
 
-      // Initial check
+      // Initial check.
       updateScrollState();
 
-      // Listen for scroll events
+      // Listen for scroll events.
       viewport.addEventListener('scroll', updateScrollState);
 
-      // Setup resize observer to detect content changes
+      // Setup resize observer to detect content changes.
       const resizeObserver = new ResizeObserver(updateScrollState);
       resizeObserver.observe(viewport);
 
@@ -78,24 +85,24 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       };
     }, [viewport, fade]);
 
-    useEffect(() => {
-      updateScrollState();
-    }, [Children.count(children), viewport]);
-
     return (
       <div className='relative flex-1 min-bs-0 grid overflow-hidden'>
         {fade && (
           <div
             role='none'
             data-visible={isOverflowing && !scrolledAtTop}
-            className='opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100 z-10 absolute block-start-0 inset-inline-0 bs-24 pointer-events-none bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none'
+            className={mx(
+              'opacity-0 duration-200 transition-opacity',
+              'data-[visible="true"]:opacity-100 z-10 absolute block-start-0 inset-inline-0 bs-24',
+              'bg-gradient-to-b from-[--surface-bg] to-transparent pointer-events-none',
+            )}
           />
         )}
         <div
           className={mx('flex flex-col-reverse min-bs-0 overflow-y-auto scrollbar-thin', classNames)}
           ref={setViewport}
         >
-          {[...Children.toArray(children)].reverse()}
+          {reversedChildren}
         </div>
       </div>
     );

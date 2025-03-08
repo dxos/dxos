@@ -9,6 +9,7 @@ import {
   type BasicExtensionsOptions,
   createBasicExtensions,
   createThemeExtensions,
+  keymap,
   useTextEditor,
   type UseTextEditorProps,
 } from '@dxos/react-ui-editor';
@@ -24,13 +25,15 @@ export interface PromptController {
 }
 
 export type PromptProps = ThemedClassName<
-  AutocompleteOptions &
+  {
+    onOpenChange?: (open: boolean) => void;
+  } & AutocompleteOptions &
     Pick<UseTextEditorProps, 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
 export const Prompt = forwardRef<PromptController, PromptProps>(
-  ({ classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest }, forwardRef) => {
+  ({ classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onOpenChange }, forwardRef) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor(
       {
@@ -43,6 +46,24 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
           }),
           createThemeExtensions({ themeMode }),
           createAutocompleteExtension({ onSubmit, onSuggest }),
+          keymap.of([
+            {
+              key: 'Alt-ArrowUp',
+              preventDefault: true,
+              run: (view) => {
+                onOpenChange?.(true);
+                return true;
+              },
+            },
+            {
+              key: 'Alt-ArrowDown',
+              preventDefault: true,
+              run: (view) => {
+                onOpenChange?.(false);
+                return true;
+              },
+            },
+          ]),
         ],
       },
       [themeMode, onSubmit, onSuggest],

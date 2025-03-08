@@ -15,7 +15,7 @@ import { FormatAnnotationId, FormatEnum } from './types';
  * https://geojson.org
  * {
  *   "type": "Point",
- *   "coordinates": [30.0, 10.0] // [longitude, latitude]
+ *   "coordinates": [0, 51.47] // [longitude, latitude]
  * }
  * Note: optional third element for altitude.
  */
@@ -30,7 +30,7 @@ export const GeoPoint = S.Tuple(
     [AST.TitleAnnotationId]: 'Height ASL (m)',
   }),
 ).annotations({
-  [FormatAnnotationId]: FormatEnum.LatLong,
+  [FormatAnnotationId]: FormatEnum.GeoPoint,
   [AST.TitleAnnotationId]: 'GeoPoint',
   [AST.DescriptionAnnotationId]: 'GeoJSON Position',
 });
@@ -38,8 +38,8 @@ export const GeoPoint = S.Tuple(
 export type GeoPoint = S.Schema.Type<typeof GeoPoint>;
 
 export type GeoLocation = {
-  latitude: number;
   longitude: number;
+  latitude: number;
   height?: number;
 };
 
@@ -51,31 +51,21 @@ export namespace GeoLocation {
    * Convert latitude and longitude to GeoPoint (GeoJSON format [longitude, latitude, height?]).
    * Clamps values to valid ranges: latitude [-90, 90], longitude [-180, 180].
    */
-  export const toGeoPoint = ({
-    latitude,
-    longitude,
-    height,
-  }: {
-    latitude: number;
-    longitude: number;
-    height?: number;
-  }): GeoPoint => {
+  export const toGeoPoint = ({ longitude, latitude, height }: GeoLocation): GeoPoint => {
     // TODO(ZaymonFC): Use schema validation instead of doing this manually.
-    const clampedLatitude = clamp(latitude, -90, 90);
     const clampedLongitude = clamp(longitude, -180, 180);
-
+    const clampedLatitude = clamp(latitude, -90, 90);
     return height !== undefined ? [clampedLongitude, clampedLatitude, height] : [clampedLongitude, clampedLatitude];
   };
 
   /**
    * Extract latitude and longitude from GeoPoint (GeoJSON format [longitude, latitude, height?]).
    */
-  export const fromGeoPoint = (
-    geoPoint: GeoPoint | undefined,
-  ): { latitude: number; longitude: number; height?: number } => {
+  export const fromGeoPoint = (geoPoint: GeoPoint | undefined): GeoLocation => {
     if (!geoPoint) {
-      return { latitude: 0, longitude: 0 };
+      return { longitude: 0, latitude: 0 };
     }
+
     const result: GeoLocation = {
       longitude: geoPoint[0],
       latitude: geoPoint[1],
