@@ -12,19 +12,19 @@ export type SpaceGraphModelOptions = {
   schema?: boolean;
 };
 
-export type EchoGraphNode = SchemaGraphNode | EchoObjectGraphNode;
-
-type EchoObjectGraphNode = {
-  id: string;
-  type: 'echo-object';
-  object: ReactiveEchoObject<any>;
-};
-
 type SchemaGraphNode = {
   id: string;
   type: 'schema';
   schema: S.Schema<any>;
 };
+
+type ObjectGraphNode = {
+  id: string;
+  type: 'object';
+  object: ReactiveEchoObject<any>;
+};
+
+export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
 
 /**
  * Converts ECHO objects to a graph.
@@ -58,13 +58,17 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
       this._subscription = query.subscribe(
         ({ objects }) => {
           this._objects = objects;
+
+          // TODO(burdon): Normalize schema.
           this._graph.nodes = objects.map((object) => {
             if (object instanceof StoredSchema) {
               const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!;
               return { type: 'schema', id: object.id, schema: effectSchema.schema };
             }
-            return { type: 'echo-object', id: object.id, object };
+
+            return { type: 'object', id: object.id, object };
           });
+
           this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
             const objectSchema = getSchema(object);
             const typename = getType(object)?.objectId;
