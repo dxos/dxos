@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
+import { useSelectedItems } from '@dxos/react-ui-attention';
 import { type MapMarker, type MapCanvasProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -29,6 +30,12 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
 
   const schema = useSchema(space, map?.view?.target?.query.type);
   const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
+
+  // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
+  const selectedItems = useSelectedItems(map!.view!.target!.query.type!);
+  useEffect(() => {
+    console.log('Selected items changed:', selectedItems);
+  }, [selectedItems]);
 
   useEffect(() => {
     const locationProperty = getLocationProperty(map?.view?.target);
