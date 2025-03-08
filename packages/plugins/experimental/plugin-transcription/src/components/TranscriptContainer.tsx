@@ -129,23 +129,20 @@ const summarizeTranscript = async (
 
 // TODO(dmaretskyi): Add example to set consistent structure for the summary.
 const SUMMARIZE_PROMPT = `
-  <GOAL>
+  # Goal
   Create a markdown summary of the transcript provided.
-  </GOAL>
 
-  <FORMATTING>
+  # Formatting
   - Format the summary as a markdown document without extra comments like "Here is the summary of the transcript:".
   - Use markdown formatting for headings and bullet points.
   - Format the summary as a list of key points and takeaways.
   - All names of people should be in bold.
-  </FORMATTING>
 
-  <NOTE_TAKING>
+  # Note Taking
   - Correlate items in the summary with the person of origin to build a coherent narrative.
   - Include short quotes verbatim where appropriate. Especially when concerned with design decisions and problem descriptions.
-  </NOTE_TAKING>
 
-  <TASKS>
+  # Tasks
   At the end of the summary include tasks.
   Extract only the tasks that are:
   - Directly actionable
@@ -153,8 +150,12 @@ const SUMMARIZE_PROMPT = `
   - Strongly implied by the conversation and/or user note (no speculative tasks)
   - Specific enough that someone reading them would know exactly what to do next
 
-  If no actionable tasks are found, omit this section.
-  </TASKS>
+  Format all tasks as markdown checkboxes using the syntax:
+  - [ ] Task description
+
+  Additional information can be included (indented).
+
+  If no actionable tasks are found, omit this tasks section.
 `;
 
 // TODO(dmaretskyi): Extract?

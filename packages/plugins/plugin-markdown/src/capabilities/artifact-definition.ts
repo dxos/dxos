@@ -61,7 +61,6 @@ export default () => {
           const space = extensions.space;
           const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
           const document = documents.find((doc) => fullyQualifiedId(doc) === id);
-
           if (!document) {
             return ToolResult.Error(`Document not found: ${id}`);
           }
@@ -69,7 +68,6 @@ export default () => {
           invariant(isInstanceOf(DocumentType, document));
 
           const { content } = await document.content?.load();
-
           return ToolResult.Success({
             id: fullyQualifiedId(document),
             name: document.name || document.fallbackName || 'Unnamed Document',
