@@ -20,4 +20,4 @@ export type Call = {
   space: Space;
 };
 
-export const isCall = (data: any): data is Call => data.type === `${CALLS_PLUGIN}/space` && isSpace(data.space);
+export const isCall = (data: any): data is Call => data?.type === `${CALLS_PLUGIN}/space` && isSpace(data?.space);
