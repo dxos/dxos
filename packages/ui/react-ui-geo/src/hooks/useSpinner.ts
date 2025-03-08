@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { timer as d3Timer } from 'd3';
 import { type Timer } from 'd3';
 import { useEffect, useState } from 'react';
 
@@ -27,7 +27,7 @@ export const useSpinner = (controller?: GlobeController | null, options: Spinner
 
       let t = 0;
       let lastRotation = controller.projection.rotate();
-      timer = d3.timer((elapsed) => {
+      timer = d3Timer((elapsed) => {
         const dt = elapsed - t;
         t = elapsed;
 

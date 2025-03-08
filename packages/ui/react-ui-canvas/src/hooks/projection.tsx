@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { interpolate, interpolateObject, transition, easeSinOut } from 'd3';
 import {
   type Matrix,
   applyToPoints,
@@ -121,9 +121,9 @@ export const zoomInPlace = (
   next: number,
   delay = 200,
 ) => {
-  const is = d3.interpolate(current, next);
-  d3.transition()
-    .ease(d3.easeSinOut)
+  const is = interpolate(current, next);
+  transition()
+    .ease(easeSinOut)
     .duration(delay)
     .tween('zoom', () => (t) => {
       const newScale = is(t);
@@ -144,9 +144,9 @@ export const zoomTo = (
   delay = 200,
   cb = noop,
 ) => {
-  const is = d3.interpolateObject({ scale: current.scale, ...current.offset }, { scale: next.scale, ...next.offset });
-  d3.transition()
-    .ease(d3.easeSinOut)
+  const is = interpolateObject({ scale: current.scale, ...current.offset }, { scale: next.scale, ...next.offset });
+  transition()
+    .ease(easeSinOut)
     .duration(delay)
     .tween('zoom', () => (t) => {
       const { scale, x, y } = is(t);

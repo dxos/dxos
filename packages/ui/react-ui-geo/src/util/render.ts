@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as d3 from 'd3';
-import { type GeoPath, type GeoPermissibleObjects } from 'd3';
-import * as topojson from 'topojson-client';
+import { type GeoPath, type GeoPermissibleObjects, geoGraticule } from 'd3';
+import { feature, mesh } from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
 import { type LatLng, geoLine, geoPoint } from './path';
@@ -53,7 +52,7 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   if (styles.graticule) {
     layers.push({
       styles: styles.graticule,
-      path: d3.geoGraticule().step([6, 6])(),
+      path: geoGraticule().step([6, 6])(),
     });
   }
 
@@ -65,14 +64,14 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
     if (topology.objects.land && styles.land) {
       layers.push({
         styles: styles.land,
-        path: topojson.feature(topology, topology.objects.land),
+        path: feature(topology, topology.objects.land),
       });
     }
 
     if (topology.objects.countries && styles.border) {
       layers.push({
         styles: styles.border,
-        path: topojson.mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
+        path: mesh(topology, topology.objects.countries, (a: any, b: any) => a !== b),
       });
     }
 

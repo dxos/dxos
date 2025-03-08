@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as d3 from 'd3';
+import { curveCatmullRom, line } from 'd3';
 import { type CSSProperties } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -226,11 +226,10 @@ export const createPathThroughPoints2 = (points: Point[]): string => {
 /**
  * https://d3js.org/d3-shape/curve
  */
-const curveGenerator = d3
-  .line<Point>()
-  // .curve(d3.curveBasis)
-  // .curve(d3.curveBundle)
-  .curve(d3.curveCatmullRom.alpha(0.9))
+const curveGenerator = line<Point>()
+  // .curve(curveBasis)
+  // .curve(curveBundle)
+  .curve(curveCatmullRom.alpha(0.9))
   .x((d) => d.x)
   .y((d) => d.y);
 
