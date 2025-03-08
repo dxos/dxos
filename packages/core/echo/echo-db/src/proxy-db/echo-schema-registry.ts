@@ -254,7 +254,6 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
 
     let previousTypename: string | undefined;
-
     const echoSchema = new EchoSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
       echoSchema._invalidate();
@@ -266,7 +265,6 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       }
       previousTypename = schema.typename;
       this._schemaByType.set(schema.typename, echoSchema);
-
       this._notifySchemaListChanged();
     }
 

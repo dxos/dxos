@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ReactiveEchoObject, type Space, getType } from '@dxos/client/echo';
+import { type ReactiveEchoObject, type Space, getTypename } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
   defaultStyles,
@@ -45,9 +45,10 @@ const colors = [
 export type GraphProps = {
   space: Space;
   match?: RegExp;
+  grid?: boolean;
 };
 
-export const Graph: FC<GraphProps> = ({ space, match }) => {
+export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
   const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
   const [selected, setSelected] = useState<string>();
   const { themeMode } = useThemeContext();
@@ -69,7 +70,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
           },
         },
         attributes: {
-          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 24 : 12),
+          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 16 : 8),
         },
       }),
     [],
@@ -95,7 +96,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     <SVGRoot context={context}>
       <SVG className={mx(defaultStyles, slots?.root?.className)}>
         <Markers arrowSize={6} />
-        <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />
+        {grid && <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />}
         <Zoom extent={[1 / 2, 4]}>
           <GraphComponent
             model={model}
@@ -117,7 +118,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
               node: (node: GraphLayoutNode<ReactiveEchoObject<any>>) => {
                 let className: string | undefined;
                 if (node.data) {
-                  const typename = getType(node.data)?.objectId;
+                  const typename = getTypename(node.data);
                   if (typename) {
                     className = colorMap.get(typename);
                     if (!className) {

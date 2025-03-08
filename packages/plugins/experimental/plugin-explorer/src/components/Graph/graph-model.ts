@@ -6,17 +6,21 @@ import { AST, EchoSchema, ReferenceAnnotationId, type S, SchemaValidator, Stored
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { type ReactiveEchoObject, type Space, type Subscription, getSchema, getType } from '@dxos/react-client/echo';
+import {
+  type ReactiveEchoObject,
+  type Space,
+  type Subscription,
+  getSchema,
+  getTypename,
+} from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
 };
 
-export type EchoGraphNode = SchemaGraphNode | EchoObjectGraphNode;
-
-type EchoObjectGraphNode = {
+type ObjectGraphNode = {
   id: string;
-  type: 'echo-object';
+  type: 'object';
   object: ReactiveEchoObject<any>;
 };
 
@@ -25,6 +29,8 @@ type SchemaGraphNode = {
   type: 'schema';
   schema: S.Schema<any>;
 };
+
+export type EchoGraphNode = ObjectGraphNode | SchemaGraphNode;
 
 /**
  * Converts ECHO objects to a graph.
@@ -58,28 +64,31 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
       this._subscription = query.subscribe(
         ({ objects }) => {
           this._objects = objects;
+
           this._graph.nodes = objects.map((object) => {
             if (object instanceof StoredSchema) {
-              const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!;
-              return { type: 'schema', id: object.id, schema: effectSchema.schema };
+              const schema = space.db.schemaRegistry.getSchemaById(object.id)!;
+              return { type: 'schema', id: object.id, schema };
             }
-            return { type: 'echo-object', id: object.id, object };
+
+            return { type: 'object', id: object.id, object };
           });
+
           this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
-            const objectSchema = getSchema(object);
-            const typename = getType(object)?.objectId;
-            if (objectSchema == null || typename == null) {
-              log.info('no schema for object:', { id: object.id.slice(0, 8) });
+            const schema = getSchema(object);
+            const typename = getTypename(object);
+            if (schema == null || typename == null) {
+              log.info('no schema for object:', { id: object.id.slice(0, 8), object });
               return links;
             }
 
-            if (!(objectSchema instanceof EchoSchema)) {
+            if (!(schema instanceof EchoSchema)) {
               const idx = objects.findIndex((obj) => obj.id === typename);
               if (idx === -1) {
                 this._graph.nodes.push({
                   id: typename,
                   type: 'schema',
-                  schema: objectSchema,
+                  schema,
                 });
               }
             }
@@ -94,8 +103,8 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
             }
 
             // Parse schema to follow referenced objects.
-            AST.getPropertySignatures(objectSchema.ast).forEach((prop) => {
-              if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotationId)) {
+            AST.getPropertySignatures(schema.ast).forEach((prop) => {
+              if (!SchemaValidator.hasTypeAnnotation(schema, prop.name.toString(), ReferenceAnnotationId)) {
                 return;
               }
               const value = object[String(prop.name)];
