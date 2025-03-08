@@ -45,7 +45,7 @@ export default (context: PluginsContext) =>
             label: ['app settings label', { ns: SETTINGS_PLUGIN }],
             icon: 'ph--gear--regular',
             disposition: 'pin-end',
-            position: 'fallback',
+            position: 'hoist',
             testId: 'treeView.appSettings',
           },
         },

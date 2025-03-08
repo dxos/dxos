@@ -94,6 +94,7 @@ export default (context: PluginsContext) => {
             icon: 'ph--plus--regular',
             testId: 'spacePlugin.addSpace',
             disposition: 'item',
+            position: 'fallback',
           },
         },
       ],
