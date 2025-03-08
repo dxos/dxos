@@ -19,6 +19,8 @@ export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
   const settings = useCapability(Capabilities.SettingsStore).getStore<AutomationSettingsProps>(
     AUTOMATION_PLUGIN,
   )?.value;
+
+  // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(false);
 
   return (

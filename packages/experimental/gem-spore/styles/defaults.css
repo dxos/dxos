@@ -9,7 +9,7 @@ svg g.graph, svg.graph {
   marker {
     &.arrow path {
       fill: none;
-      stroke: #888;
+      stroke: #555;
       stroke-width: 1px;
     }
 
@@ -68,7 +68,7 @@ svg g.graph, svg.graph {
   g.links {
     path {
       fill: none;
-      stroke: #888;
+      stroke: #555;
       stroke-width: 1px;
     }
 
