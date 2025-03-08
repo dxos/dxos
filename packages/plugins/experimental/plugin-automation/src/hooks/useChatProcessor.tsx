@@ -15,12 +15,12 @@ import { isNonNullable } from '@dxos/util';
 import { AutomationCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { ServiceType } from '../types';
+import { type AutomationSettingsProps, ServiceType } from '../types';
 
 /**
- * Creates a processor for the chat.
+ * Configure and create ChatProcessor.
  */
-export const useChatProcessor = (space?: Space): ChatProcessor => {
+export const useChatProcessor = (space?: Space, settings?: AutomationSettingsProps): ChatProcessor => {
   const aiClient = useCapability(AutomationCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -63,13 +63,14 @@ export const useChatProcessor = (space?: Space): ChatProcessor => {
   // Create processor.
   // TODO(burdon): Updated on each query update above. Should just update current processor.
   const processor = useMemo(() => {
-    log.info('creating processor...');
+    log('creating processor...', { settings });
     return new ChatProcessor(aiClient, tools, extensions, {
-      // TODO(burdon): Move to settings.
-      model: '@anthropic/claude-3-5-sonnet-20241022',
+      // TODO(burdon): Remove defualt (let backend decide if not specified).
+      model: settings?.llmModel,
+      // TOOD(burdon): Query.
       systemPrompt,
     });
-  }, [aiClient, tools, extensions, systemPrompt]);
+  }, [aiClient, tools, extensions, systemPrompt, settings?.llmModel]);
 
   return processor;
 };

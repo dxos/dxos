@@ -6,6 +6,7 @@ import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from
 
 import { defineTool, ToolResult } from '@dxos/artifact';
 import {
+  FormatEnum,
   FormatEnums,
   formatToType,
   S,
@@ -14,7 +15,6 @@ import {
   SelectOptionSchema,
   GeoPoint,
   toJsonSchema,
-  FormatEnum,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
@@ -32,8 +32,8 @@ export const TypeNameSchema = S.String.pipe(
 );
 
 const formatDescription = `The format of the property. Additional information:
-  ${FormatEnum.LatLong}: ${JSON.stringify(toJsonSchema(GeoPoint))}
-  This tuple is GeoJSON. YOU MUST SPECIFY \`${FormatEnum.LatLong}\` as [Longitude, Latitude]`;
+  ${FormatEnum.GeoPoint}: ${JSON.stringify(toJsonSchema(GeoPoint))}
+  This tuple is GeoJSON. You must specify \`${FormatEnum.GeoPoint}\` as [Longitude, Latitude]`;
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
@@ -135,8 +135,8 @@ export const schemaTools = [
           makeSingleSelectAnnotations(registeredSchema.jsonSchema.properties![prop.name], [...prop.config.options]);
         }
 
-        if (prop.format === FormatEnum.LatLong) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLong;
+        if (prop.format === FormatEnum.GeoPoint) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.GeoPoint;
           registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
         }
       }

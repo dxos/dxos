@@ -4,7 +4,8 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { AIChatType } from './schema';
+import { AIChatType } from './chat';
+import { TemplateType } from './template';
 import { AUTOMATION_PLUGIN } from '../meta';
 
 export namespace AutomationAction {
@@ -19,4 +20,22 @@ export namespace AutomationAction {
       object: AIChatType,
     }),
   }) {}
+
+  export class CreateTemplate extends S.TaggedClass<CreateTemplate>()(`${AUTOMATION_ACTION}/create-template`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: TemplateType,
+    }),
+  }) {}
 }
+
+export const AutomationSettingsSchema = S.mutable(
+  S.Struct({
+    llmModel: S.optional(S.String),
+    customPrompts: S.optional(S.Boolean),
+  }),
+);
+
+export type AutomationSettingsProps = S.Schema.Type<typeof AutomationSettingsSchema>;

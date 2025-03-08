@@ -7,7 +7,14 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, IntentPlugin, Surface, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  Capabilities,
+  IntentPlugin,
+  SettingsPlugin,
+  Surface,
+  useCapabilities,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
 import { capabilities, genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
@@ -23,6 +30,7 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { useQueue } from '@dxos/react-edge-client';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -199,6 +207,10 @@ const meta: Meta<typeof Render> = {
   render: Render,
   decorators: [
     withSignals,
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+    }),
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -207,6 +219,7 @@ const meta: Meta<typeof Render> = {
           },
         }),
         SpacePlugin({ observability: false }),
+        SettingsPlugin(),
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),

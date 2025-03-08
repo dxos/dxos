@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useDynamicRef, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];
@@ -30,10 +30,8 @@ export const StatusRoll = ({
 }: StatusRollProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentLine, setCurrentLine] = useState(line);
-  useEffect(() => {
-    setCurrentLine(line);
-  }, [line]);
-
+  const linesLength = useDynamicRef(lines.length);
+  useEffect(() => setCurrentLine(line), [line]);
   useEffect(() => {
     if (!autoAdvance) {
       return;
@@ -41,7 +39,7 @@ export const StatusRoll = ({
 
     const next = () => {
       setCurrentLine((prev) => {
-        if (prev >= lines.length - 1) {
+        if (prev >= linesLength.current - 1) {
           clearInterval(interval);
           return prev;
         }
