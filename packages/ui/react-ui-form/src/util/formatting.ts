@@ -73,7 +73,7 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
         return date.toLocaleTimeString(locale);
       }
     }
-    case FormatEnum.LatLong: {
+    case FormatEnum.GeoPoint: {
       if (value === null || value === undefined) {
         return '';
       }
@@ -138,7 +138,7 @@ export const formatForEditing = ({ type, format, value, locale = undefined }: Va
       const date = new Date(value as number);
       return date.toISOString().split('T')[1].split('.')[0];
     }
-    case FormatEnum.LatLong: {
+    case FormatEnum.GeoPoint: {
       // Handle null or undefined
       if (value === null || value === undefined) {
         return '';

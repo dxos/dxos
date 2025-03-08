@@ -18,6 +18,7 @@ import {
   IntentResolver,
   AppGraphSerializer,
   Thread,
+  ArtifactDefinition,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { MARKDOWN_PLUGIN, meta } from './meta';
@@ -103,5 +104,10 @@ export const MarkdownPlugin = () =>
       id: `${meta.id}/module/thread`,
       activatesOn: ThreadEvents.SetupThread,
       activate: Thread,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);

@@ -18,6 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
+import { makeSingleSelectAnnotations } from '@dxos/schema';
 
 // TODO(ZaymonFC): Move this somewhere common.
 export const TypeNameSchema = S.String.pipe(
@@ -30,10 +31,9 @@ export const TypeNameSchema = S.String.pipe(
   }),
 );
 
-// when return a geopoint YOU MUST return in the form [Longitude, Latitude]
-const formatDescription = `The format of the property. Extra information about format schemas:
-  ${FormatEnum.LatLong}: ${JSON.stringify(toJsonSchema(GeoPoint))}
-  NOTE: In GeoJSON, Longitude is the first coordinate. Latitude is the second coordinate.`;
+const formatDescription = `The format of the property. Additional information:
+  ${FormatEnum.GeoPoint}: ${JSON.stringify(toJsonSchema(GeoPoint))}
+  This tuple is GeoJSON. You must specify \`${FormatEnum.GeoPoint}\` as [Longitude, Latitude]`;
 
 // TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
 const PropertyDefinitionSchema = S.Struct({
@@ -132,14 +132,11 @@ export const schemaTools = [
       //   to all formats.
       for (const prop of properties) {
         if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.SingleSelect;
-          registeredSchema.jsonSchema.properties![prop.name].oneOf = prop.config.options.map(
-            ({ id, title, color }) => ({ const: id, title, color }),
-          );
+          makeSingleSelectAnnotations(registeredSchema.jsonSchema.properties![prop.name], [...prop.config.options]);
         }
 
-        if (prop.format === FormatEnum.LatLong) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.LatLong;
+        if (prop.format === FormatEnum.GeoPoint) {
+          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.GeoPoint;
           registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
         }
       }
