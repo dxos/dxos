@@ -16,8 +16,7 @@ import { type AIChatType, type AutomationSettingsProps } from '../../types';
 export type ThreadContainerProps = {
   chat?: AIChatType;
   settings?: AutomationSettingsProps;
-  onOpenChange?: (open: boolean) => void;
-} & Pick<ThreadProps, 'debug' | 'transcription'>;
+} & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
 export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
@@ -71,6 +70,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       error={processor.error.value}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
+      onOpenChange={onOpenChange}
       {...props}
     />
   );

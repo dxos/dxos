@@ -21,6 +21,7 @@ export type ThreadProps = ThemedClassName<{
   messages?: Message[];
   collapse?: boolean;
   transcription?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
   Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
@@ -41,6 +42,7 @@ export const Thread = ({
   onCancel,
   onPrompt,
   onDelete,
+  onOpenChange,
 }: ThreadProps) => {
   const scroller = useRef<ScrollController>(null);
 
@@ -69,7 +71,7 @@ export const Thread = ({
   }, [messages, collapse]);
 
   return (
-    <div role='none' className={mx('flex flex-col grow', classNames)}>
+    <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <ScrollContainer ref={scroller} fade>
         <div
           role='none'
@@ -97,6 +99,7 @@ export const Thread = ({
           error={error}
           onSubmit={handleSubmit}
           onCancel={onCancel}
+          onOpenChange={onOpenChange}
         />
       )}
     </div>
