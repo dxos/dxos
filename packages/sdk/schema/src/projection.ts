@@ -44,7 +44,9 @@ export class ViewProjection {
     // TODO(burdon): How to use tables with static schema.
     private readonly _schema: EchoSchema,
     private readonly _view: ViewType,
-  ) {}
+  ) {
+    this.migrateSingleSelectStoredFormat();
+  }
 
   get view() {
     return this._view;
@@ -192,6 +194,33 @@ export class ViewProjection {
     delete this._schema.jsonSchema.properties?.[current?.field.path];
 
     return { deleted: fieldProjection, index: fieldIndex };
+  }
+
+  /**
+   * @deprecated TODO(ZaymonFC): Remove this migration code in a future release once all data is migrated.
+   * Migrate legacy single-select format to new format.
+   */
+  private migrateSingleSelectStoredFormat(): void {
+    invariant(this._schema.jsonSchema.properties);
+
+    for (const field of this._view.fields) {
+      const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? {
+        format: FormatEnum.None,
+      };
+      const { format: schemaFormat = FormatEnum.None, oneOf } = jsonProperty;
+      if (schemaFormat !== FormatEnum.SingleSelect) {
+        continue;
+      }
+
+      const hasLegacyOptions =
+        oneOf !== undefined && oneOf?.length !== 0 && oneOf?.every((p) => typeof p.const === 'string');
+      if (hasLegacyOptions) {
+        const options = (oneOf as any[]).map(({ const: id, title, color }) => ({ id, title, color }));
+        log.info('Migrating legacy single-select format', options);
+        makeSingleSelectAnnotations(jsonProperty, options);
+        jsonProperty.oneOf = [];
+      }
+    }
   }
 }
 
