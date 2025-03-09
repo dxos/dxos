@@ -48,6 +48,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
