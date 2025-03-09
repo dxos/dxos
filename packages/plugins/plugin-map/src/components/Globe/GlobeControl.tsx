@@ -104,6 +104,8 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
     [markers],
   );
 
+  console.log(features);
+
   // Control hooks.
   useDrag(controller);
   const [start] = useTour(controller, features, { styles });
@@ -114,8 +116,8 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
         ref={setController}
         topology={topology}
         projection='orthographic'
-        styles={styles}
         features={features}
+        styles={styles}
       />
       <Globe.Action onAction={handleAction} />
       <Globe.Zoom onAction={handleZoomAction} />

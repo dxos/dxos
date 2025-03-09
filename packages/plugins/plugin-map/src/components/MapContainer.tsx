@@ -3,7 +3,7 @@
 //
 
 import { isNotNullable } from 'effect/Predicate';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
@@ -30,12 +30,6 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
 
   const schema = useSchema(space, map?.view?.target?.query.type);
   const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
-
-  // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
-  const selectedItems = useSelectedItems(map!.view!.target!.query.type!);
-  useEffect(() => {
-    console.log('Selected items changed:', selectedItems);
-  }, [selectedItems]);
 
   useEffect(() => {
     const locationProperty = getLocationProperty(map?.view?.target);
@@ -65,6 +59,16 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
 
     setMarkers(newMarkers);
   }, [rowsForType, map?.view?.target]);
+
+  // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
+  const selectedItems = useSelectedItems(map!.view!.target!.query.type!);
+  const objects = useMemo(() => {
+    if (!space) {
+      return [];
+    }
+
+    return Array.from(selectedItems).map((id) => space.db.getObjectById(id));
+  }, [space, selectedItems]);
 
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>

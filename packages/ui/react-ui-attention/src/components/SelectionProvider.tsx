@@ -33,6 +33,7 @@ export const useSelectedItems = (contextId: string): Set<string> => {
   return selection.getSelection(contextId);
 };
 
+// TODO(burdon): What is this for?
 export const useSelectionActions = (...contextIds: string[]) => {
   const { selection } = useSelectionContext(SELECTION_NAME);
 
@@ -41,6 +42,7 @@ export const useSelectionActions = (...contextIds: string[]) => {
       if (!contextIds.length) {
         return new Set();
       }
+
       for (const contextId of contextIds) {
         selection.updateSelection(contextId, ids);
       }
@@ -53,6 +55,7 @@ export const useSelectionActions = (...contextIds: string[]) => {
       if (!contextIds.length) {
         return new Set();
       }
+
       for (const contextId of contextIds) {
         selection.toggleSelection(contextId, id);
       }
@@ -64,6 +67,7 @@ export const useSelectionActions = (...contextIds: string[]) => {
     if (!contextIds.length) {
       return;
     }
+
     for (const contextId of contextIds) {
       selection.clearSelection(contextId);
     }
