@@ -91,7 +91,6 @@ export const GlobeControl = ({
 
   const [controller, setController] = useState<GlobeController | null>();
   const handleZoomAction = useGlobeZoomHandler(controller);
-  useDrag(controller);
 
   const features = useMemo(
     () => ({
@@ -116,9 +115,14 @@ export const GlobeControl = ({
     return points;
   }, [markers, selected]);
 
+  const [moved, setMoved] = useState(false);
+  useDrag(controller, {
+    onUpdate: () => setMoved(true),
+  });
   const [running, setRunning] = useTour(controller, selectedPoints?.length ? selectedPoints : features.points, {
     loop: true,
     styles,
+    autoRotate: !moved,
   });
 
   useEffect(() => setRunning(!!selectedPoints?.length), [running, selectedPoints?.length]);
@@ -132,6 +136,7 @@ export const GlobeControl = ({
 
       case 'start': {
         setRunning((running) => !running);
+        setMoved(false);
         break;
       }
     }

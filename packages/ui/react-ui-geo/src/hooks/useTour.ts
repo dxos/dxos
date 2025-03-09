@@ -21,6 +21,7 @@ export type TourOptions = {
   duration?: number;
   loop?: boolean;
   tilt?: number;
+  autoRotate?: boolean;
   styles?: StyleSet;
 };
 
@@ -97,8 +98,10 @@ export const useTour = (
                 context.restore();
 
                 // TODO(burdon): This has to come after rendering above. Add to features to correct order?
-                projection.rotate(iv(t));
-                setRotation(projection.rotate());
+                if (options.autoRotate) {
+                  projection.rotate(iv(t));
+                  setRotation(projection.rotate());
+                }
               });
 
             // Throws if interrupted.
@@ -117,7 +120,7 @@ export const useTour = (
         selection.interrupt(TRANSITION_NAME);
       };
     }
-  }, [controller, running]);
+  }, [controller, running, JSON.stringify(options)]);
 
   return [running, setRunning];
 };
