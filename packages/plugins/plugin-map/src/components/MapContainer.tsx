@@ -3,7 +3,7 @@
 //
 
 import { isNotNullable } from 'effect/Predicate';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
@@ -61,19 +61,16 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   }, [rowsForType, map?.view?.target]);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
-  const selectedItems = useSelectedItems(map!.view!.target!.query.type!);
-  const objects = useMemo(() => {
-    if (!space) {
-      return [];
-    }
-
-    return Array.from(selectedItems).map((id) => space.db.getObjectById(id));
-  }, [space, selectedItems]);
+  const selected = useSelectedItems(map?.view?.target?.query.type);
 
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
-      {type === 'map' && <MapControl markers={markers} onToggle={() => setType('globe')} {...props} />}
-      {type === 'globe' && <GlobeControl markers={markers} onToggle={() => setType('map')} {...props} />}
+      {type === 'map' && (
+        <MapControl markers={markers} selected={Array.from(selected)} onToggle={() => setType('globe')} {...props} />
+      )}
+      {type === 'globe' && (
+        <GlobeControl markers={markers} selected={Array.from(selected)} onToggle={() => setType('map')} {...props} />
+      )}
     </StackItem.Content>
   );
 };

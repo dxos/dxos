@@ -20,6 +20,11 @@ const [SelectionContextProvider, useSelectionContext] = createContext<SelectionC
   selection: new SelectionManager(),
 });
 
+/**
+ * Manages selection state across the app for multiple contexts.
+ */
+// TODO(burdon): Review/remove this.
+// TODO(burdon): When is the selection removed?
 export const SelectionProvider = ({
   children,
   selection: propsSelection,
@@ -28,50 +33,43 @@ export const SelectionProvider = ({
   return <SelectionContextProvider selection={selection}>{children}</SelectionContextProvider>;
 };
 
-export const useSelectedItems = (contextId: string): Set<string> => {
+const emptySet = new Set<string>();
+
+// TODO(burdon): Return array?
+export const useSelectedItems = (contextId?: string): Set<string> => {
   const { selection } = useSelectionContext(SELECTION_NAME);
-  return selection.getSelection(contextId);
+  return contextId ? selection.getSelection(contextId) : emptySet;
 };
 
-// TODO(burdon): What is this for? What does contextIds mean?
-export const useSelectionActions = (...contextIds: string[]) => {
+/**
+ * Provides functions to manage the selection state for multiple contexts.
+ */
+export const useSelectionActions = (contextIds: string[]) => {
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const select = useCallback(
     (ids: string[]) => {
-      if (!contextIds.length) {
-        return new Set();
-      }
-
       for (const contextId of contextIds) {
         selection.updateSelection(contextId, ids);
       }
     },
-    [selection, contextIds],
+    [selection, ...contextIds],
   );
 
   const toggle = useCallback(
     (id: string) => {
-      if (!contextIds.length) {
-        return new Set();
-      }
-
       for (const contextId of contextIds) {
         selection.toggleSelection(contextId, id);
       }
     },
-    [selection, contextIds],
+    [selection, ...contextIds],
   );
 
   const clear = useCallback(() => {
-    if (!contextIds.length) {
-      return;
-    }
-
     for (const contextId of contextIds) {
       selection.clearSelection(contextId);
     }
-  }, [selection, contextIds]);
+  }, [selection, ...contextIds]);
 
   return { select, toggle, clear };
 };

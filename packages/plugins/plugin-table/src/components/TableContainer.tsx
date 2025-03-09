@@ -27,16 +27,21 @@ import { TableAction } from '../types';
 const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
-
   const schema = useSchema(space, table.view?.target?.query.type);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+  const tableRef = useRef<TableController>(null);
+
+  const handleThreadCreate = useCallback(() => {
+    // TODO(Zan): Consider a more appropriate anchor format.
+    void dispatch(createIntent(ThreadAction.Create, { subject: table, cursor: Date.now().toString() }));
+  }, [dispatch, table]);
 
   const handleInsertRow = useCallback(() => {
     if (schema && space) {
       space.db.add(create(schema, {}));
     }
-  }, [schema, space]);
+  }, [space, schema]);
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -45,9 +50,12 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
     [dispatch],
   );
 
-  const handleDeleteColumn = useCallback((fieldId: string) => {
-    void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
-  }, []);
+  const handleDeleteColumn = useCallback(
+    (fieldId: string) => {
+      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
+    },
+    [dispatch],
+  );
 
   const projection = useMemo(() => {
     if (!schema || !table.view?.target) {
@@ -56,8 +64,6 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
 
     return new ViewProjection(schema, table.view.target!);
   }, [schema, table.view?.target]);
-
-  const tableRef = useRef<TableController>(null);
 
   const model = useTableModel({
     table,
@@ -72,16 +78,11 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
 
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
-  const onThreadCreate = useCallback(() => {
-    // TODO(Zan): Consider a more appropriate anchor format.
-    void dispatch(createIntent(ThreadAction.Create, { subject: table, cursor: Date.now().toString() }));
-  }, [dispatch, table]);
-
   const handleAction = useCallback(
     (action: TableToolbarAction) => {
       switch (action.properties.type) {
         case 'comment': {
-          onThreadCreate();
+          handleThreadCreate();
           break;
         }
         case 'add-row': {
@@ -94,7 +95,7 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
         }
       }
     },
-    [onThreadCreate, space, schema, handleInsertRow, dispatch, table, model],
+    [dispatch, space, schema, table, model, handleThreadCreate, handleInsertRow],
   );
 
   return (

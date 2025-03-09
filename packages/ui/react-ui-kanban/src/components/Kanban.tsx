@@ -23,7 +23,7 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { select, clear } = useSelectionActions(model.id, model.cardSchema.typename);
+  const { select, clear } = useSelectionActions([model.id, model.cardSchema.typename]);
   const selectedItems = useSelectedItems(model.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);

@@ -2,19 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { type ThemeMode, useThemeContext, useAsyncState } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,
   type GlobeController,
+  type LatLng,
   type MapCanvasProps,
   loadTopology,
   useDrag,
   useGlobeZoomHandler,
   useTour,
 } from '@dxos/react-ui-geo';
+import { isNonNullable } from '@dxos/util';
 
 const globeStyles = (themeMode: ThemeMode) =>
   themeMode === 'dark'
@@ -75,26 +77,21 @@ const globeStyles = (themeMode: ThemeMode) =>
 
 export type GlobeControlProps = MapCanvasProps & { onToggle?: () => void };
 
-export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle }: GlobeControlProps) => {
+export const GlobeControl = ({
+  classNames,
+  markers = [],
+  selected = [],
+  center,
+  zoom,
+  onToggle,
+}: GlobeControlProps) => {
   const [topology] = useAsyncState(loadTopology);
   const { themeMode } = useThemeContext();
   const styles = globeStyles(themeMode);
 
   const [controller, setController] = useState<GlobeController | null>();
   const handleZoomAction = useGlobeZoomHandler(controller);
-  const handleAction: ControlProps['onAction'] = (action) => {
-    switch (action) {
-      case 'toggle': {
-        onToggle?.();
-        break;
-      }
-
-      case 'start': {
-        start();
-        break;
-      }
-    }
-  };
+  useDrag(controller);
 
   const features = useMemo(
     () => ({
@@ -104,11 +101,41 @@ export const GlobeControl = ({ classNames, markers = [], center, zoom, onToggle 
     [markers],
   );
 
-  console.log(features);
+  const selectedPoints = useMemo<LatLng[]>(() => {
+    if (selected?.length === 0) {
+      return features.points;
+    }
 
-  // Control hooks.
-  useDrag(controller);
-  const [start] = useTour(controller, features, { styles });
+    const points = selected
+      .map((id) => {
+        const marker = markers.find((marker) => marker.id === id);
+        return marker ? marker.location : undefined;
+      })
+      .filter(isNonNullable);
+
+    return points;
+  }, [markers, selected]);
+
+  const [running, setRunning] = useTour(controller, selectedPoints?.length ? selectedPoints : features.points, {
+    loop: true,
+    styles,
+  });
+
+  useEffect(() => setRunning(!!selectedPoints?.length), [running, selectedPoints?.length]);
+
+  const handleAction: ControlProps['onAction'] = (action) => {
+    switch (action) {
+      case 'toggle': {
+        onToggle?.();
+        break;
+      }
+
+      case 'start': {
+        setRunning((running) => !running);
+        break;
+      }
+    }
+  };
 
   return (
     <Globe.Root classNames={classNames} center={center} scale={zoom}>
