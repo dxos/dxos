@@ -126,7 +126,7 @@ const components: Record<string, BlockComponent> = {
       case 'tool_list': {
         return (
           <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
-            <ToolboxContainer space={space} />
+            <ToolboxContainer space={space} classNames='pbe-2' />
           </ToggleContainer>
         );
       }

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Tool } from '@dxos/artifact';
+import { DEFAULT_LLM_MODEL } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -66,7 +67,7 @@ export const useChatProcessor = (space?: Space, settings?: AutomationSettingsPro
     log('creating processor...', { settings });
     return new ChatProcessor(aiClient, tools, extensions, {
       // TODO(burdon): Remove defualt (let backend decide if not specified).
-      model: settings?.llmModel,
+      model: settings?.llmModel ?? DEFAULT_LLM_MODEL,
       // TOOD(burdon): Query.
       systemPrompt,
     });

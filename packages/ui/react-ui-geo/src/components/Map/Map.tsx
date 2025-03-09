@@ -61,98 +61,96 @@ type MapController = {
   setZoom: (cb: (zoom: number) => number) => void;
 };
 
-const MapCanvas = forwardRef<MapController, MapCanvasProps>(
-  ({ markers = [], center, zoom, onChange }, forwardedRef) => {
-    const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
-    const map = useMap();
+const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, zoom, onChange }, forwardedRef) => {
+  const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
+  const map = useMap();
 
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        setCenter: (center: LatLngExpression, zoom?: number) => {
-          map.setView(center, zoom);
-        },
-        setZoom: (cb) => {
-          map.setZoom(cb(map.getZoom()));
-        },
-      }),
-      [map],
-    );
-
-    // Resize.
-    useEffect(() => {
-      if (width && height) {
-        map.invalidateSize();
-      }
-    }, [width, height]);
-
-    // Position.
-    useEffect(() => {
-      if (center) {
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      setCenter: (center: LatLngExpression, zoom?: number) => {
         map.setView(center, zoom);
-      } else if (zoom !== undefined) {
-        map.setZoom(zoom);
-      }
-    }, [center, zoom]);
+      },
+      setZoom: (cb) => {
+        map.setZoom(cb(map.getZoom()));
+      },
+    }),
+    [map],
+  );
 
-    // Events.
-    useEffect(() => {
-      const handler = debounce(() => {
-        onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
-      }, 100);
-      map.on('move', handler);
-      map.on('zoom', handler);
-      return () => {
-        map.off('move', handler);
-        map.off('zoom', handler);
-      };
-    }, [map, onChange]);
+  // Resize.
+  useEffect(() => {
+    if (width && height) {
+      map.invalidateSize();
+    }
+  }, [width, height]);
 
-    // Set the viewport around the markers, or show the whole world map if `markers` is empty.
-    useEffect(() => {
-      if (markers.length > 0) {
-        const bounds = latLngBounds(markers.map((marker) => marker.location));
-        map.fitBounds(bounds);
-      } else {
-        map.setView(defaults.center, defaults.zoom);
-      }
-    }, [markers]);
+  // Position.
+  useEffect(() => {
+    if (center) {
+      map.setView(center, zoom);
+    } else if (zoom !== undefined) {
+      map.setZoom(zoom);
+    }
+  }, [center, zoom]);
 
-    return (
-      <div ref={ref} className='flex w-full h-full overflow-hidden bg-baseSurface'>
-        {/* Map tiles. */}
-        <TileLayer
-          className='dark:filter dark:grayscale dark:invert'
-          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        />
+  // Events.
+  useEffect(() => {
+    const handler = debounce(() => {
+      onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
+    }, 100);
+    map.on('move', handler);
+    map.on('zoom', handler);
+    return () => {
+      map.off('move', handler);
+      map.off('zoom', handler);
+    };
+  }, [map, onChange]);
 
-        {/* Markers. */}
-        {markers.map(({ id, title, location: { lat, lng } }) => {
-          return (
-            <Marker
-              key={id}
-              position={{ lat, lng }}
-              icon={
-                // TODO(burdon): Create custom icon from bundled assets.
-                new L.Icon({
-                  iconUrl: 'https://dxos.network/marker-icon.png',
-                  iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
-                  shadowUrl: 'https://dxos.network/marker-shadow.png',
-                  iconSize: [25, 41],
-                  iconAnchor: [12, 41],
-                  popupAnchor: [1, -34],
-                  shadowSize: [41, 41],
-                })
-              }
-            >
-              {title && <Popup>{title}</Popup>}
-            </Marker>
-          );
-        })}
-      </div>
-    );
-  },
-);
+  // Set the viewport around the markers, or show the whole world map if `markers` is empty.
+  useEffect(() => {
+    if (markers.length > 0) {
+      const bounds = latLngBounds(markers.map((marker) => marker.location));
+      map.fitBounds(bounds);
+    } else {
+      map.setView(defaults.center, defaults.zoom);
+    }
+  }, [markers]);
+
+  return (
+    <div ref={ref} className='flex w-full h-full overflow-hidden bg-baseSurface'>
+      {/* Map tiles. */}
+      <TileLayer
+        className='dark:filter dark:grayscale dark:invert'
+        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      />
+
+      {/* Markers. */}
+      {markers?.map(({ id, title, location: { lat, lng } }) => {
+        return (
+          <Marker
+            key={id}
+            position={{ lat, lng }}
+            icon={
+              // TODO(burdon): Create custom icon from bundled assets.
+              new L.Icon({
+                iconUrl: 'https://dxos.network/marker-icon.png',
+                iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
+                shadowUrl: 'https://dxos.network/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+              })
+            }
+          >
+            {title && <Popup>{title}</Popup>}
+          </Marker>
+        );
+      })}
+    </div>
+  );
+});
 
 //
 // Controls

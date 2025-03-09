@@ -57,8 +57,9 @@ svg g.graph, svg.graph {
     }
 
     text {
-      fill: #555 !important;
+      fill: #555;
       font-family: sans-serif;
+      font-size: 12px;
     }
   }
 

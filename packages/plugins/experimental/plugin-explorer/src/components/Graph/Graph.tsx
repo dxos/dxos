@@ -132,18 +132,13 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
                 }
 
                 const selected = filteredRef.current?.some((object) => object.id === node.data?.id);
+                const blur = !selected && !!filteredRef.current?.length;
                 return {
-                  class: mx(
-                    filteredRef.current?.length
-                      ? selected
-                        ? [className]
-                        : '[&>text]:!fill-neutral-300'
-                      : ['[&>text]:!fill-neutral-700', className],
-                  ),
+                  class: mx(className, blur && 'opacity-70'),
                 };
               },
               link: () => ({
-                class: '[&>path]:!stroke-neutral-500',
+                class: '[&>path]:!stroke-neutral-300 dark:[&>path]:!stroke-neutral-700',
               }),
             }}
           />

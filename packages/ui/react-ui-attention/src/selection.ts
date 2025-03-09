@@ -10,6 +10,7 @@ import { create, type ReactiveObject } from '@dxos/live-object';
  * Manages selection state for different contexts.
  * Each context maintains its own list of selected IDs.
  */
+// TODO(burdon): Review/remove this abstraction. Selection should be managed by specific components.
 export class SelectionManager {
   private readonly _state = create<{ selections: Record<string, Set<string>> }>({ selections: {} });
 
