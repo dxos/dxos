@@ -33,7 +33,7 @@ export const useSelectedItems = (contextId: string): Set<string> => {
   return selection.getSelection(contextId);
 };
 
-// TODO(burdon): What is this for?
+// TODO(burdon): What is this for? What does contextIds mean?
 export const useSelectionActions = (...contextIds: string[]) => {
   const { selection } = useSelectionContext(SELECTION_NAME);
 

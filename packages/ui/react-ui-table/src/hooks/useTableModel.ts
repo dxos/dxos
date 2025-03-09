@@ -50,7 +50,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
     }
   }, [model, objects]);
 
-  const { select, clear } = useSelectionActions(table?.id, table?.view?.target?.query.type ?? '');
+  const { select, clear } = useSelectionActions(table?.id ?? '', table?.view?.target?.query.type ?? '');
 
   useEffect(() => {
     if (!model) {
