@@ -24,13 +24,14 @@ import { ViewProjection } from '@dxos/schema';
 import { TableAction } from '../types';
 
 // TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: { table: TableType; role?: string }) => {
+const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const tableRef = useRef<TableController>(null);
+
   const space = getSpace(table);
   const schema = useSchema(space, table.view?.target?.query.type);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
-  const tableRef = useRef<TableController>(null);
 
   const handleThreadCreate = useCallback(() => {
     // TODO(Zan): Consider a more appropriate anchor format.
@@ -99,7 +100,7 @@ const TableContainer = ({ role, table }: { table: TableType; role?: string }) =>
   );
 
   return (
-    <StackItem.Content toolbar role={role}>
+    <StackItem.Content role={role} toolbar>
       <TableToolbar onAction={handleAction} attendableId={fullyQualifiedId(table)} />
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
