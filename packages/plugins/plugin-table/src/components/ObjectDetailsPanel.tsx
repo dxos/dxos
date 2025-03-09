@@ -18,7 +18,6 @@ type RowDetailsPanelProps = { objectId: string; view: ViewType };
 
 const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
-  const selectedRows = useSelectedItems(objectId);
   const space = getSpace(view);
   const schema = useSchema(space, view.query?.type);
   const effectSchema = useMemo(() => schema?.getSchemaSnapshot(), [JSON.stringify(schema?.jsonSchema)]);
@@ -26,6 +25,7 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
   //   up in will not necessarily match the order in the selected context.
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const selectedRows = useSelectedItems(objectId);
   const selectedObjects = queriedObjects.filter((obj) => selectedRows.has(obj.id));
 
   const handleSave = useCallback(

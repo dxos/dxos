@@ -7772,6 +7772,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -11841,6 +11844,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
