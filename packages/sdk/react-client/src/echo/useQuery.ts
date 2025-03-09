@@ -5,11 +5,11 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import {
-  Filter,
   isSpace,
   type Echo,
-  type ReactiveEchoObject,
   type FilterSource,
+  Filter,
+  type ReactiveEchoObject,
   type Query,
   type QueryOptions,
   type Space,
