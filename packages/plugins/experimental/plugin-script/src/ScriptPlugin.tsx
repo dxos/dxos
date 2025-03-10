@@ -8,8 +8,10 @@ import { Capabilities, contributes, createIntent, defineModule, definePlugin, Ev
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { ArtifactDefinition, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
 import { ScriptEvents } from './events';
@@ -46,6 +48,18 @@ export const ScriptPlugin = () =>
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
           },
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/complementary-panels`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'function',
+          label: ['function panel label', { ns: SCRIPT_PLUGIN }],
+          icon: 'ph--terminal--regular',
+          fixed: true,
+          filter: (node) => node.data instanceof ScriptType && !!getSpace(node.data),
         }),
     }),
     defineModule({

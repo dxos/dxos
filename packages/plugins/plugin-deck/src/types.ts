@@ -20,6 +20,10 @@ export type Panel = {
   id: string;
   label: Label;
   icon: string;
+  /**
+   * If true, the panel will now be wrapped in a scroll area.
+   */
+  fixed?: boolean;
   filter?: (node: Node) => boolean;
 };
 
