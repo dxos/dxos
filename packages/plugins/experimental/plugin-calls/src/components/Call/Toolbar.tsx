@@ -31,7 +31,7 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
   const { call } = useCallGlobalContext();
 
   // Screen sharing.
-  const isScreensharing = call.media.screenshareVideoTrack !== undefined;
+  const isScreensharing = call.media.screenshareTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
 
