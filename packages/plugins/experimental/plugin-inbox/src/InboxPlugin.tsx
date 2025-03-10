@@ -8,7 +8,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { INBOX_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
@@ -90,5 +90,10 @@ export const InboxPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
     }),
   ]);
