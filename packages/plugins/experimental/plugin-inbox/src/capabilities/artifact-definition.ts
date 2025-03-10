@@ -5,6 +5,7 @@
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
 declare global {
@@ -16,15 +17,16 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-inbox',
-    instructions: 'List all inbox items for the given inbox.',
+    id: 'plugin-calendar',
+    instructions: 'Manage the calendar for the current space.',
     schema: S.Struct({}),
     tools: [
       defineTool({
         name: 'calendar_view',
-        description: '',
+        description: 'List all events for the given calendar.',
         schema: S.Struct({}),
         execute: async () => {
+          log.info('calendar_view');
           return ToolResult.Success({});
         },
       }),

@@ -66,7 +66,6 @@ export default () => {
           }
 
           invariant(isInstanceOf(DocumentType, document));
-
           const { content } = await document.content?.load();
           return ToolResult.Success({
             id: fullyQualifiedId(document),

@@ -242,7 +242,7 @@ type Story = StoryObj<typeof Render>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['Ask me a question', 'Show me a chess puzzle'],
+    prompts: ['What tools do you have?', 'Show me a chess puzzle'],
   },
 };
 
