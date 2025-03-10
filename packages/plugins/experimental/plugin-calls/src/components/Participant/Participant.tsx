@@ -20,18 +20,14 @@ export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemP
   );
 
   const videoStream: MediaStream | undefined = useMemo(() => {
-    if (isScreenshare) {
-      return call.media.screenshareVideoStream;
-    }
-
-    if (isSelf && call.media.videoStream) {
+    if (isSelf && !isScreenshare) {
       return call.media.videoStream;
-    }
-
-    if (!isSelf) {
+    } else if (isSelf && isScreenshare) {
+      return call.media.screenshareVideoStream;
+    } else if (!isSelf) {
       return pulledVideoStream;
     }
-  }, [isSelf, pulledVideoStream, call.media.videoStream]);
+  }, [isSelf, call.media.videoStream, call.media.screenshareVideoStream, isScreenshare, pulledVideoStream]);
 
   return (
     <ResponsiveGridItem
