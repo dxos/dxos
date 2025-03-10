@@ -20,6 +20,8 @@ export type HuePickerProps = {
 export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
   const { t } = useTranslation('os');
 
+  console.log('hues', { hues });
+
   return (
     <ToolbarPickerButton
       Component={HuePreview}
