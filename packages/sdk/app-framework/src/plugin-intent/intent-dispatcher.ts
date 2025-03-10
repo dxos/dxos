@@ -6,6 +6,7 @@ import { Effect, Option, pipe, Ref } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { create } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
 
 import { IntentAction } from './actions';
@@ -236,7 +237,10 @@ export const createDispatcher = (
   const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
     return Effect.runPromise(dispatch(intentChain))
       .then((data) => ({ data }))
-      .catch((error) => ({ error }));
+      .catch((error) => {
+        log.catch(error);
+        return { error };
+      });
   };
 
   const undo: IntentUndo = () => {

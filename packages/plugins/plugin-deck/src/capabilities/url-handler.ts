@@ -51,8 +51,10 @@ export default async (context: PluginsContext) => {
     () => ({ solo: state.deck.solo, activeDeck: state.activeDeck }),
     ({ solo, activeDeck }) => {
       const path = solo ? `/${activeDeck}/${solo}` : `/${activeDeck}`;
-      // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
-      history.pushState(null, '', `${path}${window.location.search}`);
+      if (window.location.pathname !== path) {
+        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+        history.pushState(null, '', `${path}${window.location.search}`);
+      }
     },
   );
 

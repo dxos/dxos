@@ -17,9 +17,15 @@ import { log } from '@dxos/log';
 import { captureException } from '@dxos/observability/sentry';
 
 import { meta, PWA_PLUGIN } from './meta';
+import translations from './translations';
 
 export const PwaPlugin = () =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
     defineModule({
       id: `${meta.id}/module/register-pwa`,
       activatesOn: Events.DispatcherReady,
