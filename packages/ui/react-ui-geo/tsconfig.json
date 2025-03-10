@@ -14,7 +14,10 @@
       "path": "../../common/debug",
     },
     {
-      "path": "../../common/node-std",
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
     },
     {
       "path": "../../common/storybook-utils",

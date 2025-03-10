@@ -25,7 +25,7 @@ export type ToolboxProps = ThemedClassName<{
 const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
 
 export const Toolbox = ({ classNames, artifacts, functions, services, striped }: ToolboxProps) => {
-  const gridClassNames = 'grid grid-cols-[6rem_8rem_1fr]';
+  const gridClassNames = 'grid grid-cols-[8rem_8rem_1fr]';
   const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
 
   return (
