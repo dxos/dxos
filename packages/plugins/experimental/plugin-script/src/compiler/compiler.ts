@@ -175,7 +175,18 @@ export class Compiler {
   private _parseImportToUrl(moduleName: string): string | undefined {
     if (!moduleName.startsWith('.')) {
       const version = this._moduleVersions.get(moduleName);
-      return `https://esm.sh/${moduleName}${version ? `@${version}` : ''}`;
+      const parts = moduleName.split('/');
+      let baseModule, path;
+      if (parts[0].startsWith('@')) {
+        baseModule = parts.slice(0, 2).join('/');
+        path = parts.slice(2).length > 0 ? '/' + parts.slice(2).join('/') : '';
+      } else {
+        baseModule = parts[0];
+        path = parts.slice(1).length > 0 ? '/' + parts.slice(1).join('/') : '';
+      }
+      const url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
+      log.info('parse import to url', { moduleName, url });
+      return url;
     }
   }
 
