@@ -181,6 +181,9 @@ export class CallManager extends Resource {
       video: state.pushedVideoTrack ? TrackNameCodec.encode(state.pushedVideoTrack) : undefined,
       audio: state.pushedAudioTrack ? TrackNameCodec.encode(state.pushedAudioTrack) : undefined,
       screenshare: state.pushedScreenshareTrack ? TrackNameCodec.encode(state.pushedScreenshareTrack) : undefined,
+      videoEnabled: state.videoEnabled,
+      audioEnabled: state.audioEnabled,
+      screenshareEnabled: state.screenshareEnabled,
     });
 
     this._updateState();
