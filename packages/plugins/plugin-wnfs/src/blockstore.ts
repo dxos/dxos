@@ -3,7 +3,7 @@
 //
 
 import { CarWriter } from '@ipld/car';
-import type { Block } from '@ipld/car/api';
+import type { Block } from '@ipld/car/reader';
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
 import debounce from 'debounce';

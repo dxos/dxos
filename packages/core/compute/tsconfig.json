@@ -4,8 +4,6 @@
     "lib": [
       "ESNext"
     ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "outDir": "./dist/types",
     "types": [
       "node"
