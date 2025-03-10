@@ -141,7 +141,7 @@ export class MediaManager extends Resource {
 
   async turnScreenshareOn() {
     const ms = await getScreenshare({ contentHint: 'text' });
-    this._state.screenshareVideoTrack = ms?.getVideoTracks()[0];
+    this._state.screenshareVideoTrack = ms.getVideoTracks()[0];
     this._state.screenshareEnabled = true;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
