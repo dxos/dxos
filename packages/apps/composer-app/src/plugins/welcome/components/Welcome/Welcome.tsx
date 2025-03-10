@@ -16,6 +16,8 @@ import { hero } from './hero-image';
 import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
 
+const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
+
 export const Welcome = ({
   state,
   identity,
@@ -120,7 +122,7 @@ export const Welcome = ({
                   <p className='text-subdued'>{t('new device description')}</p>
                 </div>
                 <div className='flex flex-col gap-2'>
-                  {onPasskey && (
+                  {supportsPasskeys && onPasskey && (
                     <CompoundButton
                       slots={{ label: { className: 'text-sm' } }}
                       after={<CaretRight className={getSize(4)} weight='bold' />}
