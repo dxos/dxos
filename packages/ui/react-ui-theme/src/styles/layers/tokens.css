@@ -3,9 +3,6 @@
 
   :root {
     /* Recitations */
-    --surface-bg: var(--dx-baseSurface);
-    --surface-text: var(--dx-baseText);
-    --description-text: var(--dx-description);
     --sticky-top: 0;
 
     /* Lengths / sizes */
