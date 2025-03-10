@@ -4,7 +4,6 @@
     "lib": [
       "ESNext"
     ],
-    "outDir": "./dist/types",
     "types": [
       "@cloudflare/workers-types"
     ]

@@ -3,7 +3,6 @@
     "../../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
