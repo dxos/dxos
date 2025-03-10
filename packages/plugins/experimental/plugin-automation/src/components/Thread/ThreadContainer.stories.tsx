@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
+  Events,
   IntentPlugin,
   SettingsPlugin,
   Surface,
@@ -230,6 +231,7 @@ const meta: Meta<typeof Render> = {
         TablePlugin(),
       ],
       capabilities,
+      fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
