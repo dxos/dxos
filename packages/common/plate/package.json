@@ -39,7 +39,7 @@
     "plate": "plate"
   },
   "dependencies": {
-    "@swc/core": "1.5.7",
+    "@swc/core": "1.8.0",
     "callsite": "^1.0.0",
     "chalk": "^4.1.0",
     "inquirer": "^12.0.0",
