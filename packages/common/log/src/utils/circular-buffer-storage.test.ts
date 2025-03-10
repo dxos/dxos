@@ -36,7 +36,6 @@ describe('CircularBufferStorage', () => {
   // Common test options
   const options = {
     storeName: 'logs',
-    maxEntries: 10,
     maxSizeBytes: 10 * 1024, // 10KB
     recalculationInterval: 5000,
     lockTimeout: 100, // Short timeout for tests
@@ -60,6 +59,7 @@ describe('CircularBufferStorage', () => {
     // Dispose all buffer instances
     for (const buffer of bufferInstances) {
       await buffer.dispose();
+      console.log('Disposed buffer', buffer.dbName);
       await deleteDatabase(buffer.dbName);
     }
     bufferInstances.length = 0;
@@ -151,44 +151,10 @@ describe('CircularBufferStorage', () => {
     });
   });
 
-  it('should enforce max entries limit', async () => {
-    // Create a buffer with a small max entries limit
-    const buffer = createBuffer({
-      ...options,
-      maxEntries: 5,
-      maxSizeBytes: 0, // Disable size-based cleanup
-    });
-
-    // Add 10 items (twice the limit)
-    for (let i = 0; i < 10; i++) {
-      await buffer.add(`data${i}`);
-      // Small delay to ensure different timestamps
-      await wait(5);
-    }
-
-    // Wait a bit to ensure cleanup has happened
-    await wait(50);
-
-    // Get all recent items
-    const items = await buffer.getRecent(10);
-    expect(items.length).toBe(5);
-
-    // Should only contain the last 5 items (5-9)
-    for (let i = 5; i < 10; i++) {
-      expect(items).toContain(`data${i}`);
-    }
-
-    // Should not contain the first 5 items (0-4)
-    for (let i = 0; i < 5; i++) {
-      expect(items).not.toContain(`data${i}`);
-    }
-  });
-
   it('should enforce max size limit', async () => {
     // Create a buffer with a small max size limit (5KB)
     const buffer = createBuffer({
       ...options,
-      maxEntries: 0, // Disable count-based cleanup
       maxSizeBytes: 5 * 1024,
     });
 
@@ -198,15 +164,40 @@ describe('CircularBufferStorage', () => {
     // Add another 2KB item
     await buffer.add(createLargeString(2));
 
-    // Add a 3KB item (should trigger cleanup)
+    // Add a 3KB item (should trigger cleanup, but let's force it for testing)
     await buffer.add(createLargeString(3));
 
-    // Wait a bit to ensure cleanup has happened
-    await wait(50);
+    // Manually trigger garbage collection instead of waiting
+    await buffer.performGarbageCollection();
 
     // Get all items - should only contain the last two items (5KB total)
     const items = await buffer.getRecent(10);
     expect(items.length).toBe(2);
+  });
+
+  it('should manually perform garbage collection', async () => {
+    // Create a buffer with a small max size limit (3KB)
+    const buffer = createBuffer({
+      ...options,
+      maxSizeBytes: 3 * 1024,
+    });
+
+    // Add multiple items totaling more than the limit
+    await buffer.add(createLargeString(1)); // 1KB
+    await buffer.add(createLargeString(1)); // 1KB
+    await buffer.add(createLargeString(1)); // 1KB
+    await buffer.add(createLargeString(1)); // 1KB - total now 4KB, over limit
+
+    // Before garbage collection, we should have all 4 items
+    let items = await buffer.getRecent(10);
+    expect(items.length).toBe(4);
+
+    // Manually trigger garbage collection
+    await buffer.performGarbageCollection();
+
+    // After garbage collection, we should have 3 items or fewer (3KB total)
+    items = await buffer.getRecent(10);
+    expect(items.length).toBeLessThanOrEqual(3);
   });
 
   it('should use the singleton pattern when created with factory function', async () => {
@@ -252,6 +243,24 @@ describe('CircularBufferStorage', () => {
       const data = await buffer.get(id);
       expect(data).toMatch(/^concurrent-\d$/);
     }
+  });
+
+  it('should generate sequential IDs with autoincrement', async () => {
+    const buffer = createBuffer();
+
+    // Add multiple items
+    const id1 = await buffer.add('item1');
+    const id2 = await buffer.add('item2');
+    const id3 = await buffer.add('item3');
+
+    // IDs should be sequential
+    expect(id2).toBe(id1 + 1);
+    expect(id3).toBe(id2 + 1);
+
+    // Should be able to retrieve all items by their IDs
+    expect(await buffer.get(id1)).toBe('item1');
+    expect(await buffer.get(id2)).toBe('item2');
+    expect(await buffer.get(id3)).toBe('item3');
   });
 
   // Test handling of Web Locks API

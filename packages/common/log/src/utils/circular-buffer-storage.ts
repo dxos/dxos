@@ -17,22 +17,10 @@ export interface CircularBufferOptions {
   storeName: string;
 
   /**
-   * Maximum number of entries to keep.
-   * Set to 0 to disable count-based cleanup.
-   */
-  maxEntries: number;
-
-  /**
    * Maximum size in bytes to store.
    * Set to 0 to disable size-based cleanup.
    */
   maxSizeBytes: number;
-
-  /**
-   * Time interval in milliseconds to recalculate the total size.
-   * This ensures consistency when multiple instances are writing to the same store.
-   */
-  recalculationInterval: number;
 
   /**
    * Timeout for lock acquisition in milliseconds.
@@ -47,9 +35,7 @@ export interface CircularBufferOptions {
 const DEFAULT_OPTIONS: CircularBufferOptions = {
   dbName: 'circular-buffer',
   storeName: 'entries',
-  maxEntries: 1000,
   maxSizeBytes: 10 * 1024 * 1024, // 10MB
-  recalculationInterval: 60000, // 1 minute
   lockTimeout: 5000, // 5 seconds
 };
 
@@ -62,6 +48,34 @@ interface BufferEntry {
   data: string;
   size: number;
   instanceId: string;
+}
+
+/**
+ * Options for retrieving logs from the circular buffer.
+ */
+export interface GetLogsOptions {
+  /**
+   * Only return logs with timestamps after this value (inclusive).
+   */
+  after?: number;
+
+  /**
+   * Only return logs with timestamps before this value (inclusive).
+   */
+  before?: number;
+
+  /**
+   * Maximum number of logs to return.
+   */
+  limit?: number;
+
+  /**
+   * Direction to retrieve logs.
+   * - 'asc': Oldest first (ascending by ID/timestamp)
+   * - 'desc': Newest first (descending by ID/timestamp)
+   * Default is 'desc' (newest first).
+   */
+  direction?: 'asc' | 'desc';
 }
 
 // Generate a unique instance ID
@@ -77,10 +91,8 @@ const generateInstanceId = (): string => {
 export class CircularBufferStorage {
   private _options: CircularBufferOptions;
   private _db: IDBDatabase | null = null;
-  private _totalSize = 0;
   private _ready: Promise<void>;
   private _instanceId: string;
-  private _recalculationIntervalId: ReturnType<typeof setInterval> | null = null;
   private _pendingOperations: Promise<unknown> = Promise.resolve();
   private _webLocksSupported: boolean;
 
@@ -114,7 +126,7 @@ export class CircularBufferStorage {
       return;
     }
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open(this._options.dbName, 1);
 
       request.onerror = (event) => {
@@ -124,14 +136,7 @@ export class CircularBufferStorage {
 
       request.onsuccess = (event) => {
         this._db = (event.target as IDBOpenDBRequest).result;
-
-        // Set up periodic recalculation for better accuracy with multiple instances
-        this._recalculationIntervalId = setInterval(() => {
-          void this._recalculateTotalSize();
-        }, this._options.recalculationInterval);
-
-        // Perform initial size calculation
-        this._recalculateTotalSize().then(resolve).catch(reject);
+        resolve();
       };
 
       request.onupgradeneeded = (event) => {
@@ -139,11 +144,14 @@ export class CircularBufferStorage {
 
         // Create entries object store if needed
         if (!db.objectStoreNames.contains(this._options.storeName)) {
-          const store = db.createObjectStore(this._options.storeName, { keyPath: 'id' });
-          store.createIndex('timestamp', 'timestamp', { unique: false });
+          // Use autoIncrement for id to maintain chronological order
+          const store = db.createObjectStore(this._options.storeName, { keyPath: 'id', autoIncrement: true });
+          // No need for timestamp index as IDs are already in insertion order
         }
       };
     });
+
+    console.log('Initialized circular buffer', this._options.dbName, this._options.storeName);
   }
 
   /**
@@ -158,17 +166,11 @@ export class CircularBufferStorage {
       throw new Error('IndexedDB is not available');
     }
 
-    // Generate a unique ID with timestamp + random component
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    const entryId = timestamp * 1000 + random;
-
     // Calculate the size of the data
     const size = new Blob([data]).size;
 
-    const entry: BufferEntry = {
-      id: entryId,
-      timestamp,
+    const entry: Omit<BufferEntry, 'id'> = {
+      timestamp: Date.now(),
       data,
       size,
       instanceId: this._instanceId,
@@ -177,8 +179,9 @@ export class CircularBufferStorage {
     // Wait for any pending operations
     await this._pendingOperations;
 
-    // Add entry with lock and enforce retention policy
-    this._pendingOperations = this._withLock('write', async () => {
+    // Add entry directly without a lock (IndexedDB already provides transaction-level locking)
+    let entryId = 0;
+    this._pendingOperations = (async () => {
       if (!this._db) return;
 
       await new Promise<void>((resolve, reject) => {
@@ -194,9 +197,13 @@ export class CircularBufferStorage {
 
           const request = store.add(entry);
 
+          request.onsuccess = (event) => {
+            entryId = (event.target as IDBRequest).result as number;
+          };
+
           transaction.oncomplete = async () => {
-            this._totalSize += entry.size;
-            await this._enforceRetentionPolicy();
+            // Enforce retention policy after adding new entry, this operation does need a lock
+            await this.performGarbageCollection();
             resolve();
           };
 
@@ -209,7 +216,7 @@ export class CircularBufferStorage {
           reject(error);
         }
       });
-    });
+    })();
 
     await this._pendingOperations;
     return entryId;
@@ -253,14 +260,16 @@ export class CircularBufferStorage {
   }
 
   /**
-   * Get multiple entries by timestamp range.
+   * Get entries based on provided options.
    */
-  async getRange(startTimestamp: number, endTimestamp: number, limit = 100): Promise<string[]> {
+  async getLogs(options: GetLogsOptions = {}): Promise<string[]> {
     await this._ready;
 
     if (!this._db) {
       throw new Error('IndexedDB is not available');
     }
+
+    const { after, before, limit = 100, direction = 'desc' } = options;
 
     return new Promise<string[]>((resolve, reject) => {
       try {
@@ -272,19 +281,31 @@ export class CircularBufferStorage {
 
         const transaction = db.transaction(this._options.storeName, 'readonly');
         const store = transaction.objectStore(this._options.storeName);
-        const index = store.index('timestamp');
-
-        const range = IDBKeyRange.bound(startTimestamp, endTimestamp);
         const results: string[] = [];
 
-        const request = index.openCursor(range);
+        // Use primary key ordering based on direction
+        const cursorDirection: IDBCursorDirection = direction === 'desc' ? 'prev' : 'next';
+        const request = store.openCursor(null, cursorDirection);
 
         request.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
 
-          if (cursor && results.length < limit) {
+          if (cursor) {
             const entry = cursor.value as BufferEntry;
-            results.push(entry.data);
+
+            // Apply timestamp filters if provided
+            const afterCheck = after === undefined || entry.timestamp >= after;
+            const beforeCheck = before === undefined || entry.timestamp <= before;
+
+            if (afterCheck && beforeCheck) {
+              if (results.length < limit) {
+                results.push(entry.data);
+              } else {
+                resolve(results);
+                return;
+              }
+            }
+
             cursor.continue();
           } else {
             resolve(results);
@@ -301,50 +322,24 @@ export class CircularBufferStorage {
   }
 
   /**
+   * Get entries within a time range.
+   * @deprecated Use getLogs({ after, before, limit }) instead.
+   */
+  async getRange(startTimestamp: number, endTimestamp: number, limit = 100): Promise<string[]> {
+    return this.getLogs({
+      after: startTimestamp,
+      before: endTimestamp,
+      limit,
+      direction: 'asc',
+    });
+  }
+
+  /**
    * Get the most recent entries.
+   * @deprecated Use getLogs({ limit }) instead.
    */
   async getRecent(limit = 100): Promise<string[]> {
-    await this._ready;
-
-    if (!this._db) {
-      throw new Error('IndexedDB is not available');
-    }
-
-    return new Promise<string[]>((resolve, reject) => {
-      try {
-        const db = this._db;
-        if (!db) {
-          resolve([]);
-          return;
-        }
-
-        const transaction = db.transaction(this._options.storeName, 'readonly');
-        const store = transaction.objectStore(this._options.storeName);
-        const index = store.index('timestamp');
-
-        const results: string[] = [];
-
-        const request = index.openCursor(null, 'prev');
-
-        request.onsuccess = (event) => {
-          const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
-
-          if (cursor && results.length < limit) {
-            const entry = cursor.value as BufferEntry;
-            results.push(entry.data);
-            cursor.continue();
-          } else {
-            resolve(results);
-          }
-        };
-
-        request.onerror = (event) => {
-          reject((event.target as IDBRequest).error);
-        };
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return this.getLogs({ limit });
   }
 
   /**
@@ -354,82 +349,13 @@ export class CircularBufferStorage {
     if (!this._db) return;
 
     try {
-      // First, check if we need to remove entries based on count
-      if (this._options.maxEntries > 0) {
-        await this._removeOldEntriesByCount();
-      }
-
-      // Then, check if we need to remove entries based on size
-      if (this._options.maxSizeBytes > 0 && this._totalSize > this._options.maxSizeBytes) {
+      // Check if we need to remove entries based on size
+      if (this._options.maxSizeBytes > 0) {
         await this._removeOldEntriesBySize();
       }
     } catch (error) {
       console.error('Error enforcing retention policy:', error);
     }
-  }
-
-  /**
-   * Remove old entries based on count limit.
-   */
-  private async _removeOldEntriesByCount(): Promise<void> {
-    if (!this._db) return;
-
-    return this._withLock('cleanup', async () => {
-      if (!this._db) return;
-
-      await new Promise<void>((resolve, reject) => {
-        try {
-          const db = this._db;
-          if (!db) {
-            resolve();
-            return;
-          }
-
-          const transaction = db.transaction(this._options.storeName, 'readwrite');
-          const store = transaction.objectStore(this._options.storeName);
-          const index = store.index('timestamp');
-
-          // Get count of entries
-          const countRequest = store.count();
-
-          countRequest.onsuccess = () => {
-            const count = countRequest.result;
-            if (count <= this._options.maxEntries) {
-              resolve();
-              return;
-            }
-
-            // Calculate how many to remove
-            const toRemove = count - this._options.maxEntries;
-
-            // Get the oldest entries
-            const cursorRequest = index.openCursor();
-            let removed = 0;
-
-            cursorRequest.onsuccess = (event) => {
-              const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
-              if (cursor && removed < toRemove) {
-                const entry = cursor.value as BufferEntry;
-                this._totalSize -= entry.size;
-                store.delete(cursor.primaryKey);
-                removed++;
-                cursor.continue();
-              }
-            };
-          };
-
-          transaction.oncomplete = () => {
-            resolve();
-          };
-
-          transaction.onerror = (event) => {
-            reject((event.target as IDBRequest).error);
-          };
-        } catch (error) {
-          reject(error);
-        }
-      });
-    });
   }
 
   /**
@@ -441,6 +367,17 @@ export class CircularBufferStorage {
     return this._withLock('cleanup', async () => {
       if (!this._db) return;
 
+      // TODO(dmaretskyi): Iterate only once caluculating the total size and ID of the last entry that fits ino the size budged, and then remove all entries from [0; to that id)
+      // First, calculate the current total size
+      const totalSize = await this._calculateCurrentSize();
+
+      // If we're under the limit, no need to remove anything
+      if (totalSize <= this._options.maxSizeBytes) {
+        return;
+      }
+
+      const bytesToRemove = totalSize - this._options.maxSizeBytes;
+
       await new Promise<void>((resolve, reject) => {
         try {
           const db = this._db;
@@ -451,23 +388,17 @@ export class CircularBufferStorage {
 
           const transaction = db.transaction(this._options.storeName, 'readwrite');
           const store = transaction.objectStore(this._options.storeName);
-          const index = store.index('timestamp');
 
-          // Calculate how many bytes to remove
-          const bytesToRemove = this._totalSize - this._options.maxSizeBytes;
           let removedBytes = 0;
 
-          // Get the oldest entries
-          const cursorRequest = index.openCursor();
+          // Get the oldest entries (lowest IDs first with autoIncrement)
+          const cursorRequest = store.openCursor();
 
           cursorRequest.onsuccess = (event) => {
             const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
             if (cursor && removedBytes < bytesToRemove) {
               const entry = cursor.value as BufferEntry;
-
-              this._totalSize -= entry.size;
               removedBytes += entry.size;
-
               store.delete(cursor.primaryKey);
               cursor.continue();
             }
@@ -488,53 +419,40 @@ export class CircularBufferStorage {
   }
 
   /**
-   * Recalculate total size of all entries in the database.
-   * This is called periodically to ensure consistency when multiple instances are active.
+   * Calculate the current total size of all entries.
+   * @returns The total size in bytes.
    */
-  private async _recalculateTotalSize(): Promise<void> {
-    if (!this._db) return;
+  private async _calculateCurrentSize(): Promise<number> {
+    if (!this._db) return 0;
 
-    return this._withLock('recalculate', async () => {
-      await this._calculateTotalSize();
-    });
-  }
-
-  /**
-   * Calculate total size of all entries in the database.
-   */
-  private async _calculateTotalSize(): Promise<void> {
-    if (!this._db) return;
-
-    return new Promise((resolve, reject) => {
+    return new Promise<number>((resolve, reject) => {
       try {
         const db = this._db;
         if (!db) {
-          resolve();
+          resolve(0);
           return;
         }
 
         const transaction = db.transaction(this._options.storeName, 'readonly');
         const store = transaction.objectStore(this._options.storeName);
-
         let totalSize = 0;
 
-        const cursorRequest = store.openCursor();
+        const request = store.openCursor();
 
-        cursorRequest.onsuccess = (event) => {
+        request.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
           if (cursor) {
             const entry = cursor.value as BufferEntry;
             totalSize += entry.size;
             cursor.continue();
+          } else {
+            resolve(totalSize);
           }
         };
 
-        transaction.oncomplete = () => {
-          this._totalSize = totalSize;
-          resolve();
+        request.onerror = (event) => {
+          reject((event.target as IDBRequest).error);
         };
-
-        transaction.onerror = (event) => reject((event.target as IDBRequest).error);
       } catch (error) {
         reject(error);
       }
@@ -625,24 +543,38 @@ export class CircularBufferStorage {
   }
 
   /**
-   * Clean up resources.
+   * Force garbage collection by manually enforcing the retention policy.
+   * This is primarily useful for testing.
+   * @returns A promise that resolves when garbage collection is complete.
+   */
+  async performGarbageCollection(): Promise<void> {
+    await this._ready;
+    return this._withLock('manual-gc', async () => {
+      await this._enforceRetentionPolicy();
+    });
+  }
+
+  /**
+   * Dispose of the circular buffer.
    */
   async dispose(): Promise<void> {
+    // Make sure we are initialized before disposing to avoid race condition
     try {
       await this._ready;
-    } catch {}
-
-    if (this._recalculationIntervalId) {
-      clearInterval(this._recalculationIntervalId);
-      this._recalculationIntervalId = null;
+    } catch (error) {
+      console.error('Error disposing circular buffer:', error);
     }
 
-    // Wait for pending operations
+    // Wait for any pending operations
     await this._pendingOperations;
 
-    // Close the database
+    // Clear recalculation interval
     if (this._db) {
-      this._db.close();
+      try {
+        this._db.close();
+      } catch (error) {
+        console.error('Error closing IndexedDB:', error);
+      }
       this._db = null;
     }
   }
