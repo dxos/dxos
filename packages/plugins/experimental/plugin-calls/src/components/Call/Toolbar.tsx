@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { createStatic } from '@dxos/echo-schema';
@@ -34,9 +34,6 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
   const isScreensharing = call.media.screenshareVideoTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
-
-  // Broadcast status over swarm.
-  const [raisedHand, setRaisedHand] = useState(false);
 
   // Initialize transcriber.
   const edgeClient = useEdgeClient();
@@ -138,14 +135,18 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
         icon={isScreensharing ? 'ph--broadcast--regular' : 'ph--screencast--regular'}
         label={isScreensharing ? t('screenshare off') : t('screenshare on')}
         classNames={[isScreensharing && 'text-red-500']}
-        onClick={isScreensharing ? call.turnScreenshareOff : call.turnScreenshareOn}
+        onClick={
+          isScreensharing
+            ? () => call.turnScreenshareOff().catch((err) => log.catch(err))
+            : () => call.turnScreenshareOn().catch((err) => log.catch(err))
+        }
       />
       <IconButton
         iconOnly
-        icon={raisedHand ? 'ph--hand-waving--regular' : 'ph--hand-palm--regular'}
-        label={raisedHand ? t('lower hand') : t('raise hand')}
-        classNames={[raisedHand && 'text-red-500']}
-        onClick={() => setRaisedHand((raisedHand) => !raisedHand)}
+        icon={call.raisedHand ? 'ph--hand-waving--regular' : 'ph--hand-palm--regular'}
+        label={call.raisedHand ? t('lower hand') : t('raise hand')}
+        classNames={[call.raisedHand && 'text-red-500']}
+        onClick={() => call.setRaisedHand(!call.raisedHand)}
       />
       <MediaButtons />
     </Toolbar.Root>
