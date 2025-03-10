@@ -16,7 +16,7 @@ import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/cli
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
-import { codec, type TranscriptionState, type EncodedTrackName, type UserState } from '../types';
+import { codec, type TranscriptionState, type UserState } from '../types';
 
 export type CallState = {
   /**
@@ -40,11 +40,7 @@ export type CallState = {
   /**
    * Tracks pushed by self to calls service.
    */
-  tracks?: {
-    screenshare?: EncodedTrackName;
-    video?: EncodedTrackName;
-    audio?: EncodedTrackName;
-  };
+  tracks?: UserState['tracks'];
 };
 
 export type CallSwarmSynchronizerParams = { networkService: NetworkService };
@@ -105,15 +101,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._notifyAndSchedule();
   }
 
-  setTracks(tracks: { screenshare?: EncodedTrackName; video?: EncodedTrackName; audio?: EncodedTrackName }) {
-    if (
-      tracks.video === this._state.tracks?.video &&
-      tracks.audio === this._state.tracks?.audio &&
-      tracks.screenshare === this._state.tracks?.screenshare
-    ) {
-      return;
-    }
-
+  setTracks(tracks: UserState['tracks']) {
     this._state.tracks = { ...this._state.tracks, ...tracks };
     this._notifyAndSchedule();
   }
