@@ -8,6 +8,8 @@ import { S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
+import { meta } from '../meta';
+
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -17,8 +19,11 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-calendar',
-    instructions: 'Manage the calendar for the current space.',
+    id: meta.id,
+    name: meta.name,
+    instructions: `
+      - Manage the calendar for the current space.
+    `,
     schema: S.Struct({}),
     tools: [
       defineTool({

@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 
+import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
 
 // TODO(burdon): Factor out.
@@ -25,15 +26,15 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-chess',
+    id: meta.id,
+    name: meta.name,
     instructions: `
-      Chess:
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
     `,
     schema: ChessType,
     tools: [
       defineTool({
-        name: 'chess_new',
+        name: 'create',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
         schema: S.Struct({
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
@@ -54,7 +55,7 @@ export default () => {
         },
       }),
       defineTool({
-        name: 'chess_query',
+        name: 'list',
         description: 'Query all active chess games.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
@@ -65,7 +66,7 @@ export default () => {
         },
       }),
       defineTool({
-        name: 'chess_inspect',
+        name: 'analyze',
         description: 'Get the current state of the chess game.',
         schema: S.Struct({ id: ObjectId }),
         execute: async ({ id }, { extensions }) => {
@@ -77,7 +78,7 @@ export default () => {
         },
       }),
       defineTool({
-        name: 'chess_move',
+        name: 'move',
         description: 'Make a move in the chess game.',
         schema: S.Struct({
           id: ObjectId,

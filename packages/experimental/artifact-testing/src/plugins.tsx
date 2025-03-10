@@ -62,14 +62,14 @@ export const capabilities: AnyCapability[] = [
   contributes(
     Capabilities.ArtifactDefinition,
     defineArtifact({
-      id: 'plugin-image',
+      id: 'dxos.org/plugin/image',
+      name: 'Image',
       instructions: `
-    Images:
-    - When presenting an image, you must use an artifact.
-    - Nest the <image> tag inside the <artifact> tag.
-    - Image tags are always self-closing and must contain an id attribute.
-    (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
-    `,
+        - When presenting an image, you must use an artifact.
+        - Nest the <image> tag inside the <artifact> tag.
+        - Image tags are always self-closing and must contain an id attribute.
+          (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
+      `,
       schema: S.Struct({}), // TODO(burdon): Add schema.
       tools: [],
     }),

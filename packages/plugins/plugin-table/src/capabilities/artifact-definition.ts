@@ -14,6 +14,7 @@ import { create, Filter, fullyQualifiedId, type Space } from '@dxos/react-client
 import { TableType } from '@dxos/react-ui-table';
 
 import { schemaTools } from './schema-tool';
+import { meta } from '../meta';
 import { TableAction } from '../types';
 
 // TODO(burdon): Factor out.
@@ -32,14 +33,14 @@ const QualifiedId = S.String.annotations({
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-table',
+    id: meta.id,
+    name: meta.name,
     // TODO(ZaymonFC): See if we need instructions beyond what the tools define.
     instructions: `
-      When working with tables here are some additional instructions:
       - Before appending data to a table you must inspect the table to see its schema. Only add fields that are in the schema.
       - Inspect the table schema even if you have just created the table.
       - When adding rows you must not include the 'id' field -- it is automatically generated.
-      - BEFORE adding rows, always make sure the table has been shown to the user!
+      - BEFORE adding rows, always make sure the table has been shown to the user.
     `,
     schema: TableType,
     tools: [

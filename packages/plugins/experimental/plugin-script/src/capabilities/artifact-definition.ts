@@ -12,6 +12,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
+import { meta } from '../meta';
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
@@ -22,10 +23,11 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-script',
+    id: meta.id,
+    name: meta.name,
     // TODO(dmaretskyi): Since writing scripts requires a lot of domain knowledge,
-    //                   we should offload the work of synthesizing the code to a separate model.
-    //                   The main reasoning model will give it a concrete task and the script model will synthesize the code, knowing all the docs.
+    //  we should offload the work of synthesizing the code to a separate model.
+    //  The main reasoning model will give it a concrete task and the script model will synthesize the code, knowing all the docs.
     instructions: `
       If the user explicitly requests you to write a script, you can create one.
       If the user requests you to change one of the existing script, you can update it.

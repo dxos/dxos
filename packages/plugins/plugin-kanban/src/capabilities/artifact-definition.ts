@@ -13,6 +13,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
+import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
 const QualifiedId = S.String.annotations({
@@ -28,13 +29,13 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-kanban',
+    id: meta.id,
+    name: meta.name,
     instructions: `
-        When working with kanban boards here are some additional instructions:
-        - Before adding items to a kanban board, inspect the board to see its schema
-        - When adding items, you must not include the 'id' field -- it is automatically generated
-        - BEFORE adding items, always make sure the board has been shown to the user!
-      `,
+      - Before adding items to a kanban board, inspect the board to see its schema
+      - When adding items, you must not include the 'id' field -- it is automatically generated
+      - BEFORE adding items, always make sure the board has been shown to the user!
+    `,
     schema: KanbanType,
     tools: [
       defineTool({

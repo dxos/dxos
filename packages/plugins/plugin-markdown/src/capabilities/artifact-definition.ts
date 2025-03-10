@@ -8,6 +8,7 @@ import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 
+import { meta } from '../meta';
 import { DocumentType } from '../types';
 
 // TODO(burdon): Factor out.
@@ -20,11 +21,12 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-markdown',
+    id: meta.id,
+    name: meta.name,
     instructions: `
-      The markdown plugin allows you to work with text documents in the current space.
-      Use these tools to interact with documents, including listing available documents and retrieving their content.
-      Documents are stored in Markdown format.
+      - The markdown plugin allows you to work with text documents in the current space.
+      - Use these tools to interact with documents, including listing available documents and retrieving their content.
+      - Documents are stored in Markdown format.
     `,
     schema: DocumentType,
     tools: [

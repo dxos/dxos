@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { capabilities, genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
+import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -230,7 +230,6 @@ const meta: Meta<typeof Render> = {
         MapPlugin(),
         TablePlugin(),
       ],
-      capabilities,
       fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
