@@ -47,6 +47,9 @@
       "path": "../../../core/echo/live-object"
     },
     {
+      "path": "../../../experimental/artifact"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
