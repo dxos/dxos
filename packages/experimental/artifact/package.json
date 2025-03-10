@@ -6,6 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -32,8 +33,10 @@
   ],
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "handlebars": "4.7.8"
   },
   "devDependencies": {
     "@effect/schema": "^0.75.5",

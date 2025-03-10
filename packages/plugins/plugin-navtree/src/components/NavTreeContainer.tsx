@@ -130,7 +130,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       // Open the first item if the workspace is empty.
       if (layout.active.length === 0) {
         const [item] = getItems(node).filter((node) => !isActionLike(node));
-        if (item) {
+        if (item && item.data) {
           await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] }));
         }
       }
@@ -190,6 +190,11 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       }
     },
     [graph, dispatch, isCurrent, isLg],
+  );
+
+  const onBack = useCallback(
+    () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
+    [dispatch],
   );
 
   // TODO(wittjosiah): Factor out hook.
@@ -255,6 +260,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     () => ({
       tab,
       onTabChange,
+      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,
@@ -271,6 +277,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     [
       tab,
       onTabChange,
+      onBack,
       getActions,
       loadDescendents,
       renderItemEnd,

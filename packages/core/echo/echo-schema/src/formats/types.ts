@@ -90,7 +90,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  LatLong = 'latlng',
+  GeoPoint = 'latlng', // TODO(burdon): Change to geopoint.
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -146,7 +146,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.LatLong]: TypeEnum.Object,
+  [FormatEnum.GeoPoint]: TypeEnum.Object,
 };
 
 /**

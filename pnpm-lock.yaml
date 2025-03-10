@@ -275,6 +275,9 @@ importers:
       execa:
         specifier: ^5.1.1
         version: 5.1.1
+      extensionless:
+        specifier: ^1.9.9
+        version: 1.9.9
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
@@ -4655,12 +4658,18 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
     devDependencies:
       '@effect/schema':
         specifier: ^0.75.5
@@ -5491,6 +5500,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5572,9 +5584,15 @@ importers:
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.13.6)
+      '@lezer/highlight':
+        specifier: ^1.2.1
+        version: 1.2.1
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      '@xiechao/codemirror-lang-handlebars':
+        specifier: 1.0.4
+        version: 1.0.4
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -7760,6 +7778,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -7821,6 +7842,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../experimental/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11826,6 +11850,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -15308,6 +15335,9 @@ packages:
 
   '@codemirror/lang-html@6.4.2':
     resolution: {integrity: sha512-bqCBASkteKySwtIbiV/WCtGnn/khLRbbiV5TE+d9S9eQJD7BA4c5dTRm2b3bVmSpilff5EYxvB4PQaZzM/7cNw==}
+
+  '@codemirror/lang-html@6.4.9':
+    resolution: {integrity: sha512-aQv37pIMSlueybId/2PVSP6NPnmurFDVmZwzc7jszd2KAF8qd4VBbvNYPXWQq90WIARjsdVkPbw29pszmHws3Q==}
 
   '@codemirror/lang-java@6.0.1':
     resolution: {integrity: sha512-OOnmhH67h97jHzCuFaIEspbmsT98fNdhVhmA3zCxW0cn7l8rChDhZtwiwJ/JOKXgfm4J+ELxQihxaI7bj7mJRg==}
@@ -22116,6 +22146,9 @@ packages:
   '@xenova/transformers@2.17.2':
     resolution: {integrity: sha512-lZmHqzrVIkSvZdKZEx7IYY51TK0WDrC8eR0c5IMnBsO8di8are1zzw8BlLhyO2TklZKLN5UffNGs1IJwT6oOqQ==}
 
+  '@xiechao/codemirror-lang-handlebars@1.0.4':
+    resolution: {integrity: sha512-ghOpKUrRvvPQnvoVXY8axEA3xVFxC8M0zNDgiUdfJykqCMxusb3pN9ZbYYg/8KuoGUR/LDd2rb6eaW7ftcCqOg==}
+
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
     engines: {node: '>=10.0.0'}
@@ -26002,6 +26035,11 @@ packages:
 
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
+
+  handlebars@4.7.8:
+    resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
 
   happy-dom@13.3.4:
     resolution: {integrity: sha512-2BYMz3V0hUR8+Vgu9Oc6o5ScnlStD8iaamtSI3fw4yIOxZwypAw50EMRvUcKHAtabDVmL/cu2ITxgLubJpQZXQ==}
@@ -32202,6 +32240,11 @@ packages:
   ufo@1.5.4:
     resolution: {integrity: sha512-UsUk3byDzKd04EyoZ7U4DOlxQaD14JUKQl6/P7wiX4FNvUfm3XL246n9W5AmqwW5RSFJ27NAuM0iLscAOYUiGQ==}
 
+  uglify-js@3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+
   uint64be@2.0.2:
     resolution: {integrity: sha512-9QqdvpGQTXgxthP+lY4e/gIBy+RuqcBaC6JVwT5I3bDLgT/btL6twZMR0pI3/Fgah9G/pdwzIprE5gL6v9UvyQ==}
 
@@ -37426,6 +37469,18 @@ snapshots:
       - '@codemirror/view'
 
   '@codemirror/lang-html@6.4.2':
+    dependencies:
+      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
+      '@codemirror/lang-css': 6.2.1(@codemirror/view@6.34.1)
+      '@codemirror/lang-javascript': 6.2.2
+      '@codemirror/language': 6.10.3
+      '@codemirror/state': 6.4.1
+      '@codemirror/view': 6.34.1
+      '@lezer/common': 1.2.2
+      '@lezer/css': 1.1.1
+      '@lezer/html': 1.3.3
+
+  '@codemirror/lang-html@6.4.9':
     dependencies:
       '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lang-css': 6.2.1(@codemirror/view@6.34.1)
@@ -45920,6 +45975,15 @@ snapshots:
     optionalDependencies:
       onnxruntime-node: 1.14.0
 
+  '@xiechao/codemirror-lang-handlebars@1.0.4':
+    dependencies:
+      '@codemirror/lang-html': 6.4.9
+      '@codemirror/language': 6.10.3
+      '@lezer/common': 1.2.2
+      '@lezer/highlight': 1.2.1
+      '@lezer/lr': 1.4.2
+      codemirror: 6.0.1
+
   '@xmldom/xmldom@0.8.10': {}
 
   '@xobotyi/scrollbar-width@1.9.5': {}
@@ -50629,6 +50693,15 @@ snapshots:
   h3-js@3.7.2: {}
 
   handle-thing@2.0.1: {}
+
+  handlebars@4.7.8:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
 
   happy-dom@13.3.4:
     dependencies:
@@ -58236,6 +58309,9 @@ snapshots:
   uc.micro@1.0.6: {}
 
   ufo@1.5.4: {}
+
+  uglify-js@3.19.3:
+    optional: true
 
   uint64be@2.0.2:
     dependencies:

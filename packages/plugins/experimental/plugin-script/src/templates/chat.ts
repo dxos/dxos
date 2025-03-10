@@ -56,11 +56,11 @@ export default async ({
   let prompt = promptObject.template;
   for (const input of promptObject.inputs) {
     let value: string | null = null;
-    if (input.type === ChainInputType.VALUE) {
+    if (input.type === TemplateInputType.VALUE) {
       value = String(input.value);
-    } else if (input.type === ChainInputType.RETRIEVER) {
+    } else if (input.type === TemplateInputType.RETRIEVER) {
       value = await getContext({ space });
-    } else if (input.type === ChainInputType.PASS_THROUGH) {
+    } else if (input.type === TemplateInputType.PASS_THROUGH) {
       value = message.text;
     }
     if (value) {
@@ -89,7 +89,7 @@ const getContext = async ({ space }: any) => {
   return context;
 };
 
-enum ChainInputType {
+enum TemplateInputType {
   VALUE = 0,
   PASS_THROUGH = 1,
   RETRIEVER = 2,

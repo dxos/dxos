@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
+import { makeSingleSelectAnnotations } from './util';
 import { type ViewType, type FieldType } from './view';
 
 export const VIEW_FIELD_LIMIT = 32;
@@ -43,7 +44,9 @@ export class ViewProjection {
     // TODO(burdon): How to use tables with static schema.
     private readonly _schema: EchoSchema,
     private readonly _view: ViewType,
-  ) {}
+  ) {
+    this.migrateSingleSelectStoredFormat();
+  }
 
   get view() {
     return this._view;
@@ -79,7 +82,7 @@ export class ViewProjection {
     invariant(field.path.indexOf('.') === -1);
 
     const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, oneOf, ...rest } = jsonProperty;
+    const { type: schemaType, format: schemaFormat = FormatEnum.None, echo, ...rest } = jsonProperty;
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
@@ -90,15 +93,9 @@ export class ViewProjection {
         : (schemaFormat as FormatEnum);
 
     const options =
-      format === FormatEnum.SingleSelect && oneOf
-        ? {
-            options: oneOf.map((opt) => ({
-              id: opt.const as string,
-              title: opt.title ?? (opt.const as string),
-              color: (opt as any).color,
-            })),
-          }
-        : {};
+      format === FormatEnum.SingleSelect && echo?.annotations?.singleSelect?.options
+        ? echo.annotations.singleSelect.options
+        : undefined;
 
     const values = {
       type,
@@ -106,7 +103,7 @@ export class ViewProjection {
       property: field.path as JsonProp,
       referenceSchema,
       referencePath: field.referencePath,
-      ...options,
+      options,
       ...rest,
     };
 
@@ -157,6 +154,7 @@ export class ViewProjection {
       invariant(format);
 
       const jsonProperty: JsonSchemaType = {};
+
       if (referenceSchema) {
         Object.assign(jsonProperty, createSchemaReference(referenceSchema));
         type = undefined;
@@ -166,7 +164,7 @@ export class ViewProjection {
       }
 
       if (format === FormatEnum.SingleSelect && options) {
-        jsonProperty.oneOf = options.map(({ id, title, color }) => ({ const: id, title, color }));
+        makeSingleSelectAnnotations(jsonProperty, options);
       }
 
       invariant(type !== TypeEnum.Ref);
@@ -196,6 +194,33 @@ export class ViewProjection {
     delete this._schema.jsonSchema.properties?.[current?.field.path];
 
     return { deleted: fieldProjection, index: fieldIndex };
+  }
+
+  /**
+   * @deprecated TODO(ZaymonFC): Remove this migration code in a future release once all data is migrated.
+   * Migrate legacy single-select format to new format.
+   */
+  private migrateSingleSelectStoredFormat(): void {
+    invariant(this._schema.jsonSchema.properties);
+
+    for (const field of this._view.fields) {
+      const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? {
+        format: FormatEnum.None,
+      };
+      const { format: schemaFormat = FormatEnum.None, oneOf } = jsonProperty;
+      if (schemaFormat !== FormatEnum.SingleSelect) {
+        continue;
+      }
+
+      const hasLegacyOptions =
+        oneOf !== undefined && oneOf?.length !== 0 && oneOf?.every((p) => typeof p.const === 'string');
+      if (hasLegacyOptions) {
+        const options = (oneOf as any[]).map(({ const: id, title, color }) => ({ id, title, color }));
+        log.info('Migrating legacy single-select format', options);
+        makeSingleSelectAnnotations(jsonProperty, options);
+        jsonProperty.oneOf = [];
+      }
+    }
   }
 }
 

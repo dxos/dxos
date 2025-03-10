@@ -7,6 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     "./data": {
       "types": "./dist/types/src/data.d.ts",
@@ -35,6 +36,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "d3": "^7.9.0",

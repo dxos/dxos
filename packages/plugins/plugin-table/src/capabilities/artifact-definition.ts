@@ -47,7 +47,7 @@ export default () => {
       defineTool({
         name: 'table_new',
         description: `
-          Create a new table using an existing schema. 
+          Create a new table using an existing schema.
           Use schema_create first to create a schema, or schema_list to choose an existing one.`,
         schema: S.Struct({
           typename: S.String.annotations({
@@ -137,7 +137,7 @@ export default () => {
       defineTool({
         name: 'table_list_rows',
         description: `
-          List all rows in a given table along with their values. 
+          List all rows in a given table along with their values.
           NOTE: If the user wants to *see* the table, use the show tool.`,
         schema: S.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
@@ -161,7 +161,7 @@ export default () => {
       defineTool({
         name: 'table_add_rows',
         description: `
-          Add one or more rows to an existing table. 
+          Add one or more rows to an existing table.
           Use table_inspect first to understand the schema.`,
         schema: S.Struct({
           id: QualifiedId,

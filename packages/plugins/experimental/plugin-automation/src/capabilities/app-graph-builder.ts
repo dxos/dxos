@@ -71,8 +71,10 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: ['open assistant label', { ns: AUTOMATION_PLUGIN }],
+            // TODO(wittjosiah): Use logo icon.
             icon: 'ph--chat-centered-text--regular',
-            disposition: 'pin-end',
+            disposition: 'item',
+            position: 'hoist',
             keyBinding: {
               macos: 'shift+meta+k',
               windows: 'shift+ctrl+k',

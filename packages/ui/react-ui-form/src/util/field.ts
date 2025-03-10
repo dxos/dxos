@@ -81,7 +81,7 @@ export const parseValue = ({ type, format, value }: ParseProps) => {
       return isNaN(date.getTime()) ? null : date;
     }
 
-    case FormatEnum.LatLong: {
+    case FormatEnum.GeoPoint: {
       // Parse string in format "lat,long" to GeoPoint [longitude, latitude].
       if (typeof value === 'string') {
         // Only keep digits, decimal points, minus signs, and commas.

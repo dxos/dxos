@@ -5,7 +5,6 @@
     "declaration": false,
     "declarationMap": false,
     "emitDeclarationOnly": false,
-    "jsx": "react",
     "lib": [
       "DOM",
       "ES6"

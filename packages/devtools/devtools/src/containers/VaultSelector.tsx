@@ -8,9 +8,9 @@ import { Select } from '../components';
 
 type Target = { value: string; label: string };
 
-const targets: Target[] = [undefined, 'ws://localhost:5001', 'http://localhost:3967'].map((value) => ({
-  value: value ?? '',
-  label: value ?? 'default',
+const targets: Target[] = ['default', 'ws://localhost:5001', 'http://localhost:3967'].map((value) => ({
+  value,
+  label: value,
 }));
 
 const getTarget = (value: string): Target => targets.find((target) => target.value === value) ?? targets[0];
@@ -30,5 +30,5 @@ export const VaultSelector = () => {
     window.location.href = url.href;
   };
 
-  return <Select value={vault.value ?? ''} items={targets} onValueChange={(value) => handleSetVault(value)} />;
+  return <Select value={vault.value} items={targets} onValueChange={(value) => handleSetVault(value)} />;
 };

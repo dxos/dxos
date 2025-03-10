@@ -136,7 +136,7 @@ describe('Artifacts', () => {
     ]);
 
     const stream = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
+      model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',
@@ -164,7 +164,7 @@ describe('Artifacts', () => {
     ]);
 
     const stream2 = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
+      model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',

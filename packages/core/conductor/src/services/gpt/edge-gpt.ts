@@ -6,7 +6,7 @@ import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
 import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact';
-import { type AIServiceClient } from '@dxos/assistant';
+import { DEFAULT_LLM_MODEL, type AIServiceClient } from '@dxos/assistant';
 import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -40,8 +40,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const result = yield* Effect.promise(() =>
         this._client.generate({
-          // model: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
-          model: '@anthropic/claude-3-5-sonnet-20241022',
+          model: DEFAULT_LLM_MODEL,
           history: messages,
           systemPrompt,
           tools: tools as Tool[],

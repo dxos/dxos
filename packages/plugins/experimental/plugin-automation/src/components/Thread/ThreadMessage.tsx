@@ -20,14 +20,18 @@ import { safeParseJson } from '@dxos/util';
 import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
+const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
 const userClassNames = 'bg-[--user-fill]';
-const panelClassNames = 'flex flex-col w-full bg-groupSurface rounded-md';
 
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
 };
 
 const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
+  if (!children) {
+    return null;
+  }
+
   return (
     <div role='list-item' className={mx('flex w-full', user && 'justify-end', classNames)}>
       <div className={mx(user ? ['px-2 py-1 rounded-md', userClassNames] : 'w-full')}>{children}</div>
@@ -55,24 +59,20 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
     );
   }
 
-  return (
-    <div role='none' className='flex flex-col gap-2'>
-      {content.map((block, idx) => (
-        <MessageContainer key={idx} classNames={classNames} user={block.type === 'text' && role === 'user'}>
-          <Block space={space} block={block} onPrompt={onPrompt} />
-        </MessageContainer>
-      ))}
-    </div>
-  );
-};
+  return content.map((block, idx) => {
+    // TODO(burdon): Filter empty messages.
+    if (block.type === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
+      return null;
+    }
 
-const Block: FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }> = ({
-  space,
-  block,
-  onPrompt,
-}) => {
-  const Component = components[block.type] ?? components.default;
-  return <Component space={space} block={block} onPrompt={onPrompt} />;
+    const Component = components[block.type] ?? components.default;
+
+    return (
+      <MessageContainer key={idx} classNames={classNames} user={block.type === 'text' && role === 'user'}>
+        <Component space={space} block={block} onPrompt={onPrompt} />
+      </MessageContainer>
+    );
+  });
 };
 
 type BlockComponent = FC<{ space?: Space; block: MessageContentBlock; onPrompt?: (text: string) => void }>;
@@ -126,7 +126,7 @@ const components: Record<string, BlockComponent> = {
       case 'tool_list': {
         return (
           <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
-            <ToolboxContainer space={space} />
+            <ToolboxContainer space={space} classNames='pbe-2' />
           </ToggleContainer>
         );
       }

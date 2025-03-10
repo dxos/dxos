@@ -7,6 +7,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -47,6 +48,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
