@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LogEntry, type LogProcessor } from '../context';
 import { type LogConfig } from '../config';
+import { getLogRecordFromEntry, type LogEntry, type LogProcessor, type LogRecord } from '../context';
 import { CircularBufferStorage, type CircularBufferOptions } from '../utils/circular-buffer-storage';
 
 /**
@@ -19,12 +19,6 @@ export interface IDBProcessorOptions {
    * Name of the object store for logs.
    */
   storeName: string;
-
-  /**
-   * Maximum number of log batches to keep.
-   * Set to 0 to disable count-based cleanup.
-   */
-  maxBatches: number;
 
   /**
    * Maximum size in bytes to store.
@@ -44,10 +38,9 @@ export interface IDBProcessorOptions {
   flushInterval: number;
 
   /**
-   * Time interval in milliseconds to recalculate the total size.
-   * This ensures consistency when multiple instances are writing to the same store.
+   * Time interval in milliseconds to perform garbage collection.
    */
-  recalculationInterval: number;
+  gcInterval: number;
 
   /**
    * Timeout for lock acquisition in milliseconds.
@@ -62,43 +55,37 @@ export interface IDBProcessorOptions {
 const DEFAULT_OPTIONS: IDBProcessorOptions = {
   dbName: 'dxos-logs',
   storeName: 'logs',
-  maxBatches: 1000,
   maxSizeBytes: 10 * 1024 * 1024, // 10MB
   batchSize: 50,
   flushInterval: 10000, // 10 seconds
-  recalculationInterval: 60000, // 1 minute
+  gcInterval: 60000, // 1 minute
   lockTimeout: 5000, // 5 seconds
 };
 
 /**
- * Structure for a log batch entry in IndexedDB.
+ * Options for retrieving logs.
  */
-interface LogBatch {
-  id: number;
-  timestamp: number;
-  logs: LogEntry[];
-  approximateSize: number;
-  instanceId?: string; // Track which instance created this batch
+export interface GetLogsOptions {
+  /**
+   * Start time in milliseconds since epoch.
+   */
+  startTime?: number;
+
+  /**
+   * End time in milliseconds since epoch.
+   */
+  endTime?: number;
+
+  /**
+   * Maximum number of entries to return.
+   */
+  limit?: number;
+
+  /**
+   * Sort direction.
+   */
+  direction?: 'asc' | 'desc';
 }
-
-/**
- * Structure for a lock entry in IndexedDB.
- */
-interface LockEntry {
-  id: string;
-  operation: string;
-  instanceId: string;
-  timestamp: number;
-  expiresAt: number;
-}
-
-// Track instances by database and store name
-const instanceMap = new Map<string, IDBProcessor>();
-
-// Generate a unique instance ID
-const generateInstanceId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
-};
 
 /**
  * IDB processor stores logs in a circular buffer in IndexedDB.
@@ -107,7 +94,7 @@ const generateInstanceId = (): string => {
  */
 export class IDBProcessor {
   private _options: IDBProcessorOptions;
-  private _currentBatch: LogEntry[] = [];
+  private _currentBatch: LogRecord[] = [];
   private _flushTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private _buffer: CircularBufferStorage;
   private _pendingWrites: Promise<void> = Promise.resolve();
@@ -122,9 +109,8 @@ export class IDBProcessor {
     const bufferOptions: Partial<CircularBufferOptions> = {
       dbName: this._options.dbName,
       storeName: this._options.storeName,
-      maxEntries: this._options.maxBatches,
       maxSizeBytes: this._options.maxSizeBytes,
-      recalculationInterval: this._options.recalculationInterval,
+      gcInterval: this._options.gcInterval,
       lockTimeout: this._options.lockTimeout,
     };
 
@@ -135,8 +121,11 @@ export class IDBProcessor {
    * Process a log entry.
    */
   async process(config: LogConfig, entry: LogEntry): Promise<void> {
+    // Convert LogEntry to LogRecord
+    const record = getLogRecordFromEntry(config, entry);
+
     // Add to current batch
-    this._currentBatch.push(entry);
+    this._currentBatch.push(record);
 
     // Flush if batch is full
     if (this._currentBatch.length >= this._options.batchSize) {
@@ -183,63 +172,106 @@ export class IDBProcessor {
 
   /**
    * Get log entries by time range.
-   *
-   * @param startTime Start timestamp (ms since epoch)
-   * @param endTime End timestamp (ms since epoch)
-   * @param limit Maximum number of log entries to return
-   * @returns Array of log entries
    */
-  async getLogs(startTime: number, endTime: number, limit = 100): Promise<LogEntry[]> {
-    const serializedBatches = await this._buffer.getRange(startTime, endTime, limit);
+  async getLogs(options: GetLogsOptions = {}): Promise<LogEntry[]> {
+    const serializedBatches = await this._buffer.getLogs(options);
 
     // Deserialize and flatten the batches
-    const logs: LogEntry[] = [];
+    const records: LogRecord[] = [];
 
     for (const serializedBatch of serializedBatches) {
       try {
-        const batch = JSON.parse(serializedBatch) as LogEntry[];
-        logs.push(...batch);
+        const batch = JSON.parse(serializedBatch) as LogRecord[];
+        records.push(...batch);
       } catch (error) {
         console.error('Failed to parse log batch:', error);
       }
     }
 
-    // Sort by timestamp if available
-    logs.sort((a, b) => {
-      const aTime = getTimestamp(a);
-      const bTime = getTimestamp(b);
-      return aTime - bTime;
+    // Sort by timestamp
+    records.sort((a, b) => a.timestamp - b.timestamp);
+
+    // Convert LogRecord back to LogEntry (simplified conversion)
+    const logs: LogEntry[] = records.map((record) => {
+      const entry: LogEntry = {
+        level: record.level,
+        message: record.message
+      };
+
+      // Add meta if available
+      if (record.context?.meta) {
+        entry.meta = {
+          F: record.context.meta.file || '',
+          L: record.context.meta.line,
+          C: record.context.meta.column,
+          S: {} // Empty scope but satisfies the CallMetadata type
+        };
+      }
+
+      // Add context if available (excluding meta which we handled separately)
+      if (record.context) {
+        const { meta, ...restContext } = record.context;
+        if (Object.keys(restContext).length > 0) {
+          entry.context = restContext;
+        }
+      }
+
+      return entry;
     });
 
-    return logs.slice(0, limit);
+    return logs.slice(0, options.limit);
   }
 
   /**
    * Get the most recent log entries.
-   *
-   * @param limit Maximum number of log entries to return
-   * @returns Array of log entries
    */
   async getRecentLogs(limit = 100): Promise<LogEntry[]> {
-    const serializedBatches = await this._buffer.getRecent(Math.ceil(limit / this._options.batchSize));
+    const serializedBatches = await this._buffer.getLogs({
+      limit: Math.ceil(limit / this._options.batchSize),
+      direction: 'desc',
+    });
 
     // Deserialize and flatten the batches
-    const logs: LogEntry[] = [];
+    const records: LogRecord[] = [];
 
     for (const serializedBatch of serializedBatches) {
       try {
-        const batch = JSON.parse(serializedBatch) as LogEntry[];
-        logs.push(...batch);
+        const batch = JSON.parse(serializedBatch) as LogRecord[];
+        records.push(...batch);
       } catch (error) {
         console.error('Failed to parse log batch:', error);
       }
     }
 
-    // Sort by timestamp if available and take the most recent
-    logs.sort((a, b) => {
-      const aTime = getTimestamp(a);
-      const bTime = getTimestamp(b);
-      return bTime - aTime; // Descending order
+    // Sort by timestamp in descending order
+    records.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Convert LogRecord back to LogEntry (simplified conversion)
+    const logs: LogEntry[] = records.map((record) => {
+      const entry: LogEntry = {
+        level: record.level,
+        message: record.message
+      };
+
+      // Add meta if available
+      if (record.context?.meta) {
+        entry.meta = {
+          F: record.context.meta.file || '',
+          L: record.context.meta.line,
+          C: record.context.meta.column,
+          S: {} // Empty scope but satisfies the CallMetadata type
+        };
+      }
+
+      // Add context if available (excluding meta which we handled separately)
+      if (record.context) {
+        const { meta, ...restContext } = record.context;
+        if (Object.keys(restContext).length > 0) {
+          entry.context = restContext;
+        }
+      }
+
+      return entry;
     });
 
     return logs.slice(0, limit);
@@ -264,12 +296,6 @@ export class IDBProcessor {
 
     // Dispose the buffer
     await this._buffer.dispose();
-
-    // Remove this instance from the map
-    const dbStoreKey = `${this._options.dbName}:${this._options.storeName}`;
-    if (instanceMap.get(dbStoreKey) === this) {
-      instanceMap.delete(dbStoreKey);
-    }
   }
 }
 
@@ -279,16 +305,7 @@ export class IDBProcessor {
  * per database/store combination.
  */
 export const createIDBProcessor = (options?: Partial<IDBProcessorOptions>): LogProcessor => {
-  const dbName = options?.dbName || DEFAULT_OPTIONS.dbName;
-  const storeName = options?.storeName || DEFAULT_OPTIONS.storeName;
-  const dbStoreKey = `${dbName}:${storeName}`;
-
-  // Reuse existing instance if available
-  if (!instanceMap.has(dbStoreKey)) {
-    instanceMap.set(dbStoreKey, new IDBProcessor(options));
-  }
-
-  const processor = instanceMap.get(dbStoreKey)!;
+  const processor = new IDBProcessor(options);
   const processorFn = (config: LogConfig, entry: LogEntry) => {
     void processor.process(config, entry);
   };
@@ -306,8 +323,14 @@ export const createIDBProcessor = (options?: Partial<IDBProcessorOptions>): LogP
  * Tries to use meta data if available, or falls back to current time.
  */
 export function getTimestamp(entry: LogEntry): number {
-  if (entry.meta && 'T' in entry.meta) {
-    return (entry.meta as Record<string, any>)['T'] as number;
+  if ('timestamp' in entry) {
+    return (entry as { timestamp: number }).timestamp;
+  }
+  if ('meta' in entry && typeof (entry as any).meta === 'object' && (entry as any).meta !== null) {
+    const meta = (entry as any).meta;
+    if ('timestamp' in meta && typeof meta.timestamp === 'number') {
+      return meta.timestamp;
+    }
   }
   return Date.now(); // Fallback
 }

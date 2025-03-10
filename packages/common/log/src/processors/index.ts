@@ -7,3 +7,4 @@ export * from './debug-processor';
 export * from './browser-processor';
 export * from './file-processor';
 export * from './common';
+export * from './idb-processor';

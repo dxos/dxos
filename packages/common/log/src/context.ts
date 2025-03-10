@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { SpaceId } from '@dxos/keys';
 import { type LogConfig, type LogFilter, type LogLevel } from './config';
 import { type CallMetadata } from './meta';
 import { gatherLogInfoFromScope } from './scope';
+import { getRelativeFilename } from './processors/common';
 
 /**
  * Optional object passed to the logging API.
@@ -21,6 +23,61 @@ export interface LogEntry {
   meta?: CallMetadata;
   error?: Error;
 }
+
+/**
+ * Log record stored in a log store.
+ */
+export type LogRecord = {
+  level: LogLevel;
+  message: string;
+
+  /**
+   * Timestamp.
+   */
+  timestamp: number;
+
+  context?: {
+    /**
+     * Error message.
+     */
+    error?: string;
+
+    /**
+     * DID of the identity.
+     */
+    identityDid?: string;
+
+    /**
+     * ID of the space.
+     */
+    spaceId?: SpaceId;
+
+    /**
+     * PID or `app` / `worker`.
+     */
+    processId?: string;
+
+    /**
+     * Filename.
+     */
+    filename?: string;
+
+    /**
+     * Line number.
+     */
+    line?: number;
+
+    /**
+     * Column number.
+     */
+    column?: number;
+
+    /**
+     * Additional context.
+     */
+    [key: string]: any;
+  };
+};
 
 /**
  * Processes (e.g., prints, forwards) log entries.
@@ -69,4 +126,20 @@ export const getContextFromEntry = (entry: LogEntry): Record<string, any> | unde
   }
 
   return context && Object.keys(context).length > 0 ? context : undefined;
+};
+
+export const getLogRecordFromEntry = (config: LogConfig, entry: LogEntry): LogRecord => {
+  const context = getContextFromEntry(entry);
+  return {
+    level: entry.level,
+    message: entry.message,
+    timestamp: Date.now(),
+    context: {
+      ...(config.options.globalContext ?? {}),
+      ...context,
+      ...(entry.meta
+        ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L, column: entry.meta.C } }
+        : {}),
+    },
+  };
 };

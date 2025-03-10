@@ -57,6 +57,13 @@ describe('IDBProcessor', () => {
     lockExpirationTime: 1000,
   };
 
+  let processors: IDBProcessor[] = [];
+  const createProcessor = () => {
+    const processor = new IDBProcessor(options);
+    processors.push(processor);
+    return processor;
+  };
+
   // Delete the test database before each test
   beforeEach(async () => {
     await deleteDatabase(TEST_DB_NAME);
@@ -64,11 +71,14 @@ describe('IDBProcessor', () => {
 
   // Delete the test database after each test
   afterEach(async () => {
-    await deleteDatabase(TEST_DB_NAME);
+    for (const processor of processors) {
+      await processor.dispose();
+      await deleteDatabase(TEST_DB_NAME);
+    }
   });
 
   it('should initialize correctly', () => {
-    const processor = new IDBProcessor(options);
+    const processor = createProcessor();
     expect(processor).toBeDefined();
   });
 

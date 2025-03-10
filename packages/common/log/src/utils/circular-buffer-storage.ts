@@ -27,6 +27,12 @@ export interface CircularBufferOptions {
    * If a lock cannot be acquired within this time, the operation will proceed without a lock.
    */
   lockTimeout: number;
+
+  /**
+   * Interval in milliseconds to automatically run garbage collection.
+   * Set to 0 to disable automatic garbage collection.
+   */
+  gcInterval: number;
 }
 
 /**
@@ -37,6 +43,7 @@ const DEFAULT_OPTIONS: CircularBufferOptions = {
   storeName: 'entries',
   maxSizeBytes: 10 * 1024 * 1024, // 10MB
   lockTimeout: 5000, // 5 seconds
+  gcInterval: 10000, // 10 seconds
 };
 
 /**
@@ -95,6 +102,7 @@ export class CircularBufferStorage {
   private _instanceId: string;
   private _pendingOperations: Promise<unknown> = Promise.resolve();
   private _webLocksSupported: boolean;
+  private _gcIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Creates a new circular buffer storage.
@@ -104,6 +112,20 @@ export class CircularBufferStorage {
     this._instanceId = generateInstanceId();
     this._webLocksSupported = this._checkWebLocksSupport();
     this._ready = this._initialize();
+
+    // Setup automatic garbage collection if enabled
+    if (this._options.gcInterval > 0) {
+      this._ready
+        .then(() => {
+          this._gcIntervalId = setInterval(() => {
+            console.log(`Running automatic garbage collection for ${this._options.dbName}:${this._options.storeName}`);
+            void this.performGarbageCollection();
+          }, this._options.gcInterval);
+        })
+        .catch((err) => {
+          console.error('Failed to initialize automatic garbage collection:', err);
+        });
+    }
   }
 
   get dbName() {
@@ -346,7 +368,7 @@ export class CircularBufferStorage {
     if (!this._db) return;
 
     return this._withLock('cleanup', async () => {
-      if (!this._db) return;
+      if (this._db) return;
 
       // First, calculate the current total size
       const totalSize = await this._calculateCurrentSize();
@@ -363,7 +385,6 @@ export class CircularBufferStorage {
             resolve();
             return;
           }
-
           // First phase: collect all entries and their cumulative size
           const readTx = db.transaction(this._options.storeName, 'readonly');
           const store = readTx.objectStore(this._options.storeName);
@@ -589,6 +610,12 @@ export class CircularBufferStorage {
       await this._ready;
     } catch (error) {
       console.error('Error disposing circular buffer:', error);
+    }
+
+    // Clear the automatic garbage collection interval
+    if (this._gcIntervalId !== null) {
+      clearInterval(this._gcIntervalId);
+      this._gcIntervalId = null;
     }
 
     // Wait for any pending operations

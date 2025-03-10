@@ -20,8 +20,14 @@ import { appKey } from './constants';
 import { core, defaults, plugins, type PluginConfig } from './plugins';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
+import { createIDBProcessor, log } from '@dxos/log';
 
 const main = async () => {
+  log.config({
+    globalContext: { processId: 'app' },
+  });
+  log.addProcessor(createIDBProcessor());
+
   TRACE_PROCESSOR.setInstanceTag('app');
 
   registerSignalsRuntime();

@@ -39,6 +39,7 @@ describe('CircularBufferStorage', () => {
     maxSizeBytes: 10 * 1024, // 10KB
     recalculationInterval: 5000,
     lockTimeout: 100, // Short timeout for tests
+    gcInterval: 0, // Disable automatic GC by default for tests
   };
 
   // Store instances to ensure proper cleanup
@@ -296,6 +297,39 @@ describe('CircularBufferStorage', () => {
     const id2 = await buffer.add('test-without-locks');
     const retrieved2 = await buffer.get(id2);
     expect(retrieved2).toBe('test-without-locks');
+  });
+
+  it('should perform automatic garbage collection', async () => {
+    // Create a buffer with a small size limit and short GC interval
+    const buffer = createBuffer({
+      ...options,
+      maxSizeBytes: 3 * 1024, // 3KB
+      gcInterval: 100, // Run GC every 100ms for faster testing
+    });
+
+    // Add items to exceed the size limit
+    await buffer.add(createLargeString(1)); // 1KB
+    await buffer.add(createLargeString(1)); // 1KB
+    await buffer.add(createLargeString(1)); // 1KB
+    await buffer.add(createLargeString(1)); // 1KB - total now 4KB, over limit
+
+    // Verify all 4 items are initially present
+    let items = await buffer.getLogs({ limit: 10 });
+    expect(items.length).toBe(4);
+
+    // Wait for the automatic GC to run
+    await wait(200); // Wait a bit longer than the GC interval
+
+    // After automatic GC, the total size should be within the limit
+    items = await buffer.getLogs({ limit: 10 });
+
+    // Log debug info
+    console.log(`Items after automatic GC: ${items.length}`);
+    const totalSize = items.reduce((acc, item) => acc + new Blob([item]).size, 0);
+    console.log(`Total size after automatic GC: ${totalSize} bytes (limit: ${3 * 1024} bytes)`);
+
+    // Verify the size is within limits
+    expect(totalSize).toBeLessThanOrEqual(3 * 1024 + 100); // Allow small margin of error
   });
 
   it.skip('should use the singleton pattern when created with factory function', async () => {

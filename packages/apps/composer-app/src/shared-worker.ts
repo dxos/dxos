@@ -2,12 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import { createIDBProcessor } from '@dxos/log';
+
 // NOTE: Shared worker doesn't support top-level imports currently.
 // All worker code & imports have been moved behind an async import due to WASM
 // + top-level await breaking the connect even somehow.
 // See: https://github.com/Menci/vite-plugin-wasm/issues/37
 
 onconnect = async (event) => {
+  const { log } = await import('@dxos/log');
+
+  log.config({
+    globalContext: { processId: 'worker' },
+  });
+  log.addProcessor(createIDBProcessor());
+
   const { onconnect, getWorkerServiceHost } = await import('@dxos/client/worker');
   const { initializeAppObservability } = await import('@dxos/observability');
   const { setupConfig } = await import('./config');

@@ -64,6 +64,7 @@ export type LogOptions = {
     timestampFirst: boolean;
   };
   prefix?: string;
+  globalContext?: Record<string, any>;
 };
 
 /**
@@ -75,4 +76,5 @@ export interface LogConfig {
   captureFilters?: LogFilter[];
   processors: LogProcessor[];
   prefix?: string;
+  globalContext?: Record<string, any>;
 }
