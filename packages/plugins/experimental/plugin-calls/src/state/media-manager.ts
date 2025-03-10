@@ -21,7 +21,8 @@ export type MediaState = {
   videoStream?: MediaStream;
 
   screenshareEnabled?: boolean;
-  screenshareVideoTrack?: MediaStreamTrack;
+  screenshareTrack?: MediaStreamTrack;
+  screenshareVideoStream?: MediaStream;
 
   pushedVideoTrack?: TrackObject;
   pushedAudioTrack?: TrackObject;
@@ -80,7 +81,7 @@ export class MediaManager extends Resource {
     this._state.videoTrack && this._state.videoStream?.removeTrack(this._state.videoTrack);
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
-    this._state.screenshareVideoTrack?.stop();
+    this._state.screenshareTrack?.stop();
     this._pushTracksTask = undefined;
     this._pullTracksTask = undefined;
   }
@@ -141,7 +142,8 @@ export class MediaManager extends Resource {
 
   async turnScreenshareOn() {
     const ms = await getScreenshare({ contentHint: 'text' });
-    this._state.screenshareVideoTrack = ms?.getVideoTracks()[0];
+    this._state.screenshareVideoStream = ms;
+    this._state.screenshareTrack = ms.getVideoTracks()[0];
     this._state.screenshareEnabled = true;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
@@ -149,8 +151,8 @@ export class MediaManager extends Resource {
 
   async turnScreenshareOff() {
     this._state.screenshareEnabled = false;
-    this._state.screenshareVideoTrack?.stop();
-    this._state.screenshareVideoTrack = undefined;
+    this._state.screenshareTrack?.stop();
+    this._state.screenshareTrack = undefined;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
   }
@@ -254,7 +256,7 @@ export class MediaManager extends Resource {
 
     // Screenshare track.
     const pushedScreenshareTrack = await this._pushTrack(
-      this._state.screenshareVideoTrack,
+      this._state.screenshareTrack,
       this._state.pushedScreenshareTrack,
     );
     if (pushedScreenshareTrack !== this._state.pushedScreenshareTrack) {

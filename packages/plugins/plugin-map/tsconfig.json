@@ -4,11 +4,6 @@
   ],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]

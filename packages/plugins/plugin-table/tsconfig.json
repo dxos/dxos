@@ -3,13 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]

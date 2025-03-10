@@ -9,7 +9,6 @@
       "DOM",
       "ES6"
     ],
-    "outDir": "./dist/types",
     "rootDir": "src"
   },
   "include": [

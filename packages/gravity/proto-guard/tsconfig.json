@@ -1,14 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "CommonJS",
-    "outDir": "dist",
-    "target": "esnext"
+    "outDir": "dist"
   },
   "exclude": [
     "/node_modules/"

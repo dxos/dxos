@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Participant } from './Participant';
+import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 import { type UserState } from '../../types';
 import { ResponsiveGrid } from '../ResponsiveGrid';
 
@@ -28,7 +28,7 @@ export const ParticipantGrid = ({ self, users, debug }: ParticipantGridProps) =>
       if (user.tracks?.screenshareEnabled) {
         const screenshare: UserState = {
           ...user,
-          id: user.id + '_screenshare',
+          id: user.id + SCREENSHARE_SUFFIX,
           tracks: {
             ...user.tracks,
             video: user.tracks.screenshare,

@@ -2,8 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "esModuleInterop": true,
-    "module": "esnext",
     "outDir": "dist",
     "rootDir": "src"
   },
