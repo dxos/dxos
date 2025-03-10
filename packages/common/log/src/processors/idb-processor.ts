@@ -195,7 +195,7 @@ export class IDBProcessor {
     const logs: LogEntry[] = records.map((record) => {
       const entry: LogEntry = {
         level: record.level,
-        message: record.message
+        message: record.message,
       };
 
       // Add meta if available
@@ -204,7 +204,7 @@ export class IDBProcessor {
           F: record.context.meta.file || '',
           L: record.context.meta.line,
           C: record.context.meta.column,
-          S: {} // Empty scope but satisfies the CallMetadata type
+          S: {}, // Empty scope but satisfies the CallMetadata type
         };
       }
 
@@ -250,7 +250,7 @@ export class IDBProcessor {
     const logs: LogEntry[] = records.map((record) => {
       const entry: LogEntry = {
         level: record.level,
-        message: record.message
+        message: record.message,
       };
 
       // Add meta if available
@@ -259,7 +259,7 @@ export class IDBProcessor {
           F: record.context.meta.file || '',
           L: record.context.meta.line,
           C: record.context.meta.column,
-          S: {} // Empty scope but satisfies the CallMetadata type
+          S: {}, // Empty scope but satisfies the CallMetadata type
         };
       }
 
