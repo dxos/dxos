@@ -348,6 +348,14 @@ export class CircularBufferStorage {
     return this._withLock('cleanup', async () => {
       if (!this._db) return;
 
+      // First, calculate the current total size
+      const totalSize = await this._calculateCurrentSize();
+
+      // If we're under the limit, no need to remove anything
+      if (totalSize <= this._options.maxSizeBytes) {
+        return;
+      }
+
       await new Promise<void>((resolve, reject) => {
         try {
           const db = this._db;
@@ -356,86 +364,61 @@ export class CircularBufferStorage {
             return;
           }
 
-          // First transaction: Read-only to collect information
+          // First phase: collect all entries and their cumulative size
           const readTx = db.transaction(this._options.storeName, 'readonly');
-          const readStore = readTx.objectStore(this._options.storeName);
+          const store = readTx.objectStore(this._options.storeName);
 
-          // Array to store entries in reverse order (newest first)
-          // We'll accumulate entries until we reach the size budget
           const entries: { id: number; size: number }[] = [];
-          let totalSize = 0;
-          let deletionThresholdId = -1;
 
-          // Get all entries in reverse order (newest first)
-          const request = readStore.openCursor(null, 'prev');
+          // Use cursor to get all entries in chronological order (oldest first)
+          const request = store.openCursor();
 
           request.onsuccess = (event) => {
             const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
             if (cursor) {
               const entry = cursor.value as BufferEntry;
-
-              // Add this entry to our calculation
-              entries.push({ id: entry.id, size: entry.size });
-              totalSize += entry.size;
-
-              // Check if we've collected enough entries to determine what to keep
-              if (totalSize > this._options.maxSizeBytes && deletionThresholdId === -1) {
-                // We've crossed the threshold, all entries with ID less than the last one
-                // that fit within budget can be deleted
-                for (let i = entries.length - 1; i >= 0; i--) {
-                  totalSize -= entries[i].size;
-                  if (totalSize <= this._options.maxSizeBytes) {
-                    deletionThresholdId = entries[i].id;
-                    break;
-                  }
-                }
-
-                // If we couldn't find a threshold (rare edge case), we'll delete nothing
-                if (deletionThresholdId === -1) {
-                  deletionThresholdId = 0; // Keep everything
-                }
-
-                // No need to continue scanning once we've found our threshold
-                resolve();
-                return;
-              }
-
+              entries.push({
+                id: entry.id,
+                size: entry.size,
+              });
               cursor.continue();
-            } else {
-              // If we've gone through all entries and are still under budget, no deletion needed
-              if (totalSize <= this._options.maxSizeBytes) {
-                resolve();
-                return;
-              }
-
-              // If we haven't set a threshold but we're over budget,
-              // we need to delete the oldest entries
-              if (deletionThresholdId === -1) {
-                deletionThresholdId = entries[entries.length - 1].id;
-              }
-
-              resolve();
             }
           };
 
-          request.onerror = (event) => {
-            reject((event.target as IDBRequest).error);
-          };
-
-          // After the read transaction completes, perform the deletion if needed
           readTx.oncomplete = () => {
-            if (deletionThresholdId <= 0) {
-              // Nothing to delete
+            // If no entries, nothing to do
+            if (entries.length === 0) {
               resolve();
               return;
             }
 
-            // Second transaction: Delete entries with ID less than the threshold
+            // Second phase: determine which entries to keep
+            let currentSize = totalSize;
+            let deleteUpToId = -1;
+
+            // Start from oldest entries, remove until we're under the size limit
+            for (let i = 0; i < entries.length; i++) {
+              if (currentSize <= this._options.maxSizeBytes) {
+                break;
+              }
+
+              // Mark this entry for deletion
+              deleteUpToId = entries[i].id;
+              currentSize -= entries[i].size;
+            }
+
+            // If we don't need to delete anything
+            if (deleteUpToId === -1) {
+              resolve();
+              return;
+            }
+
+            // Third phase: delete entries
             const writeTx = db.transaction(this._options.storeName, 'readwrite');
             const writeStore = writeTx.objectStore(this._options.storeName);
 
-            // Use IDBKeyRange to efficiently delete all entries with ID < deletionThresholdId
-            const range = IDBKeyRange.upperBound(deletionThresholdId, true); // Exclude the threshold ID
+            // Delete all entries up to and including deleteUpToId
+            const range = IDBKeyRange.upperBound(deleteUpToId);
             const deleteRequest = writeStore.delete(range);
 
             deleteRequest.onerror = (event) => {
