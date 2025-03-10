@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { createIdFromSpaceKey, type SpaceDoc } from '@dxos/echo-protocol';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -113,13 +113,16 @@ export class QueryState extends Resource {
               this.metrics.documentsLoaded++;
             }
 
-            const handle = await this._params.automergeHost.loadDoc(Context.default(), documentId as DocumentId);
+            const handle = await this._params.automergeHost.loadDoc<SpaceDoc>(
+              Context.default(),
+              documentId as DocumentId,
+            );
 
             // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
             if (this._ctx.disposed) {
               return;
             }
-            spaceKey = getSpaceKeyFromDoc(handle.docSync());
+            spaceKey = getSpaceKeyFromDoc(handle.docSync()!);
           }
 
           if (!spaceKey) {

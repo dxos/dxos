@@ -4,10 +4,6 @@
   ],
   "compilerOptions": {
     "allowJs": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
     "outDir": "./dist/types",
     "types": [
       "node"

@@ -261,7 +261,7 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry, index) => {
-          const handle = await this.loadDoc(Context.default(), entry.documentId as DocumentId);
+          const handle = await this.loadDoc<SpaceDoc>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -575,7 +575,7 @@ const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
     for (const changeHash of unavailableHeads.values()) {
-      if (changeIsPresentInDoc(handle.docSync(), changeHash)) {
+      if (changeIsPresentInDoc(handle.docSync()!, changeHash)) {
         unavailableHeads.delete(changeHash);
       }
     }

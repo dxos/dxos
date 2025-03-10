@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
+    "outDir": "./dist/types",
     "types": [
       "node"
     ]
