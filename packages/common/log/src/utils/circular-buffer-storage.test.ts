@@ -110,20 +110,32 @@ describe('CircularBufferStorage', () => {
       Date.now = originalNow;
 
       // Get items from 11 minutes ago to now
-      const items1 = await buffer.getRange(now - 11 * 60 * 1000, now);
+      const items1 = await buffer.getLogs({
+        after: now - 11 * 60 * 1000,
+        before: now,
+        direction: 'asc',
+      });
       expect(items1.length).toBe(3);
       expect(items1).toContain('data1');
       expect(items1).toContain('data2');
       expect(items1).toContain('data3');
 
       // Get items from 6 minutes ago to now
-      const items2 = await buffer.getRange(now - 6 * 60 * 1000, now);
+      const items2 = await buffer.getLogs({
+        after: now - 6 * 60 * 1000,
+        before: now,
+        direction: 'asc',
+      });
       expect(items2.length).toBe(2);
       expect(items2).toContain('data1');
       expect(items2).toContain('data2');
 
       // Get items from 11 minutes ago to 6 minutes ago
-      const items3 = await buffer.getRange(now - 11 * 60 * 1000, now - 6 * 60 * 1000);
+      const items3 = await buffer.getLogs({
+        after: now - 11 * 60 * 1000,
+        before: now - 6 * 60 * 1000,
+        direction: 'asc',
+      });
       expect(items3.length).toBe(1);
       expect(items3).toContain('data3');
     } finally {
@@ -141,7 +153,7 @@ describe('CircularBufferStorage', () => {
     }
 
     // Get 5 most recent items
-    const items = await buffer.getRecent(5);
+    const items = await buffer.getLogs({ limit: 5 });
     expect(items.length).toBe(5);
 
     // Should be the last 5 items we added (15-19)
@@ -171,7 +183,7 @@ describe('CircularBufferStorage', () => {
     await buffer.performGarbageCollection();
 
     // Get all items - should only contain the last two items (5KB total)
-    const items = await buffer.getRecent(10);
+    const items = await buffer.getLogs({ limit: 10 });
     expect(items.length).toBe(2);
   });
 
@@ -189,14 +201,14 @@ describe('CircularBufferStorage', () => {
     await buffer.add(createLargeString(1)); // 1KB - total now 4KB, over limit
 
     // Before garbage collection, we should have all 4 items
-    let items = await buffer.getRecent(10);
+    let items = await buffer.getLogs({ limit: 10 });
     expect(items.length).toBe(4);
 
     // Manually trigger garbage collection
     await buffer.performGarbageCollection();
 
     // After garbage collection, we should have 3 items or fewer (3KB total)
-    items = await buffer.getRecent(10);
+    items = await buffer.getLogs({ limit: 10 });
     expect(items.length).toBeLessThanOrEqual(3);
   });
 

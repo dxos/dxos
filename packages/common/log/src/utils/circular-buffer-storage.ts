@@ -322,27 +322,6 @@ export class CircularBufferStorage {
   }
 
   /**
-   * Get entries within a time range.
-   * @deprecated Use getLogs({ after, before, limit }) instead.
-   */
-  async getRange(startTimestamp: number, endTimestamp: number, limit = 100): Promise<string[]> {
-    return this.getLogs({
-      after: startTimestamp,
-      before: endTimestamp,
-      limit,
-      direction: 'asc',
-    });
-  }
-
-  /**
-   * Get the most recent entries.
-   * @deprecated Use getLogs({ limit }) instead.
-   */
-  async getRecent(limit = 100): Promise<string[]> {
-    return this.getLogs({ limit });
-  }
-
-  /**
    * Enforce retention policy by removing old entries.
    */
   private async _enforceRetentionPolicy(): Promise<void> {
@@ -359,24 +338,15 @@ export class CircularBufferStorage {
   }
 
   /**
-   * Remove old entries based on size limit.
+   * Remove old entries based on size limit using a single-pass algorithm.
+   * This calculates the total size while identifying entries that should be kept
+   * within the size budget, then removes older entries in a batch operation.
    */
   private async _removeOldEntriesBySize(): Promise<void> {
     if (!this._db) return;
 
     return this._withLock('cleanup', async () => {
       if (!this._db) return;
-
-      // TODO(dmaretskyi): Iterate only once caluculating the total size and ID of the last entry that fits ino the size budged, and then remove all entries from [0; to that id)
-      // First, calculate the current total size
-      const totalSize = await this._calculateCurrentSize();
-
-      // If we're under the limit, no need to remove anything
-      if (totalSize <= this._options.maxSizeBytes) {
-        return;
-      }
-
-      const bytesToRemove = totalSize - this._options.maxSizeBytes;
 
       await new Promise<void>((resolve, reject) => {
         try {
@@ -386,29 +356,102 @@ export class CircularBufferStorage {
             return;
           }
 
-          const transaction = db.transaction(this._options.storeName, 'readwrite');
-          const store = transaction.objectStore(this._options.storeName);
+          // First transaction: Read-only to collect information
+          const readTx = db.transaction(this._options.storeName, 'readonly');
+          const readStore = readTx.objectStore(this._options.storeName);
 
-          let removedBytes = 0;
+          // Array to store entries in reverse order (newest first)
+          // We'll accumulate entries until we reach the size budget
+          const entries: { id: number; size: number }[] = [];
+          let totalSize = 0;
+          let deletionThresholdId = -1;
 
-          // Get the oldest entries (lowest IDs first with autoIncrement)
-          const cursorRequest = store.openCursor();
+          // Get all entries in reverse order (newest first)
+          const request = readStore.openCursor(null, 'prev');
 
-          cursorRequest.onsuccess = (event) => {
+          request.onsuccess = (event) => {
             const cursor = (event.target as IDBRequest).result as IDBCursorWithValue;
-            if (cursor && removedBytes < bytesToRemove) {
+            if (cursor) {
               const entry = cursor.value as BufferEntry;
-              removedBytes += entry.size;
-              store.delete(cursor.primaryKey);
+
+              // Add this entry to our calculation
+              entries.push({ id: entry.id, size: entry.size });
+              totalSize += entry.size;
+
+              // Check if we've collected enough entries to determine what to keep
+              if (totalSize > this._options.maxSizeBytes && deletionThresholdId === -1) {
+                // We've crossed the threshold, all entries with ID less than the last one
+                // that fit within budget can be deleted
+                for (let i = entries.length - 1; i >= 0; i--) {
+                  totalSize -= entries[i].size;
+                  if (totalSize <= this._options.maxSizeBytes) {
+                    deletionThresholdId = entries[i].id;
+                    break;
+                  }
+                }
+
+                // If we couldn't find a threshold (rare edge case), we'll delete nothing
+                if (deletionThresholdId === -1) {
+                  deletionThresholdId = 0; // Keep everything
+                }
+
+                // No need to continue scanning once we've found our threshold
+                resolve();
+                return;
+              }
+
               cursor.continue();
+            } else {
+              // If we've gone through all entries and are still under budget, no deletion needed
+              if (totalSize <= this._options.maxSizeBytes) {
+                resolve();
+                return;
+              }
+
+              // If we haven't set a threshold but we're over budget,
+              // we need to delete the oldest entries
+              if (deletionThresholdId === -1) {
+                deletionThresholdId = entries[entries.length - 1].id;
+              }
+
+              resolve();
             }
           };
 
-          transaction.oncomplete = () => {
-            resolve();
+          request.onerror = (event) => {
+            reject((event.target as IDBRequest).error);
           };
 
-          transaction.onerror = (event) => {
+          // After the read transaction completes, perform the deletion if needed
+          readTx.oncomplete = () => {
+            if (deletionThresholdId <= 0) {
+              // Nothing to delete
+              resolve();
+              return;
+            }
+
+            // Second transaction: Delete entries with ID less than the threshold
+            const writeTx = db.transaction(this._options.storeName, 'readwrite');
+            const writeStore = writeTx.objectStore(this._options.storeName);
+
+            // Use IDBKeyRange to efficiently delete all entries with ID < deletionThresholdId
+            const range = IDBKeyRange.upperBound(deletionThresholdId, true); // Exclude the threshold ID
+            const deleteRequest = writeStore.delete(range);
+
+            deleteRequest.onerror = (event) => {
+              reject((event.target as IDBRequest).error);
+            };
+
+            writeTx.oncomplete = () => {
+              resolve();
+            };
+
+            writeTx.onerror = (event) => {
+              reject((event.target as IDBRequest).error);
+            };
+          };
+
+          readTx.onerror = (event) => {
             reject((event.target as IDBRequest).error);
           };
         } catch (error) {
