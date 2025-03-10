@@ -36,7 +36,7 @@ declare global {
 }
 
 export const genericTools = [
-  defineTool({
+  defineTool('testing', {
     name: 'focus',
     description: 'Focus on the given artifact. Use this tool to bring the artifact to the front of the canvas.',
     schema: S.Struct({ id: ObjectId }),

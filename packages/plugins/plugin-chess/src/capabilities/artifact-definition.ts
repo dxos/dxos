@@ -33,8 +33,9 @@ export default () => {
     `,
     schema: ChessType,
     tools: [
-      defineTool({
+      defineTool(meta.id, {
         name: 'create',
+        caption: 'Creating chess game...',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
         schema: S.Struct({
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
@@ -54,8 +55,9 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool({
+      defineTool(meta.id, {
         name: 'list',
+        caption: 'Getting chess games...',
         description: 'Query all active chess games.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
@@ -65,8 +67,9 @@ export default () => {
           return ToolResult.Success(games);
         },
       }),
-      defineTool({
-        name: 'analyze',
+      defineTool(meta.id, {
+        name: 'inspect',
+        caption: 'Inspecting game...',
         description: 'Get the current state of the chess game.',
         schema: S.Struct({ id: ObjectId }),
         execute: async ({ id }, { extensions }) => {
@@ -77,8 +80,9 @@ export default () => {
           return ToolResult.Success(game.fen);
         },
       }),
-      defineTool({
+      defineTool(meta.id, {
         name: 'move',
+        caption: 'Making chess move...',
         description: 'Make a move in the chess game.',
         schema: S.Struct({
           id: ObjectId,

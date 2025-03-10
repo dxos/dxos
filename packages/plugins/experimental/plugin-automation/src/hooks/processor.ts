@@ -113,6 +113,10 @@ export class ChatProcessor {
     });
   }
 
+  get tools() {
+    return this._tools;
+  }
+
   /**
    * Update tools.
    */

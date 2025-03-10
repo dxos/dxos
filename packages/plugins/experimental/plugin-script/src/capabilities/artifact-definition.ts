@@ -138,8 +138,8 @@ export default () => {
   `,
     schema: ScriptType,
     tools: [
-      defineTool({
-        name: 'script_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: 'Create a new script. Returns the artifact definition for the script',
         schema: S.Struct({
           name: S.String.annotations({ description: 'The name of the script' }),
@@ -170,8 +170,8 @@ export default () => {
           return ToolResult.Success(createArtifactElement(script.id));
         },
       }),
-      defineTool({
-        name: 'script_inspect',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Inspect a script. Returns the artifact definition for the script',
         schema: S.Struct({
           id: ObjectId,
@@ -188,8 +188,8 @@ export default () => {
           });
         },
       }),
-      defineTool({
-        name: 'script_update',
+      defineTool(meta.id, {
+        name: 'update',
         description: 'Update a script. Returns the artifact definition for the script',
         schema: S.Struct({
           id: ObjectId,

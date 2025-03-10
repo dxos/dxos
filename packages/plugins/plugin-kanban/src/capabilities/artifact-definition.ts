@@ -38,8 +38,8 @@ export default () => {
     `,
     schema: KanbanType,
     tools: [
-      defineTool({
-        name: 'kanban_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: `
             Create a new kanban board using an existing schema.
             Use schema_create first to create a schema, or schema_list to choose an existing one.`,
@@ -78,8 +78,8 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool({
-        name: 'kanban_list',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'List all kanban boards in the current space.',
         schema: S.Struct({}),
         execute: async (_input, { extensions }) => {
@@ -100,8 +100,8 @@ export default () => {
           return ToolResult.Success(boardInfo);
         },
       }),
-      defineTool({
-        name: 'kanban_inspect',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Get details about a specific kanban board.',
         schema: S.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {

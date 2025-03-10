@@ -30,8 +30,8 @@ export default () => {
     `,
     schema: DocumentType,
     tools: [
-      defineTool({
-        name: 'document_list',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'List all markdown documents in the current space.',
         schema: S.Struct({}),
         execute: async (_input, { extensions }) => {
@@ -50,8 +50,8 @@ export default () => {
           return ToolResult.Success(documentInfo);
         },
       }),
-      defineTool({
-        name: 'document_read',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Read the content of a markdown document.',
         schema: S.Struct({
           id: S.String.annotations({

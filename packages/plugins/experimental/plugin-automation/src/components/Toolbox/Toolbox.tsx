@@ -5,7 +5,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ArtifactDefinition, type Tool } from '@dxos/artifact';
+import { parseToolName, type ArtifactDefinition, type Tool } from '@dxos/artifact';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -25,7 +25,7 @@ export type ToolboxProps = ThemedClassName<{
 const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
 
 export const Toolbox = ({ classNames, artifacts, functions, services, striped }: ToolboxProps) => {
-  const gridClassNames = 'grid grid-cols-[8rem_8rem_1fr]';
+  const gridClassNames = 'grid grid-cols-[6rem_8rem_1fr]';
   const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
 
   return (
@@ -34,16 +34,16 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
         <div>
           <h1 className='px-2 text-sm'>Artifacts</h1>
           <div className={gridClassNames}>
-            {artifacts.map(({ id, description, tools }) => (
+            {artifacts.map(({ id, name, description, tools }) => (
               <Fragment key={id}>
                 <div className={subGridClassNames}>
-                  <div className='text-primary-500 truncate'>{id}</div>
+                  <div className='text-primary-500 truncate'>{name}</div>
                   <div className='col-span-2 line-clamp-2'>{description}</div>
                 </div>
                 {tools.map(({ name, description }, i) => (
                   <div key={`${name}-${i}`} className={subGridClassNames}>
                     <div />
-                    <div className='truncate'>{name}</div>
+                    <div className='truncate'>{parseToolName(name)}</div>
                     <div className='text-subdued line-clamp-3'>{description}</div>
                   </div>
                 ))}

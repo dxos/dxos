@@ -26,8 +26,8 @@ export default () => {
     `,
     schema: S.Struct({}),
     tools: [
-      defineTool({
-        name: 'calendar_view',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'List all events for the given calendar.',
         schema: S.Struct({}),
         execute: async () => {

@@ -62,6 +62,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
   const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  // TODO(burdon): Replace with useChatProcessor.
   const processor = useMemo<ChatProcessor | undefined>(() => {
     if (!space) {
       return;
@@ -172,6 +174,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         <Thread
           messages={messages}
           processing={processor?.streaming.value}
+          tools={processor?.tools}
           onSubmit={processor ? handleSubmit : undefined}
           onPrompt={processor ? handlePrompt : undefined}
           onDelete={processor ? handleDelete : undefined}

@@ -45,8 +45,8 @@ export default () => {
     schema: TableType,
     tools: [
       ...schemaTools,
-      defineTool({
-        name: 'table_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: `
           Create a new table using an existing schema.
           Use schema_create first to create a schema, or schema_list to choose an existing one.`,
@@ -90,8 +90,8 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool({
-        name: 'table_list',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'List all tables in the current space with their row types.',
         schema: S.Struct({}),
         execute: async (_input, { extensions }) => {
@@ -112,8 +112,8 @@ export default () => {
           return ToolResult.Success(tableInfo);
         },
       }),
-      defineTool({
-        name: 'table_inspect',
+      defineTool(meta.id, {
+        name: 'inpect',
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
         description: 'Get the current schema of the table.',
         schema: S.Struct({ id: QualifiedId }),
@@ -135,8 +135,8 @@ export default () => {
       // TODO(ZaymonFC): Search the row of a table? General search functionality? Can we (for now) just dump the entire
       //   table into the context and have it not get too diluted?
       // TODO(ZaymonFC): LIMIT number and indicate that.
-      defineTool({
-        name: 'table_list_rows',
+      defineTool(meta.id, {
+        name: 'list-rows',
         description: `
           List all rows in a given table along with their values.
           NOTE: If the user wants to *see* the table, use the show tool.`,
@@ -159,8 +159,8 @@ export default () => {
           return ToolResult.Success(rows);
         },
       }),
-      defineTool({
-        name: 'table_add_rows',
+      defineTool(meta.id, {
+        name: 'insert-rows',
         description: `
           Add one or more rows to an existing table.
           Use table_inspect first to understand the schema.`,
