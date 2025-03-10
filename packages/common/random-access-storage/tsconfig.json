@@ -6,7 +6,6 @@
       "es2019"
     ],
     "outDir": "./dist/types",
-    "skipLibCheck": true,
     "types": [
       "@dxos/typings",
       "node",

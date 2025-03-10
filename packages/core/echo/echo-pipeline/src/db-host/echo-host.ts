@@ -237,7 +237,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = this._automergeHost.repo.find(automergeUrl);
+    const handle = this._automergeHost.repo.find<SpaceDoc>(automergeUrl);
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }
