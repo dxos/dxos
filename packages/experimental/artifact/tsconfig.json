@@ -1,18 +1,28 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/keys",
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/log",
+      "path": "../../common/keys"
     },
     {
-      "path": "../../core/echo/echo-schema",
+      "path": "../../common/log"
     },
-  ],
+    {
+      "path": "../../core/echo/echo-schema"
+    }
+  ]
 }

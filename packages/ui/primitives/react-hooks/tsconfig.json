@@ -1,15 +1,22 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../../common/async",
+      "path": "../../../common/async"
     },
     {
-      "path": "../../../common/log",
-    },
-  ],
+      "path": "../../../common/log"
+    }
+  ]
 }

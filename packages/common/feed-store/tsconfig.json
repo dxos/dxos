@@ -1,51 +1,57 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@dxos/typings", "node"],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../core/halo/keyring",
+      "path": "../../core/halo/keyring"
     },
     {
-      "path": "../async",
+      "path": "../async"
     },
     {
-      "path": "../codec-protobuf",
+      "path": "../codec-protobuf"
     },
     {
-      "path": "../context",
+      "path": "../context"
     },
     {
-      "path": "../crypto",
+      "path": "../crypto"
     },
     {
-      "path": "../debug",
+      "path": "../debug"
     },
     {
-      "path": "../hypercore",
+      "path": "../hypercore"
     },
     {
-      "path": "../invariant",
+      "path": "../invariant"
     },
     {
-      "path": "../keys",
+      "path": "../keys"
     },
     {
-      "path": "../log",
+      "path": "../log"
     },
     {
-      "path": "../node-std",
+      "path": "../node-std"
     },
     {
-      "path": "../random",
+      "path": "../random"
     },
     {
-      "path": "../random-access-storage",
+      "path": "../random-access-storage"
     },
     {
-      "path": "../util",
-    },
-  ],
+      "path": "../util"
+    }
+  ]
 }

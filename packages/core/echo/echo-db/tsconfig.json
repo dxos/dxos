@@ -1,78 +1,83 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@dxos/typings"],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../../../common/async",
+      "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf",
+      "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../../common/context",
+      "path": "../../../common/context"
     },
     {
-      "path": "../../../common/crypto",
+      "path": "../../../common/crypto"
     },
     {
-      "path": "../../../common/debug",
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/invariant",
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../../../common/keys",
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../../common/kv-store",
+      "path": "../../../common/kv-store"
     },
     {
-      "path": "../../../common/log",
+      "path": "../../../common/log"
     },
     {
-      "path": "../../../common/node-std",
+      "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/test-utils",
+      "path": "../../../common/test-utils"
     },
     {
-      "path": "../../../common/tracing",
+      "path": "../../../common/tracing"
     },
     {
-      "path": "../../../common/util",
+      "path": "../../../common/util"
     },
     {
-      "path": "../../mesh/edge-client",
+      "path": "../../mesh/edge-client"
     },
     {
-      "path": "../../mesh/teleport",
+      "path": "../../mesh/teleport"
     },
     {
-      "path": "../../protocols",
+      "path": "../../protocols"
     },
     {
-      "path": "../automerge",
+      "path": "../automerge"
     },
     {
-      "path": "../echo-pipeline",
+      "path": "../echo-pipeline"
     },
     {
-      "path": "../echo-protocol",
+      "path": "../echo-protocol"
     },
     {
-      "path": "../echo-schema",
+      "path": "../echo-schema"
     },
     {
-      "path": "../echo-signals",
+      "path": "../echo-signals"
     },
     {
-      "path": "../indexing",
+      "path": "../indexing"
     },
     {
-      "path": "../live-object",
-    },
-  ],
+      "path": "../live-object"
+    }
+  ]
 }

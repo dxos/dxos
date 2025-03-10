@@ -1,27 +1,34 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/random",
+      "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils",
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../react-ui",
+      "path": "../react-ui"
     },
     {
-      "path": "../react-ui-attention",
+      "path": "../react-ui-attention"
     },
     {
-      "path": "../react-ui-theme",
-    },
-  ],
+      "path": "../react-ui-theme"
+    }
+  ]
 }

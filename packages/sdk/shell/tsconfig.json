@@ -2,74 +2,83 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["*.t.ts", "vite.config.ts"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/async",
+      "path": "../../common/async"
     },
     {
-      "path": "../../common/debug",
+      "path": "../../common/debug"
     },
     {
-      "path": "../../common/display-name",
+      "path": "../../common/display-name"
     },
     {
-      "path": "../../common/invariant",
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/random",
+      "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils",
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../common/test-utils",
+      "path": "../../common/test-utils"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/mesh/rpc",
+      "path": "../../core/mesh/rpc"
     },
     {
-      "path": "../../core/mesh/rpc-tunnel",
+      "path": "../../core/mesh/rpc-tunnel"
     },
     {
-      "path": "../../core/protocols",
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../ui/primitives/react-hooks",
+      "path": "../../ui/primitives/react-hooks"
     },
     {
-      "path": "../../ui/react-ui",
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-pickers",
+      "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-theme",
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../../ui/react-ui-types",
+      "path": "../../ui/react-ui-types"
     },
     {
-      "path": "../client-protocol",
+      "path": "../client-protocol"
     },
     {
-      "path": "../client-services",
+      "path": "../client-services"
     },
     {
-      "path": "../config",
+      "path": "../config"
     },
     {
-      "path": "../react-client",
-    },
-  ],
+      "path": "../react-client"
+    }
+  ]
 }

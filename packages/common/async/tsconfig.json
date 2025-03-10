@@ -1,27 +1,33 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@dxos/typings", "node"],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../context",
+      "path": "../context"
     },
     {
-      "path": "../debug",
+      "path": "../debug"
     },
     {
-      "path": "../invariant",
+      "path": "../invariant"
     },
     {
-      "path": "../log",
+      "path": "../log"
     },
     {
-      "path": "../node-std",
+      "path": "../node-std"
     },
     {
-      "path": "../util",
-    },
-  ],
+      "path": "../util"
+    }
+  ]
 }

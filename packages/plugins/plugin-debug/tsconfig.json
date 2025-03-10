@@ -1,142 +1,154 @@
 {
-  "extends": ["../../../tsconfig.base.json"],
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
   "compilerOptions": {
-    "types": ["node"],
+    "outDir": "./dist/types",
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["*.t.ts", "vite.config.ts"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/async",
+      "path": "../../common/async"
     },
     {
-      "path": "../../common/invariant",
+      "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys",
+      "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage",
+      "path": "../../common/local-storage"
     },
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/random",
+      "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils",
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../common/util",
+      "path": "../../common/util"
     },
     {
-      "path": "../../core/compute",
+      "path": "../../core/compute"
     },
     {
-      "path": "../../core/conductor",
+      "path": "../../core/conductor"
     },
     {
-      "path": "../../core/echo/automerge",
+      "path": "../../core/echo/automerge"
     },
     {
-      "path": "../../core/echo/echo-generator",
+      "path": "../../core/echo/echo-generator"
     },
     {
-      "path": "../../core/echo/echo-pipeline",
+      "path": "../../core/echo/echo-pipeline"
     },
     {
-      "path": "../../core/echo/echo-schema",
+      "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/live-object",
+      "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../core/functions",
+      "path": "../../core/functions"
     },
     {
-      "path": "../../core/protocols",
+      "path": "../../core/protocols"
     },
     {
-      "path": "../../devtools/devtools",
+      "path": "../../devtools/devtools"
     },
     {
-      "path": "../../sdk/app-framework",
+      "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/client-services",
+      "path": "../../sdk/client-services"
     },
     {
-      "path": "../../sdk/config",
+      "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-client",
+      "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema",
+      "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/primitives/react-hooks",
+      "path": "../../ui/primitives/react-hooks"
     },
     {
-      "path": "../../ui/react-ui",
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention",
+      "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-canvas-compute",
+      "path": "../../ui/react-ui-canvas-compute"
     },
     {
-      "path": "../../ui/react-ui-canvas-editor",
+      "path": "../../ui/react-ui-canvas-editor"
     },
     {
-      "path": "../../ui/react-ui-form",
+      "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-kanban",
+      "path": "../../ui/react-ui-kanban"
     },
     {
-      "path": "../../ui/react-ui-stack",
+      "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter",
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-table",
+      "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme",
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../plugin-client",
+      "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck",
+      "path": "../plugin-deck"
     },
     {
-      "path": "../plugin-graph",
+      "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-markdown",
+      "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-sheet",
+      "path": "../plugin-sheet"
     },
     {
-      "path": "../plugin-sketch",
+      "path": "../plugin-sketch"
     },
     {
-      "path": "../plugin-space",
+      "path": "../plugin-space"
     },
     {
-      "path": "../plugin-status-bar",
+      "path": "../plugin-status-bar"
     },
     {
-      "path": "../plugin-table",
+      "path": "../plugin-table"
     },
     {
-      "path": "../plugin-theme",
-    },
-  ],
+      "path": "../plugin-theme"
+    }
+  ]
 }

@@ -1,20 +1,27 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ESNext"],
-
-    "types": ["@cloudflare/workers-types"],
+    "lib": [
+      "ESNext"
+    ],
+    "outDir": "./dist/types",
+    "types": [
+      "@cloudflare/workers-types"
+    ]
   },
-  "include": ["src", "vite.config.ts"],
+  "include": [
+    "src",
+    "vite.config.ts"
+  ],
   "references": [
     {
-      "path": "../../common/log",
+      "path": "../../common/log"
     },
     {
-      "path": "../../core/halo/credentials",
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../core/halo/keyring",
-    },
-  ],
+      "path": "../../core/halo/keyring"
+    }
+  ]
 }

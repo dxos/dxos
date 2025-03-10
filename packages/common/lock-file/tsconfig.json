@@ -1,18 +1,29 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM", "es2019"],
-
-    "types": ["@dxos/typings", "node"],
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "outDir": "./dist/types",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "exclude": ["/dist/", "/node_modules/"],
-  "include": ["src"],
+  "exclude": [
+    "/dist/",
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../async",
+      "path": "../async"
     },
     {
-      "path": "../node-std",
-    },
-  ],
+      "path": "../node-std"
+    }
+  ]
 }
