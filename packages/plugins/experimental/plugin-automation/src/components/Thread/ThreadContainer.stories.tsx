@@ -26,6 +26,7 @@ import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -221,7 +222,10 @@ const meta: Meta<typeof Render> = {
         SpacePlugin({ observability: false }),
         SettingsPlugin(),
         IntentPlugin(),
+
+        // Artifacts.
         ChessPlugin(),
+        InboxPlugin(),
         MapPlugin(),
         TablePlugin(),
       ],

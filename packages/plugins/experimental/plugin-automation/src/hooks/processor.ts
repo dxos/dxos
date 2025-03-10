@@ -169,7 +169,11 @@ export class ChatProcessor {
     try {
       let more = false;
       do {
-        log.info('requesting', { history: this._history.length, messages: this._pending.value.length });
+        log.info('request', {
+          pending: this._pending.value.length,
+          history: this._history.length,
+          tools: this._tools?.map((tool) => tool.name),
+        });
         this._stream = await this._client.generate({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
@@ -182,7 +186,7 @@ export class ChatProcessor {
         await this._stream.complete();
 
         // Add messages.
-        log.info('response', { messages: this._pending.value });
+        log.info('response', { pending: this._pending.value });
 
         // Resolve tool use locally.
         more = false;

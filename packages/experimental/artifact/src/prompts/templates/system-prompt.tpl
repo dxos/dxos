@@ -70,13 +70,18 @@ If the user asks for a list of tools, then just emit a single <tool-list /> tag 
 
 {{section}}. Suggestions:
 
-- You can suggest commands to the user in your response.
-- The suggestion must be in the form of a direct command that you can execute and must be enclosed in a <suggest> tag.
-- Suggestions could include actions that create artifacts.
-- You can produce multiple suggestions. 
+- You can make suggestions in your prompts for requests the user can make.
+- Suggestions must be enclosed in a <suggest> tag.
+- Suggestions should be concise and to the point.
+- You can produce multiple suggestions.
 - Place each suggestion on a new line.
-- If you have asked a multiple choice question, then present each of the possible answers as concise text inside <option> tags inside a well formed <select> tag: <select><option>Yes</option><option>No</option></select>
-- Suggestions and answers must not have placeholders.
+- All suggestions must start with a verb.
+{{!-- - Suggestions must end with an exclamation mark. --}}
+{{!-- - Double check that suggestions are actions supported by the tools. --}}
+{{!-- - Suggestions could include actions that create artifacts. --}}
+{{!-- - Suggestions should not be questions to the user. --}}
+{{!-- - If you have asked a multiple choice question, then present each of the possible answers as concise text inside <option> tags inside a well formed <select> tag: <select><option>Yes</option><option>No</option></select> --}}
+{{!-- - Suggestions and answers must not have placeholders. --}}
 {{/if}}
 
 {{! Output }}

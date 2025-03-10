@@ -17,8 +17,8 @@ import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
   artifacts?: ArtifactDefinition[];
-  functions?: FunctionType[];
   services?: { service: ServiceType; tools: Tool[] }[];
+  functions?: FunctionType[];
   striped?: boolean;
 }>;
 
@@ -95,13 +95,14 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
 };
 
 export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
+  // Plugin artifacts.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  const functions = useQuery(space, Filter.schema(FunctionType));
-  const services = useQuery(space, Filter.schema(ServiceType));
 
+  // Registered services.
+  const services = useQuery(space, Filter.schema(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType; tools: Tool[] }[]>([]);
   useEffect(() => {
-    log('creating service tools...');
+    log('creating service tools...', { services: services.length });
     queueMicrotask(async () => {
       const tools = await Promise.all(
         services.map(async (service) => ({ service, tools: await createToolsFromService(service) })),
@@ -111,7 +112,10 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
     });
   }, [services]);
 
+  // Deployed functions.
+  const functions = useQuery(space, Filter.schema(FunctionType));
+
   return (
-    <Toolbox classNames={classNames} artifacts={artifactDefinitions} functions={functions} services={serviceTools} />
+    <Toolbox classNames={classNames} artifacts={artifactDefinitions} services={serviceTools} functions={functions} />
   );
 };
