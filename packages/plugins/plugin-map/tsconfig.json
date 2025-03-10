@@ -4,7 +4,6 @@
   ],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "outDir": "./dist/types",
     "types": [
       "node"
     ]
