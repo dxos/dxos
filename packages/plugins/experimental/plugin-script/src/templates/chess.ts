@@ -2,11 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 // @version 0.13.1
 import { Chess } from 'chess.js';
-// @ts-ignore
-import { defineFunction } from 'dxos:functions';
+
+// @version 0.7.5-staging.b81e783?deps=effect@3.13.3
+import { S } from '@dxos/echo-schema';
+// @version 0.7.5-staging.b81e783
+import { defineFunction } from '@dxos/functions';
+// @version 0.7.5-staging.b81e783
+import { invariant } from '@dxos/invariant';
 
 export default defineFunction({
   description: 'Plays a random move in a chess game.',
@@ -31,18 +35,19 @@ export default defineFunction({
       data: { changedObjectId, player = 'b' },
     },
     context: { space },
-  }: any) => {
+  }) => {
+    invariant(space, 'Space is required');
     const { pgn } = await space.db.query({ id: changedObjectId }).first();
     const game = new Chess();
     game.load_pgn(pgn);
     if (game.turn() !== player) {
-      return new Response('Invalid turn', { status: 409 });
+      throw new Error('Invalid turn');
     }
 
     const moves = game.moves();
     const move = moves[Math.floor(Math.random() * moves.length)];
     if (!move) {
-      return new Response('No legal moves', { status: 406 });
+      throw new Error('No legal moves');
     }
 
     game.move(move);

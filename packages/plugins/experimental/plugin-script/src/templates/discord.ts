@@ -3,14 +3,22 @@
 //
 
 // @version 0.77.2?deps=effect@3.13.3
-import { FetchHttpClient } from '@effect/platform@0.77.2';
+import { FetchHttpClient } from '@effect/platform';
 // @version 0.113.0?deps=effect@3.13.3
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
-// TODO(wittjosiah): Use @dxos packages from npm.
-// @ts-ignore
-import { createStatic, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
 // @version 3.13.3
 import { Effect, Config, Redacted, Ref } from 'effect';
+
+// @version 0.7.5-staging.b81e783
+import { Filter } from '@dxos/client/echo';
+// @version 0.7.5-staging.b81e783?deps=effect@3.13.3
+import { createStatic, EchoObject, ObjectId, S } from '@dxos/echo-schema';
+// @version 0.7.5-staging.b81e783
+import { defineFunction } from '@dxos/functions';
+// @version 0.7.5-staging.b81e783
+import { invariant } from '@dxos/invariant';
+// @version 0.7.5-staging.b81e783
+import { DXN } from '@dxos/keys';
 
 const MessageSchema = S.Struct({
   id: S.String,
@@ -46,15 +54,16 @@ export default defineFunction({
       data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 },
     },
     context: { space },
-  }: any) =>
+  }) =>
     Effect.gen(function* () {
+      invariant(space, 'Space is required');
       const { token } = yield* Effect.tryPromise(() =>
         space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
       );
       const { objects } = yield* Effect.tryPromise(() => space.queues.queryQueue(DXN.parse(queueId)));
       const backfill = objects.length === 0;
       const newMessages = yield* Ref.make(0);
-      const lastMessage = yield* Ref.make(objects.at(-1));
+      const lastMessage = yield* Ref.make(objects.at(-1) as S.Schema.Type<typeof MessageSchema>);
 
       const enqueueMessages = Effect.gen(function* () {
         const rest = yield* DiscordREST;
@@ -65,9 +74,9 @@ export default defineFunction({
             after: backfill && !last ? `${generateSnowflake(after)}` : last?.foreignId,
             limit: pageSize,
           };
-          const messages = yield* rest.getChannelMessages(channelId, options).pipe((res: any) => res.json);
+          const messages = yield* rest.getChannelMessages(channelId, options).pipe((res) => res.json);
           const queueMessages = messages
-            .map((message: any) =>
+            .map((message) =>
               createStatic(MessageSchema, {
                 id: ObjectId.random(),
                 foreignId: message.id,
@@ -79,8 +88,8 @@ export default defineFunction({
             .toReversed();
           if (queueMessages.length > 0) {
             yield* Effect.tryPromise(() => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages));
-            yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);
-            yield* Ref.update(lastMessage, (m: any) => queueMessages.at(-1));
+            yield* Ref.update(newMessages, (n) => n + queueMessages.length);
+            yield* Ref.update(lastMessage, () => queueMessages.at(-1)!);
           }
           if (messages.length < pageSize) {
             break;
