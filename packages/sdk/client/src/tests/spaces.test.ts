@@ -11,7 +11,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
 import { Expando, type HasId } from '@dxos/echo-schema';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { create, type ReactiveObject, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
@@ -48,6 +48,7 @@ describe('Spaces', () => {
     await testSpaceAutomerge(space.db);
 
     expect(SpaceId.isValid(space.id)).to.be.true;
+    expect(DXN.isDXNString(space.properties.invocationTraceQueue)).to.be.true;
     expect(space.members.get()).to.be.length(1);
 
     // Get by id.

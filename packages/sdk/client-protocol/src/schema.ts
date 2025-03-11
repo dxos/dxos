@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject, DXN } from '@dxos/echo-schema';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
@@ -13,9 +13,10 @@ export class PropertiesType extends TypedObject({
 })(
   {
     name: S.optional(S.String),
+    invocationTraceQueue: S.optional(DXN),
   },
   { record: true },
 ) {}
 
 // TODO(burdon): Remove? Use PropertiesType instead?
-export type PropertiesTypeProps = Pick<PropertiesType, 'name'>;
+export type PropertiesTypeProps = Pick<PropertiesType, 'name' | 'invocationTraceQueue'>;
