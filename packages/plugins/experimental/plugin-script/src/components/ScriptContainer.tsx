@@ -61,7 +61,7 @@ export const ScriptContainer = ({
     <StackItem.Content toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-        {state.view !== 'logs' && (
+        {state.view !== 'debug' && (
           <TypescriptEditor
             id={script.id}
             env={env}
