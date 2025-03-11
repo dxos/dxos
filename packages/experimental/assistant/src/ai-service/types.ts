@@ -34,25 +34,25 @@ export const GenerateRequest = S.Struct({
   model: S.optional(LLMModel),
 
   /**
+   * Tools available for the LLM.
+   */
+  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
+
+  /**
    * System instructions to the LLM.
    */
   systemPrompt: S.optional(S.String),
 
   /**
-   * Current request.
-   */
-  // TODO(burdon): Remove from history.
-  // prompt: Message,
-
-  /**
    * History of messages to include in the context window.
    */
+  // TODO(burdon): Rename messages.
   history: S.optional(S.Array(Message)),
 
   /**
-   * Tools available for the LLM.
+   * Current request.
    */
-  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
+  prompt: S.optional(Message),
 });
 
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;

@@ -68,6 +68,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       messages={messages}
       processing={processor.streaming.value}
       error={processor.error.value}
+      tools={processor.tools}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onPrompt={handleSubmit}

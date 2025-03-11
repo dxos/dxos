@@ -100,7 +100,7 @@ const summarizeTranscript = async (
 
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
-    await aiService.generate({
+    await aiService.exec({
       model: DEFAULT_LLM_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
@@ -162,6 +162,6 @@ const SUMMARIZE_PROMPT = `
 //  Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.
 const useAiServiceClient = (): AIServiceClient => {
   const config = useConfig();
-  const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788';
+  const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788'; // TOOD(burdon): Standardize consts.
   return useMemo(() => new AIServiceClientImpl({ endpoint }), [endpoint]);
 };

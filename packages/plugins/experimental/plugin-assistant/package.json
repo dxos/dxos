@@ -93,6 +93,7 @@
     "@dxos/artifact-testing": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/random": "workspace:*",

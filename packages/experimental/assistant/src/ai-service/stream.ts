@@ -11,7 +11,7 @@ import { iterSSEMessages } from './util';
 /**
  * Creates a stream from an SSE response.
  */
-export const createGenerationStream = (response: Response, controller = new AbortController()) => {
+export const createGenerationStream = (response: Response, controller = new AbortController()): GenerationStream => {
   const iterator = async function* () {
     for await (const sse of iterSSEMessages(response, controller)) {
       if (sse.event === 'completion') {

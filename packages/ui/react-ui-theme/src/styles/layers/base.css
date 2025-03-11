@@ -6,19 +6,20 @@
     'slnt' 0;
     scroll-padding-block-start: theme(spacing.14);
     scroll-padding-block-end: theme(spacing.2);
+    @apply font-body;
   }
 
   button {
     -webkit-tap-highlight-color: transparent;
   }
+}
 
-  .dark {
-    color: var(--surface-text);
-  }
-
-  html {
-    background-color: var(--surface-bg);
-    color: var(--surface-text);
-    @apply font-body;
+@layer dx-tokens {
+  html, html.dark, html .dark {
+    background-color: var(--dx-baseSurface);
+    --surface-bg: var(--dx-baseSurface);
+    color: var(--dx-baseText);
+    --surface-text: var(--dx-baseText);
+    --description-text: var(--dx-description);
   }
 }

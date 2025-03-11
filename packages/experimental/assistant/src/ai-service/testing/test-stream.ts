@@ -4,7 +4,7 @@
 
 import { ObjectId } from '@dxos/echo-schema';
 
-import { type GenerationStreamEvent } from './types';
+import { type GenerationStreamEvent } from '../types';
 
 /**
  * Mock server-side events (SSE) stream.

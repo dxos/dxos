@@ -7,12 +7,13 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
+import { createSystemPrompt } from '@dxos/artifact';
 import { create } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TemplateEditor } from './TemplateEditor';
+import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 import translations from '../../translations';
 import { TemplateType } from '../../types';
 
@@ -33,11 +34,11 @@ const TEMPLATE = [
   '',
 ].join('\n');
 
-const Render = () => {
+const Render = ({ text }: TemplateEditorProps & { text: string }) => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(create(TemplateType, { source: TEMPLATE }));
+    return space.db.add(create(TemplateType, { source: text }));
   });
 
   return (
@@ -47,7 +48,7 @@ const Render = () => {
   );
 };
 
-const meta: Meta<typeof TemplateEditor> = {
+const meta: Meta<typeof Render> = {
   title: 'plugins/plugin-automation/TemplateEditor',
   component: TemplateEditor,
   render: Render,
@@ -67,6 +68,16 @@ const meta: Meta<typeof TemplateEditor> = {
 
 export default meta;
 
-type Story = Meta<typeof TemplateEditor>;
+type Story = Meta<typeof Render>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    text: TEMPLATE,
+  },
+};
+
+export const System: Story = {
+  args: {
+    text: createSystemPrompt(),
+  },
+};

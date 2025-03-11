@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
+  Events,
   IntentPlugin,
   SettingsPlugin,
   Surface,
@@ -17,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
-import { capabilities, genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
+import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -26,6 +27,7 @@ import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -60,6 +62,9 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
   const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  // TODO(burdon): Replace with useChatProcessor.
+  // const processor = useChatProcessor(space);
   const processor = useMemo<ChatProcessor | undefined>(() => {
     if (!space) {
       return;
@@ -170,6 +175,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         <Thread
           messages={messages}
           processing={processor?.streaming.value}
+          error={processor?.error.value}
+          tools={processor?.tools}
           onSubmit={processor ? handleSubmit : undefined}
           onPrompt={processor ? handlePrompt : undefined}
           onDelete={processor ? handleDelete : undefined}
@@ -221,11 +228,14 @@ const meta: Meta<typeof Render> = {
         SpacePlugin({ observability: false }),
         SettingsPlugin(),
         IntentPlugin(),
+
+        // Artifacts.
         ChessPlugin(),
+        InboxPlugin(),
         MapPlugin(),
         TablePlugin(),
       ],
-      capabilities,
+      fireEvents: [Events.SetupArtifactDefinition],
     }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true }),
@@ -242,7 +252,7 @@ type Story = StoryObj<typeof Render>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['Ask me a question', 'Show me a chess puzzle'],
+    prompts: ['What tools do you have access to?', 'Show me a chess puzzle'],
   },
 };
 

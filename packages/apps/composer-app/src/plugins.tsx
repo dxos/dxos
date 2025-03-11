@@ -108,7 +108,7 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     .filter(isNotFalsy)
     .flat();
 
-export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
+export const plugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
   [
     AssistantPlugin(),
     AttentionPlugin(),
@@ -146,12 +146,12 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     }),
     DebugPlugin(),
     DeckPlugin(),
-    ExcalidrawPlugin(),
+    isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
-    InboxPlugin(),
+    isLabs && InboxPlugin(),
     IntentPlugin(),
     KanbanPlugin(),
     MapPlugin(),
@@ -160,12 +160,12 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     isSocket && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
-    OutlinerPlugin(),
+    isLabs && OutlinerPlugin(),
     PresenterPlugin(),
     !isSocket && isPwa && PwaPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),
-    SearchPlugin(),
+    isLabs && SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
