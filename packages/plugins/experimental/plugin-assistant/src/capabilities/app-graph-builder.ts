@@ -17,13 +17,13 @@ import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space, Filter, getSpace } from '@dxos/react-client/echo';
 
-import { ASSISTANT_DIALOG, AUTOMATION_PLUGIN } from '../meta';
+import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
 import { AIChatType, AutomationAction } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${AUTOMATION_PLUGIN}/assistant`,
+      id: `${ASSISTANT_PLUGIN}/assistant`,
       filter: (node): node is Node<null> => node.id === ROOT_ID,
       actions: () => [
         {
@@ -70,7 +70,7 @@ export default (context: PluginsContext) =>
             );
           },
           properties: {
-            label: ['open assistant label', { ns: AUTOMATION_PLUGIN }],
+            label: ['open assistant label', { ns: ASSISTANT_PLUGIN }],
             icon: 'ph--chat-centered-text--regular',
             disposition: 'pin-end',
             position: 'hoist',

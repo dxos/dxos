@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { ASSISTANT_PLUGIN } from '../../meta';
 import { type TemplateType } from '../../types';
 
 handlebarsLanguage.configure({
@@ -33,7 +33,7 @@ export type TemplateEditorProps = ThemedClassName<{
 }>;
 
 export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(ASSISTANT_PLUGIN);
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({

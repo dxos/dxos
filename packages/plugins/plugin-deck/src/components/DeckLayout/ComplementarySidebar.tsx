@@ -24,6 +24,7 @@ import {
 import { Main, useTranslation, toLocalizedString, IconButton, ScrollArea as NaturalScrollArea } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { byPosition } from '@dxos/util';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
@@ -50,13 +51,15 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const hoistStatusbar = useHoistStatusbar(breakpoint);
 
   const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
-  const availablePanels = panels.filter((panel) => {
-    if (!node || !panel.filter) {
-      return true;
-    }
+  const availablePanels = panels
+    .filter((panel) => {
+      if (!node || !panel.filter) {
+        return true;
+      }
 
-    return panel.filter(node);
-  });
+      return panel.filter(node);
+    })
+    .toSorted(byPosition);
   const activePanelId = availablePanels.find((panel) => panel.id === current)?.id ?? availablePanels[0]?.id;
   const [internalValue, setInternalValue] = useState(activePanelId);
 

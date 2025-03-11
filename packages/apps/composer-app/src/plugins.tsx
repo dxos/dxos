@@ -5,6 +5,7 @@
 import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
+import { AssistantPlugin, ASSISTANT_PLUGIN } from '@dxos/plugin-assistant';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
 import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
@@ -67,6 +68,7 @@ export type PluginConfig = State & {
 export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
   [
     ATTENTION_PLUGIN,
+    AUTOMATION_PLUGIN,
     CLIENT_PLUGIN,
     DECK_PLUGIN,
     FILES_PLUGIN,
@@ -101,13 +103,14 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     WNFS_PLUGIN,
 
     // Labs
-    isLabs && [AUTOMATION_PLUGIN, CALLS_PLUGIN, TRANSCRIPTION_PLUGIN],
+    isLabs && [ASSISTANT_PLUGIN, CALLS_PLUGIN, TRANSCRIPTION_PLUGIN],
   ]
     .filter(isNotFalsy)
     .flat();
 
 export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
   [
+    AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
     CallsPlugin(),

@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "plugin-automation",
+  "name": "plugin-assistant",
   "tags": [
     "scope:experimental",
     "scope:plugins"
@@ -12,7 +12,12 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/types/index.ts"
+        ],
+        "platforms": [
+          "browser",
+          "node"
         ]
       }
     },

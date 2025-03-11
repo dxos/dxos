@@ -3,3 +3,4 @@
 //
 
 export * from './test-functions';
+export * from './test-services';

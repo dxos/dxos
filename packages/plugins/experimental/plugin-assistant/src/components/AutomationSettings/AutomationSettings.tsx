@@ -8,11 +8,11 @@ import { DEFAULT_LLM_MODELS } from '@dxos/assistant';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { ASSISTANT_PLUGIN } from '../../meta';
 import { type AutomationSettingsProps } from '../../types';
 
 export const AutomationSettings = ({ settings }: { settings: AutomationSettingsProps }) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(ASSISTANT_PLUGIN);
 
   return (
     <DeprecatedFormContainer>

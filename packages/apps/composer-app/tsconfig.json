@@ -72,6 +72,9 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../plugins/experimental/plugin-assistant"
+    },
+    {
       "path": "../../plugins/experimental/plugin-automation"
     },
     {

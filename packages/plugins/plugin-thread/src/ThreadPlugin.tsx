@@ -108,6 +108,7 @@ export const ThreadPlugin = () =>
           id: 'comments',
           label: ['comments panel label', { ns: THREAD_PLUGIN }],
           icon: 'ph--chat-text--regular',
+          position: 'hoist',
           // TODO(wittjosiah): Support comments on any object.
           // filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
           filter: (node) =>

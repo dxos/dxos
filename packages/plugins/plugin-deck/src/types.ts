@@ -6,6 +6,7 @@ import { LayoutAction } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { type Node } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/react-ui';
+import { type Position } from '@dxos/util';
 
 import { DECK_PLUGIN } from './meta';
 
@@ -20,6 +21,7 @@ export type Panel = {
   id: string;
   label: Label;
   icon: string;
+  position?: Position;
   /**
    * If true, the panel will now be wrapped in a scroll area.
    */

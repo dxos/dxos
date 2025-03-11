@@ -10,7 +10,7 @@ import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { TemplateEditor } from './TemplateEditor';
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { ASSISTANT_PLUGIN } from '../../meta';
 import { type TemplateInput, TemplateInputType, type TemplateType } from '../../types';
 
 export type TemplateFormProps = {
@@ -20,7 +20,7 @@ export type TemplateFormProps = {
 };
 
 export const TemplateForm = ({ template, commandEditable = true }: TemplateFormProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(ASSISTANT_PLUGIN);
 
   usePromptInputs(template);
 

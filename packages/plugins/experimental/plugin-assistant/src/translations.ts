@@ -2,14 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AUTOMATION_PLUGIN } from './meta';
+import { ASSISTANT_PLUGIN } from './meta';
+import { AIChatType, TemplateType } from './types';
 
 export default [
   {
     'en-US': {
+      [AIChatType.typename]: {
+        'typename label': 'AI Chat',
+      },
+      [TemplateType.typename]: {
+        'typename label': 'Template',
+      },
       // TODO(wittjosiah): Audit translations, most appear unused.
-      [AUTOMATION_PLUGIN]: {
-        'plugin name': 'Automation',
+      [ASSISTANT_PLUGIN]: {
+        'chat title placeholder': 'AI Chat',
+        'template title placeholder': 'Template',
+
+        'open ambient chat label': 'Open AI chat',
+        'plugin name': 'Assistant',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
         'create trigger label': 'Create trigger',

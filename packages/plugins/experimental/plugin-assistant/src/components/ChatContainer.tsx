@@ -9,14 +9,14 @@ import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { ThreadContainer } from './Thread';
-import { AUTOMATION_PLUGIN } from '../meta';
+import { ASSISTANT_PLUGIN } from '../meta';
 import { type AutomationSettingsProps, type AIChatType } from '../types';
 
 // TODO(burdon): Attention.
 export const ChatContainer = ({ chat, role }: { chat: AIChatType; role: string }) => {
   const transcription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
   const settings = useCapability(Capabilities.SettingsStore).getStore<AutomationSettingsProps>(
-    AUTOMATION_PLUGIN,
+    ASSISTANT_PLUGIN,
   )?.value;
 
   return (

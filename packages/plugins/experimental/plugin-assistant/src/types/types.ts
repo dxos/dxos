@@ -6,10 +6,10 @@ import { S } from '@dxos/echo-schema';
 
 import { AIChatType } from './chat';
 import { TemplateType } from './template';
-import { AUTOMATION_PLUGIN } from '../meta';
+import { ASSISTANT_PLUGIN } from '../meta';
 
 export namespace AutomationAction {
-  const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
+  const AUTOMATION_ACTION = `${ASSISTANT_PLUGIN}/action`;
 
   export class CreateChat extends S.TaggedClass<CreateChat>()(`${AUTOMATION_ACTION}/create-chat`, {
     input: S.Struct({

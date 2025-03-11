@@ -10,7 +10,7 @@ import { Spinner } from '@dxos/react-ui-sfx';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { Prompt, type PromptController, type PromptProps } from './Prompt';
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { ASSISTANT_PLUGIN } from '../../meta';
 
 export type PromptBarProps = ThemedClassName<
   Pick<PromptProps, 'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest' | 'onOpenChange'> & {
@@ -30,7 +30,7 @@ export const PromptBar = ({
   onCancel,
   ...props
 }: PromptBarProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(ASSISTANT_PLUGIN);
 
   const promptRef = useRef<PromptController>(null);
 

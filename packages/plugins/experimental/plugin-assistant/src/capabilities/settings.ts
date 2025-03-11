@@ -5,7 +5,7 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 
-import { AUTOMATION_PLUGIN } from '../meta';
+import { ASSISTANT_PLUGIN } from '../meta';
 import { type AutomationSettingsProps, AutomationSettingsSchema } from '../types';
 
 export default () => {
@@ -13,7 +13,7 @@ export default () => {
 
   return contributes(Capabilities.Settings, {
     schema: AutomationSettingsSchema,
-    prefix: AUTOMATION_PLUGIN,
+    prefix: ASSISTANT_PLUGIN,
     value: settings,
   });
 };
