@@ -15,7 +15,7 @@ import {
 } from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
-import { IconButton, Input, useTranslation, Button } from '@dxos/react-ui';
+import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
@@ -73,57 +73,62 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
   };
 
   return (
-    <div className='flex flex-col w-full divide-y divide-separator overflow-y-auto'>
-      <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
-        {({ items: triggers }) => (
-          <div role='list' className='flex flex-col w-full'>
-            {triggers?.map((trigger) => {
-              const copyAction = getCopyAction(client, trigger);
-              return (
-                <List.Item<FunctionTrigger>
-                  key={trigger.id}
-                  item={trigger}
-                  classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
-                >
-                  <Input.Root>
-                    <Input.Switch
-                      checked={trigger.enabled}
-                      onCheckedChange={(checked) => (trigger.enabled = checked)}
-                    />
-                  </Input.Root>
-
-                  <div className={'flex'}>
-                    <List.ItemTitle
-                      classNames='px-1 cursor-pointer w-0 shrink truncate'
-                      onClick={() => handleSelect(trigger)}
+    <Clipboard.Provider>
+      <div className='flex flex-col w-full'>
+        {!trigger && (
+          <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
+            {({ items: triggers }) => (
+              <div role='list' className='flex flex-col w-full'>
+                {triggers?.map((trigger) => {
+                  const copyAction = getCopyAction(client, trigger);
+                  return (
+                    <List.Item<FunctionTrigger>
+                      key={trigger.id}
+                      item={trigger}
+                      classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
                     >
-                      {getFunctionName(scripts, functions, trigger) ?? '∅'}
-                    </List.ItemTitle>
+                      <Input.Root>
+                        <Input.Switch
+                          checked={trigger.enabled}
+                          onCheckedChange={(checked) => (trigger.enabled = checked)}
+                        />
+                      </Input.Root>
 
-                    {/* TODO: a better way to expose copy action */}
-                    {copyAction && (
-                      <Button onClick={() => navigator.clipboard.writeText(copyAction.contentProvider())}>
-                        {t(copyAction.translationKey)}
-                      </Button>
-                    )}
-                  </div>
+                      <div className={'flex'}>
+                        <List.ItemTitle
+                          classNames='px-1 cursor-pointer w-0 shrink truncate'
+                          onClick={() => handleSelect(trigger)}
+                        >
+                          {getFunctionName(scripts, functions, trigger) ?? '∅'}
+                        </List.ItemTitle>
 
-                  <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-                </List.Item>
-              );
-            })}
+                        {/* TODO: a better way to expose copy action */}
+                        {copyAction && (
+                          <Clipboard.IconButton
+                            label={t(copyAction.translationKey)}
+                            value={copyAction.contentProvider()}
+                          />
+                        )}
+                      </div>
+
+                      <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+                    </List.Item>
+                  );
+                })}
+              </div>
+            )}
+          </List.Root>
+        )}
+
+        {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
+
+        {!trigger && (
+          <div className='flex p-2 justify-center'>
+            <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
           </div>
         )}
-      </List.Root>
-
-      {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
-
-      {!trigger && (
-        <div className='flex p-2 justify-center'>
-          <IconButton icon='ph--plus--regular' label={t('new trigger')} onClick={handleAdd} />
-        </div>
-      )}
-    </div>
+      </div>
+    </Clipboard.Provider>
   );
 };
 
@@ -148,8 +153,10 @@ const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
 };
 
 const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
+  // TODO(wittjosiah): Truncation should be done in the UI.
+  //   Warning that the List component is currently a can of worms.
   const shortId = trigger.function && `${trigger.function?.slice(0, 16)}…`;
-  const functionObject = functions.find((fn) => fn.name === trigger.function);
+  const functionObject = functions.find((fn) => `dxn:worker:${fn.name}` === trigger.function);
   if (!functionObject) {
     return shortId;
   }
