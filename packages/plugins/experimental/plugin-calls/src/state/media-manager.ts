@@ -41,6 +41,7 @@ const VIDEO_WIDTH = 1280;
 const VIDEO_HEIGHT = 720;
 const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
+const RETRY_INTERVAL = 200;
 
 export type MediaManagerParams = {
   serviceConfig: CallsServiceConfig;
@@ -174,9 +175,6 @@ export class MediaManager extends Resource {
 
   private async _reconcilePulledMedia() {
     log('reconciling tracks');
-    // TODO(mykola): Add retry logic, remove sleep.
-    // Wait for cloudflare to process the track.
-    await cancelWithContext(this._ctx, sleep(1000));
     const trackNames = this._trackToReconcile;
 
     const tracksToPull = trackNames.filter(
@@ -198,30 +196,7 @@ export class MediaManager extends Resource {
     });
 
     // Pull new tracks.
-    await Promise.all(
-      tracksToPull.map(async (name) => {
-        const ctx = this._ctx.derive();
-        const trackData = TrackNameCodec.decode(name);
-        const track = await this._state
-          .peer!.pullTrack({ trackData, ctx })
-          .catch((err) => log.warn('Error while pulling track', { err }));
-
-        if (track?.kind === 'audio') {
-          this._state.pulledAudioTracks[name] = { track, ctx };
-          ctx.onDispose(() => delete this._state.pulledAudioTracks[name]);
-        } else if (track?.kind === 'video') {
-          const mediaStream = new MediaStream();
-          mediaStream.addTrack(track);
-          this._state.pulledVideoStreams[name] = { stream: mediaStream, ctx };
-          ctx.onDispose(() => {
-            mediaStream.removeTrack(track);
-            delete this._state.pulledVideoStreams[name];
-          });
-        } else {
-          log.warn('failed to pull track', { trackData });
-        }
-      }),
-    );
+    await Promise.all(tracksToPull.map((name) => this._pullTrack(name)));
 
     // Close old tracks.
     await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
@@ -269,6 +244,40 @@ export class MediaManager extends Resource {
     }
 
     this.stateUpdated.emit(this._state);
+  }
+
+  private async _pullTrack(name: EncodedTrackName) {
+    const ctx = this._ctx.derive();
+    try {
+      const trackData = TrackNameCodec.decode(name);
+      const track = await this._state.peer!.pullTrack({ trackData, ctx });
+
+      switch (track?.kind) {
+        case 'audio': {
+          this._state.pulledAudioTracks[name] = { track, ctx };
+          ctx.onDispose(() => delete this._state.pulledAudioTracks[name]);
+          break;
+        }
+        case 'video': {
+          const mediaStream = new MediaStream();
+          mediaStream.addTrack(track);
+          this._state.pulledVideoStreams[name] = { stream: mediaStream, ctx };
+          ctx.onDispose(() => {
+            mediaStream.removeTrack(track);
+            delete this._state.pulledVideoStreams[name];
+          });
+          break;
+        }
+        default:
+          throw new Error(`Invalid track kind: ${track?.kind}`);
+      }
+    } catch (err) {
+      log.warn('failed to pull track', { err, name });
+      void ctx.dispose();
+      await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
+      log.warn('retrying pull track', { name });
+      this._pullTracksTask!.schedule();
+    }
   }
 
   private async _pushTrack(
