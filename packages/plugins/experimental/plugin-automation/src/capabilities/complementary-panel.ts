@@ -37,11 +37,13 @@ export default (context: PluginsContext) => {
     const workspace = context.requestCapabilities(Capabilities.Layout)[0]?.workspace;
     const { spaceId } = parseId(workspace);
     if (!spaceId || !client) {
+      state.functionsAvailable = false;
       return;
     }
 
     const space = client.spaces.get(spaceId);
     if (!space) {
+      state.functionsAvailable = false;
       return;
     }
 
