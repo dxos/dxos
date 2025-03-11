@@ -17,9 +17,16 @@ const GLOBALS = 'globals.d.ts';
 
 const defaultOptions: ts.CompilerOptions = {
   allowJs: true,
+  declaration: true,
+  declarationMap: true,
+  esModuleInterop: true,
   lib: ['DOM', 'es2022'],
   moduleResolution: ts.ModuleResolutionKind.Bundler,
-  module: ts.ModuleKind.ESNext,
+  module: ts.ModuleKind.Preserve,
+  isolatedModules: true,
+  skipLibCheck: true,
+  strict: true,
+  stripInternal: true,
   target: ts.ScriptTarget.ES2022,
 };
 

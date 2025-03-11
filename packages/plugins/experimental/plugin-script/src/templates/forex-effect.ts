@@ -7,9 +7,9 @@ import { HttpClient, HttpClientRequest, FetchHttpClient } from '@effect/platform
 // @version 3.13.3
 import { Effect, Schedule } from 'effect';
 
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { S } from '@dxos/echo-schema';
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
 
 const RatesSchema = S.Struct({

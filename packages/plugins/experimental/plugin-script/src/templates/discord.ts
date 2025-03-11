@@ -4,20 +4,22 @@
 
 // @version 0.77.2?deps=effect@3.13.3
 import { FetchHttpClient } from '@effect/platform';
+// @version 0.75.5?deps=effect@3.13.3
+import { Schema as S } from '@effect/schema';
 // @version 0.113.0?deps=effect@3.13.3
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 // @version 3.13.3
 import { Effect, Config, Redacted, Ref } from 'effect';
 
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { Filter } from '@dxos/client/echo';
-// @version 0.7.5-staging.b81e783?deps=effect@3.13.3
-import { createStatic, EchoObject, ObjectId, S } from '@dxos/echo-schema';
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8?deps=effect@3.13.3
+import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
+// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { invariant } from '@dxos/invariant';
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { DXN } from '@dxos/keys';
 
 const MessageSchema = S.Struct({

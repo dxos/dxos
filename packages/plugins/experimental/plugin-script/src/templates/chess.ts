@@ -5,11 +5,11 @@
 // @version 0.13.1
 import { Chess } from 'chess.js';
 
-// @version 0.7.5-staging.b81e783?deps=effect@3.13.3
+// @version 0.7.5-main.b19bfc8?deps=effect@3.13.3
 import { S } from '@dxos/echo-schema';
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
-// @version 0.7.5-staging.b81e783
+// @version 0.7.5-main.b19bfc8
 import { invariant } from '@dxos/invariant';
 
 export default defineFunction({
