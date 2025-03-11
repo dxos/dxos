@@ -123,12 +123,14 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
       <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={handleLeave} />
       <div className='grow'></div>
       {/* TODO(burdon): Capability test. */}
-      <IconButton
-        iconOnly
-        icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
-        label={call.transcription.enabled ? t('transcription off') : t('transcription on')}
-        onClick={handleToggleTranscription}
-      />
+      {onTranscription && (
+        <IconButton
+          iconOnly
+          icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
+          label={call.transcription.enabled ? t('transcription off') : t('transcription on')}
+          onClick={handleToggleTranscription}
+        />
+      )}
       <IconButton
         disabled={!canSharescreen}
         iconOnly
