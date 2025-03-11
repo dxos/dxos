@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { FunctionTrigger } from '@dxos/functions';
+import { FunctionType, FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 
@@ -21,7 +21,7 @@ export const AutomationPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [FunctionTrigger]),
+      activate: () => contributes(ClientCapabilities.Schema, [FunctionType, FunctionTrigger]),
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panels`,

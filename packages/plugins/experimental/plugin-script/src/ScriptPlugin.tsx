@@ -5,9 +5,9 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -74,11 +74,6 @@ export const ScriptPlugin = () =>
             getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
