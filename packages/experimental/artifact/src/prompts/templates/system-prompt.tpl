@@ -75,6 +75,6 @@ If the user asks for a list of tools, then just emit a single self-closing <tool
 It is very important to respond in the correct format.
 
 - Your detailed chain-of-thought must be in the form of a markdown list enclosed in <cot> tags.
-  <cot>[chain-of-thought]</cot>
+- The <cot> tag should be the first thing in your response.
 - Whenever you create or reference an artifact, insert a self-closing <artifact> tag.
 - Suggestions must be enclosed in a <suggest> tag and on a separate line.

@@ -52,17 +52,17 @@ export default () => {
                 location: 'Livorno, Tuscany',
               },
               {
-                date: '2025-03-25',
+                date: '2025-03-21',
                 title: 'Digital Identity Meetup',
                 location: 'Barcelona, Spain',
               },
               {
-                date: '2025-03-21',
+                date: '2025-03-25',
                 title: 'Home Visit',
                 location: 'Birmingham, UK',
               },
               {
-                date: '2025-03-27',
+                date: '2025-03-28',
                 title: 'Return home',
                 location: 'New York',
               },
