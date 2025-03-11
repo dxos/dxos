@@ -2,35 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect, untracked } from '@preact/signals-core';
+import { effect } from '@preact/signals-core';
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
 import { FunctionType } from '@dxos/functions/types';
 import { create } from '@dxos/live-object';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { Filter, parseId, type Query, type SpaceId, type Space } from '@dxos/react-client/echo';
+import { Filter, parseId } from '@dxos/react-client/echo';
 
 import { AUTOMATION_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) => {
   const state = create({ functionsAvailable: false });
-  const queries = new Map<SpaceId, Query<FunctionType>>();
-  const subscriptions = new EventSubscriptions();
-
-  const getQueryForSpace = (space: Space) => {
-    return untracked(() => {
-      if (queries.has(space.id)) {
-        return queries.get(space.id)!;
-      }
-
-      const query = space.db.query(Filter.schema(FunctionType));
-      subscriptions.add(query.subscribe());
-      queries.set(space.id, query);
-      return query;
-    });
-  };
 
   const unsubscribe = effect(() => {
     const client = context.requestCapabilities(ClientCapabilities.Client)[0];
@@ -47,8 +31,12 @@ export default (context: PluginsContext) => {
       return;
     }
 
-    const query = getQueryForSpace(space);
-    state.functionsAvailable = query.objects.length > 0;
+    return space.db.query(Filter.schema(FunctionType)).subscribe(
+      (query) => {
+        state.functionsAvailable = query.objects.length > 0;
+      },
+      { fire: true },
+    );
   });
 
   return contributes(
@@ -59,9 +47,6 @@ export default (context: PluginsContext) => {
       icon: 'ph--robot--regular',
       filter: () => state.functionsAvailable,
     },
-    () => {
-      unsubscribe();
-      subscriptions.clear();
-    },
+    () => unsubscribe(),
   );
 };
