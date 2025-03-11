@@ -17,7 +17,6 @@ import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-frame
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import {
-  Icon,
   Popover,
   ScrollArea,
   toLocalizedString,
@@ -26,6 +25,7 @@ import {
   useSidebars,
   useTranslation,
   ListItem,
+  Icon,
 } from '@dxos/react-ui';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -130,11 +130,12 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         getInitialData: () => ({ id: item.id, type }),
         onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
           document.body.setAttribute('data-drag-preview', 'true');
-          scrollJustEnoughIntoView({ element: source.element });
-          const { x, y } = preserveOffsetOnSource({ element: source.element, input: location.current.input })({
-            container: (source.element.offsetParent ?? document.body) as HTMLElement,
+          const element = source.element.querySelector('[data-frame]') as HTMLElement;
+          scrollJustEnoughIntoView({ element });
+          const { x, y } = preserveOffsetOnSource({ element, input: location.current.input })({
+            container: (element.offsetParent ?? document.body) as HTMLElement,
           });
-          nativeSetDragImage?.(source.element, x, y);
+          nativeSetDragImage?.(element, x, y);
         },
         onDragStart: () => {
           document.body.removeAttribute('data-drag-preview');
@@ -180,35 +181,35 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       )}
       ref={itemElement}
     >
-      {type !== 'collection' && (
-        <div
-          role='none'
-          className={mx(
-            'absolute -z-[1] dx-focus-ring-group-indicator transition-colors',
-            type === 'tab' || pinned ? 'rounded' : 'rounded-full',
-            pinned
-              ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
-              : 'bg-groupSurface inset-inline-3 inset-block-2',
-          )}
-          {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
-        />
-      )}
+      <div
+        role='none'
+        data-frame={true}
+        className={mx(
+          'absolute grid dx-focus-ring-group-indicator transition-colors',
+          type === 'tab' || pinned ? 'rounded' : 'rounded-full',
+          pinned
+            ? 'bg-transparent group-hover/l0i:bg-groupSurface inset-inline-3 inset-block-0.5'
+            : 'bg-groupSurface inset-inline-3 inset-block-2',
+        )}
+        {...(hue && { style: { background: `var(--dx-${hue}Surface)` } })}
+      >
+        {(item.properties.icon && (
+          <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+        )) ||
+          (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
+            <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
+              {avatarValue}
+            </span>
+          ) : (
+            item.properties.icon && (
+              <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
+            )
+          ))}
+      </div>
       <div
         role='none'
         className='hidden group-aria-selected/l0i:block absolute inline-start-0 inset-block-4 is-1 bg-accentSurface rounded-ie'
       />
-      {(item.properties.icon && (
-        <Icon icon={item.properties.icon} size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-      )) ||
-        (type === 'tab' && item.properties.disposition !== 'pin-end' ? (
-          <span role='img' className='place-self-center text-3xl font-light' {...hueFgStyle}>
-            {avatarValue}
-          </span>
-        ) : (
-          item.properties.icon && (
-            <Icon icon='ph--planet--regular' size={pinned ? 5 : 7} classNames='place-self-center' {...hueFgStyle} />
-          )
-        ))}
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
@@ -260,8 +261,6 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
       data-itemid={id}
       data-testid={testId}
     >
-      {/* TODO(burdon): Option. */}
-      {/* <L0Item item={item} parent={parent} path={groupPath} /> */}
       {collectionItems.map((collectionItem) => (
         <L0Item
           key={collectionItem.id}
