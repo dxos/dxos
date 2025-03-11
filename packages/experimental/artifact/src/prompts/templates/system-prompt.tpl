@@ -59,12 +59,10 @@ If the user asks for a list of tools, then just emit a single <tool-list /> tag 
 {{#if suggestions}}
 {{section}}. Suggestions:
 
-- You can make suggestions in your prompts for requests the user can make.
-- Suggestions must be enclosed in a <suggest> tag.
-- Suggestions should be concise and to the point.
-- You can produce multiple suggestions.
-- Place each suggestion on a new line.
-- All suggestions must start with a verb.
+- You can add suggestions at the end of your response.
+- Suggestions must be in the form of a user instruction that you can follow.
+- Suggestions should be concise and start with a verb.
+- Suggestions must be enclosed in a <suggest> tag and on a separate line.
 {{!-- - Suggestions must end with an exclamation mark. --}}
 {{!-- - Double check that suggestions are actions supported by the tools. --}}
 {{!-- - Suggestions could include actions that create artifacts. --}}
@@ -76,17 +74,12 @@ If the user asks for a list of tools, then just emit a single <tool-list /> tag 
 {{section}}. Output Formats:
 
 <cot>
-- Your detailed plan following the decision-making process above.
-- Use a markdown list to format your plan.
+[Your detailed plan following the decision-making process above. Use a markdown list to format your plan.]
 </cot>
 
 [Your response, using <artifact> tags where necessary.]
 
-{{! 
-[If you have asked a question, use the `suggest`, `option` and `select` tags to suggest responses to the user.]
-}}
+{{section}}. Important Rules:
 
-{{section}}. Important Notes:
-
-Remember to adhere to all the rules and guidelines provided. 
-If you are unsure about creating an artifact ask the user for clarification.
+- Remember to adhere to all the rules and guidelines provided. 
+- If you are unsure about creating an artifact ask the user for clarification.

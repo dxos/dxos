@@ -18,7 +18,7 @@ export const isToolMessage = (message: Message) => {
 };
 
 const getToolName = (tool: ToolType) => {
-  return tool.namespace && tool.function ? `${tool.namespace}/${tool.function}` : tool.name.split('_').pop();
+  return tool.namespace && tool.function ? `${tool.namespace}:${tool.function}` : tool.name.split('_').pop();
 };
 
 const getToolCaption = (tool: ToolType | undefined) => {
@@ -90,7 +90,7 @@ export const ToolContainer: FC<ThemedClassName<{ items: { title: string; block: 
 
   const title = useMemo(() => {
     const lines = items.map((item) => item.title).filter(isNotFalsy);
-    return <StatusRoll key='status-roll' lines={lines} autoAdvance />;
+    return <StatusRoll key='status-roll' lines={lines} duration={1_000} autoAdvance />;
   }, [items]);
 
   return (

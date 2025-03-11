@@ -9,11 +9,11 @@ import { type Tool, Message, type MessageContentBlock } from '@dxos/artifact';
 import {
   isToolUse,
   runTools,
-  type AIServiceClientImpl,
   type GenerateRequest,
   type GenerationStream,
   MixedStreamParser,
   DEFAULT_LLM_MODEL,
+  type AIService,
 } from '@dxos/assistant';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -50,10 +50,10 @@ export class ChatProcessor {
   /** SSE stream parser. */
   private readonly _parser = new MixedStreamParser();
 
-  /** Current streaming response (iterator). */
+  /** Current streaming response. */
   private _stream: GenerationStream | undefined;
 
-  /** Pending messages (incl. the user request). */
+  /** Pending messages (incl. the current user request). */
   private readonly _pending: Signal<Message[]> = signal([]);
 
   /** Current streaming block (from the AI service). */
@@ -92,7 +92,7 @@ export class ChatProcessor {
   });
 
   constructor(
-    private readonly _client: AIServiceClientImpl,
+    private readonly _service: AIService,
     private _tools?: Tool[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
@@ -139,7 +139,7 @@ export class ChatProcessor {
       this._block.value = undefined;
     });
 
-    await this._generate();
+    await this._request();
     options.onComplete?.(this._pending.value);
     return this._reset();
   }
@@ -169,16 +169,18 @@ export class ChatProcessor {
    * Generate a response from the AI service.
    * Iterates over tool requests.
    */
-  private async _generate() {
+  private async _request() {
     try {
       let more = false;
       do {
-        log.info('request', {
+        log('request', {
           pending: this._pending.value.length,
           history: this._history.length,
           tools: this._tools?.map((tool) => tool.name),
         });
-        this._stream = await this._client.generate({
+
+        // Open request stream.
+        this._stream = await this._service.exec({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
           history: [...this._history, ...this._pending.value],
@@ -190,21 +192,21 @@ export class ChatProcessor {
         await this._stream.complete();
 
         // Add messages.
-        log.info('response', { pending: this._pending.value });
+        log('response', { pending: this._pending.value });
 
         // Resolve tool use locally.
         more = false;
         const message = this._pending.value.at(-1);
         invariant(message);
         if (isToolUse(message)) {
-          log.info('tool request...');
+          log('tool request...');
           const response = await runTools({
             message: this._pending.value.at(-1)!,
             tools: this._tools ?? [],
             extensions: this._extensions,
           });
 
-          log.info('tool response', { response });
+          log('tool response', { response });
           switch (response.type) {
             case 'continue': {
               this._pending.value = [...this._pending.value, response.message];
@@ -215,13 +217,12 @@ export class ChatProcessor {
         }
       } while (more);
 
-      log.info('done');
+      this.error.value = undefined;
     } catch (err) {
       log.catch(err);
       this.error.value = new Error('AI service error', { cause: err });
     } finally {
       this._stream = undefined;
-      this.error.value = undefined;
     }
   }
 }

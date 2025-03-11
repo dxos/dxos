@@ -17,12 +17,17 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
-import { Toolbox } from './Toolbox';
+import { Toolbox, type ToolboxProps } from './Toolbox';
+import translations from '../../translations';
 
-const Render = () => {
+const Render = (props: ToolboxProps) => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   return (
-    <Toolbox artifacts={artifactDefinitions} classNames='w-[30rem] h-[15rem] rounded-md border border-separator' />
+    <Toolbox
+      {...props}
+      artifacts={artifactDefinitions}
+      classNames='w-[30rem] h-[15rem] rounded-md border border-separator py-1'
+    />
   );
 };
 
@@ -52,6 +57,7 @@ const meta: Meta<typeof Toolbox> = {
     withLayout({ tooltips: true }),
   ],
   parameters: {
+    translations,
     layout: 'centered',
   },
 };
@@ -60,6 +66,4 @@ export default meta;
 
 type Story = Meta<typeof Toolbox>;
 
-export const Default: Story = {
-  args: {},
-};
+export const Default: Story = {};

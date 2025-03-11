@@ -64,6 +64,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.
+  // const processor = useChatProcessor(space);
   const processor = useMemo<ChatProcessor | undefined>(() => {
     if (!space) {
       return;
@@ -174,6 +175,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         <Thread
           messages={messages}
           processing={processor?.streaming.value}
+          error={processor?.error.value}
           tools={processor?.tools}
           onSubmit={processor ? handleSubmit : undefined}
           onPrompt={processor ? handlePrompt : undefined}
@@ -250,7 +252,7 @@ type Story = StoryObj<typeof Render>;
 export const Default: Story = {
   args: {
     debug: true,
-    prompts: ['What tools do you have?', 'Show me a chess puzzle'],
+    prompts: ['What tools do you have access to?', 'Show me a chess puzzle'],
   },
 };
 

@@ -9,12 +9,23 @@ import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];
 
+// TODO(burdon): Factor out?
+export type Size = 'sm' | 'md' | 'lg';
+export const sizes: Size[] = ['sm', 'md', 'lg'];
+
+const sizeClassNames: Record<Size, { height: number; className: string }> = {
+  sm: { height: 20, className: 'h-[20px] text-sm' },
+  md: { height: 24, className: 'h-[24px]' },
+  lg: { height: 28, className: 'h-[28px] text-lg' },
+};
+
 export type StatusRollProps = ThemedClassName<{
+  size?: Size;
   line?: number;
   lines?: string[];
-  transition?: number;
-  advance?: number;
   autoAdvance?: boolean;
+  transition?: number;
+  duration?: number;
 }>;
 
 /**
@@ -22,15 +33,17 @@ export type StatusRollProps = ThemedClassName<{
  */
 export const StatusRoll = ({
   classNames,
+  size = 'md',
   line = -1,
   lines = emptyLines,
-  transition = 300,
-  advance = 1_000,
   autoAdvance,
+  transition = 300,
+  duration = 1_000,
 }: StatusRollProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentLine, setCurrentLine] = useState(line);
   const linesLength = useDynamicRef(lines.length);
+  const lastRoll = useRef(Date.now());
   useEffect(() => setCurrentLine(line), [line]);
   useEffect(() => {
     if (!autoAdvance) {
@@ -40,37 +53,39 @@ export const StatusRoll = ({
     const next = () => {
       setCurrentLine((prev) => {
         if (prev >= linesLength.current - 1) {
-          clearInterval(interval);
+          clearInterval(i);
           return prev;
         }
 
+        lastRoll.current = Date.now();
         return prev + 1;
       });
     };
 
-    next();
-    const interval = setInterval(next, advance);
+    if (Date.now() - lastRoll.current > duration) {
+      next();
+    }
 
-    return () => clearInterval(interval);
-  }, [lines.length, autoAdvance, advance]);
+    const i = setInterval(next, duration);
+    return () => clearInterval(i);
+  }, [lines.length, autoAdvance, duration]);
 
+  const { className, height } = sizeClassNames[size];
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.style.transition = `transform ${transition}ms ease-in-out`;
-      containerRef.current.style.transform = `translateY(-${currentLine * 24}px)`;
+      containerRef.current.style.transform = `translateY(-${currentLine * height}px)`;
     }
-  }, [currentLine]);
+  }, [height, currentLine]);
 
   return (
-    <div className={mx('relative h-[24px] overflow-hidden', classNames)}>
-      <div ref={containerRef} className='h-[24px]'>
-        <div className='flex flex-col'>
-          {lines.map((line, i) => (
-            <div key={i} className={mx('flex h-[24px] items-center')}>
-              <span className='truncate'>{line}</span>
-            </div>
-          ))}
-        </div>
+    <div className={mx('overflow-hidden', classNames)}>
+      <div ref={containerRef} className={mx('relative flex flex-col py-0', className)}>
+        {lines.map((line, i) => (
+          <div key={i} className={mx('flex items-center', className)}>
+            <span className='truncate'>{line}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

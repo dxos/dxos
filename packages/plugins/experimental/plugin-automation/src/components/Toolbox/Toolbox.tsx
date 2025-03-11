@@ -38,13 +38,13 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
               <Fragment key={id}>
                 <div className={subGridClassNames}>
                   <div className='text-primary-500 truncate'>{name}</div>
-                  <div className='col-span-2 line-clamp-2'>{description}</div>
+                  <div className='col-span-2 line-clamp-3'>{description}</div>
                 </div>
                 {tools.map(({ name, description }, i) => (
-                  <div key={`${name}-${i}`} className={subGridClassNames}>
+                  <div key={i} className={subGridClassNames}>
                     <div />
                     <div className='truncate'>{parseToolName(name)}</div>
-                    <div className='text-subdued line-clamp-3'>{description}</div>
+                    <div className='line-clamp-3'>{description}</div>
                   </div>
                 ))}
               </Fragment>
@@ -67,7 +67,7 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
                   <div key={name} className={mx(subGridClassNames, striped && stripeClassNames)}>
                     <div className='text-primary-500 truncate'>{i === 0 && service.serviceId}</div>
                     <div className='truncate'>{name}</div>
-                    <div className='truncate'>{description}</div>
+                    <div className='line-clamp-3'>{description}</div>
                   </div>
                 ))}
               </Fragment>
@@ -84,7 +84,7 @@ export const Toolbox = ({ classNames, artifacts, functions, services, striped }:
               <div key={name} className={mx(subGridClassNames, striped && stripeClassNames)}>
                 <div className='text-primary-500 truncate'>function</div>
                 <div className='truncate'>{name}</div>
-                <div className='truncate'>{description}</div>
+                <div className='line-clamp-3'>{description}</div>
               </div>
             ))}
           </div>

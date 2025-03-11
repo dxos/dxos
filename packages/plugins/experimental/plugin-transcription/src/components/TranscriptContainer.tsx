@@ -100,7 +100,7 @@ const summarizeTranscript = async (
 
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
-    await aiService.generate({
+    await aiService.exec({
       model: DEFAULT_LLM_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],

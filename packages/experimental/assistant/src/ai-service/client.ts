@@ -12,14 +12,16 @@ import { log } from '@dxos/log';
 import { createGenerationStream, type GenerationStream } from './stream';
 import { type GenerateRequest } from './types';
 
-// TODO(burdon): Rename.
-export interface AIServiceClient {
+export interface AIService {
+  exec(request: GenerateRequest): Promise<GenerationStream>;
+}
+
+export interface AIServiceClient extends AIService {
   getSpace(spaceId: SpaceId): Promise<Space>;
   getThread(spaceId: SpaceId, threadId: string): Promise<Thread>;
   getMessages(spaceId: SpaceId, threadId: string): Promise<Message[]>;
   appendMessages(messages: Message[]): Promise<void>;
   updateMessage(spaceId: SpaceId, threadId: string, messageId: string, message: Message): Promise<void>;
-  generate(request: GenerateRequest): Promise<GenerationStream>;
 }
 
 export type AIServiceClientParams = {
@@ -72,9 +74,9 @@ export class AIServiceClientImpl implements AIServiceClient {
   }
 
   /**
-   * Open message stream.
+   * Process request and open message stream.
    */
-  async generate(request: GenerateRequest): Promise<GenerationStream> {
+  async exec(request: GenerateRequest): Promise<GenerationStream> {
     // TODO(dmaretskyi): Errors if tools are not provided.
     request = {
       tools: request.tools ?? [],
