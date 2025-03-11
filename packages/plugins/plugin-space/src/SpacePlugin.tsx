@@ -122,6 +122,7 @@ export const SpacePlugin = ({
           id: 'settings',
           label: ['settings panel label', { ns: SPACE_PLUGIN }],
           icon: 'ph--sliders--regular',
+          position: 'hoist',
           filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
         }),
     }),
