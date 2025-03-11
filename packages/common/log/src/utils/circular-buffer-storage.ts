@@ -118,7 +118,7 @@ export class CircularBufferStorage {
       this._ready
         .then(() => {
           this._gcIntervalId = setInterval(() => {
-            console.log(`Running automatic garbage collection for ${this._options.dbName}:${this._options.storeName}`);
+            // console.log(`Running automatic garbage collection for ${this._options.dbName}:${this._options.storeName}`);
             void this.performGarbageCollection();
           }, this._options.gcInterval);
         })
@@ -289,7 +289,7 @@ export class CircularBufferStorage {
       throw new Error('IndexedDB is not available');
     }
 
-    const { after, before, limit = 100, direction = 'desc' } = options;
+    const { after, before, limit, direction = 'desc' } = options;
 
     return new Promise<string[]>((resolve, reject) => {
       try {
@@ -318,7 +318,7 @@ export class CircularBufferStorage {
             const beforeCheck = before === undefined || entry.timestamp <= before;
 
             if (afterCheck && beforeCheck) {
-              if (results.length < limit) {
+              if (limit === undefined || results.length < limit) {
                 results.push(entry.data);
               } else {
                 resolve(results);

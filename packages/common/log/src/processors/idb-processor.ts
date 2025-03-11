@@ -55,7 +55,7 @@ export interface IDBProcessorOptions {
 const DEFAULT_OPTIONS: IDBProcessorOptions = {
   dbName: 'dxos-logs',
   storeName: 'logs',
-  maxSizeBytes: 10 * 1024 * 1024, // 10MB
+  maxSizeBytes: 90 * 1024 * 1024, // 90MB
   batchSize: 50,
   flushInterval: 10000, // 10 seconds
   gcInterval: 60000, // 1 minute

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createIDBProcessor } from '@dxos/log';
+import { createIDBProcessor, randomInstanceId } from '@dxos/log';
 
 // NOTE: Shared worker doesn't support top-level imports currently.
 // All worker code & imports have been moved behind an async import due to WASM
@@ -13,7 +13,7 @@ onconnect = async (event) => {
   const { log } = await import('@dxos/log');
 
   log.config({
-    globalContext: { processId: 'worker' },
+    globalContext: { processLabel: 'worker', instanceId: randomInstanceId() },
   });
   log.addProcessor(createIDBProcessor());
 

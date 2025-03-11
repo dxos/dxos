@@ -20,11 +20,11 @@ import { appKey } from './constants';
 import { core, defaults, plugins, type PluginConfig } from './plugins';
 import translations from './translations';
 import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
-import { createIDBProcessor, log } from '@dxos/log';
+import { createIDBProcessor, log, randomInstanceId } from '@dxos/log';
 
 const main = async () => {
   log.config({
-    globalContext: { processId: 'app' },
+    globalContext: { processLabel: 'app', instanceId: randomInstanceId() },
   });
   log.addProcessor(createIDBProcessor());
 

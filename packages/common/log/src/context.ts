@@ -41,10 +41,32 @@ export type LogRecord = {
   timestamp: number;
 
   context?: {
+    // Instance metadata.
+
     /**
-     * Error message.
+     * `app` / `worker`.
      */
-    error?: string;
+    processLabel?: string;
+
+    /**
+     * Identifier for the running instance of the application.
+     * Typically generated on startup.
+     */
+    instanceId?: string;
+
+    // Log metadata.
+
+    /**
+     * Filename.
+     */
+    file?: string;
+
+    /**
+     * Line number.
+     */
+    line?: number;
+
+    // User metadata.
 
     /**
      * DID of the identity.
@@ -56,20 +78,12 @@ export type LogRecord = {
      */
     spaceId?: SpaceId;
 
-    /**
-     * PID or `app` / `worker`.
-     */
-    processId?: string;
+    // Common context.
 
     /**
-     * Filename.
+     * Error message.
      */
-    filename?: string;
-
-    /**
-     * Line number.
-     */
-    line?: number;
+    error?: string;
 
     /**
      * Additional context.
@@ -136,9 +150,7 @@ export const getLogRecordFromEntry = (config: LogConfig, entry: LogEntry): LogRe
     context: {
       ...(config.options.globalContext ?? {}),
       ...context,
-      ...(entry.meta
-        ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L, column: entry.meta.C } }
-        : {}),
+      ...(entry.meta ? { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } : {}),
     },
   };
 };

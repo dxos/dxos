@@ -34,9 +34,7 @@ const createLogEntry = (level: LogLevel, message: string, timestamp?: number): L
     meta: {
       F: 'test-file.ts',
       L: 42,
-      C: 1,
       S: {},
-      ...(timestamp ? ({ T: timestamp } as any) : {}),
     },
   };
 };
