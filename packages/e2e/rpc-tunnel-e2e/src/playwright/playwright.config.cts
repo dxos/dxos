@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(ZaymonFC): Convert these back to ESM syntax which currently breaks bundling.
 const { nxE2EPreset } = require('@nx/playwright/preset');
 const { defineConfig } = require('@playwright/test');
 const { e2ePreset } = require('@dxos/test-utils/playwright');
