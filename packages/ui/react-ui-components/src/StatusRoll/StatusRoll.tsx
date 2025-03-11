@@ -97,11 +97,15 @@ export const StatusRoll = ({
       <div ref={containerRef} className={mx(className)}>
         <div className='flex flex-col'>
           {lines.map((line, i) => (
-            <div key={i} className={mx('items-center truncate', className)}>
-              {line}
+            <div key={i} className={mx('flex items-center', className)}>
+              <span className='truncate'>{line}</span>
             </div>
           ))}
-          {cyclic && <div className={mx('items-center truncate', className)}>{lines[0]}</div>}
+          {cyclic && (
+            <div className={mx('flex items-center', className)}>
+              <span className='truncate'>{lines[0]}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
