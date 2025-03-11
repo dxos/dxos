@@ -53,20 +53,26 @@ export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
 /**
  * Fully qualified id of a reactive object is a combination of the space id and the object id.
  * @returns Fully qualified id of a reactive object.
+ * @deprecated Prefer DXNs.
  */
 export const fullyQualifiedId = (object: ReactiveObject<any>): string => {
   const space = getSpace(object);
   return space ? `${space.id}:${object.id}` : object.id;
 };
 
+/**
+ * @deprecated Use `parseId` instead.
+ */
 export const parseFullyQualifiedId = (id: string): [string, string] => {
   const [spaceId, objectId] = id.split(':');
   invariant(objectId, 'invalid id');
   return [spaceId, objectId];
 };
 
-export const parseId = (id: string) => {
-  if (id.length === SPACE_ID_LENGTH) {
+export const parseId = (id?: string) => {
+  if (!id) {
+    return {};
+  } else if (id.length === SPACE_ID_LENGTH) {
     return { spaceId: id as SpaceId };
   } else if (id.length === OBJECT_ID_LENGTH) {
     return { objectId: id as ObjectId };
