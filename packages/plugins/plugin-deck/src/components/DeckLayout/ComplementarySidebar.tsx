@@ -196,7 +196,9 @@ const ComplementarySidebarPanel = ({ panel, activePanelId, data, hoistStatusbar 
 
   return (
     <>
-      <h2 className='flex items-center pli-2 border-separator border-be font-medium'>{toLocalizedString(panel.label, t)}</h2>
+      <h2 className='flex items-center pli-2 border-separator border-be font-medium'>
+        {toLocalizedString(panel.label, t)}
+      </h2>
       <Wrapper>
         <Surface
           role={`complementary--${activePanelId}`}
