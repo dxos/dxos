@@ -55,7 +55,6 @@ export default (context: PluginsContext) => {
       id: 'automation',
       label: ['automation panel label', { ns: AUTOMATION_PLUGIN }],
       icon: 'ph--robot--regular',
-      fixed: true,
       filter: () => state.functionsAvailable,
     },
     () => {
