@@ -7,10 +7,6 @@
       "node"
     ]
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
