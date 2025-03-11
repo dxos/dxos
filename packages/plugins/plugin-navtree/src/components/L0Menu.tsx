@@ -2,10 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useMemo } from 'react';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
+import {
+  attachClosestEdge,
+  type Edge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import React, { type MouseEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
+import { invariant } from '@dxos/invariant';
 import {
   Icon,
   Popover,
@@ -15,9 +25,12 @@ import {
   useMediaQuery,
   useSidebars,
   useTranslation,
+  ListItem,
 } from '@dxos/react-ui';
+import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
+import { arrayMove } from '@dxos/util';
 
 import { useNavTreeContext } from './NavTreeContext';
 import { NotchStart } from './NotchStart';
@@ -25,11 +38,14 @@ import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { getFirstTwoRenderableChars, l0ItemType } from '../util';
 
+type L0ItemData = Pick<L0ItemProps, 'item'> & { id: L0ItemProps['item']['id'] };
+
 type L0ItemProps = {
   item: Node<any>;
   parent?: Node<any>;
   path: string[];
   pinned?: boolean;
+  onRearrange?: StackItemRearrangeHandler<L0ItemData>;
 };
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
@@ -79,8 +95,10 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
-const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
+const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  const itemElement = useRef<HTMLElement | null>(null);
+  const [closestEdge, setEdge] = useState<Edge | null>(null);
   const type = l0ItemType(item);
   const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { getProps, popoverAnchorId } = useNavTreeContext();
@@ -100,6 +118,57 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
     [type, item.properties.label, t],
   );
   const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
+
+  useLayoutEffect(() => {
+    // NOTE(thure): This is copied from StackItem, perhaps this should be DRYed out.
+    if (!itemElement.current || !onRearrange) {
+      return;
+    }
+    return combine(
+      draggable({
+        element: itemElement.current,
+        getInitialData: () => ({ id: item.id, type }),
+        onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
+          document.body.setAttribute('data-drag-preview', 'true');
+          scrollJustEnoughIntoView({ element: source.element });
+          const { x, y } = preserveOffsetOnSource({ element: source.element, input: location.current.input })({
+            container: (source.element.offsetParent ?? document.body) as HTMLElement,
+          });
+          nativeSetDragImage?.(source.element, x, y);
+        },
+        onDragStart: () => {
+          document.body.removeAttribute('data-drag-preview');
+          itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
+        },
+        onDrop: () => {
+          itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
+        },
+      }),
+      dropTargetForElements({
+        element: itemElement.current,
+        getData: ({ input, element }) => {
+          return attachClosestEdge({ id: item.id, type }, { input, element, allowedEdges: ['top', 'bottom'] });
+        },
+        onDragEnter: ({ self, source }) => {
+          if (source.data.type === self.data.type) {
+            setEdge(extractClosestEdge(self.data));
+          }
+        },
+        onDrag: ({ self, source }) => {
+          if (source.data.type === self.data.type) {
+            setEdge(extractClosestEdge(self.data));
+          }
+        },
+        onDragLeave: () => setEdge(null),
+        onDrop: ({ self, source }) => {
+          setEdge(null);
+          if (source.data.type === self.data.type) {
+            onRearrange(source.data as L0ItemData, self.data as L0ItemData, extractClosestEdge(self.data));
+          }
+        },
+      }),
+    );
+  }, [item]);
 
   const l0ItemTrigger = (
     <Root
@@ -142,6 +211,7 @@ const L0Item = ({ item, parent, path, pinned }: L0ItemProps) => {
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
+      {onRearrange && closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
     </Root>
   );
 
@@ -166,6 +236,21 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
   const collectionItems = navTreeContext.getItems(item);
   const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
   const { id, testId } = navTreeContext.getProps?.(item, path) ?? {};
+  const handleRearrange = useCallback<StackItemRearrangeHandler<L0ItemData>>(
+    (source, target, closestEdge) => {
+      invariant(item.properties.onRearrangeChildren);
+      const sourceIndex = collectionItems.findIndex((i) => i.id === source.id);
+      const targetIndex = collectionItems.findIndex((i) => i.id === target.id);
+      const insertIndex =
+        source.id === target.id
+          ? sourceIndex
+          : targetIndex +
+            (targetIndex > sourceIndex ? (closestEdge === 'bottom' ? 0 : -1) : closestEdge === 'top' ? 1 : 0);
+      const nextOrder = arrayMove([...collectionItems], sourceIndex, insertIndex);
+      return item.properties.onRearrangeChildren(nextOrder);
+    },
+    [collectionItems, item.properties.onRearrangeChildren],
+  );
   return (
     <div
       role='group'
@@ -177,7 +262,13 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
       {/* TODO(burdon): Option. */}
       {/* <L0Item item={item} parent={parent} path={groupPath} /> */}
       {collectionItems.map((collectionItem) => (
-        <L0Item key={collectionItem.id} item={collectionItem} parent={item} path={groupPath} />
+        <L0Item
+          key={collectionItem.id}
+          item={collectionItem}
+          parent={item}
+          path={groupPath}
+          {...(item.properties.onRearrangeChildren && { onRearrange: handleRearrange })}
+        />
       ))}
     </div>
   );
