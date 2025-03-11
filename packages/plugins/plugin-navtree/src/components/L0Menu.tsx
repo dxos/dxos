@@ -38,7 +38,7 @@ import { useLoadDescendents } from '../hooks';
 import { NAVTREE_PLUGIN } from '../meta';
 import { getFirstTwoRenderableChars, l0ItemType } from '../util';
 
-type L0ItemData = Pick<L0ItemProps, 'item'> & { id: L0ItemProps['item']['id'] };
+type L0ItemData = { id: L0ItemProps['item']['id']; type: 'l0Item' };
 
 type L0ItemProps = {
   item: Node<any>;
@@ -127,7 +127,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
     return combine(
       draggable({
         element: itemElement.current,
-        getInitialData: () => ({ id: item.id, type }),
+        getInitialData: () => ({ id: item.id, type: 'l0Item' }) satisfies L0ItemData,
         onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
           document.body.setAttribute('data-drag-preview', 'true');
           const element = source.element.querySelector('[data-frame]') as HTMLElement;
@@ -148,7 +148,10 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       dropTargetForElements({
         element: itemElement.current,
         getData: ({ input, element }) => {
-          return attachClosestEdge({ id: item.id, type }, { input, element, allowedEdges: ['top', 'bottom'] });
+          return attachClosestEdge(
+            { id: item.id, type: 'l0Item' },
+            { input, element, allowedEdges: ['top', 'bottom'] },
+          );
         },
         onDragEnter: ({ self, source }) => {
           if (source.data.type === self.data.type) {
