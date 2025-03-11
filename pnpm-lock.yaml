@@ -9317,9 +9317,6 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread

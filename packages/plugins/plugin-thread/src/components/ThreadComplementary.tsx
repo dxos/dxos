@@ -9,9 +9,8 @@ import { ThreadCapabilities } from '@dxos/plugin-space';
 import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { useTranslation, Input } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { isNonNullable } from '@dxos/util';
 
 import { ThreadCapabilities as LocalThreadCapabilities } from '../capabilities';
@@ -27,9 +26,10 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const { state, getViewState } = useCapability(LocalThreadCapabilities.MutableState);
   const viewState = getViewState(fullyQualifiedId(subject));
   const { showResolvedThreads } = viewState;
-  const onChangeViewState = useCallback(
-    (nextValue: string) => {
-      viewState.showResolvedThreads = nextValue === 'all';
+  const handleViewStateChange = useCallback(
+    (nextChecked: boolean) => {
+      console.log('[view state change]', viewState, nextChecked);
+      viewState.showResolvedThreads = nextChecked;
     },
     [viewState],
   );
@@ -123,36 +123,28 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     [dispatch, subject],
   );
 
-  const comments = (
-    <CommentsContainer
-      threads={threads}
-      detached={detachedIds}
-      currentId={attended.includes(qualifiedSubjectId) ? state.current : undefined}
-      showResolvedThreads={showResolvedThreads}
-      onAttend={handleAttend}
-      onComment={handleComment}
-      onResolve={handleResolve}
-      onMessageDelete={handleMessageDelete}
-      onThreadDelete={handleThreadDelete}
-    />
-  );
-
   return (
-    <Tabs.Root
-      value={showResolvedThreads ? 'all' : 'unresolved'}
-      onValueChange={onChangeViewState}
-      orientation='horizontal'
-    >
-      <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
-        <Tabs.Tab value='unresolved' classNames='text-sm'>
-          {t('show unresolved label')}
-        </Tabs.Tab>
-        <Tabs.Tab value='all' classNames='text-sm'>
-          {t('show all label')}
-        </Tabs.Tab>
-      </Tabs.Tablist>
-      <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-      <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
-    </Tabs.Root>
+    <>
+      <div
+        role='toolbar'
+        className='plb-1 pli-2 gap-2 bs-[--rail-action] border-be border-separator flex items-center justify-end'
+      >
+        <Input.Root>
+          <Input.Label>{t('show all label')}</Input.Label>
+          <Input.Switch checked={showResolvedThreads} onCheckedChange={handleViewStateChange} />
+        </Input.Root>
+      </div>
+      <CommentsContainer
+        threads={threads}
+        detached={detachedIds}
+        currentId={attended.includes(qualifiedSubjectId) ? state.current : undefined}
+        showResolvedThreads={showResolvedThreads}
+        onAttend={handleAttend}
+        onComment={handleComment}
+        onResolve={handleResolve}
+        onMessageDelete={handleMessageDelete}
+        onThreadDelete={handleThreadDelete}
+      />
+    </>
   );
 };
