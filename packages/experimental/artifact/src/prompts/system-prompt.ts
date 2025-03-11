@@ -11,6 +11,7 @@ export type SystemPromptOptions = {
    * Instructions for each artifact.
    */
   artifacts?: string[];
+
   /**
    * Whether to include suggestions in the prompt.
    */

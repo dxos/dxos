@@ -37,7 +37,7 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.generate({
+    const stream = await client.exec({
       model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
@@ -82,7 +82,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     {
-      const stream1 = await client.generate({
+      const stream1 = await client.exec({
         model: DEFAULT_LLM_MODEL,
         spaceId,
         threadId,
@@ -116,7 +116,7 @@ describe.skip('AI Service Client', () => {
     }
 
     {
-      const stream2 = await client.generate({
+      const stream2 = await client.exec({
         model: DEFAULT_LLM_MODEL,
         spaceId,
         threadId,
@@ -154,7 +154,7 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.generate({
+    const stream = await client.exec({
       model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,

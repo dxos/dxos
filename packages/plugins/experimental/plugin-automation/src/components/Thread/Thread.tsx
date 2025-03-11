@@ -24,7 +24,7 @@ export type ThreadProps = ThemedClassName<{
   onOpenChange?: (open: boolean) => void;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
-  Pick<ThreadMessageProps, 'debug' | 'onPrompt' | 'onDelete'>;
+  Pick<ThreadMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete'>;
 
 /**
  * Chat thread component.
