@@ -141,6 +141,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'create',
         description: 'Create a new script. Returns the artifact definition for the script',
+        caption: 'Creating script...',
         schema: S.Struct({
           name: S.String.annotations({ description: 'The name of the script' }),
           code: S.String.annotations({
@@ -173,6 +174,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'inspect',
         description: 'Inspect a script. Returns the artifact definition for the script',
+        caption: 'Inspecting script...',
         schema: S.Struct({
           id: ObjectId,
         }),
@@ -191,6 +193,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'update',
         description: 'Update a script. Returns the artifact definition for the script',
+        caption: 'Updating script...',
         schema: S.Struct({
           id: ObjectId,
           code: S.String.annotations({

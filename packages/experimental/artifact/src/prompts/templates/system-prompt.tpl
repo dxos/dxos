@@ -62,11 +62,13 @@ If the user asks for a list of tools, then just emit a single <tool-list /> tag 
 - You can add suggestions at the end of your response.
 - Suggestions must be in the form of a user instruction that you can follow.
 - Suggestions should be concise and start with a verb.
+- Suggestions should be phrased as a command to an agent -- not a question to the user.
+- Suggestions could include actions that create artifacts.
 - Suggestions must be enclosed in a <suggest> tag and on a separate line.
-{{!-- - Suggestions must end with an exclamation mark. --}}
-{{!-- - Double check that suggestions are actions supported by the tools. --}}
-{{!-- - Suggestions could include actions that create artifacts. --}}
-{{!-- - Suggestions should not be questions to the user. --}}
+  Examples: 
+  <suggest>Show the table on a map.</suggest>
+  <suggest>Create a kanban from the table.</suggest>
+
 {{!-- - If you have asked a multiple choice question, then present each of the possible answers as concise text inside <option> tags inside a well formed <select> tag: <select><option>Yes</option><option>No</option></select> --}}
 {{!-- - Suggestions and answers must not have placeholders. --}}
 {{/if}}
@@ -78,6 +80,10 @@ If the user asks for a list of tools, then just emit a single <tool-list /> tag 
 </cot>
 
 [Your response, using <artifact> tags where necessary.]
+
+<suggest>
+[Your suggestions for follow-up actions.]
+</suggest>
 
 {{section}}. Important Rules:
 

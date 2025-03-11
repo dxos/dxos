@@ -58,7 +58,8 @@ const SYSTEM_NAMESPACE = 'dxos.org/echo/schema';
 export const schemaTools = [
   defineTool(SYSTEM_NAMESPACE, {
     name: 'list',
-    description: 'List all registered schemas in the space.',
+    description: 'List registered schemas in the space.',
+    caption: 'Listing registered schemas...',
     schema: S.Struct({}),
     execute: async (_input, { extensions }) => {
       invariant(extensions?.space, 'No space.');
@@ -76,6 +77,7 @@ export const schemaTools = [
   defineTool(SYSTEM_NAMESPACE, {
     name: 'get',
     description: 'Get a specific schema by its typename.',
+    caption: 'Getting schema...',
     schema: S.Struct({
       typename: S.String.annotations({
         description: 'The fully qualified typename of the schema.',
@@ -95,7 +97,8 @@ export const schemaTools = [
   }),
   defineTool(SYSTEM_NAMESPACE, {
     name: 'create',
-    description: 'Use schema_formats before calling this!! Create a new schema with the provided definition.',
+    description: 'Create a new schema with the provided definition.',
+    caption: 'Creating schema...',
     schema: S.Struct({
       typename: TypeNameSchema.annotations({
         description:

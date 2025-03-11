@@ -5,7 +5,6 @@
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { S } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -23,25 +22,28 @@ export default () => {
     name: meta.name,
     instructions: `
       - Manage the calendar for the current space.
+      - Always try to determine the geolocation of the event.
+      - You can create a travel itinerary by creating a table from a list of events. In this case you must include the geopoint of the event.
+      - When creating a schema for an event, always include a geopoint property.
+      - You could suggest to view the itinerary on a map.
     `,
     schema: S.Struct({}),
     tools: [
       defineTool(meta.id, {
         name: 'inspect',
-        description: 'List all events for the given calendar.',
+        description: 'Retrieves events for the given calendar.',
+        caption: 'Retrieving calendar events...',
         schema: S.Struct({}),
         execute: async () => {
-          log.info('calendar_view');
           return ToolResult.Success({
             events: [
               {
                 date: '2025-03-16',
-                title: 'Pack for trip from home',
                 location: 'New York',
               },
               {
                 date: '2025-03-17',
-                title: 'Effect conference',
+                title: 'Effect Conference',
                 location: 'Rome',
               },
               {
@@ -50,14 +52,14 @@ export default () => {
                 location: 'Livorno, Tuscany',
               },
               {
-                date: '2025-03-21',
-                title: 'UK Visit',
-                location: 'Birmingham, UK',
+                date: '2025-03-25',
+                title: 'Digital Identity Meetup',
+                location: 'Barcelona, Spain',
               },
               {
-                date: '2025-03-25',
-                title: 'ETH meetup',
-                location: 'Paris',
+                date: '2025-03-21',
+                title: 'Home Visit',
+                location: 'Birmingham, UK',
               },
               {
                 date: '2025-03-27',

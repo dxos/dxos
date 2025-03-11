@@ -49,7 +49,8 @@ export default () => {
         name: 'create',
         description: `
           Create a new table using an existing schema.
-          Use schema_create first to create a schema, or schema_list to choose an existing one.`,
+          Use schema_create first to create a schema, or schema_list to choose an existing one.
+        `,
         schema: S.Struct({
           typename: S.String.annotations({
             description: 'The fully qualified typename of the schema to use for the table.',
@@ -62,7 +63,7 @@ export default () => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
-          // Validate schema exists first
+          // Validate schema exists first.
           const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           if (!schema) {
             return ToolResult.Error(`Schema not found: ${typename}`);
