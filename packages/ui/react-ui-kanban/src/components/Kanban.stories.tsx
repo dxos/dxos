@@ -138,7 +138,7 @@ const meta: Meta<StoryProps> = {
         space.db.add(kanban);
 
         // TODO(burdon): Replace with sdk/schema/testing.
-        Array.from({ length: 8 }).map(() => {
+        Array.from({ length: 80 }).map(() => {
           return space.db.add(
             create(schema, {
               title: faker.commerce.productName(),
