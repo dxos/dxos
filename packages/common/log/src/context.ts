@@ -29,6 +29,10 @@ export interface LogEntry {
  */
 export type LogRecord = {
   level: LogLevel;
+
+  /**
+   * User message.
+   */
   message: string;
 
   /**
@@ -66,11 +70,6 @@ export type LogRecord = {
      * Line number.
      */
     line?: number;
-
-    /**
-     * Column number.
-     */
-    column?: number;
 
     /**
      * Additional context.

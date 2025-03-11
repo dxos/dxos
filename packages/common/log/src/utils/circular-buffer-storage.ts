@@ -172,8 +172,6 @@ export class CircularBufferStorage {
         }
       };
     });
-
-    console.log('Initialized circular buffer', this._options.dbName, this._options.storeName);
   }
 
   /**

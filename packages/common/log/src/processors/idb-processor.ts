@@ -172,8 +172,9 @@ export class IDBProcessor {
 
   /**
    * Get log entries by time range.
+   * @param options.direction=asc - Sort direction. 'desc' for newest first, 'asc' for oldest first.
    */
-  async getLogs(options: GetLogsOptions = {}): Promise<LogEntry[]> {
+  async getLogs(options: GetLogsOptions = {}): Promise<LogRecord[]> {
     const serializedBatches = await this._buffer.getLogs(options);
 
     // Deserialize and flatten the batches
@@ -188,93 +189,16 @@ export class IDBProcessor {
       }
     }
 
-    // Sort by timestamp
-    records.sort((a, b) => a.timestamp - b.timestamp);
+    const direction = options.direction ?? 'asc';
 
-    // Convert LogRecord back to LogEntry (simplified conversion)
-    const logs: LogEntry[] = records.map((record) => {
-      const entry: LogEntry = {
-        level: record.level,
-        message: record.message,
-      };
-
-      // Add meta if available
-      if (record.context?.meta) {
-        entry.meta = {
-          F: record.context.meta.file || '',
-          L: record.context.meta.line,
-          C: record.context.meta.column,
-          S: {}, // Empty scope but satisfies the CallMetadata type
-        };
-      }
-
-      // Add context if available (excluding meta which we handled separately)
-      if (record.context) {
-        const { meta, ...restContext } = record.context;
-        if (Object.keys(restContext).length > 0) {
-          entry.context = restContext;
-        }
-      }
-
-      return entry;
-    });
-
-    return logs.slice(0, options.limit);
-  }
-
-  /**
-   * Get the most recent log entries.
-   */
-  async getRecentLogs(limit = 100): Promise<LogEntry[]> {
-    const serializedBatches = await this._buffer.getLogs({
-      limit: Math.ceil(limit / this._options.batchSize),
-      direction: 'desc',
-    });
-
-    // Deserialize and flatten the batches
-    const records: LogRecord[] = [];
-
-    for (const serializedBatch of serializedBatches) {
-      try {
-        const batch = JSON.parse(serializedBatch) as LogRecord[];
-        records.push(...batch);
-      } catch (error) {
-        console.error('Failed to parse log batch:', error);
-      }
+    // Sort by timestamp according to requested direction
+    if (direction === 'desc') {
+      records.sort((a, b) => b.timestamp - a.timestamp);
+    } else {
+      records.sort((a, b) => a.timestamp - b.timestamp);
     }
 
-    // Sort by timestamp in descending order
-    records.sort((a, b) => b.timestamp - a.timestamp);
-
-    // Convert LogRecord back to LogEntry (simplified conversion)
-    const logs: LogEntry[] = records.map((record) => {
-      const entry: LogEntry = {
-        level: record.level,
-        message: record.message,
-      };
-
-      // Add meta if available
-      if (record.context?.meta) {
-        entry.meta = {
-          F: record.context.meta.file || '',
-          L: record.context.meta.line,
-          C: record.context.meta.column,
-          S: {}, // Empty scope but satisfies the CallMetadata type
-        };
-      }
-
-      // Add context if available (excluding meta which we handled separately)
-      if (record.context) {
-        const { meta, ...restContext } = record.context;
-        if (Object.keys(restContext).length > 0) {
-          entry.context = restContext;
-        }
-      }
-
-      return entry;
-    });
-
-    return logs.slice(0, limit);
+    return records.slice(0, options.limit);
   }
 
   /**
@@ -310,27 +234,5 @@ export const createIDBProcessor = (options?: Partial<IDBProcessorOptions>): LogP
     void processor.process(config, entry);
   };
 
-  // Expose the processor instance and helper functions for testing
-  if (process.env.NODE_ENV === 'test') {
-    (processorFn as any).__processor = processor;
-  }
-
   return processorFn;
 };
-
-/**
- * Extract a timestamp from a log entry.
- * Tries to use meta data if available, or falls back to current time.
- */
-export function getTimestamp(entry: LogEntry): number {
-  if ('timestamp' in entry) {
-    return (entry as { timestamp: number }).timestamp;
-  }
-  if ('meta' in entry && typeof (entry as any).meta === 'object' && (entry as any).meta !== null) {
-    const meta = (entry as any).meta;
-    if ('timestamp' in meta && typeof meta.timestamp === 'number') {
-      return meta.timestamp;
-    }
-  }
-  return Date.now(); // Fallback
-}
