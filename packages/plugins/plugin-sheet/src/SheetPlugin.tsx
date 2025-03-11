@@ -3,8 +3,7 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { FunctionType } from '@dxos/functions';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -52,13 +51,6 @@ export const SheetPlugin = () =>
             getIntent: (props, options) => createIntent(SheetAction.Create, { ...props, space: options.space }),
           }),
         ),
-    }),
-    // TODO(wittjosiah): Factor out to common package/plugin.
-    //  FunctionType is currently registered here in case script plugin isn't enabled.
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,

@@ -3,22 +3,12 @@
 //
 
 import { AUTOMATION_PLUGIN } from './meta';
-import { AIChatType, TemplateType } from './types';
 
 export default [
   {
     'en-US': {
-      [AIChatType.typename]: {
-        'typename label': 'AI Chat',
-      },
-      [TemplateType.typename]: {
-        'typename label': 'Template',
-      },
+      // TODO(wittjosiah): Audit translations, most appear unused.
       [AUTOMATION_PLUGIN]: {
-        'chat title placeholder': 'AI Chat',
-        'template title placeholder': 'Template',
-
-        'open ambient chat label': 'Open AI chat',
         'plugin name': 'Automation',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
