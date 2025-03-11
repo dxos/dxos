@@ -168,16 +168,17 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
         },
       }),
     );
-  }, [item]);
+  }, [item, onRearrange]);
 
   const l0ItemTrigger = (
     <Root
       {...(rootProps as any)}
       data-type={type}
       className={mx(
-        'group/l0i dx-focus-ring-group grid overflow-hidden relative data[type!="collection"]:cursor-pointer app-no-drag',
+        'group/l0i dx-focus-ring-group grid relative data[type!="collection"]:cursor-pointer app-no-drag',
         l0Breakpoints[item.properties.l0Breakpoint],
       )}
+      ref={itemElement}
     >
       {type !== 'collection' && (
         <div
@@ -245,7 +246,7 @@ const L0Collection = ({ item, path, parent }: L0ItemProps) => {
         source.id === target.id
           ? sourceIndex
           : targetIndex +
-            (targetIndex > sourceIndex ? (closestEdge === 'bottom' ? 0 : -1) : closestEdge === 'top' ? 1 : 0);
+            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
       const nextOrder = arrayMove([...collectionItems], sourceIndex, insertIndex);
       return item.properties.onRearrangeChildren(nextOrder);
     },
