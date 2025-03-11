@@ -21,9 +21,10 @@ const sizeClassNames: Record<Size, { height: number; className: string }> = {
 
 export type StatusRollProps = ThemedClassName<{
   size?: Size;
-  line?: number;
+  index?: number;
   lines?: string[];
   autoAdvance?: boolean;
+  cyclic?: boolean;
   transition?: number;
   duration?: number;
 }>;
@@ -34,24 +35,25 @@ export type StatusRollProps = ThemedClassName<{
 export const StatusRoll = ({
   classNames,
   size = 'md',
-  line = -1,
+  index: _index = -1,
   lines = emptyLines,
+  cyclic,
   autoAdvance,
   transition = 300,
   duration = 1_000,
 }: StatusRollProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [currentLine, setCurrentLine] = useState(line);
+  const [index, setIndex] = useState(_index);
+  useEffect(() => setIndex(_index), [_index]);
   const linesLength = useDynamicRef(lines.length);
   const lastRoll = useRef(Date.now());
-  useEffect(() => setCurrentLine(line), [line]);
   useEffect(() => {
     if (!autoAdvance) {
       return;
     }
 
     const next = () => {
-      setCurrentLine((prev) => {
+      setIndex((prev) => {
         if (prev >= linesLength.current - 1) {
           clearInterval(i);
           return prev;
@@ -73,10 +75,22 @@ export const StatusRoll = ({
   const { className, height } = sizeClassNames[size];
   useEffect(() => {
     if (containerRef.current) {
+      let i = index;
+      if (cyclic && index === 0) {
+        i = lines.length;
+        setTimeout(() => {
+          // Jump back to start.
+          if (containerRef.current) {
+            containerRef.current.style.transition = 'transform 0ms';
+            containerRef.current.style.transform = 'translateY(0px)';
+          }
+        }, transition);
+      }
+
       containerRef.current.style.transition = `transform ${transition}ms ease-in-out`;
-      containerRef.current.style.transform = `translateY(-${currentLine * height}px)`;
+      containerRef.current.style.transform = `translateY(-${i * height}px)`;
     }
-  }, [height, currentLine]);
+  }, [height, index]);
 
   return (
     <div className={mx('overflow-hidden', classNames)}>
@@ -86,6 +100,11 @@ export const StatusRoll = ({
             <span className='truncate'>{line}</span>
           </div>
         ))}
+        {cyclic && (
+          <div className={mx('flex items-center', className)}>
+            <span className='truncate'>{lines[0]}</span>
+          </div>
+        )}
       </div>
     </div>
   );

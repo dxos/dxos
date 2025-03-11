@@ -162,6 +162,6 @@ const SUMMARIZE_PROMPT = `
 //  Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.
 const useAiServiceClient = (): AIServiceClient => {
   const config = useConfig();
-  const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788';
+  const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788'; // TOOD(burdon): Standardize consts.
   return useMemo(() => new AIServiceClientImpl({ endpoint }), [endpoint]);
 };

@@ -73,7 +73,8 @@ export const Numbers: Story = {
                 classNames={['font-mono', i === n - 1 && 'text-red-500']}
                 size={size}
                 lines={digits}
-                line={digits.findIndex((d) => d === str[i])}
+                index={digits.findIndex((d) => d === str[i])}
+                cyclic
               />
             ))}
           </div>
