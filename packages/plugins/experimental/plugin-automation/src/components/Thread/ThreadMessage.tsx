@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type FC } from 'react';
 
-import { type MessageContentBlock, type Message } from '@dxos/artifact';
+import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
@@ -43,18 +43,19 @@ export type ThreadMessageProps = ThemedClassName<{
   space?: Space;
   message: Message;
   debug?: boolean;
+  tools?: ToolType[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
 }>;
 
-export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, onPrompt }) => {
+export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, message, tools, onPrompt }) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
   if (isToolMessage(message)) {
     return (
       <MessageContainer classNames={classNames}>
-        <ToolBlock space={space} classNames={panelClassNames} message={message} />
+        <ToolBlock space={space} classNames={panelClassNames} message={message} tools={tools} />
       </MessageContainer>
     );
   }
