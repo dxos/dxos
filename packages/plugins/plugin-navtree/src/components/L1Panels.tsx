@@ -46,7 +46,7 @@ const L1Panel = ({ item, path, currentItemId, onBack }: L1PanelProps) => {
                 density='fine'
                 variant='ghost'
                 classNames={mx(
-                  'shrink-0 mie-2 p-0',
+                  'shrink-0 mie-2 !p-0',
                   'pointer-fine:pli-1',
                   hoverableControlItem,
                   hoverableOpenControlItem,
