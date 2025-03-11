@@ -8,18 +8,18 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace, isSpace } from '@dxos/react-client/echo';
 
-import { AssistantDialog, AutomationSettings, ChatContainer, ServiceRegistry, TemplateContainer } from '../components';
+import { AssistantDialog, AssistantSettings, ChatContainer, ServiceRegistry, TemplateContainer } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
-import { AIChatType, type AutomationSettingsProps, TemplateType } from '../types';
+import { AIChatType, type AssistantSettingsProps, TemplateType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${ASSISTANT_PLUGIN}/settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<AutomationSettingsProps> } =>
+      filter: (data): data is { subject: SettingsStore<AssistantSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === ASSISTANT_PLUGIN,
-      component: ({ data: { subject } }) => <AutomationSettings settings={subject.value} />,
+      component: ({ data: { subject } }) => <AssistantSettings settings={subject.value} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

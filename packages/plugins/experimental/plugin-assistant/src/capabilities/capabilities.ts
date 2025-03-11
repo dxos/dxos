@@ -7,6 +7,6 @@ import { type AIServiceClientImpl } from '@dxos/assistant';
 
 import { ASSISTANT_PLUGIN } from '../meta';
 
-export namespace AutomationCapabilities {
+export namespace AssistantCapabilities {
   export const AiClient = defineCapability<AIServiceClientImpl>(`${ASSISTANT_PLUGIN}/capability/ai-client`);
 }

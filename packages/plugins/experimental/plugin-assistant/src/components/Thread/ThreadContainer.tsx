@@ -11,11 +11,11 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Thread, type ThreadProps } from './Thread';
 import { useChatProcessor, useMessageQueue } from '../../hooks';
-import { type AIChatType, type AutomationSettingsProps } from '../../types';
+import { type AIChatType, type AssistantSettingsProps } from '../../types';
 
 export type ThreadContainerProps = {
   chat?: AIChatType;
-  settings?: AutomationSettingsProps;
+  settings?: AssistantSettingsProps;
 } & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?

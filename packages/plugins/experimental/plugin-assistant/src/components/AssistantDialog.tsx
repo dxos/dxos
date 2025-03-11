@@ -11,14 +11,12 @@ import { useTranslation } from '@dxos/react-ui';
 import { AmbientDialog } from './AmbientDialog';
 import { ThreadContainer } from './Thread';
 import { ASSISTANT_PLUGIN } from '../meta';
-import { type AutomationSettingsProps, type AIChatType } from '../types';
+import { type AssistantSettingsProps, type AIChatType } from '../types';
 
 export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
   const transcription = useCapabilities(TranscriptionCapabilities.Transcription).length > 0;
-  const settings = useCapability(Capabilities.SettingsStore).getStore<AutomationSettingsProps>(
-    ASSISTANT_PLUGIN,
-  )?.value;
+  const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(false);

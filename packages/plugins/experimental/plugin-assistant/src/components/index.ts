@@ -4,7 +4,7 @@
 
 import { lazy } from 'react';
 
-export * from './AutomationSettings';
+export * from './AssistantSettings';
 export * from './ServiceRegistry';
 export * from './TemplateEditor';
 export * from './Thread';

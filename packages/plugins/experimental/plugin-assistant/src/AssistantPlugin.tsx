@@ -11,7 +11,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, AssistantSettings } from './capabilities';
 import { ASSISTANT_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { AutomationAction, AIChatType, ServiceType, TemplateType } from './types';
+import { AssistantAction, AIChatType, ServiceType, TemplateType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -53,14 +53,14 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: AIChatType,
-            getIntent: (_, options) => createIntent(AutomationAction.CreateChat, { spaceId: options.space.id }),
+            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { spaceId: options.space.id }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: TemplateType,
-            getIntent: () => createIntent(AutomationAction.CreateTemplate),
+            getIntent: () => createIntent(AssistantAction.CreateTemplate),
           }),
         ),
       ],

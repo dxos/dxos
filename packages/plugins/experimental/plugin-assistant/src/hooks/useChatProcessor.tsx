@@ -13,16 +13,16 @@ import { useConfig } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { AutomationCapabilities } from '../capabilities';
+import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { type AutomationSettingsProps, ServiceType } from '../types';
+import { type AssistantSettingsProps, ServiceType } from '../types';
 
 /**
  * Configure and create ChatProcessor.
  */
-export const useChatProcessor = (space?: Space, settings?: AutomationSettingsProps): ChatProcessor => {
-  const aiClient = useCapability(AutomationCapabilities.AiClient);
+export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProps): ChatProcessor => {
+  const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const { dispatchPromise: dispatch } = useIntentDispatcher();

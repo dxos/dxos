@@ -18,7 +18,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space, Filter, getSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
-import { AIChatType, AutomationAction } from '../types';
+import { AIChatType, AssistantAction } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -92,7 +92,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
     return objects[objects.length - 1];
   }
 
-  const { data } = await dispatch(createIntent(AutomationAction.CreateChat, { spaceId: space.id }));
+  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { spaceId: space.id }));
   invariant(data?.object instanceof AIChatType);
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;

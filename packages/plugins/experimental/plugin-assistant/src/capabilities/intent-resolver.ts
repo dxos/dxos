@@ -7,13 +7,13 @@ import { ObjectId } from '@dxos/echo-schema';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { create, refFromDXN } from '@dxos/live-object';
 
-import { AutomationAction, AIChatType, TemplateType } from '../types';
+import { AssistantAction, AIChatType, TemplateType } from '../types';
 
 export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AutomationAction.CreateChat,
+      intent: AssistantAction.CreateChat,
       resolve: ({ spaceId, name }) => ({
         data: {
           object: create(AIChatType, {
@@ -27,7 +27,7 @@ export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AutomationAction.CreateTemplate,
+      intent: AssistantAction.CreateTemplate,
       resolve: ({ name }) => ({
         data: {
           object: create(TemplateType, { name, source: '{{! Template }}' }),

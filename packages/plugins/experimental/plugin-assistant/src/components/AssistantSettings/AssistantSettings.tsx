@@ -9,9 +9,9 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { ASSISTANT_PLUGIN } from '../../meta';
-import { type AutomationSettingsProps } from '../../types';
+import { type AssistantSettingsProps } from '../../types';
 
-export const AutomationSettings = ({ settings }: { settings: AutomationSettingsProps }) => {
+export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
 
   return (
