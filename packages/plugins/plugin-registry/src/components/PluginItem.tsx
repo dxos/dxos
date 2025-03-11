@@ -58,7 +58,7 @@ export const PluginItem = ({
       <div className='flex flex-col grow justify-center items-center'>
         <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
       </div>
-      <div className='flex grow items-center text-xl font-light truncate cursor-pointer' onClick={handleClick}>
+      <div className='flex grow items-center truncate cursor-pointer' onClick={handleClick}>
         {name ?? id}
       </div>
       <div className='flex grow justify-center items-center'>
