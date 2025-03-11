@@ -41,6 +41,8 @@ export default [
         'delete message label': 'Delete message',
         'open comments panel label': 'Show Comments',
         'comments panel label': 'Comments',
+        'show all label': 'All comments',
+        'show unresolved label': 'Unresolved only',
       },
     },
   },

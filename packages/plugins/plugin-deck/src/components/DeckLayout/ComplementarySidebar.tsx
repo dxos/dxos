@@ -139,7 +139,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           >
             {panel.id === activePanelId && data && (
               <>
-                <h2 className='flex items-center pli-2 border-separator border-be'>
+                <h2 className='flex items-center pli-2 border-separator border-be font-medium'>
                   {toLocalizedString(panel.label, t)}
                 </h2>
                 <ScrollArea.Root>
