@@ -7,11 +7,14 @@
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
       ],
+      "@dxos/plugin-assistant": [
+        "packages/plugins/experimental/plugin-assistant/src/index.ts"
+      ],
+      "@dxos/plugin-assistant/types": [
+        "packages/plugins/experimental/plugin-assistant/src/types/index.ts"
+      ],
       "@dxos/plugin-automation": [
         "packages/plugins/experimental/plugin-automation/src/index.ts"
-      ],
-      "@dxos/plugin-automation/types": [
-        "packages/plugins/experimental/plugin-automation/src/types/index.ts"
       ],
       "@dxos/plugin-calls": [
         "packages/plugins/experimental/plugin-calls/src/index.ts"
