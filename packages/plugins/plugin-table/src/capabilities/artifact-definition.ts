@@ -10,7 +10,7 @@ import { createArtifactElement } from '@dxos/assistant';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { create, Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { create, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
 import { schemaTools } from './schema-tool';
@@ -51,6 +51,7 @@ export default () => {
           Create a new table using an existing schema.
           Use schema_create first to create a schema, or schema_list to choose an existing one.
         `,
+        caption: 'Creating table...',
         schema: S.Struct({
           typename: S.String.annotations({
             description: 'The fully qualified typename of the schema to use for the table.',
@@ -94,6 +95,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'list',
         description: 'List all tables in the current space with their row types.',
+        caption: 'Querying tables...',
         schema: S.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -117,6 +119,7 @@ export default () => {
         name: 'inpect',
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
         description: 'Get the current schema of the table.',
+        caption: 'Loading table...',
         schema: S.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -140,7 +143,9 @@ export default () => {
         name: 'list-rows',
         description: `
           List all rows in a given table along with their values.
-          NOTE: If the user wants to *see* the table, use the show tool.`,
+          NOTE: If the user wants to *see* the table, use the show tool.
+        `,
+        caption: 'Loading table rows...',
         schema: S.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -164,7 +169,9 @@ export default () => {
         name: 'insert-rows',
         description: `
           Add one or more rows to an existing table.
-          Use table_inspect first to understand the schema.`,
+          Use table_inspect first to understand the schema.
+        `,
+        caption: 'Inserting table rows...',
         schema: S.Struct({
           id: QualifiedId,
           data: S.Array(S.Any).annotations({ description: 'Array of data payloads to add as rows' }),
