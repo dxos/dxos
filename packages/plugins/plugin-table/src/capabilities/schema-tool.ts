@@ -52,10 +52,12 @@ const PropertyDefinitionSchema = S.Struct({
   ),
 }).pipe(S.mutable);
 
+const SYSTEM_NAMESPACE = 'dxos.org/echo/schema';
+
 // TODO(ZaymonFC): If this works well, move this to global tools.
 export const schemaTools = [
-  defineTool({
-    name: 'schema_list',
+  defineTool(SYSTEM_NAMESPACE, {
+    name: 'list',
     description: 'List all registered schemas in the space.',
     schema: S.Struct({}),
     execute: async (_input, { extensions }) => {
@@ -63,7 +65,6 @@ export const schemaTools = [
       const space = extensions.space;
 
       const schemas = await space.db.schemaRegistry.query({}).run();
-
       return ToolResult.Success(
         schemas.map((schema) => ({
           typename: schema.typename,
@@ -72,8 +73,8 @@ export const schemaTools = [
       );
     },
   }),
-  defineTool({
-    name: 'schema_get',
+  defineTool(SYSTEM_NAMESPACE, {
+    name: 'get',
     description: 'Get a specific schema by its typename.',
     schema: S.Struct({
       typename: S.String.annotations({
@@ -92,8 +93,8 @@ export const schemaTools = [
       return ToolResult.Success(schema);
     },
   }),
-  defineTool({
-    name: 'schema_create',
+  defineTool(SYSTEM_NAMESPACE, {
+    name: 'create',
     description: 'Use schema_formats before calling this!! Create a new schema with the provided definition.',
     schema: S.Struct({
       typename: TypeNameSchema.annotations({

@@ -39,7 +39,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const result = yield* Effect.promise(() =>
-        this._client.generate({
+        this._client.exec({
           model: DEFAULT_LLM_MODEL,
           history: messages,
           systemPrompt,

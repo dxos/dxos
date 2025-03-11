@@ -10,6 +10,7 @@ export const os = {
   'copy success label': 'Copied',
   'copy self did label': 'Copy DID',
   'open share panel label': 'View QR code',
+  'manage credentials label': 'Manage credentials',
   'joining space heading': 'Joining space',
   'join space heading': 'Enter space invitation',
   'halo heading': 'Initialize device identity',
@@ -144,8 +145,8 @@ export const os = {
   'current device tag label': 'This device',
   'device name placeholder': '{{platform}} on {{os}}',
   'more options label': 'More options',
-  'disconnect label': 'Go offline.',
-  'connect label': 'Go online.',
+  'disconnect label': 'Go offline',
+  'connect label': 'Go online',
   'edit device label': 'Edit device name & avatar',
   'agent heading': 'Agent',
   'create agent clickwrap':
