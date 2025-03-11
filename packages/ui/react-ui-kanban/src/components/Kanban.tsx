@@ -202,24 +202,6 @@ type CardFormProps<T extends BaseKanbanItem> = {
 };
 
 const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
-  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
-  //   omit fields from the form?
-  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
-    if (!model.columnFieldPath) {
-      return undefined;
-    }
-    return {
-      [model.columnFieldPath]: () => <></>,
-    };
-  }, [model.columnFieldPath]);
-
-  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]);
-
-  // Log when initial value changes.
-  useEffect(() => {
-    console.log('Initial value changed:', initialValue);
-  }, [initialValue]);
-
   const handleSave = useCallback(
     debounce((values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
       const id = values.id;
@@ -235,6 +217,19 @@ const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardForm
     }, 500),
     [model.items],
   );
+
+  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]);
+
+  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
+  //   omit fields from the form?
+  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
+    if (!model.columnFieldPath) {
+      return undefined;
+    }
+    return {
+      [model.columnFieldPath]: () => <></>,
+    };
+  }, [model.columnFieldPath]);
 
   return (
     <Form

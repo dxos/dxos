@@ -124,7 +124,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * Handler for card and column rearrangement events. Supports both reordering columns and moving cards between columns.
    */
   public handleRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
-    console.log('handleRearrange');
     batch(() => {
       const nextArrangement = this.arrangedCards;
       const sourceColumn = this._findColumn(source.id, nextArrangement);
