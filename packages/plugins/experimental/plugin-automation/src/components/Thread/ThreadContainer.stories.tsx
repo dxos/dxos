@@ -184,7 +184,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
         />
       </div>
 
-      {/* Artifacts Deck/Mosaic */}
+      {/* Artifacts Deck */}
       <div className='overflow-hidden grid grid-rows-[2fr_1fr] divide-y divide-separator'>
         {artifactItems.length > 0 && (
           <div className={mx('flex grow overflow-hidden', artifactItems.length === 1 && 'row-span-2')}>

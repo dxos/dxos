@@ -28,6 +28,7 @@ export default () => {
   const definition = defineArtifact({
     id: meta.id,
     name: meta.name,
+    description: 'Provides a simple chess engine.',
     instructions: `
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
     `,

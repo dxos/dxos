@@ -93,18 +93,16 @@ export const StatusRoll = ({
   }, [height, index]);
 
   return (
-    <div className={mx('overflow-hidden', classNames)}>
-      <div ref={containerRef} className={mx('relative flex flex-col py-0', className)}>
-        {lines.map((line, i) => (
-          <div key={i} className={mx('flex items-center', className)}>
-            <span className='truncate'>{line}</span>
-          </div>
-        ))}
-        {cyclic && (
-          <div className={mx('flex items-center', className)}>
-            <span className='truncate'>{lines[0]}</span>
-          </div>
-        )}
+    <div className={mx('relative overflow-hidden', classNames)}>
+      <div ref={containerRef} className={mx(className)}>
+        <div className='flex flex-col'>
+          {lines.map((line, i) => (
+            <div key={i} className={mx('items-center truncate', className)}>
+              {line}
+            </div>
+          ))}
+          {cyclic && <div className={mx('items-center truncate', className)}>{lines[0]}</div>}
+        </div>
       </div>
     </div>
   );

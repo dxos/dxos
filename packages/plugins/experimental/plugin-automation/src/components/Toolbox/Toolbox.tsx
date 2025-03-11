@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, type FC } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { parseToolName, type ArtifactDefinition, type Tool } from '@dxos/artifact';
@@ -22,74 +22,68 @@ export type ToolboxProps = ThemedClassName<{
   striped?: boolean;
 }>;
 
-const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
-
 export const Toolbox = ({ classNames, artifacts, functions, services, striped }: ToolboxProps) => {
-  const gridClassNames = 'grid grid-cols-[6rem_8rem_1fr]';
-  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
-
   return (
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
       {artifacts && artifacts.length > 0 && (
-        <div>
-          <h1 className='px-2 text-sm'>Artifacts</h1>
-          <div className={gridClassNames}>
-            {artifacts.map(({ id, name, description, tools }) => (
-              <Fragment key={id}>
-                <div className={subGridClassNames}>
-                  <div className='text-primary-500 truncate'>{name}</div>
-                  <div className='col-span-2 line-clamp-3'>{description}</div>
-                </div>
-                {tools.map(({ name, description }, i) => (
-                  <div key={i} className={subGridClassNames}>
-                    <div />
-                    <div className='truncate'>{parseToolName(name)}</div>
-                    <div className='line-clamp-3'>{description}</div>
-                  </div>
-                ))}
-              </Fragment>
-            ))}
-          </div>
-        </div>
+        <Section
+          title='Artifacts'
+          items={artifacts.map(({ name, description, tools }) => ({
+            name,
+            description,
+            subitems: tools.map(({ name, description }) => ({ name: `∙ ${parseToolName(name)}`, description })),
+          }))}
+        />
       )}
 
       {services && services.length > 0 && (
-        <div>
-          <h1 className='px-2 text-sm'>Services</h1>
-          <div className={gridClassNames}>
-            {services.map(({ service, tools }) => (
-              <Fragment key={service.serviceId}>
-                <div className={subGridClassNames}>
-                  <div className='text-primary-500 truncate'>{service.name ?? service.serviceId}</div>
-                  <div className='col-span-2 line-clamp-2'>{service.description}</div>
-                </div>
-                {tools.map(({ name, description }, i) => (
-                  <div key={name} className={mx(subGridClassNames, striped && stripeClassNames)}>
-                    <div className='text-primary-500 truncate'>{i === 0 && service.serviceId}</div>
-                    <div className='truncate'>{name}</div>
-                    <div className='line-clamp-3'>{description}</div>
-                  </div>
-                ))}
-              </Fragment>
-            ))}
-          </div>
-        </div>
+        <Section
+          title='Services'
+          items={services.map(({ service: { serviceId, name, description }, tools }) => ({
+            name: name ?? serviceId,
+            description,
+            subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+          }))}
+        />
       )}
 
       {functions && functions.length > 0 && (
-        <div>
-          <h1 className='px-2 text-sm'>Functions</h1>
-          <div className={gridClassNames}>
-            {functions.map(({ name, description }) => (
-              <div key={name} className={mx(subGridClassNames, striped && stripeClassNames)}>
-                <div className='text-primary-500 truncate'>function</div>
+        <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+      )}
+    </div>
+  );
+};
+
+const Section: FC<{
+  title: string;
+  items: { name: string; description?: string; subitems?: { name: string; description?: string }[] }[];
+  striped?: boolean;
+}> = ({ title, items, striped }) => {
+  const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
+  const gridClassNames = 'grid grid-cols-[8rem_1fr]';
+  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
+
+  return (
+    <div>
+      <h1 className='px-2 text-sm'>{title}</h1>
+      <div className={gridClassNames}>
+        {items.map(({ name, description, subitems }, i) => (
+          <Fragment key={i}>
+            {name && (
+              <div className={subGridClassNames}>
+                <div className='truncate text-primary-500'>{name}</div>
+                <div className='line-clamp-2'>{description}</div>
+              </div>
+            )}
+            {subitems?.map(({ name, description }, i) => (
+              <div key={i} className={mx(subGridClassNames, striped && stripeClassNames)}>
                 <div className='truncate'>{name}</div>
-                <div className='line-clamp-3'>{description}</div>
+                <div className='line-clamp-3 text-subdued'>{description}</div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 };

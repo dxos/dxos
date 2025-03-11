@@ -32,7 +32,40 @@ export default () => {
         schema: S.Struct({}),
         execute: async () => {
           log.info('calendar_view');
-          return ToolResult.Success({});
+          return ToolResult.Success({
+            events: [
+              {
+                date: '2025-03-16',
+                title: 'Pack for trip from home',
+                location: 'New York',
+              },
+              {
+                date: '2025-03-17',
+                title: 'Effect conference',
+                location: 'Rome',
+              },
+              {
+                date: '2025-03-18',
+                title: 'Effect conference',
+                location: 'Livorno, Tuscany',
+              },
+              {
+                date: '2025-03-21',
+                title: 'UK Visit',
+                location: 'Birmingham, UK',
+              },
+              {
+                date: '2025-03-25',
+                title: 'ETH meetup',
+                location: 'Paris',
+              },
+              {
+                date: '2025-03-27',
+                title: 'Return home',
+                location: 'New York',
+              },
+            ],
+          });
         },
       }),
     ],
