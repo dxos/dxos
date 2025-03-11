@@ -4,6 +4,7 @@
 
 export * from 'zod';
 export * from './api';
+export * from './DirectoryTemplate';
 export * from './util/templateLiterals';
 export {
   type InputOf,

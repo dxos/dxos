@@ -5,6 +5,7 @@
 import { IdentificationCard, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -48,16 +49,30 @@ const IdentityHeading = ({
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
-  const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
+  const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
-  const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
+  const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
+
+  const updateDisplayName = useMemo(
+    () =>
+      debounce(
+        (nextDisplayName: string) => onUpdateProfile?.({ ...identity.profile, displayName: nextDisplayName }),
+        3_000,
+      ),
+    [onUpdateProfile, identity.profile],
+  );
+
+  const setDisplayName = (nextDisplayName: string) => {
+    setDisplayNameDirectly(nextDisplayName);
+    updateDisplayName(nextDisplayName);
+  };
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, emoji: nextEmoji } });
   };
 
-  const setHue = (nextHue: string) => {
+  const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
   };
@@ -86,13 +101,12 @@ const IdentityHeading = ({
             classNames='mbs-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
-            onBlur={({ target: { value } }) => onUpdateProfile?.({ ...identity.profile, displayName: value })}
           />
         </Input.Root>
 
         <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
-          <HuePicker value={hue} onChange={setHue} classNames='bs-[--rail-action]' />
+          <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} classNames='bs-[--rail-action]' />
           <Clipboard.IconButton
             classNames='bs-[--rail-action]'
             data-testid='update-profile-form-copy-key'

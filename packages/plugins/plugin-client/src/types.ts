@@ -33,7 +33,7 @@ export namespace ClientAction {
 
   export class JoinIdentity extends S.TaggedClass<JoinIdentity>()(`${CLIENT_ACTION}/join-identity`, {
     input: S.Struct({
-      invitationCode: S.String,
+      invitationCode: S.optional(S.String),
     }),
     output: S.Void,
   }) {}

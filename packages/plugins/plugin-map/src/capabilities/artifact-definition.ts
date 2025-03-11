@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 
+import { meta } from '../meta';
 import { MapAction, MapType } from '../types';
 
 // TODO(burdon): Factor out.
@@ -24,17 +25,17 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-map',
+    id: meta.id,
+    name: meta.name,
     instructions: `
-    Maps:
-    - If the request relates to a map, you must return the map as a valid GeoJSON Point (longitude, latitude) with valid coordinates.
-    - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
-    - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
+      - If the request relates to a map, you must return the map as a valid GeoJSON Point (longitude, latitude) with valid coordinates.
+      - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
+      - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
     `,
     schema: MapType,
     tools: [
-      defineTool({
-        name: 'map_query',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'Query all active maps.',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
@@ -44,8 +45,8 @@ export default () => {
           return ToolResult.Success(objects);
         },
       }),
-      defineTool({
-        name: 'map_new',
+      defineTool(meta.id, {
+        name: 'create',
         description:
           'Create a new map, optionally with a schema for data points. When creating a map, make sure to use the show tool to display the map to the user.',
         schema: S.Struct({

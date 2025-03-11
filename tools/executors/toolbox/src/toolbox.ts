@@ -341,10 +341,10 @@ export class Toolbox {
           tsConfigJson.references = [];
         }
 
-        if (!this.config.tsconfig?.noDirectOutDir && `${tsConfigJson?.extends}`.endsWith('tsconfig.base.json')) {
-          tsConfigJson.compilerOptions ??= {};
-          tsConfigJson.compilerOptions.outDir ??= './dist/types';
-        }
+        // if (!this.config.tsconfig?.noDirectOutDir && `${tsConfigJson?.extends}`.endsWith('tsconfig.base.json')) {
+        //   tsConfigJson.compilerOptions ??= {};
+        //   tsConfigJson.compilerOptions.outDir ??= './dist/types';
+        // }
 
         const updated = sortJson(tsConfigJson, {
           depth: 3,

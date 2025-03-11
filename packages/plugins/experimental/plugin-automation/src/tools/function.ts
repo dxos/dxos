@@ -28,7 +28,7 @@ export const covertFunctionToTool = (
     spaceId,
   });
 
-  return defineTool({
+  return defineTool('user-function', {
     name: fn.name,
     description: fn.description,
     schema: toEffectSchema(fn.inputSchema),

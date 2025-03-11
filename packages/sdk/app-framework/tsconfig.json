@@ -1,14 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "outDir": "./dist/types"
-  },
+  "compilerOptions": {},
   "exclude": [
     "/node_modules/"
   ],
