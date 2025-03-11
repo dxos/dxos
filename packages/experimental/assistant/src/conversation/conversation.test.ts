@@ -37,7 +37,7 @@ describe.skip('Conversation tests', () => {
   });
 
   test('tool call', async ({ expect }) => {
-    const custodian = defineTool({
+    const custodian = defineTool('testing', {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       schema: S.Struct({
