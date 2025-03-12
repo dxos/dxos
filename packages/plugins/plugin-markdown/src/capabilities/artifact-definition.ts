@@ -33,6 +33,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'list',
         description: 'List all markdown documents in the current space.',
+        caption: 'Listing markdown documents...',
         schema: S.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -53,6 +54,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'inspect',
         description: 'Read the content of a markdown document.',
+        caption: 'Inspecting markdown document...',
         schema: S.Struct({
           id: S.String.annotations({
             description: 'The fully qualified ID of the document `spaceID:objectID`',

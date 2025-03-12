@@ -69,6 +69,7 @@ export default () => {
   state
     .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
+    .prop({ key: 'complementarySidebarPanel', type: LocalStorageStore.string({ allowUndefined: true }) })
     .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, Deck>>() })
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
