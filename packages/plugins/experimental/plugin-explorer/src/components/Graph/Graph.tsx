@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { forceLink, forceManyBody } from 'd3';
 import ForceGraph from 'force-graph';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -18,12 +19,10 @@ import {
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
 import { useAsyncState, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-
 import '@dxos/gem-spore/styles';
 
 import { type EchoGraphNode, SpaceGraphModel } from './graph-model';
-
-import { forceLink, forceManyBody } from 'd3';
+import { Tree } from '../Tree';
 
 type Slots = {
   root?: { className?: string };
@@ -148,16 +147,16 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
     forceGraph.current?.zoomToFit(400, 40);
   };
 
-  // if (selected) {
-  //   return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
-  // }
-
   if (!svg) {
     return (
       <div ref={ref} className='relative grow' onClick={handleZoomToFit}>
         <div ref={rootRef} className='absolute inset-0' />
       </div>
     );
+  }
+
+  if (selected) {
+    return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
   }
 
   return (
