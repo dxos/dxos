@@ -120,6 +120,7 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
           // .nodeAutoColorBy('module')
           .linkDirectionalParticles(2)
           .linkDirectionalParticleWidth(2)
+
           // .d3Force(
           // 'collision',
           // forceCollide((node) => Math.sqrt(100 / (node.level + 1)) * NODE_REL_SIZE),
