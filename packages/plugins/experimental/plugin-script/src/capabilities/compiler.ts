@@ -14,6 +14,9 @@ import { Compiler } from '../compiler';
 export default async () => {
   const compiler = new Compiler();
 
+  (globalThis as any).composer ??= {};
+  (globalThis as any).composer.compiler = compiler;
+
   await compiler.initialize();
   await initializeBundler({ wasmUrl });
 

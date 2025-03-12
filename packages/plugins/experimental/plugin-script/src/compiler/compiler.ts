@@ -12,7 +12,6 @@ import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { mapValues } from '@dxos/util';
 
 const GLOBALS = 'globals.d.ts';
 
@@ -39,33 +38,9 @@ export class Compiler {
   private _httpTypeCache: Map<string, string> = new Map();
   private _processedUrls: Set<string> = new Set();
   private _moduleVersions: Map<string, string> = new Map();
-
   private _debugModuleMap: Record<string, Mod> = {};
 
-  get debugModuleMap() {
-    const obj: Record<string, any> = {};
-
-    for (const [fileName, mod] of Object.entries(this._debugModuleMap)) {
-      obj[fileName] = {
-        source: mod.source,
-        rawDeps: mod.deps,
-        deps: {},
-      };
-    }
-
-    for (const [fileName, mod] of Object.entries(this._debugModuleMap)) {
-      for (const dep of mod.deps) {
-        obj[fileName].deps[dep] = obj[dep];
-      }
-    }
-
-    return obj;
-  }
-
-  constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {
-    (globalThis as any).debugCompiler ??= [];
-    (globalThis as any).debugCompiler.push(this);
-  }
+  constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
 
   async initialize(globals?: string) {
     if (this._env) {
@@ -89,6 +64,44 @@ export class Compiler {
   get environment() {
     invariant(this._env, 'Compiler environment not initialized.');
     return this._env;
+  }
+
+  get __debugModuleMap() {
+    const obj: Record<string, any> = {};
+
+    for (const [fileName, mod] of Object.entries(this._debugModuleMap)) {
+      obj[fileName] = {
+        source: mod.source,
+        rawDeps: mod.deps,
+        deps: {},
+      };
+    }
+
+    for (const [fileName, mod] of Object.entries(this._debugModuleMap)) {
+      for (const dep of mod.deps) {
+        obj[fileName].deps[dep] = obj[dep];
+      }
+    }
+
+    return obj;
+  }
+
+  __diagnostics() {
+    const program = this.environment.languageService.getProgram();
+    invariant(program, 'Program not found');
+    const emitResult = program.emit();
+
+    const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+
+    allDiagnostics.forEach((diagnostic) => {
+      if (diagnostic.file) {
+        const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
+        const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+        log.info(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+      } else {
+        log.info(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+      }
+    });
   }
 
   setFile(fileName: string, content: string) {
@@ -135,7 +148,7 @@ export class Compiler {
       },
       resolveModuleNames: (moduleNames: string[], containingFile: string) => {
         return moduleNames.map((_moduleName) => {
-          const moduleName = this._parseImportToUrl(_moduleName) ?? _moduleName;
+          const moduleName = this._parseImportToUrl(_moduleName, containingFile) ?? _moduleName;
           if (moduleName.startsWith('https://')) {
             const typesUrl = moduleName.endsWith('.d.ts') ? moduleName : this._httpTypeCache.get(moduleName);
             if (typesUrl) {
@@ -145,6 +158,8 @@ export class Compiler {
               };
             }
           }
+
+          log('fallback to default resolution', { moduleName, containingFile });
 
           // Fall back to default resolution.
           const result = ts.resolveModuleName(moduleName, containingFile, this._options, baseSystem);
@@ -207,8 +222,12 @@ export class Compiler {
     return Array.from(imports);
   }
 
-  private _parseImportToUrl(moduleName: string): string | undefined {
-    if (!moduleName.startsWith('.')) {
+  private _parseImportToUrl(moduleName: string, containingFile?: string): string | undefined {
+    if (moduleName.startsWith('http')) {
+      return moduleName;
+    } else if (moduleName.startsWith('node:')) {
+      return `https://esm.sh/@types/node/${moduleName.slice(5)}.d.ts`;
+    } else if (!moduleName.startsWith('.') && !moduleName.startsWith('/')) {
       const version = this._moduleVersions.get(moduleName);
       const parts = moduleName.split('/');
       let baseModule, path;
@@ -221,12 +240,14 @@ export class Compiler {
       }
       const url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
       return url;
+    } else if (containingFile?.startsWith('http') && (moduleName.startsWith('.') || moduleName.startsWith('/'))) {
+      return new URL(moduleName, containingFile).href;
     }
   }
 
   private async _processImportsInContent(content: string, fileName?: string): Promise<void> {
     const imports = this._findImportsInContent(content);
-    log.info('process imports', { imports, fileName });
+    log('process imports', { imports, fileName });
 
     if (fileName) {
       this._debugModuleMap[fileName] = { source: content, deps: [] };
