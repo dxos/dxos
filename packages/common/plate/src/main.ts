@@ -8,7 +8,7 @@ import process from 'node:process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { executeDirectoryTemplate } from './api';
+import { executeDirectoryTemplate } from './InteractiveDirectoryTemplate';
 import { catFiles } from './util/catFiles';
 import { logger } from './util/logger';
 
