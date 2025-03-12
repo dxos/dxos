@@ -15,13 +15,13 @@ export type SpaceGraphModelOptions = {
 type SchemaGraphNode = {
   id: string;
   type: 'schema';
-  schema: S.Schema<any>;
+  data: S.Schema<any>;
 };
 
 type ObjectGraphNode = {
   id: string;
   type: 'object';
-  object: ReactiveEchoObject<any>;
+  data: ReactiveEchoObject<any>;
 };
 
 export type EchoGraphNode = SchemaGraphNode | ObjectGraphNode;
@@ -68,10 +68,10 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           this._graph.nodes = objects.map((object) => {
             if (object instanceof StoredSchema) {
               const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!;
-              return { type: 'schema', id: object.id, schema: effectSchema.schema };
+              return { type: 'schema', id: object.id, data: effectSchema.schema };
             }
 
-            return { type: 'object', id: object.id, object };
+            return { type: 'object', id: object.id, data: object };
           });
 
           this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
@@ -86,6 +86,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
               const idx = objects.findIndex((obj) => obj.id === typename);
               if (idx === -1) {
                 const { typename } = objectSchema as EchoSchema;
+                // Root schema.
                 if (typename === 'dxos.org/type/Schema') {
                   // return links;
                 }
@@ -93,7 +94,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
                 this._graph.nodes.push({
                   type: 'schema',
                   id: typename,
-                  schema: objectSchema,
+                  data: objectSchema,
                 });
               }
             }
