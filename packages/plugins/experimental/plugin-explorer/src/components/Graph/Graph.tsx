@@ -23,7 +23,7 @@ import '@dxos/gem-spore/styles';
 
 import { type EchoGraphNode, SpaceGraphModel } from './graph-model';
 
-import { forceLink, forceManyBody, forceRadial } from 'd3';
+import { forceLink, forceManyBody } from 'd3';
 
 type Slots = {
   root?: { className?: string };
@@ -108,7 +108,7 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
 
           return node.id;
         })
-        .nodeAutoColorBy((node: any) => node.type)
+        .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
         .linkColor(() => 'rgba(255,255,255,0.25)');
     }
 
@@ -121,7 +121,6 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
   // Update.
   useEffect(() => {
     if (forceGraph.current && width && height && model) {
-      const r = Math.min(width, height) / 2;
       forceGraph.current
         .pauseAnimation()
         .width(width)
@@ -131,13 +130,13 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
         })
 
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#force-engine-d3-force-configuration
-        .d3Force('center', forceRadial(r).strength(0.3))
-        .d3Force('link', forceLink().strength(1.5))
-        .d3Force('charge', forceManyBody().strength(-200))
-        .d3AlphaDecay(0.0228)
-        .d3VelocityDecay(0.4)
+        // .d3Force('center', forceCenter().strength(0.9))
+        .d3Force('link', forceLink().distance(160).strength(0.5))
+        .d3Force('charge', forceManyBody().strength(-30))
+        // .d3AlphaDecay(0.0228)
+        // .d3VelocityDecay(0.4)
         .warmupTicks(100)
-        .cooldownTime(1000)
+        // .cooldownTime(1000)
 
         //
         .graphData(model.graph)

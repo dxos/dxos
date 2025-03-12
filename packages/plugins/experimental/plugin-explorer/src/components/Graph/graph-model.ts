@@ -61,11 +61,12 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
     return this._objects ?? [];
   }
 
-  // TODO(burdon): Alternatives for larger datasets:
-  // - https://www.npmjs.com/package/force-graph (canvas)
-  // - https://github.com/marceljuenemann/react-query-graph
+  // TODO(burdon): Alternative diagram types:
   // - https://observablehq.com/@d3/radial-tree/2
   // - https://observablehq.com/@d3/disjoint-force-directed-graph/2
+  // - https://observablehq.com/@mbostock/tadpoles
+  // - https://observablehq.com/@d3/psr-b1919-21
+  // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
   async open(space: Space, objectId?: string) {
     if (!this._objectsSubscription) {
@@ -81,6 +82,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
       onSchemaUpdate({ results: schemas });
 
       this._objectsSubscription = space.db
+        // TODO(burdon): ERROR: Cannot mix type and or filters.
         .query(Filter.not(Filter.or(Filter.schema(StoredSchema), Filter.schema(CollectionType))))
         .subscribe(
           ({ objects }) => {
@@ -144,7 +146,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
                   }
 
                   // Link ot refs.
-                  // Parse schema to follow referenced objects.
+                  // TODO(burdon): This isn't working.
                   AST.getPropertySignatures(schema.ast).forEach((prop) => {
                     if (!SchemaValidator.hasTypeAnnotation(schema, prop.name.toString(), ReferenceAnnotationId)) {
                       return;
