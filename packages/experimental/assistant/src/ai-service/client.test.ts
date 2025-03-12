@@ -5,8 +5,8 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
-import { type Message, type Tool } from '@dxos/artifact';
-import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
+import { Message, type Tool } from '@dxos/artifact';
+import { toJsonSchema, ObjectId, createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -18,8 +18,8 @@ import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });
 
-describe.skip('AI Service Client', () => {
-  test('client generation', async () => {
+describe('AI Service Client', () => {
+  test.only('client generation', async () => {
     const client = new AIServiceClientImpl({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
@@ -27,28 +27,27 @@ describe.skip('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.appendMessages([
-      {
-        id: ObjectId.random(),
-        spaceId,
-        threadId,
-        role: 'user',
-        content: [{ type: 'text', text: 'Hello' }],
-      },
-    ]);
-
     const stream = await client.exec({
-      model: DEFAULT_LLM_MODEL,
+      // model: DEFAULT_LLM_MODEL,
+      // model: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+      model: '@hf/nousresearch/hermes-2-pro-mistral-7b',
       spaceId,
       threadId,
       systemPrompt: 'You are a poet',
       tools: [],
+      history: [
+        createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'Hello' }],
+        }),
+      ],
     });
+
     for await (const event of stream) {
-      log('event', event);
+      log.info('event', event);
     }
 
-    log('full message', {
+    log.info('full message', {
       message: await stream.complete(),
     });
   });

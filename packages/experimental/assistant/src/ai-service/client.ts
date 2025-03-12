@@ -69,6 +69,10 @@ export class AIServiceClientImpl implements AIServiceClient {
       body: JSON.stringify(request),
     });
 
+    if (!response.ok) {
+      throw new Error(`AI service error: ${await response.text()}`);
+    }
+
     invariant(response.body instanceof ReadableStream);
     return createGenerationStream(response, controller);
   }
