@@ -41,7 +41,7 @@ const VIDEO_WIDTH = 1280;
 const VIDEO_HEIGHT = 720;
 const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
-const RETRY_INTERVAL = 200;
+const RETRY_INTERVAL = 500;
 
 export type MediaManagerParams = {
   serviceConfig: CallsServiceConfig;
@@ -213,33 +213,28 @@ export class MediaManager extends Resource {
       return;
     }
 
-    // Video track.
-    const pushedVideoTrack = await this._pushTrack(this._state.videoTrack, this._state.pushedVideoTrack, [
-      { maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE },
+    let updated = false;
+    const [pushedVideoTrack, pushedAudioTrack, pushedScreenshareTrack] = await Promise.all([
+      this._pushTrack(this._state.videoTrack, this._state.pushedVideoTrack, [
+        { maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE },
+      ]),
+      this._pushTrack(this._state.audioTrack, this._state.pushedAudioTrack, [{ networkPriority: 'high' }]),
+      this._pushTrack(this._state.screenshareTrack, this._state.pushedScreenshareTrack),
     ]);
+
     if (pushedVideoTrack !== this._state.pushedVideoTrack) {
       this._state.pushedVideoTrack = pushedVideoTrack;
+      updated = true;
     }
-
-    // Audio track.
-    const pushedAudioTrack = await this._pushTrack(this._state.audioTrack, this._state.pushedAudioTrack, [
-      { networkPriority: 'high' },
-    ]);
     if (pushedAudioTrack !== this._state.pushedAudioTrack) {
       this._state.pushedAudioTrack = pushedAudioTrack;
+      updated = true;
     }
-
-    // Screenshare track.
-    const pushedScreenshareTrack = await this._pushTrack(
-      this._state.screenshareTrack,
-      this._state.pushedScreenshareTrack,
-    );
     if (pushedScreenshareTrack !== this._state.pushedScreenshareTrack) {
       this._state.pushedScreenshareTrack = pushedScreenshareTrack;
+      updated = true;
     }
-
-    // No tracks to updated.
-    if (!pushedVideoTrack && !pushedAudioTrack && !pushedScreenshareTrack) {
+    if (!updated) {
       return;
     }
 
