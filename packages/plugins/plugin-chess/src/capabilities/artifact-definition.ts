@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 
+import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
 
 // TODO(burdon): Factor out.
@@ -25,16 +26,18 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-chess',
+    id: meta.id,
+    name: meta.name,
+    description: 'Provides a simple chess engine.',
     instructions: `
-      Chess:
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
     `,
     schema: ChessType,
     tools: [
-      defineTool({
-        name: 'chess_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
+        caption: 'Creating chess game...',
         schema: S.Struct({
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
         }),
@@ -53,9 +56,10 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool({
-        name: 'chess_query',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'Query all active chess games.',
+        caption: 'Getting games...',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -64,9 +68,10 @@ export default () => {
           return ToolResult.Success(games);
         },
       }),
-      defineTool({
-        name: 'chess_inspect',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Get the current state of the chess game.',
+        caption: 'Inspecting game...',
         schema: S.Struct({ id: ObjectId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -76,9 +81,10 @@ export default () => {
           return ToolResult.Success(game.fen);
         },
       }),
-      defineTool({
-        name: 'chess_move',
+      defineTool(meta.id, {
+        name: 'move',
         description: 'Make a move in the chess game.',
+        caption: 'Making chess move...',
         schema: S.Struct({
           id: ObjectId,
           move: S.String.annotations({

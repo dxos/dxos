@@ -13,6 +13,8 @@ import { defineTool, ToolResult } from '@dxos/artifact';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
+import { meta } from '../meta';
+
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
@@ -23,11 +25,14 @@ declare global {
 
 export default () =>
   contributes(Capabilities.Tools, [
-    defineTool({
+    defineTool(meta.id, {
       name: 'show',
       // TODO(ZaymonFC): We should update the prompt to teach the LLM the difference between object ids and fully qualified ids.
-      description:
-        'Show an item in the app. Use this tool to open an artifact. When supplying IDs to show, they must be fully qualified like space:object.',
+      description: `
+        Show an item in the app. Use this tool to open an artifact. 
+        When supplying IDs to show, they must be fully qualified like space:object.
+      `,
+      caption: 'Showing item...',
       // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
       schema: S.Struct({
         id: S.String.annotations({

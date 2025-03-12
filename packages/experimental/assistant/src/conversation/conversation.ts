@@ -43,7 +43,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   const generate = async () => {
     log('llm generate', { tools: params.tools });
     const beginTs = Date.now();
-    const stream = await params.client.generate({
+    const stream = await params.client.exec({
       model: params.model,
       spaceId: params.spaceId,
       threadId: params.threadId,
