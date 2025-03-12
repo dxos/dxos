@@ -10,7 +10,8 @@ import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
 
 import { ScriptCapabilities } from './capabilities';
-import { AutomationPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
+import { DebugPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
+import { useDeployState, useToolbarState } from '../hooks';
 import { SCRIPT_PLUGIN } from '../meta';
 import { type ScriptSettingsProps } from '../types';
 
@@ -35,10 +36,15 @@ export default () =>
     }),
     createSurface({
       id: `${SCRIPT_PLUGIN}/automation`,
-      role: 'complementary--automation',
+      role: 'complementary--function',
       position: 'hoist',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
-      component: ({ data }) => <AutomationPanel subject={data.subject} />,
+      component: ({ data }) => {
+        // TODO(wittjosiah): Decouple hooks from toolbar state.
+        const state = useToolbarState({ view: 'editor' });
+        useDeployState({ state, script: data.subject });
+        return <DebugPanel functionUrl={state.functionUrl} />;
+      },
     }),
     createSurface({
       id: `${SCRIPT_PLUGIN}/settings-panel`,

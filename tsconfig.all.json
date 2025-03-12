@@ -271,6 +271,9 @@
       "path": "packages/gravity/proto-guard/tsconfig.json"
     },
     {
+      "path": "packages/plugins/experimental/plugin-assistant/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/experimental/plugin-automation/tsconfig.json"
     },
     {

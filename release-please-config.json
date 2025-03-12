@@ -474,6 +474,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/experimental/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
