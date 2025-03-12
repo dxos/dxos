@@ -37,8 +37,8 @@ import {
   StackItemSigilButton,
 } from './StackItemSigil';
 
-// TODO(burdon): Option for default width?
-export const DEFAULT_HORIZONTAL_SIZE = 55 satisfies StackItemSize;
+// NOTE: 49rem fills the screen on a MacbookPro with the sidebars closed.
+export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
 
