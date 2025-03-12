@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import defaultsDeep from 'lodash.defaultsdeep';
+
 import { createTemplate } from './template';
 // @ts-ignore
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
@@ -23,5 +25,5 @@ export type SystemPromptOptions = {
  */
 export const createSystemPrompt = (options: SystemPromptOptions = {}): string => {
   const template = createTemplate(SYSTEM_PROMPT);
-  return template(options);
+  return template(defaultsDeep({}, options, { suggestions: true }));
 };

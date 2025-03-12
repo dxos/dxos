@@ -41,7 +41,7 @@ export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {
   }, [dispatch, space, target]);
 
   return (
-    <StackItem.Content toolbar={false} classNames='w-full'>
+    <StackItem.Content toolbar={false}>
       {call.joined ? (
         <>
           <Call.Room />
