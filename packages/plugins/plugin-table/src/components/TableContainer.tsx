@@ -96,7 +96,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
         }
       }
     },
-    [dispatch, space, schema, table, model, handleThreadCreate, handleInsertRow],
+    [handleThreadCreate, handleInsertRow, model],
   );
 
   return (
