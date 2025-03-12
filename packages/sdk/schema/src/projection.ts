@@ -15,6 +15,7 @@ import {
 import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
@@ -118,6 +119,43 @@ export class ViewProjection {
   }
 
   /**
+   * Identifies schema properties not visible in the current view projection.
+   * @returns Schema property names that aren't mapped to any view field path, returned as an alphabetically sorted string array.
+   */
+  getHiddenProperties(): string[] {
+    const pathsInView = new Set(this._view.fields.map((field) => field.path));
+    const schemaProperties = Object.keys(this._schema.jsonSchema.properties ?? {});
+
+    // schema properties that are not in the view and are not 'id'.
+    return schemaProperties.filter((property) => !pathsInView.has(property as JsonProp) && property !== 'id').sort();
+  }
+
+  hideFieldProjection(fieldId: string): void {
+    const index = this._view.fields.findIndex((field) => field.id === fieldId);
+    this._view.fields.splice(index, 1);
+  }
+
+  unhideFieldProjection(property: JsonProp): void {
+    invariant(this._schema.jsonSchema.properties);
+    invariant(property in this._schema.jsonSchema.properties);
+
+    // Check if the property is already visible in the view
+    const existingField = this._view.fields.find((field) => field.path === property);
+    if (existingField) {
+      return; // Property is already visible
+    }
+
+    // Create a new field for the existing property
+    const field: FieldType = {
+      id: createFieldId(),
+      path: property,
+    };
+
+    log('unhideFieldProjection', { property, field });
+    this._view.fields.push(field);
+  }
+
+  /**
    * Update JSON schema property annotations and view fields.
    * @param projection The field and props to update
    * @param index Optional index for inserting new fields. Ignored when updating existing fields.
@@ -182,7 +220,7 @@ export class ViewProjection {
   deleteFieldProjection(fieldId: string): { deleted: FieldProjection; index: number } {
     // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
     const current = this.getFieldProjection(fieldId);
-    const fieldProjection = { field: { ...current.field }, props: { ...current.props } };
+    const fieldProjection = getSnapshot(current);
 
     // Delete field.
     const fieldIndex = this._view.fields.findIndex((field) => field.id === fieldId);
