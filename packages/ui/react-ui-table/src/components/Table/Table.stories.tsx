@@ -40,7 +40,7 @@ const DefaultStory = () => {
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
-  const schema = useSchema(space, table?.view?.target?.query.type);
+  const schema = useSchema(space, table?.view?.target?.query.typename);
 
   useEffect(() => {
     if (space && tables.length && !table) {
@@ -133,7 +133,7 @@ const DefaultStory = () => {
     (typename: string) => {
       if (table?.view?.target) {
         schema?.updateTypename(typename);
-        table.view.target.query.type = typename;
+        table.view.target.query.typename = typename;
       }
     },
     [table?.view?.target, schema],

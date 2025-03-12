@@ -42,15 +42,15 @@ const DefaultStory = () => {
   }, [space]);
 
   const views = useQuery(space, Filter.schema(ViewType));
-  const currentTypename = useMemo(() => view?.query?.type, [view]);
+  const currentTypename = useMemo(() => view?.query?.typename, [view]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {
       if (!schema) {
         return;
       }
-      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
-        view.query.type = newTypename;
+        view.query.typename = newTypename;
       }
       schema.updateTypename(newTypename);
     },
