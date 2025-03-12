@@ -7,10 +7,11 @@ import { type Effect } from 'effect';
 
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
-import type { CoreDatabase, EchoDatabase, QueryResult, ReactiveEchoObject } from '@dxos/echo-db';
+import type { CoreDatabase, EchoDatabase, ReactiveEchoObject } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type QueryResult } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
