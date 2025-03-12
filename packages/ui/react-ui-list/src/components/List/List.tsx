@@ -7,6 +7,7 @@ import {
   type IconButtonProps,
   ListItem,
   ListItemDeleteButton,
+  ListItemButton,
   ListItemDragHandle,
   ListItemDragPreview,
   type ListItemProps,
@@ -35,6 +36,7 @@ export const List = {
   ItemWrapper: ListItemWrapper,
   ItemDragHandle: ListItemDragHandle,
   ItemDeleteButton: ListItemDeleteButton,
+  ItemButton: ListItemButton,
   ItemTitle: ListItemTitle,
   IconButton,
 };
