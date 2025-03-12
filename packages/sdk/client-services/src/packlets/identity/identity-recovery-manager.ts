@@ -32,20 +32,26 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential({ recoveryKey, lookupKey, algorithm }: CreateRecoveryCredentialRequest) {
+  public async createRecoveryCredential({ data }: CreateRecoveryCredentialRequest) {
     const identity = this._identityProvider();
     invariant(identity);
 
+    let recoveryKey: PublicKey;
+    let lookupKey: PublicKey;
+    let algorithm: string;
     let recoveryCode: string | undefined;
-    if (!recoveryKey || !lookupKey) {
+    if (data) {
+      recoveryKey = data.recoveryKey;
+      lookupKey = data.lookupKey;
+      algorithm = data.algorithm;
+    } else {
       recoveryCode = generateSeedPhrase();
       const keypair = keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
-      lookupKey = PublicKey.random();
+      lookupKey = PublicKey.from(keypair.publicKey);
       algorithm = 'ED25519';
     }
 
-    invariant(algorithm, 'Algorithm is required.');
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,

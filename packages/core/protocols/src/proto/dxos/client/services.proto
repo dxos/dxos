@@ -147,15 +147,20 @@ message RecoverIdentityRequest {
   }
 }
 
-message CreateRecoveryCredentialRequest {
-  /// Optional recovery key. If not provided, a new key will be generated.
-  optional dxos.keys.PublicKey recovery_key = 1;
+message RecoveryCredentialData {
+  /// Recovery key used to validate recovery challenge signature.
+  dxos.keys.PublicKey recovery_key = 1;
 
   /// Public key used to identify the recovery key.
-  optional dxos.keys.PublicKey lookup_key = 2;
+  dxos.keys.PublicKey lookup_key = 2;
 
   /// Algorithm used to generate the recovery key.
-  optional string algorithm = 3;
+  string algorithm = 3;
+}
+
+message CreateRecoveryCredentialRequest {
+  /// If not provided, a new key will be generated.
+  optional RecoveryCredentialData data = 1;
 }
 
 message CreateRecoveryCredentialResponse {

@@ -67,9 +67,11 @@ const Test = () => {
     invariant(client.services.services.IdentityService, 'IdentityService not available');
     // TODO(wittjosiah): This needs a proper api.
     await client.services.services.IdentityService.createRecoveryCredential({
-      recoveryKey,
-      algorithm,
-      lookupKey,
+      data: {
+        recoveryKey,
+        algorithm,
+        lookupKey,
+      },
     });
   }, [client, identity]);
 

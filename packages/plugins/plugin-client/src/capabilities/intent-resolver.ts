@@ -166,9 +166,11 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
         // TODO(wittjosiah): This needs a proper api.
         invariant(client.services.services.IdentityService, 'IdentityService not available');
         await client.services.services.IdentityService.createRecoveryCredential({
-          recoveryKey,
-          algorithm,
-          lookupKey,
+          data: {
+            recoveryKey,
+            algorithm,
+            lookupKey,
+          },
         });
       },
     }),
