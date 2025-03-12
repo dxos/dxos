@@ -62,7 +62,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           // TODO(burdon): Normalize schema.
           this._graph.nodes = objects.map((object) => {
             if (object instanceof StoredSchema) {
-              const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!;
+              const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!; // TODO(burdon): ???
               return { type: 'schema', id: object.id, schema: effectSchema.schema };
             }
 
@@ -70,7 +70,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           });
 
           this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
-            const objectSchema = getSchema(object);
+            const objectSchema = getSchema(object); // TODO(burdon): ???
             const typename = getType(object)?.objectId;
             if (objectSchema == null || typename == null) {
               log.info('no schema for object:', { id: object.id.slice(0, 8) });
