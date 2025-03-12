@@ -2,14 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-// @version 0.13.1
+/* @version
+{
+  "chess.js": "0.13.1",
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8",
+  "@dxos/invariant": "0.7.5-main.b19bfc8"
+}
+*/
+
 import { Chess } from 'chess.js';
 
-// @version 0.7.5-main.b19bfc8?deps=effect@3.13.3
 import { S } from '@dxos/echo-schema';
-// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
-// @version 0.7.5-main.b19bfc8
 import { invariant } from '@dxos/invariant';
 
 export default defineFunction({

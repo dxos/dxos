@@ -2,14 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-// @version 0.77.2?deps=effect@3.13.3
+/* @version
+{
+  "effect": "3.13.3",
+  "@effect/platform": "0.77.2",
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8"
+}
+*/
+
 import { HttpClient, HttpClientRequest, FetchHttpClient } from '@effect/platform';
-// @version 3.13.3
 import { Effect, Schedule } from 'effect';
 
-// @version 0.7.5-main.b19bfc8
 import { S } from '@dxos/echo-schema';
-// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
 
 const RatesSchema = S.Struct({

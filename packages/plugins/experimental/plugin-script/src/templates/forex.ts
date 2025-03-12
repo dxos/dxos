@@ -2,9 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-// @version 0.7.5-main.b19bfc8
+/* @version
+{
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8"
+}
+*/
+
 import { S } from '@dxos/echo-schema';
-// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({

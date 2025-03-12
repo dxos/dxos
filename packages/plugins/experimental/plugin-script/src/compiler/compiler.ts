@@ -32,12 +32,15 @@ const defaultOptions: ts.CompilerOptions = {
 
 type Mod = { source: string; deps: string[] };
 
+// TODO(wittjosiah): There either needs to be a compiler per space or the compiler needs to have multiple environments.
+//   Currently module versions are going to trample each other and so only one version can be used globally.
 export class Compiler {
   private _env: VirtualTypeScriptEnvironment | undefined;
   private _fsMap: Map<string, string> | undefined;
   private _httpTypeCache: Map<string, string> = new Map();
   private _processedUrls: Set<string> = new Set();
   private _moduleVersions: Map<string, string> = new Map();
+  private _packageJsonCache: Map<string, any> = new Map();
   private _debugModuleMap: Record<string, Mod> = {};
 
   constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
@@ -169,7 +172,7 @@ export class Compiler {
     };
   }
 
-  private _findImportsInContent(content: string): string[] {
+  private _findImportsInContent(content: string, parseVersions = false): string[] {
     const imports: Set<string> = new Set();
     const visit = (node: ts.Node) => {
       if (ts.isImportDeclaration(node)) {
@@ -193,22 +196,19 @@ export class Compiler {
         }
       }
 
-      // Check for version comments before imports
-      if (ts.isImportDeclaration(node) || (ts.isExportDeclaration(node) && node.moduleSpecifier)) {
-        const sourceFile = node.getSourceFile();
-        const start = node.getStart();
-        const lineStart = ts.getLineAndCharacterOfPosition(sourceFile, start).line;
-        if (lineStart > 0) {
-          const prevLineStart = ts.getPositionOfLineAndCharacter(sourceFile, lineStart - 1, 0);
-          const prevLineEnd = ts.getPositionOfLineAndCharacter(sourceFile, lineStart, 0);
-          const prevLine = sourceFile.text.substring(prevLineStart, prevLineEnd).trim();
-
-          const versionMatch = prevLine.match(/\/\/\s*@version\s+([^\s]+)/);
-          if (versionMatch) {
-            const moduleName = ts.isImportDeclaration(node)
-              ? (node.moduleSpecifier as ts.StringLiteral).text
-              : (node.moduleSpecifier as ts.StringLiteral).text;
-            this._moduleVersions.set(moduleName, versionMatch[1]);
+      if (parseVersions) {
+        // Parse version comment at start of file if it exists
+        if (ts.isSourceFile(node)) {
+          const firstComment = node.getFullText().match(/\/\* @version\n([\s\S]*?)\*\//);
+          if (firstComment) {
+            try {
+              const versions = JSON.parse(firstComment[1]);
+              for (const [module, version] of Object.entries(versions)) {
+                this._moduleVersions.set(module, version as string);
+              }
+            } catch (err) {
+              log.catch(err);
+            }
           }
         }
       }
@@ -238,7 +238,22 @@ export class Compiler {
         baseModule = parts[0];
         path = parts.slice(1).length > 0 ? '/' + parts.slice(1).join('/') : '';
       }
-      const url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
+
+      let url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
+
+      const packageJson = this._packageJsonCache.get(`${baseModule}@${version}`);
+      if (packageJson) {
+        // Get all dependencies from package.json that have versions specified in moduleVersions
+        const deps = Object.keys({ ...(packageJson.dependencies || {}), ...(packageJson.peerDependencies || {}) })
+          .filter((dep) => this._moduleVersions.has(dep))
+          .map((dep) => `${dep}@${this._moduleVersions.get(dep)}`)
+          .join(',');
+
+        if (deps) {
+          url += `?deps=${deps}`;
+        }
+      }
+
       return url;
     } else if (containingFile?.startsWith('http') && (moduleName.startsWith('.') || moduleName.startsWith('/'))) {
       return new URL(moduleName, containingFile).href;
@@ -246,7 +261,7 @@ export class Compiler {
   }
 
   private async _processImportsInContent(content: string, fileName?: string): Promise<void> {
-    const imports = this._findImportsInContent(content);
+    const imports = this._findImportsInContent(content, true);
     log('process imports', { imports, fileName });
 
     if (fileName) {
@@ -255,7 +270,19 @@ export class Compiler {
 
     await Promise.all(
       imports.map(async (importUrl) => {
-        const url = this._parseImportToUrl(importUrl);
+        let url = this._parseImportToUrl(importUrl);
+        if (!url) {
+          return;
+        }
+
+        // If it's an esm.sh URL, fetch package.json first
+        if (url.startsWith('https://esm.sh/')) {
+          await this._fetchPackageJson(url);
+        }
+
+        // TODO(wittjosiah): Clean this up to parse doesn't need to be called twice.
+        // Ensure the deps are included in the URL.
+        url = this._parseImportToUrl(importUrl);
         if (!url) {
           return;
         }
@@ -295,6 +322,7 @@ export class Compiler {
     }
   }
 
+  // TODO(wittjosiah): Reconcile with _parseImportToUrl.
   private _normalizeTypesUrl(url: string, parent?: string): string | undefined {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
@@ -324,7 +352,18 @@ export class Compiler {
 
     await Promise.all(
       imports.map(async (importUrl) => {
-        const normalizedUrl = this._normalizeTypesUrl(importUrl, parentUrl);
+        let normalizedUrl = this._normalizeTypesUrl(importUrl, parentUrl);
+        if (!normalizedUrl) {
+          return;
+        }
+
+        if (normalizedUrl.startsWith('https://esm.sh/')) {
+          await this._fetchPackageJson(normalizedUrl);
+        }
+
+        // TODO(wittjosiah): Clean this up to parse doesn't need to be called twice.
+        // Ensure the deps are included in the URL.
+        normalizedUrl = this._parseImportToUrl(importUrl, parentUrl);
         if (!normalizedUrl) {
           return;
         }
@@ -354,6 +393,42 @@ export class Compiler {
     } catch (err) {
       this._processedUrls.delete(url);
       log.catch(err, { url });
+    }
+  }
+
+  private async _fetchPackageJson(esmUrl: string): Promise<void> {
+    // Parse the package name from esm.sh URL
+    const urlObj = new URL(esmUrl);
+    const [, ...pathParts] = urlObj.pathname.split('/');
+    let packageName = pathParts[0];
+
+    // Handle scoped packages
+    if (packageName.startsWith('@')) {
+      packageName = `${packageName}/${pathParts[1]}`;
+    }
+
+    // If we've already cached this package.json, skip
+    if (this._packageJsonCache.has(packageName)) {
+      return;
+    }
+
+    // Skip node and builtin modules
+    if (packageName === 'node' || packageName.startsWith('node:')) {
+      return;
+    }
+
+    try {
+      const packageJsonUrl = `https://esm.sh/${packageName}/package.json`;
+      const response = await fetch(packageJsonUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch package.json for ${packageName}`);
+      }
+
+      const packageJson = await response.json();
+      this._packageJsonCache.set(packageName, packageJson);
+      log('cached package.json', { packageName });
+    } catch (err) {
+      log.catch(err, { packageName });
     }
   }
 }

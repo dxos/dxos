@@ -2,24 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-// @version 0.77.2?deps=effect@3.13.3
+/* @version
+{
+  "dfx": "0.113.0",
+  "effect": "3.13.3",
+  "@effect/platform": "0.77.2",
+  "@effect/schema": "0.75.5",
+  "@dxos/client": "0.7.5-main.b19bfc8",
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8",
+  "@dxos/invariant": "0.7.5-main.b19bfc8",
+  "@dxos/keys": "0.7.5-main.b19bfc8"
+}
+*/
+
 import { FetchHttpClient } from '@effect/platform';
-// @version 0.75.5?deps=effect@3.13.3
 import { Schema as S } from '@effect/schema';
-// @version 0.113.0?deps=effect@3.13.3
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
-// @version 3.13.3
 import { Effect, Config, Redacted, Ref } from 'effect';
 
-// @version 0.7.5-main.b19bfc8
 import { Filter } from '@dxos/client/echo';
-// @version 0.7.5-main.b19bfc8?deps=effect@3.13.3
 import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
-// @version 0.7.5-main.b19bfc8
 import { defineFunction } from '@dxos/functions';
-// @version 0.7.5-main.b19bfc8
 import { invariant } from '@dxos/invariant';
-// @version 0.7.5-main.b19bfc8
 import { DXN } from '@dxos/keys';
 
 const MessageSchema = S.Struct({
