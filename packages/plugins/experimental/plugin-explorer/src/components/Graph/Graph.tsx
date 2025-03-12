@@ -50,9 +50,10 @@ export type GraphProps = {
   space: Space;
   match?: RegExp;
   grid?: boolean;
+  svg?: boolean;
 };
 
-export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
+export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
   const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
   const [selected, setSelected] = useState<string>();
   const { themeMode } = useThemeContext();
@@ -92,62 +93,41 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
   const { ref, width, height } = useResizeDetector();
   const rootRef = useRef<HTMLDivElement>(null);
   const forceGraph = useRef<ForceGraph>();
+
   useEffect(() => {
-    if (rootRef.current && width && height && model) {
-      if (!forceGraph.current) {
-        forceGraph.current = new ForceGraph(rootRef.current)
-          .nodeLabel((node: any) => {
-            if (node.type === 'schema') {
-              return node.id;
-            }
-
+    if (rootRef.current) {
+      forceGraph.current = new ForceGraph(rootRef.current)
+        .nodeAutoColorBy((node: any) => node.type)
+        .nodeLabel((node: any) => {
+          if (node.type === 'schema') {
             return node.id;
-          })
-          // .dagMode('radialout')
-          // .dagLevelDistance(300)
+          }
 
-          // .backgroundColor('#101010')
-          .nodeRelSize(6)
-          .nodeAutoColorBy((node: any) => node.type)
-          .linkColor(() => 'rgba(255,255,255,0.2)')
-          // .nodeId('path')
-          // .nodeVal((node) => 100 / (node.level + 1))
-          // .nodeAutoColorBy('module')
-          // .linkDirectionalParticles(2)
-          // .linkDirectionalParticleWidth(2)
-
-          // https://d3js.org/d3-force
-          // .d3Force('center', forceCenter().strength(0.08))
-          // .d3Force(
-          //   'collision',
-          //   forceCollide((node: any) => Math.sqrt(100 / ((node.level ?? 0) + 1)) * 10),
-          // )
-          .d3Force('radial', forceRadial(width / 2).strength(0.001))
-          // .d3VelocityDecay(0.2)
-
-          // .autoPauseRedraw(true)
-          .onEngineStop(() => forceGraph.current?.zoomToFit(400, 40))
-          // .onNodeHover((node: any) => {
-          //   highlightNodes.clear();
-          //   highlightLinks.clear();
-          //   if (node) {
-          //     highlightNodes.add(node);
-          //     // node.neighbors.forEach((neighbor) => highlightNodes.add(neighbor));
-          //     // node.links.forEach((link) => highlightLinks.add(link));
-          //   }
-          //   hoverNode = node || null;
-          // })
-
-          .graphData(model.graph);
-      }
-
-      forceGraph.current.width(width).height(height);
+          return node.id;
+        })
+        .nodeRelSize(6)
+        .linkColor(() => 'rgba(255,255,255,0.2)');
     }
 
     return () => {
       forceGraph.current?.graphData({ nodes: [], links: [] });
       forceGraph.current = undefined;
     };
+  }, []);
+
+  // Update.
+  useEffect(() => {
+    if (forceGraph.current && width && height && model) {
+      forceGraph.current
+        .width(width)
+        .height(height)
+        .d3Force('radial', forceRadial(width / 2).strength(0.001))
+        .graphData(model.graph)
+        .resumeAnimation()
+        .onEngineStop(() => {
+          forceGraph.current?.zoomToFit(400, 40);
+        });
+    }
   }, [model, width, height]);
 
   const handleZoomToFit = () => {
@@ -162,7 +142,7 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
     return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
   }
 
-  if (model.graph.nodes.length > 10) {
+  if (!svg) {
     return (
       <div ref={ref} className='relative grow' onClick={handleZoomToFit}>
         <div ref={rootRef} className='absolute inset-0' />
