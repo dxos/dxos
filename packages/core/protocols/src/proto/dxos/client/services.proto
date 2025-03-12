@@ -132,7 +132,7 @@ message RequestRecoveryChallengeResponse {
 
 message RecoverIdentityRequest {
   message ExternalSignature {
-    string identity_did = 1;
+    dxos.keys.PublicKey lookup_key = 1;
     dxos.keys.PublicKey device_key = 2;
     dxos.keys.PublicKey control_feed_key = 3;
     bytes signature = 4;
@@ -147,12 +147,20 @@ message RecoverIdentityRequest {
   }
 }
 
-message CreateRecoveryCredentialRequest {
-  /// Optional recovery key. If not provided, a new key will be generated.
-  optional dxos.keys.PublicKey recovery_key = 1;
+message RecoveryCredentialData {
+  /// Recovery key used to validate recovery challenge signature.
+  dxos.keys.PublicKey recovery_key = 1;
+
+  /// Public key used to identify the recovery key.
+  dxos.keys.PublicKey lookup_key = 2;
 
   /// Algorithm used to generate the recovery key.
-  optional string algorithm = 2;
+  string algorithm = 3;
+}
+
+message CreateRecoveryCredentialRequest {
+  /// If not provided, a new key will be generated.
+  optional RecoveryCredentialData data = 1;
 }
 
 message CreateRecoveryCredentialResponse {
