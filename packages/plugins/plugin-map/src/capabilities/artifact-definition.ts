@@ -36,7 +36,8 @@ export default () => {
     tools: [
       defineTool(meta.id, {
         name: 'list',
-        description: 'Query all active maps.',
+        description: 'Query maps.',
+        caption: 'Listing maps...',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -49,6 +50,7 @@ export default () => {
         name: 'create',
         description:
           'Create a new map, optionally with a schema for data points. When creating a map, make sure to use the show tool to display the map to the user.',
+        caption: 'Creating map...',
         schema: S.Struct({
           center: S.optional(
             S.Struct({

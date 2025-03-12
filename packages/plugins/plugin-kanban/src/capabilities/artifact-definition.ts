@@ -43,6 +43,7 @@ export default () => {
         description: `
             Create a new kanban board using an existing schema.
             Use schema_create first to create a schema, or schema_list to choose an existing one.`,
+        caption: 'Creating kanban board...',
         schema: S.Struct({
           typename: S.String.annotations({
             description: 'The fully qualified typename of the schema to use for the kanban cards.',
@@ -81,6 +82,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'list',
         description: 'List all kanban boards in the current space.',
+        caption: 'Listing kanban boards...',
         schema: S.Struct({}),
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -103,6 +105,7 @@ export default () => {
       defineTool(meta.id, {
         name: 'inspect',
         description: 'Get details about a specific kanban board.',
+        caption: 'Inspecting kanban board...',
         schema: S.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
