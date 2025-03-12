@@ -4673,10 +4673,16 @@ importers:
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
     devDependencies:
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.7)
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       effect:
         specifier: ^3.12.3
         version: 3.12.7

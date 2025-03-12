@@ -87,6 +87,7 @@ export default (context: PluginsContext) =>
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
   const { objects } = await space.db.query(Filter.schema(AIChatType)).run();
+  // console.log('objects', JSON.stringify(objects, null, 2));
   if (objects.length > 0) {
     // TODO(burdon): Is this the most recent?
     return objects[objects.length - 1];
