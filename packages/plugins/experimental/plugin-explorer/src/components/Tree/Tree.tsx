@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type Space } from '@dxos/client/echo';
 import { createSvgContext, SVG, SVGRoot } from '@dxos/gem-core';
+import { useAsyncState } from '@dxos/react-ui';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
 import { mapGraphToTreeData, type TreeNode } from './types';
@@ -62,7 +63,11 @@ export type TreeComponentProps<N = unknown> = {
 
 // TODO(burdon): Label accessor.
 export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: TreeComponentProps<N>) => {
-  const model = useMemo(() => (space ? new SpaceGraphModel().open(space, selected) : undefined), [space, selected]);
+  const [model] = useAsyncState(
+    async () => (space ? new SpaceGraphModel().open(space, selected) : undefined),
+    [space, selected],
+  );
+
   const [tree, setTree] = useState<TreeNode>();
   useEffect(() => {
     return model?.subscribe(() => {
