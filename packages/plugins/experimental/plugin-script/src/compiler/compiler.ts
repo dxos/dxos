@@ -192,7 +192,6 @@ export class Compiler {
         path = parts.slice(1).length > 0 ? '/' + parts.slice(1).join('/') : '';
       }
       const url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
-      log.info('parse import to url', { moduleName, url });
       return url;
     }
   }
