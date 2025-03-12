@@ -15,11 +15,9 @@ export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
 /**
  * @deprecated Use `getTypename` instead.
  */
+// TODO(burdon): Can we remove this?
 export const getType = <T extends BaseObject>(obj: T | undefined): Reference | undefined => {
-  if (obj == null) {
-    return undefined;
-  }
-  if (isReactiveObject(obj)) {
+  if (obj && isReactiveObject(obj)) {
     return getProxyHandler(obj).getTypeReference(obj);
   }
 

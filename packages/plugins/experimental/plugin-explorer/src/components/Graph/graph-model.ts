@@ -50,19 +50,24 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
     return this._objects ?? [];
   }
 
+  // TODO(burdon): Alternatives for larger datasets:
+  // - https://www.npmjs.com/package/force-graph (canvas)
+  // - https://github.com/marceljuenemann/react-query-graph
+  // - https://observablehq.com/@d3/radial-tree/2
+  // - https://observablehq.com/@d3/disjoint-force-directed-graph/2
+
   open(space: Space, objectId?: string) {
     if (!this._subscription) {
-      // TODO(burdon): Filter.
-      const query = space.db.query((object: ReactiveEchoObject<any>) => !(object instanceof CollectionType));
+      // TODO(burdon): Filter?
+      const query = space.db.query((object) => !(object instanceof CollectionType));
 
       this._subscription = query.subscribe(
         ({ objects }) => {
           this._objects = objects;
 
-          // TODO(burdon): Normalize schema.
           this._graph.nodes = objects.map((object) => {
             if (object instanceof StoredSchema) {
-              const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!; // TODO(burdon): ???
+              const effectSchema = space.db.schemaRegistry.getSchemaById(object.id)!;
               return { type: 'schema', id: object.id, schema: effectSchema.schema };
             }
 
@@ -73,16 +78,21 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
             const objectSchema = getSchema(object); // TODO(burdon): ???
             const typename = getType(object)?.objectId;
             if (objectSchema == null || typename == null) {
-              log.info('no schema for object:', { id: object.id.slice(0, 8) });
+              log('no schema for object:', { id: object.id.slice(0, 8) });
               return links;
             }
 
             if (!(objectSchema instanceof EchoSchema)) {
               const idx = objects.findIndex((obj) => obj.id === typename);
               if (idx === -1) {
+                const { typename } = objectSchema as EchoSchema;
+                if (typename === 'dxos.org/type/Schema') {
+                  // return links;
+                }
+
                 this._graph.nodes.push({
-                  id: typename,
                   type: 'schema',
+                  id: typename,
                   schema: objectSchema,
                 });
               }
@@ -102,6 +112,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
               if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotationId)) {
                 return;
               }
+
               const value = object[String(prop.name)];
               if (value) {
                 const refs = Array.isArray(value) ? value : [value];

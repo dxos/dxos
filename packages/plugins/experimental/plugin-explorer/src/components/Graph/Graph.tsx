@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { forceCenter } from 'd3';
+import ForceGraph from 'force-graph';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { getTypename, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
@@ -58,6 +61,9 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
     () =>
       new GraphForceProjector<EchoGraphNode>(context, {
         forces: {
+          center: {
+            // strength: 0.1,
+          },
           manyBody: {
             strength: -100,
           },
@@ -66,7 +72,7 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
           },
           radial: {
             radius: 150,
-            strength: 0.05,
+            strength: 0.1,
           },
         },
         attributes: {
@@ -91,6 +97,55 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
   if (selected) {
     return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
   }
+
+  // https://github.com/vasturiano/force-graph
+  const { ref, width, height } = useResizeDetector();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const forceGraph = useRef<ForceGraph>();
+  useEffect(() => {
+    if (rootRef.current && width && height) {
+      if (!forceGraph.current) {
+        forceGraph.current = new ForceGraph(rootRef.current)
+          .width(width)
+          .height(height)
+
+          // .dagMode('td')
+          // .dagLevelDistance(300)
+          .backgroundColor('#101020')
+          .linkColor(() => 'rgba(255,255,255,0.2)')
+          // .nodeRelSize(NODE_REL_SIZE)
+          // .nodeId('path')
+          // .nodeVal((node) => 100 / (node.level + 1))
+          // .nodeLabel('id')
+          // .nodeAutoColorBy('module')
+          .linkDirectionalParticles(2)
+          .linkDirectionalParticleWidth(2)
+          // .d3Force(
+          // 'collision',
+          // forceCollide((node) => Math.sqrt(100 / (node.level + 1)) * NODE_REL_SIZE),
+          // )
+          .d3VelocityDecay(0.3)
+
+          // https://d3js.org/d3-force/center
+          .d3Force('center', forceCenter().strength(0.01))
+          // .onEngineStop(() => forceGraph.current?.zoomToFit(400, 40));
+          .graphData(model.graph);
+      } else {
+        forceGraph.current.width(width).height(height);
+      }
+    }
+
+    return () => {
+      forceGraph.current?.graphData({ nodes: [], links: [] });
+      forceGraph.current = undefined;
+    };
+  }, [width, height]);
+
+  return (
+    <div ref={ref} className='relative grow'>
+      <div ref={rootRef} className='absolute inset-0' />
+    </div>
+  );
 
   return (
     <SVGRoot context={context}>
