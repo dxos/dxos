@@ -5,6 +5,7 @@
 import { faker } from '@dxos/random';
 
 type SlideOptions = {
+  text?: string;
   number?: number;
   code?: boolean;
   list?: number;
@@ -35,7 +36,7 @@ export const createSlide = (options: SlideOptions = {}) => {
 
   return [
     `# ${num}${faker.lorem.sentence(3)}`,
-    faker.lorem.sentences(),
+    options.text && faker.lorem.sentences(),
     options.code && code(),
     options.list && list(options.list),
     options.ordered && ordered(options.ordered),
