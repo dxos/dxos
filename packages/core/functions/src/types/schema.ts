@@ -12,7 +12,6 @@ export class ScriptType extends TypedObject({
   typename: 'dxos.org/type/Script',
   version: '0.1.0',
 })({
-  // TODO(burdon): Change to URI?
   name: S.optional(S.String),
   description: S.optional(S.String),
   // TODO(burdon): Change to hash of deployed content.
