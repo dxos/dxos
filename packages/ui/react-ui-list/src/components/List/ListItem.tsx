@@ -216,6 +216,17 @@ export const ListItemDeleteButton = ({
   );
 };
 
+export const ListItemButton = ({
+  autoHide = true,
+  classNames,
+  disabled,
+  ...props
+}: IconButtonProps & { autoHide?: boolean }) => {
+  const { state } = useListContext('ITEM_BUTTON');
+  const isDisabled = state.type !== 'idle' || disabled;
+  return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
+};
+
 export const ListItemDragHandle = () => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
   return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' />;
