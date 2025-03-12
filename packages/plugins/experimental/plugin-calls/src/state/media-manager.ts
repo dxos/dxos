@@ -175,6 +175,10 @@ export class MediaManager extends Resource {
 
   private async _reconcilePulledMedia() {
     log('reconciling tracks');
+    // TODO(mykola): Currently cloudflare fails if you try to pull track immediately after pushing it.
+    // Add retry logic, remove sleep.
+    // Wait for cloudflare to process the track.
+    await cancelWithContext(this._ctx, sleep(800));
     const trackNames = this._trackToReconcile;
 
     const tracksToPull = trackNames.filter(
