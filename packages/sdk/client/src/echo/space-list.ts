@@ -17,9 +17,8 @@ import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query, type QueryOptions } from '@dxos/echo-db';
-import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
@@ -301,9 +300,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    const invocationTraceQueue =
-      meta?.invocationTraceQueue ?? new DXN(DXN.kind.QUEUE, ['trace', space.id, ObjectId.random()]).toString();
-    spaceProxy.db.add(create(PropertiesType, { invocationTraceQueue, ...meta }), { placeIn: 'root-doc' });
+    spaceProxy.db.add(create(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

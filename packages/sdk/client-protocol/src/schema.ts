@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject, DXN } from '@dxos/echo-schema';
+import { S, TypedObject, Ref, Expando } from '@dxos/echo-schema';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
@@ -13,7 +13,7 @@ export class PropertiesType extends TypedObject({
 })(
   {
     name: S.optional(S.String),
-    invocationTraceQueue: S.optional(DXN),
+    invocationTraceQueue: Ref(Expando),
   },
   { record: true },
 ) {}
