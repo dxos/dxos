@@ -32,19 +32,26 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential({ recoveryKey, algorithm }: CreateRecoveryCredentialRequest) {
+  public async createRecoveryCredential({ data }: CreateRecoveryCredentialRequest) {
     const identity = this._identityProvider();
     invariant(identity);
 
+    let recoveryKey: PublicKey;
+    let lookupKey: PublicKey;
+    let algorithm: string;
     let recoveryCode: string | undefined;
-    if (!recoveryKey) {
+    if (data) {
+      recoveryKey = data.recoveryKey;
+      lookupKey = data.lookupKey;
+      algorithm = data.algorithm;
+    } else {
       recoveryCode = generateSeedPhrase();
       const keypair = keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
+      lookupKey = PublicKey.from(keypair.publicKey);
       algorithm = 'ED25519';
     }
 
-    invariant(algorithm, 'Algorithm is required.');
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
@@ -53,6 +60,7 @@ export class EdgeIdentityRecoveryManager {
         recoveryKey,
         identityKey,
         algorithm,
+        lookupKey,
       },
     });
 
@@ -88,7 +96,7 @@ export class EdgeIdentityRecoveryManager {
   }
 
   public async recoverIdentityWithExternalSignature({
-    identityDid,
+    lookupKey,
     deviceKey,
     controlFeedKey,
     signature,
@@ -98,7 +106,7 @@ export class EdgeIdentityRecoveryManager {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const request: EdgeRecoverIdentityRequest = {
-      identityDid,
+      lookupKey: lookupKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
       signature:
@@ -132,7 +140,7 @@ export class EdgeIdentityRecoveryManager {
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const request: EdgeRecoverIdentityRequest = {
-      recoveryKey: recoveryKey.toHex(),
+      lookupKey: recoveryKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
     };

@@ -137,12 +137,13 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
         invariant(identity, 'Identity not available');
 
         // TODO(wittjosiah): Consider factoring out passkey creation to the halo api.
+        const lookupKey = PublicKey.random();
         const credential = await navigator.credentials.create({
           publicKey: {
             challenge: new Uint8Array(),
             rp: { id: location.hostname, name: appName },
             user: {
-              id: new TextEncoder().encode(identity.did),
+              id: lookupKey.asUint8Array(),
               name: identity.did,
               displayName: identity.profile?.displayName ?? '',
             },
@@ -164,7 +165,13 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
 
         // TODO(wittjosiah): This needs a proper api.
         invariant(client.services.services.IdentityService, 'IdentityService not available');
-        await client.services.services.IdentityService.createRecoveryCredential({ recoveryKey, algorithm });
+        await client.services.services.IdentityService.createRecoveryCredential({
+          data: {
+            recoveryKey,
+            algorithm,
+            lookupKey,
+          },
+        });
       },
     }),
     createResolver({
@@ -182,10 +189,10 @@ export default ({ context, appName = 'Composer', onReset }: IntentResolverOption
             userVerification: 'required',
           },
         });
-        const identityDid = new TextDecoder().decode((credential as any).response.userHandle);
+        const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
         await client.services.services.IdentityService.recoverIdentity({
           external: {
-            identityDid,
+            lookupKey,
             deviceKey,
             controlFeedKey,
             signature: Buffer.from((credential as any).response.signature),
