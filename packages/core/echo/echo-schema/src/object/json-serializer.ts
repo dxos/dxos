@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Reference, encodeReference } from '@dxos/echo-protocol';
-import { deepMapValues } from '@dxos/util';
-
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
-import { Ref } from '../ast';
 
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
@@ -24,15 +20,10 @@ export const attachTypedJsonSerializer = (obj: any) => {
 
 // NOTE: KEEP as function.
 const typedJsonSerializer = function (this: any, key: string, value: any) {
-  const { id, ...rest } = deepMapValues(this, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      return encodeReference(Reference.fromDXN(value.dxn));
-    }
-    return recurse(value);
-  });
+  const { id, [TYPENAME_SYMBOL]: typename, ...rest } = this;
   return {
     id,
-    [ECHO_ATTR_TYPE]: this[TYPENAME_SYMBOL],
+    [ECHO_ATTR_TYPE]: typename,
     ...rest,
   };
 };
