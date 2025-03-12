@@ -127,7 +127,7 @@ export const Graph: FC<GraphProps> = ({ space, match, grid }) => {
           .d3VelocityDecay(0.3)
 
           // https://d3js.org/d3-force/center
-          .d3Force('center', forceCenter().strength(0.01))
+          .d3Force('center', forceCenter().strength(0.03))
           // .onEngineStop(() => forceGraph.current?.zoomToFit(400, 40));
           .graphData(model.graph);
       } else {
