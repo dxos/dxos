@@ -13,7 +13,7 @@ export class PropertiesType extends TypedObject({
 })(
   {
     name: S.optional(S.String),
-    invocationTraceQueue: Ref(Expando),
+    invocationTraceQueue: S.optional(Ref(Expando)),
   },
   { record: true },
 ) {}
