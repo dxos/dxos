@@ -32,15 +32,16 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityParams) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential({ recoveryKey, algorithm }: CreateRecoveryCredentialRequest) {
+  public async createRecoveryCredential({ recoveryKey, lookupKey, algorithm }: CreateRecoveryCredentialRequest) {
     const identity = this._identityProvider();
     invariant(identity);
 
     let recoveryCode: string | undefined;
-    if (!recoveryKey) {
+    if (!recoveryKey || !lookupKey) {
       recoveryCode = generateSeedPhrase();
       const keypair = keyPairFromSeedPhrase(recoveryCode);
       recoveryKey = PublicKey.from(keypair.publicKey);
+      lookupKey = PublicKey.random();
       algorithm = 'ED25519';
     }
 
@@ -53,6 +54,7 @@ export class EdgeIdentityRecoveryManager {
         recoveryKey,
         identityKey,
         algorithm,
+        lookupKey,
       },
     });
 
@@ -88,7 +90,7 @@ export class EdgeIdentityRecoveryManager {
   }
 
   public async recoverIdentityWithExternalSignature({
-    identityDid,
+    lookupKey,
     deviceKey,
     controlFeedKey,
     signature,
@@ -98,7 +100,7 @@ export class EdgeIdentityRecoveryManager {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const request: EdgeRecoverIdentityRequest = {
-      identityDid,
+      lookupKey: lookupKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
       signature:
@@ -132,7 +134,7 @@ export class EdgeIdentityRecoveryManager {
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const request: EdgeRecoverIdentityRequest = {
-      recoveryKey: recoveryKey.toHex(),
+      lookupKey: recoveryKey.toHex(),
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
     };
