@@ -12,6 +12,7 @@ import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { mapValues } from '@dxos/util';
 
 const GLOBALS = 'globals.d.ts';
 
@@ -30,6 +31,8 @@ const defaultOptions: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2022,
 };
 
+type Mod = { source: string; deps: string[] };
+
 export class Compiler {
   private _env: VirtualTypeScriptEnvironment | undefined;
   private _fsMap: Map<string, string> | undefined;
@@ -37,7 +40,32 @@ export class Compiler {
   private _processedUrls: Set<string> = new Set();
   private _moduleVersions: Map<string, string> = new Map();
 
-  constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {}
+  private _debugModuleMap: Record<string, Mod> = {};
+
+  get debugModuleMap() {
+    const obj: Record<string, any> = {};
+
+    for (const [fileName, mod] of Object.entries(this._debugModuleMap)) {
+      obj[fileName] = {
+        source: mod.source,
+        rawDeps: mod.deps,
+        deps: {},
+      };
+    }
+
+    for (const [fileName, mod] of Object.entries(this._debugModuleMap)) {
+      for (const dep of mod.deps) {
+        obj[fileName].deps[dep] = obj[dep];
+      }
+    }
+
+    return obj;
+  }
+
+  constructor(private readonly _options: ts.CompilerOptions = defaultOptions) {
+    (globalThis as any).debugCompiler ??= [];
+    (globalThis as any).debugCompiler.push(this);
+  }
 
   async initialize(globals?: string) {
     if (this._env) {
@@ -198,7 +226,11 @@ export class Compiler {
 
   private async _processImportsInContent(content: string, fileName?: string): Promise<void> {
     const imports = this._findImportsInContent(content);
-    log('process imports', { imports, fileName });
+    log.info('process imports', { imports, fileName });
+
+    if (fileName) {
+      this._debugModuleMap[fileName] = { source: content, deps: [] };
+    }
 
     await Promise.all(
       imports.map(async (importUrl) => {
@@ -207,12 +239,12 @@ export class Compiler {
           return;
         }
 
-        await this._prefetchHttpModule(url);
+        await this._prefetchHttpModule(url, fileName);
       }),
     );
   }
 
-  private async _prefetchHttpModule(url: string): Promise<void> {
+  private async _prefetchHttpModule(url: string, parent?: string): Promise<void> {
     if (this._processedUrls.has(url)) {
       return;
     }
@@ -220,12 +252,19 @@ export class Compiler {
     try {
       this._processedUrls.add(url);
       const response = await fetch(url);
-      invariant(response.ok);
+      if (!response.ok) {
+        log.error('failed to fetch', { url });
+        throw new Error(`Failed to fetch ${url}`);
+      }
+
       const typesUrl = response.headers.get('x-typescript-types');
       const content = await response.text();
       this.setFile(url, content);
 
       if (typesUrl) {
+        if (parent) {
+          this._debugModuleMap[parent]?.deps.push(typesUrl);
+        }
         this._httpTypeCache.set(url, typesUrl);
         await this._prefetchHttpTypes(typesUrl);
       }
@@ -258,11 +297,19 @@ export class Compiler {
     const imports = this._findImportsInContent(content);
     log('process imports', { parentUrl, imports });
 
+    if (parentUrl) {
+      this._debugModuleMap[parentUrl] = { source: content, deps: [] };
+    }
+
     await Promise.all(
       imports.map(async (importUrl) => {
         const normalizedUrl = this._normalizeTypesUrl(importUrl, parentUrl);
         if (!normalizedUrl) {
           return;
+        }
+
+        if (parentUrl) {
+          this._debugModuleMap[parentUrl]?.deps.push(normalizedUrl);
         }
 
         await this._prefetchHttpTypes(normalizedUrl);
