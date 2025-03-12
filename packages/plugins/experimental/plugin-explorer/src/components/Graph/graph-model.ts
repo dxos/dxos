@@ -69,11 +69,11 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
   async open(space: Space, objectId?: string) {
-    if (!this._objectsSubscription) {
+    // TODO(burdon): Factor out graph builder to lib (use common/graph abstraction).
+    if (!this._schemaSubscription) {
       // TODO(burdon): Normalize unsubscribe callbacks and merge handlers.
       // TODO(burdon): Trigger initial subscription update.
       // TODO(burdon): Normalize subscription cb for objects, schema, etc.
-      // TODO(burdon): Factor out graph builder to lib.
 
       const schemaaQuery = space.db.schemaRegistry.query({});
       const schemas = await schemaaQuery.run();
