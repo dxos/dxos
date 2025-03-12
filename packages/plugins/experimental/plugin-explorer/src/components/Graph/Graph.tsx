@@ -16,15 +16,14 @@ import {
   Markers,
 } from '@dxos/gem-spore';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
-import { useThemeContext } from '@dxos/react-ui';
+import { useAsyncState, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import '@dxos/gem-spore/styles';
 
 import { type EchoGraphNode, SpaceGraphModel } from './graph-model';
-import { Tree } from '../Tree';
 
-import { forceRadial } from 'd3';
+import { forceLink, forceManyBody, forceRadial } from 'd3';
 
 type Slots = {
   root?: { className?: string };
@@ -54,9 +53,13 @@ export type GraphProps = {
 };
 
 export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
-  const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
-  const [selected, setSelected] = useState<string>();
   const { themeMode } = useThemeContext();
+  const [selected, setSelected] = useState<string>();
+
+  const [model] = useAsyncState(
+    async () => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined),
+    [space],
+  );
 
   const context = createSvgContext();
   const projector = useMemo(
@@ -97,20 +100,20 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
   useEffect(() => {
     if (rootRef.current) {
       forceGraph.current = new ForceGraph(rootRef.current)
-        .nodeAutoColorBy((node: any) => node.type)
+        .nodeRelSize(6)
         .nodeLabel((node: any) => {
           if (node.type === 'schema') {
-            return node.id;
+            return node.data.typename;
           }
 
           return node.id;
         })
-        .nodeRelSize(6)
-        .linkColor(() => 'rgba(255,255,255,0.2)');
+        .nodeAutoColorBy((node: any) => node.type)
+        .linkColor(() => 'rgba(255,255,255,0.25)');
     }
 
     return () => {
-      forceGraph.current?.graphData({ nodes: [], links: [] });
+      forceGraph.current?.pauseAnimation().graphData({ nodes: [], links: [] });
       forceGraph.current = undefined;
     };
   }, []);
@@ -118,15 +121,27 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
   // Update.
   useEffect(() => {
     if (forceGraph.current && width && height && model) {
+      const r = Math.min(width, height) / 2;
       forceGraph.current
+        .pauseAnimation()
         .width(width)
         .height(height)
-        .d3Force('radial', forceRadial(width / 2).strength(0.001))
-        .graphData(model.graph)
-        .resumeAnimation()
         .onEngineStop(() => {
           forceGraph.current?.zoomToFit(400, 40);
-        });
+        })
+
+        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#force-engine-d3-force-configuration
+        .d3Force('center', forceRadial(r).strength(0.3))
+        .d3Force('link', forceLink().strength(1.5))
+        .d3Force('charge', forceManyBody().strength(-200))
+        .d3AlphaDecay(0.0228)
+        .d3VelocityDecay(0.4)
+        .warmupTicks(100)
+        .cooldownTime(1000)
+
+        //
+        .graphData(model.graph)
+        .resumeAnimation();
     }
   }, [model, width, height]);
 
@@ -134,13 +149,9 @@ export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
     forceGraph.current?.zoomToFit(400, 40);
   };
 
-  if (!model) {
-    return null;
-  }
-
-  if (selected) {
-    return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
-  }
+  // if (selected) {
+  //   return <Tree space={space} selected={selected} variant='tidy' onNodeClick={() => setSelected(undefined)} />;
+  // }
 
   if (!svg) {
     return (
