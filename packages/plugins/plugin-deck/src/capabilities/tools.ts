@@ -32,6 +32,7 @@ export default () =>
         Show an item in the app. Use this tool to open an artifact. 
         When supplying IDs to show, they must be fully qualified like space:object.
       `,
+      caption: 'Showing item...',
       // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
       schema: S.Struct({
         id: S.String.annotations({

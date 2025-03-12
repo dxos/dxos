@@ -57,7 +57,10 @@ export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProp
 
   // Prompt.
   const systemPrompt = useMemo(
-    () => createSystemPrompt({ artifacts: artifactDefinitions.map((definition) => definition.instructions) }),
+    () =>
+      createSystemPrompt({
+        artifacts: artifactDefinitions.map((definition) => definition.instructions),
+      }),
     [artifactDefinitions],
   );
 
