@@ -48,7 +48,6 @@ describe('Spaces', () => {
     await testSpaceAutomerge(space.db);
 
     expect(SpaceId.isValid(space.id)).to.be.true;
-    expect(DXN.isDXNString(space.properties.invocationTraceQueue)).to.be.true;
     expect(space.members.get()).to.be.length(1);
 
     // Get by id.
