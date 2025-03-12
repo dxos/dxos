@@ -52,6 +52,7 @@
     "@observablehq/plot": "^0.6.11",
     "@preact/signals-core": "^1.6.0",
     "d3": "^7.9.0",
+    "force-graph": "1.49.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "react-resize-detector": "^11.0.1",

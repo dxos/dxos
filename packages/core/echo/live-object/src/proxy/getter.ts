@@ -3,7 +3,7 @@
 //
 
 import { type Reference } from '@dxos/echo-protocol';
-import type { BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
 import { getSchema, SchemaMetaSymbol } from '@dxos/echo-schema';
 
 import { getProxyHandler, isReactiveObject } from './proxy';
@@ -15,11 +15,9 @@ export const isDeleted = <T extends BaseObject>(obj: T): boolean => {
 /**
  * @deprecated Use `getTypename` instead.
  */
+// TODO(burdon): Can we remove this?
 export const getType = <T extends BaseObject>(obj: T | undefined): Reference | undefined => {
-  if (obj == null) {
-    return undefined;
-  }
-  if (isReactiveObject(obj)) {
+  if (obj && isReactiveObject(obj)) {
     return getProxyHandler(obj).getTypeReference(obj);
   }
 
