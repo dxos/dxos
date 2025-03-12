@@ -35,6 +35,7 @@ export default () => {
         caption: 'Retrieving calendar events...',
         schema: S.Struct({}),
         execute: async () => {
+          // TODO(burdon): Mock data for demo.
           return ToolResult.Success({
             events: [
               {
