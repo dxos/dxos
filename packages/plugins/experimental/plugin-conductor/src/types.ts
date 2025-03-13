@@ -5,12 +5,12 @@
 import { S } from '@dxos/echo-schema';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
-import { CANVAS_PLUGIN } from './meta';
+import { CONDUCTOR_PLUGIN } from './meta';
 
-export namespace CanvasAction {
-  const CANVAS_ACTION = `${CANVAS_PLUGIN}/action`;
+export namespace ConductorAction {
+  const CONDUCTOR_ACTION = `${CONDUCTOR_PLUGIN}/action`;
 
-  export class Create extends S.TaggedClass<Create>()(`${CANVAS_ACTION}/create`, {
+  export class Create extends S.TaggedClass<Create>()(`${CONDUCTOR_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
     }),
