@@ -226,10 +226,17 @@ const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardForm
     if (!model.columnFieldPath) {
       return undefined;
     }
-    return {
-      [model.columnFieldPath]: () => <></>,
-    };
-  }, [model.columnFieldPath]);
+
+    const custom: ComponentProps<typeof Form>['Custom'] = {};
+    custom[model.columnFieldPath] = () => <></>;
+    for (const field of model.kanban.cardView?.target?.hiddenFields ?? []) {
+      custom[field.path] = () => <></>;
+    }
+
+    return custom;
+  }, [model.columnFieldPath, JSON.stringify(model.kanban.cardView?.target?.hiddenFields)]);
+
+  console.log('Render kanban', Custom, JSON.stringify(model.kanban.cardView?.target?.hiddenFields));
 
   return (
     <Form

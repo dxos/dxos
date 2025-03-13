@@ -46,6 +46,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._computeArrangement();
   }
 
+  get kanban() {
+    return this._kanban;
+  }
+
   get id() {
     return this._kanban.id;
   }

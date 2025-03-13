@@ -140,7 +140,7 @@ export class ViewProjection {
   hideFieldProjection(fieldId: string): void {
     const index = this._view.fields.findIndex((field) => field.id === fieldId);
     if (index !== -1) {
-      const fieldToHide = this._view.fields[index];
+      const fieldToHide = getSnapshot(this._view.fields[index]);
       this._view.fields.splice(index, 1);
       if (!this._view.hiddenFields) {
         this._view.hiddenFields = [];
@@ -163,7 +163,7 @@ export class ViewProjection {
       const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === property);
 
       if (hiddenIndex !== -1) {
-        const fieldToUnhide = this._view.hiddenFields[hiddenIndex];
+        const fieldToUnhide = getSnapshot(this._view.hiddenFields[hiddenIndex]);
         this._view.hiddenFields.splice(hiddenIndex, 1);
         this._view.fields.push(fieldToUnhide);
         return;
