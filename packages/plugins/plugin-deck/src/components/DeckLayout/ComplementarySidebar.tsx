@@ -21,7 +21,14 @@ import {
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Main, useTranslation, toLocalizedString, IconButton, ScrollArea as NaturalScrollArea } from '@dxos/react-ui';
+import {
+  Main,
+  useTranslation,
+  toLocalizedString,
+  IconButton,
+  ScrollArea as NaturalScrollArea,
+  type Label,
+} from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { byPosition } from '@dxos/util';
@@ -38,6 +45,8 @@ import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../ut
 export type ComplementarySidebarProps = {
   current?: string;
 };
+
+const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
@@ -95,6 +104,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar
+      label={label}
       classNames={[
         topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
         hoistStatusbar && 'block-end-[--statusbar-size]',
