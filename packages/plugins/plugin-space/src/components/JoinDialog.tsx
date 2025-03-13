@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import { Dialog } from '@dxos/react-ui';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -24,6 +24,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const { graph } = useAppGraph();
+  const { t } = useTranslation(SPACE_PLUGIN);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -86,6 +87,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
   return (
     <Dialog.Content>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: 'os' })}</Dialog.Title>
       <JoinPanel
         {...props}
         exitActionParent={<Dialog.Close asChild />}
