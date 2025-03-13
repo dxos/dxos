@@ -2,12 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { ECHO_ATTR_TYPE, TYPENAME_SYMBOL } from './typename';
+import { type Ref } from '../ast';
 
-export const serializeStatic = <T extends { id: string }>(obj: T): T & { [ECHO_ATTR_TYPE]: string } => {
-  invariant(obj[TYPENAME_SYMBOL] && typeof obj[TYPENAME_SYMBOL] === 'string');
+type DeepReplaceRef<T> =
+  T extends Ref<any> ? EncodedReference : T extends object ? { [K in keyof T]: DeepReplaceRef<T[K]> } : T;
+
+type SerializedStatic<T extends { id: string }> = { [K in keyof T]: DeepReplaceRef<T[K]> } & {
+  [ECHO_ATTR_TYPE]: string;
+};
+
+export const serializeStatic = <T extends { id: string }>(obj: T): SerializedStatic<T> => {
+  const typename = (obj as any)[TYPENAME_SYMBOL];
+  invariant(typename && typeof typename === 'string');
   return JSON.parse(JSON.stringify(obj));
 };
 
