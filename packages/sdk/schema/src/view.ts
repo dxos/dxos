@@ -100,7 +100,6 @@ export const ViewTypeV1ToV2 = defineObjectMigration({
   from: ViewTypeV1,
   to: ViewType,
   transform: async (from) => {
-    console.log('transform', from);
     return { ...from, query: { typename: from.query.type } };
   },
   onMigration: async () => {},

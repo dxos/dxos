@@ -135,9 +135,10 @@ test('chained migrations', async () => {
   expect(objects[0].email).to.eq('john.doe@example.com');
 });
 
-test.only('view migration', async () => {
+// TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
+test('view migration', async () => {
   const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ViewTypeV1, ViewType]);
+  graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
 
   db.add(
     create(ViewTypeV1, {
@@ -155,7 +156,7 @@ test.only('view migration', async () => {
   await db.flush({ indexes: true });
   await db.runMigrations([ViewTypeV1ToV2]);
 
-  const { objects } = await db.query(Filter.schema(ViewType)).run();
+  const { objects } = await db.query(Filter.schema(ViewTypeV2)).run();
   expect(objects).to.have.length(1);
 });
 
@@ -169,45 +170,6 @@ export const FieldSchema = S.Struct({
 
 export type FieldType = S.Schema.Type<typeof FieldSchema>;
 
-export class ViewType extends TypedObject({
-  typename: 'dxos.org/type/View',
-  version: '0.2.0',
-})({
-  /**
-   * Human readable name.
-   */
-  name: S.String.annotations({
-    [AST.TitleAnnotationId]: 'Name',
-    [AST.ExamplesAnnotationId]: ['Contact'],
-  }),
-
-  /**
-   * Query used to retrieve data.
-   * This includes the base type that the view schema (above) references.
-   * It may include predicates that represent a persistent "drill-down" query.
-   */
-  query: QueryType,
-
-  /**
-   * Optional schema override used to customize the underlying schema.
-   */
-  schema: S.optional(JsonSchemaType),
-
-  /**
-   * UX metadata associated with displayed fields (in table, form, etc.)
-   */
-  fields: S.mutable(S.Array(FieldSchema)),
-
-  /**
-   * Additional metadata for the view.
-   */
-  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
-
-  // TODO(burdon): Readonly flag?
-  // TODO(burdon): Add array of sort orders (which might be tuples).
-}) {}
-
-// TODO(wittjosiah): Refactor to organize better previous versions + migrations.
 export class ViewTypeV1 extends TypedObject({
   typename: 'dxos.org/type/View',
   version: '0.1.0',
@@ -225,9 +187,23 @@ export class ViewTypeV1 extends TypedObject({
   metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
 }) {}
 
+export class ViewTypeV2 extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.2.0',
+})({
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Name',
+    [AST.ExamplesAnnotationId]: ['Contact'],
+  }),
+  query: QueryType,
+  schema: S.optional(JsonSchemaType),
+  fields: S.mutable(S.Array(FieldSchema)),
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+}) {}
+
 export const ViewTypeV1ToV2 = defineObjectMigration({
   from: ViewTypeV1,
-  to: ViewType,
+  to: ViewTypeV2,
   transform: async (from) => {
     return { ...from, query: { typename: from.query.type } };
   },
