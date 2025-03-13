@@ -535,7 +535,7 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
-    // Create schema with three properties
+    // Create schema with three properties.
     const schema = S.Struct({
       title: S.String,
       description: S.String,
@@ -550,22 +550,66 @@ describe('ViewProjection', () => {
 
     const [mutable] = await registry.register([schema]);
 
-    // Create view with no explicit fields
+    // Create view with no explicit fields.
     const view = createView({
       name: 'Test',
       typename: mutable.typename,
       jsonSchema: mutable.jsonSchema,
-      fields: [], // No fields specified
+      fields: [], // No fields specified.
     });
 
-    // Create projection
+    // Create projection.
     void new ViewProjection(mutable, view);
 
-    // Verify all schema fields were added to hiddenFields
+    // Verify all schema fields were added to hiddenFields.
     expect(view.hiddenFields).to.exist;
     expect(view.hiddenFields).to.have.length(3);
 
     const hiddenPaths = view.hiddenFields!.map((field) => field.path).sort();
     expect(hiddenPaths).to.deep.equal(['description', 'status', 'title']);
+  });
+
+  test('normalizeView syncs fields with schema changes', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    // Create initial schema with a single field.
+    const initialSchema = S.Struct({
+      title: S.String,
+    }).annotations({
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Task',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([initialSchema]);
+
+    // Create empty view (no fields).
+    const view = createView({
+      name: 'Test',
+      typename: mutable.typename,
+      jsonSchema: mutable.jsonSchema,
+      fields: [],
+    });
+
+    // Initialize projection.
+    void new ViewProjection(mutable, view);
+
+    // Verify title is in hiddenFields.
+    expect(view.hiddenFields).to.have.length(1);
+    expect(view.hiddenFields![0].path).to.equal('title');
+
+    // Modify the schema - add a field.
+    mutable.jsonSchema.properties!.status = { type: 'string' };
+
+    // Create new projection to trigger normalization.
+    void new ViewProjection(mutable, view);
+
+    // Verify status was added to hiddenFields.
+    expect(view.hiddenFields).to.have.length(2);
+    const paths = view.hiddenFields!.map((f) => f.path).sort();
+    expect(paths).to.deep.equal(['status', 'title']);
   });
 });

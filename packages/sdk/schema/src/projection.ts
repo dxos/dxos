@@ -46,7 +46,7 @@ export class ViewProjection {
     private readonly _schema: EchoSchema,
     private readonly _view: ViewType,
   ) {
-    this.initializeHiddenFields();
+    this.normalizeView();
     this.migrateSingleSelectStoredFormat();
   }
 
@@ -259,22 +259,49 @@ export class ViewProjection {
   }
 
   /**
-   * Initialize hiddenFields with schema properties that aren't in view.fields
+   * Normalizes the view by:
+   * 1. Moving schema properties not in view.fields to hiddenFields
+   * 2. Removing fields from view.fields and hiddenFields that no longer exist in the schema
    */
-  private initializeHiddenFields(): void {
-    // TODO(ZaymonFC): Do we have a concept of system fields like 'id'?
-    const schemaProperties = Object.keys(this._schema.jsonSchema.properties ?? {}).filter((prop) => prop !== 'id');
-    const viewPaths = new Set(this._view.fields.map((field) => field.path));
+  private normalizeView(): void {
+    // Get all valid properties from the schema (excluding 'id')
+    const schemaProperties = new Set(
+      Object.keys(this._schema.jsonSchema.properties ?? {}).filter((prop) => prop !== 'id'),
+    );
 
-    const hiddenProperties = schemaProperties.filter((prop) => !viewPaths.has(prop as JsonProp));
-    if (hiddenProperties.length > 0 && !this._view.hiddenFields) {
-      this._view.hiddenFields = [];
+    // 1. Process view.fields - remove fields not in schema
+    for (let i = this._view.fields.length - 1; i >= 0; i--) {
+      const field = this._view.fields[i];
+      if (!schemaProperties.has(field.path)) {
+        // Remove fields that don't exist in schema anymore
+        this._view.fields.splice(i, 1);
+      }
     }
 
-    for (const prop of hiddenProperties) {
-      const alreadyHidden = this._view.hiddenFields?.some((field) => field.path === prop);
-      if (!alreadyHidden) {
-        this._view.hiddenFields!.push({
+    // 2. Process hiddenFields - remove fields not in schema
+    if (this._view.hiddenFields) {
+      for (let i = this._view.hiddenFields.length - 1; i >= 0; i--) {
+        const field = this._view.hiddenFields[i];
+        if (!schemaProperties.has(field.path)) {
+          this._view.hiddenFields.splice(i, 1);
+        }
+      }
+    }
+
+    // 3. Find schema properties not in view.fields
+    const viewPaths = new Set(this._view.fields.map((field) => field.path));
+    const hiddenPaths = new Set(this._view.hiddenFields?.map((field) => field.path) || []);
+
+    // 4. Add missing schema properties to hiddenFields
+    for (const prop of schemaProperties) {
+      if (!viewPaths.has(prop as JsonProp) && !hiddenPaths.has(prop as JsonProp)) {
+        // Initialize hiddenFields if needed
+        if (!this._view.hiddenFields) {
+          this._view.hiddenFields = [];
+        }
+
+        // Add new hidden field
+        this._view.hiddenFields.push({
           id: createFieldId(),
           path: prop as JsonProp,
         });
