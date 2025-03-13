@@ -35,6 +35,7 @@ const Test = () => {
   const handleCreatePassKey = useCallback(async () => {
     invariant(identity, 'Identity not available');
     const challenge = getNewChallenge();
+    const lookupKey = PublicKey.random();
     // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
     const credential = await navigator.credentials
       .create({
@@ -42,7 +43,7 @@ const Test = () => {
           challenge: new TextEncoder().encode(challenge),
           rp: { id: location.hostname, name: 'Test' },
           user: {
-            id: new TextEncoder().encode(identity.did),
+            id: lookupKey.asUint8Array(),
             name: identity.did,
             displayName: identity.profile?.displayName ?? '',
           },
@@ -66,8 +67,11 @@ const Test = () => {
     invariant(client.services.services.IdentityService, 'IdentityService not available');
     // TODO(wittjosiah): This needs a proper api.
     await client.services.services.IdentityService.createRecoveryCredential({
-      recoveryKey,
-      algorithm,
+      data: {
+        recoveryKey,
+        algorithm,
+        lookupKey,
+      },
     });
   }, [client, identity]);
 
@@ -86,10 +90,10 @@ const Test = () => {
         },
       })
       .catch(log.error);
-    const identityDid = new TextDecoder().decode((credential as any).response.userHandle);
+    const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
     await client.services.services.IdentityService.recoverIdentity({
       external: {
-        identityDid,
+        lookupKey,
         deviceKey,
         controlFeedKey,
         signature: Buffer.from((credential as any).response.signature),
@@ -138,8 +142,8 @@ const config = new Config({
     },
     services: {
       edge: {
-        // url: 'wss://edge.dxos.workers.dev/',
-        url: 'ws://localhost:8787',
+        url: 'wss://edge-main.dxos.workers.dev/',
+        // url: 'ws://localhost:8787',
       },
       iceProviders: [{ urls: 'https://edge-production.dxos.workers.dev/ice' }],
     },
