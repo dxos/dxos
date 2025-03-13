@@ -475,9 +475,6 @@ describe('ViewProjection', () => {
     // Verify getFieldId throws for hidden fields.
     expect(() => getFieldId(view, 'createdAt')).to.throw();
 
-    // Initially hiddenFields should be undefined.
-    expect(view.hiddenFields).to.be.undefined;
-
     // Check that hidden fields is correct.
     const hiddenProps = projection.getHiddenProperties();
     expect(hiddenProps).to.have.length(1);
@@ -532,5 +529,43 @@ describe('ViewProjection', () => {
 
     // Ensure schema still matches.
     expect(mutable.getSchemaSnapshot()).to.deep.equal(initialSchema);
+  });
+
+  test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    // Create schema with three properties
+    const schema = S.Struct({
+      title: S.String,
+      description: S.String,
+      status: S.String,
+    }).annotations({
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Task',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+
+    // Create view with no explicit fields
+    const view = createView({
+      name: 'Test',
+      typename: mutable.typename,
+      jsonSchema: mutable.jsonSchema,
+      fields: [], // No fields specified
+    });
+
+    // Create projection
+    void new ViewProjection(mutable, view);
+
+    // Verify all schema fields were added to hiddenFields
+    expect(view.hiddenFields).to.exist;
+    expect(view.hiddenFields).to.have.length(3);
+
+    const hiddenPaths = view.hiddenFields!.map((field) => field.path).sort();
+    expect(hiddenPaths).to.deep.equal(['description', 'status', 'title']);
   });
 });

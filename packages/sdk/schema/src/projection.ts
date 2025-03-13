@@ -46,6 +46,7 @@ export class ViewProjection {
     private readonly _schema: EchoSchema,
     private readonly _view: ViewType,
   ) {
+    this.initializeHiddenFields();
     this.migrateSingleSelectStoredFormat();
   }
 
@@ -255,6 +256,30 @@ export class ViewProjection {
     delete this._schema.jsonSchema.properties?.[current?.field.path];
 
     return { deleted: fieldProjection, index: fieldIndex };
+  }
+
+  /**
+   * Initialize hiddenFields with schema properties that aren't in view.fields
+   */
+  private initializeHiddenFields(): void {
+    // TODO(ZaymonFC): Do we have a concept of system fields like 'id'?
+    const schemaProperties = Object.keys(this._schema.jsonSchema.properties ?? {}).filter((prop) => prop !== 'id');
+    const viewPaths = new Set(this._view.fields.map((field) => field.path));
+
+    const hiddenProperties = schemaProperties.filter((prop) => !viewPaths.has(prop as JsonProp));
+    if (hiddenProperties.length > 0 && !this._view.hiddenFields) {
+      this._view.hiddenFields = [];
+    }
+
+    for (const prop of hiddenProperties) {
+      const alreadyHidden = this._view.hiddenFields?.some((field) => field.path === prop);
+      if (!alreadyHidden) {
+        this._view.hiddenFields!.push({
+          id: createFieldId(),
+          path: prop as JsonProp,
+        });
+      }
+    }
   }
 
   /**

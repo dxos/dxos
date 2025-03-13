@@ -236,8 +236,6 @@ const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardForm
     return custom;
   }, [model.columnFieldPath, JSON.stringify(model.kanban.cardView?.target?.hiddenFields)]);
 
-  console.log('Render kanban', Custom, JSON.stringify(model.kanban.cardView?.target?.hiddenFields));
-
   return (
     <Form
       values={initialValue}
