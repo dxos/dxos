@@ -48,6 +48,7 @@ export default [
         'feeds label': 'Feeds',
         'objects label': 'Objects',
         'automerge label': 'Automerge',
+        'queues label': 'Queues',
         'members label': 'Members',
         'metadata label': 'Metadata',
         'mesh label': 'Mesh',

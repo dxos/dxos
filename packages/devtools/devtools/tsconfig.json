@@ -103,6 +103,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/react-edge-client"
+    },
+    {
       "path": "../../ui/primitives/react-hooks"
     },
     {
