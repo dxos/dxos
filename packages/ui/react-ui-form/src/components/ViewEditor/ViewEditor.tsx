@@ -88,6 +88,16 @@ export const ViewEditor = ({
     setField(field);
   }, [view]);
 
+  const handleDelete = useCallback(
+    (fieldId: string) => {
+      if (fieldId === field?.id) {
+        setField(undefined);
+      }
+      onDelete(fieldId);
+    },
+    [onDelete, field],
+  );
+
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
@@ -156,7 +166,11 @@ export const ViewEditor = ({
                         disabled={view.fields.length <= 1}
                         onClick={() => handleHide(field.id)}
                       />
-                      <List.ItemDeleteButton disabled={view.fields.length <= 1} onClick={() => onDelete(field.id)} />
+                      <List.ItemDeleteButton
+                        icon='ph--trash--regular'
+                        disabled={view.fields.length <= 1}
+                        onClick={() => handleDelete(field.id)}
+                      />
                     </div>
                   </List.Item>
                 ))}
@@ -164,33 +178,37 @@ export const ViewEditor = ({
             </>
           )}
         </List.Root>
-      </div>
 
-      {hiddenProperties.length > 0 && (
-        <div>
-          <div role='none' className='p-2'>
-            <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
+        {hiddenProperties.length > 0 && (
+          <div>
+            <div role='none' className='p-2'>
+              <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
+            </div>
+
+            <List.Root<string>
+              items={hiddenProperties}
+              isItem={(item): item is string => typeof item === 'string'}
+              getId={(property) => property}
+            >
+              {({ items: properties }) => (
+                <div role='list' className='flex flex-col w-full'>
+                  {properties?.map((property) => (
+                    <List.Item<string>
+                      key={property}
+                      item={property}
+                      classNames={mx(grid, ghostHover, 'cursor-pointer')}
+                    >
+                      <div />
+                      <List.ItemTitle>{property}</List.ItemTitle>
+                      <List.ItemButton icon='ph--eye--regular' onClick={() => handleUnhide(property)} />
+                    </List.Item>
+                  ))}
+                </div>
+              )}
+            </List.Root>
           </div>
-
-          <List.Root<string>
-            items={hiddenProperties}
-            isItem={(item): item is string => typeof item === 'string'}
-            getId={(property) => property}
-          >
-            {({ items: properties }) => (
-              <div role='list' className='flex flex-col w-full'>
-                {properties?.map((property) => (
-                  <List.Item<string> key={property} item={property} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
-                    <div />
-                    <List.ItemTitle>{property}</List.ItemTitle>
-                    <List.ItemButton icon='ph--eye--regular' onClick={() => handleUnhide(property)} />
-                  </List.Item>
-                ))}
-              </div>
-            )}
-          </List.Root>
-        </div>
-      )}
+        )}
+      </div>
 
       {field && (
         <FieldEditor
