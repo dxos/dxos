@@ -548,12 +548,15 @@ export class CoreDatabase {
     const core = await this.loadObjectCoreById(id);
     invariant(core);
 
-    const mappedData = deepMapValues(getSnapshot(data), (value) => {
+    const mappedData = deepMapValues(data, (value, recurse) => {
       if (Ref.isRef(value)) {
         return { '/': value.dxn.toString() };
       }
-      return value;
+      return recurse(value);
     });
+    delete mappedData.id;
+    invariant(mappedData['@type'] === undefined);
+    invariant(mappedData['@meta'] === undefined);
 
     const existingStruct: ObjectStructure = core.getDecoded([]) as any;
     const newStruct: ObjectStructure = {
