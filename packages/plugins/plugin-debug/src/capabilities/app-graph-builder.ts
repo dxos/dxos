@@ -166,7 +166,7 @@ export default (context: PluginsContext) =>
                   type: DEVTOOLS_TYPE,
                   properties: {
                     label: ['feeds label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--queue--regular',
+                    icon: 'ph--list-bullets--regular',
                   },
                 },
                 {
@@ -185,6 +185,15 @@ export default (context: PluginsContext) =>
                   properties: {
                     label: ['automerge label', { ns: DEBUG_PLUGIN }],
                     icon: 'ph--gear-six--regular',
+                  },
+                },
+                {
+                  id: Devtools.Echo.Queues,
+                  data: Devtools.Echo.Queues,
+                  type: DEVTOOLS_TYPE,
+                  properties: {
+                    label: ['queues label', { ns: DEBUG_PLUGIN }],
+                    icon: 'ph--queue--regular',
                   },
                 },
                 {
