@@ -4,18 +4,18 @@
 
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
-import { CANVAS_PLUGIN } from './meta';
+import { CONDUCTOR_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
       [CanvasBoardType.typename]: {
-        'typename label': 'Canvas',
+        'typename label': 'Circuit',
       },
-      [CANVAS_PLUGIN]: {
-        'plugin name': 'Canvas',
-        'canvas title placeholder': 'New canvas',
-        'create canvas label': 'Create canvas',
+      [CONDUCTOR_PLUGIN]: {
+        'plugin name': 'Conductor',
+        'canvas title placeholder': 'New circuit',
+        'create canvas label': 'Create circuit',
         'content placeholder': 'Enter text...',
       },
     },

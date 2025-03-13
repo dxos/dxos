@@ -5,10 +5,13 @@
 import React, { useMemo } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
-import { Main } from '@dxos/react-ui';
+import { type Label, Main } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
+import { DECK_PLUGIN } from '../../meta';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
+
+const label = ['sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 
 export const Sidebar = () => {
   const { popoverAnchorId, activeDeck: current } = useCapability(DeckCapabilities.DeckState);
@@ -23,6 +26,7 @@ export const Sidebar = () => {
 
   return (
     <Main.NavigationSidebar
+      label={label}
       classNames={[
         'grid',
         topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',

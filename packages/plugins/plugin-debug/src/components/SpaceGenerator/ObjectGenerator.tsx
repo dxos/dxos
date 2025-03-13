@@ -155,7 +155,7 @@ export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): Obj
 
     // Find or create table and view.
     const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-    const table = tables.find((table) => table.view?.target?.query?.type === type.typename);
+    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });

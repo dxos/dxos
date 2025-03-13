@@ -245,7 +245,7 @@ export const registry: Record<NodeType, Executable> = {
               const schema = yield* Effect.promise(async () =>
                 spaceService.db.schemaRegistry
                   .query({
-                    typename: (await container.view?.load())?.query.type,
+                    typename: (await container.view?.load())?.query.typename,
                   })
                   .first(),
               );
@@ -260,7 +260,7 @@ export const registry: Record<NodeType, Executable> = {
               const schema = yield* Effect.promise(async () =>
                 spaceService.db.schemaRegistry
                   .query({
-                    typename: (await container.cardView?.load())?.query.type,
+                    typename: (await container.cardView?.load())?.query.typename,
                   })
                   .first(),
               );
