@@ -5,11 +5,14 @@
 import { synchronized } from '@dxos/async';
 import { type PublicKey, type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
+import { EdgeHttpClient } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { isNonNullable } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
+import { TranscriptionManager } from './transcription-manager';
 import { type TranscriptionState, CALLS_URL, type EncodedTrackName, TrackNameCodec } from '../types';
 
 export type GlobalState = { call: CallState; media: MediaState };
@@ -29,7 +32,7 @@ export class CallManager extends Resource {
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
-
+  private readonly _transcriptionManager: TranscriptionManager;
   /** @reactive */
   get raisedHand() {
     return this._state.call.raisedHand ?? false;
@@ -123,6 +126,10 @@ export class CallManager extends Resource {
     super();
     this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: _client.services.services.NetworkService! });
     this._mediaManager = new MediaManager();
+
+    const edgeUrl = this._client.config.get('runtime.services.edge.url');
+    invariant(edgeUrl);
+    this._transcriptionManager = new TranscriptionManager(new EdgeHttpClient(edgeUrl));
   }
 
   protected override async _open() {
@@ -172,6 +179,7 @@ export class CallManager extends Resource {
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
+    this._transcriptionManager.setTranscription(state.transcription);
 
     this._updateState();
   }
@@ -185,6 +193,10 @@ export class CallManager extends Resource {
       audioEnabled: state.audioEnabled,
       screenshareEnabled: state.screenshareEnabled,
     });
+
+    this._transcriptionManager.setAudioTrack(state.audioTrack);
+    this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
+    this._transcriptionManager.setSpeaking(this._mediaManager.isSpeaking ?? false);
 
     this._updateState();
   }
