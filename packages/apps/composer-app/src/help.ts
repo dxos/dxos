@@ -54,9 +54,16 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-joyride="welcome/settings"]',
+    target: '[data-testid="treeView.appSettings"]',
     title: 'Settings',
-    content: 'Configure settings and add plugins.',
+    content: 'Configure settings.',
+  },
+  {
+    ...base,
+    before: ensureSidebar,
+    target: '[data-testid="treeView.pluginRegistry"]',
+    title: 'Plugins',
+    content: 'Add plugins.',
   },
   {
     ...base,

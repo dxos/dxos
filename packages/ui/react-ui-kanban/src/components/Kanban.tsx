@@ -109,7 +109,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <CardForm card={card} model={model} autoFocus={card.id === focusedCardId} />
+                      <CardForm key={card.id} card={card} model={model} autoFocus={card.id === focusedCardId} />
                     </div>
                   </StackItem.Root>
                 ))}

@@ -69,25 +69,20 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+export type RecoverIdentitySignature =
+  | string
+  // This is the format of the signature from the WebAuthn authenticator.
+  | {
+      signature: string;
+      clientDataJson: string;
+      authenticatorData: string;
+    };
+
 export type RecoverIdentityRequest = {
-  /**
-   * Required if recoveryKey is not provided.
-   */
-  identityDid?: string;
-  /**
-   * Required if identityDid is not provided.
-   */
-  recoveryKey?: string;
   deviceKey: string;
   controlFeedKey: string;
-  signature?:
-    | string
-    // This is the format of the signature from the WebAuthn authenticator.
-    | {
-        signature: string;
-        clientDataJson: string;
-        authenticatorData: string;
-      };
+  lookupKey?: string;
+  signature?: RecoverIdentitySignature;
 };
 
 export type RecoverIdentityResponseBody = {

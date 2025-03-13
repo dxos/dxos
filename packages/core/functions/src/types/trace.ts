@@ -6,7 +6,7 @@ import { EchoObject, Expando, ObjectId, Ref, S } from '@dxos/echo-schema';
 
 import { FunctionTrigger } from './types';
 
-const InvocationTrace = S.Struct({
+export const InvocationTrace = S.Struct({
   id: ObjectId,
   /**
    * Queue DXN for function/workflow invocation events.
@@ -24,21 +24,21 @@ const InvocationTrace = S.Struct({
 
 export type InvocationTraceEvent = S.Schema.Type<typeof InvocationTrace>;
 
-const TraceEventLog = S.Struct({
+export const TraceEventLog = S.Struct({
   timestampMs: S.Number,
   level: S.String,
   message: S.String,
   context: S.optional(S.Object),
 });
 
-const TraceEventException = S.Struct({
+export const TraceEventException = S.Struct({
   timestampMs: S.Number,
   message: S.String,
   name: S.String,
   stack: S.optional(S.String),
 });
 
-const TraceEvent = S.Struct({
+export const TraceEvent = S.Struct({
   id: ObjectId,
   outcome: S.String,
   truncated: S.Boolean,
