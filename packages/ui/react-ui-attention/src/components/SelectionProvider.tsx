@@ -3,8 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { useCallback, type PropsWithChildren } from 'react';
-import React from 'react';
+import React, { useCallback, useMemo, type PropsWithChildren } from 'react';
 
 import { useDefaultValue } from '@dxos/react-ui';
 
@@ -45,31 +44,32 @@ export const useSelectedItems = (contextId?: string): Set<string> => {
  * Provides functions to manage the selection state for multiple contexts.
  */
 export const useSelectionActions = (contextIds: string[]) => {
+  const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]);
   const { selection } = useSelectionContext(SELECTION_NAME);
 
   const select = useCallback(
     (ids: string[]) => {
-      for (const contextId of contextIds) {
+      for (const contextId of stableContextIds) {
         selection.updateSelection(contextId, ids);
       }
     },
-    [selection, ...contextIds],
+    [selection, stableContextIds],
   );
 
   const toggle = useCallback(
     (id: string) => {
-      for (const contextId of contextIds) {
+      for (const contextId of stableContextIds) {
         selection.toggleSelection(contextId, id);
       }
     },
-    [selection, ...contextIds],
+    [selection, stableContextIds],
   );
 
   const clear = useCallback(() => {
-    for (const contextId of contextIds) {
+    for (const contextId of stableContextIds) {
       selection.clearSelection(contextId);
     }
-  }, [selection, ...contextIds]);
+  }, [selection, stableContextIds]);
 
   return { select, toggle, clear };
 };

@@ -21,7 +21,7 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](./
 
 DXOS can be used in both the `node` and browser environments.
 
-If you're using a browser environment, ensure you've set up your bundler to handle `wasm`. Example [vite config](#usage-in-a-browser) and [project templates](#project-templates).
+If you're using a browser environment, ensure you've set up your bundler to handle `wasm` (example [vite config](#usage-in-a-browser)).
 
 ```bash
 # If node-gyp fails during post-install, `brew install python-setuptools` before trying again.
