@@ -26,7 +26,7 @@ import {
   type SpaceDoc,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData, getSnapshot } from '@dxos/echo-schema';
+import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -51,7 +51,6 @@ import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChanged
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
-import { isReactiveObject } from '@dxos/live-object';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
