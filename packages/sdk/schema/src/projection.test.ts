@@ -428,7 +428,6 @@ describe('ViewProjection', () => {
   });
 
   // TODO(burdon): Test changing format.
-
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
@@ -524,6 +523,12 @@ describe('ViewProjection', () => {
     const multipleHidden = projection.getHiddenProperties();
     expect(multipleHidden).to.have.length(1);
     expect(multipleHidden).to.include('email');
+
+    // Unhide email and verify ID is preserved
+    projection.unhideFieldProjection('email' as JsonProp);
+    expect(view.fields).to.have.length(3);
+    expect(getFieldId(view, 'email')).to.equal(emailId);
+    expect(view.hiddenFields).to.have.length(0);
 
     // Ensure schema still matches.
     expect(mutable.getSchemaSnapshot()).to.deep.equal(initialSchema);

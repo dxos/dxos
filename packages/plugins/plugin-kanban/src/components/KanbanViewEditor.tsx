@@ -67,7 +67,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [kanban],
   );
 
-  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban]);
+  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban.columnFieldId]);
   const custom: CustomInputMap = useMemo(
     () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
     [selectFields],
