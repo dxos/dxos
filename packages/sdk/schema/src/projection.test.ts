@@ -21,12 +21,10 @@ import {
   getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { getSnapshot } from '@dxos/live-object';
 
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
-import { getSnapshot } from '@dxos/live-object';
-import { cond } from 'effect/STM';
-import { cons } from 'effect/List';
 
 const getFieldId = (view: ViewType, path: string): string => {
   const field = view.fields.find((field) => field.path === path);
@@ -431,7 +429,7 @@ describe('ViewProjection', () => {
 
   // TODO(burdon): Test changing format.
 
-  test('hidden fields are excluded from view', async ({ expect }) => {
+  test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
 
@@ -462,7 +460,6 @@ describe('ViewProjection', () => {
     });
 
     const projection = new ViewProjection(mutable, view);
-    const initialView = getSnapshot(view);
     const initialSchema = mutable.getSchemaSnapshot();
 
     // Verify only the included fields are in the view.
@@ -479,10 +476,13 @@ describe('ViewProjection', () => {
     // Verify getFieldId throws for hidden fields.
     expect(() => getFieldId(view, 'createdAt')).to.throw();
 
+    // Initially hiddenFields should be undefined.
+    expect(view.hiddenFields).to.be.undefined;
+
     // Check that hidden fields is correct.
-    const hiddenFields = projection.getHiddenProperties();
-    expect(hiddenFields).to.have.length(1);
-    expect(hiddenFields[0]).to.equal('createdAt');
+    const hiddenProps = projection.getHiddenProperties();
+    expect(hiddenProps).to.have.length(1);
+    expect(hiddenProps[0]).to.equal('createdAt');
 
     // Verify we can unhide the hidden field.
     projection.unhideFieldProjection('createdAt' as JsonProp);
@@ -491,14 +491,41 @@ describe('ViewProjection', () => {
     expect(view.fields.map((f) => f.path)).to.deep.equal(['name', 'email', 'createdAt']);
     expect(projection.getHiddenProperties()).to.have.length(0);
 
+    // Record ID of the createdAt field.
+    const createdAtId = getFieldId(view, 'createdAt');
+
     // Hide again.
-    projection.hideFieldProjection(getFieldId(view, 'createdAt'));
+    projection.hideFieldProjection(createdAtId);
+
+    // Now the field should be in hiddenFields.
+    expect(view.hiddenFields).to.have.length(1);
+    expect(view.hiddenFields![0].path).to.equal('createdAt');
+    expect(view.hiddenFields![0].id).to.equal(createdAtId);
+
     expect(view.fields).to.have.length(2);
     expect(view.fields.map((f) => f.path)).to.deep.equal(['name', 'email']);
     expect(() => getFieldId(view, 'createdAt')).to.throw();
 
-    // Ensure unhiding then hiding field results in the same view and schema.
-    expect(view).to.deep.equal(initialView);
+    // Unhide using the same property name.
+    projection.unhideFieldProjection('createdAt' as JsonProp);
+
+    // Field should be back in visible fields with same ID.
+    expect(view.fields).to.have.length(3);
+    expect(getFieldId(view, 'createdAt')).to.equal(createdAtId);
+
+    // hiddenFields should be empty now.
+    expect(view.hiddenFields).to.have.length(0);
+
+    // Hide the email field.
+    const emailId = getFieldId(view, 'email');
+    projection.hideFieldProjection(emailId);
+
+    // Check both hidden properties are returned.
+    const multipleHidden = projection.getHiddenProperties();
+    expect(multipleHidden).to.have.length(1);
+    expect(multipleHidden).to.include('email');
+
+    // Ensure schema still matches.
     expect(mutable.getSchemaSnapshot()).to.deep.equal(initialSchema);
   });
 });

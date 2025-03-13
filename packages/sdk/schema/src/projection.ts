@@ -126,32 +126,55 @@ export class ViewProjection {
     const pathsInView = new Set(this._view.fields.map((field) => field.path));
     const schemaProperties = Object.keys(this._schema.jsonSchema.properties ?? {});
 
-    // schema properties that are not in the view and are not 'id'.
-    return schemaProperties.filter((property) => !pathsInView.has(property as JsonProp) && property !== 'id').sort();
+    const hiddenSchemaProperties = schemaProperties.filter(
+      (property) => !pathsInView.has(property as JsonProp) && property !== 'id',
+    );
+    const hiddenFieldPaths = this._view.hiddenFields?.map((field) => field.path as string) ?? [];
+    return [...new Set([...hiddenSchemaProperties, ...hiddenFieldPaths])].sort();
   }
 
+  /**
+   * Hides a field from the view by moving it from visible fields to hiddenFields.
+   * This preserves the field's structure and ID for later unhiding.
+   */
   hideFieldProjection(fieldId: string): void {
     const index = this._view.fields.findIndex((field) => field.id === fieldId);
-    this._view.fields.splice(index, 1);
+    if (index !== -1) {
+      const fieldToHide = this._view.fields[index];
+      this._view.fields.splice(index, 1);
+      if (!this._view.hiddenFields) {
+        this._view.hiddenFields = [];
+      }
+
+      this._view.hiddenFields.push(fieldToHide);
+    }
   }
 
   unhideFieldProjection(property: JsonProp): void {
     invariant(this._schema.jsonSchema.properties);
     invariant(property in this._schema.jsonSchema.properties);
 
-    // Check if the property is already visible in the view
     const existingField = this._view.fields.find((field) => field.path === property);
     if (existingField) {
-      return; // Property is already visible
+      return;
     }
 
-    // Create a new field for the existing property
+    if (this._view.hiddenFields) {
+      const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === property);
+
+      if (hiddenIndex !== -1) {
+        const fieldToUnhide = this._view.hiddenFields[hiddenIndex];
+        this._view.hiddenFields.splice(hiddenIndex, 1);
+        this._view.fields.push(fieldToUnhide);
+        return;
+      }
+    }
+
     const field: FieldType = {
       id: createFieldId(),
       path: property,
     };
 
-    log('unhideFieldProjection', { property, field });
     this._view.fields.push(field);
   }
 
