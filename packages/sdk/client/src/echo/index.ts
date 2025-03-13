@@ -37,6 +37,8 @@ export {
   type FilterSource,
   type Hypergraph,
   type IDocHandle,
+  type ObjectMigration,
+  defineObjectMigration,
   Query,
   ResultFormat,
   type Selection,

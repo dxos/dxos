@@ -132,7 +132,7 @@ export const presets = {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           const results = space.db.query(Filter.schema(TableType)).runSync();
-          const emailTable = results.find((r) => r.object?.view?.target?.query?.type?.endsWith('Email'));
+          const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
           invariant(emailTable, 'Email table not found.');
 
           const template = canvasModel.createNode(
@@ -229,7 +229,7 @@ export const presets = {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           const results = space.db.query(Filter.schema(TableType)).runSync();
-          const emailTable = results.find((r) => r.object?.view?.target?.query?.type?.endsWith('Email'));
+          const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
           invariant(emailTable, 'Email table not found.');
 
           const template = canvasModel.createNode(
@@ -407,7 +407,7 @@ export const presets = {
           // invariant(kanban, 'Kanban not found.');
 
           const results = space.db.query(Filter.schema(TableType)).runSync();
-          const messages = results.find((r) => r.object?.view?.target?.query?.type?.endsWith('Message'));
+          const messages = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Message'));
           invariant(messages, 'Table not found.');
 
           let functionTrigger: FunctionTrigger | undefined;

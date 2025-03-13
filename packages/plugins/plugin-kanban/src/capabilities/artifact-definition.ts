@@ -94,7 +94,7 @@ export default () => {
               const view = await board.cardView?.load();
               return {
                 id: fullyQualifiedId(board),
-                typename: view?.query.type,
+                typename: view?.query.typename,
               };
             }),
           );
@@ -117,7 +117,7 @@ export default () => {
           const view = await board.cardView?.load();
           invariant(view);
 
-          const typename = view.query.type;
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
