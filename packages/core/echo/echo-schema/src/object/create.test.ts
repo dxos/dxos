@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { createStatic } from './create';
+import { serializeStatic } from './json-serializer';
 import { getTypename } from './typename';
 import { getSchema } from '../ast';
 import { Contact } from '../testing';
@@ -38,6 +39,7 @@ describe('create (static version)', () => {
       name: 'John',
       email: 'john@example.com',
     });
+    expect(serializeStatic(contact)).toStrictEqual(json);
   });
 
   test('getSchema', () => {
