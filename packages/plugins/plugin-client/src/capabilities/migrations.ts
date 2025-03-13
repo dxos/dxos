@@ -15,6 +15,7 @@ export default (context: PluginsContext) => {
   const unsubscribe = effect(() => {
     const migrations = Array.from(new Set(context.requestCapabilities(ClientCapabilities.Migration).flat()));
     const spaces = client.spaces.get();
+    console.log('migrations', migrations);
     void Promise.all(spaces.map((space) => space.db.runMigrations(migrations)));
   });
 

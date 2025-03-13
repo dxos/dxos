@@ -4,7 +4,18 @@
 
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { getSchemaDXN, getSchemaVersion, getTypename, S, TypedObject } from '@dxos/echo-schema';
+import {
+  AST,
+  FieldSortType,
+  getSchemaDXN,
+  getSchemaVersion,
+  getTypename,
+  JsonPath,
+  JsonSchemaType,
+  QueryType,
+  S,
+  TypedObject,
+} from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { create, getSchema } from '@dxos/live-object';
 
@@ -122,4 +133,104 @@ test('chained migrations', async () => {
   expect(getSchemaVersion(getSchema(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
+});
+
+test.only('view migration', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.schemaRegistry.addSchema([ViewTypeV1, ViewType]);
+
+  db.add(
+    create(ViewTypeV1, {
+      fields: [
+        { id: '8cb60541', path: 'name' as JsonPath },
+        { id: '902dd8b5', path: 'email' as JsonPath },
+        { id: 'e288952b', path: 'salary' as JsonPath, size: 150 },
+        { id: 'cbdc987c', path: 'active' as JsonPath, size: 100 },
+        { id: '922fd882', path: 'manager' as JsonPath, referencePath: 'name' as JsonPath },
+      ],
+      name: 'View',
+      query: { type: 'example.com/type/b1e66ff8' },
+    }),
+  );
+  await db.flush({ indexes: true });
+  await db.runMigrations([ViewTypeV1ToV2]);
+
+  const { objects } = await db.query(Filter.schema(ViewType)).run();
+  expect(objects).to.have.length(1);
+});
+
+export const FieldSchema = S.Struct({
+  id: S.String,
+  path: JsonPath,
+  visible: S.optional(S.Boolean),
+  size: S.optional(S.Number),
+  referencePath: S.optional(JsonPath),
+}).pipe(S.mutable);
+
+export type FieldType = S.Schema.Type<typeof FieldSchema>;
+
+export class ViewType extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.2.0',
+})({
+  /**
+   * Human readable name.
+   */
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Name',
+    [AST.ExamplesAnnotationId]: ['Contact'],
+  }),
+
+  /**
+   * Query used to retrieve data.
+   * This includes the base type that the view schema (above) references.
+   * It may include predicates that represent a persistent "drill-down" query.
+   */
+  query: QueryType,
+
+  /**
+   * Optional schema override used to customize the underlying schema.
+   */
+  schema: S.optional(JsonSchemaType),
+
+  /**
+   * UX metadata associated with displayed fields (in table, form, etc.)
+   */
+  fields: S.mutable(S.Array(FieldSchema)),
+
+  /**
+   * Additional metadata for the view.
+   */
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+
+  // TODO(burdon): Readonly flag?
+  // TODO(burdon): Add array of sort orders (which might be tuples).
+}) {}
+
+// TODO(wittjosiah): Refactor to organize better previous versions + migrations.
+export class ViewTypeV1 extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.1.0',
+})({
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Name',
+    [AST.ExamplesAnnotationId]: ['Contact'],
+  }),
+  query: S.Struct({
+    type: S.optional(S.String),
+    sort: S.optional(S.Array(FieldSortType)),
+  }).pipe(S.mutable),
+  schema: S.optional(JsonSchemaType),
+  fields: S.mutable(S.Array(FieldSchema)),
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+}) {}
+
+export const ViewTypeV1ToV2 = defineObjectMigration({
+  from: ViewTypeV1,
+  to: ViewType,
+  transform: async (from) => {
+    console.log('transform', from);
+    return { ...from, query: { typename: from.query.type } };
+  },
+  onMigration: async () => {},
 });
