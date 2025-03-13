@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type Queue, QueueImpl } from '@dxos/echo-db';
 import { createStatic } from '@dxos/echo-schema';
@@ -30,8 +31,9 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
-  private _transcriber?: Transcriber = undefined;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
+  private _mediaRecorder?: MediaStreamRecorder = undefined;
+  private _transcriber?: Transcriber = undefined;
   private _transcriptionState?: TranscriptionState = undefined;
   private _queue?: Queue<TranscriptBlock> = undefined;
 
@@ -50,13 +52,14 @@ export class TranscriptionManager extends Resource {
     }
 
     if (speaking) {
-      void this._transcriber?.startChunksRecording();
+      this._transcriber?.startChunksRecording();
     } else {
-      void this._transcriber?.stopChunksRecording();
+      this._transcriber?.stopChunksRecording();
     }
   }
 
-  setTranscription(transcription?: TranscriptionState) {
+  @synchronized
+  async setTranscription(transcription?: TranscriptionState) {
     if (
       !transcription ||
       (this._transcriptionState?.enabled === transcription.enabled &&
@@ -65,45 +68,55 @@ export class TranscriptionManager extends Resource {
       return;
     }
 
-    if (transcription.queueDxn && this._transcriptionState?.queueDxn !== transcription.queueDxn) {
-      this._queue = new QueueImpl(this._edgeClient, DXN.parse(transcription.queueDxn));
-      this._maybeInitTranscriber();
-    }
-
-    if (transcription.enabled) {
-      void this._transcriber?.open();
-    } else {
-      void this._transcriber?.close();
-    }
-
     this._transcriptionState = transcription;
+    await this._toggleTranscriber();
   }
 
-  setAudioTrack(track?: MediaStreamTrack) {
+  @synchronized
+  async setAudioTrack(track?: MediaStreamTrack) {
     if (this._audioStreamTrack === track) {
       return;
     }
     this._audioStreamTrack = track;
-    this._maybeInitTranscriber();
+    await this._toggleTranscriber();
   }
 
-  private _maybeInitTranscriber() {
-    if (!this._audioStreamTrack || !this._queue) {
+  private async _toggleTranscriber() {
+    if (!this._audioStreamTrack || !this._transcriptionState?.enabled || !this._transcriptionState.queueDxn) {
       return;
     }
 
-    void this._transcriber?.close();
-    this._transcriber = new Transcriber({
-      config: {
-        transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
-        prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-      },
-      recorder: new MediaStreamRecorder({
+    // Reinitialize transcriber if queue or media stream track has changed.
+    let needReinit = false;
+    if (this._queue?.dxn.toString() !== this._transcriptionState.queueDxn) {
+      this._queue = new QueueImpl(this._edgeClient, DXN.parse(this._transcriptionState.queueDxn));
+      needReinit = true;
+    }
+    if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
+      this._mediaRecorder = new MediaStreamRecorder({
         mediaStreamTrack: this._audioStreamTrack,
         interval: RECORD_INTERVAL,
-      }),
-      onSegments: (segments) => this._onSegments(segments),
-    });
+      });
+      needReinit = true;
+    }
+    if (needReinit) {
+      await this._transcriber?.close();
+      this._transcriber = new Transcriber({
+        config: {
+          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
+          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
+        },
+        recorder: this._mediaRecorder,
+        onSegments: (segments) => this._onSegments(segments),
+      });
+    }
+
+    // Open or close transcriber if transcription is enabled or disabled.
+    if (this._transcriptionState?.enabled) {
+      await this._transcriber?.open();
+    } else {
+      await this._transcriber?.close();
+    }
   }
 
   private async _onSegments(segments: TranscriptSegment[]) {

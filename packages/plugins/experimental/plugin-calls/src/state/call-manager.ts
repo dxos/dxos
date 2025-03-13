@@ -179,7 +179,7 @@ export class CallManager extends Resource {
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
-    this._transcriptionManager.setTranscription(state.transcription);
+    void this._transcriptionManager.setTranscription(state.transcription);
 
     this._updateState();
   }
@@ -194,7 +194,7 @@ export class CallManager extends Resource {
       screenshareEnabled: state.screenshareEnabled,
     });
 
-    this._transcriptionManager.setAudioTrack(state.audioTrack);
+    void this._transcriptionManager.setAudioTrack(state.audioTrack);
     this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
     this._transcriptionManager.setSpeaking(this._mediaManager.isSpeaking ?? false);
 
