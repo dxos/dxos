@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/plugin-canvas",
+  "name": "@dxos/plugin-conductor",
   "version": "0.7.4",
-  "description": "Infinite canvas.",
+  "description": "Composer plugin for conductor.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

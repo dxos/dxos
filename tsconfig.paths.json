@@ -22,11 +22,11 @@
       "@dxos/plugin-calls/types": [
         "packages/plugins/experimental/plugin-calls/src/types/index.ts"
       ],
-      "@dxos/plugin-canvas": [
-        "packages/plugins/experimental/plugin-canvas/src/index.ts"
+      "@dxos/plugin-conductor": [
+        "packages/plugins/experimental/plugin-conductor/src/index.ts"
       ],
-      "@dxos/plugin-canvas/types": [
-        "packages/plugins/experimental/plugin-canvas/src/types.ts"
+      "@dxos/plugin-conductor/types": [
+        "packages/plugins/experimental/plugin-conductor/src/types.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"

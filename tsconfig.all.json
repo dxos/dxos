@@ -280,7 +280,7 @@
       "path": "packages/plugins/experimental/plugin-calls/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-canvas/tsconfig.json"
+      "path": "packages/plugins/experimental/plugin-conductor/tsconfig.json"
     },
     {
       "path": "packages/plugins/experimental/plugin-excalidraw/tsconfig.json"
