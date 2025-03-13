@@ -21,8 +21,8 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   useEffect(() => {
-    if (kanban.cardView?.target?.query?.type && space) {
-      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.type });
+    if (kanban.cardView?.target?.query?.typename && space) {
+      const query = space.db.schemaRegistry.query({ typename: kanban.cardView.target.query.typename });
       const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;

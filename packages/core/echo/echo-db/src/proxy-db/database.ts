@@ -100,6 +100,11 @@ export interface EchoDatabase {
   flush(opts?: FlushOptions): Promise<void>;
 
   /**
+   * Run migrations.
+   */
+  runMigrations(migrations: ObjectMigration[]): Promise<void>;
+
+  /**
    * @deprecated
    */
   readonly pendingBatch: ReadOnlyEvent<unknown>;

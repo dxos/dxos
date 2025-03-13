@@ -36,7 +36,7 @@ export const initializeMap = async ({
     const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
     invariant(schema, `Schema not found: ${initialSchema}`);
 
-    view.query.type = initialSchema;
+    view.query.typename = initialSchema;
 
     if (locationProperty) {
       setLocationProperty(view, locationProperty);
