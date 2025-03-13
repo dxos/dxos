@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { isEchoObject } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta, TABLE_PLUGIN } from './meta';
@@ -80,7 +80,12 @@ export const TablePlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ViewType]),
+      activate: () => contributes(ClientCapabilities.Schema, [ViewType, ViewTypeV1]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

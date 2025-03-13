@@ -19,16 +19,19 @@ type KanbanViewEditorProps = { kanban: KanbanType };
 export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
-  const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
+  const currentTypename = useMemo(
+    () => kanban?.cardView?.target?.query?.typename,
+    [kanban?.cardView?.target?.query?.typename],
+  );
   const schema = useSchema(space, currentTypename);
   const views = useQuery(space, Filter.schema(ViewType));
 
   const updateViewTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
-      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
-        view.query.type = newTypename;
+        view.query.typename = newTypename;
       }
       schema.updateTypename(newTypename);
     },

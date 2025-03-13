@@ -107,7 +107,7 @@ export default () => {
               return {
                 id: fullyQualifiedId(table),
                 name: table.name ?? 'Unnamed Table',
-                typename: view?.query.type,
+                typename: view?.query.typename,
               };
             }),
           );
@@ -130,7 +130,7 @@ export default () => {
 
           const view = await table.view?.load();
           invariant(view);
-          const typename = view?.query.type;
+          const typename = view?.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
           return ToolResult.Success(schema);
@@ -157,7 +157,7 @@ export default () => {
           const view = await table.view?.load();
           invariant(view);
 
-          const typename = view.query.type;
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
@@ -189,7 +189,7 @@ export default () => {
           invariant(view);
 
           // Get schema for validation.
-          const typename = view.query.type;
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
