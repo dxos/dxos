@@ -7,6 +7,7 @@ import { cancelWithContext, type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { SpeakingMonitor } from './speaking-monitor';
 import { TrackNameCodec, type EncodedTrackName, type TrackObject } from '../types';
 import { type CallsServiceConfig, CallsServicePeer, getScreenshare, getUserMediaTrack } from '../util';
 
@@ -50,11 +51,16 @@ export type MediaManagerParams = {
 export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
   private readonly _state: MediaState = { pulledVideoStreams: {}, pulledAudioTracks: {} };
+  private _speakingMonitor?: SpeakingMonitor = undefined;
 
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
+
+  get isSpeaking() {
+    return this._speakingMonitor?.isSpeaking;
+  }
 
   /**
    * @internal
@@ -79,6 +85,7 @@ export class MediaManager extends Resource {
   }
 
   protected override async _close() {
+    void this._speakingMonitor?.close();
     this._state.videoTrack && this._state.videoStream?.removeTrack(this._state.videoTrack);
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
@@ -127,13 +134,22 @@ export class MediaManager extends Resource {
 
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
   async turnAudioOn() {
+    void this._speakingMonitor?.close();
+
     this._state.audioEnabled = true;
     this._state.audioTrack = await getUserMediaTrack('audioinput');
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
+
+    this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
+    this._speakingMonitor.speakingChanged.on(this._ctx, () => this.stateUpdated.emit(this._state));
+    void this._speakingMonitor.open();
   }
 
   async turnAudioOff() {
+    void this._speakingMonitor?.close();
+    this._speakingMonitor = undefined;
+
     this._state.audioEnabled = false;
     this._state.audioTrack?.stop();
     this._state.audioTrack = undefined;
