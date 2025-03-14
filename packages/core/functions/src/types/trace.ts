@@ -23,6 +23,7 @@ export const InvocationTraceEvent = S.Struct({
   timestampMs: S.Number,
   outcome: S.Enums(InvocationOutcome),
   input: S.Object,
+  durationMs: S.Number,
   /**
    * Queue DXN for function/workflow invocation events.
    */
