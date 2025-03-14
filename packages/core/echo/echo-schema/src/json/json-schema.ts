@@ -268,6 +268,10 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
         }
         break;
       }
+      case 'null': {
+        result = S.Null;
+        break;
+      }
     }
   } else if ('$ref' in root) {
     const refSegments = root.$ref!.split('/');
