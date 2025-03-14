@@ -15,7 +15,7 @@ import { TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
-const SKIP_AI_SERVICE_TESTS = false;
+const SKIP_AI_SERVICE_TESTS = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
 describe('Gpt pipelines', () => {
@@ -208,7 +208,7 @@ describe('Gpt pipelines', () => {
     }).pipe(Effect.scoped),
   );
 
-  test.only(
+  test(
     'gpt with image gen',
     { timeout: 60_000 },
     testEffect(() =>
