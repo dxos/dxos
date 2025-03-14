@@ -343,6 +343,21 @@ export const Artifact: Story = {
   },
 };
 
+export const ImageGen: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    sidebar: 'controller',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraphController(
+      createGptCircuit({ history: true, image: true, artifact: true }),
+      createEdgeServices(),
+    ),
+  },
+};
+
 export const Audio: Story = {
   args: {
     // debug: true,

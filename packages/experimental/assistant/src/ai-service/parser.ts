@@ -11,6 +11,7 @@ import { isNotFalsy, safeParseJson } from '@dxos/util';
 
 import { type GenerationStream } from './stream';
 import { StreamTransform, type StreamBlock } from './transform';
+import type { GenerationStreamEvent } from './types';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
@@ -30,6 +31,8 @@ export class MixedStreamParser {
    * Update partial block (while streaming).
    */
   public update = new Event<MessageContentBlock>();
+
+  public streamEvent = new Event<GenerationStreamEvent>();
 
   /**
    * Current message.
@@ -77,6 +80,8 @@ export class MixedStreamParser {
     const messagesCollected: Message[] = [];
 
     for await (const event of stream) {
+      this.streamEvent.emit(event);
+
       // log.info('event', { type: event.type, event });
       switch (event.type) {
         //
