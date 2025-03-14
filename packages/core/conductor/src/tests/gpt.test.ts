@@ -188,8 +188,13 @@ describe('Gpt pipelines', () => {
     );
   });
 
-  it.effect('gpt simple', () =>
+  it.effect('gpt simple', (ctx) =>
     Effect.gen(function* () {
+      if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+        ctx!.skip();
+        return;
+      }
+
       const input: GptInput = {
         prompt: 'What is the meaning of life? Answer in 10 words or less.',
       };
@@ -211,8 +216,13 @@ describe('Gpt pipelines', () => {
   test(
     'gpt with image gen',
     { timeout: 60_000 },
-    testEffect(() =>
+    testEffect((ctx) =>
       Effect.gen(function* () {
+        if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+          ctx!.skip();
+          return;
+        }
+
         const input: GptInput = {
           prompt: 'A beautiful sunset over a calm ocean',
           tools: [
@@ -269,10 +279,10 @@ const gpt2 = () => {
 
 // TODO(dmaretskyi): Bump vitest and @effect/vitest and remove this.
 const testEffect =
-  <E, A>(effect: () => Effect.Effect<A, E>) =>
+  <E, A>(effect: (ctx?: TaskContext) => Effect.Effect<A, E>) =>
   (ctx?: TaskContext) =>
     Effect.gen(function* () {
-      const exitFiber = yield* Effect.fork(Effect.exit(effect()));
+      const exitFiber = yield* Effect.fork(Effect.exit(effect(ctx)));
 
       ctx?.onTestFinished(() => Fiber.interrupt(exitFiber).pipe(Effect.asVoid, Effect.runPromise));
 
