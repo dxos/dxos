@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import { getPropertySignatures } from '@effect/schema/AST';
+import { SchemaAST as AST, Schema as S } from 'effect';
+import { getPropertySignatures } from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoSchemaRegistry } from '@dxos/echo-db';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 import React, { Fragment, useEffect } from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';

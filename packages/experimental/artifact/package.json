@@ -40,12 +40,10 @@
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
-    "@effect/schema": "^0.75.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "effect": "^3.12.3"
   },
   "peerDependencies": {
-    "@effect/schema": "^0.75.5",
     "effect": "^3.12.3"
   },
   "publishConfig": {

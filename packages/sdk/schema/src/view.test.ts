@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import { pipe } from 'effect';
+import { SchemaAST as AST, Schema as S, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 

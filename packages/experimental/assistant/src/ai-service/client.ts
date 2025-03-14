@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';

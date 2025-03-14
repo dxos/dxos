@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { AST, JSONSchema, Schema as S } from '@effect/schema';
+import { SchemaAST as AST, JSONSchema, Schema as S } from 'effect';
 import type * as Types from 'effect/Types';
 
 // TODO(dmaretskyi): Remove re-exports.

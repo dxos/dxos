@@ -65,7 +65,6 @@
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
     "effect": "^3.12.3",
     "jszip": "^3.10.1",

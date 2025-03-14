@@ -82,7 +82,6 @@
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@fontsource/poiret-one": "^5.0.20",
     "effect": "^3.12.3",
     "isomorphic-fetch": "^3.0.0",

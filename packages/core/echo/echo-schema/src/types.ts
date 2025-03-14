@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { AST, splitJsonPath, type JsonPath } from '@dxos/effect';

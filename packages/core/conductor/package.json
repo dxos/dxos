@@ -50,7 +50,6 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "0.75.1",
-    "@effect/schema": "^0.75.5",
     "effect": "^3.12.3",
     "jsonpath-plus": "10.2.0",
     "ollama": "^0.5.11"

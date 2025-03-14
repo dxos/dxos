@@ -41,7 +41,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@types/d3": "^7.4.3",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
@@ -52,7 +51,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

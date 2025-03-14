@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { test, describe } from 'vitest';
 
 import { type Message, type Tool } from '@dxos/artifact';
