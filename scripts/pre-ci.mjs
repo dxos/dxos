@@ -83,12 +83,47 @@ async function main() {
         await $`git merge origin/main --no-edit`;
         console.log(chalk.green('Successfully merged origin/main into the current branch.'));
       } catch (mergeError) {
-        console.error(chalk.red('Merge conflict occurred:'), mergeError);
-        await $`git merge --abort`;
-        console.error(
-          chalk.red('Merge aborted. Please manually merge origin/main into your branch before running this script.'),
-        );
-        process.exit(1);
+        // Check if the only conflict is in pnpm-lock.yaml
+        try {
+          // Get list of files with merge conflicts
+          const { stdout: conflictOutput } = await $`git diff --name-only --diff-filter=U`;
+          const conflictedFiles = conflictOutput.trim().split('\n').filter(Boolean);
+
+          // If only pnpm-lock.yaml has conflicts
+          if (conflictedFiles.length === 1 && conflictedFiles[0] === 'pnpm-lock.yaml') {
+            console.log(chalk.yellow('Only pnpm-lock.yaml has conflicts. Attempting to resolve automatically...'));
+
+            // Abort current merge
+            await $`git merge --abort`;
+
+            // Run pnpm install to regenerate lock file
+            console.log(chalk.blue('Running pnpm install to resolve lock file conflict...'));
+            await $`pnpm install`;
+
+            // Try merging again
+            console.log(chalk.blue('Attempting to merge origin/main again...'));
+            await $`git merge origin/main --no-edit`;
+            console.log(chalk.green('Successfully merged origin/main after resolving lock file conflict.'));
+          } else {
+            // Handle other conflicts
+            console.error(chalk.red('Merge conflict occurred:'), mergeError);
+            await $`git merge --abort`;
+            console.error(
+              chalk.red(
+                'Merge aborted. Please manually merge origin/main into your branch before running this script.',
+              ),
+            );
+            process.exit(1);
+          }
+        } catch (conflictCheckError) {
+          // If we can't check conflicts for some reason, abort
+          console.error(chalk.red('Failed to check conflicted files:'), conflictCheckError);
+          await $`git merge --abort`;
+          console.error(
+            chalk.red('Merge aborted. Please manually merge origin/main into your branch before running this script.'),
+          );
+          process.exit(1);
+        }
       }
     } else {
       console.log(chalk.yellow('Current branch is main. Skipping merge step.'));
