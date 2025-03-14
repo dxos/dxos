@@ -427,6 +427,7 @@ describe('ViewProjection', () => {
   });
 
   // TODO(burdon): Test changing format.
+
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new EchoSchemaRegistry(db);
@@ -484,7 +485,7 @@ describe('ViewProjection', () => {
     expect(projection.getFieldProjection(getFieldId(view, 'createdAt'))).to.exist;
     expect(view.fields).to.have.length(3);
     expect(view.fields.map((f) => f.path)).to.deep.equal(['name', 'email', 'createdAt']);
-    expect(projection.getHiddenProperties()).to.have.length(0);
+    expect(projection.getHiddenProperties()).to.deep.equal([]);
 
     // Record ID of the createdAt field.
     const createdAtId = getFieldId(view, 'createdAt');
@@ -610,5 +611,51 @@ describe('ViewProjection', () => {
     expect(view.hiddenFields).to.have.length(2);
     const paths = view.hiddenFields!.map((f) => f.path).sort();
     expect(paths).to.deep.equal(['status', 'title']);
+  });
+
+  test('deleted fields should not appear in hidden properties after reinitialization', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const registry = new EchoSchemaRegistry(db);
+
+    const schema = S.Struct({
+      name: S.String,
+      email: Format.Email,
+      phone: S.String,
+    }).annotations({
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+    });
+
+    const [mutable] = await registry.register([schema]);
+    const view = createView({ name: 'Test', typename: mutable.typename, jsonSchema: mutable.jsonSchema });
+    let projection = new ViewProjection(mutable, view);
+
+    // Initial state
+    expect(view.fields).to.have.length(3);
+    expect(projection.getHiddenProperties()).to.have.length(0);
+
+    // Delete a field
+    const emailId = getFieldId(view, 'email');
+    projection.deleteFieldProjection(emailId);
+
+    // Verify it's deleted from the schema and view.fields
+    expect(view.fields).to.have.length(2);
+    expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
+
+    // Verify it doesn't show up in hidden properties
+    let hiddenProps = projection.getHiddenProperties();
+    expect(hiddenProps).to.not.include('email');
+
+    // Reinitialize projection to trigger normalization
+    projection = new ViewProjection(mutable, view);
+
+    // Verify field is still deleted and not in hidden properties
+    expect(view.fields).to.have.length(2);
+    expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
+    hiddenProps = projection.getHiddenProperties();
+    expect(hiddenProps).to.not.include('email');
   });
 });

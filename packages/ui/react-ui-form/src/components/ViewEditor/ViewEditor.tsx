@@ -111,7 +111,6 @@ export const ViewEditor = ({
 
   const handleClose = useCallback(() => setField(undefined), []);
 
-  // TODO(ZaymonFC): Make this reactive?
   const hiddenProperties = projection.getHiddenProperties();
 
   const handleUnhide = useCallback(
