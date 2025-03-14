@@ -14,6 +14,9 @@ import { type GptService } from './gpt';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 
+/**
+ * @deprecated See OllamaClient.
+ */
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
   public readonly imageCache = new Map<string, ImageContentBlock>();
