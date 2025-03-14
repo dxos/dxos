@@ -9,3 +9,4 @@ export * from './stream';
 export * from './transform';
 export * from './types';
 export * from './interface';
+export * from './message-collector';

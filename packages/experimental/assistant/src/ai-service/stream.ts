@@ -108,6 +108,7 @@ export class GenerationStreamImpl implements GenerationStream {
           this._done.wake();
         } catch (err: any) {
           this._done.throw(err);
+          throw err;
         }
       };
 
