@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { computed, ReadonlySignal } from '@preact/signals-core';
+
 import {
   formatToType,
   typeToFormat,
@@ -114,9 +116,30 @@ export class ViewProjection {
     return { field, props };
   }
 
-  /** Get all field projections */
+  /**
+   * Get projection of View fields and JSON schema property annotations, returning undefined if field doesn't exist.
+   * @param fieldId The ID of the field to get projection for
+   */
+  tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
+    invariant(this._schema.jsonSchema.properties);
+    const field = this._view.fields.find((field) => field.id === fieldId);
+    if (!field) {
+      return undefined;
+    }
+
+    return this.getFieldProjection(fieldId);
+  }
+
+  private _fieldProjectionsComputed = computed(() =>
+    this._view.fields.map((field) => this.getFieldProjection(field.id)),
+  );
+
+  /**
+   * Get all field projections
+   * @reactive
+   */
   getFieldProjections(): FieldProjection[] {
-    return this._view.fields.map((field) => this.getFieldProjection(field.id));
+    return this._fieldProjectionsComputed.value;
   }
 
   /**
@@ -190,6 +213,13 @@ export class ViewProjection {
     const sourcePropertyName = field?.path;
     const targetPropertyName = props?.property;
     const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
+
+    if (targetPropertyName && this._view.hiddenFields) {
+      const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === targetPropertyName);
+      if (hiddenIndex !== -1) {
+        this._view.hiddenFields.splice(hiddenIndex, 1);
+      }
+    }
 
     // TODO(burdon): Set field if does not exist.
     if (field) {
