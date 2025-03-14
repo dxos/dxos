@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { invariant } from '@dxos/invariant';
+
 import { Trigger } from './trigger';
 
 interface PushAsyncIterable<T, TReturn = any> extends AsyncIterable<T, TReturn> {
@@ -28,7 +33,7 @@ export const makePushIterable = <T, TReturn = any>(): PushAsyncIterable<T, TRetu
   return {
     [Symbol.asyncIterator]() {
       return {
-        async next(): Promise<IteratorResult<T, TReturn>> {
+        next: async (): Promise<IteratorResult<T, TReturn>> => {
           while (buf.length === 0) {
             await trigger.wait();
           }
@@ -47,15 +52,15 @@ export const makePushIterable = <T, TReturn = any>(): PushAsyncIterable<T, TRetu
         },
       };
     },
-    next(value: T) {
+    next: (value: T) => {
       buf.push({ kind: 'next', value });
       trigger.wake();
     },
-    return(value: TReturn) {
+    return: (value: TReturn) => {
       buf.push({ kind: 'return', value });
       trigger.wake();
     },
-    throw(value?: any) {
+    throw: (value?: any) => {
       buf.push({ kind: 'throw', value });
       trigger.wake();
     },

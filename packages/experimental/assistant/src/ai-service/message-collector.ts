@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { Message } from '@dxos/artifact';
+
 import type { GenerationStreamEvent } from './types';
 
 export class MessageCollector {

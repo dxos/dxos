@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { test, describe, beforeAll } from 'vitest';
+import { test, describe } from 'vitest';
 
 import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
 import { toJsonSchema, ObjectId, createStatic } from '@dxos/echo-schema';
@@ -13,10 +13,10 @@ import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
 import { DEFAULT_LLM_MODEL } from './defs';
-import { ToolTypes } from './types';
-import { AI_SERVICE_ENDPOINT } from '../testing';
 import { OllamaClient } from './ollama-client';
 import { MixedStreamParser } from './parser';
+import { ToolTypes } from './types';
+import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });
 

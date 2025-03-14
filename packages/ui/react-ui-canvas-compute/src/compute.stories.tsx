@@ -9,6 +9,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
+import { OllamaClient } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { EdgeGpt, type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -37,7 +38,6 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
-import { OllamaClient } from '@dxos/assistant';
 
 // const FormSchema = S.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 

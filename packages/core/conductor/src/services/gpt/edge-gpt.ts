@@ -10,18 +10,17 @@ import {
   DEFAULT_LLM_MODEL,
   MixedStreamParser,
   type AIService,
-  type AIServiceClient,
   type GenerateRequest,
   type GenerationStreamEvent,
 } from '@dxos/assistant';
-import { ObjectId, ECHO_ATTR_TYPE, createStatic } from '@dxos/echo-schema';
+import { makePushIterable } from '@dxos/async';
+import { ObjectId, ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { IMAGE_TYPENAME, MESSAGE_TYPENAME, type GptService } from './gpt';
 import { type GptInput, type GptOutput } from '../../nodes';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
-import { makePushIterable } from '@dxos/async';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

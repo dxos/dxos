@@ -10,7 +10,7 @@ import { AIServiceClientImpl, OllamaClient, ToolTypes, type GenerationStreamEven
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
-import { EdgeGpt, OllamaGpt } from '../services';
+import { EdgeGpt } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 

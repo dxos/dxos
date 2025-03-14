@@ -5,9 +5,9 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
+import type { GenerationStream } from './interface';
 import { type GenerationStreamEvent } from './types';
 import { iterSSEMessages } from './util';
-import type { GenerationStream } from './interface';
 
 /**
  * Creates a stream from an SSE response.

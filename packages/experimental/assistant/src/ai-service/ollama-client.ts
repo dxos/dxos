@@ -1,12 +1,18 @@
-import { type Message, type MessageContentBlock, type ToolType, defineTool, Tool, ToolResult } from '@dxos/artifact';
-import { AIService, type GenerationStream } from './interface';
-import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
-import { GenerationStreamImpl } from './stream';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type MessageContentBlock, defineTool, type Tool, ToolResult } from '@dxos/artifact';
 import { ObjectId, S } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { MessageCollector, emitMessageAsEvents } from './message-collector';
-import { isToolUse, runTools } from '../conversation';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+
+import { type AIService, type GenerationStream } from './interface';
+import { MessageCollector, emitMessageAsEvents } from './message-collector';
+import { GenerationStreamImpl } from './stream';
+import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
+import { isToolUse, runTools } from '../conversation';
+
 export type OllamaClientParams = {
   endpoint?: string;
 
@@ -238,7 +244,9 @@ export class OllamaClient implements AIService {
       while (true) {
         const { done, value: data } = await reader.read();
 
-        if (done) break;
+        if (done) {
+          break;
+        }
 
         log.info('ollama data', { data });
 
