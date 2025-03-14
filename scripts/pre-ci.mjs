@@ -5,10 +5,11 @@ import { $, cd, chalk, fs, question } from 'zx';
 /**
  * Auto-fix common issues before a CI run.
  * 1. If there are any uncommitted changes, abort with error.
- * 2. Run pnpm install and commit the changes if any.
- * 3. Run pnpm -w nx run-many --target=lint --fix. If it errors -- abort, otherwise commit changes if any.
- * 4. Push
- * 5. Run pnpm -w nx run-many --target=build,test
+ * 2. Merge the latest origin/main.
+ * 3. Run pnpm install and commit the changes if any.
+ * 4. Run pnpm -w nx run-many --target=lint --fix. If it errors -- abort, otherwise commit changes if any.
+ * 5. Push
+ * 6. Run pnpm -w nx run-many --target=build,test
  */
 
 // Set error handling to capture specific failures
@@ -65,8 +66,40 @@ async function main() {
   }
   console.log(chalk.green('No uncommitted changes found. Proceeding...'));
 
-  // Step 2: Run pnpm install and commit changes if any
-  console.log(chalk.blue('Step 2: Running pnpm install...'));
+  // Step 2: Merge the latest origin/main
+  console.log(chalk.blue('Step 2: Merging latest origin/main...'));
+  try {
+    // Fetch the latest changes from origin
+    await $`git fetch origin`;
+    console.log(chalk.green('Successfully fetched the latest changes from origin.'));
+
+    // Get current branch name
+    const { stdout: branchName } = await $`git rev-parse --abbrev-ref HEAD`;
+    const currentBranch = branchName.trim();
+
+    // Only try to merge if we're not already on main
+    if (currentBranch !== 'main') {
+      try {
+        await $`git merge origin/main --no-edit`;
+        console.log(chalk.green('Successfully merged origin/main into the current branch.'));
+      } catch (mergeError) {
+        console.error(chalk.red('Merge conflict occurred:'), mergeError);
+        await $`git merge --abort`;
+        console.error(
+          chalk.red('Merge aborted. Please manually merge origin/main into your branch before running this script.'),
+        );
+        process.exit(1);
+      }
+    } else {
+      console.log(chalk.yellow('Current branch is main. Skipping merge step.'));
+    }
+  } catch (error) {
+    console.error(chalk.red('Error fetching or identifying branch:'), error);
+    process.exit(1);
+  }
+
+  // Step 3: Run pnpm install and commit changes if any
+  console.log(chalk.blue('Step 3: Running pnpm install...'));
   try {
     await $`pnpm install`;
 
@@ -80,8 +113,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 3: Run lint with fixes and commit changes if any
-  console.log(chalk.blue('Step 3: Running linting with auto-fix...'));
+  // Step 4: Run lint with fixes and commit changes if any
+  console.log(chalk.blue('Step 4: Running linting with auto-fix...'));
   try {
     await $`pnpm -w nx run-many --target=lint --fix`;
 
@@ -95,8 +128,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 4: Push changes to remote
-  console.log(chalk.blue('Step 4: Pushing changes to remote...'));
+  // Step 5: Push changes to remote
+  console.log(chalk.blue('Step 5: Pushing changes to remote...'));
   try {
     await $`git push`;
     console.log(chalk.green('Successfully pushed changes.'));
@@ -105,8 +138,8 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 5: Run build and test
-  console.log(chalk.blue('Step 5: Running build and tests...'));
+  // Step 6: Run build and test
+  console.log(chalk.blue('Step 6: Running build and tests...'));
   try {
     await $`pnpm -w nx run-many --target=build,test`;
     console.log(chalk.green('Build and tests completed successfully.'));
