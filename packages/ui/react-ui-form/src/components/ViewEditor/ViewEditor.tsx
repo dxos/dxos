@@ -61,7 +61,7 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      typename: view.query.type,
+      typename: view.query.typename,
     };
   }, [view]);
 
@@ -71,7 +71,7 @@ export const ViewEditor = ({
         if (view.name !== name) {
           view.name = name;
         }
-        if (view.query.type !== typename) {
+        if (view.query.typename !== typename) {
           onTypenameChanged(typename);
         }
       });

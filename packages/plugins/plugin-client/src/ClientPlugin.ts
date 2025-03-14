@@ -4,7 +4,15 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
 
-import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface, Schema } from './capabilities';
+import {
+  Client,
+  AppGraphBuilder,
+  IntentResolver,
+  Migrations,
+  ReactContext,
+  ReactSurface,
+  Schema,
+} from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
@@ -34,6 +42,12 @@ export const ClientPlugin = ({
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
       activate: Schema,
+    }),
+    defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.ClientReady,
+      activatesBefore: [ClientEvents.SetupMigration],
+      activate: Migrations,
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,

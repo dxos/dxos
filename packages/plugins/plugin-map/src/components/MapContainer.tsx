@@ -28,7 +28,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const space = getSpace(map);
 
-  const schema = useSchema(space, map?.view?.target?.query.type);
+  const schema = useSchema(space, map?.view?.target?.query.typename);
   const rowsForType = useQuery(space, schema ? Filter.schema(schema) : undefined);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
   }, [rowsForType, map?.view?.target]);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
-  const selected = useSelectedItems(map?.view?.target?.query.type);
+  const selected = useSelectedItems(map?.view?.target?.query.typename);
 
   return (
     <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
