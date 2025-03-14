@@ -7,6 +7,7 @@ import { log } from '@dxos/log';
 
 import { type GenerationStreamEvent } from './types';
 import { iterSSEMessages } from './util';
+import type { GenerationStream } from './interface';
 
 /**
  * Creates a stream from an SSE response.
@@ -49,14 +50,14 @@ export const createGenerationStream = (response: Response, controller = new Abor
     }
   };
 
-  return new GenerationStream(controller, iterator);
+  return new GenerationStreamImpl(controller, iterator);
 };
 
 /**
  * Server-Sent Events (SSE) stream from the AI service.
  * https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events
  */
-export class GenerationStream implements AsyncIterable<GenerationStreamEvent> {
+export class GenerationStreamImpl implements GenerationStream {
   /**
    * Trigger event when the stream is done.
    */
@@ -99,7 +100,7 @@ export class GenerationStream implements AsyncIterable<GenerationStreamEvent> {
   private _createIterator(): AsyncIterator<GenerationStreamEvent> {
     const self = this;
     return (this._iterator ??= (() => {
-      const generator = async function* (this: GenerationStream) {
+      const generator = async function* (this: GenerationStreamImpl) {
         try {
           for await (const event of self._getIterator()) {
             yield event;

@@ -8,12 +8,9 @@ import { Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { createGenerationStream, type GenerationStream } from './stream';
+import { createGenerationStream } from './stream';
 import { type GenerateRequest } from './types';
-
-export interface AIService {
-  exec(request: GenerateRequest): Promise<GenerationStream>;
-}
+import type { AIService, GenerationStream } from './interface';
 
 export interface AIServiceClient extends AIService {
   appendMessages(messages: Message[]): Promise<void>;

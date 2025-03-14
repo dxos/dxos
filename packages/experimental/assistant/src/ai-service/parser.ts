@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
 
-import { type GenerationStream } from './stream';
+import { type GenerationStream } from './interface';
 import { StreamTransform, type StreamBlock } from './transform';
 import type { GenerationStreamEvent } from './types';
 
