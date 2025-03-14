@@ -91,19 +91,17 @@ async function main() {
 
           // If only pnpm-lock.yaml has conflicts
           if (conflictedFiles.length === 1 && conflictedFiles[0] === 'pnpm-lock.yaml') {
-            console.log(chalk.yellow('Only pnpm-lock.yaml has conflicts. Attempting to resolve automatically...'));
+            console.log(chalk.yellow('Only pnpm-lock.yaml has conflicts. Letting pnpm resolve it...'));
 
-            // Abort current merge
-            await $`git merge --abort`;
-
-            // Run pnpm install to regenerate lock file
-            console.log(chalk.blue('Running pnpm install to resolve lock file conflict...'));
+            // Run pnpm install to resolve the conflict
+            // (pnpm will see the conflict markers and regenerate the lock file)
+            console.log(chalk.blue('Running pnpm install to resolve the lock file conflict...'));
             await $`pnpm install`;
 
-            // Try merging again
-            console.log(chalk.blue('Attempting to merge origin/main again...'));
-            await $`git merge origin/main --no-edit`;
-            console.log(chalk.green('Successfully merged origin/main after resolving lock file conflict.'));
+            // Add the resolved lock file and complete the merge
+            await $`git add pnpm-lock.yaml`;
+            await $`git commit -m "chore: merge origin/main with pnpm-resolved lock file"`;
+            console.log(chalk.green('Successfully merged origin/main with pnpm-resolved lock file.'));
           } else {
             // Handle other conflicts
             console.error(chalk.red('Merge conflict occurred:'), mergeError);
