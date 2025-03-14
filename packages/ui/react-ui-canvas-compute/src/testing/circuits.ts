@@ -228,6 +228,7 @@ export const createGptCircuit = (options: {
   image?: boolean;
   history?: boolean;
   artifact?: boolean;
+  instructions?: boolean;
 }) => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call((builder) => {
@@ -255,18 +256,21 @@ export const createGptCircuit = (options: {
         .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
     }
 
-    if (options.artifact) {
+    if (options.instructions) {
       const prompt = model.createNode(
         createTemplate({
           text: createSystemPrompt(),
           ...position({ x: -18, y: -12, width: 8, height: 10 }),
         }),
       );
+
+      builder.createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' });
+    }
+
+    if (options.artifact) {
       const artifact = model.createNode(createSurface(position({ x: 17, y: -10, width: 14, height: 14 })));
 
-      builder
-        .createEdge({ source: prompt.id, target: gpt.id, input: 'systemPrompt' })
-        .createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
+      builder.createEdge({ source: gpt.id, target: artifact.id, output: 'artifact' });
     }
 
     if (options.cot) {
