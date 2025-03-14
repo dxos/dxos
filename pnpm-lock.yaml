@@ -4280,6 +4280,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../experimental/gem-core

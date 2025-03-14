@@ -28,6 +28,7 @@ import {
   MagnifyingGlass,
   Cloud,
   Function,
+  LineSegments,
 } from '@phosphor-icons/react';
 
 export type SectionItem = {
@@ -201,6 +202,11 @@ export const useSections = (): SectionItem[] => {
           id: '/edge/dashboard',
           title: 'Dashboard',
           Icon: ComputerTower,
+        },
+        {
+          id: '/edge/traces',
+          title: 'Traces',
+          Icon: LineSegments,
         },
       ],
     },
