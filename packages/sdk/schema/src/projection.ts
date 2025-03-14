@@ -42,6 +42,9 @@ export class ViewProjection {
   private readonly _encode = S.encodeSync(PropertySchema);
   private readonly _decode = S.decodeSync(PropertySchema, {});
 
+  private _fieldProjections = computed(() => this._view.fields.map((field) => this.getFieldProjection(field.id)));
+  private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);
+
   constructor(
     // TODO(burdon): This could be StoredSchema?
     // TODO(burdon): How to use tables with static schema.
@@ -130,21 +133,13 @@ export class ViewProjection {
     return this.getFieldProjection(fieldId);
   }
 
-  private _fieldProjectionsComputed = computed(() =>
-    this._view.fields.map((field) => this.getFieldProjection(field.id)),
-  );
-
   /**
    * Get all field projections
    * @reactive
    */
   getFieldProjections(): FieldProjection[] {
-    return this._fieldProjectionsComputed.value;
+    return this._fieldProjections.value;
   }
-
-  private _hiddenPropertiesComputed = computed(
-    () => this._view.hiddenFields?.map((field) => field.path as string) ?? [],
-  );
 
   /**
    * Identifies schema properties not visible in the current view projection.
@@ -152,7 +147,7 @@ export class ViewProjection {
    * @reactive
    */
   getHiddenProperties(): string[] {
-    return this._hiddenPropertiesComputed.value;
+    return this._hiddenProperties.value;
   }
 
   /**
