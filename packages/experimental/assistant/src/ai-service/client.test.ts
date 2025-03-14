@@ -235,4 +235,31 @@ describe('Ollama Client', () => {
 
     log.info('messages', { messages });
   });
+
+  test('text-to-image', async (ctx) => {
+    const isRunning = await OllamaClient.isOllamaRunning();
+    if (!isRunning) {
+      ctx.skip();
+    }
+
+    const client = OllamaClient.createTestClient();
+    const parser = new MixedStreamParser();
+
+    const messages = await parser.parse(
+      await client.exec({
+        prompt: createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate an image of a cat' }],
+        }),
+        tools: [
+          {
+            name: 'text-to-image',
+            type: ToolTypes.TextToImage,
+          },
+        ],
+      }),
+    );
+
+    log.info('messages', { messages });
+  });
 });

@@ -1,14 +1,15 @@
-import type { Tool, Message, MessageContentBlock } from '@dxos/artifact';
+import { type Message, type MessageContentBlock, type ToolType, defineTool, Tool, ToolResult } from '@dxos/artifact';
 import { AIService, type GenerationStream } from './interface';
-import type { GenerateRequest, GenerationStreamEvent } from './types';
+import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
 import { GenerationStreamImpl } from './stream';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId, S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { isToolUse, runTools } from '../conversation';
 import { invariant } from '@dxos/invariant';
 export type OllamaClientParams = {
   endpoint?: string;
+
   /**
    * Tools that are executed within the client.
    */
@@ -62,12 +63,22 @@ export class OllamaClient implements AIService {
   private readonly _modelOverride?: string;
   private readonly _temperatureOverride?: number;
   private readonly _maxToolInvocations: number;
+
   constructor({ endpoint, tools, overrides, maxToolInvocations }: OllamaClientParams) {
     this._endpoint = endpoint ?? 'http://localhost:11434';
     this._tools = tools ?? [];
     this._modelOverride = overrides?.model;
     this._temperatureOverride = overrides?.temperature;
     this._maxToolInvocations = maxToolInvocations ?? 3;
+  }
+
+  private _getEmbededTools(clientTools: Tool[]) {
+    return [
+      ...this._tools,
+      ...clientTools
+        .filter((tool) => tool.type !== undefined && WELL_KNOWN_TOOLS[tool.type])
+        .map((tool) => WELL_KNOWN_TOOLS[tool.type!]),
+    ];
   }
 
   private async *_generateStream(request: GenerateRequest, signal?: AbortSignal): AsyncIterable<GenerationStreamEvent> {
@@ -145,8 +156,14 @@ export class OllamaClient implements AIService {
     // Add tools if provided
     if (request.tools?.length || this._tools.length) {
       const allTools = [...(request.tools ?? []), ...this._tools];
-      if (allTools.length > 0) {
-        ollamaRequest.tools = allTools.map((tool) => ({
+      const withWellKnownTools = allTools.map((tool) =>
+        tool.type !== undefined && WELL_KNOWN_TOOLS[tool.type] ? WELL_KNOWN_TOOLS[tool.type] : tool,
+      );
+
+      log.info('withWellKnownTools', { withWellKnownTools });
+
+      if (withWellKnownTools.length > 0) {
+        ollamaRequest.tools = withWellKnownTools.map((tool) => ({
           type: 'function',
           function: {
             name: tool.name,
@@ -307,7 +324,9 @@ export class OllamaClient implements AIService {
 
             if (
               collector.messages.length > 0 &&
-              !isToolUse(collector.messages.at(-1)!, { onlyToolNames: this._tools.map((tool) => tool.name) })
+              !isToolUse(collector.messages.at(-1)!, {
+                onlyToolNames: this._getEmbededTools(request.tools ?? []).map((tool) => tool.name),
+              })
             ) {
               break;
             }
@@ -318,7 +337,7 @@ export class OllamaClient implements AIService {
 
             const result = await runTools({
               message: collector.messages.at(-1)!,
-              tools: this._tools,
+              tools: this._getEmbededTools(request.tools ?? []),
             });
 
             switch (result.type) {
@@ -340,6 +359,43 @@ export class OllamaClient implements AIService {
     }
   }
 }
+
+const SAMPLE_IMAGE_URL = 'https://images.nightcafe.studio/jobs/BNmcRhHCM1JRKoUtqSei/BNmcRhHCM1JRKoUtqSei--1--5b9rv.jpg';
+
+const WELL_KNOWN_TOOLS: Record<string, Tool> = {
+  [ToolTypes.TextToImage]: defineTool('system', {
+    name: 'text-to-image',
+    description: 'Generate an image from a text prompt',
+    schema: S.Struct({
+      prompt: S.String.annotations({ description: 'The text prompt describing the image to generate' }),
+    }),
+    execute: async ({ prompt }) => {
+      const image = await fetch(SAMPLE_IMAGE_URL).then(async (res) => Buffer.from(await res.arrayBuffer()));
+
+      const imageBase64 = image.toString('base64');
+
+      const id = ObjectId.random();
+
+      return ToolResult.Success(
+        `
+        The generation was successful.
+        Image ID: ${id} Prompt: ${prompt}
+      `,
+        [
+          {
+            type: 'image',
+            id,
+            source: {
+              type: 'base64',
+              mediaType: 'image/jpeg',
+              data: imageBase64,
+            },
+          },
+        ],
+      );
+    },
+  }),
+};
 
 type OllamaMessage = {
   role: 'system' | 'user' | 'assistant' | 'tool';

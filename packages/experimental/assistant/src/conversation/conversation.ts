@@ -220,6 +220,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
             content:
               typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },
+          ...(toolResult.extractContentBlocks ?? []),
         ],
       });
 
