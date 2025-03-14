@@ -2,15 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { createStatic } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useTranscriber } from '@dxos/plugin-transcription';
-import { TranscriptBlock, type TranscriptType, type TranscriptSegment } from '@dxos/plugin-transcription/types';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { type TranscriptType } from '@dxos/plugin-transcription/types';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
@@ -18,8 +14,6 @@ import { useCallGlobalContext } from '../../hooks';
 import { CALLS_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
-
-const STOP_TRANSCRIPTION_TIMEOUT = 250;
 
 export type CallToolbarProps = {
   onTranscription?: () => Promise<ReactiveEchoObject<TranscriptType>>;
@@ -34,71 +28,6 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
   const isScreensharing = call.media.screenshareTrack !== undefined;
   const canSharescreen =
     typeof navigator.mediaDevices !== 'undefined' && navigator.mediaDevices.getDisplayMedia !== undefined;
-
-  // Initialize transcriber.
-  const edgeClient = useEdgeClient();
-  const queue = useQueue<TranscriptBlock>(
-    edgeClient,
-    call.transcription.queueDxn ? DXN.parse(call.transcription.queueDxn) : undefined,
-  );
-  const handleSegments = useCallback(
-    async (segments: TranscriptSegment[]) => {
-      const block = createStatic(TranscriptBlock, { author: call.self.name, segments });
-      queue?.append([block]);
-    },
-    [queue, call.self.name],
-  );
-
-  // TODO(mykola): Move to CallManager.
-  const transcriber = useTranscriber({
-    audioStreamTrack: call.media.audioTrack,
-    onSegments: handleSegments,
-  });
-
-  // Turn transcription on and off.
-  useEffect(() => {
-    if (call.transcription.enabled && transcriber) {
-      void transcriber.open();
-    } else if (!call.transcription.enabled && transcriber) {
-      void transcriber.close();
-    }
-  }, [call.transcription.enabled, transcriber]);
-
-  // If user is not speaking, stop transcription after STOP_TRANSCRIPTION_TIMEOUT. if speaking, start transcription.
-  const disableTimeout = useRef<NodeJS.Timeout | null>(null);
-  useEffect(() => {
-    const transcriptionEnabled = call.transcription.enabled;
-    log('transcription', {
-      enabled: transcriptionEnabled,
-      transcriber: !!transcriber,
-      isOpen: transcriber?.isOpen,
-      speaking: call.speaking,
-    });
-
-    if (!transcriptionEnabled) {
-      return;
-    }
-
-    if (call.speaking) {
-      if (disableTimeout.current) {
-        clearTimeout(disableTimeout.current);
-        disableTimeout.current = null;
-      }
-
-      transcriber?.startChunksRecording();
-    } else {
-      disableTimeout.current = setTimeout(() => {
-        transcriber?.stopChunksRecording();
-      }, STOP_TRANSCRIPTION_TIMEOUT);
-    }
-
-    return () => {
-      if (disableTimeout.current) {
-        clearTimeout(disableTimeout.current);
-        disableTimeout.current = null;
-      }
-    };
-  }, [call.transcription.enabled, transcriber, transcriber?.isOpen, call.speaking]);
 
   const leaveSound = useSoundEffect('LeaveCall');
   const handleLeave = () => {
@@ -123,12 +52,14 @@ export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
       <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={handleLeave} />
       <div className='grow'></div>
       {/* TODO(burdon): Capability test. */}
-      <IconButton
-        iconOnly
-        icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
-        label={call.transcription.enabled ? t('transcription off') : t('transcription on')}
-        onClick={handleToggleTranscription}
-      />
+      {onTranscription && (
+        <IconButton
+          iconOnly
+          icon={call.transcription.enabled ? 'ph--text-t--regular' : 'ph--text-t-slash--regular'}
+          label={call.transcription.enabled ? t('transcription off') : t('transcription on')}
+          onClick={handleToggleTranscription}
+        />
+      )}
       <IconButton
         disabled={!canSharescreen}
         iconOnly

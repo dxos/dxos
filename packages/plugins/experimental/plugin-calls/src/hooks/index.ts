@@ -4,4 +4,3 @@
 
 export * from './useCallsGlobalContext';
 export * from './useDebugEnabled';
-export * from './useIsSpeaking';

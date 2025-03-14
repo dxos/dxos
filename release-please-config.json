@@ -489,7 +489,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-canvas/package.json",
+          "path": "packages/plugins/experimental/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
         {

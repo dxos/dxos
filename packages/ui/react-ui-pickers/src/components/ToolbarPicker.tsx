@@ -80,15 +80,15 @@ export const ToolbarPickerButton = ({
           </Tooltip.Content>
         </Tooltip.Portal>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content side='bottom' classNames='!w-40'>
-            <DropdownMenu.Viewport classNames='grid grid-cols-6'>
+          <DropdownMenu.Content side='bottom' classNames='!is-min'>
+            <DropdownMenu.Viewport classNames='grid grid-cols-[repeat(6,2rem)]'>
               {values.map((_value) => {
                 return (
                   <DropdownMenu.CheckboxItem
                     key={_value}
                     checked={_value === value}
                     onCheckedChange={() => setValue(_value)}
-                    classNames={'!p-0 items-center justify-center'}
+                    classNames={'p-px items-center justify-center aspect-square'}
                   >
                     <Component value={_value} />
                   </DropdownMenu.CheckboxItem>
@@ -97,9 +97,9 @@ export const ToolbarPickerButton = ({
               {onReset && (
                 <DropdownMenu.CheckboxItem
                   onCheckedChange={() => onReset()}
-                  classNames={'!p-0 items-center justify-center'}
+                  classNames={'p-px items-center justify-center aspect-square'}
                 >
-                  <Icon icon='ph--x--regular' size={5} />
+                  <Icon icon='ph--x--regular' size={6} />
                 </DropdownMenu.CheckboxItem>
               )}
             </DropdownMenu.Viewport>

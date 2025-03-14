@@ -1,4 +1,4 @@
-# @dxos/plugin-canvas
+# @dxos/plugin-conductor
 
 ## Summary
 

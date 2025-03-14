@@ -7,5 +7,6 @@ export * from './components';
 export * from './hooks';
 export * from './meta';
 export * from './transcriber';
+export * from './transcription-manager';
 
 export * from './TranscriptionPlugin';

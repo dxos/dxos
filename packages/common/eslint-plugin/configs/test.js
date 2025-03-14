@@ -10,5 +10,6 @@ module.exports = {
     'mocha/no-global-tests': 'off',
     'mocha/no-setup-in-describe': 'off',
     'mocha/no-sibling-hooks': 'off',
+    'mocha/handle-done-callback': 'off',
   },
 };

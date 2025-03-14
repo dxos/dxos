@@ -14,6 +14,8 @@ export default [
         'collapse navigation sidebar label': 'Minimize sidebar',
         'open complementary sidebar label': 'Open context sidebar',
         'close complementary sidebar label': 'Minimize context sidebar',
+        'sidebar title': 'Navigation sidebar',
+        'complementary sidebar title': 'Context sidebar',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':

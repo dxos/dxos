@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { GraphModel } from '@dxos/gem-spore';
+// TODO(burdon): Convert to common/graph.
+import { type GraphModel } from '@dxos/gem-spore';
 
 export type TreeNode = {
   id: string;

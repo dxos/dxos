@@ -28,6 +28,7 @@ import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider';
 
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
@@ -194,15 +195,17 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogConte
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
   side: 'inline-start' | 'inline-end';
+  label: Label;
 };
 
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   (
-    { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, side, ...props },
+    { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, side, label, ...props },
     forwardedRef,
   ) => {
     const [isLg] = useMediaQuery('lg', { ssr: false });
     const { tx } = useThemeContext();
+    const { t } = useTranslation();
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
@@ -219,7 +222,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     );
     const Root = isLg ? Primitive.div : DialogContent;
     return (
-      <DialogRoot open={state !== 'closed'} modal={false}>
+      <DialogRoot open={state !== 'closed'} aria-label={toLocalizedString(label, t)} modal={false}>
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...props}

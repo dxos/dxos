@@ -7,13 +7,13 @@ import { ComputeGraph } from '@dxos/conductor';
 import { create, makeRef } from '@dxos/live-object';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
-import { CanvasAction } from '../types';
+import { ConductorAction } from '../types';
 
 export default () =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: CanvasAction.Create,
+      intent: ConductorAction.Create,
       resolve: ({ name }) => ({
         data: {
           object: create(CanvasBoardType, {

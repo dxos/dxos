@@ -147,10 +147,10 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   };
 };
 
-export const isToolUse = (message: Message) => {
+export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
   invariant(block);
-  return block.type === 'tool_use';
+  return block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
 export type RunToolsOptions = {
@@ -220,6 +220,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
             content:
               typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },
+          ...(toolResult.extractContentBlocks ?? []),
         ],
       });
 

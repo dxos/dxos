@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { Clipboard, Dialog } from '@dxos/react-ui';
+import { Clipboard, Dialog, useTranslation } from '@dxos/react-ui';
 import { IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
 
 import { MANAGE_CREDENTIALS_DIALOG } from './ManageCredentialsDialog';
@@ -18,6 +18,7 @@ export const IDENTITY_DIALOG = `${CLIENT_PLUGIN}/IdentityDialog`;
 export const IdentityDialog = (props: IdentityPanelProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
+  const { t } = useTranslation(CLIENT_PLUGIN);
 
   const handleDone = useCallback(
     () =>
@@ -57,6 +58,7 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
 
   return (
     <Dialog.Content>
+      <Dialog.Title classNames='sr-only'>{t('manage profile label', { ns: 'os' })}</Dialog.Title>
       <Clipboard.Provider>
         <IdentityPanel
           {...props}

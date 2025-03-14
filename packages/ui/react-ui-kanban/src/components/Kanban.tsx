@@ -57,7 +57,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='flex flex-col pli-1 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-2 plb-2 drag-preview-p-0'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
           >
@@ -73,7 +73,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='pbe-1 drag-preview-p-0'
+                classNames='!plb-0 !pbe-0 drag-preview-p-0'
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
@@ -81,7 +81,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'contain-layout plb-1 pli-2 drag-preview-p-0'}
+                    classNames={'contain-layout pli-2 plb-2 drag-preview-p-0'}
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >

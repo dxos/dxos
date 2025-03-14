@@ -5,7 +5,11 @@
 import { synchronized } from '@dxos/async';
 import { type PublicKey, type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
+import { generateName } from '@dxos/display-name';
+import { EdgeHttpClient } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
+import { TranscriptionManager } from '@dxos/plugin-transcription';
 import { isNonNullable } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
@@ -29,7 +33,7 @@ export class CallManager extends Resource {
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
-
+  private readonly _transcriptionManager: TranscriptionManager;
   /** @reactive */
   get raisedHand() {
     return this._state.call.raisedHand ?? false;
@@ -123,6 +127,10 @@ export class CallManager extends Resource {
     super();
     this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService: _client.services.services.NetworkService! });
     this._mediaManager = new MediaManager();
+
+    const edgeUrl = this._client.config.get('runtime.services.edge.url');
+    invariant(edgeUrl);
+    this._transcriptionManager = new TranscriptionManager(new EdgeHttpClient(edgeUrl));
   }
 
   protected override async _open() {
@@ -131,6 +139,7 @@ export class CallManager extends Resource {
     const subscription = this._client.halo.identity.subscribe((identity) => {
       if (identity) {
         this._swarmSynchronizer._setIdentity(identity);
+        this._transcriptionManager.setName(identity.profile?.displayName ?? generateName(identity.identityKey.toHex()));
       }
       if (this._client.halo.device) {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
@@ -143,6 +152,7 @@ export class CallManager extends Resource {
   }
 
   protected override async _close() {
+    await this._transcriptionManager.close();
     await this._swarmSynchronizer.leave();
     await this._swarmSynchronizer.close();
     await this._mediaManager.close();
@@ -157,10 +167,12 @@ export class CallManager extends Resource {
       iceServers: this._client.config.get('runtime.services.ice'),
       apiBase: `${CALLS_URL}/api/calls`,
     });
+    await this._transcriptionManager.open();
   }
 
   @synchronized
   async leave() {
+    await this._transcriptionManager.close();
     await this._swarmSynchronizer.leave();
     this._swarmSynchronizer.setJoined(false);
     await this._mediaManager.leave();
@@ -172,6 +184,8 @@ export class CallManager extends Resource {
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
+    void this._transcriptionManager.setEnabled(state.transcription?.enabled ?? false);
+    void this._transcriptionManager.setQueue(state.transcription?.queueDxn);
 
     this._updateState();
   }
@@ -185,6 +199,10 @@ export class CallManager extends Resource {
       audioEnabled: state.audioEnabled,
       screenshareEnabled: state.screenshareEnabled,
     });
+
+    void this._transcriptionManager.setAudioTrack(state.audioTrack);
+    this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
+    this._transcriptionManager.setRecording(this._mediaManager.isSpeaking ?? false);
 
     this._updateState();
   }

@@ -9,9 +9,9 @@ import { AssistantPlugin, ASSISTANT_PLUGIN } from '@dxos/plugin-assistant';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
 import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
-import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
+import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DebugPlugin, DEBUG_PLUGIN } from '@dxos/plugin-debug';
 import { DeckPlugin, DECK_PLUGIN } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
@@ -114,7 +114,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     AttentionPlugin(),
     AutomationPlugin(),
     CallsPlugin(),
-    CanvasPlugin(),
     ChessPlugin(),
     ClientPlugin({
       config,
@@ -144,6 +143,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
         }
       },
     }),
+    ConductorPlugin(),
     DebugPlugin(),
     DeckPlugin(),
     isLabs && ExcalidrawPlugin(),

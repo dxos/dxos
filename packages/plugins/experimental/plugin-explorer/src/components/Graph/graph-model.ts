@@ -21,6 +21,8 @@ export type SpaceGraphModelOptions = {
   schema?: boolean;
 };
 
+// TODO(burdon): Convert to common/graph.
+
 type SchemaGraphNode = {
   id: string;
   type: 'schema';

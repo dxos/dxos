@@ -11,12 +11,11 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { IntentResolver, ReactSurface } from './capabilities';
-import { CANVAS_PLUGIN, meta } from './meta';
+import { CONDUCTOR_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { CanvasAction } from './types';
+import { ConductorAction } from './types';
 
-// TODO(wittjosiah): Rename ConductorPlugin.
-export const CanvasPlugin = () =>
+export const ConductorPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/translations`,
@@ -30,7 +29,7 @@ export const CanvasPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: CanvasBoardType.typename,
           metadata: {
-            placeholder: ['canvas title placeholder', { ns: CANVAS_PLUGIN }],
+            placeholder: ['canvas title placeholder', { ns: CONDUCTOR_PLUGIN }],
             icon: 'ph--infinity--regular',
           },
         }),
@@ -43,7 +42,7 @@ export const CanvasPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: CanvasBoardType,
-            getIntent: () => createIntent(CanvasAction.Create),
+            getIntent: () => createIntent(ConductorAction.Create),
           }),
         ),
     }),

@@ -9,8 +9,9 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
+import { OllamaClient } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
+import { EdgeGpt, type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -340,6 +341,20 @@ export const Artifact: Story = {
     // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createArtifactCircuit(), createEdgeServices()),
+  },
+};
+
+export const ImageGen: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    sidebar: 'controller',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraphController(createGptCircuit({ image: true, artifact: true }), {
+      gpt: new EdgeGpt(OllamaClient.createTestClient()),
+    }),
   },
 };
 

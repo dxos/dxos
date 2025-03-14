@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "plugin-canvas",
+  "name": "plugin-conductor",
   "tags": [
     "scope:experimental",
     "scope:plugins"
