@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+
+import { $, cd, chalk, fs, question } from 'zx';
+
+/**
+ * Auto-fix common issues before a CI run.
+ * 1. If there are any uncommitted changes, abort with error.
+ * 2. Run pnpm install and commit the changes if any.
+ * 3. Run pnpm -w nx run-many --target=lint --fix. If it errors -- abort, otherwise commit changes if any.
+ * 4. Push
+ * 5. Run pnpm -w nx run-many --target=build,test
+ */
+
+// Set error handling to capture specific failures
+$.verbose = true;
+process.on('unhandledRejection', (err) => {
+  console.error(chalk.red('Error: '), err);
+  process.exit(1);
+});
+
+/**
+ * Check if there are uncommitted changes in the git repository
+ * @returns {Promise<boolean>} True if there are uncommitted changes, false otherwise
+ */
+async function hasUncommittedChanges() {
+  try {
+    const { stdout } = await $`git status --porcelain`;
+    return stdout.trim().length > 0;
+  } catch (error) {
+    console.error(chalk.red('Failed to check git status:'), error);
+    throw error;
+  }
+}
+
+/**
+ * Commit changes with a specific message
+ * @param {string} message - The commit message
+ */
+async function commitChanges(message) {
+  try {
+    await $`git add .`;
+    await $`git commit -m ${message}`;
+    console.log(chalk.green(`Changes committed: ${message}`));
+  } catch (error) {
+    console.error(chalk.red('Failed to commit changes:'), error);
+    throw error;
+  }
+}
+
+/**
+ * Main function to run the pre-CI checks and fixes
+ */
+async function main() {
+  console.log(chalk.blue('Starting pre-CI checks and fixes...'));
+
+  // Step 1: Check for uncommitted changes
+  console.log(chalk.blue('Step 1: Checking for uncommitted changes...'));
+  if (await hasUncommittedChanges()) {
+    console.error(
+      chalk.red(
+        'Error: There are uncommitted changes in the repository. Please commit or stash them before running this script.',
+      ),
+    );
+    process.exit(1);
+  }
+  console.log(chalk.green('No uncommitted changes found. Proceeding...'));
+
+  // Step 2: Run pnpm install and commit changes if any
+  console.log(chalk.blue('Step 2: Running pnpm install...'));
+  try {
+    await $`pnpm install`;
+
+    if (await hasUncommittedChanges()) {
+      await commitChanges('chore: update dependencies after pnpm install');
+    } else {
+      console.log(chalk.green('No changes after pnpm install.'));
+    }
+  } catch (error) {
+    console.error(chalk.red('Error during pnpm install:'), error);
+    process.exit(1);
+  }
+
+  // Step 3: Run lint with fixes and commit changes if any
+  console.log(chalk.blue('Step 3: Running linting with auto-fix...'));
+  try {
+    await $`pnpm -w nx run-many --target=lint --fix`;
+
+    if (await hasUncommittedChanges()) {
+      await commitChanges('style: fix linting issues');
+    } else {
+      console.log(chalk.green('No linting issues to fix.'));
+    }
+  } catch (error) {
+    console.error(chalk.red('Linting failed with errors that could not be auto-fixed:'), error);
+    process.exit(1);
+  }
+
+  // Step 4: Push changes to remote
+  console.log(chalk.blue('Step 4: Pushing changes to remote...'));
+  try {
+    await $`git push`;
+    console.log(chalk.green('Successfully pushed changes.'));
+  } catch (error) {
+    console.error(chalk.red('Failed to push changes:'), error);
+    process.exit(1);
+  }
+
+  // Step 5: Run build and test
+  console.log(chalk.blue('Step 5: Running build and tests...'));
+  try {
+    await $`pnpm -w nx run-many --target=build,test`;
+    console.log(chalk.green('Build and tests completed successfully.'));
+  } catch (error) {
+    console.error(chalk.red('Build or tests failed:'), error);
+    process.exit(1);
+  }
+
+  console.log(chalk.green.bold('✅ All pre-CI checks and fixes completed successfully!'));
+}
+
+// Execute main function
+main().catch((error) => {
+  console.error(chalk.red('Error in pre-CI script:'), error);
+  process.exit(1);
+});
