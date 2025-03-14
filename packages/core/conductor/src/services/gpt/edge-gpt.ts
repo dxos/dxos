@@ -108,8 +108,12 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         for (const message of output) {
           for (const content of message.content) {
             if (content.type === 'image') {
-              log.info('save image to cache', { id: content.id, mediaType: content.source?.mediaType });
-              this.imageCache.set(content.id!, content);
+              // TODO(dmaretskyi): Hardwired to return images as artifacts if they are present in the response,
+              return {
+                [ECHO_ATTR_TYPE]: IMAGE_TYPENAME,
+                id: content.id,
+                source: content.source,
+              };
             }
           }
         }

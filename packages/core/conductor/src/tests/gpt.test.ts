@@ -220,8 +220,8 @@ describe('Gpt pipelines', () => {
               name: 'text-to-image',
               type: ToolTypes.TextToImage,
               options: {
-                model: '@testing/kitten-in-bubble'
-              }
+                model: '@testing/kitten-in-bubble',
+              },
             },
           ],
         };
@@ -235,6 +235,7 @@ describe('Gpt pipelines', () => {
           ),
         );
         log.info('output', { output });
+        log.info('artifact', { artifact: output.artifact });
       }).pipe(Effect.scoped),
     ),
   );
