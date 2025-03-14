@@ -6,11 +6,11 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceClientImpl, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
+import { AIServiceClientImpl, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
-import { EdgeGpt } from '../services';
+import { EdgeGpt, OllamaGpt } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
@@ -230,12 +230,13 @@ describe('Gpt pipelines', () => {
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
+              gpt: new EdgeGpt(OllamaClient.createTestClient()),
             }),
           ),
         );
         log.info('output', { output });
         log.info('artifact', { artifact: output.artifact });
+        expect(output.artifact).toBeDefined();
       }).pipe(Effect.scoped),
     ),
   );

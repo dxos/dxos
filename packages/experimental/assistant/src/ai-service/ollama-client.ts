@@ -31,6 +31,9 @@ export type OllamaClientParams = {
 };
 
 export class OllamaClient implements AIService {
+  /**
+   * Create a test client with small local model and no temperature for predictable results.
+   */
   static createTestClient(options?: Pick<OllamaClientParams, 'tools'>) {
     return new OllamaClient({
       tools: options?.tools,
@@ -160,15 +163,17 @@ export class OllamaClient implements AIService {
         tool.type !== undefined && WELL_KNOWN_TOOLS[tool.type] ? WELL_KNOWN_TOOLS[tool.type] : tool,
       );
 
-      log.info('withWellKnownTools', { withWellKnownTools });
-
       if (withWellKnownTools.length > 0) {
         ollamaRequest.tools = withWellKnownTools.map((tool) => ({
           type: 'function',
           function: {
             name: tool.name,
             description: tool.description,
-            parameters: tool.parameters,
+            parameters: {
+              type: 'object',
+              properties: tool.parameters?.properties,
+              required: tool.parameters?.required,
+            },
           },
         }));
       }
@@ -267,7 +272,7 @@ export class OllamaClient implements AIService {
               type: 'tool_use',
               id: ObjectId.random(),
               name: data.message.tool_calls[0].function.name,
-              input: data.message.tool_calls[0].function.arguments,
+              input: sanitizeToolArguments(data.message.tool_calls[0].function.arguments),
             },
           } as GenerationStreamEvent;
 
@@ -359,6 +364,15 @@ export class OllamaClient implements AIService {
     }
   }
 }
+
+const sanitizeToolArguments = (args: any) => {
+  // TODO(dmaretskyi): Workaround for model bug.
+  if (args.type === 'object' && typeof args.properties === 'object' && Array.isArray(args.required)) {
+    return args.properties;
+  }
+
+  return args;
+};
 
 const SAMPLE_IMAGE_URL = 'https://images.nightcafe.studio/jobs/BNmcRhHCM1JRKoUtqSei/BNmcRhHCM1JRKoUtqSei--1--5b9rv.jpg';
 

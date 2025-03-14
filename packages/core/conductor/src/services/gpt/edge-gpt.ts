@@ -9,6 +9,7 @@ import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact'
 import {
   DEFAULT_LLM_MODEL,
   MixedStreamParser,
+  type AIService,
   type AIServiceClient,
   type GenerateRequest,
   type GenerationStreamEvent,
@@ -26,10 +27,10 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
   public readonly imageCache = new Map<string, ImageContentBlock>();
 
-  constructor(private readonly _client: AIServiceClient) {}
+  constructor(private readonly _client: AIService) {}
 
   // TODO(burdon): Not used?
-  getAiServiceClient = () => this._client;
+  getAiServiceClient = () => this._client as any;
 
   public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
@@ -161,7 +162,7 @@ interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
 }
 
 const generate = async (
-  client: AIServiceClient,
+  client: AIService,
   generationRequest: GenerateRequest,
   { abort }: { abort?: AbortSignal } = {},
 ): Promise<GenerateResult> => {
