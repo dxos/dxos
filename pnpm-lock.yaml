@@ -395,6 +395,9 @@ importers:
       wrangler:
         specifier: ^3.51.2
         version: 3.51.2(@cloudflare/workers-types@4.20241022.0)
+      zx:
+        specifier: ^8.4.1
+        version: 8.4.1
 
   docs:
     devDependencies:
@@ -2441,6 +2444,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../experimental/assistant
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -33988,6 +33994,11 @@ packages:
   zwitch@2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
 
+  zx@8.4.1:
+    resolution: {integrity: sha512-1Cb+Tfwt/daKV6wckBeDbB6h3IMauqj9KWp+EcbYzi9doeJeIHCktxp/yWspXOXRdoUzBCQSKoUgm3g8r9fz5A==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
+
 snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
@@ -60374,3 +60385,5 @@ snapshots:
   zwitch@1.0.5: {}
 
   zwitch@2.0.2: {}
+
+  zx@8.4.1: {}
