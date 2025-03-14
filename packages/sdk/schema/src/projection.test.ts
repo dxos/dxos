@@ -21,7 +21,6 @@ import {
   getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/live-object';
 
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
