@@ -4,14 +4,14 @@
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type Queue, QueueImpl } from '@dxos/echo-db';
+import { QueueImpl, type Queue } from '@dxos/echo-db';
 import { createStatic } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { MediaStreamRecorder, Transcriber } from '@dxos/plugin-transcription';
-import { TranscriptBlock, type TranscriptSegment } from '@dxos/plugin-transcription/types';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 
-import { type TranscriptionState } from '../types';
+import { MediaStreamRecorder, Transcriber } from './transcriber';
+import { TranscriptBlock, type TranscriptSegment } from './types';
 
 /**
  * Length of the chunk in ms.
@@ -35,7 +35,7 @@ export class TranscriptionManager extends Resource {
   private _name?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _transcriptionState?: TranscriptionState = undefined;
+  private _enabled = false;
   private _queue?: Queue<TranscriptBlock> = undefined;
 
   constructor(edgeClient: EdgeHttpClient) {
@@ -51,8 +51,9 @@ export class TranscriptionManager extends Resource {
     void this._transcriber?.close();
   }
 
-  recordChunks(recording: boolean) {
-    if (!this.isOpen || !this._transcriptionState?.enabled) {
+  @synchronized
+  setRecording(recording: boolean) {
+    if (!this.isOpen || !this._enabled) {
       return;
     }
 
@@ -63,17 +64,16 @@ export class TranscriptionManager extends Resource {
     }
   }
 
+  /**
+   * Enable or disable transcription.
+   * @param enabled - Whether to enable transcription.
+   */
   @synchronized
-  async setTranscription(transcription?: TranscriptionState) {
-    if (
-      !transcription ||
-      (this._transcriptionState?.enabled === transcription.enabled &&
-        this._transcriptionState?.queueDxn === transcription.queueDxn)
-    ) {
+  async setEnabled(enabled: boolean) {
+    if (this._enabled === enabled) {
       return;
     }
-
-    this._transcriptionState = transcription;
+    this._enabled = enabled;
     this.isOpen && (await this._toggleTranscriber());
   }
 
@@ -86,6 +86,32 @@ export class TranscriptionManager extends Resource {
     this.isOpen && (await this._toggleTranscriber());
   }
 
+  /**
+   * Set the queue to save the transcription to.
+   * @param queue - The queue to save the transcription to or the DXN of the queue.
+   */
+  @synchronized
+  async setQueue(queue?: Queue<TranscriptBlock> | string) {
+    switch (typeof queue) {
+      case 'string':
+        if (this._queue?.dxn.toString() === queue) {
+          return;
+        }
+        this._queue = new QueueImpl<TranscriptBlock>(this._edgeClient, DXN.parse(queue));
+        break;
+      case 'object':
+        if (this._queue === queue) {
+          return;
+        }
+        invariant(queue instanceof QueueImpl);
+        this._queue = queue;
+        break;
+      case 'undefined':
+        this._queue = undefined;
+        break;
+    }
+  }
+
   @synchronized
   setName(name: string) {
     if (this._name === name) {
@@ -95,16 +121,23 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _toggleTranscriber() {
-    if (!this._audioStreamTrack || !this._transcriptionState?.enabled || !this._transcriptionState.queueDxn) {
+    await this._maybeReinitTranscriber();
+
+    // Open or close transcriber if transcription is enabled or disabled.
+    if (this._enabled) {
+      await this._transcriber?.open();
+    } else {
+      await this._transcriber?.close();
+    }
+  }
+
+  private async _maybeReinitTranscriber() {
+    if (!this._audioStreamTrack || !this._enabled) {
       return;
     }
 
     // Reinitialize transcriber if queue or media stream track has changed.
     let needReinit = false;
-    if (this._queue?.dxn.toString() !== this._transcriptionState.queueDxn) {
-      this._queue = new QueueImpl(this._edgeClient, DXN.parse(this._transcriptionState.queueDxn));
-      needReinit = true;
-    }
     if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
       this._mediaRecorder = new MediaStreamRecorder({
         mediaStreamTrack: this._audioStreamTrack,
@@ -122,13 +155,6 @@ export class TranscriptionManager extends Resource {
         recorder: this._mediaRecorder,
         onSegments: (segments) => this._onSegments(segments),
       });
-    }
-
-    // Open or close transcriber if transcription is enabled or disabled.
-    if (this._transcriptionState?.enabled) {
-      await this._transcriber?.open();
-    } else {
-      await this._transcriber?.close();
     }
   }
 

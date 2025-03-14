@@ -9,11 +9,11 @@ import { generateName } from '@dxos/display-name';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
+import { TranscriptionManager } from '@dxos/plugin-transcription';
 import { isNonNullable } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
-import { TranscriptionManager } from './transcription-manager';
 import { type TranscriptionState, CALLS_URL, type EncodedTrackName, TrackNameCodec } from '../types';
 
 export type GlobalState = { call: CallState; media: MediaState };
@@ -184,7 +184,8 @@ export class CallManager extends Resource {
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
-    void this._transcriptionManager.setTranscription(state.transcription);
+    void this._transcriptionManager.setEnabled(state.transcription?.enabled ?? false);
+    void this._transcriptionManager.setQueue(state.transcription?.queueDxn);
 
     this._updateState();
   }
@@ -201,7 +202,7 @@ export class CallManager extends Resource {
 
     void this._transcriptionManager.setAudioTrack(state.audioTrack);
     this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
-    this._transcriptionManager.recordChunks(this._mediaManager.isSpeaking ?? false);
+    this._transcriptionManager.setRecording(this._mediaManager.isSpeaking ?? false);
 
     this._updateState();
   }
