@@ -3,20 +3,20 @@
 //
 
 import { it } from '@effect/vitest';
-import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
-import { describe, test } from 'vitest';
+import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
+import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceClientImpl, type GenerationStreamEvent } from '@dxos/assistant';
+import { AIServiceClientImpl, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
 import { EdgeGpt } from '../services';
 import { TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
-const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
+const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
 describe('Gpt pipelines', () => {
   it.effect('text output', ({ expect }) =>
@@ -187,6 +187,69 @@ describe('Gpt pipelines', () => {
       }),
     );
   });
+
+  it.effect('gpt simple', (ctx) =>
+    Effect.gen(function* () {
+      if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+        ctx!.skip();
+        return;
+      }
+
+      const input: GptInput = {
+        prompt: 'What is the meaning of life? Answer in 10 words or less.',
+      };
+      const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
+        Effect.flatMap(unwrapValueBag),
+        Effect.provide(
+          testServices({
+            enableLogging: ENABLE_LOGGING,
+            gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
+          }),
+        ),
+      );
+      log.info('output', { output });
+      expect(typeof output.text).toBe('string');
+      expect(output.text.length).toBeGreaterThan(10);
+    }).pipe(Effect.scoped),
+  );
+
+  test(
+    'gpt with image gen',
+    { timeout: 60_000 },
+    testEffect((ctx) =>
+      Effect.gen(function* () {
+        if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+          ctx!.skip();
+          return;
+        }
+
+        const input: GptInput = {
+          prompt: 'A beautiful sunset over a calm ocean',
+          tools: [
+            {
+              name: 'text-to-image',
+              type: ToolTypes.TextToImage,
+              options: {
+                model: '@testing/kitten-in-bubble',
+              },
+            },
+          ],
+        };
+        const output = yield* registry.gpt.exec!(makeValueBag(input)).pipe(
+          Effect.flatMap(unwrapValueBag),
+          Effect.provide(
+            testServices({
+              enableLogging: ENABLE_LOGGING,
+              gpt: new EdgeGpt(OllamaClient.createTestClient()),
+            }),
+          ),
+        );
+        log.info('output', { output });
+        log.info('artifact', { artifact: output.artifact });
+        expect(output.artifact).toBeDefined();
+      }).pipe(Effect.scoped),
+    ),
+  );
 });
 
 const gpt1 = () => {
@@ -213,3 +276,28 @@ const gpt2 = () => {
 
   return model;
 };
+
+// TODO(dmaretskyi): Bump vitest and @effect/vitest and remove this.
+const testEffect =
+  <E, A>(effect: (ctx?: TaskContext) => Effect.Effect<A, E>) =>
+  (ctx?: TaskContext) =>
+    Effect.gen(function* () {
+      const exitFiber = yield* Effect.fork(Effect.exit(effect(ctx)));
+
+      ctx?.onTestFinished(() => Fiber.interrupt(exitFiber).pipe(Effect.asVoid, Effect.runPromise));
+
+      const exit = yield* Fiber.join(exitFiber);
+      if (Exit.isSuccess(exit)) {
+        return () => exit.value;
+      } else {
+        const errors = Cause.prettyErrors(exit.cause);
+        for (let i = 1; i < errors.length; i++) {
+          yield* Effect.logError(errors[i]);
+        }
+        return () => {
+          throw errors[0];
+        };
+      }
+    })
+      .pipe(Effect.runPromise)
+      .then((f) => f());

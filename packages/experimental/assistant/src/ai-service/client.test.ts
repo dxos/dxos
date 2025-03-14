@@ -5,14 +5,16 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
-import { type Message, type Tool } from '@dxos/artifact';
-import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
+import { defineTool, Message, ToolResult, type Tool } from '@dxos/artifact';
+import { toJsonSchema, ObjectId, createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
 import { DEFAULT_LLM_MODEL } from './defs';
+import { OllamaClient } from './ollama-client';
+import { MixedStreamParser } from './parser';
 import { ToolTypes } from './types';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
@@ -174,5 +176,90 @@ describe.skip('AI Service Client', () => {
     }
 
     log('full message', { message: await stream.complete() });
+  });
+});
+
+describe('Ollama Client', () => {
+  test('basic', async (ctx) => {
+    const isRunning = await OllamaClient.isOllamaRunning();
+    if (!isRunning) {
+      ctx.skip();
+    }
+
+    const client = OllamaClient.createTestClient();
+    const parser = new MixedStreamParser();
+
+    const messages = await parser.parse(
+      await client.exec({
+        prompt: createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'Hello, world!' }],
+        }),
+      }),
+    );
+
+    log.info('messages', { messages });
+  });
+
+  test('tool calls', async (ctx) => {
+    const isRunning = await OllamaClient.isOllamaRunning();
+    if (!isRunning) {
+      ctx.skip();
+    }
+
+    const client = OllamaClient.createTestClient({
+      tools: [
+        defineTool('test', {
+          name: 'encrypt',
+          description: 'Encrypt a message',
+          schema: S.Struct({
+            message: S.String.annotations({ description: 'The message to encrypt' }),
+          }),
+          execute: async ({ message }) => ToolResult.Success(message.split('').reverse().join('')),
+        }),
+      ],
+    });
+    const parser = new MixedStreamParser();
+    parser.streamEvent.on((event) => {
+      // log.info('event', { event });
+    });
+
+    const messages = await parser.parse(
+      await client.exec({
+        prompt: createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
+        }),
+      }),
+    );
+
+    log.info('messages', { messages });
+  });
+
+  test('text-to-image', async (ctx) => {
+    const isRunning = await OllamaClient.isOllamaRunning();
+    if (!isRunning) {
+      ctx.skip();
+    }
+
+    const client = OllamaClient.createTestClient();
+    const parser = new MixedStreamParser();
+
+    const messages = await parser.parse(
+      await client.exec({
+        prompt: createStatic(Message, {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate an image of a cat' }],
+        }),
+        tools: [
+          {
+            name: 'text-to-image',
+            type: ToolTypes.TextToImage,
+          },
+        ],
+      }),
+    );
+
+    log.info('messages', { messages });
   });
 });
