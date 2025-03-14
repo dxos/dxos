@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, ReadonlySignal } from '@preact/signals-core';
+import { computed } from '@preact/signals-core';
 
 import {
   formatToType,
