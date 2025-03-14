@@ -189,7 +189,10 @@ const _JsonSchemaType = S.Struct({
   dependencies: S.optional(
     S.Record({
       key: S.String,
-      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)),
+      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)).annotations({
+        identifier: 'dependency',
+        description: 'Dependency',
+      }),
     }),
   ),
 
@@ -267,7 +270,7 @@ const _JsonSchemaType = S.Struct({
       }),
     ),
   ),
-}).annotations({ description: 'JSON Schema' });
+}).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 
