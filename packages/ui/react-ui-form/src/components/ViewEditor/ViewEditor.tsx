@@ -111,10 +111,12 @@ export const ViewEditor = ({
 
   const handleClose = useCallback(() => setField(undefined), []);
 
+  // TODO(ZaymonFC): Make this reactive?
   const hiddenProperties = projection.getHiddenProperties();
 
   const handleUnhide = useCallback(
     (property: string) => {
+      setField(undefined);
       projection.unhideFieldProjection(property as JsonProp);
     },
     [projection],
@@ -122,12 +124,10 @@ export const ViewEditor = ({
 
   const handleHide = useCallback(
     (fieldId: string) => {
+      setField(undefined);
       projection.hideFieldProjection(fieldId);
-      if (field?.id === fieldId) {
-        setField(undefined);
-      }
     },
-    [projection, field],
+    [projection],
   );
 
   return (

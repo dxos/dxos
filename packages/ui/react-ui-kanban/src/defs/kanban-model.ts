@@ -54,12 +54,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return this._kanban.id;
   }
 
-  get columnFieldPath() {
+  get columnFieldPath(): JsonProp | undefined {
     const columnFieldId = this._kanban.columnFieldId;
     if (columnFieldId === undefined) {
       return undefined;
     }
-    const columnFieldProjection = this._projection.getFieldProjection(columnFieldId);
+    const columnFieldProjection = this._projection.tryGetFieldProjection(columnFieldId);
     return columnFieldProjection?.props.property;
   }
 
@@ -98,13 +98,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   private initializeEffects(): void {
-    // Effect to recompute arrangement when columnField changes
     const arrangementWatcher = effect(() => {
-      // Touch the field to subscribe to changes
       const _ = this._kanban.columnFieldId;
       this._cards.value = this._computeArrangement();
     });
-
     this._ctx.onDispose(arrangementWatcher);
   }
 
@@ -161,7 +158,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return [];
     }
 
-    return this._projection.getFieldProjection(this._kanban.columnFieldId).props.options ?? [];
+    return this._projection.tryGetFieldProjection(this._kanban.columnFieldId)?.props.options ?? [];
   }
 
   private _computeArrangement(): ArrangedCards<T> {
