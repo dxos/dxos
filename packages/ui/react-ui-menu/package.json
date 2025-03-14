@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-menu",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Components for facilitating reactive and consistent menus.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
