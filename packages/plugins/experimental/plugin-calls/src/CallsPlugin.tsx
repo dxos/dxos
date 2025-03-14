@@ -44,6 +44,7 @@ export const CallsPlugin = () =>
           id: 'calls',
           label: ['calls panel label', { ns: CALLS_PLUGIN }],
           icon: 'ph--phone-call--regular',
+          fixed: true,
         }),
       ],
     }),
