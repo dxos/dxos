@@ -20,7 +20,7 @@ type MapViewEditorProps = { map: MapType };
 
 export const MapViewEditor = ({ map }: MapViewEditorProps) => {
   const space = getSpace(map);
-  const currentTypename = useMemo(() => map?.view?.target?.query?.type, [map?.view?.target?.query?.type]);
+  const currentTypename = useMemo(() => map?.view?.target?.query?.typename, [map?.view?.target?.query?.typename]);
   const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
   const currentSchema = useSchema(space, currentTypename);
 

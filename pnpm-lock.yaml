@@ -602,15 +602,15 @@ importers:
       '@dxos/plugin-calls':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-calls
-      '@dxos/plugin-canvas':
-        specifier: workspace:*
-        version: link:../../plugins/experimental/plugin-canvas
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-conductor':
+        specifier: workspace:*
+        version: link:../../plugins/experimental/plugin-conductor
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
@@ -4313,6 +4313,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-edge-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-edge-client
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/primitives/react-hooks
@@ -5892,7 +5895,7 @@ importers:
         specifier: ~3.4.1
         version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.3))
 
-  packages/plugins/experimental/plugin-canvas:
+  packages/plugins/experimental/plugin-conductor:
     dependencies:
       '@dxos/app-framework':
         specifier: workspace:*

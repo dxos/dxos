@@ -38,7 +38,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type!));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.typename!));
     }
   }, [space, tables]);
 

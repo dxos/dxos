@@ -8,6 +8,7 @@ import { FunctionTrigger } from './types';
 
 export const InvocationTrace = S.Struct({
   id: ObjectId,
+  timestampMs: S.Number,
   /**
    * Queue DXN for function/workflow invocation events.
    */
@@ -42,6 +43,10 @@ export const TraceEvent = S.Struct({
   id: ObjectId,
   outcome: S.String,
   truncated: S.Boolean,
+  /**
+   * Time when the event was persisted.
+   */
+  ingestionTimestampMs: S.Number,
   logs: S.Array(TraceEventLog),
   exceptions: S.Array(TraceEventException),
 }).pipe(EchoObject('dxos.org/type/TraceEvent', '0.1.0'));

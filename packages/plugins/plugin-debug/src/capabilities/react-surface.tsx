@@ -36,6 +36,7 @@ import {
   SearchPanel,
   AutomergePanel,
   WorkflowPanel,
+  QueuesPanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
 import { Graph } from '@dxos/plugin-graph';
@@ -249,6 +250,12 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
       component: () => <AutomergePanel />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/echo/queues`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Echo.Queues,
+      component: () => <QueuesPanel />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/members`,
