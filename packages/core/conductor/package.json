@@ -35,11 +35,11 @@
   "dependencies": {
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/async": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
