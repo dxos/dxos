@@ -29,6 +29,10 @@ const PREFIXED_CHUNKS_AMOUNT = 10;
  */
 const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 
+/**
+ * Manages transcription state.
+ */
+// TODO(mykola): Reconcile with useTranscriber hook.
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
@@ -52,7 +56,7 @@ export class TranscriptionManager extends Resource {
   }
 
   @synchronized
-  setRecording(recording: boolean) {
+  setRecording(recording?: boolean) {
     if (!this.isOpen || !this._enabled) {
       return;
     }
@@ -69,11 +73,11 @@ export class TranscriptionManager extends Resource {
    * @param enabled - Whether to enable transcription.
    */
   @synchronized
-  async setEnabled(enabled: boolean) {
+  async setEnabled(enabled?: boolean) {
     if (this._enabled === enabled) {
       return;
     }
-    this._enabled = enabled;
+    this._enabled = enabled ?? false;
     this.isOpen && (await this._toggleTranscriber());
   }
 
@@ -91,7 +95,7 @@ export class TranscriptionManager extends Resource {
    * @param queue - The queue to save the transcription to or the DXN of the queue.
    */
   @synchronized
-  async setQueue(queue?: Queue<TranscriptBlock> | string) {
+  setQueue(queue?: Queue<TranscriptBlock> | string) {
     switch (typeof queue) {
       case 'string':
         if (this._queue?.dxn.toString() === queue) {
