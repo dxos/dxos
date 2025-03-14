@@ -49,6 +49,10 @@ export class MediaStreamRecorder implements AudioRecorder {
     };
   }
 
+  get mediaStreamTrack() {
+    return this._mediaStreamTrack;
+  }
+
   setOnChunk(onChunk: (chunk: AudioChunk) => void): void {
     this._onChunk = onChunk;
   }

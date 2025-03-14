@@ -16,13 +16,13 @@ const FieldSort = S.Struct({
 
 export interface FieldSortType extends S.Schema.Type<typeof FieldSort> {}
 
+export const FieldSortType: S.Schema<FieldSortType> = FieldSort;
+
 /**
  * ECHO query object.
  */
 const QuerySchema = S.Struct({
-  // TODO(burdon): Rename to typename.
-  // typename: S.String,
-  type: S.optional(S.String),
+  typename: S.optional(S.String),
   sort: S.optional(S.Array(FieldSort)),
 }).pipe(S.mutable);
 
