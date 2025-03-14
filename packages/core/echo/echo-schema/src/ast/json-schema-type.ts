@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JsonProp, S } from '@dxos/effect';
+import { Schema as S } from 'effect';
+
+import { type JsonProp } from '@dxos/effect';
 
 import { EntityKind } from './entity-kind';
 import { FormatAnnotationId } from '../formats';

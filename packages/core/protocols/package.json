@@ -85,7 +85,11 @@
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.43.0",
-    "@bufbuild/protoc-gen-es": "^2.1.0"
+    "@bufbuild/protoc-gen-es": "^2.1.0",
+    "effect": "^3.12.3"
+  },
+  "peerDependencies": {
+    "effect": "^3.12.3"
   },
   "publishConfig": {
     "access": "public"

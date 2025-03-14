@@ -3653,6 +3653,9 @@ importers:
       '@bufbuild/protoc-gen-es':
         specifier: ^2.1.0
         version: 2.1.0(@bufbuild/protobuf@2.1.0)
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
 
   packages/devtools/cli:
     dependencies:
@@ -10987,9 +10990,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11011,9 +11011,6 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
-      effect:
-        specifier: ^3.12.3
-        version: 3.12.7
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -11042,6 +11039,9 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
+      effect:
+        specifier: ^3.12.3
+        version: 3.12.7
       react:
         specifier: ~18.2.0
         version: 18.2.0
