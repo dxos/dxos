@@ -51,12 +51,12 @@ export class TranscriptionManager extends Resource {
     void this._transcriber?.close();
   }
 
-  setSpeaking(speaking: boolean) {
+  recordChunks(recording: boolean) {
     if (!this.isOpen || !this._transcriptionState?.enabled) {
       return;
     }
 
-    if (speaking) {
+    if (recording) {
       this._transcriber?.startChunksRecording();
     } else {
       this._transcriber?.stopChunksRecording();

@@ -201,7 +201,7 @@ export class CallManager extends Resource {
 
     void this._transcriptionManager.setAudioTrack(state.audioTrack);
     this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
-    this._transcriptionManager.setSpeaking(this._mediaManager.isSpeaking ?? false);
+    this._transcriptionManager.recordChunks(this._mediaManager.isSpeaking ?? false);
 
     this._updateState();
   }
