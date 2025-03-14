@@ -223,10 +223,12 @@ export class Compiler {
   }
 
   private _parseImportToUrl(moduleName: string, containingFile?: string): string | undefined {
-    if (moduleName.startsWith('http')) {
+    if (moduleName.startsWith('node:')) {
+      return;
+    }
+
+    if (moduleName.startsWith('http://') || moduleName.startsWith('https://')) {
       return moduleName;
-    } else if (moduleName.startsWith('node:')) {
-      return `https://esm.sh/@types/node/${moduleName.slice(5)}.d.ts`;
     } else if (!moduleName.startsWith('.') && !moduleName.startsWith('/')) {
       const version = this._moduleVersions.get(moduleName);
       const parts = moduleName.split('/');
@@ -239,24 +241,30 @@ export class Compiler {
         path = parts.slice(1).length > 0 ? '/' + parts.slice(1).join('/') : '';
       }
 
-      let url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
+      // TODO(wittjosiah): Transitive deps are not working.
+      //   https://github.com/esm-dev/esm.sh/issues/1106
+      const url = `https://esm.sh/${baseModule}${version ? `@${version}` : ''}${path}`;
+      // const packageJson = this._packageJsonCache.get(`${baseModule}@${version}`);
+      // if (packageJson) {
+      //   // Get all dependencies from package.json that have versions specified in moduleVersions
+      //   const deps = Object.keys({ ...(packageJson.dependencies || {}), ...(packageJson.peerDependencies || {}) })
+      //     .filter((dep) => this._moduleVersions.has(dep))
+      //     .map((dep) => `${dep}@${this._moduleVersions.get(dep)}`)
+      //     .join(',');
 
-      const packageJson = this._packageJsonCache.get(`${baseModule}@${version}`);
-      if (packageJson) {
-        // Get all dependencies from package.json that have versions specified in moduleVersions
-        const deps = Object.keys({ ...(packageJson.dependencies || {}), ...(packageJson.peerDependencies || {}) })
-          .filter((dep) => this._moduleVersions.has(dep))
-          .map((dep) => `${dep}@${this._moduleVersions.get(dep)}`)
-          .join(',');
-
-        if (deps) {
-          url += `?deps=${deps}`;
-        }
-      }
+      //   if (deps) {
+      //     url += `?deps=${deps}`;
+      //   }
+      // }
 
       return url;
-    } else if (containingFile?.startsWith('http') && (moduleName.startsWith('.') || moduleName.startsWith('/'))) {
+    } else if (containingFile?.startsWith('http') && moduleName.startsWith('.')) {
+      // Relative path - resolve against parent's full URL.
       return new URL(moduleName, containingFile).href;
+    } else if (containingFile?.startsWith('http') && moduleName.startsWith('/')) {
+      // Absolute path - use parent's origin.
+      const parentUrl = new URL(containingFile);
+      return new URL(moduleName, parentUrl.origin).href;
     }
   }
 
@@ -322,26 +330,6 @@ export class Compiler {
     }
   }
 
-  // TODO(wittjosiah): Reconcile with _parseImportToUrl.
-  private _normalizeTypesUrl(url: string, parent?: string): string | undefined {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-
-    if (!parent || url.startsWith('node:')) {
-      return;
-    }
-
-    const parentUrl = new URL(parent);
-    if (url.startsWith('/')) {
-      // Absolute path - use parent's origin.
-      return new URL(url, parentUrl.origin).href;
-    } else {
-      // Relative path - resolve against parent's full URL.
-      return new URL(url, parentUrl).href;
-    }
-  }
-
   private async _processImportsInTypeDefinition(content: string, parentUrl?: string): Promise<void> {
     const imports = this._findImportsInContent(content);
     log('process imports', { parentUrl, imports });
@@ -352,7 +340,7 @@ export class Compiler {
 
     await Promise.all(
       imports.map(async (importUrl) => {
-        let normalizedUrl = this._normalizeTypesUrl(importUrl, parentUrl);
+        let normalizedUrl = this._parseImportToUrl(importUrl, parentUrl);
         if (!normalizedUrl) {
           return;
         }
