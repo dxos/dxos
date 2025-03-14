@@ -32,6 +32,7 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
+  private _name?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _transcriptionState?: TranscriptionState = undefined;
@@ -42,12 +43,16 @@ export class TranscriptionManager extends Resource {
     this._edgeClient = edgeClient;
   }
 
+  protected override async _open() {
+    await this._toggleTranscriber();
+  }
+
   protected override async _close() {
     void this._transcriber?.close();
   }
 
   setSpeaking(speaking: boolean) {
-    if (!this._transcriptionState?.enabled) {
+    if (!this.isOpen || !this._transcriptionState?.enabled) {
       return;
     }
 
@@ -69,7 +74,7 @@ export class TranscriptionManager extends Resource {
     }
 
     this._transcriptionState = transcription;
-    await this._toggleTranscriber();
+    this.isOpen && (await this._toggleTranscriber());
   }
 
   @synchronized
@@ -78,7 +83,15 @@ export class TranscriptionManager extends Resource {
       return;
     }
     this._audioStreamTrack = track;
-    await this._toggleTranscriber();
+    this.isOpen && (await this._toggleTranscriber());
+  }
+
+  @synchronized
+  setName(name: string) {
+    if (this._name === name) {
+      return;
+    }
+    this._name = name;
   }
 
   private async _toggleTranscriber() {
@@ -120,11 +133,11 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _onSegments(segments: TranscriptSegment[]) {
-    if (!this._queue) {
+    if (!this.isOpen || !this._queue) {
       return;
     }
 
-    const block = createStatic(TranscriptBlock, { author: self.name, segments });
+    const block = createStatic(TranscriptBlock, { author: this._name, segments });
     this._queue.append([block]);
   }
 }

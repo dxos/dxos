@@ -5,6 +5,7 @@
 import { synchronized } from '@dxos/async';
 import { type PublicKey, type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
+import { generateName } from '@dxos/display-name';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
@@ -138,6 +139,7 @@ export class CallManager extends Resource {
     const subscription = this._client.halo.identity.subscribe((identity) => {
       if (identity) {
         this._swarmSynchronizer._setIdentity(identity);
+        this._transcriptionManager.setName(identity.profile?.displayName ?? generateName(identity.identityKey.toHex()));
       }
       if (this._client.halo.device) {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
@@ -150,6 +152,7 @@ export class CallManager extends Resource {
   }
 
   protected override async _close() {
+    await this._transcriptionManager.close();
     await this._swarmSynchronizer.leave();
     await this._swarmSynchronizer.close();
     await this._mediaManager.close();
@@ -164,10 +167,12 @@ export class CallManager extends Resource {
       iceServers: this._client.config.get('runtime.services.ice'),
       apiBase: `${CALLS_URL}/api/calls`,
     });
+    await this._transcriptionManager.open();
   }
 
   @synchronized
   async leave() {
+    await this._transcriptionManager.close();
     await this._swarmSynchronizer.leave();
     this._swarmSynchronizer.setJoined(false);
     await this._mediaManager.leave();
