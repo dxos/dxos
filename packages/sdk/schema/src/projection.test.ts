@@ -481,7 +481,7 @@ describe('ViewProjection', () => {
     expect(hiddenProps[0]).to.equal('createdAt');
 
     // Verify we can unhide the hidden field.
-    projection.unhideFieldProjection('createdAt' as JsonProp);
+    projection.showFieldProjection('createdAt' as JsonProp);
     expect(projection.getFieldProjection(getFieldId(view, 'createdAt'))).to.exist;
     expect(view.fields).to.have.length(3);
     expect(view.fields.map((f) => f.path)).to.deep.equal(['name', 'email', 'createdAt']);
@@ -503,7 +503,7 @@ describe('ViewProjection', () => {
     expect(() => getFieldId(view, 'createdAt')).to.throw();
 
     // Unhide using the same property name.
-    projection.unhideFieldProjection('createdAt' as JsonProp);
+    projection.showFieldProjection('createdAt' as JsonProp);
 
     // Field should be back in visible fields with same ID.
     expect(view.fields).to.have.length(3);
@@ -522,7 +522,7 @@ describe('ViewProjection', () => {
     expect(multipleHidden).to.include('email');
 
     // Unhide email and verify ID is preserved
-    projection.unhideFieldProjection('email' as JsonProp);
+    projection.showFieldProjection('email' as JsonProp);
     expect(view.fields).to.have.length(3);
     expect(getFieldId(view, 'email')).to.equal(emailId);
     expect(view.hiddenFields).to.have.length(0);

@@ -169,7 +169,7 @@ export class ViewProjection {
     });
   }
 
-  unhideFieldProjection(property: JsonProp): void {
+  showFieldProjection(property: JsonProp): void {
     untracked(() => {
       invariant(this._schema.jsonSchema.properties);
       invariant(property in this._schema.jsonSchema.properties);

@@ -113,18 +113,18 @@ export const ViewEditor = ({
 
   const hiddenProperties = projection.getHiddenProperties();
 
-  const handleUnhide = useCallback(
-    (property: string) => {
-      setField(undefined);
-      projection.unhideFieldProjection(property as JsonProp);
-    },
-    [projection],
-  );
-
   const handleHide = useCallback(
     (fieldId: string) => {
       setField(undefined);
       projection.hideFieldProjection(fieldId);
+    },
+    [projection],
+  );
+
+  const handleShow = useCallback(
+    (property: string) => {
+      setField(undefined);
+      projection.showFieldProjection(property as JsonProp);
     },
     [projection],
   );
@@ -199,7 +199,7 @@ export const ViewEditor = ({
                     >
                       <div />
                       <List.ItemTitle>{property}</List.ItemTitle>
-                      <List.ItemButton icon='ph--eye--regular' onClick={() => handleUnhide(property)} />
+                      <List.ItemButton icon='ph--eye--regular' onClick={() => handleShow(property)} />
                     </List.Item>
                   ))}
                 </div>
