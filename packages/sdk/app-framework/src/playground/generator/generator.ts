@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Capabilities, Events } from '../../common';
 import { contributes, defineEvent, defineCapability, defineModule, definePlugin } from '../../core';

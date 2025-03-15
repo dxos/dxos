@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 export const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';
 export const SETTINGS_ACTION = `${SETTINGS_PLUGIN}/action`;

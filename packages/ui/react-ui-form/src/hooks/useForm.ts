@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { SchemaAST as AST, type Schema as S } from 'effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
-import { AST, type S, type SimpleType, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
+import { type SimpleType, type JsonPath, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { type Effect } from 'effect';
 
 import { type Client, PublicKey } from '@dxos/client';

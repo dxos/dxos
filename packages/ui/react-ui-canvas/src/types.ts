@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { Schema as S } from 'effect';
 
 export const Point = S.Struct({ x: S.Number, y: S.Number });
 export const Dimension = S.Struct({ width: S.Number, height: S.Number });

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { ulid } from 'ulidx';
 
 export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
