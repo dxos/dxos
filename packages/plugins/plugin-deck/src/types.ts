@@ -33,7 +33,7 @@ export const DeckSettingsSchema = S.mutable(
   S.Struct({
     showHints: S.Boolean,
     enableNativeRedirect: S.Boolean,
-    enableIdeStyleStatusbar: S.Boolean,
+    enableStatusbar: S.Boolean,
     newPlankPositioning: S.Literal(...NewPlankPositions),
     overscroll: S.Literal(...OverscrollOptions),
   }),

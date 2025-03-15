@@ -6,7 +6,7 @@ import { it } from '@effect/vitest';
 import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } from 'effect';
 import { describe, expect, test, type TaskContext } from 'vitest';
 
-import { AIServiceClientImpl, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
+import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
@@ -120,7 +120,7 @@ describe('Gpt pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
+                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT })),
               }),
             ),
             Scope.extend(scope),
@@ -157,7 +157,7 @@ describe('Gpt pipelines', () => {
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
-                gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
+                gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT })),
               }),
             ),
             Scope.extend(scope),
@@ -190,7 +190,7 @@ describe('Gpt pipelines', () => {
 
   it.effect('gpt simple', (ctx) =>
     Effect.gen(function* () {
-      if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+      if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
         ctx!.skip();
         return;
       }
@@ -203,7 +203,7 @@ describe('Gpt pipelines', () => {
         Effect.provide(
           testServices({
             enableLogging: ENABLE_LOGGING,
-            gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: AI_SERVICE_ENDPOINT })),
+            gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT })),
           }),
         ),
       );
@@ -218,7 +218,7 @@ describe('Gpt pipelines', () => {
     { timeout: 60_000 },
     testEffect((ctx) =>
       Effect.gen(function* () {
-        if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+        if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
           ctx!.skip();
           return;
         }
@@ -240,7 +240,7 @@ describe('Gpt pipelines', () => {
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(OllamaClient.createTestClient()),
+              gpt: new EdgeGpt(OllamaClient.createClient()),
             }),
           ),
         );
