@@ -42,8 +42,7 @@
     "@dxos/node-std": "workspace:*",
     "@nx/devkit": "19.7.2",
     "@playwright/test": "^1.46.0",
-    "pkg-up": "^3.1.0",
-    "vitest": "^3.0.8"
+    "pkg-up": "^3.1.0"
   },
   "publishConfig": {
     "access": "public"

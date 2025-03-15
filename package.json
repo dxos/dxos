@@ -34,9 +34,11 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.5.17",
     "@cloudflare/workers-types": "^4.20241018.0",
     "@dxos/async": "workspace:*",
     "@dxos/beast": "workspace:*",
+    "@effect/vitest": "^0.16.3",
     "@dxos/client": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
