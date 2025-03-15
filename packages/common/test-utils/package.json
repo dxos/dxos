@@ -44,6 +44,9 @@
     "@playwright/test": "^1.46.0",
     "pkg-up": "^3.1.0"
   },
+  "peerDependencies": {
+    "vitest": "^3.0.8"
+  },
   "publishConfig": {
     "access": "public"
   }
