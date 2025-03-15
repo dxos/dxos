@@ -11,8 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl } from './client';
 import { DEFAULT_LLM_MODEL } from './defs';
+import { AIServiceEdgeClient } from './edge-client';
 import { OllamaClient } from './ollama-client';
 import { MixedStreamParser } from './parser';
 import { ToolTypes } from './types';
@@ -22,7 +22,7 @@ import { AI_SERVICE_ENDPOINT } from '../testing';
 
 describe.skip('AI Service Client', () => {
   test('client generation', async () => {
-    const client = new AIServiceClientImpl({
+    const client = new AIServiceEdgeClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -56,7 +56,7 @@ describe.skip('AI Service Client', () => {
   });
 
   test('tool calls', async () => {
-    const client = new AIServiceClientImpl({
+    const client = new AIServiceEdgeClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
@@ -139,7 +139,7 @@ describe.skip('AI Service Client', () => {
   });
 
   test.skip('image generation', async () => {
-    const client = new AIServiceClientImpl({
+    const client = new AIServiceEdgeClient({
       endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 

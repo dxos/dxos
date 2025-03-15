@@ -7,8 +7,8 @@ import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type AIService, type GenerationStream } from './interface';
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
+import { type AIService, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
 import { isToolUse, runTools } from '../conversation';
