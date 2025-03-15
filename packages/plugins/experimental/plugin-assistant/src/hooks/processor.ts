@@ -13,7 +13,7 @@ import {
   type GenerationStream,
   MixedStreamParser,
   DEFAULT_LLM_MODEL,
-  type AIService,
+  type AIServiceClient,
 } from '@dxos/assistant';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -92,7 +92,7 @@ export class ChatProcessor {
   });
 
   constructor(
-    private readonly _service: AIService,
+    private readonly _ai: AIServiceClient,
     private _tools?: Tool[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
@@ -180,7 +180,7 @@ export class ChatProcessor {
         });
 
         // Open request stream.
-        this._stream = await this._service.exec({
+        this._stream = await this._ai.exec({
           ...this._options,
           // TODO(burdon): Rename messages or separate history/message.
           history: [...this._history, ...this._pending.value],

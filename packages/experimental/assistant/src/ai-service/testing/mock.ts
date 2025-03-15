@@ -2,11 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type GenerationStream, type AIService, type GenerateRequest, createGenerationStream } from '@dxos/assistant';
+import {
+  type GenerationStream,
+  type AIServiceClient,
+  type GenerateRequest,
+  createGenerationStream,
+} from '@dxos/assistant';
 
 import { createTestSSEStream } from './test-stream';
 
-export class MockAIService implements AIService {
+export class MockAIService implements AIServiceClient {
   constructor(private readonly _responses: string[]) {}
 
   // TODO(burdon): Match response to request.
