@@ -14,20 +14,20 @@ import { Compiler } from '../compiler';
 export default async () => {
   const compiler = new Compiler();
 
+  (globalThis as any).composer ??= {};
+  (globalThis as any).composer.compiler = compiler;
+
   await compiler.initialize();
-  // TODO(wittjosiah): Fetch types for https modules.
-  compiler.setFile('/src/typings.d.ts', "declare module 'https://*';");
-  // TODO(wittjosiah): Proper function handler types.
-  // TODO(wittjosiah): Remove.
-  compiler.setFile(
-    '/src/runtime.ts',
-    `
-        export const Filter: any = {};
-        export type FunctionHandler = ({ event, context }: { event: any; context: any }) => Promise<Response>;
-        export const functionHandler = (handler: FunctionHandler) => handler;
-      `,
-  );
   await initializeBundler({ wasmUrl });
 
   return contributes(ScriptCapabilities.Compiler, compiler);
 };
+
+const _globals = `
+  import { defineFunction } from 'npm:@dxos/functions@main';
+  type DefineFunction = typeof defineFunction;
+
+  declare global {
+    var defineFunction: DefineFunction;
+  }
+`;

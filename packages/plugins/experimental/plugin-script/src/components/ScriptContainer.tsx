@@ -23,15 +23,9 @@ export type ScriptEditorProps = ThemedClassName<{
   settings?: ScriptSettingsProps;
   role?: string;
 }> &
-  Pick<TypescriptEditorProps, 'env'>;
+  Pick<TypescriptEditorProps, 'compiler'>;
 
-export const ScriptContainer = ({
-  role,
-  classNames,
-  script,
-  settings = { editorInputMode: 'vscode' },
-  env,
-}: ScriptEditorProps) => {
+export const ScriptContainer = ({ role, classNames, compiler, settings, script }: ScriptEditorProps) => {
   const identity = useIdentity();
   const space = getSpace(script);
 
@@ -64,11 +58,11 @@ export const ScriptContainer = ({
         {state.view !== 'debug' && (
           <TypescriptEditor
             id={script.id}
-            env={env}
+            compiler={compiler}
             initialValue={script.source?.target?.content}
             extensions={extensions}
             className={stackItemContentEditorClassNames(role)}
-            inputMode={settings.editorInputMode}
+            inputMode={settings?.editorInputMode}
             toolbar
           />
         )}

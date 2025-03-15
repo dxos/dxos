@@ -5,31 +5,42 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useMemo } from 'react';
+// @ts-ignore
+import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import { initializeBundler } from '@dxos/functions/bundler';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TypescriptEditor } from './TypescriptEditor';
+import { Compiler } from '../../compiler';
 import { templates } from '../../templates';
 
-// TODO(burdon): Features:
-// - language support for S
-// - hierarchical editor (DND)
-// - virtual document image rendering
-// - mobile rendering error
-
-// TODO(burdon): JSX.
-// TODO(burdon): Effect schema.
-// TODO(burdon): react-buddy for storybook?
-
 const DefaultStory = () => {
-  const object = useMemo(() => createObject({ content: templates[0].source }), []);
+  const [compiler, setCompiler] = useState<Compiler>();
+  const object = useMemo(() => createObject({ content: templates[4].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [createDataExtensions({ id: object.id, text: accessor })], [object.id, accessor]);
-  return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      const compiler = new Compiler();
+      await compiler.initialize();
+      await initializeBundler({ wasmUrl });
+      setCompiler(compiler);
+    });
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (!compiler) {
+    return <></>;
+  }
+
+  return <TypescriptEditor id='test' compiler={compiler} initialValue={initialValue} extensions={extensions} />;
 };
 
 export const Default = {};

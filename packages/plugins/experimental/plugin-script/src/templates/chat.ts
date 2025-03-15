@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// @ts-ignore
-import { transformServerSentEvents } from 'https://esm.sh/@dxos/script-toolbox';
+import { transformServerSentEvents } from '@dxos/script-toolbox';
 
 /**
  * Chatbot that answers questions based on the context data.

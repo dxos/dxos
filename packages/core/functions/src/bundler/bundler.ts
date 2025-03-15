@@ -38,10 +38,9 @@ export type BundleResult = {
 };
 
 export type BundlerOptions = {
-  platform: BuildOptions['platform'];
   sandboxedModules: string[];
   remoteModules: Record<string, string>;
-};
+} & Pick<BuildOptions, 'banner' | 'platform'>;
 
 let initialized: Promise<void>;
 export const initializeBundler = async (options: { wasmUrl: string }) => {
@@ -54,6 +53,8 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
  * ESBuild bundler.
  */
 export class Bundler {
+  private _moduleVersions: Map<string, string> = new Map();
+
   constructor(private readonly _options: BundlerOptions) {}
 
   async bundle({ path, source }: BundleOptions): Promise<BundleResult> {
@@ -67,7 +68,7 @@ export class Bundler {
       };
     };
 
-    if (this._options.platform === 'browser') {
+    if (options.platform === 'browser') {
       invariant(initialized, 'Compiler not initialized.');
       await initialized;
     }
@@ -77,6 +78,7 @@ export class Bundler {
     // https://esbuild.github.io/api/#build
     try {
       const result = await build({
+        banner: options.banner,
         platform: options.platform,
         conditions: ['workerd', 'browser'],
         metafile: true,
@@ -88,14 +90,6 @@ export class Bundler {
           {
             name: 'memory',
             setup: (build) => {
-              build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
-                return { path, external: true };
-              });
-
-              build.onResolve({ filter: /^dxos:functions$/ }, ({ path }) => {
-                return { path: './runtime.js', external: true };
-              });
-
               build.onResolve({ filter: /^memory:/ }, ({ path }) => {
                 return { path: path.split(':')[1], namespace: 'memory' };
               });
@@ -109,6 +103,7 @@ export class Bundler {
                 }
               });
 
+              // TODO(wittjosiah): Remove?
               for (const module of providedModules) {
                 build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => {
                   return { path, namespace: 'injected-module' };
@@ -128,7 +123,7 @@ export class Bundler {
               });
             },
           },
-          httpPlugin,
+          npmPlugin,
         ],
       });
 
@@ -175,12 +170,22 @@ export class Bundler {
     // TODO(dmaretskyi): Support import aliases and wildcard imports.
     const parsedImports = allMatches(IMPORT_REGEX, code);
     return parsedImports.map((capture) => {
+      const moduleIdentifier = capture[4];
+      const quotes = capture[5];
+
+      // Check for version comment before the import
+      const importLine = code.substring(0, code.indexOf(capture[0])).split('\n').pop()?.trim() ?? '';
+      const versionMatch = importLine.match(/\/\/\s*@version\s+([^\s]+)/);
+      if (versionMatch) {
+        this._moduleVersions.set(moduleIdentifier, versionMatch[1]);
+      }
+
       return {
         defaultImportName: capture[1],
         namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
         wildcardImportName: capture[3],
-        moduleIdentifier: capture[4],
-        quotes: capture[5],
+        moduleIdentifier,
+        quotes,
       };
     });
   }
@@ -236,23 +241,32 @@ const analyzeSourceFileImports = (code: string): ParsedImport[] => {
   });
 };
 
-const httpPlugin: Plugin = {
-  name: 'http',
+const npmPlugin: Plugin = {
+  name: 'npm',
   setup: (build) => {
-    // Intercept import paths starting with "http:" and "https:" so esbuild doesn't attempt to map them to a file system location.
-    // Tag them with the "http-url" namespace to associate them with this plugin.
-    build.onResolve({ filter: /^https?:\/\// }, (args) => ({
-      path: args.path,
-      namespace: 'http-url',
-    }));
+    // Handle all non-relative imports through esm.sh
+    build.onResolve({ filter: /^[^./]|^[.][^/]/ }, (args) => {
+      const moduleName = args.path;
+      const version = (build.initialOptions.plugins?.[0] as any)?._moduleVersions?.get(moduleName);
+      const url = new URL(moduleName, 'https://esm.sh/');
+      if (version) {
+        url.pathname = `${moduleName}@${version}`;
+      }
+      return {
+        path: url.toString(),
+        namespace: 'http-url',
+      };
+    });
 
     // We also want to intercept all import paths inside downloaded files and resolve them against the original URL.
     // All of these files will be in the "http-url" namespace.
     // Make sure to keep the newly resolved URL in the "http-url" namespace so imports inside it will also be resolved as URLs recursively.
-    build.onResolve({ filter: /.*/, namespace: 'http-url' }, (args) => ({
-      path: new URL(args.path, args.importer).toString(),
-      namespace: 'http-url',
-    }));
+    build.onResolve({ filter: /.*/, namespace: 'http-url' }, (args) => {
+      return {
+        path: new URL(args.path, args.importer).toString(),
+        namespace: 'http-url',
+      };
+    });
 
     // When a URL is loaded, we want to actually download the content from the internet.
     // This has just enough logic to be able to handle the example import from unpkg.com but in reality this would probably need to be more complex.
