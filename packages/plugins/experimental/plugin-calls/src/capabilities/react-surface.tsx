@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isSpace, getSpace } from '@dxos/react-client/echo';
 
-import { CallContainer } from '../components';
+import { CallContainer, CallSidebar } from '../components';
 import { CALLS_PLUGIN } from '../meta';
 import { type Call, isCall } from '../types';
 
@@ -28,7 +28,7 @@ export default () =>
           return null;
         }
 
-        return <CallContainer space={space} roomId={space.key} />;
+        return <CallSidebar space={space} roomId={space.key} />;
       },
     }),
   ]);

@@ -124,13 +124,13 @@ importers:
         version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/playwright':
         specifier: 19.7.2
-        version: 19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
       '@nx/storybook':
         specifier: 19.7.2
         version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)
       '@nx/vite':
         specifier: 19.7.2
-        version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
       '@nx/web':
         specifier: 19.7.2
         version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)
@@ -226,7 +226,7 @@ importers:
         version: 2.1.3(playwright@1.46.1)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.7.3))
       '@vitest/coverage-v8':
         specifier: ^2.1.3
-        version: 2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.7.3)))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 2.1.3(@vitest/browser@2.1.3)(vitest@2.1.3)
       '@vitest/expect':
         specifier: ^2.1.3
         version: 2.1.3
@@ -395,6 +395,9 @@ importers:
       wrangler:
         specifier: ^3.51.2
         version: 3.51.2(@cloudflare/workers-types@4.20241022.0)
+      zx:
+        specifier: ^8.4.1
+        version: 8.4.1
 
   docs:
     devDependencies:
@@ -2441,6 +2444,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../experimental/assistant
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -2501,7 +2507,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: ^0.16.1
-        version: 0.16.3(effect@3.12.7)(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 0.16.3(effect@3.12.7)(vitest@2.1.3)
 
   packages/core/echo/automerge:
     dependencies:
@@ -4811,7 +4817,7 @@ importers:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.5.17
-        version: 0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3)
       '@cloudflare/workers-types':
         specifier: ^4.20241018.0
         version: 4.20241022.0
@@ -5769,6 +5775,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../../core/mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -15593,6 +15602,7 @@ packages:
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
+    deprecated: this package has been merged into the main effect package
     peerDependencies:
       effect: ^3.9.2
 
@@ -22307,6 +22317,7 @@ packages:
 
   acorn-import-assertions@1.9.0:
     resolution: {integrity: sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==}
+    deprecated: package has been renamed to acorn-import-attributes
     peerDependencies:
       acorn: ^8
 
@@ -22960,6 +22971,7 @@ packages:
 
   boolean@3.2.0:
     resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   bowser@2.11.0:
     resolution: {integrity: sha512-AlcaJBi/pqqJBIQ8U9Mcpc9i8Aqxn88Skv5d+xBX006BY5u8N3mGLHa5Lgppa7L/HfwgwLgZ6NYs+Ag6uUmJRA==}
@@ -27702,6 +27714,7 @@ packages:
 
   lodash.isequal@4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
 
   lodash.isequalwith@4.4.0:
     resolution: {integrity: sha512-dcZON0IalGBpRmJBmMkaoV7d3I80R2O+FrzsZyHdNSFrANq/cgDqKQNmAHE8UEj4+QYWwwhkQOVdLHiAopzlsQ==}
@@ -27723,12 +27736,14 @@ packages:
 
   lodash.omit@4.5.0:
     resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
 
   lodash.orderby@4.6.0:
     resolution: {integrity: sha512-T0rZxKmghOOf5YPnn8EY5iLYeWCpZq8G41FfqoVHH5QDTAFaghJRmAdLiadEDq+ztgM2q5PjA+Z1fOwGrLgmtg==}
 
   lodash.pick@4.4.0:
     resolution: {integrity: sha512-hXt6Ul/5yWjfklSGvLQl8vM//l3FtyHZeuelpzK6mm99pNvN9yTDruNZPEJZD1oWrqo+izBmB7oUfWgcCX7s4Q==}
+    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
 
   lodash.set@4.3.2:
     resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
@@ -33982,6 +33997,11 @@ packages:
   zwitch@2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
 
+  zx@8.4.1:
+    resolution: {integrity: sha512-1Cb+Tfwt/daKV6wckBeDbB6h3IMauqj9KWp+EcbYzi9doeJeIHCktxp/yWspXOXRdoUzBCQSKoUgm3g8r9fz5A==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
+
 snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
@@ -37464,7 +37484,7 @@ snapshots:
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/vitest-pool-workers@0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@cloudflare/vitest-pool-workers@0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3)':
     dependencies:
       '@vitest/runner': 2.1.3
       '@vitest/snapshot': 2.1.3
@@ -37946,7 +37966,7 @@ snapshots:
       effect: 3.12.7
       fast-check: 3.23.1
 
-  '@effect/vitest@0.16.3(effect@3.12.7)(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@effect/vitest@0.16.3(effect@3.12.7)(vitest@2.1.3)':
     dependencies:
       effect: 3.12.7
       vitest: 2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -39710,9 +39730,9 @@ snapshots:
       - '@swc/core'
       - debug
 
-  '@nrwl/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@nrwl/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)':
     dependencies:
-      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -40020,12 +40040,12 @@ snapshots:
   '@nx/nx-win32-x64-msvc@19.7.2':
     optional: true
 
-  '@nx/playwright@19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@nx/playwright@19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)':
     dependencies:
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/eslint': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)
-      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
       '@nx/webpack': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(esbuild@0.23.1)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.7.3)
       minimatch: 9.0.3
@@ -40092,9 +40112,9 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@nx/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)':
     dependencies:
-      '@nrwl/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@nrwl/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.7.3)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.7.3)
@@ -45515,7 +45535,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.7.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.7.3)))(vitest@2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.3))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3)(vitest@2.1.3)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -60368,3 +60388,5 @@ snapshots:
   zwitch@1.0.5: {}
 
   zwitch@2.0.2: {}
+
+  zx@8.4.1: {}
