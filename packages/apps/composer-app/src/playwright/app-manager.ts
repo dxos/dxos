@@ -41,8 +41,7 @@ export class AppManager {
     const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
 
-    await this.isAuthenticated();
-    await this.confirmRecoveryCode();
+    await this.isAuthenticated({ timeout: 10_000 });
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -112,32 +111,24 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace({
-    type = 'Document',
-    name,
-    timeout = 10_000,
-  }: { type?: string; name?: string; timeout?: number } = {}) {
-    await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
+  async createSpace({ type = 'Document', timeout = 10_000 }: { type?: string; timeout?: number } = {}) {
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').click();
     await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
 
     await this.page.getByTestId('create-object-form.schema-input').fill(type);
     await this.page.keyboard.press('Enter');
 
-    const objectForm = this.page.getByTestId('create-object-form');
-    if (name) {
-      await objectForm.getByLabel('Name').fill(name);
-    }
-    await objectForm.getByTestId('save-button').click();
-
     await this.waitForSpaceReady(timeout);
   }
 
   async joinSpace() {
-    await this.page.getByTestId('spacePlugin.joinSpace').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('spacePlugin.addSpace').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
   async waitForSpaceReady(timeout = 30_000) {
-    await this.page.getByTestId('spacePlugin.shareSpaceButton').waitFor({ timeout });
+    await this.page.getByTestId('spacePlugin.shareSpace').waitFor({ timeout });
   }
 
   getSpacePresenceMembers() {
@@ -145,10 +136,10 @@ export class AppManager {
   }
 
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
-    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
+    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
     if (typeof nextState !== 'undefined') {
-      const state = await toggle.getAttribute('aria-expanded');
+      const state = await toggle.getAttribute('aria-selected');
       if (state !== nextState.toString()) {
         await toggle.click();
       }
@@ -169,6 +160,10 @@ export class AppManager {
     await this.page.keyboard.press('Enter');
 
     const objectForm = this.page.getByTestId('create-object-form');
+    if (!(await objectForm.isVisible())) {
+      return;
+    }
+
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
     }
@@ -200,6 +195,7 @@ export class AppManager {
       .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
+    await this.page.pause();
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
     await this.page.keyboard.press('Enter');
   }
@@ -238,15 +234,23 @@ export class AppManager {
   //
 
   async openSettings() {
-    await this.page.getByTestId('treeView.openSettings').click();
+    await this.page.getByTestId('treeView.appSettings').click();
   }
 
-  async toggleExperimenalPlugins() {
-    await this.page.getByTestId('pluginSettings.experimental').click();
+  async openPluginRegistry() {
+    await this.page.getByTestId('treeView.pluginRegistry').click();
+  }
+
+  async openRegistryCategory(category: string) {
+    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+  }
+
+  getPluginToggle(plugin: string) {
+    return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
   async enablePlugin(plugin: string) {
-    await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
+    await this.getPluginToggle(plugin).click();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }

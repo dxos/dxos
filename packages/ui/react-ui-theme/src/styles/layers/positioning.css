@@ -8,9 +8,12 @@
   .sticky-top-0 {
     --sticky-top: 0;
   }
+  .contain-layout {
+    contain: layout;
+  }
 }
 
-@layer components {
+@layer dx-components {
   .sticky-top-from-topbar-bottom {
     --sticky-top: var(--topbar-size);
   }

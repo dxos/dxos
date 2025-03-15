@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep, latch } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { SystemError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import {

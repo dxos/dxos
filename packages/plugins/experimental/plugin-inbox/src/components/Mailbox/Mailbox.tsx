@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { MessageState, type MessageType } from '@dxos/plugin-space/types';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
 import { type MailboxType } from '../../types';
@@ -42,9 +42,9 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     clearTimeout(tRef.current);
     if (selected) {
       tRef.current = setTimeout(() => {
-        const object = mailbox?.messages?.filter(nonNullable).find((message) => message.id === selected);
-        if (object?.properties) {
-          setMessageProperty(object, 'read', true);
+        const object = mailbox?.messages?.find((message) => message.target?.id === selected);
+        if (object?.target?.properties) {
+          setMessageProperty(object.target, 'read', true);
         }
       }, options?.readTimout ?? DEFAULT_READ_TIMEOUT);
     }
@@ -53,7 +53,8 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   }, [selected]);
 
   const messages = [...(mailbox.messages ?? [])]
-    .filter(nonNullable) // TODO(burdon): [SDK] Why is filter needed?
+    .map((message) => message.target)
+    .filter(isNonNullable) // TODO(burdon): [SDK] Why is filter needed?
     .filter(
       (message) =>
         message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,

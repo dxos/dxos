@@ -162,7 +162,7 @@ export const InvitationListItemImpl = ({
           </Tooltip.Trigger>
         </Avatar.Root>
         <Tooltip.Portal>
-          <Tooltip.Content side='left' classNames='z-[70]'>
+          <Tooltip.Content side='left'>
             {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -184,7 +184,7 @@ export const InvitationListItemImpl = ({
             <Clipboard.IconButton variant='ghost' value={invitationUrl} />
           </>
           <Tooltip.Portal>
-            <Tooltip.Content side='left' classNames='z-[70]'>
+            <Tooltip.Content side='left'>
               {invitationHasLifetime && <span>Expires {invitationTimeLeft}</span>}
             </Tooltip.Content>
           </Tooltip.Portal>

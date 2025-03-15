@@ -1,12 +1,13 @@
 {
   "name": "@dxos/react-ui-syntax-highlighter",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "A syntax highlighter wrapper.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -23,12 +24,14 @@
     "src"
   ],
   "dependencies": {
+    "jsonpath": "^1.1.1",
     "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@types/jsonpath": "^0.2.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",

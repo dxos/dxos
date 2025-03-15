@@ -88,10 +88,10 @@ export class MeshEchoReplicator implements EchoReplicator {
               documentId: params.documentId,
               peerId: connection.peerId,
             });
-            log('document not found locally for share policy check, accepting the remote document', {
+            log('document not found locally for share policy check', {
               peerId: connection.peerId,
               documentId: params.documentId,
-              remoteDocumentExists,
+              acceptDocument: remoteDocumentExists,
             });
             // If a document is not present locally return true if another peer claims to have it.
             // Simply returning true will add the peer to "generous peers list" for this document which will

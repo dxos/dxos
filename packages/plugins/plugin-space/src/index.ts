@@ -2,14 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SpacePlugin } from './SpacePlugin';
-
-export default SpacePlugin;
+export { SpaceCapabilities, ThreadCapabilities } from './capabilities';
+export { SpaceEvents, ThreadEvents } from './events';
 
 export * from './components';
 export * from './meta';
-export * from './types';
-export * from './util';
-export { default as translations } from './translations';
-
 export * from './SpacePlugin';
+export * from './util';

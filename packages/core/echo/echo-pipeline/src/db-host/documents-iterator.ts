@@ -27,9 +27,9 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const [id, heads] of objects.entries()) {
       try {
         const { documentId, objectId } = objectPointerCodec.decode(id);
-        const handle = await automergeHost.loadDoc(Context.default(), documentId as DocumentId);
+        const handle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), documentId as DocumentId);
 
-        let doc: A.Doc<SpaceDoc> = handle.docSync();
+        let doc = handle.docSync();
         invariant(doc);
 
         const currentHeads = A.getHeads(doc);

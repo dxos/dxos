@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
@@ -44,7 +46,7 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
 
   return (
     <div className='flex justify-center overflow-y-auto bg-white dark:bg-black'>
-      <div className='flex flex-col w-[400px]'>
+      <div className='flex flex-col w-[30rem]'>
         <CommentsContainer threads={threads} detached={detached} onThreadDelete={console.log} />
       </div>
     </div>
@@ -57,7 +59,11 @@ const meta: Meta = {
   title: 'plugins/plugin-thread/Comments',
   // TODO(wittjosiah): Use decorator.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  decorators: [
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+    withPluginManager({ plugins: [IntentPlugin()] }),
+  ],
   parameters: { translations },
 };
 

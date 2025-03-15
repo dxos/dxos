@@ -4,16 +4,7 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import {
-  useResolvePlugin,
-  parseNavigationPlugin,
-  parseGraphPlugin,
-  NavigationAction,
-  LayoutAction,
-  type LayoutCoordinate,
-  isLayoutParts,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
@@ -23,6 +14,8 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
+
+export const SEARCH_DIALOG = `${SEARCH_PLUGIN}/SearchDialog`;
 
 type SearchListResultProps = {
   node: Node;
@@ -45,55 +38,46 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
   );
 });
 
-export const SearchDialog = ({
-  subject,
-}: {
-  subject: { action: NavigationAction; layoutCoordinate: LayoutCoordinate; position: 'add-after' | 'add-before' };
-}) => {
+export type SearchDialogProps = {
+  pivotId: string;
+};
+
+export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const graph = graphPlugin?.provides.graph;
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
-  const providedClosed = navigationPlugin?.provides.location.closed ?? [];
-  const closed = (Array.isArray(providedClosed) ? providedClosed : [providedClosed])
+  const { graph } = useAppGraph();
+  const layout = useLayout();
+  const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
     .map((id) => graph?.findNode(id))
     .filter(Boolean);
-  const active = navigationPlugin?.provides.location.active;
   const [queryString, setQueryString] = useState('');
   const client = useClient();
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleSelect = useCallback(
-    (nodeId: string) => {
-      if (active && isLayoutParts(active)) {
-        // If node is already present in the active parts, scroll to it and close the dialog.
-        const index = active?.main?.findIndex((entry) => entry.id === nodeId);
-        if (index !== -1) {
-          return dispatch([
-            { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-            { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
-          ]);
-        }
+    async (nodeId: string) => {
+      await dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
 
-        return dispatch([
-          {
-            action: NavigationAction.ADD_TO_ACTIVE,
-            data: {
-              part: subject.layoutCoordinate.part,
-              id: nodeId,
-              pivotId: subject.layoutCoordinate.entryId,
+      // If node is already present in the active parts, scroll to it and close the dialog.
+      const index = layout.active.findIndex((id) => id === nodeId);
+      if (index !== -1) {
+        await dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: nodeId }));
+      } else {
+        await dispatch(
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [nodeId],
+            options: {
+              pivotId,
               positioning: 'end',
             },
-          },
-          { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-          { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
-        ]);
+          }),
+        );
       }
     },
-    [subject, dispatch, active],
+    [pivotId, dispatch, layout],
   );
 
   return (

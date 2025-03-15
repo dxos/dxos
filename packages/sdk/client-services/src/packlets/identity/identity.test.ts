@@ -5,7 +5,7 @@
 import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import { createDidFromIdentityKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
   createIdFromSpaceKey,
   MetadataStore,
@@ -206,6 +206,7 @@ describe('identity/identity', () => {
 
     const identity = new Identity({
       signer: keyring,
+      did: await createDidFromIdentityKey(identityKey),
       identityKey,
       deviceKey,
       space,

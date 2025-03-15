@@ -8,9 +8,8 @@ import { type SpaceId } from '@dxos/keys';
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
-  // TODO(burdon): Rename to just SWARM, SIGNAL.
-  SWARM_SERVICE_ID = 'swarm',
-  SIGNAL_SERVICE_ID = 'signal',
+  SWARM = 'swarm',
+  SIGNAL = 'signal',
 }
 
 export type EdgeHttpSuccess<T> = {
@@ -45,6 +44,12 @@ export type GetNotarizationResponseBody = {
   awaitingNotarization: { credentials: string[] };
 };
 
+export type ExecuteWorkflowResponseBody = {
+  success: boolean;
+  reason?: string;
+  output?: any;
+};
+
 export type PostNotarizationRequestBody = {
   credentials: string[];
 };
@@ -64,11 +69,20 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+export type RecoverIdentitySignature =
+  | string
+  // This is the format of the signature from the WebAuthn authenticator.
+  | {
+      signature: string;
+      clientDataJson: string;
+      authenticatorData: string;
+    };
+
 export type RecoverIdentityRequest = {
-  recoveryKey: string;
   deviceKey: string;
   controlFeedKey: string;
-  signature?: string;
+  lookupKey?: string;
+  signature?: RecoverIdentitySignature;
 };
 
 export type RecoverIdentityResponseBody = {
@@ -106,7 +120,15 @@ export type UploadFunctionResponseBody = {
   functionId: string;
   version: string;
   meta: {
+    description?: string;
+    /**
+     * JSON Schema for the input of the function.
+     */
     inputSchema?: object;
+    /**
+     * JSON Schema for the output of the function.
+     */
+    outputSchema?: object;
   };
 };
 

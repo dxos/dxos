@@ -19,7 +19,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
 
     setTimeout(() =>
       observability.event({
-        identityId: getTelemetryIdentifier(client),
+        did: getTelemetryIdentifier(client),
         name: `${namespace}.window.click`,
         properties: {
           href: window.location.href,
@@ -38,7 +38,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     const now = new Date();
     setTimeout(() =>
       observability.event({
-        identityId: getTelemetryIdentifier(client),
+        did: getTelemetryIdentifier(client),
         name: `${namespace}.window.focus`,
         properties: {
           href: window.location.href,
@@ -54,7 +54,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
     const timeSpent = now.getTime() - lastFocusEvent.getTime();
     setTimeout(() =>
       observability.event({
-        identityId: getTelemetryIdentifier(client),
+        did: getTelemetryIdentifier(client),
         name: `${namespace}.window.blur`,
         properties: {
           href: window.location.href,
@@ -69,7 +69,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
   const unloadCallback = () => {
     setTimeout(() =>
       observability.event({
-        identityId: getTelemetryIdentifier(client),
+        did: getTelemetryIdentifier(client),
         name: `${namespace}.page.unload`,
         properties: {
           href: window.location.href,
@@ -82,7 +82,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
   const errorCallback = (event: ErrorEvent) => {
     setTimeout(() =>
       observability.event({
-        identityId: getTelemetryIdentifier(client),
+        did: getTelemetryIdentifier(client),
         name: `${namespace}.window.error`,
         properties: {
           href: window.location.href,

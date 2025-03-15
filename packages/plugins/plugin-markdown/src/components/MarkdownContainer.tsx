@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
@@ -27,7 +27,6 @@ const MarkdownContainer = ({
   id,
   role,
   object,
-  extensionProviders,
   settings,
   viewMode,
   editorStateStore,
@@ -35,7 +34,7 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = object instanceof DocumentType ? object : undefined;
-  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode, editorStateStore });
+  const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore });
 
   if (doc) {
     return (
@@ -77,26 +76,31 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
-    if (!doc.fallbackName && doc.content?.content) {
-      doc.fallbackName = getFallbackName(doc.content.content);
+    if (typeof doc.fallbackName === 'string') {
+      return;
+    }
+
+    const fallbackName = doc.content?.target?.content ? getFallbackName(doc.content.target.content) : undefined;
+    if (fallbackName) {
+      doc.fallbackName = fallbackName;
     }
   }, [doc, doc.content]);
 
   // File dragging.
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const [upload] = useCapabilities(Capabilities.FileUploader);
   const handleFileUpload = useMemo(() => {
-    if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
+    if (space === undefined || upload === undefined) {
       return undefined;
     }
 
     // TODO(burdon): Re-order props: space, file.
-    return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
-  }, [space, fileManagerPlugin]);
+    return async (file: File) => upload!(file, space);
+  }, [space, upload]);
 
   return (
     <MarkdownEditor
       id={id}
-      initialValue={doc.content?.content}
+      initialValue={doc.content?.target?.content}
       viewMode={viewMode}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}

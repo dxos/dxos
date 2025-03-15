@@ -9,15 +9,16 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { create } from '@dxos/live-object';
-import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
+import { create, makeRef } from '@dxos/live-object';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { type Space, type AbstractTypedObject } from '@dxos/react-client/echo';
+import { type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TextType } from '@dxos/schema';
 import type { MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
@@ -28,7 +29,7 @@ const testBuilder = new TestBuilder();
 
 type PeersInSpaceProps = {
   count?: number;
-  types?: AbstractTypedObject<any>[];
+  types?: TypedObject<any>[];
   onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
 };
 
@@ -54,7 +55,7 @@ const main = async () => {
     onSpaceCreated: ({ space }) => {
       space.db.add(
         create(DocumentType, {
-          content: create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' }),
+          content: makeRef(create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
           threads: [],
         }),
       );

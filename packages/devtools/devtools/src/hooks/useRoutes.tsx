@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
-import { useRoutes as useRouterRoutes } from 'react-router-dom';
+import React, { useCallback } from 'react';
+import { useNavigate, useRoutes as useRouterRoutes } from 'react-router-dom';
 
 import { RootContainer } from '../containers';
 import {
@@ -29,6 +29,7 @@ import {
   EdgeDashboardPanel,
   SearchPanel,
   AutomergePanel,
+  WorkflowPanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -38,6 +39,10 @@ export const namespace = 'devtools';
  * https://reactrouter.com/en/main
  */
 export const useRoutes = () => {
+  const navigate = useNavigate();
+  const handleSelectSpace = useCallback(() => navigate('/echo/space'), [navigate]);
+  const handleSelectFeed = useCallback(() => navigate('/echo/feeds'), [navigate]);
+
   return useRouterRoutes([
     {
       path: '/',
@@ -94,11 +99,11 @@ export const useRoutes = () => {
           children: [
             {
               path: '/echo/spaces',
-              element: <SpaceListPanel />,
+              element: <SpaceListPanel onSelect={handleSelectSpace} />,
             },
             {
               path: '/echo/space',
-              element: <SpaceInfoPanel />,
+              element: <SpaceInfoPanel onSelectFeed={handleSelectFeed} onSelectPipeline={handleSelectFeed} />,
             },
             {
               path: '/echo/feeds',
@@ -155,6 +160,10 @@ export const useRoutes = () => {
         {
           path: '/edge',
           children: [
+            {
+              path: '/edge/workflows',
+              element: <WorkflowPanel />,
+            },
             {
               path: '/edge/dashboard',
               element: <EdgeDashboardPanel />,

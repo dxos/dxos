@@ -2,18 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { resolvePlugin, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginsContext, createIntent } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import layoutPlugin from '@dxos/plugin-deck/meta';
 import { type Step } from '@dxos/plugin-help';
 
-const ensureSidebar: Step['before'] = async ({ plugins }) => {
-  const intent = resolvePlugin(plugins, parseIntentPlugin)!;
-  await intent.provides.intent.dispatch({
-    plugin: layoutPlugin.id,
-    action: LayoutAction.SET_LAYOUT,
-    data: { element: 'sidebar', state: true },
-  });
+const ensureSidebar: Step['before'] = async (context: PluginsContext) => {
+  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+  await dispatch(
+    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: 'expanded' } }),
+  );
   return await sleep(200);
 };
 
@@ -34,7 +31,7 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-testid="spacePlugin.createSpace"]',
+    target: '[data-testid="spacePlugin.addSpace"]',
     title: 'Sharing',
     content: 'Create shared spaces to collaborate with others.',
     placement: 'bottom',
@@ -57,9 +54,16 @@ export const steps: Step[] = [
   {
     ...base,
     before: ensureSidebar,
-    target: '[data-joyride="welcome/settings"]',
+    target: '[data-testid="treeView.appSettings"]',
     title: 'Settings',
-    content: 'Configure settings and add plugins.',
+    content: 'Configure settings.',
+  },
+  {
+    ...base,
+    before: ensureSidebar,
+    target: '[data-testid="treeView.pluginRegistry"]',
+    title: 'Plugins',
+    content: 'Add plugins.',
   },
   {
     ...base,

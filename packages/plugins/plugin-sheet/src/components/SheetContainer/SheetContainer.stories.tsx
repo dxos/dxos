@@ -7,9 +7,12 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { type Intent, IntentProvider } from '@dxos/app-framework';
-import { useSpace, create } from '@dxos/react-client/echo';
+import { Capabilities, contributes, createResolver, IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SheetContainer } from './SheetContainer';
@@ -19,24 +22,6 @@ import { SheetAction, SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
-// TODO(thure via wittjosiah):  stories/components should be written such that the dependency on intents is external and provided via callback and then the story can implement it differently.
-const storybookIntentValue = create({
-  dispatch: async (intents: Intent | Intent[]) => {
-    const intent = Array.isArray(intents) ? intents[0] : intents;
-    switch (intent.action) {
-      case SheetAction.DROP_AXIS: {
-        if (!intent.undo) {
-          const { model, axis, axisIndex } = intent.data as SheetAction.DropAxis;
-          model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-        }
-      }
-    }
-  },
-  undo: async () => ({}),
-  history: [],
-  registerResolver: () => () => {},
-});
-
 export const Basic = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
@@ -45,7 +30,11 @@ export const Basic = () => {
     return null;
   }
 
-  return <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />;
+  return (
+    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
+      <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
+    </AttendableContainer>
+  );
 };
 
 export const Spec = () => {
@@ -57,14 +46,14 @@ export const Spec = () => {
   }
 
   return (
-    <IntentProvider value={storybookIntentValue}>
+    <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
       <div role='none' className='grid grid-rows-[66%_33%] grid-cols-1'>
         <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
       </div>
-    </IntentProvider>
+    </AttendableContainer>
   );
 };
 
@@ -79,6 +68,22 @@ const meta: Meta = {
       fullscreen: true,
       tooltips: true,
       classNames: 'grid',
+    }),
+    withAttention,
+    // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
+    withPluginManager({
+      plugins: [IntentPlugin()],
+      capabilities: [
+        contributes(
+          Capabilities.IntentResolver,
+          createResolver({
+            intent: SheetAction.DropAxis,
+            resolve: ({ model, axis, axisIndex }) => {
+              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+            },
+          }),
+        ),
+      ],
     }),
   ],
   parameters: { translations },

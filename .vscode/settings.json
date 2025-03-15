@@ -21,7 +21,8 @@
     "Hypergraph",
     "mykola",
     "protobuf",
-    "testutils"
+    "testutils",
+    "wittjosiah"
   ],
   "files.associations": {
     "nx.json": "jsonc",
@@ -51,7 +52,6 @@
   "debug.javascript.terminalOptions": {},
   "circleci.persistedProjectSelection": [],
   "vitest.disableWorkspaceWarning": true,
-  "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
     "^.*/src/.*$",
     "node:console",

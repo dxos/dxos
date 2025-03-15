@@ -7,9 +7,16 @@ import 'reveal.js/dist/reveal.css';
 // eslint-disable-next-line no-restricted-imports
 import 'reveal.js/dist/theme/black.css';
 
+// https://github.com/highlightjs/highlight.js/tree/main/src/styles
+// import 'highlight.js/styles/github-dark.css';
+import 'highlight.js/styles/tokyo-night-dark.css';
+
+import hljs from 'highlight.js';
+import typescript from 'highlight.js/lib/languages/typescript';
 import React, { useEffect, useRef } from 'react';
 import Reveal from 'reveal.js';
-import Markdown from 'reveal.js/plugin/markdown/plugin.js';
+import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
+import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
 // import Notes from 'reveal.js/plugin/notes/notes.js';
 
 const styles = `
@@ -41,6 +48,10 @@ const styles = `
     font-weight: 100;
     padding: 32px;
   }
+  .reveal code {
+    background: #111111;
+    color: #eeeeee;
+  }
 </style>
 `;
 
@@ -59,7 +70,9 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
       return;
     }
 
-    setTimeout(async () => {
+    hljs.registerLanguage('typescript', typescript);
+
+    const t = setTimeout(async () => {
       // https://revealjs.com/config
       // https://github.com/hakimel/reveal.js
       // TODO(burdon): Fragments and scroll view steps 2 at a time (safe mode?)
@@ -78,15 +91,20 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
         maxScale: 1.4,
 
         // https://revealjs.com/markdown
-        plugins: [
-          Markdown,
-          // TODO(burdon): Requires server to serve popout window.
-          // Notes
-        ],
+        // TODO(burdon): Requires server to serve popout window.
+        plugins: [RevealMarkdown, RevealHighlight],
 
         // See https://marked.js.org/using_advanced#options
         markdown: {
           gfm: true,
+          smartypants: true,
+          highlight: (code, language) => {
+            if (language) {
+              return hljs.highlight(code, { language }).value;
+            }
+
+            return hljs.highlightAuto(code).value;
+          },
         },
       });
 
@@ -94,7 +112,7 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
       if (slide !== undefined) {
         deckRef.current.slide(slide < 0 ? deckRef.current?.getTotalSlides() + slide : slide - 1);
       }
-      // TODO(burdon): Translation.
+
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });
@@ -102,6 +120,7 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
 
     return () => {
       try {
+        clearTimeout(t);
         if (deckRef.current) {
           deckRef.current.destroy();
           deckRef.current = null;
@@ -120,8 +139,8 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
           <link rel='preconnect' href='https://fonts.googleapis.com' />
           <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
           <link
-            href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
             rel='stylesheet'
+            href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
           />
         </style>
         <div className='slides'>

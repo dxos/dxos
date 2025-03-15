@@ -4,15 +4,8 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import {
-  Surface,
-  useIntentDispatcher,
-  useResolvePlugin,
-  parseLayoutPlugin,
-  NavigationAction,
-} from '@dxos/app-framework';
+import { Surface, createIntent, useLayout, useIntentDispatcher } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -22,35 +15,20 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
-import { PRESENTER_PLUGIN } from '../meta';
-import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
+import { PresenterContext, PresenterAction } from '../types';
 
 const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const fullscreen = layoutPlugin?.provides.layout.layoutMode === 'fullscreen';
+  const layout = useLayout();
+  const fullscreen = layout.mode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleSetRunning = (running: boolean) => {
-    void dispatch([
-      {
-        plugin: PRESENTER_PLUGIN,
-        action: TOGGLE_PRESENTATION,
-        data: { state: running },
-      },
-      ...(!running
-        ? [
-            {
-              action: NavigationAction.CLOSE,
-              data: { activeParts: { fullScreen: fullyQualifiedId(collection) } },
-            },
-          ]
-        : []),
-    ]);
+    void dispatch(createIntent(PresenterAction.TogglePresentation, { object: collection, state: running }));
   };
 
   return (
@@ -76,7 +54,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
         }
       >
         {/* TODO(wittjosiah): Better slide placeholder. */}
-        <Surface role='slide' data={{ slide: collection.objects[slide] }} placeholder={<></>} />
+        <Surface role='slide' data={{ subject: collection.objects[slide] }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );

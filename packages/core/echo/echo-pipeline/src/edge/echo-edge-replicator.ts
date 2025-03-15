@@ -3,7 +3,6 @@
 //
 
 import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
-import * as A from '@dxos/automerge/automerge';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
@@ -20,6 +19,7 @@ import {
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
+import { InflightRequestLimiter } from './inflight-request-limiter';
 import {
   getSpaceIdFromCollectionId,
   type EchoReplicator,
@@ -184,9 +184,12 @@ type EdgeReplicatorConnectionsParams = {
   onRestartRequested: () => Promise<void>;
 };
 
+const MAX_INFLIGHT_REQUESTS = 5;
+const MAX_RATE_LIMIT_WAIT_TIME_MS = 3000;
+
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
   private readonly _edgeConnection: EdgeConnection;
-  private _remotePeerId: string | null = null;
+  private readonly _remotePeerId: string | null = null;
   private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
   private readonly _context: EchoReplicatorContext;
@@ -194,6 +197,11 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
+
+  private _requestLimiter = new InflightRequestLimiter({
+    maxInflightRequests: MAX_INFLIGHT_REQUESTS,
+    resetBalanceTimeoutMs: MAX_RATE_LIMIT_WAIT_TIME_MS,
+  });
 
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
 
@@ -213,7 +221,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._edgeConnection = edgeConnection;
     this._spaceId = spaceId;
     this._context = context;
-
     // Generate a unique peer id for every connection.
     // This way automerge-repo will have separate sync states for every connection.
     // This is important because the previous connection might have had some messages that failed to deliver
@@ -233,6 +240,8 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     this.writable = new WritableStream<AutomergeProtocolMessage>({
       write: async (message: AutomergeProtocolMessage, controller) => {
+        await this._requestLimiter.rateLimit(message);
+
         await this._sendMessage(message);
       },
     });
@@ -240,6 +249,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
   protected override async _open(ctx: Context): Promise<void> {
     log('open');
+
+    await this._requestLimiter.open();
+
     // TODO: handle reconnects
     this._ctx.onDispose(
       this._edgeConnection.onMessage((msg: RouterMessage) => {
@@ -253,6 +265,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   protected override async _close(): Promise<void> {
     log('close');
     this._readableStreamController.close();
+
+    await this._requestLimiter.close();
+
     await this._onRemoteDisconnected();
   }
 
@@ -272,9 +287,10 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
         peerId: this._remotePeerId as PeerId,
       });
 
-      log.info('document not found locally for share policy check, accepting the remote document', {
+      log.verbose('edge-replicator document not found locally for share policy check', {
         documentId: params.documentId,
-        remoteDocumentExists,
+        acceptDocument: remoteDocumentExists,
+        remoteId: this._remotePeerId,
       });
 
       // If a document is not present locally return true only if it already exists on edge.
@@ -290,7 +306,8 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return true;
     }
     const spaceId = getSpaceIdFromCollectionId(params.collectionId as CollectionId);
-    return spaceId === this._spaceId;
+    // Only sync collections of form space:id:rootDoc, edge ignores legacy space:id collections
+    return spaceId === this._spaceId && params.collectionId.split(':').length === 3;
   }
 
   private _onMessage(message: RouterMessage) {
@@ -299,15 +316,12 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeProtocolMessage;
-    log('recv', () => {
-      const decodedData =
-        payload.type === 'sync' && payload.data
-          ? A.decodeSyncMessage(payload.data)
-          : payload.type === 'collection-state'
-            ? (payload as any).state
-            : payload;
-      return { from: message.serviceId, type: payload.type, decodedData };
+    log.verbose('edge replicator receive', {
+      type: payload.type,
+      documentId: payload.type === 'sync' && payload.documentId,
+      remoteId: this._remotePeerId,
     });
+
     // Fix the peer id.
     payload.senderId = this._remotePeerId! as PeerId;
     this._processMessage(payload);
@@ -322,6 +336,8 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return;
     }
 
+    this._requestLimiter.handleResponse(message);
+
     this._readableStreamController.enqueue(message);
   }
 
@@ -329,12 +345,12 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
 
-    log('send', {
+    log.verbose('edge replicator send', {
       type: message.type,
-      senderId: message.senderId,
-      targetId: (message as any).targetId,
-      documentId: (message as any).documentId,
+      documentId: message.type === 'sync' && message.documentId,
+      remoteId: this._remotePeerId,
     });
+
     const encoded = cbor.encode(message);
 
     await this._edgeConnection.send(

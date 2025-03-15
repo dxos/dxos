@@ -59,7 +59,7 @@ export const DebugApp: FC<{ graph: Graph }> = ({ graph }) => {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          <Toolbar.Expander />
+          <Toolbar.Separator variant='gap' />
           <Button onClick={(event) => handleResetClient(event.shiftKey)} title='Reset client'>
             <Warning className={mx(getSize(5), 'text-red-700')} />
           </Button>

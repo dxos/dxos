@@ -3,7 +3,6 @@
 //
 
 import React, { type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
@@ -53,10 +52,13 @@ const columns: TableColumnDef<PipelineTableRow, any>[] = [
   ),
 ];
 
-export const PipelineTable: FC<{
+export type PipelineTableProps = {
   state: SpaceProto.PipelineState;
   metadata: SubscribeToSpacesResponse.SpaceInfo | undefined;
-}> = ({ state, metadata }) => {
+  onSelect?: (feed: PipelineTableRow | undefined) => void;
+};
+
+export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelect }) => {
   const getType = (feedKey: PublicKey) => {
     if (metadata) {
       return {
@@ -119,11 +121,10 @@ export const PipelineTable: FC<{
     ),
   ];
 
-  const navigate = useNavigate();
   const setContext = useDevtoolsDispatch();
   const handleSelect = (selected: PipelineTableRow | undefined) => {
     setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
-    navigate('/echo/feeds');
+    onSelect?.(selected);
   };
 
   return (

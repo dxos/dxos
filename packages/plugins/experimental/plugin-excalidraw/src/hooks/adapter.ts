@@ -6,7 +6,7 @@ import { type ExcalidrawElement } from '@excalidraw/excalidraw/types/element/typ
 
 import { log } from '@dxos/log';
 import { AbstractAutomergeStoreAdapter, type Batch } from '@dxos/plugin-sketch/sdk';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 export type ExcalidrawStoreAdapterProps = {
   onUpdate?: (update: { elements: ExcalidrawElement[] }) => void;
@@ -89,6 +89,6 @@ export class ExcalidrawStoreAdapter extends AbstractAutomergeStoreAdapter<Excali
 
         return undefined;
       })
-      .filter(nonNullable);
+      .filter(isNonNullable);
   }
 }

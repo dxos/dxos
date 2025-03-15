@@ -4,40 +4,42 @@
 
 import { Schema as S } from '@effect/schema';
 
+import { defineTool, ToolResult } from '@dxos/artifact';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { defineTool, LLMToolResult } from '../conversation';
 import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
 import { trim } from '../util';
 
-export const createCypherTool = (dataSource: DataSource) =>
-  defineTool({
-    name: 'graphQuery',
-    description: 'Query the ECHO graph database in cypher query language. Returns data from the database.',
+export const createCypherTool = (dataSource: DataSource, schemaTypes: S.Schema.Any[] = []) =>
+  defineTool('dxos.org/echo', {
+    name: 'query',
+    description:
+      'Query the ECHO graph database in cypher query language. Returns data from the database.' +
+      (schemaTypes.length > 0 ? `\n\n${createSystemPrompt(schemaTypes)}` : ''),
     schema: S.Struct({
       query: S.String.annotations({
         description: `
-      A valid cypher query string to execute.
-      Query must have one MATCH clause.
-      Match clause can have multiple patterns but they must all be connected via a relationship chain.
-      Query might have zero or one WHERE clauses.
-      Query must have one RETURN clause.
-      RETURN clause can have multiple expressions separated by commas.
-      DISTINCT keyword is not allowed.
+          A valid cypher query string to execute.
+          Query must have one MATCH clause.
+          Match clause can have multiple patterns but they must all be connected via a relationship chain.
+          Query might have zero or one WHERE clauses.
+          Query must have one RETURN clause.
+          RETURN clause can have multiple expressions separated by commas.
+          DISTINCT keyword is not allowed.
 
-      <example>
-      MATCH (n:Person) RETURN n.name
-      </example>
+          <example>
+          MATCH (n:Person) RETURN n.name
+          </example>
 
-      <example>
-      MATCH (s:Studio)-[:PRODUCED]->(m:Movie)-[:PRODUCED_IN]->(c:City {name: "Las Vegas"}) RETURN s
-      </example>
-      
-      <example>
-      MATCH (a:Actor)-[:STARRED_IN]->(m:Movie)<-[:PRODUCED]-(s:Studio {name: "Cinema Pictures"}) WHERE m.name = "Once upon a time" RETURN m.name, a.name
-      </example>
-      `,
+          <example>
+          MATCH (s:Studio)-[:PRODUCED]->(m:Movie)-[:PRODUCED_IN]->(c:City {name: "Las Vegas"}) RETURN s
+          </example>
+          
+          <example>
+          MATCH (a:Actor)-[:STARRED_IN]->(m:Movie)<-[:PRODUCED]-(s:Studio {name: "Cinema Pictures"}) WHERE m.name = "Once upon a time" RETURN m.name, a.name
+          </example>
+        `,
       }),
     }),
     execute: async ({ query }) => {
@@ -45,9 +47,10 @@ export const createCypherTool = (dataSource: DataSource) =>
         log('cypher query', { query });
         const results = await executeQuery(dataSource, query);
         log('query complete', { results });
-        return LLMToolResult.Success(results);
+        return ToolResult.Success(results);
       } catch (e: any) {
-        return LLMToolResult.Error(e.message);
+        log.catch(e);
+        return ToolResult.Error(e.message);
       }
     },
   });

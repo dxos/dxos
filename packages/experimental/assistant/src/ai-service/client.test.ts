@@ -5,26 +5,29 @@
 import { Schema as S } from '@effect/schema';
 import { test, describe } from 'vitest';
 
-import { toJsonSchema } from '@dxos/echo-schema';
+import { type Message, type Tool } from '@dxos/artifact';
+import { toJsonSchema, ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
-import { ObjectId, type LLMTool } from './schema';
+import { DEFAULT_LLM_MODEL } from './defs';
+import { ToolTypes } from './types';
+import { AI_SERVICE_ENDPOINT } from '../testing';
 
-const ENDPOINT = 'http://localhost:8787';
+// log.config({ filter: 'debug' });
 
 describe.skip('AI Service Client', () => {
   test('client generation', async () => {
     const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -34,28 +37,28 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
+    const stream = await client.exec({
+      model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a poet',
       tools: [],
     });
     for await (const event of stream) {
-      log.info('event', event);
+      log('event', event);
     }
 
-    log.info('full message', {
+    log('full message', {
       message: await stream.complete(),
     });
   });
 
-  test.only('tool calls', async () => {
+  test('tool calls', async () => {
     const client = new AIServiceClientImpl({
-      endpoint: ENDPOINT,
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
     });
 
-    const custodian: LLMTool = {
+    const custodian: Tool = {
       name: 'custodian',
       description: 'Custodian can tell you the password if you say the magic word',
       parameters: toJsonSchema(
@@ -68,7 +71,7 @@ describe.skip('AI Service Client', () => {
     const spaceId = SpaceId.random();
     const threadId = ObjectId.random();
 
-    await client.insertMessages([
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
@@ -78,47 +81,98 @@ describe.skip('AI Service Client', () => {
       },
     ]);
 
-    const stream = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
-      spaceId,
-      threadId,
-      systemPrompt: 'You are a helpful assistant.',
-      tools: [custodian],
-    });
-    for await (const event of stream) {
-      log.info('event', event);
-    }
-    const [message] = await stream.complete();
-    log.info('full message', {
-      message,
-    });
-    await client.insertMessages([message]);
+    {
+      const stream1 = await client.exec({
+        model: DEFAULT_LLM_MODEL,
+        spaceId,
+        threadId,
+        systemPrompt: 'You are a helpful assistant.',
+        tools: [custodian],
+      });
 
-    const toolUse = message.content.find(({ type }) => type === 'tool_use')!;
-    invariant(toolUse.type === 'tool_use');
-    await client.insertMessages([
+      for await (const event of stream1) {
+        log('event', event);
+      }
+
+      // TODO(burdon): !!!
+      await stream1.complete();
+      const messages: Message[] = [];
+
+      const [message1] = messages;
+      log('full message', { message: message1 });
+      await client.appendMessages([message1]);
+
+      const toolUse = message1.content.find(({ type }) => type === 'tool_use')!;
+      invariant(toolUse.type === 'tool_use');
+      await client.appendMessages([
+        {
+          id: ObjectId.random(),
+          spaceId,
+          threadId,
+          role: 'user',
+          content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is blue"' }],
+        },
+      ]);
+    }
+
+    {
+      const stream2 = await client.exec({
+        model: DEFAULT_LLM_MODEL,
+        spaceId,
+        threadId,
+        systemPrompt: 'You are a helpful assistant.',
+        tools: [custodian],
+      });
+
+      for await (const event of stream2) {
+        log('event', event);
+      }
+
+      await stream2.complete();
+      const messages: Message[] = [];
+
+      const [message2] = messages;
+      log('full message', { message: message2 });
+    }
+  });
+
+  test.skip('image generation', async () => {
+    const client = new AIServiceClientImpl({
+      endpoint: AI_SERVICE_ENDPOINT.LOCAL,
+    });
+
+    const spaceId = SpaceId.random();
+    const threadId = ObjectId.random();
+
+    await client.appendMessages([
       {
         id: ObjectId.random(),
         spaceId,
         threadId,
         role: 'user',
-        content: [{ type: 'tool_result', toolUseId: toolUse.id, content: 'password="The sky is gray"' }],
+        content: [{ type: 'text', text: 'Generate an image of a cat' }],
       },
     ]);
 
-    const stream2 = await client.generate({
-      model: '@anthropic/claude-3-5-haiku-20241022',
+    const stream = await client.exec({
+      model: DEFAULT_LLM_MODEL,
       spaceId,
       threadId,
-      systemPrompt: 'You are a helpful assistant.',
-      tools: [custodian],
+      tools: [
+        {
+          name: 'text-to-image',
+          type: ToolTypes.TextToImage,
+          // options: {
+          //   model: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+          // },
+        },
+      ],
     });
-    for await (const event of stream2) {
-      log.info('event', event);
+
+    for await (const event of stream) {
+      log('event', event);
     }
-    const [message2] = await stream2.complete();
-    log.info('full message', {
-      message: message2,
-    });
+
+    log('full message', { message: await stream.complete() });
   });
 });

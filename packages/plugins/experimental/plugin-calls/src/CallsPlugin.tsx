@@ -2,63 +2,49 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 
-import { type PluginDefinition } from '@dxos/app-framework';
-import { createExtension, type Node } from '@dxos/plugin-graph';
-import { type Space, isSpace } from '@dxos/react-client/echo';
-
-import CallsContainer from './components/CallsContainer';
-import meta, { CALLS_PLUGIN } from './meta';
+import { AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
+import { CALLS_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { type CallsPluginProvides } from './types';
 
-export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
-  return {
-    meta,
-    provides: {
-      graph: {
-        builder: (plugins) => {
-          return [
-            // Space calls nodes.
-            createExtension({
-              id: `${CALLS_PLUGIN}/space`,
-              filter: (node): node is Node<Space> => isSpace(node.data),
-              connector: ({ node }) => {
-                const space = node.data;
-                return [
-                  {
-                    id: `${space.id}-calls`,
-                    type: `${CALLS_PLUGIN}/space`,
-                    data: { space, type: `${CALLS_PLUGIN}/space` },
-                    properties: {
-                      label: ['calls label', { ns: CALLS_PLUGIN }],
-                      icon: 'ph--phone-call--regular',
-                    },
-                  },
-                ];
-              },
-            }),
-          ];
-        },
-      },
-      translations,
-      surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article':
-            case 'section': {
-              const primary: any = data.active ?? data.object;
-              if (primary.type === `${CALLS_PLUGIN}/space` && 'space' in primary && isSpace(primary.space)) {
-                return <CallsContainer space={primary.space} role={role} />;
-              }
-              return null;
-            }
-            default:
-              return null;
-          }
-        },
-      },
-    },
-  };
-};
+export const CallsPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-context`,
+      activatesOn: Events.Startup,
+      activate: ReactContext,
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.SetupReactSurface,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
+    }),
+    defineModule({
+      id: `${meta.id}/module/complementary-panels`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () => [
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'calls',
+          label: ['calls panel label', { ns: CALLS_PLUGIN }],
+          icon: 'ph--phone-call--regular',
+        }),
+      ],
+    }),
+  ]);

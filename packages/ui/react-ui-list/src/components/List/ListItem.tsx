@@ -25,10 +25,9 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, ListItem as NaturalListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DropIndicator } from './DropIndicator';
 import { useListContext } from './ListRoot';
 
 export type ListItemRecord = {};
@@ -75,13 +74,14 @@ export const [ListItemProvider, useListItemContext] = createContext<ListItemCont
 export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<{
     item: T;
-  }>
+  }> &
+    HTMLAttributes<HTMLDivElement>
 >;
 
 /**
  * Draggable list item.
  */
-export const ListItem = <T extends ListItemRecord>({ children, classNames, item }: ListItemProps<T>) => {
+export const ListItem = <T extends ListItemRecord>({ children, classNames, item, ...props }: ListItemProps<T>) => {
   const { isItem, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
@@ -113,6 +113,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
                   container.style.width = rect.width + 'px';
                   setState({ type: 'preview', container });
                   setRootState({ type: 'preview', container, item });
+                  return () => {}; // TODO(burdon): Cleanup.
                 },
               });
             }
@@ -164,11 +165,18 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
 
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
-      <div className='relative'>
-        <div ref={ref} role='listitem' className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}>
+      <div role='none' className='relative'>
+        <div
+          ref={ref}
+          role='listitem'
+          className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}
+          {...props}
+        >
           {children}
         </div>
-        {state.type === 'is-dragging-over' && state.closestEdge && <DropIndicator edge={state.closestEdge} />}
+        {state.type === 'is-dragging-over' && state.closestEdge && (
+          <NaturalListItem.DropIndicator edge={state.closestEdge} />
+        )}
       </div>
     </ListItemProvider>
   );

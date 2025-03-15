@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { SCRIPT_PLUGIN } from '../../meta';
 
@@ -232,7 +232,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   const wrapper = 'p-1 px-2 rounded-lg bg-hoverSurface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
-      {error && <div className={mx(wrapper, 'whitespace-pre text-error')}>{String(error)}</div>}
+      {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}
 
       {text !== undefined && (
         <div className={mx(wrapper, type === 'request' && 'bg-primary-400 dark:bg-primary-600')}>

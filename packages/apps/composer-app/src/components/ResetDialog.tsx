@@ -6,7 +6,7 @@ import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/react-client';
+import { type Config } from '@dxos/react-client';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -28,8 +28,11 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   const translatedMessage = t(`${error.name} message`, context);
   const message = translatedMessage === `${error.name} message` ? t('fatal error message') : translatedMessage;
 
+  const cause =
+    error.cause instanceof Error ? String(error.cause.stack) : error.cause ? String(error.cause) : undefined;
+
   // Removes indents.
-  const stack = String(error?.stack)
+  const stack = `${String(error.stack)}${cause ? `\nCaused by: ${cause}` : ''}`
     .split('\n')
     .map((text) => text.trim())
     .join('\n');
@@ -63,13 +66,8 @@ export const ResetDialog = ({
   }, [error]);
 
   const handleReset = async () => {
-    const config = new Config(await Storage(), Envs(), Local(), Defaults());
-
-    const { ClientServicesHost } = await import('@dxos/client-services');
-    const services = new ClientServicesHost({ config });
-    await services.reset();
     localStorage.clear();
-    window.location.pathname = '/';
+    window.location.href = window.location.origin;
   };
 
   const Caret = showStack ? CaretDown : CaretRight;
@@ -109,26 +107,26 @@ export const ResetDialog = ({
           <div role='none' className='flex gap-2 mbs-4'>
             {showStack && (
               <Tooltip.Root>
-                <Tooltip.Trigger>
+                <Tooltip.Trigger asChild>
                   <Button onClick={handleCopyError}>
                     <Clipboard weight='duotone' size='1em' />
                   </Button>
                 </Tooltip.Trigger>
-                <Tooltip.Content classNames='z-[51]'>{t('copy error label')}</Tooltip.Content>
+                <Tooltip.Content>{t('copy error label')}</Tooltip.Content>
               </Tooltip.Root>
             )}
             <div role='none' className='flex-grow' />
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button data-testid='resetDialog.reset' variant='ghost'>
-                  {t('reset client label')}
+                  {t('reset app label')}
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content side='top' classNames='z-[51]'>
+                <DropdownMenu.Content side='top'>
                   <DropdownMenu.Viewport>
                     <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
-                      {t('reset client confirm label')}
+                      {t('reset app confirm label')}
                     </DropdownMenu.Item>
                   </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />

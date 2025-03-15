@@ -1,12 +1,40 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Watch & rebuild",
-			"group": "build",
-			"type": "shell",
-			"command": "pnpm -w watch",
-			"problemMatcher": []
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "typescript",
+      "tsconfig": "tsconfig.all.json",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "option": "watch",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "build current tsconfig",
+      "type": "typescript",
+      "tsconfig": "${relativeFile}",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "option": "watch",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
+    }
+  ]
 }

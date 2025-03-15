@@ -4,5 +4,6 @@
 
 import { lazy } from 'react';
 
-export const AssistantPanel = lazy(() => import('./AssistantPanel'));
+export * from './TriggerEditor';
+
 export const AutomationPanel = lazy(() => import('./AutomationPanel'));

@@ -5,8 +5,8 @@
 import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { create, SpaceState, type Space } from '@dxos/react-client/echo';
-import { nonNullable } from '@dxos/util';
+import { create, SpaceState, type Space, makeRef } from '@dxos/react-client/echo';
+import { isNonNullable } from '@dxos/util';
 
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
@@ -22,8 +22,8 @@ export const Todos = () => {
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const list: TodoListType | undefined =
-    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoListType.typename] : undefined;
-  const allTodos = list?.todos.filter(nonNullable) ?? [];
+    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoListType.typename]?.target : undefined;
+  const allTodos = list?.todos.map((todo) => todo.target).filter(isNonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -35,21 +35,22 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title && list) {
-      list.todos.push(create(TodoType, { title, completed: false }));
+      list.todos.push(makeRef(create(TodoType, { title, completed: false })));
       inputRef.current!.value = '';
     }
   };
 
   const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
-    todos.filter(nonNullable).forEach((item) => {
+    todos.filter(isNonNullable).forEach((item) => {
       item.completed = checked;
     });
   };
 
   const handleClearCompleted = () => {
     list?.todos
-      .filter(nonNullable)
+      .map((todo) => todo.target)
+      .filter(isNonNullable)
       .filter((item) => item.completed)
       .forEach((item) => space?.db.remove(item));
   };
@@ -76,7 +77,7 @@ export const Todos = () => {
             Mark all as complete
           </label>
           <ul className='todo-list'>
-            {todos.filter(nonNullable).map((todo) => (
+            {todos.filter(isNonNullable).map((todo) => (
               <TodoItem
                 key={todo.id}
                 title={todo.title}

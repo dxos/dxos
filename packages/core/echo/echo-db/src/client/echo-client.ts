@@ -3,7 +3,6 @@
 //
 
 import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,6 +31,12 @@ export type ConstructDatabaseParams = {
    * @default true
    */
   reactiveSchemaQuery?: boolean;
+
+  /**
+   * Preload all schema during open.
+   * @default true
+   */
+  preloadSchemaOnOpen?: boolean;
 
   /**
    * Space proxy reference for SDK compatibility.
@@ -106,7 +111,13 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceId, owningObject, reactiveSchemaQuery, spaceKey }: ConstructDatabaseParams) {
+  constructDatabase({
+    spaceId,
+    owningObject,
+    reactiveSchemaQuery,
+    preloadSchemaOnOpen,
+    spaceKey,
+  }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -115,6 +126,7 @@ export class EchoClient extends Resource {
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
+      preloadSchemaOnOpen,
       spaceKey,
     });
     this._graph._register(spaceId, spaceKey, db, owningObject);
@@ -122,8 +134,8 @@ export class EchoClient extends Resource {
     return db;
   }
 
-  private async _loadObjectFromDocument({ spaceKey, objectId, documentId }: LoadObjectParams) {
-    const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
+  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {
+    const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
     }

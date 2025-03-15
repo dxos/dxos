@@ -14,10 +14,39 @@
     ]
   },
   "exclude": [
+    "src/playwright/playwright.config.cts",
     "vite.config.ts"
   ],
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/shell"
+    }
+  ]
 }

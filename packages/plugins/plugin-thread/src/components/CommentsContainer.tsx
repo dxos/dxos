@@ -14,10 +14,7 @@ import { CommentContainer } from './CommentContainer';
 import { type ThreadContainerProps } from './types';
 import { THREAD_PLUGIN } from '../meta';
 
-export type ThreadsContainerProps = Omit<
-  ThreadContainerProps,
-  'thread' | 'detached' | 'onAttend' | 'onThreadDelete' | 'onMessageDelete' | 'current' | 'autoFocus'
-> & {
+export type ThreadsContainerProps = Omit<ThreadContainerProps, 'thread' | 'detached' | 'current' | 'autoFocus'> & {
   threads: ThreadType[];
   /**
    * Threads that are no longer anchored to a position in the object.
@@ -25,11 +22,6 @@ export type ThreadsContainerProps = Omit<
   detached?: string[];
   currentId?: string;
   showResolvedThreads?: boolean;
-  onThreadAttend?: (thread: ThreadType) => void;
-  onThreadDelete?: (thread: ThreadType) => void;
-  onMessageDelete?: (thread: ThreadType, messageId: string) => void;
-  onThreadToggleResolved?: (thread: ThreadType) => void;
-  onComment?: (thread: ThreadType) => void;
 };
 
 /**
@@ -40,10 +32,6 @@ export const CommentsContainer = ({
   detached = [],
   currentId,
   showResolvedThreads,
-  onThreadAttend,
-  onThreadDelete,
-  onMessageDelete,
-  onThreadToggleResolved,
   ...props
 }: ThreadsContainerProps) => {
   const { t } = useTranslation(THREAD_PLUGIN);
@@ -66,10 +54,6 @@ export const CommentsContainer = ({
               thread={thread}
               current={currentId === threadId}
               detached={detached.includes(threadId)}
-              {...(onThreadAttend && { onAttend: () => onThreadAttend(thread) })}
-              {...(onThreadDelete && { onThreadDelete: () => onThreadDelete(thread) })}
-              {...(onMessageDelete && { onMessageDelete: (messageId: string) => onMessageDelete(thread, messageId) })}
-              {...(onThreadToggleResolved && { onResolve: () => onThreadToggleResolved(thread) })}
               {...props}
             />
           );

@@ -29,7 +29,11 @@ import { ElevationProvider } from '../ElevationProvider';
 
 type DialogRootProps = DialogRootPrimitiveProps;
 
-const DialogRoot: FunctionComponent<DialogRootProps> = DialogRootPrimitive;
+const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
+  <ElevationProvider elevation='dialog'>
+    <DialogRootPrimitive {...props} />
+  </ElevationProvider>
+);
 
 type DialogTriggerProps = DialogTriggerPrimitiveProps;
 
@@ -81,7 +85,7 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   inOverlayLayout: false,
 });
 
-type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' };
+type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' | 'end' };
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
@@ -90,15 +94,7 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
     return (
       <DialogOverlayPrimitive
         {...props}
-        className={tx(
-          'dialog.overlay',
-          'dialog__overlay',
-          {},
-          classNames,
-          'data-[block-align=start]:justify-center',
-          'data-[block-align=start]:items-start',
-          'data-[block-align=center]:place-content-center',
-        )}
+        className={tx('dialog.overlay', 'dialog__overlay', {}, classNames)}
         ref={forwardedRef}
         data-block-align={blockAlign}
       >
@@ -110,20 +106,25 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
 
 DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
-type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps>;
+type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps> & { inOverlayLayout?: boolean };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
       <DialogContentPrimitive
         {...props}
-        className={tx('dialog.content', 'dialog', { inOverlayLayout }, classNames)}
+        className={tx(
+          'dialog.content',
+          'dialog',
+          { inOverlayLayout: propsInOverlayLayout || inOverlayLayout },
+          classNames,
+        )}
         ref={forwardedRef}
       >
-        <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+        {children}
       </DialogContentPrimitive>
     );
   },

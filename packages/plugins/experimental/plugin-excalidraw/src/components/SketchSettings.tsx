@@ -5,16 +5,16 @@
 import React from 'react';
 
 import { Input, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { SKETCH_PLUGIN } from '../meta';
+import { EXCALIDRAW_PLUGIN } from '../meta';
 import { type SketchSettingsProps } from '../types';
 
 export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) => {
-  const { t } = useTranslation(SKETCH_PLUGIN);
+  const { t } = useTranslation(EXCALIDRAW_PLUGIN);
 
   return (
-    <>
+    <DeprecatedFormContainer>
       <DeprecatedFormInput label={t('settings hover tools label')}>
         <Input.Switch
           checked={settings.autoHideControls}
@@ -28,6 +28,6 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
           onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
         />
       </DeprecatedFormInput>
-    </>
+    </DeprecatedFormContainer>
   );
 };

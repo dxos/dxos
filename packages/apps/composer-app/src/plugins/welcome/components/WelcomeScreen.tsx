@@ -4,11 +4,10 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { type Trigger } from '@dxos/async';
+import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { ClientAction } from '@dxos/plugin-client/meta';
-import { SpaceAction } from '@dxos/plugin-space/meta';
+import { ClientAction } from '@dxos/plugin-client/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -17,16 +16,18 @@ import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
 
-export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
+export const WELCOME_SCREEN = 'WelcomeScreen';
+
+export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
 
   const searchParams = new URLSearchParams(window.location.search);
-  const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+  const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
 
   const handleSignup = useCallback(
     async (email: string) => {
@@ -53,17 +54,21 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
     [hubUrl, identity],
   );
 
+  const handlePasskey = useCallback(async () => {
+    await dispatch(createIntent(ClientAction.RedeemPasskey));
+  }, [dispatch]);
+
   const handleJoinIdentity = useCallback(async () => {
-    await dispatch({ action: ClientAction.JOIN_IDENTITY });
+    await dispatch(createIntent(ClientAction.JoinIdentity));
   }, [dispatch]);
 
   const handleRecoverIdentity = useCallback(async () => {
-    await dispatch({ action: ClientAction.RECOVER_IDENTITY });
+    await dispatch(createIntent(ClientAction.RecoverIdentity));
   }, [dispatch]);
 
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
-    await dispatch({ action: ClientAction.CREATE_IDENTITY }).catch(() => {
+    await dispatch(createIntent(ClientAction.CreateIdentity)).catch(() => {
       identityCreated = false;
     });
     const identity = client.halo.identity.get();
@@ -72,16 +77,25 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
     }
 
     const handleDone = async (result: InvitationResult | null) => {
-      await dispatch([
-        {
-          action: NavigationAction.CLOSE,
-          data: { activeParts: { fullScreen: 'surface:WelcomeScreen', main: client.spaces.default.id } },
-        },
-        {
-          action: LayoutAction.SET_LAYOUT_MODE,
-          data: { layoutMode: 'solo' },
-        },
-      ]);
+      await dispatch(
+        createIntent(LayoutAction.Close, {
+          part: 'main',
+          subject: [`surface:${WELCOME_SCREEN}`],
+          options: { state: false },
+        }),
+      );
+      await dispatch(
+        createIntent(LayoutAction.SetLayoutMode, {
+          part: 'mode',
+          subject: result?.target ?? undefined,
+          options: { mode: 'solo' },
+        }),
+      );
+
+      if (identityCreated) {
+        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
+        await dispatch(createIntent(ClientAction.CreateAgent));
+      }
 
       const space = result?.spaceKey && client.spaces.get(result?.spaceKey);
       if (space) {
@@ -106,15 +120,9 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
           log.error('space credential not found', { spaceId: space.id });
         }
       }
-
-      if (identityCreated) {
-        await dispatch({ action: ClientAction.CREATE_RECOVERY_CODE });
-        await dispatch({ action: ClientAction.CREATE_AGENT });
-      }
     };
 
-    firstRun?.wake();
-    await dispatch({ action: SpaceAction.JOIN, data: { invitationCode: spaceInvitationCode, onDone: handleDone } });
+    await dispatch(createIntent(SpaceAction.Join, { invitationCode: spaceInvitationCode, onDone: handleDone }));
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
   };
 
@@ -124,6 +132,7 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
       identity={identity}
       error={error}
       onSignup={handleSignup}
+      onPasskey={!identity && !spaceInvitationCode ? handlePasskey : undefined}
       onJoinIdentity={!identity && !spaceInvitationCode ? handleJoinIdentity : undefined}
       onRecoverIdentity={!identity && !spaceInvitationCode ? handleRecoverIdentity : undefined}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}

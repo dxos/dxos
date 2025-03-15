@@ -1,12 +1,38 @@
 {
   "name": "@dxos/config",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
+      }
+    },
+    "./esbuild-plugin": {
+      "types": "./dist/types/src/esbuild-plugin/index.d.ts",
+      "import": "./dist/plugin/node-esm/esbuild-plugin.mjs",
+      "require": "./dist/plugin/node/esbuild-plugin.cjs"
+    },
+    "./rollup-plugin": {
+      "types": "./dist/types/src/rollup-plugin/index.d.ts",
+      "import": "./dist/plugin/node-esm/rollup-plugin.mjs",
+      "require": "./dist/plugin/node/rollup-plugin.cjs"
+    },
+    "./vite-plugin": {
+      "types": "./dist/types/src/vite-plugin/index.d.ts",
+      "import": "./dist/plugin/node-esm/vite-plugin.mjs",
+      "require": "./dist/plugin/node/vite-plugin.cjs"
+    }
+  },
   "main": "dist/lib/node/index.cjs",
   "browser": {
     "./src/loaders/index.ts": "./src/loaders/browser.js",
@@ -15,16 +41,22 @@
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "esbuild-plugin": [
+        "dist/types/src/esbuild-plugin/index.d.ts"
+      ],
+      "rollup-plugin": [
+        "dist/types/src/rollup-plugin/index.d.ts"
+      ],
+      "vite-plugin": [
+        "dist/types/src/vite-plugin/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
-    "esbuild-plugin.js",
-    "esbuild-plugin.d.ts",
-    "rollup-plugin.js",
-    "rollup-plugin.d.ts",
-    "vite-plugin.js",
-    "vite-plugin.d.ts",
-    "webpack-plugin.js",
-    "webpack-plugin.d.ts"
+    "src"
   ],
   "scripts": {
     "test-build": "node ./src/testing/build.js"

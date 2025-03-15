@@ -503,7 +503,7 @@ export class DataSpaceManager extends Resource {
     });
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();
-      if (setting === EdgeReplicationSetting.ENABLED) {
+      if (!setting || setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
       } else if (this._echoEdgeReplicator) {
         log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
@@ -511,7 +511,7 @@ export class DataSpaceManager extends Resource {
     });
     dataSpace.preClose.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();
-      if (setting === EdgeReplicationSetting.ENABLED) {
+      if (!setting || setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
       }
     });
@@ -609,7 +609,7 @@ export class DataSpaceManager extends Resource {
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,
         guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
-        lifetime: invitation.expiresOn ? invitation.expiresOn.getTime() - Date.now() : undefined,
+        lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
         persistent: false,
