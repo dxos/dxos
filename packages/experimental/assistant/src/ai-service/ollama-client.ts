@@ -8,10 +8,14 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
-import { type AIService, type GenerationStream } from './service';
+import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
 import { isToolUse, runTools } from '../conversation';
+
+// TODO(burdon): Config.
+const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
+const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
 
 export type OllamaClientParams = {
   endpoint?: string;
@@ -37,15 +41,10 @@ export type OllamaClientParams = {
   maxToolInvocations?: number;
 };
 
-// TODO(burdon): Config.
-const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
-const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
-
-export class OllamaClient implements AIService {
+export class OllamaClient implements AIServiceClient {
   /**
    * Create a test client with small local model and no temperature for predictable results.
    */
-  // TODO(burdon): Why test?
   static createClient(options?: Pick<OllamaClientParams, 'tools'>) {
     return new OllamaClient({
       tools: options?.tools,

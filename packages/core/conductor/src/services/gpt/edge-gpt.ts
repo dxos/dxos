@@ -9,7 +9,7 @@ import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact'
 import {
   DEFAULT_LLM_MODEL,
   MixedStreamParser,
-  type AIService,
+  type AIServiceClient,
   type GenerateRequest,
   type GenerationStreamEvent,
 } from '@dxos/assistant';
@@ -26,10 +26,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
   public readonly imageCache = new Map<string, ImageContentBlock>();
 
-  constructor(private readonly _client: AIService) {}
-
-  // TODO(burdon): Not used?
-  getAiServiceClient = () => this._client as any;
+  constructor(private readonly _ai: AIServiceClient) {}
 
   public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
@@ -46,7 +43,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const generationStream = yield* Effect.promise(() =>
-        generate(this._client, {
+        generate(this._ai, {
           model: DEFAULT_LLM_MODEL,
           history: messages,
           systemPrompt,
@@ -161,11 +158,11 @@ interface GenerateResult extends AsyncIterable<GenerationStreamEvent> {
 }
 
 const generate = async (
-  client: AIService,
+  ai: AIServiceClient,
   generationRequest: GenerateRequest,
   { abort }: { abort?: AbortSignal } = {},
 ): Promise<GenerateResult> => {
-  const stream = await client.exec(generationRequest);
+  const stream = await ai.exec(generationRequest);
   const parser = new MixedStreamParser();
   const resultIterable = makePushIterable<GenerationStreamEvent>();
 
