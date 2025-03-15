@@ -50,19 +50,17 @@ export class AIServiceClientImpl implements AIServiceClient {
    * Process request and open message stream.
    */
   async exec(request: GenerateRequest): Promise<GenerationStream> {
-    // TODO(dmaretskyi): Errors if tools are not provided.
-    request = {
-      tools: request.tools ?? [],
-      ...request,
-    };
-
     log.info('requesting', { endpoint: this._endpoint });
     const controller = new AbortController();
     const response = await fetch(`${this._endpoint}/generate`, {
       signal: controller.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        // TODO(dmaretskyi): Errors if tools are not provided.
+        tools: request.tools ?? [],
+        ...request,
+      }),
     });
 
     invariant(response.body instanceof ReadableStream);
