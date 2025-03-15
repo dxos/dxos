@@ -23,6 +23,11 @@ const TEST_OBJECT: TestSchema = {
 // TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
   objectsHaveId: boolean;
+  /**
+   * Whether to test assigning objects to properties in other objects.
+   * @default true
+   */
+  allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
   createObjectFn: (props?: Partial<TestSchema>) => Promise<TestSchema>;
@@ -37,7 +42,13 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       continue;
     }
 
-    const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
+    const {
+      objectsHaveId,
+      beforeAllCb,
+      afterAllCb,
+      createObjectFn: createObject,
+      allowObjectAssignments = true,
+    } = testConfig;
 
     beforeAll(async () => {
       await beforeAllCb?.();
@@ -145,7 +156,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getTypeReference', async () => {
         const obj = await createObject({ number: 42 });
-        expect(getType(obj)).to.deep.eq(getTypeReference(getSchema(obj)));
+        expect(getType(obj)?.toDXN().toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
       });
 
       test('can assign arrays with objects', async () => {
@@ -182,7 +193,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(obj.objectArray === obj.objectArray).to.be.true;
       });
 
-      test('assigning another reactive object', async () => {
+      test.skipIf(!allowObjectAssignments)('assigning another reactive object', async () => {
         const obj = await createObject();
 
         const other = await createObject({ string: 'bar' });

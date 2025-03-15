@@ -28,7 +28,8 @@ import React, {
   type RefObject,
 } from 'react';
 
-import { useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks';
+import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
 
 type Direction = 'ltr' | 'rtl';
@@ -232,18 +233,20 @@ interface DropdownMenuContentProps extends Omit<MenuContentProps, 'onEntryFocus'
 
 const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuContentProps>(
   (props: ScopedProps<DropdownMenuContentProps>, forwardedRef) => {
-    const { __scopeDropdownMenu, classNames, ...contentProps } = props;
+    const { __scopeDropdownMenu, classNames, collisionPadding = 8, ...contentProps } = props;
     const { tx } = useThemeContext();
     const context = useDropdownMenuContext(CONTENT_NAME, __scopeDropdownMenu);
+    const elevation = useElevationContext();
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const hasInteractedOutsideRef = useRef(false);
-
+    const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
     return (
       <MenuPrimitive.Content
         id={context.contentId}
         aria-labelledby={context.triggerId}
         {...menuScope}
         {...contentProps}
+        collisionPadding={safeCollisionPadding}
         ref={forwardedRef}
         onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {
           if (!hasInteractedOutsideRef.current) {
@@ -261,7 +264,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
             hasInteractedOutsideRef.current = true;
           }
         })}
-        className={tx('menu.content', 'menu', {}, classNames)}
+        className={tx('menu.content', 'menu', { elevation }, classNames)}
         style={{
           ...props.style,
           // re-namespace exposed content custom properties

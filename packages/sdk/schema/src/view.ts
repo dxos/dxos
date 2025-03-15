@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { defineObjectMigration } from '@dxos/echo-db';
 import {
   AST,
   FieldLookupAnnotationId,
@@ -9,13 +10,14 @@ import {
   JsonPath,
   JsonSchemaType,
   QueryType,
+  FieldSortType,
   S,
   toEffectSchema,
   TypedObject,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { create, type ReactiveObject } from '@dxos/live-object';
-import { stripUndefinedValues } from '@dxos/util';
+import { stripUndefined } from '@dxos/util';
 
 import { createFieldId } from './projection';
 import { getSchemaProperties } from './properties';
@@ -40,7 +42,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
  */
 export class ViewType extends TypedObject({
   typename: 'dxos.org/type/View',
-  version: '0.1.0',
+  version: '0.2.0',
 })({
   /**
    * Human readable name.
@@ -67,13 +69,45 @@ export class ViewType extends TypedObject({
    */
   fields: S.mutable(S.Array(FieldSchema)),
 
+  /**
+   * Additional metadata for the view.
+   */
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
 }) {}
 
+// TODO(wittjosiah): Refactor to organize better previous versions + migrations.
+export class ViewTypeV1 extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.1.0',
+})({
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Name',
+    [AST.ExamplesAnnotationId]: ['Contact'],
+  }),
+  query: S.Struct({
+    type: S.optional(S.String),
+    sort: S.optional(S.Array(FieldSortType)),
+  }).pipe(S.mutable),
+  schema: S.optional(JsonSchemaType),
+  fields: S.mutable(S.Array(FieldSchema)),
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+}) {}
+
+export const ViewTypeV1ToV2 = defineObjectMigration({
+  from: ViewTypeV1,
+  to: ViewType,
+  transform: async (from) => {
+    return { ...from, query: { typename: from.query.type } };
+  },
+  onMigration: async () => {},
+});
+
 type CreateViewProps = {
   name: string;
-  typename: string;
+  typename?: string;
   jsonSchema?: JsonSchemaType;
   fields?: string[];
 };
@@ -102,7 +136,7 @@ export const createView = ({
           : undefined;
 
       fields.push(
-        stripUndefinedValues({
+        stripUndefined({
           id: createFieldId(),
           path: property.name as JsonPath,
           referencePath,
@@ -122,9 +156,7 @@ export const createView = ({
 
   return create(ViewType, {
     name,
-    query: {
-      type: typename,
-    },
+    query: { typename },
     fields,
   });
 };

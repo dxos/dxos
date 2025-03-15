@@ -22,13 +22,15 @@ import {
   ViewPlugin,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { debounce, type UnsubscribeCallback } from '@dxos/async';
+import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { documentId } from './selection';
+import { type EditorToolbarState } from '../components';
 import { type Comment, type Range } from '../types';
 import { Cursor, overlap, singleValueFacet, callbackWrapper } from '../util';
 
@@ -85,7 +87,7 @@ export const commentsState = StateField.define<CommentsState>({
             const range = Cursor.getRangeFromCursor(tr.state, comment.cursor);
             return range && { comment, range };
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
 
         return { ...value, comments: commentStates };
       }
@@ -149,7 +151,7 @@ const commentsDecorations = EditorView.decorations.compute([commentsState], (sta
       const mark = createCommentMark(comment.comment.id, comment.comment.id === current);
       return mark.range(range.from, range.to);
     })
-    .filter(nonNullable);
+    .filter(isNonNullable);
 
   return Decoration.set(decorations);
 });
@@ -505,7 +507,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
     }),
 
     options.onUpdate && trackPastedComments(options.onUpdate),
-  ].filter(nonNullable);
+  ].filter(isNonNullable);
 };
 
 //
@@ -608,26 +610,17 @@ export const createExternalCommentSync = (
     },
   );
 
-export const useCommentState = (): [{ comment: boolean; selection: boolean }, Extension] => {
-  const [state, setState] = useState<{ comment: boolean; selection: boolean }>({
-    comment: false,
-    selection: false,
-  });
-
-  const observer = useMemo(
+export const useCommentState = (state: ReactiveObject<EditorToolbarState>): Extension => {
+  return useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          setState({
-            comment: selectionOverlapsComment(update.state),
-            selection: hasActiveSelection(update.state),
-          });
+          state.comment = selectionOverlapsComment(update.state);
+          state.selection = hasActiveSelection(update.state);
         }
       }),
-    [],
+    [state],
   );
-
-  return [state, observer];
 };
 
 /**

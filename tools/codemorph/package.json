@@ -1,0 +1,17 @@
+{
+  "name": "@dxos/codemorph",
+  "version": "0.8.0",
+  "private": true,
+  "description": "Large scale code refactoring.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "scripts": {
+    "codemorph": "tsx ./src/main.ts"
+  },
+  "dependencies": {
+    "ts-morph": "^16.0.0"
+  },
+  "devDependencies": {}
+}

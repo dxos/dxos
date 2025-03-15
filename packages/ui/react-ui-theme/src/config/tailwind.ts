@@ -16,6 +16,8 @@ import { tokensTailwindConfig } from './tokens';
 export type TailwindConfig = Config;
 export type TailwindThemeConfig = ThemeConfig;
 
+const { extend: extendTokens, ...overrideTokens } = tokensTailwindConfig;
+
 export const tailwindConfig = ({
   env = 'production',
   content = [],
@@ -54,9 +56,6 @@ export const tailwindConfig = ({
           '7xl': ['2.566rem', { lineHeight: '2.75rem' }],
           '8xl': ['2.887rem', { lineHeight: '3rem' }],
           '9xl': ['3.247rem', { lineHeight: '3.25rem' }],
-        },
-        outlineWidth: {
-          3: '3px',
         },
         boxShadow: {
           slider: '0 0 0 5px rgba(0, 0, 0, 0.3)',
@@ -177,9 +176,18 @@ export const tailwindConfig = ({
           'progress-linear': 'progress-linear 2s ease-out infinite',
         },
       },
-      tokensTailwindConfig,
+      extendTokens,
       ...extensions,
     ),
+    ...overrideTokens,
+    colors: {
+      ...overrideTokens.colors,
+      inherit: 'inherit',
+      current: 'currentColor',
+      transparent: 'transparent',
+      black: 'black',
+      white: 'white',
+    },
   },
   plugins: [
     tailwindcssLogical,

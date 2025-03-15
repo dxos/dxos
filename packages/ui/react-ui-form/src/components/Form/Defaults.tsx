@@ -2,15 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
-import { type BaseObject } from '@dxos/echo-schema';
 import { Input, Select } from '@dxos/react-ui';
 
 import { type InputProps, InputHeader } from './Input';
 
-export const TextInput = <T extends BaseObject>({
-  property,
+export const TextInput = ({
   type,
   label,
   inputOnly,
@@ -20,8 +18,8 @@ export const TextInput = <T extends BaseObject>({
   getValue,
   onValueChange,
   onBlur,
-}: InputProps<T>) => {
-  const { status, error } = getStatus?.(property);
+}: InputProps) => {
+  const { status, error } = getStatus();
 
   return (
     <Input.Root validationValence={status}>
@@ -33,8 +31,8 @@ export const TextInput = <T extends BaseObject>({
       <Input.TextInput
         disabled={disabled}
         placeholder={placeholder}
-        value={getValue(property) ?? ''}
-        onChange={(event) => onValueChange(property, type, event.target.value)}
+        value={getValue() ?? ''}
+        onChange={(event) => onValueChange(type, event.target.value)}
         onBlur={onBlur}
       />
       {inputOnly && <Input.Validation>{error}</Input.Validation>}
@@ -42,8 +40,7 @@ export const TextInput = <T extends BaseObject>({
   );
 };
 
-export const NumberInput = <T extends BaseObject>({
-  property,
+export const NumberInput = ({
   type,
   label,
   inputOnly,
@@ -53,8 +50,8 @@ export const NumberInput = <T extends BaseObject>({
   getValue,
   onValueChange,
   onBlur,
-}: InputProps<T>) => {
-  const { status, error } = getStatus?.(property);
+}: InputProps) => {
+  const { status, error } = getStatus();
 
   return (
     <Input.Root validationValence={status}>
@@ -67,8 +64,8 @@ export const NumberInput = <T extends BaseObject>({
         type='number'
         disabled={disabled}
         placeholder={placeholder}
-        value={getValue(property) ?? 0}
-        onChange={(event) => onValueChange(property, type, event.target.value)}
+        value={getValue() ?? 0}
+        onChange={(event) => onValueChange(type, event.target.value)}
         onBlur={onBlur}
       />
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
@@ -76,16 +73,9 @@ export const NumberInput = <T extends BaseObject>({
   );
 };
 
-export const BooleanInput = <T extends BaseObject>({
-  property,
-  type,
-  label,
-  inputOnly,
-  getStatus,
-  getValue,
-  onValueChange,
-}: InputProps<T>) => {
-  const { status, error } = getStatus?.(property);
+export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onValueChange }: InputProps) => {
+  const { status, error } = getStatus();
+  const checked = Boolean(getValue());
 
   return (
     <Input.Root validationValence={status}>
@@ -94,21 +84,17 @@ export const BooleanInput = <T extends BaseObject>({
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Input.Switch
-        checked={getValue<boolean>(property)}
-        onCheckedChange={(value) => onValueChange(property, type, value)}
-      />
+      <Input.Switch checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
 
-export type SelectInputOptions<T extends BaseObject> = InputProps<T> & {
+export type SelectInputOptions = InputProps & {
   options?: Array<{ value: string | number; label?: string }>;
 };
 
-export const SelectInput = <T extends BaseObject>({
-  property,
+export const SelectInput = ({
   type,
   label,
   inputOnly,
@@ -118,8 +104,8 @@ export const SelectInput = <T extends BaseObject>({
   getStatus,
   getValue,
   onValueChange,
-}: SelectInputOptions<T>) => {
-  const { status, error } = getStatus?.(property);
+}: SelectInputOptions) => {
+  const { status, error } = getStatus();
 
   return (
     <Input.Root validationValence={status}>
@@ -128,7 +114,7 @@ export const SelectInput = <T extends BaseObject>({
           <Input.Label>{label}</Input.Label>
         </InputHeader>
       )}
-      <Select.Root value={getValue(property)} onValueChange={(value) => onValueChange(property, type, value)}>
+      <Select.Root value={getValue()} onValueChange={(value) => onValueChange(type, value)}>
         {/* TODO(burdon): Placeholder not working? */}
         <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
         <Select.Portal>
@@ -145,6 +131,64 @@ export const SelectInput = <T extends BaseObject>({
         </Select.Portal>
       </Select.Root>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+    </Input.Root>
+  );
+};
+
+export const MarkdownInput = ({
+  type,
+  label,
+  inputOnly,
+  disabled,
+  placeholder,
+  getStatus,
+  getValue,
+  onValueChange,
+  onBlur,
+}: InputProps) => {
+  const { status, error } = getStatus();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // TODO(ZaymonFC): If we start using `Enter` for form submission, we should prevent default behavior here
+  //  since we're using a textarea element and the user needs to be able to enter new lines.
+
+  const adjustHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.blockSize = 'auto'; // For measurement.
+      textarea.style.blockSize = `${textarea.scrollHeight + 2}px`;
+    }
+  }, []);
+
+  // Adjust height on initial render.
+  useEffect(() => {
+    adjustHeight();
+  }, [adjustHeight]);
+
+  // Adjust height when the content changes.
+  useEffect(() => {
+    adjustHeight();
+  }, [getValue(), adjustHeight]);
+
+  return (
+    <Input.Root validationValence={status}>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
+      <Input.TextArea
+        ref={textareaRef}
+        disabled={disabled}
+        placeholder={placeholder}
+        value={getValue() ?? ''}
+        classNames={'min-bs-auto max-h-40 overflow-auto'}
+        onChange={(event) => onValueChange(type, event.target.value)}
+        onBlur={onBlur}
+        style={{ resize: 'none' }}
+        spellCheck={false}
+      />
+      {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };

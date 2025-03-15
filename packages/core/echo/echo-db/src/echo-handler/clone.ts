@@ -4,6 +4,7 @@
 
 import { type BaseObject, createObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { assertParameter } from '@dxos/protocols';
 
 import { type ReactiveEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
@@ -36,6 +37,7 @@ export const clone = <T extends BaseObject>(
   obj: ReactiveEchoObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
+  assertParameter('obj', isEchoObject(obj), 'ReactiveEchoObject');
   if (retainId === false && additional.length > 0) {
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }

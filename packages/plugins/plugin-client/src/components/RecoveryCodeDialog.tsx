@@ -8,10 +8,13 @@ import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/rea
 
 import { CLIENT_PLUGIN } from '../meta';
 
+export const RECOVER_CODE_DIALOG = `${CLIENT_PLUGIN}/RecoveryCodeDialog`;
+
 export type RecoveryCodeDialogProps = {
   code: string;
 };
 
+// TODO(wittjosiah): Factor panel out to @dxos/shell.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
   const { t } = useTranslation(CLIENT_PLUGIN);
   const [confirmation, setConfirmation] = useState(false);
@@ -20,7 +23,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
 
   return (
     <AlertDialog.Content classNames='bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <AlertDialog.Title classNames=''>{t('recovery code dialog title')}</AlertDialog.Title>
+      <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
       <p className='py-4'>{t('recovery code dialog description')}</p>
       <Clipboard.Provider>
         <Code code={code} />
@@ -57,7 +60,7 @@ const Code = ({ code }: { code: string }) => {
       <Clipboard.IconButton value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
       <div className='grid grid-cols-4'>
         {words.map((word, i) => (
-          <div key={i} className='flex items-center p-2 gap-2 items-center'>
+          <div key={i} className='flex items-center p-2 gap-2'>
             <div className='w-4 text-xs text-center text-subdued'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
           </div>

@@ -45,6 +45,7 @@
       "executor": "@dxos/esbuild:build",
       "options": {
         "entryPoints": [
+          "{projectRoot}/src/config/tailwind.ts",
           "{projectRoot}/src/plugins/esbuild-plugin.ts",
           "{projectRoot}/src/plugins/plugin.ts",
           "{projectRoot}/src/theme.css"
@@ -64,7 +65,8 @@
           "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
-    }
+    },
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

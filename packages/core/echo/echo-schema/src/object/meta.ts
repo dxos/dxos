@@ -3,6 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
+import { IdentifierAnnotationId } from '@effect/schema/AST';
 
 //
 // ForeignKey
@@ -10,7 +11,8 @@ import { Schema as S } from '@effect/schema';
 
 const _ForeignKeySchema = S.Struct({
   source: S.String,
-  id: S.String,
+  // TODO(wittjosiah): This annotation is currently used to ensure id field shows up in forms.
+  id: S.String.annotations({ [IdentifierAnnotationId]: false }),
 });
 
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
@@ -21,11 +23,9 @@ export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 // ObjectMeta
 //
 
-export const ObjectMetaSchema = S.mutable(
-  S.Struct({
-    keys: S.mutable(S.Array(ForeignKeySchema)),
-  }),
-);
+export const ObjectMetaSchema = S.Struct({
+  keys: S.mutable(S.Array(ForeignKeySchema)),
+});
 
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 

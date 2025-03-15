@@ -5,20 +5,28 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { untracked } from '@preact/signals-core';
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  createIntent,
+  LayoutAction,
+  Surface,
+  useAppGraph,
+  useCapability,
+  useIntentDispatcher,
+  useLayout,
+} from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
-import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
-import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
+import { useMediaQuery } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { NAV_TREE_ITEM, NavTree, type NavTreeProps } from './NavTree';
-import { NavTreeFooter } from './NavTreeFooter';
-import { NAVTREE_PLUGIN } from '../meta';
+import { NAV_TREE_ITEM, NavTree } from './NavTree';
+import { NavTreeContext } from './NavTreeContext';
+import { type NavTreeContextValue } from './types';
+import { NavTreeCapabilities } from '../capabilities';
 import { type NavTreeItemGraphNode } from '../types';
 import {
   expandActions,
@@ -27,35 +35,41 @@ import {
   getChildren,
   getParent,
   resolveMigrationOperation,
+  expandChildrenAndActions,
 } from '../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const renderItemEnd = ({ node }: { node: Node }) => (
-  <Surface role='navtree-item-end' data={{ object: node.data, id: node.id }} />
+const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
+  <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
 );
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
-} & Pick<NavTreeProps, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
+  topbar?: boolean;
+} & Pick<NavTreeContextValue, 'tab'>;
 
-export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: NavTreeContainerProps) => {
-  const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
+export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeContainerProps) => {
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const dispatch = useIntentDispatcher();
-  const { graph } = useGraph();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { graph } = useAppGraph();
+  const layout = useLayout();
+  const { isOpen, isCurrent, setItem } = useCapability(NavTreeCapabilities.State);
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
   const getItems = useCallback(
-    (node?: Node) => {
+    (node?: Node, disposition?: string) => {
       return graph.nodes(node ?? graph.root, {
         filter: (node): node is Node => {
           return untracked(() => {
-            const action = isActionLike(node);
-            const disposition = node.properties.disposition;
-            return !action || (action && disposition === 'item');
+            const action = isAction(node);
+            if (!disposition) {
+              return !action || node.properties.disposition === 'item';
+            }
+
+            return node.properties.disposition === disposition;
           });
         },
       });
@@ -97,6 +111,33 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
     [graph],
   );
 
+  const onOpenChange = useCallback(
+    ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
+      // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
+      setItem(path, 'open', open);
+
+      if (graph) {
+        const node = graph.findNode(id);
+        return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
+      }
+    },
+    [graph],
+  );
+
+  const onTabChange = useCallback(
+    async (node: NavTreeItemGraphNode) => {
+      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: node.id }));
+      // Open the first item if the workspace is empty.
+      if (layout.active.length === 0) {
+        const [item] = getItems(node).filter((node) => !isActionLike(node));
+        if (item && item.data) {
+          await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] }));
+        }
+      }
+    },
+    [dispatch, layout],
+  );
+
   const canDrop = useCallback((source: TreeData, target: TreeData) => {
     const sourceNode = source.item as Node;
     const targetNode = target.item as Node;
@@ -124,28 +165,19 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
 
       const current = isCurrent(path, node);
       if (!current) {
-        void dispatch({
-          action: NavigationAction.OPEN,
-          data: {
-            activeParts: {
-              main: [node.id],
-            },
-          },
-        });
+        void dispatch(
+          createIntent(LayoutAction.Open, {
+            part: 'main',
+            subject: [node.id],
+            options: { key: node.properties.key },
+          }),
+        );
       } else if (option) {
-        void dispatch({
-          action: NavigationAction.CLOSE,
-          data: {
-            activeParts: {
-              main: [node.id],
-            },
-          },
-        });
+        void dispatch(
+          createIntent(LayoutAction.Close, { part: 'main', subject: [node.id], options: { state: false } }),
+        );
       } else {
-        void dispatch({
-          action: LayoutAction.SCROLL_INTO_VIEW,
-          data: { id: node.id },
-        });
+        void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: node.id }));
       }
 
       const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
@@ -154,10 +186,15 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
       }
 
       if (!isLg) {
-        closeNavigationSidebar();
+        void dispatch(createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', options: { state: 'closed' } }));
       }
     },
-    [graph, dispatch, isCurrent, isLg, closeNavigationSidebar],
+    [graph, dispatch, isCurrent, isLg],
+  );
+
+  const onBack = useCallback(
+    () => dispatch(createIntent(LayoutAction.RevertWorkspace, { part: 'workspace', options: { revert: true } })),
+    [dispatch],
   );
 
   // TODO(wittjosiah): Factor out hook.
@@ -219,36 +256,46 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
     });
   }, [graph]);
 
+  const navTreeContextValue = useMemo(
+    () => ({
+      tab,
+      onTabChange,
+      onBack,
+      getActions,
+      loadDescendents,
+      renderItemEnd,
+      popoverAnchorId,
+      topbar,
+      getItems,
+      getProps,
+      isCurrent,
+      isOpen,
+      onOpenChange,
+      canDrop,
+      onSelect: handleSelect,
+    }),
+    [
+      tab,
+      onTabChange,
+      onBack,
+      getActions,
+      loadDescendents,
+      renderItemEnd,
+      popoverAnchorId,
+      topbar,
+      getItems,
+      getProps,
+      isCurrent,
+      isOpen,
+      onOpenChange,
+      canDrop,
+      handleSelect,
+    ],
+  );
+
   return (
-    <ElevationProvider elevation='chrome'>
-      <div
-        role='none'
-        className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'
-      >
-        {/* TODO(wittjosiah): Factor out surfaces to layout? */}
-        <div role='none' className='border-be border-separator'>
-          <Surface role='search-input' limit={1} />
-        </div>
-
-        {/* TODO(thure): What gives this an inline `overflow: initial`? */}
-        <div role='none' className='border-be border-separator !overflow-y-auto'>
-          <NavTree
-            id={graph.root.id}
-            getActions={getActions}
-            getItems={getItems}
-            getProps={getProps}
-            isCurrent={isCurrent}
-            loadDescendents={loadDescendents}
-            renderItemEnd={renderItemEnd}
-            popoverAnchorId={popoverAnchorId}
-            canDrop={canDrop}
-            onSelect={handleSelect}
-            {...props}
-          />
-        </div>
-
-        <NavTreeFooter />
-      </div>
-    </ElevationProvider>
+    <NavTreeContext.Provider value={navTreeContextValue}>
+      <NavTree root={graph.root} id={graph.root.id} />
+    </NavTreeContext.Provider>
   );
 });

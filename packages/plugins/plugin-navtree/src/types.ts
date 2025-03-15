@@ -4,7 +4,7 @@
 
 import { type Action, type ActionLike, type Node } from '@dxos/app-graph';
 import { type Label } from '@dxos/react-ui';
-import { type MaybePromise } from '@dxos/util';
+import { type MaybePromise, type Position } from '@dxos/util';
 
 export type NavTreeItemGraphNode = Node<
   any,
@@ -31,6 +31,7 @@ type SharedProperties = {
   label: Label;
   icon?: string;
   disabled?: boolean;
+  position?: Position;
   testId?: string;
   className?: string;
   headingClassName?: string;
@@ -47,7 +48,7 @@ export type ActionProperties = SharedProperties & {
   disposition?: string;
   hidden?: boolean;
   caller?: string;
-  menuType?: 'searchList' | 'dropdown';
+  menuType?: 'dropdown';
   keyBinding?: string | KeyBinding;
 };
 

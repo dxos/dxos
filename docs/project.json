@@ -46,6 +46,7 @@
         "quiet": true
       }
     },
+    "pack": {},
     "prerelease": {
       "executor": "nx:run-script",
       "options": {

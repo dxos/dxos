@@ -3,12 +3,17 @@
 //
 
 import inquirer from 'inquirer';
+import { writeFileSync } from 'node:fs';
 
+import { createUserMessage } from '@dxos/artifact';
+import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, ObjectId } from '../ai-service';
-import { runLLM, createUserMessage } from '../conversation';
+import { AIServiceClientImpl, ToolTypes, DEFAULT_LLM_MODEL } from '../ai-service';
+import { runLLM } from '../conversation';
 import {
+  AI_SERVICE_ENDPOINT,
   createLogger,
   createCypherTool,
   createSystemPrompt,
@@ -19,12 +24,9 @@ import {
   Task,
 } from '../testing';
 
-// TODO(burdon): Move out of src?
-
-const ENDPOINT = 'http://localhost:8787';
-
+// TOOD(burdon): Get from config.
 const client = new AIServiceClientImpl({
-  endpoint: ENDPOINT,
+  endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
 const dataSource = createTestData();
@@ -44,19 +46,33 @@ while (true) {
       message: 'Enter a message:',
     },
   ]);
-  await client.insertMessages([createUserMessage(spaceId, threadId, prompt.message)]);
+  await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
-    model: '@anthropic/claude-3-5-sonnet-20241022',
+    model: DEFAULT_LLM_MODEL,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
-    tools: [cypherTool],
+    tools: [
+      cypherTool,
+      {
+        name: 'text-to-image',
+        type: ToolTypes.TextToImage,
+      },
+    ],
     client,
     logger: createLogger({
       stream: true,
       filter: (e) => {
         return true;
+      },
+      onImage: (img) => {
+        const path = `/tmp/image-${img.id}.jpeg`;
+        writeFileSync(path, Buffer.from(img.source.data, 'base64'));
+        log.info('Saved image', { path });
+        // Print image in iTerm using ANSI escape sequence
+        const imageData = img.source.data;
+        process.stdout.write('\x1b]1337;File=inline=1:' + imageData + '\x07');
       },
     }),
   });

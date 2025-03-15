@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/react-ui-gameboard",
+  "version": "0.8.0",
+  "description": "Game board.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "gen:pieces": "pnpm gen:pieces:chess",
+    "gen:pieces:chess": "pnpm gen:pieces:chess:alpha && pnpm gen:pieces:chess:cburnett",
+    "gen:pieces:chess:alpha": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/alpha ./assets/pieces/chess/alpha",
+    "gen:pieces:chess:cburnett": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/cburnett ./assets/pieces/chess/cburnett"
+  },
+  "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+    "@dxos/debug": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
+    "chess.js": "^1.0.0",
+    "react-resize-detector": "^11.0.1"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@svgr/cli": "^8.1.0",
+    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "lodash.defaultsdeep": "^4.6.1",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "5.4.7"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

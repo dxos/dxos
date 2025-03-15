@@ -4,29 +4,31 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { scrollJustEnoughIntoView } from '@atlaskit/pragmatic-drag-and-drop/element/scroll-just-enough-into-view';
 import {
   attachClosestEdge,
   extractClosestEdge,
   type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-// TODO(wittjosiah): Drop indicator that doesn't depend on emotion. See react-ui-list DropIndicator.
-// import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ListItem } from '@dxos/react-ui';
+import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack, StackItemContext } from './StackContext';
+import { useStack, StackItemContext, type StackItemSize, type StackItemData } from './StackContext';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
+import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
   StackItemHeading,
   StackItemHeadingLabel,
   type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
 } from './StackItemHeading';
-import { StackItemResizeHandle } from './StackItemResizeHandle';
+import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
   StackItemSigil,
   type StackItemSigilProps,
@@ -35,31 +37,42 @@ import {
   StackItemSigilButton,
 } from './StackItemSigil';
 
-export type StackItemSize = number | 'min-content';
-export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
+// NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
+export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
-
-export type StackItemData = { id: string; type: 'column' | 'card' };
 
 export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
-  onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
+  disableRearrange?: boolean;
+  focusIndicatorVariant?: 'over-all' | 'group';
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   (
-    { item, children, classNames, onRearrange, size: propsSize, onSizeChange, role, order, style, ...props },
+    {
+      item,
+      children,
+      classNames,
+      size: propsSize,
+      onSizeChange,
+      role,
+      order,
+      style,
+      disableRearrange,
+      focusIndicatorVariant = 'over-all',
+      ...props
+    },
     forwardedRef,
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
-    const [_closestEdge, setEdge] = useState<Edge | null>(null);
-    const { orientation, rail, separators } = useStack();
+    const [closestEdge, setEdge] = useState<Edge | null>(null);
+    const { orientation, rail, onRearrange } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
 
@@ -80,7 +93,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const type = orientation === 'horizontal' ? 'column' : 'card';
 
     useLayoutEffect(() => {
-      if (!itemElement || !onRearrange) {
+      if (!itemElement || !onRearrange || disableRearrange) {
         return;
       }
       return combine(
@@ -88,6 +101,21 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           element: itemElement,
           ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
           getInitialData: () => ({ id: item.id, type }),
+          onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
+            document.body.setAttribute('data-drag-preview', 'true');
+            scrollJustEnoughIntoView({ element: source.element });
+            const { x, y } = preserveOffsetOnSource({ element: source.element, input: location.current.input })({
+              container: (source.element.offsetParent ?? document.body) as HTMLElement,
+            });
+            nativeSetDragImage?.(source.element, x, y);
+          },
+          onDragStart: () => {
+            document.body.removeAttribute('data-drag-preview');
+            itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
+          },
+          onDrop: () => {
+            itemElement?.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
+          },
         }),
         dropTargetForElements({
           element: itemElement,
@@ -127,18 +155,20 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           tabIndex={0}
           {...focusGroupAttrs}
           className={mx(
-            'group/stack-item grid relative ch-focus-ring-inset-over-all',
-            size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
+            'group/stack-item grid relative',
+            focusIndicatorVariant === 'over-all'
+              ? 'dx-focus-ring-inset-over-all'
+              : orientation === 'horizontal'
+                ? 'dx-focus-ring-group-x'
+                : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            separators && (orientation === 'horizontal' ? 'divide-separator divide-y' : 'divide-separator divide-x'),
             classNames,
           )}
           data-dx-stack-item
+          {...resizeAttributes}
           style={{
-            ...(size !== 'min-content' && {
-              [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
-            }),
+            ...sizeStyle(size, orientation),
             ...(Number.isFinite(order) && {
               [orientation === 'horizontal' ? 'gridColumn' : 'gridRow']: `${order}`,
             }),
@@ -147,7 +177,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {/* {closestEdge && <DropIndicator edge={closestEdge} />} */}
+          {closestEdge && <ListItem.DropIndicator lineInset={8} terminalInset={-8} edge={closestEdge} />}
         </Root>
       </StackItemContext.Provider>
     );
@@ -160,6 +190,7 @@ export const StackItem = {
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
   ResizeHandle: StackItemResizeHandle,
+  DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
 };
@@ -168,6 +199,8 @@ export type {
   StackItemContentProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
+  StackItemResizeHandleProps,
+  StackItemDragHandleProps,
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,

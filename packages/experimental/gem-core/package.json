@@ -1,12 +1,13 @@
 {
   "name": "@dxos/gem-core",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "GEM core components and utils.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",

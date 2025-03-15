@@ -12,12 +12,12 @@ import React, { useEffect } from 'react';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree } from './Tree';
 import { type TreeData } from './TreeItem';
 import { createTree, updateState, type TestItem } from './testing';
+import { Path } from '../../util';
 
 faker.seed(1234);
 

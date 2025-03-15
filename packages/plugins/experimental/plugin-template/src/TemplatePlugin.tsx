@@ -2,97 +2,60 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { createIntent, Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { create } from '@dxos/react-client/echo';
-
-import { TemplateMain } from './components';
-import meta, { TEMPLATE_PLUGIN } from './meta';
+import { ReactSurface, IntentResolver } from './capabilities';
+import { meta, TEMPLATE_PLUGIN } from './meta';
 import translations from './translations';
-import { TemplateAction, type TemplatePluginProvides, isObject } from './types';
+import { TemplateAction, TemplateType } from './types';
 
-const typename = 'template'; // Type.schema.typename
-
-export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
-  return {
-    meta,
-    provides: {
-      metadata: {
-        records: {
-          [typename]: {
+export const TemplatePlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: Events.SetupMetadata,
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: TemplateType.typename,
+          metadata: {
             placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: 'ph--asterisk--regular',
           },
-        },
-      },
-      translations,
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: TemplateAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${TEMPLATE_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: TEMPLATE_PLUGIN, action: TemplateAction.CREATE },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create object label', { ns: TEMPLATE_PLUGIN }],
-                    icon: 'ph--placeholder--regular',
-                    testId: 'templatePlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
-      },
-      surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main': {
-              return isObject(data.active) ? <TemplateMain object={data.active} /> : null;
-            }
-          }
-
-          return null;
-        },
-      },
-      intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case TemplateAction.CREATE: {
-              // TODO(burdon): Set typename.
-              return { data: create({ type: 'template' }) };
-            }
-          }
-        },
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: TemplateType,
+            getIntent: () => createIntent(TemplateAction.Create),
+          }),
+        ),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [TemplateType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.SetupReactSurface,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: IntentResolver,
+    }),
+  ]);

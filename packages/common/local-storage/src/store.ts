@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { effect, untracked } from '@preact/signals-core';
 
 import { AST, type S } from '@dxos/echo-schema';
-import { findNode, isSimpleType, type Path } from '@dxos/effect';
+import { findNode, isLiteralUnion, isSimpleType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { create, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -34,40 +34,55 @@ export interface SettingsStoreFactory {
  * Root store.
  */
 export class RootSettingsStore implements SettingsStoreFactory {
-  private readonly _stores = new Map<string, SettingsStore<any>>();
+  private readonly _stores = create<Record<string, SettingsStore<any>>>({});
 
   constructor(private readonly _storage: Storage = localStorage) {}
 
   toJSON() {
-    return Array.from(this._stores).reduce<Record<string, object>>((acc, [prefix, store]) => {
+    return Object.entries(this._stores).reduce<Record<string, object>>((acc, [prefix, store]) => {
       acc[prefix] = store.value;
       return acc;
     }, {});
   }
 
   getStore<T extends SettingsValue>(prefix: string): SettingsStore<T> | undefined {
-    return this._stores.get(prefix);
+    return this._stores[prefix];
   }
 
   createStore<T extends SettingsValue>({ schema, prefix, value }: SettingsProps<T>): SettingsStore<T> {
-    invariant(!this._stores.has(prefix));
-    const store = new SettingsStore<T>(schema, prefix, value, this._storage);
-    this._stores.set(prefix, store);
-    return store;
+    return untracked(() => {
+      invariant(!this._stores[prefix]);
+      const store = new SettingsStore<T>(schema, prefix, value, this._storage);
+      this._stores[prefix] = store;
+      return store;
+    });
+  }
+
+  removeStore(prefix: string) {
+    untracked(() => {
+      const store = this._stores[prefix];
+      if (store) {
+        store.close();
+        delete this._stores[prefix];
+      }
+    });
   }
 
   destroy() {
-    for (const store of this._stores.values()) {
-      store.close();
-    }
-
-    this._stores.clear();
+    return untracked(() => {
+      for (const [key, store] of Object.entries(this._stores)) {
+        store.close();
+        delete this._stores[key];
+      }
+    });
   }
 
   reset() {
-    for (const store of this._stores.values()) {
-      store.reset();
-    }
+    return untracked(() => {
+      for (const store of Object.values(this._stores)) {
+        store.reset();
+      }
+    });
   }
 }
 
@@ -88,6 +103,10 @@ export class SettingsStore<T extends SettingsValue> {
     this._value = isReactiveObject(value) ? value : create(value);
     this._defaults = cloneObject(this._value);
     this.load();
+  }
+
+  get prefix(): string {
+    return this._prefix;
   }
 
   get value(): T {
@@ -136,7 +155,7 @@ export class SettingsStore<T extends SettingsValue> {
     this.close();
 
     for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node));
+      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node) || isLiteralUnion(node));
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -155,6 +174,8 @@ export class SettingsStore<T extends SettingsValue> {
             if (v !== undefined) {
               setDeep(this.value, path, v[1]);
             }
+          } else if (isLiteralUnion(node)) {
+            setDeep(this.value, path, value);
           } else if (AST.isTupleType(node)) {
             setDeep(this.value, path, JSON.parse(value));
           } else if (AST.isTypeLiteral(node)) {
@@ -172,7 +193,7 @@ export class SettingsStore<T extends SettingsValue> {
 
   save() {
     for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node));
+      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node) || isLiteralUnion(node));
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -188,6 +209,8 @@ export class SettingsStore<T extends SettingsValue> {
         } else if (AST.isBooleanKeyword(node)) {
           this._storage.setItem(key, String(value));
         } else if (AST.isEnums(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (isLiteralUnion(node)) {
           this._storage.setItem(key, String(value));
         } else if (AST.isTupleType(node)) {
           this._storage.setItem(key, JSON.stringify(value));

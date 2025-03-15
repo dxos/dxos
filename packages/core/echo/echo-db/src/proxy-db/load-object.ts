@@ -22,6 +22,8 @@ export const loadObject = <T extends ReactiveEchoObject<any>>(obj: T): T => {
  *                        if return type is an array the method exits when all entries are non-null.
  *                        otherwise the method exits when valueAccessor is not null.
  * @param timeout - loading timeout, defaults to 5s.
+ *
+ * @deprecated Use `await Ref.load()` instead.
  */
 // TODO(burdon): Rename/review SDK.
 export const loadObjectReferences = async <

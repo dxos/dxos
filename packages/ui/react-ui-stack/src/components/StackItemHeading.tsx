@@ -9,13 +9,12 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttention, type AttendableId, type Related } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack, useStackItem } from './StackContext';
+import { useStack } from './StackContext';
 
 export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-  const { selfDragHandleRef } = useStackItem();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
   return (
     <div
@@ -24,11 +23,10 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
       tabIndex={0}
       {...focusableGroupAttrs}
       className={mx(
-        'flex items-center ch-focus-ring-inset-over-all relative !border-is-0',
+        'flex items-center dx-focus-ring-inset-over-all relative !border-is-0',
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size] flex-col',
         classNames,
       )}
-      ref={selfDragHandleRef}
     >
       {children}
     </div>
@@ -45,7 +43,7 @@ export const StackItemHeadingLabel = forwardRef<HTMLHeadingElement, StackItemHea
         {...props}
         data-attention={((related && isRelated) || hasAttention || isAncestor).toString()}
         className={mx(
-          'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText',
+          'pli-1 min-is-0 is-0 grow truncate font-medium text-baseText data-[attention=true]:text-accentText self-center',
           classNames,
         )}
         ref={forwardedRef}

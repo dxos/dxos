@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-kanban",
+  "tags": [
+    "scope:ui"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/defs/kanban.ts",
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "pack": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "node-std"
+  ]
+}

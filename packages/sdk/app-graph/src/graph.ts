@@ -8,12 +8,12 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type ReactiveObject, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type MakeOptional, nonNullable, pick } from '@dxos/util';
+import { type MakeOptional, isNonNullable, pick } from '@dxos/util';
 
 import { type Node, type NodeArg, type NodeFilter, type Relation, actionGroupSymbol, isActionLike } from './node';
 
 const graphSymbol = Symbol('graph');
-type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
+type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
 
 export const getGraph = (node: Node): Graph => {
@@ -162,7 +162,7 @@ export class Graph {
             const nextSeen = [...seen, node.id];
             return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
       }
       return obj;
     };
@@ -319,7 +319,6 @@ export class Graph {
 
       const nodes = this._getNodes({ node, relation, expansion });
       const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, expansion }, path));
-
       return () => {
         nodeSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
@@ -600,7 +599,7 @@ export class Graph {
     } else {
       return edges[relation]
         .map((id) => this._nodes[id])
-        .filter(nonNullable)
+        .filter(isNonNullable)
         .filter((n) => !type || n.type === type);
     }
   }

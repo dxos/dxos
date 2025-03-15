@@ -6,7 +6,9 @@ import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 
 import { invariant } from '@dxos/invariant';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+
+import { type JsonPath, type JsonProp } from './jsonPath';
 
 //
 // Refs
@@ -21,7 +23,7 @@ export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | '
  * Get the base type; e.g., traverse through refinements.
  */
 export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
-  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node) || isDiscriminatedUnion(node)) {
+  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node) || isDiscriminatedUnion(node) || AST.isDeclaration(node)) {
     return 'object';
   }
 
@@ -75,18 +77,6 @@ export namespace SimpleType {
 //
 // Branded types
 //
-
-export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
-export type JsonPath = string & { __JsonPath: true };
-
-const PATH_REGEX = /[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*/;
-const PROP_REGEX = /\w+/;
-
-/**
- * https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
- */
-export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
-export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
 export enum VisitResult {
   CONTINUE = 0,
@@ -397,11 +387,11 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
             invariant(AST.isLiteral(literal.type));
             return literal.type.literal;
           })
-          .filter(nonNullable);
+          .filter(isNonNullable);
 
         return literals.length ? [prop, S.Literal(...literals)] : undefined;
       })
-      .filter(nonNullable),
+      .filter(isNonNullable),
   );
 
   const schema = S.Struct(fields);
@@ -413,13 +403,19 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
  * The user is responsible for recursively calling {@link mapAst} on the AST.
  * NOTE: Will evaluate suspended ASTs.
  */
-export const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
+export const mapAst = (ast: AST.AST, f: (ast: AST.AST, key: keyof any | undefined) => AST.AST): AST.AST => {
   switch (ast._tag) {
     case 'TypeLiteral':
       return new AST.TypeLiteral(
         ast.propertySignatures.map(
           (prop) =>
-            new AST.PropertySignature(prop.name, f(prop.type), prop.isOptional, prop.isReadonly, prop.annotations),
+            new AST.PropertySignature(
+              prop.name,
+              f(prop.type, prop.name),
+              prop.isOptional,
+              prop.isReadonly,
+              prop.annotations,
+            ),
         ),
         ast.indexSignatures,
       );
@@ -427,13 +423,13 @@ export const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
       return AST.Union.make(ast.types.map(f), ast.annotations);
     case 'TupleType':
       return new AST.TupleType(
-        ast.elements.map((t) => new AST.OptionalType(f(t.type), t.isOptional, t.annotations)),
-        ast.rest.map((t) => new AST.Type(f(t.type), t.annotations)),
+        ast.elements.map((t, index) => new AST.OptionalType(f(t.type, index), t.isOptional, t.annotations)),
+        ast.rest.map((t) => new AST.Type(f(t.type, undefined), t.annotations)),
         ast.isReadonly,
         ast.annotations,
       );
     case 'Suspend': {
-      const newAst = f(ast.f());
+      const newAst = f(ast.f(), undefined);
       return new AST.Suspend(() => newAst, ast.annotations);
     }
     default:

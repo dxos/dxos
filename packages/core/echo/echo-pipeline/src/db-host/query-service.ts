@@ -3,25 +3,25 @@
 //
 
 import { DeferredTask } from '@dxos/async';
-import { getHeads, type Doc } from '@dxos/automerge/automerge';
+import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
+import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import {
   type QueryRequest,
   type QueryResponse,
-  type QueryService,
   type QueryResult,
+  type QueryService,
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
 import { QueryState } from './query-state';
-import { type AutomergeHost, getSpaceKeyFromDoc } from '../automerge';
+import { getSpaceKeyFromDoc, type AutomergeHost } from '../automerge';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -162,11 +162,11 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     /** visited automerge handles */
     const visited = new Set<string>();
 
-    async function* getObjectsFromHandle(handle: DocHandle<any>): AsyncGenerator<ObjectSnapshot[]> {
+    async function* getObjectsFromHandle(handle: DocHandle<SpaceDoc>): AsyncGenerator<ObjectSnapshot[]> {
       if (visited.has(handle.documentId)) {
         return;
       }
-      const doc: Doc<SpaceDoc> = handle.docSync();
+      const doc = handle.docSync()!;
 
       const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
 
@@ -186,7 +186,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(urlString)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc(Context.default(), urlString as DocumentId);
+          const linkHandle = await automergeHost.loadDoc<SpaceDoc>(Context.default(), urlString as DocumentId);
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }

@@ -34,6 +34,11 @@ DX_EDGE_BASE_URL:
   path: runtime.services.edge.url
   type: string
 
+# NOTE: NORMALIZED THESE URLS.
+DX_EDGE_AI_SERVICE_URL:
+  path: runtime.services.ai.server
+  type: string
+
 DX_EDGE_ECHO_REPLICATOR:
   path: runtime.client.edgeFeatures.echoReplicator
   type: boolean

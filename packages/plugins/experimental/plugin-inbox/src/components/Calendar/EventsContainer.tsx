@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { EventList } from './EventtList';
 import { type CalendarType, EventType } from '../../types';
@@ -27,10 +27,10 @@ export const EventsContainer = ({ calendar }: EventsContainerProps) => {
   objects.sort(byDate());
 
   return (
-    <div role='none' className={mx('flex row-span-2 overflow-hidden')}>
+    <StackItem.Content toolbar={false}>
       <MasterDetail>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>
-    </div>
+    </StackItem.Content>
   );
 };

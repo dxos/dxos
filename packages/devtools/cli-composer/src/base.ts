@@ -10,7 +10,7 @@ import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getObjectAnnotation, type ObjectMeta, S
 import { FUNCTION_TYPES } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 /**
  * Plugin base command.
@@ -50,7 +50,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
 
         return null;
       })
-      .filter<[string, any]>(nonNullable<any>)
+      .filter<[string, any]>(isNonNullable<any>)
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
     for (const [typename, schema] of schemata) {

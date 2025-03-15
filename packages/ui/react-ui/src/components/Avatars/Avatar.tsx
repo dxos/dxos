@@ -5,8 +5,8 @@
 import {
   Root as AvatarRootPrimitive,
   type AvatarProps as AvatarRootPrimitiveProps,
-  type ImageLoadingStatus,
   Fallback as AvatarFallbackPrimitive,
+  type AvatarImageProps as AvatarImagePrimitiveProps,
 } from '@radix-ui/react-avatar';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -112,15 +112,10 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
             </mask>
           </defs>
           {variant === 'circle' ? (
-            <circle
-              className={hue ? tx('hue.fill', 'avatar__frame__circle', { hue }) : 'fill-[var(--surface-bg)]'}
-              cx='50%'
-              cy='50%'
-              r={r}
-            />
+            <circle cx='50%' cy='50%' r={r} fill={hue ? `var(--dx-${hue}Fill)` : 'var(--surface-bg)'} />
           ) : (
             <rect
-              className={hue ? tx('hue.fill', 'avatar__frame__rect', { hue }) : 'fill-[var(--surface-bg)]'}
+              fill={hue ? `var(--dx-${hue}Fill)` : 'var(--surface-bg)'}
               x={ringGap + ringWidth}
               y={ringGap + ringWidth}
               width={2 * r}
@@ -243,9 +238,7 @@ const AvatarMaskedText = (props: AvatarMaskedTextProps) => {
   );
 };
 
-type AvatarImageProps = ComponentPropsWithRef<'image'> & {
-  onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
-};
+type AvatarImageProps = ComponentPropsWithRef<'image'> & Pick<AvatarImagePrimitiveProps, 'onLoadingStatusChange'>;
 
 const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
   ({ onLoadingStatusChange, ...props }, forwardedRef) => {
@@ -264,8 +257,7 @@ const AvatarImage = forwardRef<SVGImageElement, AvatarImageProps>(
 
 type AvatarIconProps = {
   icon: string;
-  onLoadingStatusChange?: (status: ImageLoadingStatus) => void;
-};
+} & Pick<AvatarImagePrimitiveProps, 'onLoadingStatusChange'>;
 
 const AvatarIcon = forwardRef<SVGSVGElement, AvatarIconProps>(({ onLoadingStatusChange, ...props }, forwardedRef) => {
   const { size } = useAvatarContext('AvatarIcon');

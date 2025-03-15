@@ -151,10 +151,11 @@ describe('ClientProvider', () => {
 
     await act(async () => {
       await waitForCondition({
-        condition: () => !client.initialized && newClient.status.get() === SystemStatus.ACTIVE,
+        condition: () => newClient.status.get() === SystemStatus.ACTIVE,
       });
     });
-    expect(client.initialized).toBe(false);
+    // If client is provided externally, the provider will not destroy it.
+    expect(client.initialized).toBe(true);
     expect(() => screen.getByText('Identity is NOT there')).not.toThrow();
   });
 });

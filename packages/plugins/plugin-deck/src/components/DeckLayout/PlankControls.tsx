@@ -15,9 +15,9 @@ import {
 } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../../meta';
+import { type DeckAction } from '../../types';
 
-export type PlankControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
-export type PlankControlHandler = (event: PlankControlEvent) => void;
+export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 
 export type PlankCapabilities = {
   incrementStart?: boolean;
@@ -40,13 +40,11 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
       <Tooltip.Trigger asChild>
         <Button variant='ghost' {...props}>
           <span className='sr-only'>{label}</span>
-          <Icon icon={icon} size={4} />
+          <Icon icon={icon} size={5} />
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side='bottom' classNames='z-[70]'>
-          {label}
-        </Tooltip.Content>
+        <Tooltip.Content side='bottom'>{label}</Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>
   );
@@ -54,17 +52,18 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
 
 // TODO(wittjosiah): Duplicate of stack LayoutControls?
 //   Translations were to be duplicated between packages.
+// NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },
+    { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, classNames, ...props },
     forwardedRef,
   ) => {
     const { t } = useTranslation(DECK_PLUGIN);
-    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden !pli-2 !plb-3' : '!pli-2 !plb-3';
+    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden pli-2 plb-3' : 'pli-2 plb-3';
 
     return (
-      <ButtonGroup {...props} ref={forwardedRef}>
-        {pin && !isSolo && ['both', 'start'].includes(pin) && (
+      <ButtonGroup {...props} classNames={['app-no-drag', classNames]} ref={forwardedRef}>
+        {/* {pin && !isSolo && ['both', 'start'].includes(pin) && (
           <PlankControl
             label={t('pin start label')}
             variant='ghost'
@@ -72,14 +71,14 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
             onClick={() => onClick?.('pin-start')}
             icon='ph--caret-line-left--regular'
           />
-        )}
+        )} */}
 
         {can.solo && (
           <PlankControl
             label={isSolo ? t('show deck plank label') : t('show solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
-            icon={isSolo ? 'ph--arrow-u-down-left--regular' : 'ph--arrows-out--regular'}
+            icon={isSolo ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
           />
         )}
 
@@ -102,14 +101,14 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           </>
         )}
 
-        {pin && !isSolo && ['both', 'end'].includes(pin) && (
+        {/* {pin && !isSolo && ['both', 'end'].includes(pin) && (
           <PlankControl
             label={t('pin end label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-end')}
             icon='ph--caret-line-right--regular'
           />
-        )}
+        )} */}
 
         {close && !isSolo && (
           <PlankControl

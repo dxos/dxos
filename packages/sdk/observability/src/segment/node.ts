@@ -31,7 +31,7 @@ export class SegmentTelemetry {
   /**
    * Track a page view.
    */
-  page({ installationId: anonymousId, identityId: userId, ...options }: PageOptions = {}) {
+  page({ installationId: anonymousId, did: userId, ...options }: PageOptions = {}) {
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'page' });
       return;
@@ -51,7 +51,7 @@ export class SegmentTelemetry {
   /**
    * Track an event.
    */
-  event({ installationId: anonymousId, identityId: userId, name: event, ...options }: EventOptions) {
+  event({ installationId: anonymousId, did: userId, name: event, ...options }: EventOptions) {
     log('sending event to telemetry', { event, options, tags: this._getTags() });
     if (!this._analytics) {
       log('Analytics not initialized', { action: 'event' });

@@ -17,8 +17,8 @@ export default [
         'copy error label': 'Copy this error',
         'reload page label': 'Reload',
         'update and reload page label': 'Update',
-        'reset client label': 'Reset',
-        'reset client confirm label': 'Confirm to wipe ALL DATA from local database',
+        'reset app label': 'Reset',
+        'reset app confirm label': 'Confirm to reset plugins & settings to default',
         'INVALID_STORAGE_VERSION title': 'Invalid storage version',
         'INVALID_STORAGE_VERSION message':
           'The application is not compatible with the current storage version. The data must be migrated to the new protocol in order to be used with this application. The current version is {{actual}} and the expected version is {{expected}}.',

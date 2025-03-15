@@ -1,0 +1,53 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+
+package dxos.edge.calls;
+
+message Tracks {
+  optional string audio = 1;
+  optional bool audio_enabled = 2;
+  optional string video = 3;
+  optional bool video_enabled = 4;
+  optional string screenshare = 5;
+  optional bool screenshare_enabled = 6;
+}
+
+message UserState {
+  string id = 1;
+  string name = 2;
+  optional string transceiver_session_id = 3;
+  bool raised_hand = 4;
+  bool speaking = 5;
+  bool joined = 6;
+  Tracks tracks = 7;
+  optional Transcription transcription = 8;
+}
+
+/**
+ * Transcription settings.
+ * It will be merged across all users in the room based on the Lamport timestamp (last one wins).
+ */
+message Transcription {
+  bool enabled = 1;
+
+  LamportTimestamp lamport_timestamp = 2;
+
+  /**
+   * Transcription queue DXN.
+   */
+  string queue_dxn = 3;
+}
+
+/**
+ * Lamport Timestamp.
+ * @see https://en.wikipedia.org/wiki/Lamport_timestamp
+ */
+message LamportTimestamp {
+  int32 version = 1;
+  string id = 2;
+}

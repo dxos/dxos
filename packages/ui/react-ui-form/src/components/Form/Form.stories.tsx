@@ -36,7 +36,7 @@ type TestType = S.Schema.Type<typeof TestSchema>;
 
 type StoryProps<T extends BaseObject> = { schema: S.Schema<T> } & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject>({ schema, values: initialValues }: StoryProps<T>) => {
+const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
@@ -45,7 +45,7 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues }: S
   return (
     <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
       <TestPanel>
-        <Form<T> schema={schema} values={values} onSave={handleSave} />
+        <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
       </TestPanel>
     </TestLayout>
   );
@@ -78,14 +78,24 @@ export const Default: Story<TestType> = {
   },
 };
 
-// TODO(burdon): Should accept partial values.
 export const Org: Story<Testing.OrgSchemaType> = {
   args: {
     schema: Testing.OrgSchema,
     values: {
-      // name: 'DXOS',
+      name: 'DXOS',
       // website: 'https://dxos.org',
     },
+  },
+};
+
+export const OrgAutoSave: Story<Testing.OrgSchemaType> = {
+  args: {
+    schema: Testing.OrgSchema,
+    values: {
+      name: 'DXOS',
+      // website: 'https://dxos.org',
+    },
+    autoSave: true,
   },
 };
 
@@ -114,7 +124,7 @@ const ShapeSchema = S.Struct({
       }),
       S.Struct({
         type: S.Literal('square').annotations({ [AST.TitleAnnotationId]: 'Type' }),
-        size: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Size' })),
+        size: S.optional(S.Number.pipe(S.nonNegative()).annotations({ [AST.TitleAnnotationId]: 'Size' })),
       }),
     ).annotations({ [AST.TitleAnnotationId]: 'Shape' }),
   ),
@@ -139,7 +149,7 @@ const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionSt
           onSave={handleSave}
           Custom={{
             ['shape.type' as const]: (props) => (
-              <SelectInput<ShapeType>
+              <SelectInput
                 {...props}
                 options={['circle', 'square'].map((value) => ({
                   value,
@@ -194,6 +204,38 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
     values: {
       names: ['Alice', 'Bob'],
       addresses: [],
+    },
+  },
+};
+
+const ColorSchema = S.Struct({
+  color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')).annotations({
+    [AST.TitleAnnotationId]: 'Color',
+  }),
+}).pipe(S.mutable);
+
+type ColorType = S.Schema.Type<typeof ColorSchema>;
+
+const EnumStory = ({ values: initialValues }: FormProps<ColorType>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<ColorType>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: ColorSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Enum: StoryObj<FormProps<ColorType>> = {
+  render: EnumStory,
+  args: {
+    values: {
+      color: 'red',
     },
   },
 };

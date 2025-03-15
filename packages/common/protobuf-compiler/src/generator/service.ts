@@ -3,7 +3,7 @@
 //
 
 import { dirname, relative } from 'path';
-import * as protobufjs from 'protobufjs';
+import pb from 'protobufjs';
 import * as ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
@@ -16,11 +16,7 @@ import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 
-const getRpcTypes = (
-  method: protobufjs.Method,
-  service: protobufjs.Service,
-  subs: SubstitutionsMap,
-): [ts.TypeNode, ts.TypeNode] => {
+const getRpcTypes = (method: pb.Method, service: pb.Service, subs: SubstitutionsMap): [ts.TypeNode, ts.TypeNode] => {
   method.resolve();
   return [
     types(method.resolvedRequestType ?? method.requestType, service, subs),
@@ -28,7 +24,7 @@ const getRpcTypes = (
   ];
 };
 
-const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Service, subs: SubstitutionsMap) => {
+const createRpcMethodType = (method: pb.Method, service: pb.Service, subs: SubstitutionsMap) => {
   invariant(!method.requestStream, 'Streaming RPC requests are not supported.');
 
   const [requestType, responseType] = getRpcTypes(method, service, subs);
@@ -52,7 +48,7 @@ const createRpcMethodType = (method: protobufjs.Method, service: protobufjs.Serv
   );
 };
 
-export const createServiceDeclaration = (type: protobufjs.Service, ctx: GeneratorContext): ts.InterfaceDeclaration => {
+export const createServiceDeclaration = (type: pb.Service, ctx: GeneratorContext): ts.InterfaceDeclaration => {
   const declaration = f.createInterfaceDeclaration(
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     type.name,
@@ -84,18 +80,18 @@ export const createServiceDeclaration = (type: protobufjs.Service, ctx: Generato
   return attachDocComment(declaration, commentSections.join('\n\n'));
 };
 
-function* getServices(root: protobufjs.NamespaceBase): Generator<protobufjs.Service> {
+function* getServices(root: pb.NamespaceBase): Generator<pb.Service> {
   for (const obj of root.nestedArray) {
-    if (obj instanceof protobufjs.Service) {
+    if (obj instanceof pb.Service) {
       yield obj;
       yield* getServices(obj);
-    } else if (obj instanceof protobufjs.Namespace) {
+    } else if (obj instanceof pb.Namespace) {
       yield* getServices(obj);
     }
   }
 }
 
-export const createServicesDictionary = (root: protobufjs.NamespaceBase) =>
+export const createServicesDictionary = (root: pb.NamespaceBase) =>
   f.createInterfaceDeclaration(
     [f.createToken(ts.SyntaxKind.ExportKeyword)],
     'SERVICES',

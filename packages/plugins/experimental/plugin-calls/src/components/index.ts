@@ -4,5 +4,5 @@
 
 import React from 'react';
 
-// Lazily load components for content surfaces.
-export const CallsContainer = React.lazy(() => import('./CallsContainer'));
+export const CallContainer = React.lazy(() => import('./CallContainer'));
+export * from './CallGlobalContextProvider';

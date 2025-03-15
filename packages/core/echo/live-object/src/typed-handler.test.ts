@@ -4,11 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ref, TypedObject, foreignKey } from '@dxos/echo-schema';
+import { Ref, TypedObject, createStatic, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
+import { Contact } from '@dxos/echo-schema/testing';
 import { S } from '@dxos/effect';
 
 import { getMeta } from './accessors';
 import { create } from './object';
+import { makeRef } from './ref';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {
@@ -36,12 +38,12 @@ describe('complex schema validations', () => {
 
   test('references', () => {
     class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: S.String }) {}
-    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: ref(Foo) }) {}
+    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: Ref(Foo) }) {}
     const field = 'hello';
-    expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
-    expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw(); // Unresolved reference.
-    const bar = create(Bar, { fooRef: create(Foo, { field }) });
-    expect(bar.fooRef?.field).to.eq(field);
+    expect(() => create(Bar, { fooRef: { id: '1', field } as any })).to.throw();
+    expect(() => create(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
+    const bar = create(Bar, { fooRef: makeRef(create(Foo, { field })) });
+    expect(bar.fooRef.target?.field).to.eq(field);
   });
 
   test('index signatures', () => {
@@ -62,5 +64,27 @@ describe('complex schema validations', () => {
     expect(() => setValue(object.object, 'field', 4)).not.to.throw();
     expect(() => setValue(object.array, '0', 4)).not.to.throw();
     expect(() => setValue(object.array, '0', '4')).to.throw();
+  });
+
+  test('nesting static objects with schema in the live object', () => {
+    const contact1 = createStatic(Contact, {
+      name: 'Robert Smith',
+      email: 'robert@example.com',
+    });
+    const contact2 = createStatic(Contact, {
+      name: 'Katy Perry',
+      email: 'katy@example.com',
+    });
+
+    const contactBook = create({
+      contacts: [contact1],
+    });
+
+    expect(isInstanceOf(Contact, contactBook.contacts[0])).to.eq(true);
+    expect(getSchema(contactBook.contacts[0])).to.eq(Contact);
+
+    contactBook.contacts.push(contact2);
+    expect(isInstanceOf(Contact, contactBook.contacts[1])).to.eq(true);
+    expect(getSchema(contactBook.contacts[1])).to.eq(Contact);
   });
 });

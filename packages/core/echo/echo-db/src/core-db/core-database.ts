@@ -15,11 +15,18 @@ import {
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { type AnyObjectData } from '@dxos/echo-schema';
+import {
+  encodeReference,
+  isEncodedReference,
+  Reference,
+  type ObjectStructure,
+  type SpaceDoc,
+  type SpaceState,
+} from '@dxos/echo-protocol';
+import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -28,7 +35,7 @@ import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues, setDeep } from '@dxos/util';
+import { chunkArray, deepMapValues, defaultMap, setDeep } from '@dxos/util';
 
 import {
   AutomergeDocumentLoaderImpl,
@@ -88,6 +95,13 @@ export class CoreDatabase {
   private readonly _spaceKey: PublicKey;
 
   private readonly _objects = new Map<string, ObjectCore>();
+
+  /**
+   * DXN string -> ObjectId.
+   * Stores the targets of strong dependencies to the objects that depend on them.
+   * When we load an object that doesn't have it's strong deps resolved, we wait for the deps to be loaded first.
+   */
+  private readonly _strongDepsIndex = new Map<string, ObjectId[]>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -278,13 +292,20 @@ export class CoreDatabase {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(objectId: string, { timeout }: LoadObjectOptions = {}): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(
+    objectId: string,
+    { timeout, returnWithUnsatisfiedDeps }: LoadObjectOptions = {},
+  ): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
-    if (core) {
+    if (core && (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core))) {
       return core;
     }
+    const isReady = () => {
+      const core = this.getObjectCoreById(objectId);
+      return core ? returnWithUnsatisfiedDeps || this._areDepsSatisfied(core) : false;
+    };
     const waitForUpdate = this._updateEvent
-      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady())
       .then(() => this.getObjectCoreById(objectId));
     this._automergeDocLoader.loadObjectDocument(objectId);
 
@@ -293,7 +314,17 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30_000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
+    {
+      inactivityTimeout = 30_000,
+      returnDeleted = false,
+      returnWithUnsatisfiedDeps = false,
+      failOnTimeout = false,
+    }: {
+      inactivityTimeout?: number;
+      returnDeleted?: boolean;
+      returnWithUnsatisfiedDeps?: boolean;
+      failOnTimeout?: boolean;
+    } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');
@@ -305,6 +336,8 @@ export class CoreDatabase {
       const objectId = objectIds[i];
       const core = this.getObjectCoreById(objectId);
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
+        result[i] = undefined;
+      } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(core)) {
         result[i] = undefined;
       } else if (core != null) {
         result[i] = core;
@@ -324,7 +357,11 @@ export class CoreDatabase {
       const scheduleInactivityTimeout = () => {
         inactivityTimeoutTimer = setTimeout(() => {
           unsubscribe?.();
-          reject(new TimeoutError(inactivityTimeout));
+          if (failOnTimeout) {
+            reject(new TimeoutError(inactivityTimeout));
+          } else {
+            resolve(result);
+          }
         }, inactivityTimeout);
       };
       unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {
@@ -334,7 +371,10 @@ export class CoreDatabase {
           if (updatedIds.includes(objectToLoad.id)) {
             clearTimeout(inactivityTimeoutTimer);
             result[objectToLoad.resultIndex] =
-              !returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()
+              (!returnDeleted && this._objects.get(objectToLoad.id)?.isDeleted()) ||
+              (!returnWithUnsatisfiedDeps &&
+                this._objects.get(objectToLoad.id) &&
+                !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!))
                 ? undefined
                 : this.getObjectCoreById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
@@ -494,6 +534,40 @@ export class CoreDatabase {
       const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(toUnlink);
     }
+  }
+
+  /**
+   * Resets the object to the new state.
+   * Intended way to change the type of the object (for schema migrations).
+   * Any concurrent changes made by other peers will be overwritten.
+   */
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+    const { data, type } = params;
+
+    const core = await this.loadObjectCoreById(id);
+    invariant(core);
+
+    const mappedData = deepMapValues(data, (value, recurse) => {
+      if (Ref.isRef(value)) {
+        return { '/': value.dxn.toString() };
+      }
+      return recurse(value);
+    });
+    delete mappedData.id;
+    invariant(mappedData['@type'] === undefined);
+    invariant(mappedData['@meta'] === undefined);
+
+    const existingStruct: ObjectStructure = core.getDecoded([]) as any;
+    const newStruct: ObjectStructure = {
+      ...existingStruct,
+      data: mappedData,
+    };
+
+    if (type !== undefined) {
+      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+    }
+
+    core.setDecoded([], newStruct);
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
@@ -729,8 +803,23 @@ export class CoreDatabase {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded) {
     handle.on('change', this._onDocumentUpdate);
-    this._createObjectInDocument(handle, objectId);
-    this._scheduleThrottledUpdate([objectId]);
+    const core = this._createObjectInDocument(handle, objectId);
+    if (this._areDepsSatisfied(core)) {
+      this._scheduleThrottledUpdate([objectId]);
+    } else {
+      for (const dep of core.getStrongDependencies()) {
+        if (dep.isLocalObjectId()) {
+          const id = dep.parts[1];
+          this._automergeDocLoader.loadObjectDocument(id);
+        }
+      }
+    }
+    for (const dep of this._strongDepsIndex.get(objectId) ?? []) {
+      const core = this._objects.get(dep);
+      if (core && this._areDepsSatisfied(core)) {
+        this._scheduleThrottledUpdate([core.id]);
+      }
+    }
   }
 
   /**
@@ -754,6 +843,42 @@ export class CoreDatabase {
       docHandle,
       path: ['objects', core.id],
       assignFromLocalState: false,
+    });
+
+    const deps = core.getStrongDependencies();
+    for (const dxn of deps) {
+      if (!dxn.isLocalObjectId()) {
+        continue;
+      }
+      const depObjectId = dxn.parts[1];
+      if (this._objects.has(depObjectId)) {
+        continue;
+      }
+
+      defaultMap(this._strongDepsIndex, depObjectId, []).push(core.id);
+    }
+
+    return core;
+  }
+
+  private _areDepsSatisfied(core: ObjectCore, seen?: Set<ObjectId>): boolean {
+    seen ??= new Set<ObjectId>();
+    const deps = core.getStrongDependencies();
+
+    seen.add(core.id);
+    return deps.every((dep) => {
+      if (!dep.isLocalObjectId()) {
+        return true;
+      }
+      const depObjectId = dep.parts[1];
+      const depCore = this._objects.get(depObjectId);
+      if (!depCore) {
+        return false;
+      }
+      if (seen.has(depCore.id)) {
+        return true;
+      }
+      return this._areDepsSatisfied(depCore, seen);
     });
   }
 
@@ -836,6 +961,10 @@ export interface ItemsUpdatedEvent {
 
 export type LoadObjectOptions = {
   timeout?: number;
+  /**
+   * Will not eagerly preload strong deps.
+   */
+  returnWithUnsatisfiedDeps?: boolean;
 };
 
 enum CoreDatabaseState {
@@ -857,6 +986,19 @@ export type GetObjectCoreByIdOptions = {
    * @default true
    */
   load?: boolean;
+};
+
+export type AtomicReplaceObjectParams = {
+  /**
+   * Update data.
+   * NOTE: This is not merged with the existing data.
+   */
+  data: any;
+
+  /**
+   * Update object type.
+   */
+  type?: DXN;
 };
 
 export type FlushOptions = {

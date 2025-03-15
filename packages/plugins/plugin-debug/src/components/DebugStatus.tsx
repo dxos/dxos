@@ -4,16 +4,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { firstIdInPart, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { useAppGraph, useLayout } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
-import { log } from '@dxos/log';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Icon, Popover } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -67,10 +65,7 @@ const ErrorIndicator = () => {
   useEffect(() => {
     const errorListener = (event: any) => {
       const error: Error = event.error ?? event.reason;
-      // event.preventDefault();
       if (errorRef.current !== error) {
-        // eslint-disable-next-line no-console
-        log.error('onError', { event });
         errorRef.current = error;
         forceUpdate({});
       }
@@ -140,11 +135,9 @@ const SwarmIndicator = () => {
 // TODO(burdon): Merge with SaveStatus.
 const SavingIndicator = () => {
   const [state, _setState] = useState(0);
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const location = navigationPlugin?.provides.location;
-  const graph = graphPlugin?.provides.graph;
-  const _space = location && graph ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
+  const layout = useLayout();
+  const { graph } = useAppGraph();
+  const _space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
   // TODO(dmaretskyi): Fix this when we have save status for automerge.
   // useEffect(() => {
   //   if (!space) {
@@ -192,22 +185,19 @@ const PerformanceIndicator = () => {
   const [stats, refreshStats] = useStats();
 
   return (
-    <>
-      <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
-        <Icon icon='ph--chart-bar--regular' size={4} />
-      </StatusBar.Button>
-      {visible && (
-        <div
-          className={mx(
-            'z-20 absolute bottom-[--statusbar-size] right-4 w-[450px]',
-            'overflow-x-hidden overflow-y-auto scrollbar-thin',
-            'border-x border-y border-separator',
-          )}
-        >
+    <Popover.Root open={visible} onOpenChange={setVisible}>
+      <Popover.Trigger asChild>
+        <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
+          <Icon icon='ph--chart-bar--regular' size={4} />
+        </StatusBar.Button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content classNames='max-is-[min(var(--radix-popover-content-available-width),300px)] max-bs-[--radix-popover-content-available-height]'>
           <StatsPanel stats={stats} onRefresh={refreshStats} />
-        </div>
-      )}
-    </>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 };
 

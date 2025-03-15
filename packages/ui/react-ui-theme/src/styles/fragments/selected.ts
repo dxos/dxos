@@ -20,10 +20,10 @@ export const ghostHighlighted =
 export const ghostSelectedTrackingInterFromNormal = 'tracking-[0.0092em]';
 
 export const ghostSelected =
-  'aria-selected:bg-base aria-selected:text-accentText hover:aria-selected:text-accentTextHover aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
+  'aria-selected:bg-baseSurface aria-selected:text-accentText hover:aria-selected:text-accentTextHover aria-selected:font-semibold aria-selected:tracking-normal transition-[color,font-variation-settings,letter-spacing]';
 
 export const ghostSelectedContainerMd =
-  '@md:aria-selected:bg-base @md:aria-selected:text-accentText @md:hover:aria-selected:text-accentTextHover @md:aria-selected:font-semibold @md:aria-selected:tracking-normal @md:transition-[color,font-variation-settings,letter-spacing]';
+  '@md:aria-selected:bg-baseSurface @md:aria-selected:text-accentText @md:hover:aria-selected:text-accentTextHover @md:aria-selected:font-semibold @md:aria-selected:tracking-normal @md:transition-[color,font-variation-settings,letter-spacing]';
 
 export type SelectedStyleProps = {
   current?: boolean;

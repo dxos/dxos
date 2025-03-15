@@ -1,12 +1,13 @@
 {
   "name": "@dxos/keys",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",

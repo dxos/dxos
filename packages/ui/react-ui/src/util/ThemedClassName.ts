@@ -4,4 +4,4 @@
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
-export type ThemedClassName<P> = Omit<P, 'className'> & { classNames?: ClassNameValue };
+export type ThemedClassName<P = {}> = Omit<P, 'className'> & { classNames?: ClassNameValue };

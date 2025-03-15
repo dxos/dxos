@@ -423,7 +423,10 @@ export class Pipeline implements PipelineAccessor {
     });
 
     this._feedSetIterator.stalled.on((iterator) => {
-      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`);
+      log.warn(`Stalled after ${iterator.options.stallTimeout}ms with ${iterator.size} feeds.`, {
+        currentTimeframe: this._timeframeClock.timeframe,
+        targetTimeframe: this._state.targetTimeframe,
+      });
       this._state.stalled.emit();
     });
 

@@ -3,11 +3,12 @@
 //
 
 import { createKeyborg } from 'keyborg';
-import React, { createContext, type PropsWithChildren, useEffect } from 'react';
+import React, { createContext, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
 
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
+import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
@@ -18,6 +19,7 @@ export type ThemeContextValue = {
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
+  safeAreaPadding?: SafeAreaPadding;
   noCache?: boolean;
 };
 
@@ -27,7 +29,7 @@ export type ThemeContextValue = {
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
-  Partial<ThemeContextValue> &
+  Partial<Omit<ThemeContextValue, 'safeAreaPadding'>> &
   PropsWithChildren<{
     rootDensity?: Density;
     rootElevation?: Elevation;
@@ -41,7 +43,6 @@ export const ThemeProvider = ({
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
   rootDensity = 'fine',
-  rootElevation = 'base',
   ...rest
 }: ThemeProviderProps) => {
   useEffect(() => {
@@ -52,8 +53,15 @@ export const ThemeProvider = ({
     }
   }, []);
 
+  const safeAreaPadding = useSafeArea();
+
+  const contextValue = useMemo(
+    () => ({ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), safeAreaPadding, ...rest }),
+    [tx, themeMode, safeAreaPadding, rest],
+  );
+
   return (
-    <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), ...rest }}>
+    <ThemeContext.Provider value={contextValue}>
       <TranslationsProvider
         {...{
           fallback,
@@ -61,7 +69,7 @@ export const ThemeProvider = ({
           appNs,
         }}
       >
-        <ElevationProvider elevation={rootElevation}>
+        <ElevationProvider elevation='base'>
           <DensityProvider density={rootDensity}>{children}</DensityProvider>
         </ElevationProvider>
       </TranslationsProvider>

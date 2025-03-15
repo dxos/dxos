@@ -5,8 +5,7 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { create } from '@dxos/live-object';
-import { MessageType } from '@dxos/plugin-space/types';
+import { RefArray } from '@dxos/live-object';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -19,7 +18,7 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -56,7 +55,7 @@ const ToggleResolvedButton = ({
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content classNames={'z-[21]'}>
+        <Tooltip.Content>
           {label}
           <Tooltip.Arrow />
         </Tooltip.Content>
@@ -82,7 +81,7 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content classNames='z-[21]'>
+        <Tooltip.Content classNames='z-30'>
           {label}
           <Tooltip.Arrow />
         </Tooltip.Content>
@@ -94,13 +93,12 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
 export const CommentContainer = ({
   thread,
   detached,
-  context,
   current,
   onAttend,
-  onThreadDelete,
-  onMessageDelete,
-  onResolve,
   onComment,
+  onResolve,
+  onMessageDelete,
+  onThreadDelete,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
   const space = getSpace(thread);
@@ -129,31 +127,26 @@ export const CommentContainer = ({
   const scrollToEnd = (behavior: ScrollBehavior) =>
     setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
 
-  const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
+  const handleAttend = useCallback(() => onAttend?.(thread), [onAttend, thread]);
+  const handleResolve = useCallback(() => onResolve?.(thread), [onResolve, thread]);
+  const handleMessageDelete = useCallback((id: string) => onMessageDelete?.(thread, id), [onMessageDelete, thread]);
+  const handleThreadDelete = useCallback(() => onThreadDelete?.(thread), [onThreadDelete, thread]);
+
+  const handleComment: MessageTextboxProps['onSend'] = useCallback(() => {
     if (!messageRef.current) {
       return false;
     }
 
-    thread.messages.push(
-      create(MessageType, {
-        sender: { identityKey: identity.identityKey.toHex() },
-        timestamp: new Date().toISOString(),
-        text: messageRef.current,
-        context,
-      }),
-    );
-    onComment?.(thread);
-
+    onComment?.(thread, messageRef.current);
     messageRef.current = '';
     scrollToEnd('instant');
     rerenderEditor();
 
-    // TODO(burdon): Scroll to bottom.
     return true;
   }, [thread, identity]);
 
   return (
-    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={fullyQualifiedId(thread)}>
+    <Thread onClickCapture={handleAttend} onFocusCapture={handleAttend} current={current} id={fullyQualifiedId(thread)}>
       <div
         role='none'
         className={mx(
@@ -168,7 +161,7 @@ export const CommentContainer = ({
               <ThreadHeading detached>{thread.name}</ThreadHeading>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content classNames='z-[21]' side='top'>
+              <Tooltip.Content classNames='z-30' side='top'>
                 {t('detached thread label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>
@@ -180,18 +173,14 @@ export const CommentContainer = ({
         <div className='flex flex-row items-center pli-1'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
-            <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={onResolve} />
+            <ToggleResolvedButton isResolved={thread?.status === 'resolved'} onResolve={handleResolve} />
           )}
-          {onThreadDelete && <DeleteThreadButton onDelete={onThreadDelete} />}
+          {onThreadDelete && <DeleteThreadButton onDelete={handleThreadDelete} />}
         </div>
       </div>
-      {thread.messages.filter(nonNullable).map((message) => (
-        <MessageContainer
-          key={message.id}
-          message={message}
-          members={members}
-          onDelete={(id: string) => onMessageDelete?.(id)}
-        />
+      {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
+      {RefArray.allResolvedTargets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
+        <MessageContainer key={message.id} message={message} members={members} onDelete={handleMessageDelete} />
       ))}
       {/*
         TODO(wittjosiah): Can't autofocus this generally.
@@ -199,7 +188,7 @@ export const CommentContainer = ({
           Also, it steals focus from documents when first rendered.
           Need to find a way to autofocus in one scenario only: when a new thread is created.
       */}
-      <MessageTextbox extensions={extensions} onSend={handleCreate} {...textboxMetadata} />
+      <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />

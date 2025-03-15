@@ -14,6 +14,8 @@ import "dxos/config.proto";
 import "dxos/devtools/swarm.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
+import "dxos/edge/messenger.proto";
+import "dxos/edge/signal.proto";
 import "dxos/error.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
@@ -116,17 +118,53 @@ service SystemService {
 //
 
 message Identity {
+  string did = 4;
   dxos.keys.PublicKey identity_key = 1;
   optional dxos.keys.PublicKey space_key = 2;
   optional halo.credentials.ProfileDocument profile = 3;
 }
 
-message RecoverIdentityRequest {
-  string seedphrase = 1;
+message RequestRecoveryChallengeResponse {
+  dxos.keys.PublicKey device_key = 1;
+  dxos.keys.PublicKey control_feed_key = 2;
+  string challenge = 3;
 }
 
-message CreateRecoveryPhraseResponse {
-  string seedphrase = 1;
+message RecoverIdentityRequest {
+  message ExternalSignature {
+    dxos.keys.PublicKey lookup_key = 1;
+    dxos.keys.PublicKey device_key = 2;
+    dxos.keys.PublicKey control_feed_key = 3;
+    bytes signature = 4;
+    // These are required to verify the signature from the WebAuthn authenticator.
+    optional bytes client_data_json = 5;
+    optional bytes authenticator_data = 6;
+  }
+
+  oneof request {
+    string recovery_code = 1;
+    ExternalSignature external = 2;
+  }
+}
+
+message RecoveryCredentialData {
+  /// Recovery key used to validate recovery challenge signature.
+  dxos.keys.PublicKey recovery_key = 1;
+
+  /// Public key used to identify the recovery key.
+  dxos.keys.PublicKey lookup_key = 2;
+
+  /// Algorithm used to generate the recovery key.
+  string algorithm = 3;
+}
+
+message CreateRecoveryCredentialRequest {
+  /// If not provided, a new key will be generated.
+  optional RecoveryCredentialData data = 1;
+}
+
+message CreateRecoveryCredentialResponse {
+  optional string recovery_code = 1;
 }
 
 message QueryIdentityResponse {
@@ -148,8 +186,9 @@ message CreateIdentityRequest {
 // TODO(wittjosiah): Align pluralization with other services.
 service IdentityService {
   rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
+  rpc RequestRecoveryChallenge(google.protobuf.Empty) returns (RequestRecoveryChallengeResponse);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
-  rpc CreateRecoveryPhrase(google.protobuf.Empty) returns (CreateRecoveryPhraseResponse);
+  rpc CreateRecoveryCredential(CreateRecoveryCredentialRequest) returns (CreateRecoveryCredentialResponse);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
@@ -506,10 +545,19 @@ message UpdateConfigRequest {
   ConnectionState swarm = 1;
 }
 
+message SubscribeSwarmStateRequest {
+  dxos.keys.PublicKey topic = 1;
+}
+
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
+  rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
+  rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
+  rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
+  rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
 }
 
 service EdgeAgentService {

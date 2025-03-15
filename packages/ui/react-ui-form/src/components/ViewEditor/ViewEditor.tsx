@@ -4,13 +4,12 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SchemaResolver } from '@dxos/echo-db';
-import { AST, Format, type MutableSchema, S } from '@dxos/echo-schema';
+import { type SchemaRegistry } from '@dxos/echo-db';
+import { AST, Format, type EchoSchema, S } from '@dxos/echo-schema';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
-import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
@@ -22,7 +21,7 @@ const ViewMetaSchema = S.Struct({
   name: S.String.annotations({
     [AST.TitleAnnotationId]: 'View',
   }),
-  typename: Format.DXN.annotations({
+  typename: Format.URL.annotations({
     [AST.TitleAnnotationId]: 'Typename',
   }),
 }).pipe(S.mutable);
@@ -30,11 +29,12 @@ const ViewMetaSchema = S.Struct({
 type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
-  schema: MutableSchema;
+  schema: EchoSchema;
   view: ViewType;
-  registry?: SchemaResolver;
+  registry?: SchemaRegistry;
   readonly?: boolean;
   showHeading?: boolean;
+  onTypenameChanged: (typename: string) => void;
   onDelete: (fieldId: string) => void;
 }>;
 
@@ -48,6 +48,7 @@ export const ViewEditor = ({
   registry,
   readonly,
   showHeading = false,
+  onTypenameChanged,
   onDelete,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
@@ -60,19 +61,22 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      typename: view.query.type,
+      typename: view.query.typename,
     };
   }, [view]);
 
   const handleViewUpdate = useCallback(
     ({ name, typename }: ViewMetaType) => {
       requestAnimationFrame(() => {
-        view.name = name;
-        view.query.type = typename;
-        schema.updateTypename(typename);
+        if (view.name !== name) {
+          view.name = name;
+        }
+        if (view.query.typename !== typename) {
+          onTypenameChanged(typename);
+        }
       });
     },
-    [view, schema],
+    [view, schema, onTypenameChanged],
   );
 
   const handleSelect = useCallback((field: FieldType) => {
@@ -86,7 +90,11 @@ export const ViewEditor = ({
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      arrayMove(view.fields, fromIndex, toIndex);
+      // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
+      const fields = [...view.fields];
+      const [moved] = fields.splice(fromIndex, 1);
+      fields.splice(toIndex, 0, moved);
+      view.fields = fields;
     },
     [view.fields],
   );
@@ -95,7 +103,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
+      <Form<ViewMetaType> autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}

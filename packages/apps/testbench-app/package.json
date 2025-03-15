@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -9,6 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "dependencies": {
     "@baselime/node-opentelemetry": "^0.5.8",
     "@baselime/react-rum": "^0.2.9",

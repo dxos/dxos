@@ -2,14 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import callsite from 'callsite';
+import path from 'node:path';
 import { type z } from 'zod';
 
 import {
+  BASENAME,
   DirectoryTemplate,
+  type DirectoryTemplateLoadOptions,
   type DirectoryTemplateOptions,
   type ExecuteDirectoryTemplateOptions,
 } from './DirectoryTemplate';
+import { safeLoadModule } from './util/loadModule';
 import { logger } from './util/logger';
+import { type Optional } from './util/optional';
 import { type FileResults } from './util/template';
 import { type InquirableZodType, type QuestionOptions, inquire, unDefault } from './util/zodInquire';
 
@@ -90,3 +96,76 @@ export class InteractiveDirectoryTemplate<I extends InquirableZodType> extends D
 
 export type InputOf<T> =
   T extends InteractiveDirectoryTemplate<infer U> ? z.TypeOf<U> : T extends DirectoryTemplate<infer Z> ? Z : never;
+
+export type TemplateOptions<I> = Optional<DirectoryTemplateOptions<I>, 'src'>;
+
+export const directory = <I>(options: TemplateOptions<I>) => {
+  const stack = callsite();
+  const templateFile = stack[1].getFileName();
+  const dir = path.dirname(templateFile);
+  const { src, ...rest } = { src: dir, ...options };
+  return new DirectoryTemplate({
+    src: path.isAbsolute(src) ? src : path.resolve(dir, src),
+    ...rest,
+  });
+};
+
+export type InteractiveTemplateOptions<I extends InquirableZodType> = Optional<
+  InteractiveDirectoryTemplateOptions<I>,
+  'src'
+>;
+
+export const interactiveDirectory = <I extends InquirableZodType>(options: InteractiveTemplateOptions<I>) => {
+  const stack = callsite();
+  const templateFile = stack[1].getFileName();
+  const dir = path.dirname(templateFile);
+  const { src, ...rest } = { src: dir, ...options };
+  return new InteractiveDirectoryTemplate({
+    src: path.isAbsolute(src) ? src : path.resolve(dir, src),
+    ...rest,
+  });
+};
+
+export const loadTemplate = async <T = InteractiveDirectoryTemplate<any>>(
+  src: string,
+  options?: DirectoryTemplateLoadOptions,
+) => {
+  const tsName = path.resolve(src, BASENAME + '.ts');
+  const jsName = path.resolve(src, BASENAME + '.js');
+  const { verbose } = { verbose: false, ...options };
+  try {
+    const module = (await safeLoadModule(tsName, options))?.module ?? (await safeLoadModule(jsName, options))?.module;
+    const config = { ...module?.default };
+    return config as T;
+  } catch (err: any) {
+    if (verbose) {
+      console.warn('exception while loading template config:\n' + err.toString());
+    }
+    throw err;
+  }
+};
+
+export const executeDirectoryTemplate = async <I extends InquirableZodType>(
+  options: ExecuteInteractiveDirectoryTemplateOptions<I>,
+) => {
+  const { src, verbose } = options;
+  if (!src) {
+    throw new Error('cannot load template without an src option');
+  }
+  const template = await loadTemplate(src, { verbose });
+  if (!template) {
+    throw new Error(`failed to load template function from ${src}`);
+  }
+  if (!(template instanceof DirectoryTemplate)) {
+    throw new Error(`template is not an executable template ${src}`);
+  }
+  if (!template.apply) {
+    throw new Error(`template does not have an apply function ${src}`);
+  }
+  try {
+    return template.apply(options);
+  } catch (err) {
+    console.error(`problem in template ${src}`);
+    throw err;
+  }
+};
