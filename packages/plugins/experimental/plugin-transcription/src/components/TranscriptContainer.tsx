@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState, type FC } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
-import { AIServiceClientImpl, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
+import { AIServiceEdgeClient, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
 import { create, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
@@ -30,7 +30,7 @@ import { TranscriptBlock, type TranscriptType } from '../types';
 export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ transcript }) => {
   const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const edge = useEdgeClient();
-  const aiService = useAiServiceClient();
+  const ai = useAiServiceClient();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const queue = useQueue<TranscriptBlock>(edge, transcript.queue ? DXN.parse(transcript.queue) : undefined, {
@@ -42,7 +42,7 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
   const handleSummarize = useCallback(async () => {
     setIsSummarizing(true);
     try {
-      const document = await summarizeTranscript(edge, aiService, transcript);
+      const document = await summarizeTranscript(edge, ai, transcript);
       const space = getSpace(transcript);
       const target = space?.properties[CollectionType.typename]?.target;
       await dispatch(
@@ -82,14 +82,10 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
 export default TranscriptionContainer;
 
 // TODO(dmaretskyi): Extract to the new file once transcript refactoring has settled.
-const summarizeTranscript = async (
-  edgeClient: EdgeHttpClient,
-  aiService: AIServiceClient,
-  transcript: TranscriptType,
-) => {
+const summarizeTranscript = async (edge: EdgeHttpClient, ai: AIServiceClient, transcript: TranscriptType) => {
   invariant(transcript.queue, 'No queue found for transcript');
 
-  const queue = new QueueImpl(edgeClient, DXN.parse(transcript.queue));
+  const queue = new QueueImpl(edge, DXN.parse(transcript.queue));
   await queue.refresh();
   const content = queue.items
     .filter((block) => isInstanceOf(TranscriptBlock, block))
@@ -100,7 +96,7 @@ const summarizeTranscript = async (
 
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
-    await aiService.exec({
+    await ai.exec({
       model: DEFAULT_LLM_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
@@ -145,10 +141,10 @@ const SUMMARIZE_PROMPT = `
   # Tasks
   At the end of the summary include tasks.
   Extract only the tasks that are:
-  - Directly actionable
-  - Clearly assigned to a person or team (or can easily be inferred)
-  - Strongly implied by the conversation and/or user note (no speculative tasks)
-  - Specific enough that someone reading them would know exactly what to do next
+  - Directly actionable.
+  - Clearly assigned to a person or team (or can easily be inferred).
+  - Strongly implied by the conversation and/or user note (no speculative tasks).
+  - Specific enough that someone reading them would know exactly what to do next.
 
   Format all tasks as markdown checkboxes using the syntax:
   - [ ] Task description
@@ -163,5 +159,5 @@ const SUMMARIZE_PROMPT = `
 const useAiServiceClient = (): AIServiceClient => {
   const config = useConfig();
   const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788'; // TOOD(burdon): Standardize consts.
-  return useMemo(() => new AIServiceClientImpl({ endpoint }), [endpoint]);
+  return useMemo(() => new AIServiceEdgeClient({ endpoint }), [endpoint]);
 };
