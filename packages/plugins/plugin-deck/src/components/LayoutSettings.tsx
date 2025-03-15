@@ -72,10 +72,10 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </DeprecatedFormInput>
       )}
-      <DeprecatedFormInput label={t('settings enable ide-style statusbar label')}>
+      <DeprecatedFormInput label={t('settings enable statusbar label')}>
         <Input.Switch
-          checked={settings.enableIdeStyleStatusbar}
-          onCheckedChange={(checked) => (settings.enableIdeStyleStatusbar = checked)}
+          checked={settings.enableStatusbar}
+          onCheckedChange={(checked) => (settings.enableStatusbar = checked)}
         />
       </DeprecatedFormInput>
     </DeprecatedFormContainer>

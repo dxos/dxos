@@ -12,7 +12,7 @@ export default () => {
   const settings = create<DeckSettingsProps>({
     showHints: false,
     enableNativeRedirect: false,
-    enableIdeStyleStatusbar: true,
+    enableStatusbar: true,
     newPlankPositioning: 'start',
     overscroll: 'none',
   });

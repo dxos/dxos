@@ -11,10 +11,10 @@ import { DECK_PLUGIN } from '../meta';
 import type { DeckSettingsProps } from '../types';
 
 export const useHoistStatusbar = (breakpoint: string) => {
-  const enableIdeStyleStatusbar = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!
-    .value.enableIdeStyleStatusbar;
+  const enableStatusbar = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!
+    .value.enableStatusbar;
   const { safeAreaPadding } = useThemeContext();
   return useMemo(() => {
-    return breakpoint === 'desktop' && enableIdeStyleStatusbar && safeAreaPadding?.bottom === 0;
-  }, [enableIdeStyleStatusbar, breakpoint, safeAreaPadding?.bottom]);
+    return breakpoint === 'desktop' && enableStatusbar && safeAreaPadding?.bottom === 0;
+  }, [enableStatusbar, breakpoint, safeAreaPadding?.bottom]);
 };
