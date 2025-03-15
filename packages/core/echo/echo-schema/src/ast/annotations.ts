@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe } from 'effect';
+import { flow, Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
 import { type Simplify } from 'effect/Types';
 
-import { AST, S } from '@dxos/effect';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';

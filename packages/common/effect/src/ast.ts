@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import { Option, pipe } from 'effect';
+import { Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';

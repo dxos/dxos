@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { SchemaAST as AST, Schema as S } from 'effect';
 import { describe, test } from 'vitest';
-
-import { AST, S } from '@dxos/effect';
 
 import { Format } from './formats';
 

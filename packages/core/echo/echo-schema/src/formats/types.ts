@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type JSONSchema } from '@effect/schema';
+import { SchemaAST as AST, type JSONSchema } from 'effect';
 import { Option, pipe } from 'effect';
 
 import type { JsonSchemaType } from '../ast';

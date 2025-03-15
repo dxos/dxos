@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S } from '@dxos/effect';
+import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { FormatAnnotationId, FormatEnum } from './types';
 

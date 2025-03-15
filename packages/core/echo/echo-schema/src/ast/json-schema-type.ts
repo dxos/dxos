@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JsonProp, S } from '@dxos/effect';
+import { Schema as S } from 'effect';
+
+import { type JsonProp } from '@dxos/effect';
 
 import { EntityKind } from './entity-kind';
 import { FormatAnnotationId } from '../formats';
@@ -187,7 +189,10 @@ const _JsonSchemaType = S.Struct({
   dependencies: S.optional(
     S.Record({
       key: S.String,
-      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)),
+      value: S.suspend(() => S.Union(S.String, StringArray, JsonSchemaType)).annotations({
+        identifier: 'dependency',
+        description: 'Dependency',
+      }),
     }),
   ),
 
@@ -265,7 +270,7 @@ const _JsonSchemaType = S.Struct({
       }),
     ),
   ),
-}).annotations({ description: 'JSON Schema' });
+}).annotations({ identifier: 'jsonSchema', description: 'JSON Schema' });
 
 export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 
