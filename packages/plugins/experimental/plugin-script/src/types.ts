@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TitleAnnotationId } from '@effect/schema/AST';
+import { TitleAnnotationId } from 'effect/SchemaAST';
 
 import { SpaceSchema } from '@dxos/client/echo';
 import { S } from '@dxos/echo-schema';

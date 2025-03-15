@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, ArrayFormatter } from '@effect/schema';
-import { Either, Option } from 'effect';
+import { SchemaAST as AST, ParseResult, Either, Option } from 'effect';
 import { describe, test } from 'vitest';
 
 import { type PropertyKey, S } from '@dxos/echo-schema';
@@ -30,7 +29,7 @@ describe('validate', () => {
       const value = decoder(0.001);
       expect(Either.isLeft(value)).to.be.true;
       if (Either.isLeft(value)) {
-        const [{ message }] = ArrayFormatter.formatErrorSync(value.left);
+        const [{ message }] = ParseResult.ArrayFormatter.formatErrorSync(value.left);
         expect(message).to.eq('Expected a number divisible by 0.01, actual 0.001');
       }
     }

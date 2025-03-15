@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
 

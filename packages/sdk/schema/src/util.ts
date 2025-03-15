@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { SchemaAST as AST, type Schema as S } from 'effect';
 // TODO(burdon): Move to jsonpath-plus.
 import jp from 'jsonpath';
 
 import { type BaseObject, FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo-schema';
-import { AST, type S, visit } from '@dxos/effect';
+import { visit } from '@dxos/effect';
 
 import { type FieldType } from './view';
 

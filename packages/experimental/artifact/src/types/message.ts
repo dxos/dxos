@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { EchoObject, ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';

@@ -40,7 +40,6 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@radix-ui/react-context": "1.1.1",
     "date-fns": "^3.3.1",
     "jsonpath": "^1.1.1"
@@ -65,7 +64,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@phosphor-icons/react": "^2.1.5",
     "effect": "^3.12.3",
     "react": "~18.2.0",
