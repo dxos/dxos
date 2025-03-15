@@ -2,16 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option, Schema as S } from 'effect';
 import {
   getDescriptionAnnotation,
   getIdentifierAnnotation,
   getTitleAnnotation,
   type Annotated,
-} from '@effect/schema/AST';
-import { Option } from 'effect';
+} from 'effect/SchemaAST';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';

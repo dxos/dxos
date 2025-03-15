@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 // TODO(ZaymonFC): Where should this live?
 const SortDirection = S.Union(S.Literal('asc'), S.Literal('desc'));

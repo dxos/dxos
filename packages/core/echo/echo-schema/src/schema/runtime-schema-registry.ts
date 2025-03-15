@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 
 import { raise } from '@dxos/debug';
 import type { DXN } from '@dxos/keys';

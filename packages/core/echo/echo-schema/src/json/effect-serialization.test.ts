@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, Schema as S } from '@effect/schema';
+import { JSONSchema, Schema as S } from 'effect';
 import { expect, test } from 'vitest';
 
 test('json-schema annotations for filter refinement get combined', () => {
