@@ -23,7 +23,6 @@ export type AIServiceClientParams = {
 /**
  * Edge GPT client.
  */
-// TODO(burdon): Create mock.
 export class AIServiceClientImpl implements AIServiceClient {
   private readonly _endpoint: string;
 

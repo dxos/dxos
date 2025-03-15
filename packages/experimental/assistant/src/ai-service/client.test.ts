@@ -181,12 +181,12 @@ describe.skip('AI Service Client', () => {
 
 describe('Ollama Client', () => {
   test('basic', async (ctx) => {
-    const isRunning = await OllamaClient.isOllamaRunning();
+    const isRunning = await OllamaClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
 
-    const client = OllamaClient.createTestClient();
+    const client = OllamaClient.createClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
@@ -202,12 +202,12 @@ describe('Ollama Client', () => {
   });
 
   test('tool calls', async (ctx) => {
-    const isRunning = await OllamaClient.isOllamaRunning();
+    const isRunning = await OllamaClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
 
-    const client = OllamaClient.createTestClient({
+    const client = OllamaClient.createClient({
       tools: [
         defineTool('test', {
           name: 'encrypt',
@@ -237,12 +237,12 @@ describe('Ollama Client', () => {
   });
 
   test('text-to-image', async (ctx) => {
-    const isRunning = await OllamaClient.isOllamaRunning();
+    const isRunning = await OllamaClient.isRunning();
     if (!isRunning) {
       ctx.skip();
     }
 
-    const client = OllamaClient.createTestClient();
+    const client = OllamaClient.createClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(

@@ -145,10 +145,10 @@ const SUMMARIZE_PROMPT = `
   # Tasks
   At the end of the summary include tasks.
   Extract only the tasks that are:
-  - Directly actionable
-  - Clearly assigned to a person or team (or can easily be inferred)
-  - Strongly implied by the conversation and/or user note (no speculative tasks)
-  - Specific enough that someone reading them would know exactly what to do next
+  - Directly actionable.
+  - Clearly assigned to a person or team (or can easily be inferred).
+  - Strongly implied by the conversation and/or user note (no speculative tasks).
+  - Specific enough that someone reading them would know exactly what to do next.
 
   Format all tasks as markdown checkboxes using the syntax:
   - [ ] Task description

@@ -24,6 +24,7 @@ export type OllamaClientParams = {
   /**
    * Override generation parameters.
    */
+  // TODO(burdon): Why not just options?
   overrides?: {
     model?: string;
     temperature?: number;
@@ -36,14 +37,19 @@ export type OllamaClientParams = {
   maxToolInvocations?: number;
 };
 
+// TODO(burdon): Config.
+const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
+const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
+
 export class OllamaClient implements AIService {
   /**
    * Create a test client with small local model and no temperature for predictable results.
    */
-  static createTestClient(options?: Pick<OllamaClientParams, 'tools'>) {
+  // TODO(burdon): Why test?
+  static createClient(options?: Pick<OllamaClientParams, 'tools'>) {
     return new OllamaClient({
       tools: options?.tools,
-      overrides: { model: 'llama3.2:1b', temperature: 0 },
+      overrides: { model: DEFAULT_OLLAMA_MODEL, temperature: 0 },
     });
   }
 
@@ -51,14 +57,14 @@ export class OllamaClient implements AIService {
    * Check if Ollama server is running and accessible.
    * @returns Promise that resolves to true if Ollama is running, false otherwise.
    */
-  static async isOllamaRunning(): Promise<boolean> {
+  static async isRunning(): Promise<boolean> {
     try {
-      const response = await fetch('http://localhost:11434/api/version', {
+      const response = await fetch(`${DEFAULT_OLLAMA_URL}/api/version`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(100), // Timeout after 2 seconds
+        signal: AbortSignal.timeout(100),
       });
 
       return response.ok;
@@ -74,7 +80,7 @@ export class OllamaClient implements AIService {
   private readonly _maxToolInvocations: number;
 
   constructor({ endpoint, tools, overrides, maxToolInvocations }: OllamaClientParams) {
-    this._endpoint = endpoint ?? 'http://localhost:11434';
+    this._endpoint = endpoint ?? DEFAULT_OLLAMA_URL;
     this._tools = tools ?? [];
     this._modelOverride = overrides?.model;
     this._temperatureOverride = overrides?.temperature;
@@ -93,7 +99,7 @@ export class OllamaClient implements AIService {
   private async *_generateStream(request: GenerateRequest, signal?: AbortSignal): AsyncIterable<GenerationStreamEvent> {
     invariant(request.prompt === undefined, 'Prompt must be in history');
 
-    // Map DXOS request to Ollama API format
+    // Map DXOS request to Ollama API format.
     const ollamaRequest: OllamaRequest = {
       model: this._modelOverride ?? request.model ?? 'llama3',
       messages: [],
@@ -103,7 +109,7 @@ export class OllamaClient implements AIService {
       },
     };
 
-    // Add system message if provided
+    // Add system message if provided.
     if (request.systemPrompt) {
       ollamaRequest.messages.push({
         role: 'system',
@@ -111,12 +117,12 @@ export class OllamaClient implements AIService {
       });
     }
 
-    // Add history if provided
+    // Add history if provided.
     if (request.history?.length) {
       for (const message of request.history) {
         const role = message.role === 'assistant' ? 'assistant' : 'user';
 
-        // Process message content
+        // Process message content.
         if (message.content.length === 0) {
           // Skip empty messages
           continue;
@@ -162,7 +168,7 @@ export class OllamaClient implements AIService {
       }
     }
 
-    // Add tools if provided
+    // Add tools if provided.
     if (request.tools?.length || this._tools.length) {
       const allTools = [...(request.tools ?? []), ...this._tools];
       const withWellKnownTools = allTools.map((tool) =>
@@ -213,10 +219,10 @@ export class OllamaClient implements AIService {
       .getReader();
 
     try {
-      // Create a message ID
+      // Create a message ID.
       const messageId = ObjectId.random();
 
-      // Send message_start event with proper message structure
+      // Send message_start event with proper message structure.
       yield {
         type: 'message_start',
         message: {
@@ -226,7 +232,7 @@ export class OllamaClient implements AIService {
         },
       } as GenerationStreamEvent;
 
-      // Initialize text content block
+      // Initialize text content block.
       const textBlock: MessageContentBlock = {
         type: 'text',
         text: '',
@@ -234,7 +240,7 @@ export class OllamaClient implements AIService {
 
       let currentBlockIndex = 0;
 
-      // Send content_block_start event
+      // Send content_block_start event.
       yield {
         type: 'content_block_start',
         index: currentBlockIndex,
@@ -250,7 +256,7 @@ export class OllamaClient implements AIService {
 
         log.info('ollama data', { data });
 
-        // Ollama sends chunks of text, we convert them to our event format
+        // Ollama sends chunks of text, we convert them to our event format.
         if (data.message?.content) {
           yield {
             type: 'content_block_delta',
@@ -262,7 +268,7 @@ export class OllamaClient implements AIService {
           } as GenerationStreamEvent;
         }
 
-        // If tool usage is detected
+        // If tool usage is detected.
         if (data.message?.tool_calls && data.message?.tool_calls?.length > 0) {
           if (data.message.tool_calls.length > 1) {
             log.warn('Ollama returned multiple tool calls. Only the first one will be used.');
@@ -293,7 +299,7 @@ export class OllamaClient implements AIService {
         }
       }
 
-      // Send content_block_stop and message_stop events
+      // Send content_block_stop and message_stop events.
       yield {
         type: 'content_block_stop',
         index: currentBlockIndex,
@@ -316,7 +322,7 @@ export class OllamaClient implements AIService {
         async function* (this: OllamaClient) {
           const collector = new MessageCollector();
 
-          // Loop while running tools
+          // Loop while running tools.
           let toolInvocations = 0;
           while (true) {
             for await (const event of this._generateStream(
@@ -395,26 +401,19 @@ const WELL_KNOWN_TOOLS: Record<string, Tool> = {
       const image = await fetch(SAMPLE_IMAGE_URL).then(async (res) => Buffer.from(await res.arrayBuffer()));
 
       const imageBase64 = image.toString('base64');
-
       const id = ObjectId.random();
 
-      return ToolResult.Success(
-        `
-        The generation was successful.
-        Image ID: ${id} Prompt: ${prompt}
-      `,
-        [
-          {
-            type: 'image',
-            id,
-            source: {
-              type: 'base64',
-              mediaType: 'image/jpeg',
-              data: imageBase64,
-            },
+      return ToolResult.Success(`The generation was successful. Image ID: ${id} Prompt: ${prompt}`, [
+        {
+          type: 'image',
+          id,
+          source: {
+            type: 'base64',
+            mediaType: 'image/jpeg',
+            data: imageBase64,
           },
-        ],
-      );
+        },
+      ]);
     },
   }),
 };
@@ -450,6 +449,7 @@ type OllamaRequest = {
 type OllamaResponseData = {
   message?: OllamaMessage;
 };
+
 class OllamaDecoderStream extends TransformStream<string, OllamaResponseData> {
   private _buffer = '';
 
@@ -457,10 +457,8 @@ class OllamaDecoderStream extends TransformStream<string, OllamaResponseData> {
     super({
       transform: (chunk, controller) => {
         this._buffer += chunk;
-
         const lines = this._buffer.split('\n');
         this._buffer = lines.pop() || '';
-
         for (const line of lines) {
           controller.enqueue(JSON.parse(line.trim()));
         }

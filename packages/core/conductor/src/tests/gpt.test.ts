@@ -190,7 +190,7 @@ describe('Gpt pipelines', () => {
 
   it.effect('gpt simple', (ctx) =>
     Effect.gen(function* () {
-      if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+      if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
         ctx!.skip();
         return;
       }
@@ -218,7 +218,7 @@ describe('Gpt pipelines', () => {
     { timeout: 60_000 },
     testEffect((ctx) =>
       Effect.gen(function* () {
-        if (!(yield* Effect.promise(() => OllamaClient.isOllamaRunning()))) {
+        if (!(yield* Effect.promise(() => OllamaClient.isRunning()))) {
           ctx!.skip();
           return;
         }
@@ -240,7 +240,7 @@ describe('Gpt pipelines', () => {
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(OllamaClient.createTestClient()),
+              gpt: new EdgeGpt(OllamaClient.createClient()),
             }),
           ),
         );
