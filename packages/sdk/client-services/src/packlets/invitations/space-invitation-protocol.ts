@@ -28,6 +28,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import { type InvitationProtocol } from './invitation-protocol';
+import { computeExpirationTime } from './utils';
 import { type DataSpaceManager, type SigningContext } from '../spaces';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
@@ -113,9 +114,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
         authMethod: invitation.authMethod,
         swarmKey: invitation.swarmKey,
         role: invitation.role ?? SpaceMember.Role.ADMIN,
-        expiresOn: invitation.lifetime
-          ? new Date((invitation.created?.getTime() ?? Date.now()) + invitation.lifetime)
-          : undefined,
+        expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
         guestKey:
           invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY

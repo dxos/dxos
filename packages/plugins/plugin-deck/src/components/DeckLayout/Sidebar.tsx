@@ -4,39 +4,36 @@
 
 import React, { useMemo } from 'react';
 
-import { type LayoutParts, openIds, Surface } from '@dxos/app-framework';
-import { Main } from '@dxos/react-ui';
+import { Surface, useCapability } from '@dxos/app-framework';
+import { type Label, Main } from '@dxos/react-ui';
 
-import { useLayout } from '../LayoutContext';
+import { DeckCapabilities } from '../../capabilities';
+import { DECK_PLUGIN } from '../../meta';
+import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 
-export type SidebarProps = {
-  layoutParts: LayoutParts;
-};
+const label = ['sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 
-export const Sidebar = ({ layoutParts }: SidebarProps) => {
-  const { layoutMode, popoverAnchorId } = useLayout();
-
-  // TODO(wittjosiah): The activeIds should be path-based to avoid conflicts.
-  const activeIds = useMemo(() => {
-    if (layoutMode === 'solo') {
-      return Array.from(new Set<string>(layoutParts?.solo?.map((e) => e.id) ?? []));
-    } else if (layoutMode === 'deck') {
-      return Array.from(new Set<string>(layoutParts?.main?.map((e) => e.id) ?? []));
-    }
-
-    return Array.from(new Set<string>(openIds(layoutParts)));
-  }, [layoutParts, layoutMode]);
+export const Sidebar = () => {
+  const { popoverAnchorId, activeDeck: current } = useCapability(DeckCapabilities.DeckState);
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint);
+  const hoistStatusbar = useHoistStatusbar(breakpoint);
 
   const navigationData = useMemo(
-    () => ({
-      popoverAnchorId,
-      activeIds,
-    }),
-    [popoverAnchorId, activeIds],
+    () => ({ popoverAnchorId, topbar, hoistStatusbar, current }),
+    [popoverAnchorId, topbar, hoistStatusbar, current],
   );
+
   return (
-    <Main.NavigationSidebar>
-      <Surface role='navigation' data={{ ...navigationData }} limit={1} />
+    <Main.NavigationSidebar
+      label={label}
+      classNames={[
+        'grid',
+        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
+        hoistStatusbar && 'block-end-[--statusbar-size]',
+      ]}
+    >
+      <Surface role='navigation' data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

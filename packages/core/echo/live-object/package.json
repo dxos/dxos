@@ -1,12 +1,13 @@
 {
   "name": "@dxos/live-object",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Live objects for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -43,7 +44,7 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.9.2",
+    "effect": "^3.12.3",
     "ulidx": "^2.3.0"
   },
   "publishConfig": {

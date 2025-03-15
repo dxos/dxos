@@ -1,20 +1,17 @@
 {
   "name": "@dxos/plugin-deck",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
     },
     "./types": {
       "types": "./dist/types/src/types.d.ts",
@@ -24,9 +21,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
       "types": [
         "dist/types/src/types.d.ts"
       ]
@@ -38,6 +32,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -55,12 +50,13 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "^9.19.0",
+    "@fluentui/react-tabster": "9.23.3",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.12.3",
     "immer": "^10.1.1"
   },
   "devDependencies": {

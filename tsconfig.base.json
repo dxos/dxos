@@ -1,17 +1,18 @@
+// Base tsconfig for all projects.
 {
   "compilerOptions": {
     "allowJs": false,
-    "baseUrl": ".",
+    "baseUrl": "${configDir}",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "lib": ["DOM", "ESNext"],
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "outDir": "${configDir}/dist/types",
     "isolatedModules": true,
     "noImplicitOverride": true,
@@ -20,7 +21,8 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2018"
+    "target": "ES2018",
+    "incremental": true
   },
   "include": [],
   "ts-node": {

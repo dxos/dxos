@@ -4,6 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export default {
-  id: 'dxos.org/plugin/theme',
+export const THEME_PLUGIN = 'dxos.org/plugin/theme';
+
+export const meta = {
+  id: THEME_PLUGIN,
 } satisfies PluginMeta;

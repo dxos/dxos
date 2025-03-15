@@ -38,17 +38,17 @@ test.describe('Basic tests', () => {
   });
 
   test('create document', async () => {
-    // NOTE: Document is automatically created when space is created.
     await host.createSpace();
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(2);
+    await expect(host.getObjectLinks()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
 
-  test('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
+  // TODO(wittjosiah): Reset no longer wipes old data, upgrade path needs to be provided.
+  test.skip('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to crash firefox and fail in webkit.
     if (browserName !== 'chromium') {
       test.skip();
@@ -62,7 +62,20 @@ test.describe('Basic tests', () => {
     await expect(host.page.getByTestId('resetDialog').locator('h2')).toHaveText('Invalid storage version');
 
     await host.reset();
-    await expect(host.getSpaceItems()).toHaveCount(1);
+    // Wait for identity to be re-created.
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
+  });
+
+  test('reset app', async () => {
+    await host.openPluginRegistry();
+    await host.getPluginToggle('dxos.org/plugin/stack').click();
+    await expect(host.getPluginToggle('dxos.org/plugin/stack')).toBeChecked();
+
+    await host.page.goto(INITIAL_URL + '?throw');
+    await host.reset();
+
+    await host.openPluginRegistry();
+    await expect(host.getPluginToggle('dxos.org/plugin/stack')).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {
@@ -78,6 +91,6 @@ test.describe('Basic tests', () => {
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
     await host.page.waitForRequest(INITIAL_URL, { timeout: 10_000 });
-    await expect(host.getSpaceItems()).toHaveCount(1);
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 });

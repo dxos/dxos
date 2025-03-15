@@ -31,7 +31,11 @@ import { ElevationProvider } from '../ElevationProvider';
 
 type AlertDialogRootProps = AlertDialogRootPrimitiveProps;
 
-const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = AlertDialogRootPrimitive;
+const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
+  <ElevationProvider elevation='dialog'>
+    <AlertDialogRootPrimitive {...props} />
+  </ElevationProvider>
+);
 
 type AlertDialogTriggerProps = AlertDialogTriggerPrimitiveProps;
 
@@ -91,7 +95,9 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   },
 );
 
-type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' };
+type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & {
+  blockAlign?: 'center' | 'start' | 'end';
+};
 
 const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = forwardRef<
   HTMLDivElement,
@@ -134,7 +140,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
       className={tx('dialog.content', 'dialog--alert', { inOverlayLayout }, classNames)}
       ref={forwardedRef}
     >
-      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      {children}
     </AlertDialogContentPrimitive>
   );
 });

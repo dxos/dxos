@@ -23,16 +23,16 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
 
   return (
     <div className='flex shrink-0 items-center p-1'>
-      <Button variant='ghost' classNames='!px-[5px] text-primary-500' onClick={onHome}>
+      <Button variant='ghost' classNames='pli-[5px] text-primary-500' onClick={onHome}>
         <Bug className={getSize(6)} />
       </Button>
-      <Button variant='ghost' classNames='!px-[5px] text-primary-500' onClick={onDevtools}>
+      <Button variant='ghost' classNames='pli-[5px] text-primary-500' onClick={onDevtools}>
         <Hammer className={getSize(6)} />
       </Button>
       <div className='grow' />
       <div className='flex gap-2 items-center'>
         <div className='font-mono'>{identity?.identityKey.truncate()}</div>
-        <Button classNames='!px-[7px]' onClick={onProfile}>
+        <Button classNames='pli-[7px]' onClick={onProfile}>
           <User className={getSize(5)} />
         </Button>
       </div>

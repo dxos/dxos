@@ -164,14 +164,14 @@ Finally, we can create a provisioning profile
 
 You have generated an downloaded the provisioning profile. Next establish a location to store these on the development machine.
 
-Example: `~/Developer/ssc/profiles/dxos_bret.mobileprovision`
+Example: `~/.confi/ssc/dxos.mobileprovision`
 
 In your `.sscrc` file, point it to the provisioning profile
 
 ```ini
 [settings.ios]
 codesign_identity = C221D161B7CE9530F4E7284BBAF966BE06B07E15
-provisioning_profile = /Users/bret/Developer/ssc/profiles/dxos_bret.mobileprovisio
+provisioning_profile = /Users/bret/.config/ssc/dxos.mobileprovisio
 ```
 
 Additionally, you may need to create the following directory prior to signing applications.

@@ -2,27 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, memo, useEffect, useMemo } from 'react';
+import React, { Fragment, memo, useCallback, useEffect, useMemo } from 'react';
 
-import {
-  LayoutAction,
-  NavigationAction,
-  SLUG_PATH_SEPARATOR,
-  Surface,
-  useIntentDispatcher,
-  type LayoutCoordinate,
-} from '@dxos/app-framework';
-import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
+import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { type Node } from '@dxos/plugin-graph';
+import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import { useLayout } from '../LayoutContext';
+import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
+import { useBreakpoints } from '../../util';
+import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
-  coordinate: LayoutCoordinate;
+  id: string;
+  part: 'solo' | 'deck' | 'complementary';
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
@@ -33,7 +29,8 @@ export type NodePlankHeadingProps = {
 
 export const NodePlankHeading = memo(
   ({
-    coordinate,
+    id,
+    part,
     node,
     canIncrementStart,
     canIncrementEnd,
@@ -41,16 +38,15 @@ export const NodePlankHeading = memo(
     pending,
     actions = [],
   }: NodePlankHeadingProps) => {
-    const layoutContext = useLayout();
     const { t } = useTranslation(DECK_PLUGIN);
-    const { graph } = useGraph();
+    const { graph } = useAppGraph();
+    const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
-    const dispatch = useIntentDispatcher();
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
-    const [isNotMobile] = useMediaQuery('md');
 
     useEffect(() => {
       const frame = requestAnimationFrame(() => {
@@ -61,33 +57,67 @@ export const NodePlankHeading = memo(
       return () => cancelAnimationFrame(frame);
     }, [node]);
 
-    const layoutPart = coordinate.part;
     // NOTE(Zan): Node ids may now contain a path like `${space}:${id}~comments`
-    const attendableId = coordinate.entryId.split(SLUG_PATH_SEPARATOR).at(0);
+    const attendableId = id.split(SLUG_PATH_SEPARATOR).at(0);
     const capabilities = useMemo(
       () => ({
-        solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
+        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'deck'),
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [breakpoint, part, canIncrementStart, canIncrementEnd],
+    );
+
+    const sigilActions = useMemo(
+      () => node && [actions, graph.actions(node)].filter((a) => a.length > 0),
+      [actions, node, graph],
+    );
+    const handleAction = useCallback((action: StackItemSigilAction) => {
+      typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN });
+    }, []);
+
+    const handlePlankAction = useCallback(
+      (eventType: DeckAction.PartAdjustment) => {
+        if (eventType === 'solo') {
+          return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
+        } else if (eventType === 'close') {
+          if (part === 'complementary') {
+            return dispatch(
+              createIntent(LayoutAction.UpdateComplementary, {
+                part: 'complementary',
+                options: { state: 'collapsed' },
+              }),
+            );
+          } else {
+            return dispatch(
+              createIntent(LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
+            );
+          }
+        } else {
+          return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
+        }
+      },
+      [dispatch, id, part],
     );
 
     return (
-      <StackItem.Heading classNames='pie-1 border-be border-separator'>
+      <StackItem.Heading
+        classNames={[
+          'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag',
+          part === 'solo' ? soloInlinePadding : 'pli-1',
+        ]}
+      >
         <ActionRoot>
-          {node ? (
+          {node && sigilActions ? (
             <StackItem.Sigil
               icon={icon}
-              related={layoutPart === 'complementary'}
+              related={part === 'complementary'}
               attendableId={attendableId}
               triggerLabel={t('actions menu label')}
-              actions={[actions, graph.actions(node)].filter((a) => a.length > 0)}
-              onAction={(action) =>
-                typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
-              }
+              actions={sigilActions}
+              onAction={handleAction}
             >
-              <Surface role='menu-footer' data={{ object: node.data }} />
+              <Surface role='menu-footer' data={{ subject: node.data }} />
             </StackItem.Sigil>
           ) : (
             <StackItem.SigilButton>
@@ -99,76 +129,19 @@ export const NodePlankHeading = memo(
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}
-            related={layoutPart === 'complementary'}
+            related={part === 'complementary'}
             {...(pending && { classNames: 'text-description' })}
           >
             {label}
           </StackItem.HeadingLabel>
         </TextTooltip>
-        {node && layoutPart !== 'complementary' && (
-          // TODO(Zan): What are we doing with layout coordinate here?
-          <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data }} />
-        )}
-        {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
+        {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
         <PlankControls
           capabilities={capabilities}
-          isSolo={layoutPart === 'solo'}
-          classNames='mx-1'
-          onClick={(eventType) => {
-            if (!layoutPart) {
-              return;
-            }
-
-            // TODO(Zan): Update this to use the new layout actions.
-            if (eventType === 'solo') {
-              return dispatch([
-                {
-                  action: NavigationAction.ADJUST,
-                  data: { type: eventType, layoutCoordinate: { part: 'main', entryId: coordinate.entryId } },
-                },
-              ]);
-            } else if (eventType === 'close') {
-              if (layoutPart === 'complementary') {
-                return dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'complementary',
-                    state: false,
-                  },
-                });
-              } else {
-                return dispatch({
-                  action: NavigationAction.CLOSE,
-                  data: {
-                    activeParts: {
-                      [layoutPart]: [coordinate.entryId],
-                    },
-                  },
-                });
-              }
-            } else {
-              return dispatch({
-                action: NavigationAction.ADJUST,
-                data: { type: eventType, layoutCoordinate: coordinate },
-              });
-            }
-          }}
-          close={layoutPart === 'complementary' ? 'minify-end' : true}
-        >
-          {/* TODO(wittjosiah): This doesn't behave exactly the same as the rest of the button group. */}
-          {layoutPart !== 'complementary' && (
-            <IconButton
-              iconOnly
-              onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
-              variant='ghost'
-              label={t('open complementary sidebar label')}
-              classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
-              icon='ph--sidebar-simple--regular'
-              size={4}
-              tooltipZIndex='70'
-            />
-          )}
-        </PlankControls>
+          isSolo={part === 'solo'}
+          onClick={handlePlankAction}
+          close={part === 'complementary' ? 'minify-end' : true}
+        />
       </StackItem.Heading>
     );
   },

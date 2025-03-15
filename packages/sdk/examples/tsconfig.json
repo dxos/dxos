@@ -6,7 +6,6 @@
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext",
     "outDir": "dist",
     "types": [
       "node"
@@ -15,5 +14,45 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../react-client"
+    },
+    {
+      "path": "../schema"
+    }
+  ]
 }

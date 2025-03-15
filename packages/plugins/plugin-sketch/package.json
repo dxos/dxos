@@ -1,22 +1,18 @@
 {
   "name": "@dxos/plugin-sketch",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs",
-      "node": "./dist/lib/node-esm/meta.mjs"
     },
     "./sdk": {
       "types": "./dist/types/src/sdk.d.ts",
@@ -32,9 +28,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
       "sdk": [
         "dist/types/src/sdk.d.ts"
       ],
@@ -65,9 +58,11 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
@@ -78,6 +73,7 @@
     "@tldraw/tldraw": "^3.0.0",
     "@tldraw/tlschema": "^3.0.0",
     "@tldraw/utils": "^3.0.0",
+    "effect": "^3.12.3",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },

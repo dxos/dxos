@@ -73,9 +73,7 @@ export const AgentConfig = ({
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side='bottom' classNames='z-50'>
-                    {t('destroy agent label')}
-                  </Tooltip.Content>
+                  <Tooltip.Content side='bottom'>{t('destroy agent label')}</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
             )}
@@ -90,7 +88,7 @@ export const AgentConfig = ({
         <>
           <Button
             variant='ghost'
-            classNames='mlb-2 is-full justify-start gap-2 !pis-0 !pie-3'
+            classNames='mlb-2 is-full justify-start gap-2 pis-0 pie-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
             onClick={agentStatus === 'creatable' ? onAgentCreate : onAgentRefresh}
             aria-describedby='devices-panel.create-agent.description'

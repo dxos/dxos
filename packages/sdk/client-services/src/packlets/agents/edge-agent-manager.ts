@@ -63,6 +63,12 @@ export class EdgeAgentManager extends Resource {
 
     const deviceKey = PublicKey.fromHex(response.deviceKey);
 
+    if (await this._identity.authorizedDeviceKeys.has(deviceKey)) {
+      log.info('agent was already added to HALO, ignoring response', { response });
+      this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
+      return;
+    }
+
     await this._identity.admitDevice({
       deviceKey,
       controlFeedKey: PublicKey.fromHex(response.feedKey),

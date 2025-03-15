@@ -33,7 +33,7 @@ export const Tabs = {
       <Dialog.Root open>
         <Dialog.Overlay blockAlign='start'>
           <Dialog.Content classNames='is-[calc(100dvw-4rem)] !max-is-full'>
-            <NaturalTabs.Root orientation='vertical' defaultValue={Object.keys(content)[3]}>
+            <NaturalTabs.Root orientation='vertical' defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
               <NaturalTabs.Viewport>
                 <NaturalTabs.Tablist>
                   {Object.entries(content).map(([id, { title }]) => {

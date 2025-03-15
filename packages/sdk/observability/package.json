@@ -1,12 +1,13 @@
 {
   "name": "@dxos/observability",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -46,7 +47,7 @@
     "src"
   ],
   "scripts": {
-    "api-keys": "node ./scripts/inject_api_keys.js"
+    "api-keys": "./scripts/inject_api_keys.mjs"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

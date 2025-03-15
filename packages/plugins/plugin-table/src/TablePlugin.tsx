@@ -1,39 +1,38 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { Table } from '@phosphor-icons/react';
-import React from 'react';
-
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { getSpace } from '@dxos/react-client/echo';
+import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
+import { isEchoObject } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
-import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
+import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
+import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
 
-import { TableContainer, TableViewEditor } from './components';
-import meta, { TABLE_PLUGIN } from './meta';
+import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { TableAction, type TablePluginProvides, isTable } from './types';
+import { CreateTableSchema, TableAction } from './types';
 
-export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
-  return {
-    meta,
-    ready: async (plugins) => {
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addTypes([TableType]);
-    },
-    provides: {
-      metadata: {
-        records: {
-          [TableType.typename]: {
-            createObject: TableAction.CREATE,
+export const TablePlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () =>
+        contributes(Capabilities.Translations, [...translations, ...formTranslations, ...tableTranslations]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: Events.SetupMetadata,
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: TableType.typename,
+          metadata: {
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
@@ -41,130 +40,66 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
             serializer,
           },
-        },
-      },
-      translations: [...translations, ...formTranslations, ...tableTranslations],
-      echo: {
-        schema: [TableType],
-        system: [ViewType],
-      },
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: TableAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${TABLE_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE, data: { space } },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create object label', { ns: TABLE_PLUGIN }],
-                    icon: 'ph--table--regular',
-                    testId: 'tablePlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
-      },
-      surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'slide':
-              return isTable(data.slide) ? <TableContainer table={data.slide} /> : null;
-            case 'section':
-            case 'article':
-              return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
-            case 'complementary--settings': {
-              if (data.subject instanceof TableType) {
-                const table = data.subject;
-                return { node: <TableViewEditor table={table} /> };
-              }
-
-              return null;
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/complementary-panel`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'selected-objects',
+          label: ['objects label', { ns: TABLE_PLUGIN }],
+          icon: 'ph--tree-view--regular',
+          filter: (node) => {
+            if (!node.data || !isEchoObject(node.data)) {
+              return false;
             }
-            default:
-              return null;
-          }
-        },
-      },
-      stack: {
-        creators: [
-          {
-            id: 'create-stack-section-table',
-            testId: 'tablePlugin.createSection',
-            type: ['plugin name', { ns: TABLE_PLUGIN }],
-            label: ['create stack section label', { ns: TABLE_PLUGIN }],
-            icon: (props: any) => <Table {...props} />,
-            intent: {
-              plugin: TABLE_PLUGIN,
-              action: TableAction.CREATE,
-            },
+
+            const subject = node.data;
+            // TODO(ZaymonFC): Unify the path of view between table and kanban.
+            const hasValidView = subject.view?.target instanceof ViewType;
+            const hasValidCardView = subject.cardView?.target instanceof ViewType;
+
+            return hasValidView || hasValidCardView;
           },
-        ],
-      },
-      intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case TableAction.CREATE: {
-              const { space } = intent.data as TableAction.Create;
-              invariant(space);
-              const table = create(TableType, { name: '', threads: [] });
-              initializeTable({ space, table });
-              return {
-                data: table,
-              };
-            }
-
-            case TableAction.DELETE_COLUMN: {
-              const { table, fieldId } = intent.data as TableAction.DeleteColumn;
-              invariant(isTable(table));
-              invariant(table.view);
-
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
-              invariant(schema);
-              const projection = new ViewProjection(schema, table.view);
-
-              if (!intent.undo) {
-                const { deleted, index } = projection.deleteFieldProjection(fieldId);
-                return {
-                  undoable: {
-                    message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
-                    data: { deleted, index },
-                  },
-                };
-              } else if (intent.undo) {
-                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
-                projection.setFieldProjection(deleted, index);
-                return { data: true };
-              }
-            }
-          }
-        },
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: TableType,
+            formSchema: CreateTableSchema,
+            getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
+          }),
+        ),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [ViewType, ViewTypeV1]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.SetupReactSurface,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/artifact-definition`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: ArtifactDefinition,
+    }),
+  ]);

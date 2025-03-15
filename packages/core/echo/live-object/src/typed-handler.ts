@@ -33,6 +33,16 @@ const symbolPropertySignal = Symbol('property-signal');
 
 type ProxyTarget = {
   /**
+   * Typename or type DXN.
+   */
+  [TYPENAME_SYMBOL]: string;
+
+  /**
+   * Schema for the root.
+   */
+  [symbolSchema]: S.Schema<any>;
+
+  /**
    * For get and set operations on value properties.
    */
   // TODO(dmaretskyi): Turn into a map of signals per-field.
@@ -42,11 +52,6 @@ type ProxyTarget = {
    * For modifying the structure of the object.
    */
   [symbolPropertySignal]: GenericSignal;
-
-  /**
-   * Schema for the root.
-   */
-  [symbolSchema]: S.Schema<any>;
 } & ({ [key: keyof any]: any } | any[]);
 
 /**
@@ -90,8 +95,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     if (prop === TYPENAME_SYMBOL) {
+      if ((target as any)[TYPENAME_SYMBOL] !== undefined) {
+        return (target as any)[TYPENAME_SYMBOL];
+      }
+
       const schema = this.getSchema(target);
-      // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+      // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
       if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
         return (schema as any)[SchemaMetaSymbol].typename;
       }
@@ -174,6 +183,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
     }
+
     return value;
   }
 

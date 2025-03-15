@@ -1,7 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
     "types": [
       "@dxos/typings"
     ]
@@ -10,5 +9,12 @@
     "scripts",
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../random"
+    }
+  ]
 }

@@ -5,21 +5,22 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DebugSpace } from './DebugSpace';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (space) {
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
     }
   }, [space]);
 

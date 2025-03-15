@@ -10,9 +10,9 @@ export default class Generate extends BaseCommand<typeof Generate> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async ({ client }) => {
-      const result = await client.services.services.IdentityService!.createRecoveryPhrase();
-      console.log(result.seedphrase);
-      return result.seedphrase;
+      const result = await client.services.services.IdentityService!.createRecoveryCredential({});
+      console.log(result.recoveryCode);
+      return result.recoveryCode;
     });
   }
 }

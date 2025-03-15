@@ -13,10 +13,10 @@ import { isActionLike, type NodeArg } from '@dxos/app-graph';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
-import { Path } from '@dxos/react-ui-mosaic';
+import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NavTree } from './NavTree';
+import { StorybookNavTree } from '../stories/StorybookNavTree';
 import { createTree, updateState } from '../testing';
 
 faker.seed(1234);
@@ -24,9 +24,9 @@ faker.seed(1234);
 const tree = create<NodeArg<any>>(createTree());
 const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
 
-const meta: Meta<typeof NavTree> = {
+const meta: Meta<typeof StorybookNavTree> = {
   title: 'plugins/plugin-navtree/NavTree',
-  component: NavTree,
+  component: StorybookNavTree,
   decorators: [withTheme, withLayout({ tooltips: true })],
   render: (args) => {
     useEffect(() => {
@@ -52,7 +52,7 @@ const meta: Meta<typeof NavTree> = {
       });
     }, []);
 
-    return <NavTree {...args} />;
+    return <StorybookNavTree {...args} />;
   },
   args: {
     id: tree.id,
@@ -60,7 +60,7 @@ const meta: Meta<typeof NavTree> = {
       actions: arg.nodes?.filter((node) => isActionLike(node)) ?? [],
       groupedActions: {},
     }),
-    getItems: (testItem?: NodeArg<any>) => {
+    getItems: (testItem?: any) => {
       return testItem?.nodes ?? tree.nodes ?? [];
     },
     getProps: (testItem: NodeArg<any>) => ({

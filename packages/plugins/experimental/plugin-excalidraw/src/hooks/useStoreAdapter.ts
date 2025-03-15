@@ -22,14 +22,14 @@ export const useStoreAdapter = (
       return;
     }
 
-    if (object.canvas?.schema !== EXCALIDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: object.canvas?.schema });
+    if (object.canvas.target?.schema !== EXCALIDRAW_SCHEMA) {
+      log.warn('invalid schema', { schema: object.canvas.target?.schema });
       return;
     }
 
     const t = setTimeout(async () => {
       invariant(object.canvas);
-      const accessor = createDocAccessor(object.canvas, ['content']);
+      const accessor = createDocAccessor(object.canvas.target!, ['content']);
       await adapter.open(accessor);
       forceUpdate({});
     });

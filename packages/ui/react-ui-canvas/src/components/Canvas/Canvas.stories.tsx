@@ -1,0 +1,109 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import '@dxos-theme';
+
+import type { Meta, StoryObj } from '@storybook/react';
+import React from 'react';
+
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { Canvas } from './Canvas';
+import { useCanvasContext, useWheel } from '../../hooks';
+import { type Point } from '../../types';
+import { testId } from '../../util';
+import { Grid, type GridProps } from '../Grid';
+
+const size = 128;
+
+const points: Point[] = [0, (2 * Math.PI) / 3, (2 * Math.PI * 2) / 3].map((a, i) => ({
+  x: Math.round(Math.cos(a - Math.PI / 2) * size * 1.5),
+  y: Math.round(Math.sin(a - Math.PI / 2) * size * 1.5),
+}));
+
+const Render = (props: GridProps) => {
+  return (
+    <Canvas>
+      <Grid {...props} />
+      <Content />
+    </Canvas>
+  );
+};
+
+const TwoCanvases = (props: GridProps) => {
+  return (
+    <div className='grid grid-cols-2 gap-2 w-full h-full'>
+      <div className='h-full relative'>
+        <Canvas>
+          <Grid {...props} />
+          <Content />
+        </Canvas>
+      </div>
+      <div className='h-full relative'>
+        <Canvas>
+          <Grid {...props} />
+          <Content />
+        </Canvas>
+      </div>
+    </div>
+  );
+};
+
+const Content = () => {
+  useWheel();
+  return (
+    <div>
+      {points.map(({ x, y }, i) => (
+        <Item key={i} x={x} y={y} />
+      ))}
+    </div>
+  );
+};
+
+const Item = (p: Point) => {
+  const { projection } = useCanvasContext();
+  const r = (projection.scale * size) / 2;
+  const [{ x, y }] = projection.toScreen([p]);
+  const rect = {
+    left: x - size / 2,
+    top: y - size / 2,
+    width: size,
+    height: size,
+  };
+
+  return (
+    <div {...testId('dx-test', true)}>
+      <div className='absolute flex justify-center items-center' style={rect}>
+        <div className='font-mono'>
+          ({p.x},{p.y})
+        </div>
+      </div>
+
+      {/* NOTE: Width and height are not important since overflow-visible. */}
+      <svg className='absolute overflow-visible'>
+        <circle cx={x} cy={y} r={r} className='stroke-red-500 storke-width-2 fill-none' />
+      </svg>
+    </div>
+  );
+};
+
+const meta: Meta<GridProps> = {
+  title: 'ui/react-ui-canvas/Canvas',
+  component: Grid,
+  render: Render,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+};
+
+export default meta;
+
+type Story = StoryObj<GridProps>;
+
+export const Default: Story = {
+  args: { size: 16 },
+};
+
+export const SideBySide: Story = {
+  args: { size: 16 },
+  render: TwoCanvases,
+};

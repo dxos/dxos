@@ -42,6 +42,7 @@
       }
     },
     "lint": {},
+    "pack": {},
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {

@@ -17,6 +17,7 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     if (!rows) {
       return new Set<string>();
     }
+
     const validIds = new Set(rows.map((row) => row.id));
     return new Set([...this._selection.value].filter((id) => validIds.has(id)));
   });
@@ -28,6 +29,7 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     if (rows.length === 0) {
       return false;
     }
+
     return rows.every((row) => this._selection.value.has(row.id));
   });
 
@@ -94,6 +96,15 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
   };
 
   public setSelection = (mode: 'all' | 'none'): void => {
-    this._selection.value = mode === 'all' ? new Set(this._rows.value.map((row) => row.id)) : new Set();
+    switch (mode) {
+      case 'all': {
+        this._selection.value = new Set(this._rows.value.map((row) => row.id));
+        break;
+      }
+      case 'none': {
+        this._selection.value = new Set();
+        break;
+      }
+    }
   };
 }

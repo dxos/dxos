@@ -4,7 +4,7 @@
 
 import '@fontsource/poiret-one';
 
-import { CaretRight, Key, Planet, QrCode } from '@phosphor-icons/react';
+import { CaretRight, Key, Planet, QrCode, Receipt } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
@@ -16,11 +16,14 @@ import { hero } from './hero-image';
 import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
 
+const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
+
 export const Welcome = ({
   state,
   identity,
   error,
   onSignup,
+  onPasskey,
   onJoinIdentity,
   onRecoverIdentity,
   onSpaceInvitation,
@@ -45,7 +48,7 @@ export const Welcome = ({
       >
         <div
           className={mx(
-            'relative grid grid-cols-1 md:w-[600px] max-w-[600px] h-full md:h-[675px] overflow-hidden',
+            'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
             'rounded-xl shadow-lg lg:translate-x-[-40%]',
           )}
           style={{
@@ -119,6 +122,17 @@ export const Welcome = ({
                   <p className='text-subdued'>{t('new device description')}</p>
                 </div>
                 <div className='flex flex-col gap-2'>
+                  {supportsPasskeys && onPasskey && (
+                    <CompoundButton
+                      slots={{ label: { className: 'text-sm' } }}
+                      after={<CaretRight className={getSize(4)} weight='bold' />}
+                      before={<Key className={getSize(6)} />}
+                      onClick={onPasskey}
+                      data-testid='welcome.redeem-passkey'
+                    >
+                      {t('redeem passkey button label')}
+                    </CompoundButton>
+                  )}
                   {onJoinIdentity && (
                     <CompoundButton
                       slots={{ label: { className: 'text-sm' } }}
@@ -134,7 +148,7 @@ export const Welcome = ({
                     <CompoundButton
                       slots={{ label: { className: 'text-sm' } }}
                       after={<CaretRight className={getSize(4)} weight='bold' />}
-                      before={<Key className={getSize(6)} />}
+                      before={<Receipt className={getSize(6)} />}
                       onClick={onRecoverIdentity}
                       data-testid='welcome.recover-identity'
                     >
@@ -154,7 +168,7 @@ export const Welcome = ({
               </div>
             )}
 
-            <div className='z-20 flex flex-col h-full justify-end'>
+            <div className='z-[11] flex flex-col h-full justify-end'>
               <a href='https://dxos.org' target='_blank' rel='noreferrer'>
                 <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
                   <span className='text-subdued'>Powered by</span>

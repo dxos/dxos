@@ -117,7 +117,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   async addFeed(feed: FeedWrapper<any>) {
-    log.info('addFeed', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
+    log('addFeed', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
     this._feeds.set(feed.key, feed);
 
     if (this._connected && this._connectionCtx) {
@@ -143,13 +143,16 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _sendMessage(message: ProtocolMessage) {
     if (!this._connectionCtx) {
-      log.info('message dropped because connection was disposed');
+      log('message dropped because connection was disposed');
       return;
     }
 
-    const logPayload =
-      message.type === 'data' ? { feedKey: message.feedKey, blocks: message.blocks.map((b) => b.index) } : { message };
-    log.info('sending message', logPayload);
+    if (message.type === 'data') {
+      log('sending blocks', {
+        feedKey: message.feedKey,
+        blocks: message.blocks.map((b) => b.index),
+      });
+    }
 
     invariant(message.feedKey);
     const payloadValue = bufferToArray(encodeCbor(message));
@@ -175,8 +178,6 @@ export class EdgeFeedReplicator extends Resource {
     scheduleMicroTask(this._connectionCtx, async () => {
       switch (message.type) {
         case 'metadata': {
-          log.info('received metadata', { message });
-
           const feedKey = PublicKey.fromHex(message.feedKey);
           const feed = this._feeds.get(feedKey);
           if (!feed) {
@@ -188,13 +189,18 @@ export class EdgeFeedReplicator extends Resource {
 
           this._remoteLength.set(feedKey, message.length);
 
+          const logMeta = { localLength: feed.length, remoteLength: message.length, feedKey };
           if (message.length > feed.length) {
+            log('requesting missing blocks', logMeta);
+
             await this._sendMessage({
               type: 'request',
               feedKey: feedKey.toHex(),
               range: { from: feed.length, to: message.length },
             });
           } else if (message.length < feed.length) {
+            log('pushing blocks to remote', logMeta);
+
             await this._pushBlocks(feed, message.length, feed.length);
           }
 
@@ -202,7 +208,7 @@ export class EdgeFeedReplicator extends Resource {
         }
 
         case 'data': {
-          log.info('received data', { feed: message.feedKey, blocks: message.blocks.map((b) => b.index) });
+          log('received data', { feed: message.feedKey, blocks: message.blocks.map((b) => b.index) });
 
           const feedKey = PublicKey.fromHex(message.feedKey);
           const feed = this._feeds.get(feedKey);
@@ -223,7 +229,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _pushBlocks(feed: FeedWrapper<any>, from: number, to: number) {
-    log.info('pushing blocks', { feed: feed.key.toHex(), from, to });
+    log('pushing blocks', { feed: feed.key.toHex(), from, to });
 
     const blocks: FeedBlock[] = await Promise.all(
       rangeFromTo(from, to).map(async (index) => {
@@ -249,7 +255,7 @@ export class EdgeFeedReplicator extends Resource {
   }
 
   private async _integrateBlocks(feed: FeedWrapper<any>, blocks: FeedBlock[]) {
-    log.info('integrating blocks', { feed: feed.key.toHex(), blocks: blocks.length });
+    log('integrating blocks', { feed: feed.key.toHex(), blocks: blocks.length });
 
     for (const block of blocks) {
       if (feed.has(block.index)) {

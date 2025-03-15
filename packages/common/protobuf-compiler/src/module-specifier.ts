@@ -2,9 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+import { createRequire } from 'node:module';
 import { isAbsolute, resolve, relative } from 'path';
 
 import { invariant } from '@dxos/invariant';
+
+const require = createRequire(import.meta.url);
 
 /**
  * Represents a reference to a module, either as an relative path with the cwd or as a global module specifier.
@@ -49,7 +52,7 @@ export class ModuleSpecifier {
   }
 }
 
-export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', __dirname);
+export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', import.meta.dirname);
 
 const normalizeRelativePath = (path: string) => {
   if (!path.startsWith('.')) {

@@ -1,12 +1,13 @@
 {
   "name": "@dxos/echo-signals",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "ECHO object reactivity integration with Preact Signals",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     "./core": {
       "types": "./dist/types/src/core.d.ts",

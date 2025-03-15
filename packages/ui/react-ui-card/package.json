@@ -1,12 +1,13 @@
 {
   "name": "@dxos/react-ui-card",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "An opinionated card component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -23,7 +24,7 @@
     "src"
   ],
   "dependencies": {
-    "@radix-ui/react-primitive": "^1.0.2"
+    "@radix-ui/react-primitive": "2.0.2"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.0.5",

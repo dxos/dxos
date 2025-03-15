@@ -1,0 +1,64 @@
+{
+  "name": "@dxos/conductor",
+  "version": "0.8.0",
+  "description": "Compute graph implementation",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/artifact": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/react-ui-kanban": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/platform": "0.75.1",
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.12.3",
+    "jsonpath-plus": "10.2.0",
+    "ollama": "^0.5.11"
+  },
+  "devDependencies": {
+    "@effect/vitest": "^0.16.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

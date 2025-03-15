@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type TaskType } from './types';
 
@@ -44,7 +44,7 @@ export const TaskList = (props: TaskListProps) => {
         <h1 className='mt-3 text-3xl font-bold leading-tight text-gray-900 mb-2'>Task List</h1>
         {tasks && (
           <ul className='mb-2'>
-            {tasks.filter(nonNullable).map((task, index) => (
+            {tasks.filter(isNonNullable).map((task, index) => (
               <li
                 key={index}
                 className='flex items-center justify-between text-gray-700 max-w-md rounded p-1 h-8'

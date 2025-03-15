@@ -1,29 +1,30 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs",
-      "node": "./dist/lib/node-esm/meta.mjs"
+    "./types": {
+      "types": "./dist/types/src/types.d.ts",
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": "./dist/lib/node-esm/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
+      "types": [
+        "dist/types/src/types.d.ts"
       ]
     }
   },
@@ -36,14 +37,15 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "localforage": "^1.10.0"

@@ -10,12 +10,12 @@ import { FormatAnnotationId, FormatEnum } from './types';
  * Decentralized name.
  */
 export const DXN = S.NonEmptyString.pipe(
-  S.pattern(/^([a-z][\da-z.-]+)\.([a-z.]{2,6})([/\w-]*)*\/?$/),
+  S.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
   S.annotations({
     [FormatAnnotationId]: FormatEnum.DXN,
     [AST.TitleAnnotationId]: 'DXN',
     [AST.DescriptionAnnotationId]: 'DXN URI',
-    [AST.ExamplesAnnotationId]: ['example.com/type/MyType'],
+    [AST.ExamplesAnnotationId]: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
   }),
 );
 
@@ -78,7 +78,7 @@ export const Regex = S.String.annotations({
  * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
 export const URL = S.String.pipe(
-  S.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/),
+  S.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i),
   S.annotations({
     [FormatAnnotationId]: FormatEnum.URL,
     [AST.TitleAnnotationId]: 'URL',

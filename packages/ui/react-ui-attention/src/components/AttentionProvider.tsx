@@ -6,9 +6,12 @@
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
-import React, { useMemo, type FocusEvent, type PropsWithChildren } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { useMemo, type FocusEvent, type PropsWithChildren, type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDefaultValue, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type Attention, AttentionManager, getAttendables } from '../attention';
 
@@ -92,9 +95,50 @@ const RootAttentionProvider = ({
       onChange?.(next);
     }
   };
+
+  // NOTE(thure): Use the following to debug the macOS package issue #8540
+
+  // const [startEl, setStartEl] = useState<HTMLElement | null>(null);
+  // const [endEl, setEndEl] = useState<HTMLElement | null>(null);
+  //
+  // const handleEventDebug = useCallback((event: any) => {
+  //   console.log(`[${event.type}]`, event.target, event.currentTarget, [event.clientX, event.clientY]);
+  // }, []);
+  //
+  // const handleStartDebug = useCallback(
+  //   (event: any) => {
+  //     setStartEl(event.target);
+  //     handleEventDebug(event);
+  //   },
+  //   [handleEventDebug],
+  // );
+  //
+  // const handleEndDebug = useCallback(
+  //   (event: any) => {
+  //     setEndEl(event.target);
+  //     handleEventDebug(event);
+  //   },
+  //   [handleEventDebug],
+  // );
+  //
+  // const handleClickDebug = useCallback(
+  //   (event: any) => {
+  //     console.log('[click compare]', startEl, endEl, startEl === endEl);
+  //     handleEventDebug(event);
+  //   },
+  //   [startEl, endEl, handleEventDebug],
+  // );
+
   return (
     <AttentionContextProvider attention={attention} path={[]}>
-      <div role='none' className='contents' onFocusCapture={handleFocus}>
+      <div
+        role='none'
+        className='contents'
+        onFocusCapture={handleFocus}
+        // onClick={handleClickDebug}
+        // onMouseDown={handleStartDebug}
+        // onMouseUp={handleEndDebug}
+      >
         {children}
       </div>
     </AttentionContextProvider>
@@ -112,9 +156,37 @@ const AttentionProvider = ({ id, children }: PropsWithChildren<{ id: string }>) 
   );
 };
 
+export type AttendableContainerProps = ThemedClassName<
+  ComponentPropsWithRef<'div'> & { id: string; asChild?: boolean }
+>;
+
+/**
+ * Note that DeckPlugin and StackPlugin both handle attention on their own, and when rendering content in those cases it
+ * is not necessary to also render an `AttendableContainer`. This component is primarily for Storybook stories and other
+ * testing scenarios, or the rare cases where an attendable entity is rendered outside of either of those plugins.
+ */
+const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
+  ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
+    const attendableAttrs = useAttendableAttributes(id);
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root
+        role='none'
+        {...attendableAttrs}
+        {...props}
+        className={mx('attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
+    );
+  },
+);
+
 export {
   RootAttentionProvider,
   AttentionProvider,
+  AttendableContainer,
   useAttentionContext,
   useAttention,
   useAttended,

@@ -16,7 +16,7 @@ import {
   type QueryService,
   type QueryResult as RemoteQueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { nonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import type { CoreDatabase } from './core-database';
 import type { ObjectCore } from './object-core';
@@ -63,7 +63,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
         return [];
       }
 
-      return (await Promise.all([this._filterMapCore(filter, core, start, undefined)])).filter(nonNullable);
+      return (await Promise.all([this._filterMapCore(filter, core, start, undefined)])).filter(isNonNullable);
     }
 
     // TODO(dmaretskyi): Ensure the space id is set on filter.
@@ -86,7 +86,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
     const processedResults = await Promise.all(
       (response.results ?? []).map((result) => this._filterMapResult(ctx, filter, start, result)),
     );
-    let results = processedResults.filter(nonNullable);
+    let results = processedResults.filter(isNonNullable);
 
     // TODO(dmaretskyi): Merge in results from local working set.
 

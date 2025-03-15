@@ -5,12 +5,13 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Format, type MutableSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
-import { useSpace } from '@dxos/react-client/echo';
+import { Format, type EchoSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { type ViewType, ViewProjection, createView } from '@dxos/schema';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { ViewProjection, ViewType, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor } from './ViewEditor';
@@ -19,10 +20,10 @@ import { TestLayout, TestPanel } from '../testing';
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<ViewType>();
   const [projection, setProjection] = useState<ViewProjection>();
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (space) {
       class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
         name: S.String,
@@ -30,7 +31,7 @@ const DefaultStory = () => {
         salary: Format.Currency(),
       }) {}
 
-      const schema = space.db.schemaRegistry.addSchema(TestSchema);
+      const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
       const projection = new ViewProjection(schema, view);
 
@@ -40,6 +41,21 @@ const DefaultStory = () => {
     }
   }, [space]);
 
+  const views = useQuery(space, Filter.schema(ViewType));
+  const currentTypename = useMemo(() => view?.query?.typename, [view]);
+  const updateViewTypename = useCallback(
+    (newTypename: string) => {
+      if (!schema) {
+        return;
+      }
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
+      for (const view of matchingViews) {
+        view.query.typename = newTypename;
+      }
+      schema.updateTypename(newTypename);
+    },
+    [views, schema],
+  );
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
 
   if (!schema || !view || !projection) {
@@ -49,7 +65,13 @@ const DefaultStory = () => {
   return (
     <TestLayout json={{ schema, view, projection }}>
       <TestPanel>
-        <ViewEditor schema={schema} view={view} registry={space?.db.schemaRegistry} onDelete={handleDelete} />
+        <ViewEditor
+          schema={schema}
+          view={view}
+          registry={space?.db.schemaRegistry}
+          onTypenameChanged={updateViewTypename}
+          onDelete={handleDelete}
+        />
       </TestPanel>
     </TestLayout>
   );

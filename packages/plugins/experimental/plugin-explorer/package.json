@@ -1,22 +1,18 @@
 {
   "name": "@dxos/plugin-explorer",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Braneframe data visualization plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs",
-      "node": "./dist/lib/node-esm/meta.mjs"
     },
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",
@@ -27,9 +23,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
       "types": [
         "dist/types/src/types/index.d.ts"
       ]
@@ -53,11 +46,13 @@
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@observablehq/plot": "^0.6.11",
     "@preact/signals-core": "^1.6.0",
     "d3": "^7.9.0",
+    "force-graph": "1.49.3",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "react-resize-detector": "^11.0.1",

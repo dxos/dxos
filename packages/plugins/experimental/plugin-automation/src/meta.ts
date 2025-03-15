@@ -6,11 +6,11 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const AUTOMATION_PLUGIN = 'dxos.org/plugin/automation';
 
-export default {
+export const meta = {
   id: AUTOMATION_PLUGIN,
   name: 'Automation',
-  description: 'Automation workflows.',
-  icon: 'ph--magic-wand--regular',
+  description:
+    'The Automation tab allows you to trigger pre-defined workflows related to the element you are interacting with inside of Composer.',
+  icon: 'ph--robot--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-automation',
-  tags: ['experimental'],
 } satisfies PluginMeta;

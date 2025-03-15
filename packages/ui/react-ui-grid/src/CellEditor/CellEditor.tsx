@@ -49,7 +49,7 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
       },
     },
     {
-      key: 'ArrowLeft',
+      key: 'Mod-ArrowLeft',
       run: (editor) => {
         const value = editor.state.doc.toString();
         onNav?.(value, { key: 'ArrowLeft' });
@@ -57,7 +57,7 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
       },
     },
     {
-      key: 'ArrowRight',
+      key: 'Mod-ArrowRight',
       run: (editor) => {
         const value = editor.state.doc.toString();
         onNav?.(value, { key: 'ArrowRight' });
@@ -143,7 +143,7 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
               className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
             },
             content: {
-              className: '!border !border-transparent !pli-[4px] !plb-0.5',
+              className: '!border !border-transparent !pli-1 !plb-[calc(.25rem-1px)]',
             },
           },
         }),

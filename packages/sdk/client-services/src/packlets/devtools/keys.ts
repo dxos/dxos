@@ -3,7 +3,7 @@
 //
 
 import { scheduleTask } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Keyring } from '@dxos/keyring';
 import { type SubscribeToKeyringKeysResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 

@@ -2,389 +2,71 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useEffect, useState } from 'react';
-
-import {
-  definePlugin,
-  parseGraphPlugin,
-  parseIntentPlugin,
-  parseMetadataResolverPlugin,
-  parseSettingsPlugin,
-  resolvePlugin,
-} from '@dxos/app-framework';
-import { Timer } from '@dxos/async';
-import { Devtools } from '@dxos/devtools';
-import { invariant } from '@dxos/invariant';
-import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph';
-import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
-import { CollectionType } from '@dxos/plugin-space/types';
+import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { type Client } from '@dxos/react-client';
-import {
-  create,
-  getTypename,
-  isEchoObject,
-  isSpace,
-  parseId,
-  type ReactiveObject,
-  type Space,
-  SpaceState,
-} from '@dxos/react-client/echo';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  bottombarBlockPaddingEnd,
-  fixedInsetFlexLayout,
-  topbarBlockPaddingStart,
-} from '@dxos/react-ui-theme';
+import { isEchoObject, getSpace } from '@dxos/react-client/echo';
 
-import {
-  DebugApp,
-  DebugObjectPanel,
-  DebugSettings,
-  DebugSpace,
-  DebugStatus,
-  SpaceGenerator,
-  Wireframe,
-} from './components';
-import meta, { DEBUG_PLUGIN } from './meta';
+import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
+import { DEBUG_PLUGIN, meta } from './meta';
 import translations from './translations';
-import {
-  DebugAction,
-  DebugContext,
-  type DebugPluginProvides,
-  type DebugSettingsProps,
-  DebugSettingsSchema,
-} from './types';
 
-export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
-  const settings = create<DebugSettingsProps>({
-    debug: true,
-    devtools: true,
-  });
+// TODO(wittjosiah): Rename to DevtoolsPlugin?
+export const DebugPlugin = () => {
+  setupDevtools();
 
-  return {
-    meta,
-    ready: async (plugins) => {
-      context.init(plugins);
-      context.resolvePlugin(parseSettingsPlugin).provides.settingsStore.createStore({
-        schema: DebugSettingsSchema,
-        prefix: DEBUG_PLUGIN,
-        value: settings,
-      });
+  return definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: DebugSettings,
+    }),
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/complementary-panel`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'debug',
+          label: ['debug label', { ns: DEBUG_PLUGIN }],
+          icon: 'ph--bug--regular',
+          filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-context`,
+      activatesOn: Events.Startup,
+      activate: ReactContext,
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.SetupReactSurface,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
+      activate: AppGraphBuilder,
+    }),
+  ]);
+};
 
-      // TODO(burdon): Remove hacky dependency on global variable.
-      // Used to test how composer handles breaking protocol changes.
-      const composer = (window as any).composer;
-      composer.changeStorageVersionInMetadata = async (version: number) => {
-        const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
-        const { createStorageObjects } = await import('@dxos/client-services');
-        const client: Client = (window as any).dxos.client;
-        const config = client.config;
-        await client.destroy();
-        const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
-        await changeStorageVersionInMetadata(storage, version);
-        location.pathname = '/';
-      };
-    },
-    unload: async () => {
-      context.dispose();
-    },
-    provides: {
-      settings,
-      translations,
-      complementary: {
-        panels: [{ id: 'debug', label: ['open debug panel label', { ns: DEBUG_PLUGIN }], icon: 'ph--bug--regular' }],
-      },
-      context: ({ children }) => {
-        const [timer, setTimer] = useState<Timer>();
-        useEffect(() => timer?.state.on((value) => !value && setTimer(undefined)), [timer]);
-        useEffect(() => {
-          timer?.stop();
-        }, []);
+const setupDevtools = () => {
+  (globalThis as any).composer ??= {};
 
-        return (
-          <DebugContext.Provider
-            value={{
-              running: !!timer,
-              start: (cb, options) => {
-                timer?.stop();
-                setTimer(new Timer(cb).start(options));
-              },
-              stop: () => timer?.stop(),
-            }}
-          >
-            {children}
-          </DebugContext.Provider>
-        );
-      },
-      graph: {
-        builder: (plugins) => {
-          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
-          const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-          const resolve = metadataPlugin?.provides.metadata.resolver;
-          const client = clientPlugin?.provides.client;
-          invariant(resolve);
-          invariant(client);
-
-          return [
-            // Devtools node.
-            createExtension({
-              id: 'dxos.org/plugin/debug/devtools',
-              filter: (node): node is Node<null> => !!settings.devtools && node.id === 'root',
-              connector: () => [
-                {
-                  // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
-                  id: 'dxos.org.plugin.debug.devtools',
-                  data: 'devtools',
-                  type: 'dxos.org/plugin/debug/devtools',
-                  properties: {
-                    label: ['devtools label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--hammer--regular',
-                  },
-                },
-              ],
-            }),
-
-            // Debug node.
-            createExtension({
-              id: 'dxos.org/plugin/debug/debug',
-              filter: (node): node is Node<null> => !!settings.debug && node.id === 'root',
-              connector: () => [
-                {
-                  id: 'dxos.org/plugin/debug/debug',
-                  type: 'dxos.org/plugin/debug/debug',
-                  data: { graph: graphPlugin?.provides.graph },
-                  properties: {
-                    label: ['debug label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--bug--regular',
-                  },
-                },
-              ],
-            }),
-
-            // Space debug nodes.
-            createExtension({
-              id: 'dxos.org/plugin/debug/spaces',
-              filter: (node): node is Node<Space> => !!settings.debug && isSpace(node.data),
-              connector: ({ node }) => {
-                const space = node.data;
-                const state = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                  space.id,
-                );
-                if (state !== SpaceState.SPACE_READY) {
-                  return;
-                }
-
-                // Not adding the debug node until the root collection is available aligns the behaviour of this
-                // extension with that of the space plugin adding objects. This ensures that the debug node is added at
-                // the same time as objects and prevents order from changing as the nodes are added.
-                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
-                if (!collection) {
-                  return;
-                }
-
-                return [
-                  {
-                    id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
-                    type: 'dxos.org/plugin/debug/space',
-                    data: { space, type: 'dxos.org/plugin/debug/space' },
-                    properties: {
-                      label: ['debug label', { ns: DEBUG_PLUGIN }],
-                      icon: 'ph--bug--regular',
-                    },
-                  },
-                ];
-              },
-            }),
-
-            // Create nodes for debug sidebar.
-            createExtension({
-              id: `${DEBUG_PLUGIN}/debug-for-subject`,
-              resolver: ({ id }) => {
-                // TODO(Zan): Find util (or make one).
-                if (!id.endsWith('~debug')) {
-                  return;
-                }
-
-                const type = 'orphan-settings-for-subject';
-                const icon = 'ph--bug--regular';
-
-                const [subjectId] = id.split('~');
-                const { spaceId, objectId } = parseId(subjectId);
-                const spaces = toSignal(
-                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-                  () => client.spaces.get(),
-                );
-                const space = spaces?.find(
-                  (space) => space.state.get() === SpaceState.SPACE_READY && space.id === spaceId,
-                );
-                if (!objectId) {
-                  // TODO(burdon): Ref SPACE_PLUGIN ns.
-                  const label = space
-                    ? space.properties.name || ['unnamed space label', { ns: DEBUG_PLUGIN }]
-                    : ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
-
-                  // TODO(wittjosiah): Support comments for arbitrary subjects.
-                  //   This is to ensure that the comments panel is not stuck on an old object.
-                  return {
-                    id,
-                    type,
-                    data: null,
-                    properties: {
-                      icon,
-                      label,
-                      showResolvedThreads: false,
-                      object: null,
-                      space,
-                    },
-                  };
-                }
-
-                const [object] = memoizeQuery(space, { id: objectId });
-                if (!object || !subjectId) {
-                  return;
-                }
-
-                const meta = resolve(getTypename(object) ?? '');
-                const label = meta.label?.(object) ||
-                  object.name ||
-                  meta.placeholder || ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
-
-                return {
-                  id,
-                  type,
-                  data: null,
-                  properties: {
-                    icon,
-                    label,
-                    object,
-                  },
-                };
-              },
-            }),
-          ];
-        },
-      },
-      intent: {
-        resolver: async (intent, plugins) => {
-          switch (intent.action) {
-            case DebugAction.OPEN_DEVTOOLS: {
-              const clientPlugin = context.getPlugin<ClientPluginProvides>('dxos.org/plugin/client');
-              const client = clientPlugin.provides.client;
-              const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
-
-              // Check if we're serving devtools locally on the usual port.
-              let devtoolsUrl = 'http://localhost:5174';
-              try {
-                // TODO(burdon): Test header to see if this is actually devtools.
-                await fetch(devtoolsUrl);
-              } catch {
-                // Match devtools to running app.
-                const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-                devtoolsUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org`;
-              }
-
-              window.open(`${devtoolsUrl}?target=${vaultUrl}`, '_blank');
-              return { data: true };
-            }
-          }
-        },
-      },
-      surface: {
-        component: ({ name, data, role }) => {
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <DebugSettings settings={settings} /> : null;
-            case 'status':
-              return <DebugStatus />;
-            case 'complementary--debug':
-              return isEchoObject(data.subject) ? <DebugObjectPanel object={data.subject} /> : null;
-          }
-
-          const primary = data.active ?? data.object;
-          let component: ReactNode = null;
-          if (role === 'main' || role === 'article') {
-            if (primary === 'devtools' && settings.devtools) {
-              component = <Devtools />;
-            } else if (!primary || typeof primary !== 'object' || !settings.debug) {
-              component = null;
-            } else if (
-              'type' in primary &&
-              primary.type === 'dxos.org/plugin/debug/space' &&
-              'space' in primary &&
-              isSpace(primary.space)
-            ) {
-              const handleCreateObject = (objects: ReactiveObject<any>[]) => {
-                if (!isSpace(primary.space)) {
-                  return;
-                }
-
-                const collection =
-                  primary.space.state.get() === SpaceState.SPACE_READY &&
-                  primary.space.properties[CollectionType.typename];
-                if (!(collection instanceof CollectionType)) {
-                  return;
-                }
-
-                void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
-                  objects.map((object) => ({
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target: collection, object },
-                  })),
-                );
-              };
-
-              const deprecated = false;
-              component = deprecated ? (
-                <DebugSpace space={primary.space} onAddObjects={handleCreateObject} />
-              ) : (
-                <SpaceGenerator space={primary.space} onCreateObjects={handleCreateObject} />
-              );
-            } else if ('graph' in primary && primary.graph instanceof Graph) {
-              component = <DebugApp graph={primary.graph} />;
-            }
-          }
-
-          if (!component) {
-            if (settings.wireframe) {
-              if (role === 'main' || role === 'article' || role === 'section') {
-                const primary = data.active ?? data.object;
-                const isCollection = primary instanceof CollectionType;
-                // TODO(burdon): Move into Container abstraction.
-                if (!isCollection) {
-                  return {
-                    node: (
-                      <Wireframe label={`${role}:${name}`} object={primary} classNames='row-span-2 overflow-hidden' />
-                    ),
-                    disposition: 'hoist',
-                  };
-                }
-              }
-            }
-
-            return null;
-          }
-
-          switch (role) {
-            case 'article':
-              return <>{component}</>;
-            case 'main':
-              return (
-                <Main.Content
-                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
-                >
-                  {component}
-                </Main.Content>
-              );
-          }
-
-          return null;
-        },
-      },
-    },
+  // Used to test how composer handles breaking protocol changes.
+  (globalThis as any).composer.changeStorageVersionInMetadata = async (version: number) => {
+    const { changeStorageVersionInMetadata } = await import('@dxos/echo-pipeline/testing');
+    const { createStorageObjects } = await import('@dxos/client-services');
+    const client: Client = (window as any).dxos.client;
+    const config = client.config;
+    await client.destroy();
+    const { storage } = createStorageObjects(config.values?.runtime?.client?.storage ?? {});
+    await changeStorageVersionInMetadata(storage, version);
+    location.pathname = '/';
   };
-});
+};

@@ -89,6 +89,21 @@ describe('Event', () => {
     expect(error.message).to.equal('test');
   });
 
+  test('emitAsync', async () => {
+    const event = new Event<number>();
+    let called = 0;
+    event.on(async (num) => {
+      await sleep(10);
+      called++;
+    });
+
+    await event.emitAsync(1);
+    expect(called).to.equal(1);
+
+    // TODO(dmaretskyi): Disabled for now.
+    // expect(() => event.emit(1)).to.throw(TypeError);
+  });
+
   // test.skip('weak', async () => {
   //   setFlagsFromString('--expose_gc');
   //   const gc = runInNewContext('gc'); // nocommit

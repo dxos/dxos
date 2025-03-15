@@ -5,7 +5,7 @@
 export const placeholderText = 'placeholder-neutral-300 dark:placeholder-neutral-500';
 export const staticPlaceholderText = 'text-neutral-300 dark:text-neutral-500';
 
-export const descriptionText = 'text-xs font-normal text-description';
-export const descriptionTextPrimary = 'text-xs font-normal text-baseText';
+export const descriptionText = 'text-sm font-normal text-description';
+export const descriptionTextPrimary = 'text-sm font-normal text-baseText';
 
-export const chromeText = 'text-xs font-normal';
+export const chromeText = 'text-sm font-normal';

@@ -69,3 +69,32 @@ export const distinctBy = <T, K>(array: T[], selector: (item: T) => K): T[] => {
     return true;
   });
 };
+
+/**
+ * Remove elements from array.
+ * @param array
+ * @param test
+ * @returns removed elements.
+ */
+export const removeBy = <T>(array: T[], test: (element: T, index: number) => boolean): T[] => {
+  const removed: T[] = [];
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (test(array[i], i)) {
+      removed.push(...array.splice(i, 1));
+    }
+  }
+
+  return removed;
+};
+
+/**
+ * Splits an array based on a type guard predicate function.
+ * Infers the output tuple types from the guard function.
+ */
+export const partition = <T>(array: T[], guard: (item: T, index: number, array: T[]) => boolean): [T[], T[]] => {
+  return array.reduce<[T[], T[]]>(
+    ([accepted, rejected], item, index, array) =>
+      guard(item, index, array) ? [[...accepted, item], rejected] : [accepted, [...rejected, item]],
+    [[], []],
+  );
+};

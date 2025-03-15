@@ -2,13 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { Schema as S } from '@effect/schema';
+import { type Effect } from 'effect';
 
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space, type SpaceId } from '@dxos/client/echo';
-import type { CoreDatabase, ReactiveEchoObject } from '@dxos/echo-db';
+import type { CoreDatabase, EchoDatabase, ReactiveEchoObject } from '@dxos/echo-db';
+import { type HasId } from '@dxos/echo-schema';
+import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { type QueryResult } from '@dxos/protocols';
+import { isNonNullable } from '@dxos/util';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -18,15 +22,14 @@ import { nonNullable } from '@dxos/util';
 /**
  * Function handler.
  */
-export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
+export type FunctionHandler<TData = {}, TMeta = {}, TOutput = any> = (params: {
   context: FunctionContext;
   event: FunctionEvent<TData, TMeta>;
-
   /**
    * @deprecated
    */
   response: FunctionResponse;
-}) => Promise<Response | FunctionResponse | void>;
+}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any>;
 
 /**
  * Function context.
@@ -61,6 +64,7 @@ export interface FunctionContextAi {
 /**
  * Event payload.
  */
+// TODO(dmaretskyi): Update type definitions to match the actual payload.
 export type FunctionEvent<TData = {}, TMeta = {}> = {
   data: FunctionEventMeta<TMeta> & TData;
 };
@@ -83,17 +87,61 @@ export type FunctionResponse = {
 // API.
 //
 
+// TODO(dmaretskyi): Temporary API to get the queues working.
+// TODO(dmaretskyi): To be replaced with integrating queues into echo.
+export interface QueuesAPI {
+  queryQueue(queue: DXN, options?: {}): Promise<QueryResult>;
+  insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void>;
+}
+
 /**
  * Space interface available to functions.
  */
 export interface SpaceAPI {
   get id(): SpaceId;
+  /**
+   * @deprecated
+   */
   get crud(): CoreDatabase;
+  get db(): EchoDatabase;
+  // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
+  get queues(): QueuesAPI;
 }
 
+// TODO(wittjosiah): Fix this.
 const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const y: SpaceAPI = {} as Space;
+  // const _: SpaceAPI = {} as Space;
+};
+
+export type FunctionDefinition = {
+  description?: string;
+  inputSchema: S.Schema.AnyNoContext;
+  outputSchema?: S.Schema.AnyNoContext;
+  handler: FunctionHandler<any>;
+};
+
+export type DefineFunctionParams<T, O = any> = {
+  description?: string;
+  inputSchema: S.Schema<T, any>;
+  outputSchema?: S.Schema<O, any>;
+  handler: FunctionHandler<T, any, O>;
+};
+
+// TODO(dmaretskyi): Bind input type to function handler.
+export const defineFunction = <T, O>(params: DefineFunctionParams<T, O>): FunctionDefinition => {
+  if (!S.isSchema(params.inputSchema)) {
+    throw new Error('Input schema must be a valid schema');
+  }
+  if (typeof params.handler !== 'function') {
+    throw new Error('Handler must be a function');
+  }
+
+  return {
+    description: params.description,
+    inputSchema: params.inputSchema,
+    outputSchema: params.outputSchema ?? S.Any,
+    handler: params.handler,
+  };
 };
 
 //
@@ -135,7 +183,9 @@ export const subscriptionHandler = <TMeta>(
 
     registerTypes(space, types);
     const objects = space
-      ? data.objects?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
+      ? data.objects
+          ?.map<ReactiveEchoObject<any> | undefined>((id) => space!.db.getObjectById(id))
+          .filter(isNonNullable)
       : [];
 
     if (!!data.spaceKey && !space) {

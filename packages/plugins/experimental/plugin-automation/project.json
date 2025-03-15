@@ -12,20 +12,14 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.ts",
-          "{projectRoot}/src/types/index.ts"
-        ],
-        "platforms": [
-          "browser",
-          "node"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "node-std"
+    "esbuild"
   ]
 }

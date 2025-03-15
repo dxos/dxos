@@ -267,7 +267,7 @@ export class Forest {
       if (node.level > 0) {
         string += this.formatToString(node.children[i], { pad: pad + 1 });
       }
-      string += `${padStr}   - [${node.items[i].itemDigest.slice(0, 8)}] level=${node.items[i].level} ${node.items[i].key.slice(0, 10)} -> ${arrayToHex(node.items[i].value.slice(0, 10))} \n`;
+      string += `${padStr}   - [${node.items[i].itemDigest.slice(0, 8)}] level=${node.items[i].level} ${node.items[i].key.slice(0, 10)} -> ${arrayToHex(node.items[i].value.slice(0, 10).buffer)} \n`;
     }
     if (node.level > 0) {
       string += this.formatToString(node.children[node.items.length], { pad: pad + 1 });

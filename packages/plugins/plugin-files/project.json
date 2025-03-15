@@ -11,15 +11,15 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.ts"
+          "{projectRoot}/src/index.ts"
         ],
         "platforms": [
           "browser"
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "pack": {}
   },
   "implicitDependencies": [
     "esbuild",

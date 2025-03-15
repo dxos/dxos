@@ -9,5 +9,12 @@
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

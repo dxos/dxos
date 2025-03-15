@@ -2,18 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Reference } from '@dxos/echo-protocol';
 import {
   type BaseObject,
+  getObjectAnnotation,
   type HasId,
-  MutableSchema,
+  EchoSchema,
   type ObjectMeta,
-  requireTypeReference,
   type S,
   SchemaValidator,
+  requireTypeReference,
+  Ref,
+  EntityKind,
+  getEntityKind,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type ReactiveObject } from '@dxos/live-object';
+import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
 import {
   createProxy,
   getMeta,
@@ -39,6 +46,10 @@ import { type EchoDatabase } from '../proxy-db';
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
 
+/**
+ * @returns True if `value` is a reactive object with an EchoHandler backend.
+ */
+// TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
 export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
   if (!isReactiveObject(value)) {
     return false;
@@ -50,6 +61,25 @@ export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
   }
 
   return isRootDataObject(getProxyTarget(value));
+};
+
+/**
+ * Used to determine if the value should be placed at the root of a separate ECHO object.
+ *
+ * @returns True if `value` is a reactive object with an EchoHandler backend or a schema that has an `Object` annotation.
+ */
+// TODO(dmaretskyi): Reconcile with `isEchoObject`.
+export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => {
+  if (isEchoObject(value)) {
+    return true;
+  }
+
+  const schema = getSchema(value);
+  if (schema != null) {
+    return !!getObjectAnnotation(schema);
+  }
+
+  return false;
 };
 
 /**
@@ -88,7 +118,9 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     initCore(core, target);
     slot.handler.init(target);
 
-    setTypeOnObject(target[symbolInternals], schema);
+    setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
+    setRelationSourceAndTarget(target, core, schema);
+
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
@@ -106,7 +138,9 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-    setTypeOnObject(target[symbolInternals], schema);
+    setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
+    setRelationSourceAndTarget(target, core, schema);
+
     return proxy;
   }
 };
@@ -149,12 +183,43 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
 const validateSchema = (schema: S.Schema<any>) => {
   requireTypeReference(schema);
+  const entityKind = getEntityKind(schema);
+  invariant(entityKind === 'object' || entityKind === 'relation');
   SchemaValidator.validateSchema(schema);
 };
 
-const setTypeOnObject = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
+
+    const kind = getEntityKind(schema);
+    invariant(kind);
+    internals.core.setKind(kind);
+  }
+};
+
+const setRelationSourceAndTarget = (
+  target: ProxyTarget,
+  core: ObjectCore,
+  schema: S.Schema.AnyNoContext | undefined,
+) => {
+  const kind = schema && getEntityKind(schema);
+  if (kind === EntityKind.Relation) {
+    // `getSource` and `getTarget` don't work here since they assert entity kind.
+    const sourceRef = (target as any)[RelationSourceId];
+    const targetRef = (target as any)[RelationTargetId];
+    if (!sourceRef || !targetRef) {
+      throw new TypeError('Relation source and target must be specified');
+    }
+    if (!isReactiveObject(sourceRef)) {
+      throw new TypeError('source must be an ECHO object');
+    }
+    if (!isReactiveObject(targetRef)) {
+      throw new TypeError('target must be an ECHO object');
+    }
+
+    core.setSource(EchoReactiveHandler.instance.createRef(target, sourceRef));
+    core.setTarget(EchoReactiveHandler.instance.createRef(target, targetRef));
   }
 };
 
@@ -169,10 +234,11 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     if (value === undefined) {
       delete target[key];
     } else if (typeof value === 'object') {
-      if (value instanceof MutableSchema) {
-        target[key] = value.storedSchema;
-        validateInitialProps(value.storedSchema, seen);
-      } else if (!isEchoObject(value)) {
+      if (Ref.isRef(value)) {
+        // Pass refs as is.
+      } else if (value instanceof EchoSchema || isTypedObjectProxy(value)) {
+        throw new Error('Object references must be wrapped with `makeRef`');
+      } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
       }
@@ -182,12 +248,21 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
 
 const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
   return deepMapValues(target, (value, recurse) => {
-    if (isReactiveObject(value) as boolean) {
-      return EchoReactiveHandler.instance.createRef(target, value);
+    if (Ref.isRef(value)) {
+      return refToEchoReference(target, value);
     }
 
     return recurse(value);
   });
+};
+
+const refToEchoReference = (target: ProxyTarget, ref: Ref<any>): Reference => {
+  const savedTarget = getRefSavedTarget(ref);
+  if (savedTarget) {
+    return EchoReactiveHandler.instance.createRef(target, savedTarget);
+  } else {
+    return Reference.fromDXN(ref.dxn);
+  }
 };
 
 const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInternals => ({

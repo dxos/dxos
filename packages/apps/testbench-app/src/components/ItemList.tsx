@@ -114,7 +114,7 @@ const Editor = ({ object, prop }: { object: ReactiveEchoObject<any>; prop: strin
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode, slots: { content: { className: '!p-0' } } }),
+        createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
         automerge(createDocAccessor(object, [prop])),
       ],
     };

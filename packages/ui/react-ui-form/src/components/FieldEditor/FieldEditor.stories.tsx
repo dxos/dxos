@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { createMutableSchema } from '@dxos/live-object/testing';
+import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
 import { ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
@@ -37,7 +37,7 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
   parameters: {
     translations,
   },
@@ -49,7 +49,7 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    projection: new ViewProjection(createMutableSchema(TestSchema), testView),
+    projection: new ViewProjection(createEchoSchema(TestSchema), testView),
     view: testView,
     field: testView.fields[0],
   },

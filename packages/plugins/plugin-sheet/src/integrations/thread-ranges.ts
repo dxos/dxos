@@ -4,13 +4,21 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
+import {
+  createIntent,
+  createResolver,
+  LayoutAction,
+  useIntentResolver,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
+import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
+import { S } from '@dxos/echo-schema';
+import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { type DxGridElement, type DxGridPosition } from '@dxos/react-ui-grid';
+import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
 
 import { useSheetContext } from '../components';
-import { type CellAddress, type CompleteCellRange, inRange } from '../defs';
 import { SHEET_PLUGIN } from '../meta';
 
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
@@ -32,31 +40,40 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
 
 export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null) => {
   const { model, setActiveRefs } = useSheetContext();
-  const handleScrollIntoView: IntentResolver = useCallback(
-    ({ action, data }) => {
-      switch (action) {
-        case LayoutAction.SCROLL_INTO_VIEW: {
-          if (!data?.id || data?.cursor === undefined || data?.id !== fullyQualifiedId(model.sheet)) {
-            return;
+  const scrollIntoViewResolver = useMemo(
+    () =>
+      createResolver({
+        intent: LayoutAction.ScrollIntoView,
+        position: 'hoist',
+        filter: (
+          data,
+        ): data is {
+          part: 'current';
+          subject: string;
+          options: { cursor: string; ref: GridContentProps['activeRefs'] };
+        } => {
+          if (!S.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+            return false;
           }
-          setActiveRefs(data.thread);
-          // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
-          const range = parseThreadAnchorAsCellRange(data.cursor);
-          range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
 
-          return { data: true };
-        }
-      }
-    },
+          return data.subject === fullyQualifiedId(model.sheet) && !!data.options?.cursor;
+        },
+        resolve: ({ options: { cursor, ref } }) => {
+          setActiveRefs(ref);
+          // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
+          const range = parseThreadAnchorAsCellRange(cursor!);
+          range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
+        },
+      }),
     [model.sheet, setActiveRefs],
   );
 
-  useIntentResolver(SHEET_PLUGIN, handleScrollIntoView);
+  useIntentResolver(SHEET_PLUGIN, scrollIntoViewResolver);
 };
 
 export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const threads = useMemo(
     () => model.sheet.threads?.filter((thread): thread is NonNullable<typeof thread> => !!thread) ?? [],
@@ -72,9 +89,9 @@ export const useSelectThreadOnCellFocus = () => {
         return;
       }
 
-      const closestThread = threads?.find(({ anchor }) => {
-        if (anchor) {
-          const range = parseThreadAnchorAsCellRange(anchor);
+      const closestThread = threads?.find((ref) => {
+        if (ref.target?.anchor) {
+          const range = parseThreadAnchorAsCellRange(ref.target!.anchor);
           return range ? inRange(range, cellAddress) : false;
         } else {
           return false;
@@ -82,9 +99,7 @@ export const useSelectThreadOnCellFocus = () => {
       });
 
       if (closestThread) {
-        void dispatch([
-          { action: 'dxos.org/plugin/thread/action/select', data: { current: fullyQualifiedId(closestThread) } },
-        ]);
+        void dispatch(createIntent(ThreadAction.Select, { current: fullyQualifiedId(closestThread) }));
       }
     },
     [dispatch, threads],

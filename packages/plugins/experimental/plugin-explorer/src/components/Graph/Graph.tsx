@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { forceLink, forceManyBody } from 'd3';
+import ForceGraph from 'force-graph';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
-import { type ReactiveEchoObject, type Space, getType } from '@dxos/client/echo';
+import { getTypename, type ReactiveEchoObject, type Space } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
   defaultStyles,
@@ -14,9 +17,8 @@ import {
   Markers,
 } from '@dxos/gem-spore';
 import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
-import { useThemeContext } from '@dxos/react-ui';
+import { useAsyncState, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-
 import '@dxos/gem-spore/styles';
 
 import { type EchoGraphNode, SpaceGraphModel } from './graph-model';
@@ -45,12 +47,18 @@ const colors = [
 export type GraphProps = {
   space: Space;
   match?: RegExp;
+  grid?: boolean;
+  svg?: boolean;
 };
 
-export const Graph: FC<GraphProps> = ({ space, match }) => {
-  const model = useMemo(() => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined), [space]);
-  const [selected, setSelected] = useState<string>();
+export const Graph: FC<GraphProps> = ({ space, match, grid, svg }) => {
   const { themeMode } = useThemeContext();
+  const [selected, setSelected] = useState<string>();
+
+  const [model] = useAsyncState(
+    async () => (space ? new SpaceGraphModel({ schema: true }).open(space) : undefined),
+    [space],
+  );
 
   const context = createSvgContext();
   const projector = useMemo(
@@ -61,15 +69,15 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
             strength: -100,
           },
           link: {
-            distance: 180,
+            distance: 100,
           },
           radial: {
-            radius: 200,
+            radius: 150,
             strength: 0.05,
           },
         },
         attributes: {
-          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 24 : 12),
+          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 12 : 8),
         },
       }),
     [],
@@ -83,8 +91,68 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
 
   const [colorMap] = useState(new Map<string, string>());
 
-  if (!model) {
-    return null;
+  // https://github.com/vasturiano/force-graph
+  const { ref, width, height } = useResizeDetector();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const forceGraph = useRef<ForceGraph>();
+
+  useEffect(() => {
+    if (rootRef.current) {
+      forceGraph.current = new ForceGraph(rootRef.current)
+        .nodeRelSize(6)
+        .nodeLabel((node: any) => {
+          if (node.type === 'schema') {
+            return node.data.typename;
+          }
+
+          return node.id;
+        })
+        .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
+        .linkColor(() => 'rgba(255,255,255,0.25)');
+    }
+
+    return () => {
+      forceGraph.current?.pauseAnimation().graphData({ nodes: [], links: [] });
+      forceGraph.current = undefined;
+    };
+  }, []);
+
+  // Update.
+  useEffect(() => {
+    if (forceGraph.current && width && height && model) {
+      forceGraph.current
+        .pauseAnimation()
+        .width(width)
+        .height(height)
+        .onEngineStop(() => {
+          forceGraph.current?.zoomToFit(400, 40);
+        })
+
+        // https://github.com/vasturiano/force-graph?tab=readme-ov-file#force-engine-d3-force-configuration
+        // .d3Force('center', forceCenter().strength(0.9))
+        .d3Force('link', forceLink().distance(160).strength(0.5))
+        .d3Force('charge', forceManyBody().strength(-30))
+        // .d3AlphaDecay(0.0228)
+        // .d3VelocityDecay(0.4)
+        .warmupTicks(100)
+        // .cooldownTime(1000)
+
+        //
+        .graphData(model.graph)
+        .resumeAnimation();
+    }
+  }, [model, width, height]);
+
+  const handleZoomToFit = () => {
+    forceGraph.current?.zoomToFit(400, 40);
+  };
+
+  if (!svg) {
+    return (
+      <div ref={ref} className='relative grow' onClick={handleZoomToFit}>
+        <div ref={rootRef} className='absolute inset-0' />
+      </div>
+    );
   }
 
   if (selected) {
@@ -95,7 +163,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     <SVGRoot context={context}>
       <SVG className={mx(defaultStyles, slots?.root?.className)}>
         <Markers arrowSize={6} />
-        <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />
+        {grid && <Grid className={slots?.grid?.className ?? defaultGridStyles(themeMode)} />}
         <Zoom extent={[1 / 2, 4]}>
           <GraphComponent
             model={model}
@@ -117,29 +185,27 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
               node: (node: GraphLayoutNode<ReactiveEchoObject<any>>) => {
                 let className: string | undefined;
                 if (node.data) {
-                  const typename = getType(node.data)?.objectId;
-                  if (typename) {
-                    className = colorMap.get(typename);
-                    if (!className) {
-                      className = colors[colorMap.size % colors.length];
-                      colorMap.set(typename, className);
+                  const { object } = node.data;
+                  if (object) {
+                    const typename = getTypename(object);
+                    if (typename) {
+                      className = colorMap.get(typename);
+                      if (!className) {
+                        className = colors[colorMap.size % colors.length];
+                        colorMap.set(typename, className);
+                      }
                     }
                   }
                 }
 
                 const selected = filteredRef.current?.some((object) => object.id === node.data?.id);
+                const blur = !selected && !!filteredRef.current?.length;
                 return {
-                  class: mx(
-                    filteredRef.current?.length
-                      ? selected
-                        ? [className]
-                        : '[&>text]:!fill-neutral-300'
-                      : ['[&>text]:!fill-neutral-700', className],
-                  ),
+                  class: mx(className, blur && 'opacity-70'),
                 };
               },
               link: () => ({
-                class: '[&>path]:!stroke-neutral-300',
+                class: '[&>path]:!stroke-neutral-300 dark:[&>path]:!stroke-neutral-700',
               }),
             }}
           />

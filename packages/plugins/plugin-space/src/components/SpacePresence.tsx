@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { usePlugin } from '@dxos/app-framework';
+import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { PublicKey, useClient } from '@dxos/react-client';
@@ -22,11 +22,13 @@ import {
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph, useAttended, useAttention, type AttentionGlyphProps } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
+import { SpaceCapabilities } from '../capabilities';
+import { usePath } from '../hooks';
 import { SPACE_PLUGIN } from '../meta';
-import type { ObjectViewerProps, SpacePluginProvides } from '../types';
+import type { ObjectViewerProps } from '../types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -39,7 +41,8 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
-  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
+  const spaceState = useCapability(SpaceCapabilities.MutableState);
   const client = useClient();
   const identity = useIdentity();
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
@@ -61,11 +64,10 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
 
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !spacePlugin || !space) {
+  if (!identity || !spaceState || !space) {
     return null;
   }
 
-  const spaceState = spacePlugin.provides.space;
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
 
   const membersForObject = spaceMembers
@@ -194,16 +196,30 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
   );
 };
 
-export const SmallPresenceLive = ({
-  id,
-  viewers,
-}: {
+export type SmallPresenceLiveProps = {
   id?: string;
+  open?: boolean;
   viewers?: ComplexMap<PublicKey, ObjectViewerProps>;
-}) => {
+};
+
+export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
+  const { hasAttention, isAncestor, isRelated } = useAttention(id);
+  const isAttended = hasAttention || isAncestor || isRelated;
+
+  // TODO(wittjosiah): If the attended node is deep in the graph and the graph is not fully loaded
+  //   this will result in an empty path until the graph is connected.
+  // TODO(wittjosiah): Consider using this indicator for all open nodes instead of just attended.
+  const { graph } = useAppGraph();
+  const attended = useAttended();
+  const startOfAttention = attended.at(-1);
+  const path = usePath(graph, startOfAttention);
+  const containsAttended = !open && !isAttended && id && path ? path.includes(id) : false;
+
   const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {
     const moment = Date.now();
-    return Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION);
+    return Array.from<ObjectViewerProps>(viewers.values()).filter(
+      (viewer) => moment - viewer.lastSeen < ACTIVITY_DURATION,
+    );
   };
 
   const [activeViewers, setActiveViewers] = useState(viewers ? getActiveViewers(viewers) : []);
@@ -218,24 +234,28 @@ export const SmallPresenceLive = ({
     }
   }, [viewers]);
 
-  return <SmallPresence id={id} count={activeViewers.length} />;
+  return <SmallPresence count={activeViewers.length} attended={isAttended} containsAttended={containsAttended} />;
 };
 
-export const SmallPresence = ({ id, count }: { id?: string; count: number }) => {
+export type SmallPresenceProps = {
+  count?: number;
+} & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
+
+export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const { hasAttention, isAncestor, isRelated } = useAttention(id);
-  const attention = hasAttention || isAncestor || isRelated;
 
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        {/* TODO(wittjosiah): Don't depend on data attribute just pass prop to AttentionGlyph. */}
-        <div role='none' className='flex' data-attention={attention}>
-          <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
-        </div>
+        <AttentionGlyph
+          attended={attended}
+          containsAttended={containsAttended}
+          presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+          classNames='self-center mie-1'
+        />
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side='bottom' classNames='z-[70]'>
+        <Tooltip.Content side='bottom'>
           <span>{t('presence label', { count })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>

@@ -73,6 +73,11 @@ export type ForeignKey = {
  */
 export type ObjectSystem = {
   /**
+   * Entity kind.
+   */
+  kind?: 'object' | 'relation';
+
+  /**
    * Object reference ('protobuf' protocol) type.
    */
   type?: EncodedReference;
@@ -81,4 +86,14 @@ export type ObjectSystem = {
    * Deletion marker.
    */
   deleted?: boolean;
+
+  /**
+   * Only for relations.
+   */
+  source?: EncodedReference;
+
+  /**
+   * Only for relations.
+   */
+  target?: EncodedReference;
 };

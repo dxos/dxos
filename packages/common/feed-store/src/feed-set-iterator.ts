@@ -9,7 +9,7 @@ import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
+import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue } from './feed-queue';
@@ -83,6 +83,10 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     }));
   }
 
+  reiterateBlock(block: FeedBlock<T>) {
+    this._trigger.wake();
+  }
+
   async addFeed(feed: FeedWrapper<T>) {
     invariant(!this._feedQueues.has(feed.key), `Feed already added: ${feed.key}`);
     invariant(feed.properties.opened);
@@ -132,7 +136,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
     while (this._running) {
       // Get blocks from the head of each queue.
       const queues = Array.from(this._feedQueues.values());
-      const blocks = queues.map((queue) => queue.peek()).filter(isNotNullOrUndefined);
+      const blocks = queues.map((queue) => queue.peek()).filter(isNonNullable);
       if (blocks.length) {
         // Get the selected block from candidates.
         const idx = this._selector(blocks);
@@ -142,6 +146,7 @@ export class FeedSetIterator<T extends {}> extends AbstractFeedIterator<T> {
           if (t === undefined) {
             t = setTimeout(() => {
               this.stalled.emit(this);
+              this._trigger.wake();
             }, this.options.stallTimeout);
           }
         } else {
