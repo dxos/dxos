@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { AIServiceClientImpl } from '@dxos/assistant';
+import { AIServiceEdgeClient } from '@dxos/assistant';
 import { AI_SERVICE_ENDPOINT } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
 
@@ -72,7 +72,7 @@ describe.skip('openapi', () => {
         authorization: AMADEUS_AUTH,
       });
 
-      const client = new AIServiceClientImpl({
+      const client = new AIServiceEdgeClient({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });
       const processor = new ChatProcessor(client, tools);
@@ -87,7 +87,7 @@ describe.skip('openapi', () => {
     test('amadeus hotel name autocomplete', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
 
-      const client = new AIServiceClientImpl({
+      const client = new AIServiceEdgeClient({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });
       const processor = new ChatProcessor(client, tools);
@@ -102,7 +102,7 @@ describe.skip('openapi', () => {
         instructions: WEATHER_INSTRUCTIONS,
       });
 
-      const client = new AIServiceClientImpl({
+      const client = new AIServiceEdgeClient({
         endpoint: AI_SERVICE_ENDPOINT.LOCAL,
       });
       const processor = new ChatProcessor(client, tools);

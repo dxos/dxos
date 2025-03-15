@@ -19,7 +19,7 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Message, type Tool } from '@dxos/artifact';
 import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
-import { AIServiceClientImpl } from '@dxos/assistant';
+import { AIServiceEdgeClient } from '@dxos/assistant';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -59,7 +59,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     [genericTools, artifactDefinitions],
   );
 
-  const [aiClient] = useState(() => new AIServiceClientImpl({ endpoint: endpoints.ai }));
+  const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
   const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 

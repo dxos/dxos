@@ -2,19 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-// @ts-ignore
 import chat from './chat.ts?raw';
-// @ts-ignore
 import chess from './chess.ts?raw';
-// @ts-ignore
 import discord from './discord.ts?raw';
-// @ts-ignore
 import echo from './echo.ts?raw';
-// @ts-ignore
 import email from './email.ts?raw';
-// @ts-ignore
 import forexEffect from './forex-effect.ts?raw';
-// @ts-ignore
 import forex from './forex.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');

@@ -353,7 +353,7 @@ export const ImageGen: Story = {
     sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createGptCircuit({ image: true, artifact: true }), {
-      gpt: new EdgeGpt(OllamaClient.createTestClient()),
+      gpt: new EdgeGpt(OllamaClient.createClient()),
     }),
   },
 };

@@ -29,7 +29,7 @@ export const PluginItem = ({
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { id, name, description, homePage, source, icon = 'ph--circle--regular' } = plugin.meta;
+  const { id, name, description, icon = 'ph--circle--regular' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -76,6 +76,18 @@ export const PluginItem = ({
       </div>
 
       {/* Footer. */}
+      <div />
+      <div className='flex gap-2 items-center pie-1'>
+        <Link
+          aria-describedby={descriptionId}
+          classNames='text-sm text-description cursor-pointer'
+          onClick={handleClick}
+        >
+          {t('details label')}
+        </Link>
+
+        <div className='flex-1' />
+      </div>
       <div className='flex justify-center items-center'>
         {hasSettings && (
           <IconButton
@@ -87,44 +99,6 @@ export const PluginItem = ({
             size={4}
             onClick={handleSettings}
           />
-        )}
-      </div>
-      <div className='col-span-2 flex gap-2 items-center pie-1'>
-        <Link
-          aria-describedby={descriptionId}
-          classNames='text-sm text-description cursor-pointer'
-          onClick={handleClick}
-        >
-          {t('details label')}
-        </Link>
-
-        <div className='flex-1' />
-        {homePage && (
-          <Link
-            href={homePage}
-            target='_blank'
-            rel='noreferrer'
-            aria-describedby={descriptionId}
-            classNames='text-sm text-description'
-            onClick={(ev) => ev.stopPropagation()}
-          >
-            {t('home page label')}
-            <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-          </Link>
-        )}
-
-        {source && (
-          <Link
-            href={source}
-            target='_blank'
-            rel='noreferrer'
-            aria-describedby={descriptionId}
-            classNames='text-sm text-description'
-            onClick={(ev) => ev.stopPropagation()}
-          >
-            {t('source label')}
-            <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-          </Link>
         )}
       </div>
     </ListItem.Root>

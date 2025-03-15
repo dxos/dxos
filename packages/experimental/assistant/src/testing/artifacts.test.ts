@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, Tool } from '../ai-service';
+import { AIServiceEdgeClient, Tool } from '../ai-service';
 import { defineTool, ToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.
@@ -108,7 +108,7 @@ If there's
 
 describe('Artifacts', () => {
   test('shopping list', async () => {
-    const client = new AIServiceClientImpl({
+    const client = new AIServiceEdgeClient({
       endpoint: ENDPOINT,
     });
 

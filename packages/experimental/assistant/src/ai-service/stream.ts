@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import type { GenerationStream } from './interface';
+import type { GenerationStream } from './service';
 import { type GenerationStreamEvent } from './types';
 import { iterSSEMessages } from './util';
 

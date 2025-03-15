@@ -17,7 +17,9 @@ import React, { useEffect, useRef } from 'react';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
-// import Notes from 'reveal.js/plugin/notes/notes.js';
+
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 const styles = `
 <style type="text/css">
@@ -55,14 +57,14 @@ const styles = `
 </style>
 `;
 
-export type RevealProps = {
+export type RevealProps = ThemedClassName<{
   content: string;
   slide?: number;
+  fullscreen?: boolean;
   onExit?: () => void;
-};
+}>;
 
-// https://revealjs.com/react
-export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
+export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, onExit }: RevealProps) => {
   const deckDivRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<Reveal.Api | null>(null);
   useEffect(() => {
@@ -70,9 +72,11 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
       return;
     }
 
+    // Required for syntax highlighting.
     hljs.registerLanguage('typescript', typescript);
 
     const t = setTimeout(async () => {
+      // https://revealjs.com/react
       // https://revealjs.com/config
       // https://github.com/hakimel/reveal.js
       // TODO(burdon): Fragments and scroll view steps 2 at a time (safe mode?)
@@ -82,6 +86,8 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
         transition: 'none',
         slideNumber: false,
         embedded: true,
+
+        // TODO(burdon): Speaker view requires server to serve popout window.
         // https://revealjs.com/speaker-view
         showNotes: false,
 
@@ -132,22 +138,24 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
   });
 
   return (
-    <div className='absolute inset-0 h-full'>
-      <div ref={deckDivRef} className='reveal'>
-        {/* TODO(burdon): Must be in head. */}
-        <style>
-          <link rel='preconnect' href='https://fonts.googleapis.com' />
-          <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
-          <link
-            rel='stylesheet'
-            href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
-          />
-        </style>
-        <div className='slides'>
-          <div className='!text-center' />
-          <section {...{ 'data-markdown': [] }}>
-            <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
-          </section>
+    <div className={mx('absolute flex h-full w-full items-center justify-center', fullscreen && 'inset-0', classNames)}>
+      <div className='relative aspect-video w-full'>
+        <div ref={deckDivRef} className='reveal'>
+          {/* TODO(burdon): Must be in head. */}
+          <style>
+            <link rel='preconnect' href='https://fonts.googleapis.com' />
+            <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
+            <link
+              rel='stylesheet'
+              href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
+            />
+          </style>
+          <div className='slides'>
+            <div className='!text-center' />
+            <section {...{ 'data-markdown': [] }}>
+              <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
+            </section>
+          </div>
         </div>
       </div>
     </div>

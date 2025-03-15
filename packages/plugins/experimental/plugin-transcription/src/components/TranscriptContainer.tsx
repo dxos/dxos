@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState, type FC } from 'react';
 
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
-import { AIServiceClientImpl, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
+import { AIServiceEdgeClient, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
 import { create, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
@@ -145,10 +145,10 @@ const SUMMARIZE_PROMPT = `
   # Tasks
   At the end of the summary include tasks.
   Extract only the tasks that are:
-  - Directly actionable
-  - Clearly assigned to a person or team (or can easily be inferred)
-  - Strongly implied by the conversation and/or user note (no speculative tasks)
-  - Specific enough that someone reading them would know exactly what to do next
+  - Directly actionable.
+  - Clearly assigned to a person or team (or can easily be inferred).
+  - Strongly implied by the conversation and/or user note (no speculative tasks).
+  - Specific enough that someone reading them would know exactly what to do next.
 
   Format all tasks as markdown checkboxes using the syntax:
   - [ ] Task description
@@ -163,5 +163,5 @@ const SUMMARIZE_PROMPT = `
 const useAiServiceClient = (): AIServiceClient => {
   const config = useConfig();
   const endpoint = config.values.runtime?.services?.ai?.server ?? 'http://localhost:8788'; // TOOD(burdon): Standardize consts.
-  return useMemo(() => new AIServiceClientImpl({ endpoint }), [endpoint]);
+  return useMemo(() => new AIServiceEdgeClient({ endpoint }), [endpoint]);
 };

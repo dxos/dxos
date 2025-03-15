@@ -51,7 +51,7 @@ export default [
         'select overscroll placeholder': 'Select plank overscrolling behavior',
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
-        'settings enable ide-style statusbar label': 'IDE-style statusbar',
+        'settings enable statusbar label': 'Show statusbar',
         'close current label': 'Close current plank',
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',

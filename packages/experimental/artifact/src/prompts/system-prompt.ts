@@ -5,7 +5,6 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { createTemplate } from './template';
-// @ts-ignore
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
 
 export type SystemPromptOptions = {
