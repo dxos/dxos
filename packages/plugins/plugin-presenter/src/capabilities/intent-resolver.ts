@@ -23,7 +23,6 @@ export default (context: PluginsContext) =>
       resolve: ({ object, state: next }) => {
         const state = context.requestCapability(PresenterCapabilities.MutableState);
         state.presenting = next ?? !state.presenting;
-
         if (state.presenting) {
           return {
             intents: [

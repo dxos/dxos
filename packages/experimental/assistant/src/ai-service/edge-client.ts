@@ -2,36 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Message } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { AIService, GenerationStream } from './interface';
+import type { AIServiceClient, GenerationStream } from './service';
 import { createGenerationStream } from './stream';
 import { type GenerateRequest } from './types';
 
-export interface AIServiceClient extends AIService {
-  appendMessages(messages: Message[]): Promise<void>;
-}
-
-export type AIServiceClientParams = {
+export type AIServiceEdgeClientOptions = {
   endpoint: string;
 };
 
-/**
- * Edge GPT client.
- */
-// TODO(burdon): Create mock.
-export class AIServiceClientImpl implements AIServiceClient {
+export class AIServiceEdgeClient implements AIServiceClient {
   private readonly _endpoint: string;
 
-  constructor({ endpoint }: AIServiceClientParams) {
+  constructor({ endpoint }: AIServiceEdgeClientOptions) {
     invariant(endpoint, 'endpoint is required');
     this._endpoint = endpoint;
   }
 
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   async appendMessages(messages: Message[]): Promise<void> {
     const url = `${this._endpoint}/message`;
     const res = await fetch(url, {
@@ -51,19 +47,17 @@ export class AIServiceClientImpl implements AIServiceClient {
    * Process request and open message stream.
    */
   async exec(request: GenerateRequest): Promise<GenerationStream> {
-    // TODO(dmaretskyi): Errors if tools are not provided.
-    request = {
-      tools: request.tools ?? [],
-      ...request,
-    };
-
     log.info('requesting', { endpoint: this._endpoint });
     const controller = new AbortController();
     const response = await fetch(`${this._endpoint}/generate`, {
       signal: controller.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        // TODO(dmaretskyi): Errors if tools are not provided.
+        tools: request.tools ?? [],
+        ...request,
+      }),
     });
 
     invariant(response.body instanceof ReadableStream);

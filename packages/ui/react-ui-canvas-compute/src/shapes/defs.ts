@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST } from '@effect/schema';
+import { SchemaAST as AST } from 'effect';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId, S } from '@dxos/echo-schema';

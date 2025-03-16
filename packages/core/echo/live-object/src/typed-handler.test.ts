@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { Ref, TypedObject, createStatic, foreignKey, getSchema, isInstanceOf } from '@dxos/echo-schema';
 import { Contact } from '@dxos/echo-schema/testing';
-import { S } from '@dxos/effect';
 
 import { getMeta } from './accessors';
 import { create } from './object';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
