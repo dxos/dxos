@@ -4,25 +4,26 @@
 
 import React, { useRef, useState } from 'react';
 
-import { Button, Icon, Input } from '@dxos/react-ui';
+import { IconButton, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-export const Popup = () => {
+// TODO(burdon): Authenticate with passkey..
+
+type PopupProps = ThemedClassName<{
+  onLaunch?: () => void;
+}>;
+
+export const Popup = ({ classNames, onLaunch }: PopupProps) => {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
   const handleSearch = () => {
     inputRef.current?.focus();
   };
 
-  const handleLaunch = () => {
-    window.open('https://composer.space');
-  };
-
   return (
-    <div className='flex flex-col w-[300px] p-2 gap-2 bg-baseSurface'>
-      <div className='flex gap-2 items-center'>
-        <Button onClick={handleLaunch}>
-          <Icon icon='ph--copyright--thin' size={5} />
-        </Button>
+    <div className={mx('flex flex-col gap-2 bg-baseSurface', classNames)}>
+      <Toolbar.Root>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
@@ -33,10 +34,9 @@ export const Popup = () => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleSearch()}
           />
         </Input.Root>
-        <Button onClick={handleSearch}>
-          <Icon icon='ph--magnifying-glass--regular' size={5} />
-        </Button>
-      </div>
+        <IconButton icon='ph--plus--regular' iconOnly label='add button' onClick={onLaunch} />
+      </Toolbar.Root>
+      <div className='grow' />
     </div>
   );
 };

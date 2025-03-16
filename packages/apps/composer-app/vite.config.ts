@@ -27,7 +27,9 @@ const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/asse
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
-// https://vitejs.dev/config
+/**
+ * https://vitejs.dev/config
+ */
 export default defineConfig((env) => ({
   // Vitest config.
   test: baseConfig({ cwd: __dirname })['test'] as any,

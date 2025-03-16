@@ -7,18 +7,17 @@ import '@dxos-theme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
-
-import { Popup } from './components';
+import { Popup, Container } from './components';
 
 const Root = () => {
   return (
-    <ThemeProvider tx={defaultTx} themeMode='dark'>
-      <div className='dark'>
-        <Popup />
-      </div>
-    </ThemeProvider>
+    <Container classNames='w-[300px]'>
+      <Popup
+        onLaunch={() => {
+          window.open('https://labs.composer.space');
+        }}
+      />
+    </Container>
   );
 };
 
