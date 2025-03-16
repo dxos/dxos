@@ -51,7 +51,7 @@ export default [
         'select overscroll placeholder': 'Select plank scrolling behavior',
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
-        'settings enable statusbar label': 'Show statusbar',
+        'settings enable statusbar label': 'Show status bar',
         'close current label': 'Close current plank',
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',
