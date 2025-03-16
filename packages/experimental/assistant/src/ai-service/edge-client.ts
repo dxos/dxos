@@ -27,6 +27,10 @@ export class AIServiceEdgeClient implements AIServiceClient {
   /**
    * @deprecated
    */
+<<<<<<< HEAD
+=======
+  // TODO(burdon): Remove.
+>>>>>>> origin/main
   async appendMessages(messages: Message[]): Promise<void> {
     const url = `${this._endpoint}/message`;
     const res = await fetch(url, {

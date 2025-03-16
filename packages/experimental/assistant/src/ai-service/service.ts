@@ -4,6 +4,10 @@
 
 import { type GenerateRequest, type GenerationStreamEvent } from './types';
 
+<<<<<<< HEAD
+=======
+// TODO(burdon): Create wrapper for edge/ollama. Create session?
+>>>>>>> origin/main
 export interface AIServiceClient {
   exec(request: GenerateRequest): Promise<GenerationStream>;
 }
