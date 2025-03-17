@@ -5,17 +5,13 @@
 import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
-import { range } from '@dxos/util';
 
-import { WebsocketSignalManager } from './signal-manager';
-import { type Message } from './signal-methods';
-import { messageEqual, PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder } from './testing';
+import { type Message } from './signal-manager';
+import { messageEqual, PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, type TestBuilderOptions } from './testing';
 
-export const messengerTests = (signalManagerFactory: TestBuilder['createSignalManager']) => {
+export const messengerTests = (signalManagerFactory?: TestBuilderOptions['signalManagerFactory']) => {
   test('Message between peers', async () => {
-    const builder = new TestBuilder({
-      signalManagerFactory,
-    });
+    const builder = new TestBuilder({ signalManagerFactory });
     onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
@@ -36,9 +32,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
   });
 
   test('Message 3 peers', { timeout: 1_000 }, async () => {
-    const builder = new TestBuilder({
-      signalManagerFactory,
-    });
+    const builder = new TestBuilder({ signalManagerFactory });
     onTestFinished(() => builder.close());
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
@@ -310,29 +304,6 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       // expect to receive 1 message.
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);
-    });
-  });
-
-  describe.skip('load', () => {
-    test('many connections to KUBE', { timeout: 5_000 }, async () => {
-      const builder = new TestBuilder({
-        signalManagerFactory: async () =>
-          new WebsocketSignalManager([{ server: 'wss://dev.kube.dxos.org/.well-known/dx/signal' }]),
-      });
-      void range(100).map(async () => {
-        const peer = await builder.createPeer();
-
-        void peer.messenger.sendMessage({
-          author: peer.peerInfo,
-          recipient: peer.peerInfo,
-          payload: {
-            type_url: 'dxos.test',
-            value: Buffer.from('TEST'),
-          },
-        });
-      });
-
-      await sleep(1000000);
     });
   });
 };

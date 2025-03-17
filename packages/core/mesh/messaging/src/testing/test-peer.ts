@@ -12,8 +12,7 @@ import { buf } from '@dxos/protocols/buf';
 import { type TestBuilder } from './test-builder';
 import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils';
 import { Messenger } from '../messenger';
-import { type SignalManager } from '../signal-manager';
-import { type Message, type PeerInfo } from '../signal-methods';
+import { type SignalManager, type Message, type PeerInfo } from '../signal-manager';
 
 export class TestPeer extends Resource {
   public peerId = PublicKey.random();
@@ -34,11 +33,11 @@ export class TestPeer extends Resource {
   }
 
   async waitForPeerAvailable(topic: PublicKey, peer: PeerInfo) {
-    return expectPeerAvailable(this.signalManager, topic, peer);
+    return expectPeerAvailable(this.signalManager.swarmState, topic.toHex(), peer);
   }
 
   async waitForPeerLeft(topic: PublicKey, peer: PeerInfo) {
-    return expectPeerLeft(this.signalManager, topic, peer);
+    return expectPeerLeft(this.signalManager.swarmState, topic.toHex(), peer);
   }
 
   protected override async _open() {

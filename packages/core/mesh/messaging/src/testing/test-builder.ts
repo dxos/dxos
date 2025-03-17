@@ -3,8 +3,7 @@
 //
 
 import { TestPeer } from './test-peer';
-import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from '../signal-manager';
-import { type Message } from '../signal-methods';
+import { type SignalManager, MemorySignalManager, MemorySignalManagerContext, type Message } from '../signal-manager';
 
 export type TestBuilderOptions = {
   signalManagerFactory?: (peer: TestPeer) => Promise<SignalManager>;
@@ -19,7 +18,7 @@ export class TestBuilder {
 
   async createSignalManager(peer: TestPeer): Promise<SignalManager> {
     const signalManager =
-      (await this.options.signalManagerFactory?.(peer)) ?? new MemorySignalManager(this._signalContext);
+      (await this.options.signalManagerFactory?.(peer)) ?? new MemorySignalManager(this._signalContext, peer.peerInfo);
 
     if (this.options.messageDisruption) {
       // Imitates signal network disruptions (e. g. message doubling, ).
