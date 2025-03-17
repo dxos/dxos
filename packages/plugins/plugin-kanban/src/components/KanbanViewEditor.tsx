@@ -49,16 +49,10 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     }
   }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
 
-  const selectFields = useMemo(() => {
-    if (!projection) {
-      return [];
-    }
-
-    return projection
-      .getFieldProjections()
-      .filter((field) => field.props.format === FormatEnum.SingleSelect)
-      .map(({ field }) => ({ value: field.id, label: field.path }));
-  }, [projection]);
+  const fieldProjections = projection?.getFieldProjections() || [];
+  const selectFields = fieldProjections
+    .filter((field) => field.props.format === FormatEnum.SingleSelect)
+    .map(({ field }) => ({ value: field.id, label: field.path }));
 
   const onSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
@@ -67,7 +61,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [kanban],
   );
 
-  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban]);
+  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban.columnFieldId]);
   const custom: CustomInputMap = useMemo(
     () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
     [selectFields],
