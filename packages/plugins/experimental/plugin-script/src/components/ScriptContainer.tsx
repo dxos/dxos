@@ -77,7 +77,7 @@ export const ScriptContainer = ({
           />
         )}
 
-        {state.view !== 'editor' && <LogsPanel space={space} classNames='grow' />}
+        {state.view !== 'editor' && <LogsPanel script={script} classNames='grow' />}
       </div>
     </StackItem.Content>
   );

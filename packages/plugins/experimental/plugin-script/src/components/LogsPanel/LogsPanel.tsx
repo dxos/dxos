@@ -5,23 +5,26 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type TraceEvent, type InvocationTraceEvent } from '@dxos/functions';
-import { type Space } from '@dxos/react-client/echo';
+import { type TraceEvent, type InvocationTraceEvent, type ScriptType } from '@dxos/functions';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Icon, List, ListItem, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { useDeployDeps } from '../../hooks';
 import { SCRIPT_PLUGIN } from '../../meta';
 
 export type LogsPanelProps = ThemedClassName<{
-  space: Space;
+  script: ScriptType;
 }>;
 
-export const LogsPanel = ({ space, classNames }: LogsPanelProps) => {
+export const LogsPanel = ({ script, classNames }: LogsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
+  // TODO(wittjosiah): Refactor these hooks.
+  const { space, existingFunctionUrl } = useDeployDeps({ script });
   const edgeClient = useEdgeClient();
   const invocationTraceQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue?.dxn);
   const [selected, setSelected] = useState<InvocationTraceEvent>();
+  const workerDxn = `dxn:worker:${existingFunctionUrl?.split('/').at(-1)}`;
 
   if (!invocationTraceQueue) {
     return <div>{t('no invocations message')}</div>;
@@ -33,9 +36,16 @@ export const LogsPanel = ({ space, classNames }: LogsPanelProps) => {
 
   return (
     <List classNames={mx('overflow-y-auto', classNames)}>
-      {invocationTraceQueue.items.map((trace) => (
-        <InvocationTraceItem key={trace.id} trace={trace} open={selected?.id === trace.id} setOpen={handleOpenChange} />
-      ))}
+      {invocationTraceQueue.items
+        .filter((trace) => decodeReference(trace.invocationTarget).dxn?.toString() === workerDxn)
+        .map((trace) => (
+          <InvocationTraceItem
+            key={trace.id}
+            trace={trace}
+            open={selected?.id === trace.id}
+            setOpen={handleOpenChange}
+          />
+        ))}
     </List>
   );
 };
