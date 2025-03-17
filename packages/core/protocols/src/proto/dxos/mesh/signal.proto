@@ -1,108 +1,29 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
-import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+
+import "dxos/keys.proto";
+import "dxos/edge/messenger.proto";
 
 package dxos.mesh.signal;
 
-option go_package = "github.com/dxos/dxos/proto/def/dxos/mesh/signal";
-
-/// @deprecated
 message JoinRequest {
-  bytes swarm = 1;
-  bytes peer = 2;
-  optional google.protobuf.Struct metadata = 3;
+  string swarm_key = 1;
+  dxos.edge.messenger.Peer peer = 2;
 }
 
-/// @deprecated
+message LeaveRequest {
+  string swarm_key = 1;
+  dxos.edge.messenger.Peer peer = 2;
+}
+
 message Message {
-  // TODO(egor): Rename to `sender`.
-  bytes author = 1;
-  bytes recipient = 2;
+  dxos.edge.messenger.Peer author = 1;
+  dxos.edge.messenger.Peer recipient = 2;
   google.protobuf.Any payload = 3;
-  optional google.protobuf.Struct metadata = 4;
-}
-
-/// @deprecated
-message ReceptionRequest {
-  bytes peer = 1;
-}
-
-/// Goes on Pub/Sub swarm topic and as a Join stream in RPC.
-/// @deprecated
-message SwarmEvent {
-  // Announce peer available on swarm.
-  message PeerAvailable {
-    bytes peer = 1;
-
-    google.protobuf.Timestamp since = 2;
-
-    // When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
-    // periodically in Pub/Sub with some margin such that Pub/Sub network partitions lead to offline statuses.
-    optional google.protobuf.Timestamp until = 3;
-
-    /// Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.
-    optional bytes announce_back_to_host = 4;
-  }
-
-  message PeerLeft {
-    bytes peer = 1;
-  }
-
-  oneof event {
-    /// The peer was announced as available on the swarm.
-    PeerAvailable peer_available = 1;
-    /// The peer left, or their announcement timed out.
-    PeerLeft peer_left = 2;
-  }
-}
-
-/// Goes on a Pub/Sub host topic.
-/// @deprecated
-message HostEvent {
-  message AnnounceBack {
-      bytes swarm = 1;
-      SwarmEvent.PeerAvailable peer_available = 2;
-  }
-  oneof event {
-      AnnounceBack announce_back = 1;
-  }
-}
-
-/// Goes on Pub/Sub peer topic.
-/// @deprecated
-message PeerEvent {
-  oneof event {
-    Message message = 1;
-  }
-}
-
-/// @deprecated
-enum SignalState {
-  /// Connection is being established.
-  CONNECTING = 0;
-  /// Connection is being re-established.
-  RECONNECTING = 1;
-  /// Connected.
-  CONNECTED = 2;
-  /// Server terminated the connection. Socket will be reconnected.
-  DISCONNECTED = 3;
-  /// Server terminated the connection with an ERROR. Socket will be reconnected.
-  ERROR = 4;
-  /// Socket was closed.
-  CLOSED = 5;
-}
-
-// TOOD(burdon): Rename.
-/// @deprecated
-service Signal {
-  rpc Join(JoinRequest) returns (stream SwarmEvent);
-  rpc ReceiveMessages(ReceptionRequest) returns (stream Message);
-  rpc SendMessage(Message) returns (google.protobuf.Empty);
 }
