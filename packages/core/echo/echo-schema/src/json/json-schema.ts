@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, type Types } from 'effect';
+import { JSONSchema, SchemaAST as AST, Schema as S, Option, type Types } from 'effect';
 
-import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
+import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
@@ -266,6 +266,10 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
             ? S.Tuple(...items.map((v) => toEffectSchema(v, defs)))
             : S.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
+        break;
+      }
+      case 'null': {
+        result = S.Null;
         break;
       }
     }

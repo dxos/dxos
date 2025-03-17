@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-edge-client",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "React hooks for the Edge Client.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,7 +34,6 @@
     "vite": "5.4.7"
   },
   "peerDependencies": {
-    "@effect/schema": "^0.75.5",
     "effect": "^3.12.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

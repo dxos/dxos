@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { Schema as S } from 'effect';
 
 import { EchoObject } from '../ast';
 
