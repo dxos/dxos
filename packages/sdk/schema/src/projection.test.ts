@@ -20,10 +20,13 @@ import {
   EntityKind,
   getPropertyMetaAnnotation,
 } from '@dxos/echo-schema';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
+
+registerSignalsRuntime();
 
 const getFieldId = (view: ViewType, path: string): string => {
   const field = view.fields.find((field) => field.path === path);
@@ -515,17 +518,17 @@ describe('ViewProjection', () => {
     // Hide the email field.
     const emailId = getFieldId(view, 'email');
     projection.hideFieldProjection(emailId);
+    projection.hideFieldProjection(createdAtId);
 
     // Check both hidden properties are returned.
     const multipleHidden = projection.getHiddenProperties();
-    expect(multipleHidden).to.have.length(1);
+    expect(multipleHidden).to.have.length(2);
     expect(multipleHidden).to.include('email');
+    expect(multipleHidden).to.include('createdAt');
 
     // Unhide email and verify ID is preserved
     projection.showFieldProjection('email' as JsonProp);
-    expect(view.fields).to.have.length(3);
     expect(getFieldId(view, 'email')).to.equal(emailId);
-    expect(view.hiddenFields).to.have.length(0);
 
     // Ensure schema still matches.
     expect(mutable.getSchemaSnapshot()).to.deep.equal(initialSchema);
