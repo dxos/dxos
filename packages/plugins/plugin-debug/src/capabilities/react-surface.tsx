@@ -37,6 +37,7 @@ import {
   AutomergePanel,
   WorkflowPanel,
   QueuesPanel,
+  InvocationTracePanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
 import { Graph } from '@dxos/plugin-graph';
@@ -310,5 +311,11 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
       component: () => <WorkflowPanel />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/edge/traces`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Edge.Traces,
+      component: () => <InvocationTracePanel />,
     }),
   ]);

@@ -12,7 +12,7 @@ import { createDataExtensions, listener, stackItemContentEditorClassNames } from
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DebugPanel } from './DebugPanel';
+import { LogsPanel } from './LogsPanel';
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { useDeployState, useToolbarState } from '../hooks';
@@ -57,23 +57,27 @@ export const ScriptContainer = ({
   const state = useToolbarState({ view: 'editor' });
   useDeployState({ state, script });
 
+  if (!space) {
+    return null;
+  }
+
   return (
     <StackItem.Content toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-        {state.view !== 'debug' && (
+        {state.view !== 'logs' && (
           <TypescriptEditor
             id={script.id}
             env={env}
             initialValue={script.source?.target?.content}
             extensions={extensions}
-            className={stackItemContentEditorClassNames(role)}
+            className={mx(stackItemContentEditorClassNames(role), 'grow')}
             inputMode={settings.editorInputMode}
             toolbar
           />
         )}
 
-        {state.view !== 'editor' && <DebugPanel functionUrl={state.functionUrl} />}
+        {state.view !== 'editor' && <LogsPanel script={script} classNames='grow' />}
       </div>
     </StackItem.Content>
   );

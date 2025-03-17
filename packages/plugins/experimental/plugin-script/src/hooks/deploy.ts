@@ -64,7 +64,7 @@ export const createDeploy = (state: Partial<DeployState>) => {
   };
 };
 
-const useDeployDeps = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
+export const useDeployDeps = ({ script }: { script: ScriptType }) => {
   const space = getSpace(script);
   const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
   const client = useClient();
@@ -73,7 +73,7 @@ const useDeployDeps = ({ state, script }: { state: Partial<DeployState>; script:
 };
 
 export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
-  const { space, client, existingFunctionUrl } = useDeployDeps({ state, script });
+  const { space, client, existingFunctionUrl } = useDeployDeps({ script });
   useEffect(() => {
     if (!existingFunctionUrl) {
       return;
@@ -90,7 +90,7 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 };
 
 export const useDeployHandler = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
-  const { space, fn, client, existingFunctionUrl } = useDeployDeps({ state, script });
+  const { space, fn, client, existingFunctionUrl } = useDeployDeps({ script });
   const { t } = useTranslation(SCRIPT_PLUGIN);
 
   return useCallback(async () => {

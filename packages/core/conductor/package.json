@@ -55,9 +55,7 @@
     "jsonpath-plus": "10.2.0",
     "ollama": "^0.5.11"
   },
-  "devDependencies": {
-    "@effect/vitest": "^0.16.1"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

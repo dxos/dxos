@@ -30,6 +30,7 @@ import {
   SearchPanel,
   AutomergePanel,
   WorkflowPanel,
+  InvocationTracePanel,
 } from '../panels';
 
 export const namespace = 'devtools';
@@ -167,6 +168,10 @@ export const useRoutes = () => {
             {
               path: '/edge/dashboard',
               element: <EdgeDashboardPanel />,
+            },
+            {
+              path: '/edge/traces',
+              element: <InvocationTracePanel />,
             },
           ],
         },
