@@ -48,9 +48,7 @@ export default [
         'view group label': 'View',
         'view editor label': 'Editor',
         'view split label': 'Split',
-        'view debug label': 'Debug',
-        // TODO(wittjosiah): Replace debug with logs.
-        // 'view logs label': 'Logs',
+        'view logs label': 'Logs',
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
       },

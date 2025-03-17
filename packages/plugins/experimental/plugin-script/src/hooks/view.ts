@@ -6,8 +6,7 @@ import { createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
-// TODO(wittjosiah): Replace debug with logs.
-export type ViewType = 'editor' | 'split' | 'debug'; // 'logs';
+export type ViewType = 'editor' | 'split' | 'logs';
 
 export type ViewState = { view: ViewType };
 
@@ -16,9 +15,7 @@ export type ViewActionProperties = { type: 'view'; value: ViewType };
 const views: Record<ViewType, string> = {
   editor: 'ph--code--regular',
   split: 'ph--square-split-vertical--regular',
-  debug: 'ph--bug--regular',
-  // TODO(wittjosiah): Replace debug with logs.
-  // logs: 'ph--clock-counter-clockwise--regular',
+  logs: 'ph--clock-counter-clockwise--regular',
 };
 
 const createViewGroupItem = (state: Partial<ViewState>) => {
