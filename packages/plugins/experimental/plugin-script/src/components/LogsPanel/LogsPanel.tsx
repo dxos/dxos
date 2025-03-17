@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { type TraceEvent, type InvocationTraceEvent, type ScriptType } from '@dxos/functions';
