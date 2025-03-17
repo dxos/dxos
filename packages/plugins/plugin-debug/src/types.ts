@@ -78,5 +78,6 @@ export namespace Devtools {
     export const id = `${Devtools.id}.edge`;
     export const Dashboard = `${Devtools.Edge.id}.dashboard`;
     export const Workflows = `${Devtools.Edge.id}.workflows`;
+    export const Traces = `${Devtools.Edge.id}.traces`;
   }
 }

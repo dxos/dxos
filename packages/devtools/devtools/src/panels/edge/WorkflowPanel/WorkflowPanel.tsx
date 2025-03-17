@@ -10,13 +10,13 @@ import { AST } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { Select, Toolbar } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 import { mx } from '@dxos/react-ui-theme';
 
 import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
-import { PanelContainer } from '../../../components';
+import { ControlledSelector, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
@@ -125,27 +125,6 @@ export const WorkflowPanel = () => {
         <div>Objects: {graphs.length}</div>
       </div>
     </PanelContainer>
-  );
-};
-
-const ControlledSelector = <T extends string>(props: { values: T[]; value: T; setValue: (newValue: T) => void }) => {
-  return (
-    <Select.Root value={props.value} onValueChange={props.setValue}>
-      <Select.TriggerButton placeholder='Select space' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {props.values.map((mode) => (
-              <Select.Option key={mode} value={mode}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{mode}</span>
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
   );
 };
 
