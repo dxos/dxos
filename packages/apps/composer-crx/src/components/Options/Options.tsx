@@ -5,15 +5,18 @@
 import React from 'react';
 
 import { Composer } from '@dxos/brand';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-export const Options = () => {
+export type OptionsProps = ThemedClassName<{}>;
+
+export const Options = ({ classNames }: OptionsProps) => {
   const { t } = useTranslation('composer');
 
   const handleAuth = () => {};
 
   return (
-    <div className='flex flex-col grow gap-4 overflow-y-auto bg-baseSurface'>
+    <div className={mx('flex flex-col grow gap-4 overflow-y-auto bg-baseSurface', classNames)}>
       <div className='grid grid-cols-[8rem_1fr] p-4'>
         <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
           <Composer className='w-[8rem] h-[8rem]' />

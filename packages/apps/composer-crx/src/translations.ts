@@ -9,6 +9,7 @@ export default [
         'composer.title': 'composer',
         'composer.description': 'DXOS.org',
         'button.auth': 'Authenticate',
+        'input.placeholder': 'Search...',
       },
     },
   },
