@@ -10442,6 +10442,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.12.7)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
