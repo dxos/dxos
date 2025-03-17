@@ -22,7 +22,9 @@ export const LogsPanel = ({ script, classNames }: LogsPanelProps) => {
   // TODO(wittjosiah): Refactor these hooks.
   const { space, existingFunctionUrl } = useDeployDeps({ script });
   const edgeClient = useEdgeClient();
-  const invocationTraceQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue?.dxn);
+  const invocationTraceQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue?.dxn, {
+    pollInterval: 500,
+  });
   const [selected, setSelected] = useState<InvocationTraceEvent>();
   const workerDxn = `dxn:worker:${existingFunctionUrl?.split('/').at(-1)}`;
 
