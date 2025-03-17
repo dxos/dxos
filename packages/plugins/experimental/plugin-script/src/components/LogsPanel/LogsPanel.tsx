@@ -85,10 +85,17 @@ const InvocationTraceItem = ({
         <ListItem.Endcap classNames='flex items-center justify-center'>
           <Icon icon={trace.outcome === 'success' ? 'ph--check--regular' : 'ph--x--regular'} size={5} />
         </ListItem.Endcap>
-        <ListItem.Heading classNames='flex-1 flex items-center truncate'>{heading}</ListItem.Heading>
+        <ListItem.Heading classNames='flex-1 flex items-center gap-2 truncate'>
+          <span>{new Date(trace.timestampMs).toLocaleString()}</span>
+          <span>{heading}</span>
+        </ListItem.Heading>
       </div>
       {logs && (
         <ListItem.CollapsibleContent>
+          <div className='flex items-center gap-2'>
+            <span>Duration:</span>
+            <span>{trace.durationMs}ms</span>
+          </div>
           <pre>
             <div>{JSON.stringify(trace.input, null, 2)}</div>
             {logs.map((log, index) => {
