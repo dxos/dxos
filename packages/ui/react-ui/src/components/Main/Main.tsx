@@ -4,7 +4,7 @@
 
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
-import { Root as DialogRoot, DialogContent } from '@radix-ui/react-dialog';
+import { Root as DialogRoot, DialogContent, DialogTitle } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -223,6 +223,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const Root = isLg ? Primitive.div : DialogContent;
     return (
       <DialogRoot open={state !== 'closed'} aria-label={toLocalizedString(label, t)} modal={false}>
+        {!isLg && <DialogTitle className='sr-only'>{toLocalizedString(label, t)}</DialogTitle>}
         <Root
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...props}
