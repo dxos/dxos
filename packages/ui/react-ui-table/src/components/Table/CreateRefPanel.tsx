@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { create, getSpace } from '@dxos/react-client/echo';
+import { create } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
