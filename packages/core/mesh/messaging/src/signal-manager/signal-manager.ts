@@ -4,31 +4,13 @@
 
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
+import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type SwarmResponse, type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type Any } from '@dxos/protocols/proto/google/protobuf';
+import { type LeaveRequest, type JoinRequest, type Message } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
-
-export type JoinRequest = {
-  swarmKey: string;
-  peer: PeerInfo;
-};
-
-export type LeaveRequest = {
-  swarmKey: string;
-  peer: PeerInfo;
-};
-
-export type QueryRequest = {
-  swarmKey: string;
-};
-
-export type Message = {
-  author: PeerInfo;
-  recipient: PeerInfo;
-  payload: Any;
-};
+export type { JoinRequest, LeaveRequest, Message, QueryRequest, SwarmResponse };
 
 /**
  * Message routing interface.
