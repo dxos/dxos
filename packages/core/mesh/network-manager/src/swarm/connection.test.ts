@@ -30,13 +30,13 @@ describe('Connection', () => {
   });
 
   const connectionTest = async (setup: { fastConnectionKey: PublicKey; slowConnectionKey: PublicKey }) => {
-    const [topic, sessionId] = PublicKey.randomSequence();
+    const [swarmKey, sessionId] = PublicKey.randomSequence().map(PublicKey.hash);
     const slowPeer = { peerKey: setup.slowConnectionKey.toHex() };
     const fastPeer = { peerKey: setup.fastConnectionKey.toHex() };
 
     const slowPeerProtocol = new TestWireProtocol();
     const slowConnection = new Connection(
-      topic,
+      swarmKey,
       slowPeer,
       fastPeer,
       sessionId,
@@ -49,16 +49,16 @@ describe('Connection', () => {
       },
       slowPeerProtocol.factory({
         initiator: true,
-        localPeerId: PublicKey.from(slowPeer.peerKey),
-        remotePeerId: PublicKey.from(fastPeer.peerKey),
-        topic,
+        localPeerId: slowPeer.peerKey,
+        remotePeerId: fastPeer.peerKey,
+        swarmKey,
       }),
       createRtcTransportFactory(),
     );
 
     const fastPeerProtocol = new TestWireProtocol();
     const fastConnection = new Connection(
-      topic,
+      swarmKey,
       fastPeer,
       slowPeer,
       sessionId,
@@ -71,9 +71,9 @@ describe('Connection', () => {
       },
       fastPeerProtocol.factory({
         initiator: false,
-        localPeerId: PublicKey.from(fastPeer.peerKey),
-        remotePeerId: PublicKey.from(slowPeer.peerKey),
-        topic,
+        localPeerId: fastPeer.peerKey,
+        remotePeerId: slowPeer.peerKey,
+        swarmKey,
       }),
       createRtcTransportFactory(),
     );
@@ -86,8 +86,8 @@ describe('Connection', () => {
     await slowConnection.openConnection();
 
     await Promise.all([
-      slowPeerProtocol.testConnection(PublicKey.from(fastPeer.peerKey), 'test message 1'),
-      fastPeerProtocol.testConnection(PublicKey.from(slowPeer.peerKey), 'test message 2'),
+      slowPeerProtocol.testConnection(fastPeer.peerKey, 'test message 1'),
+      fastPeerProtocol.testConnection(slowPeer.peerKey, 'test message 2'),
     ]);
   };
 

@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
 
 import { type SwarmController, type Topology } from './topology';
 
@@ -28,7 +27,7 @@ export class FullyConnectedTopology implements Topology {
     }
   }
 
-  async onOffer(peer: PublicKey): Promise<boolean> {
+  async onOffer(peer: string): Promise<boolean> {
     return true;
   }
 

@@ -32,13 +32,13 @@ describe('Tcp transport', () => {
         const peer2 = testBuilder.createPeer();
         await openAndCloseAfterTest([peer1, peer2]);
 
-        const topic = PublicKey.random();
-        const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
+        const swarmKey = PublicKey.random().toHex();
+        const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey, () => new FullyConnectedTopology());
 
         return {
           peer1,
           peer2,
-          topic,
+          swarmKey,
           swarm1,
           swarm2,
         };
@@ -57,8 +57,8 @@ describe('Tcp transport', () => {
     }
 
     await Promise.all(
-      pairs.map(async ({ peer1, peer2, topic }) => {
-        await leaveSwarm([peer1, peer2], topic);
+      pairs.map(async ({ peer1, peer2, swarmKey }) => {
+        await leaveSwarm([peer1, peer2], swarmKey);
       }),
     );
   });

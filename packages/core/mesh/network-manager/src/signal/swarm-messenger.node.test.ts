@@ -2,47 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
-import { type Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { runTestSignalServer } from '@dxos/signal';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
 
 describe('SwarmMessenger', { timeout: 7000 }, () => {
-  let topic: PublicKey;
-
-  let broker1: Awaited<ReturnType<typeof runTestSignalServer>>;
-
-  beforeAll(async () => {
-    broker1 = await runTestSignalServer();
-  });
-
-  beforeEach(() => {
-    topic = PublicKey.random();
-  });
-
-  afterAll(() => {
-    void broker1.stop();
-  });
-
   const createSignalClientAndMessageRouter = async ({
-    signalApiUrl,
+    signalContext,
     onSignal = (async () => {}) as any,
     onOffer = async () => ({ accept: true }),
-    topic,
+    swarmKey,
   }: {
-    signalApiUrl: string;
+    signalContext: MemorySignalManagerContext;
     onSignal?: (msg: SignalMessage) => Promise<void>;
     onOffer?: (msg: OfferMessage) => Promise<Answer>;
-    topic: PublicKey;
+    swarmKey: string;
   }) => {
     const peer = { peerKey: PublicKey.random().toHex() };
-    const signalManager = new WebsocketSignalManager([{ server: signalApiUrl }]);
+    const signalManager = new MemorySignalManager(signalContext, peer);
     await signalManager.open();
     onTestFinished(async () => {
       await signalManager.close();
@@ -60,7 +42,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       sendMessage: async (message) => await messenger.sendMessage(message),
       onSignal,
       onOffer,
-      topic,
+      swarmKey,
     });
 
     return {
@@ -71,32 +53,34 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
   };
 
   test('signaling between 2 clients', async () => {
+    const signalContext = new MemorySignalManagerContext();
+    const swarmKey = PublicKey.random().toHex();
     const received: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
     };
     const { signalManager: signalManager1, peer: peer1 } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: signalMock1,
-      topic,
+      swarmKey,
     });
     const {
       signalManager: signalManager2,
       router: router2,
       peer: peer2,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
-      topic,
+      signalContext,
+      swarmKey,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join({ swarmKey, peer: peer1 });
+    await signalManager2.join({ swarmKey, peer: peer2 });
 
     const msg: SignalMessage = {
       author: peer2,
       recipient: peer1,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: {
         signal: { payload: { msg: 'Some info' } },
         signalBatch: undefined,
@@ -108,36 +92,40 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
   });
 
   test('offer/answer', async () => {
+    const signalContext = new MemorySignalManagerContext();
+    const swarmKey = PublicKey.random().toHex();
     const {
       signalManager: signalManager1,
       router: router1,
       peer: peer1,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
     const { signalManager: signalManager2, peer: peer2 } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join({ swarmKey, peer: peer1 });
+    await signalManager2.join({ swarmKey, peer: peer2 });
     const answer = await router1.offer({
       author: peer1,
       recipient: peer2,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: { offer: {} },
     });
     expect(answer.accept).toEqual(true);
   });
 
   test('signaling between 3 clients', async () => {
+    const signalContext = new MemorySignalManagerContext();
+    const swarmKey = PublicKey.random().toHex();
     const received1: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received1.push(msg);
@@ -147,10 +135,10 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router1,
       peer: peer1,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: signalMock1,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
     const received2: SignalMessage[] = [];
     const signalMock2 = async (msg: SignalMessage) => {
@@ -161,10 +149,10 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router2,
       peer: peer2,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: signalMock2,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
     const received3: SignalMessage[] = [];
     const signalMock3 = async (msg: SignalMessage) => {
@@ -175,22 +163,22 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       router: router3,
       peer: peer3,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: signalMock3,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
-    await signalManager3.join({ topic, peer: peer3 });
+    await signalManager1.join({ swarmKey, peer: peer1 });
+    await signalManager2.join({ swarmKey, peer: peer2 });
+    await signalManager3.join({ swarmKey, peer: peer3 });
 
     // sending signal from peer1 to peer3.
     const msg1to3: SignalMessage = {
       author: peer1,
       recipient: peer3,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: { signal: { payload: { msg: '1to3' } }, signalBatch: undefined },
     };
     await router1.signal(msg1to3);
@@ -200,8 +188,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     const msg2to3: SignalMessage = {
       author: peer2,
       recipient: peer3,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: { signal: { payload: { msg: '2to3' } }, signalBatch: undefined },
     };
     await router2.signal(msg2to3);
@@ -211,8 +199,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     const msg3to1: SignalMessage = {
       author: peer3,
       recipient: peer1,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: { signal: { payload: { msg: '3to1' } }, signalBatch: undefined },
     };
     await router3.signal(msg3to1);
@@ -220,36 +208,38 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
   });
 
   test('two offers', async () => {
+    const signalContext = new MemorySignalManagerContext();
+    const swarmKey = PublicKey.random().toHex();
     const {
       signalManager: signalManager1,
       router: router1,
       peer: peer1,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
     const {
       signalManager: signalManager2,
       router: router2,
       peer: peer2,
     } = await createSignalClientAndMessageRouter({
-      signalApiUrl: broker1.url(),
+      signalContext,
       onSignal: (async () => {}) as any,
       onOffer: async () => ({ accept: true }),
-      topic,
+      swarmKey,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join({ swarmKey, peer: peer1 });
+    await signalManager2.join({ swarmKey, peer: peer2 });
 
     // sending offer from peer1 to peer2.
     const answer1 = await router1.offer({
       author: peer1,
       recipient: peer2,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: { offer: {} },
     });
     expect(answer1.accept).toEqual(true);
@@ -258,8 +248,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
     const answer2 = await router2.offer({
       author: peer2,
       recipient: peer1,
-      sessionId: PublicKey.random(),
-      topic,
+      sessionId: PublicKey.random().toHex(),
+      swarmKey,
       data: { offer: {} },
     });
     expect(answer2.accept).toEqual(true);

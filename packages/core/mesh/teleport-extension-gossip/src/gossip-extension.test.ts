@@ -5,7 +5,9 @@
 import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { type WithTypeUrl } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
@@ -34,31 +36,33 @@ describe('GossipExtension', () => {
     });
     connection2.teleport.addExtension('dxos.mesh.teleport.gossip', extension2);
 
+    const deviceKey1 = PublicKey.random();
+    const deviceKey2 = PublicKey.random();
     await extension1.sendAnnounce({
-      peerId: peer1.peerId,
+      deviceKey: deviceKey1,
       channelId: 'dxos.mesh.teleport.gossip',
       timestamp: new Date(),
-      messageId: PublicKey.random(),
+      messageId: PublicKey.random().toHex(),
       payload: {
         '@type': 'dxos.mesh.presence.PeerState',
-        connections: [peer2.peerId],
-        identityKey: PublicKey.random(),
-      },
+        connections: [deviceKey2],
+        deviceKey: deviceKey1,
+      } satisfies WithTypeUrl<PeerState>,
     });
 
     await extension2.sendAnnounce({
-      peerId: peer2.peerId,
+      deviceKey: deviceKey2,
       channelId: 'dxos.mesh.teleport.gossip',
       timestamp: new Date(),
-      messageId: PublicKey.random(),
+      messageId: PublicKey.random().toHex(),
       payload: {
         '@type': 'dxos.mesh.presence.PeerState',
-        connections: [peer1.peerId],
-        identityKey: PublicKey.random(),
+        connections: [deviceKey1],
+        deviceKey: deviceKey2,
       },
     });
 
-    expect((await trigger1.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer2.peerId.toHex());
-    expect((await trigger2.wait({ timeout: 50 })).peerId.toHex()).toEqual(peer1.peerId.toHex());
+    expect((await trigger1.wait({ timeout: 50 })).deviceKey.toHex()).toEqual(deviceKey2.toHex());
+    expect((await trigger2.wait({ timeout: 50 })).deviceKey.toHex()).toEqual(deviceKey1.toHex());
   });
 });

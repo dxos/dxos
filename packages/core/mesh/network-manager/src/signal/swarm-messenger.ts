@@ -5,15 +5,15 @@
 import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type PeerInfo, type Message } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, type MakeOptional } from '@dxos/util';
+import { type MakeOptional } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
+import { PublicKey } from '@dxos/keys';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -23,7 +23,7 @@ export type SwarmMessengerOptions = {
   sendMessage: (params: Message) => Promise<void>;
   onOffer: (message: OfferMessage) => Promise<Answer>;
   onSignal: (message: SignalMessage) => Promise<void>;
-  topic: PublicKey;
+  swarmKey: string;
 };
 
 const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
@@ -37,15 +37,15 @@ export class SwarmMessenger implements SignalMessenger {
   private readonly _sendMessage: (msg: Message) => Promise<void>;
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
-  private readonly _topic: PublicKey;
+  private readonly _swarmKey: string;
 
-  private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap((key) => key.toHex());
+  private readonly _offerRecords = new Map<string, OfferRecord>();
 
-  constructor({ sendMessage, onSignal, onOffer, topic }: SwarmMessengerOptions) {
+  constructor({ sendMessage, onSignal, onOffer, swarmKey }: SwarmMessengerOptions) {
     this._sendMessage = sendMessage;
     this._onSignal = onSignal;
     this._onOffer = onOffer;
-    this._topic = topic;
+    this._swarmKey = swarmKey;
   }
 
   async receiveMessage({
@@ -63,7 +63,7 @@ export class SwarmMessenger implements SignalMessenger {
     }
     const message: SwarmMessage = SwarmMessage.decode(payload.value);
 
-    if (!this._topic.equals(message.topic)) {
+    if (this._swarmKey !== message.swarmKey) {
       // Ignore messages from wrong topics.
       return;
     }
@@ -95,7 +95,7 @@ export class SwarmMessenger implements SignalMessenger {
   async offer(message: OfferMessage): Promise<Answer> {
     const networkMessage: SwarmMessage = {
       ...message,
-      messageId: PublicKey.random(),
+      messageId: PublicKey.random().toHex(),
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve });
@@ -119,7 +119,7 @@ export class SwarmMessenger implements SignalMessenger {
     const networkMessage: SwarmMessage = {
       ...message,
       // Setting unique message_id if it not specified yet.
-      messageId: message.messageId ?? PublicKey.random(),
+      messageId: message.messageId ?? PublicKey.random().toHex(),
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
@@ -167,7 +167,7 @@ export class SwarmMessenger implements SignalMessenger {
         author: recipient,
         recipient: author,
         message: {
-          topic: message.topic,
+          swarmKey: message.swarmKey,
           sessionId: message.sessionId,
           data: { answer },
         },

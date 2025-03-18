@@ -4,7 +4,6 @@
 
 import { asyncTimeout, scheduleTaskInterval, TimeoutError as AsyncTimeoutError } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
@@ -41,8 +40,8 @@ export class ControlExtension implements TeleportExtension {
 
   constructor(
     private readonly opts: ControlExtensionOpts,
-    private readonly localPeerId: PublicKey,
-    private readonly remotePeerId: PublicKey,
+    private readonly localPeerId: string,
+    private readonly remotePeerId: string,
   ) {}
 
   async registerExtension(name: string) {
@@ -68,8 +67,8 @@ export class ControlExtension implements TeleportExtension {
             if (DEBUG_PRINT_HEARTBEAT) {
               log('received heartbeat request', {
                 ts: request.requestTimestamp,
-                localPeerId: this.localPeerId.truncate(),
-                remotePeerId: this.remotePeerId.truncate(),
+                localPeerId: this.localPeerId,
+                remotePeerId: this.remotePeerId,
               });
             }
             return {
@@ -106,15 +105,15 @@ export class ControlExtension implements TeleportExtension {
             ) {
               log.warn(`heartbeat RTT for Teleport > ${HEARTBEAT_RTT_WARN_THRESH / 1000}s`, {
                 rtt: now - resp.requestTimestamp.getTime(),
-                localPeerId: this.localPeerId.truncate(),
-                remotePeerId: this.remotePeerId.truncate(),
+                localPeerId: this.localPeerId,
+                remotePeerId: this.remotePeerId,
               });
             } else {
               if (DEBUG_PRINT_HEARTBEAT) {
                 log('heartbeat RTT', {
                   rtt: now - resp.requestTimestamp.getTime(),
-                  localPeerId: this.localPeerId.truncate(),
-                  remotePeerId: this.remotePeerId.truncate(),
+                  localPeerId: this.localPeerId,
+                  remotePeerId: this.remotePeerId,
                 });
               }
             }

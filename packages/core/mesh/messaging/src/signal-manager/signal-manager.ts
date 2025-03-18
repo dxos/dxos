@@ -1,16 +1,49 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
+import { type SwarmResponse, type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import {
+  type LeaveRequest,
+  type JoinRequest,
+  type Message,
+  type QueryRequest,
+} from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { type SignalStatus, type SignalMethods } from '../signal-methods';
+export type PeerInfo = Peer;
+export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
+export type { JoinRequest, LeaveRequest, Message, QueryRequest, SwarmResponse };
 
 /**
- * Manages a collection of signaling clients.
+ * Message routing interface.
  */
-export interface SignalManager extends SignalMethods, Required<Lifecycle> {
-  statusChanged?: Event<SignalStatus[]>;
-  getStatus?: () => SignalStatus[];
+export interface SignalManager extends Required<Lifecycle> {
+  onMessage: Event<Message>;
+
+  /**
+   * Emits when the swarm state changes.
+   */
+  swarmState: Event<SwarmResponse>;
+
+  /**
+   * Join swarmKey on signal network, to be discoverable by other peers.
+   */
+  join: (request: JoinRequest) => Promise<void>;
+
+  /**
+   * Leave swarmKey on signal network, to stop being discoverable by other peers.
+   */
+  leave: (request: LeaveRequest) => Promise<void>;
+
+  /**
+   * Query swarm state without joining it.
+   */
+  query: (request: QueryRequest) => Promise<void>;
+
+  /**
+   * Send message to peer.
+   */
+  sendMessage: (message: Message) => Promise<void>;
 }

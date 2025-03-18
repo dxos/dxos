@@ -8,8 +8,9 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type SwarmEvent, type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash } from '@dxos/messaging';
+import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
@@ -19,7 +20,6 @@ import { Peer } from './peer';
 import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
 import { type SwarmController, type Topology } from '../topology';
 import { type TransportFactory } from '../transport';
-import { type Topic } from '../types';
 import { type WireProtocolProvider } from '../wire-protocol';
 
 const INITIATION_DELAY = 100;
@@ -75,7 +75,7 @@ export class Swarm {
 
   // TODO(burdon): Pass in object.
   constructor(
-    private readonly _topic: PublicKey,
+    private readonly _swarmKey: string,
     private readonly _ownPeer: PeerInfo,
     private _topology: Topology,
     private readonly _protocolProvider: WireProtocolProvider,
@@ -87,7 +87,7 @@ export class Swarm {
   ) {
     log.trace(
       'dxos.mesh.swarm.constructor',
-      trace.begin({ id: this._instanceId, data: { topic: this._topic.toHex(), peer: this._ownPeer } }),
+      trace.begin({ id: this._instanceId, data: { swarmKey: this._swarmKey, peer: this._ownPeer } }),
     );
     log('creating swarm', { peerId: _ownPeer });
     _topology.init(this._getSwarmController());
@@ -96,7 +96,7 @@ export class Swarm {
       sendMessage: async (msg) => await this._messenger.sendMessage(msg),
       onSignal: async (msg) => await this.onSignal(msg),
       onOffer: async (msg) => await this.onOffer(msg),
-      topic: this._topic,
+      swarmKey: this._swarmKey,
     });
     log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
   }
@@ -124,8 +124,8 @@ export class Swarm {
   }
 
   @logInfo
-  get topic(): Topic {
-    return this._topic;
+  get key(): string {
+    return this._swarmKey;
   }
 
   async open() {
@@ -170,33 +170,40 @@ export class Swarm {
   }
 
   @synchronized
-  onSwarmEvent(swarmEvent: SwarmEvent) {
-    log('swarm event', { swarmEvent }); // TODO(burdon): Stringify.
+  onSwarmState(swarmState: SwarmResponse) {
+    log('swarm event', { swarmState }); // TODO(burdon): Stringify.
 
     if (this._ctx.disposed) {
       log('swarm event ignored for disposed swarm');
       return;
     }
 
-    if (swarmEvent.peerAvailable) {
-      const peerId = swarmEvent.peerAvailable.peer.peerKey;
-      if (peerId !== this._ownPeer.peerKey) {
-        log('new peer', { peerId });
-        const peer = this._getOrCreatePeer(swarmEvent.peerAvailable.peer);
-        peer.advertizing = true;
+    // Reconcile peers in swarm state with swarmState
+    const connectedPeers = swarmState.peers ?? [];
+    const disconnectedPeers = Array.from(this._peers.keys()).filter(
+      (peer) => !swarmState.peers?.some((p) => PeerInfoHash(p) === PeerInfoHash(peer)),
+    );
+
+    for (const peerInfo of connectedPeers) {
+      if (PeerInfoHash(peerInfo) === PeerInfoHash(this._ownPeer)) {
+        continue;
       }
-    } else if (swarmEvent.peerLeft) {
-      const peer = this._peers.get(swarmEvent.peerLeft.peer);
+      const peer = this._getOrCreatePeer(peerInfo);
+      peer.advertizing = true;
+    }
+
+    for (const peerInfo of disconnectedPeers) {
+      const peer = this._peers.get(peerInfo);
       if (peer) {
         peer.advertizing = false;
         // Destroy peer only if there is no p2p-connection established. Otherwise, let peers go through
         // the graceful shutdown protocol.
         if (this._isConnectionEstablishmentInProgress(peer)) {
           log(`destroying peer, state: ${peer.connection?.state}`);
-          void this._destroyPeer(swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
+          void this._destroyPeer(peerInfo, 'peer left').catch((err) => log.catch(err));
         }
       } else {
-        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer.peerKey });
+        log('no establishing connection found for disconnected peer', { peerInfo });
       }
     }
 
@@ -217,8 +224,8 @@ export class Swarm {
       log('rejecting offer with incorrect peerId', { message });
       return { accept: false };
     }
-    if (!message.topic?.equals(this._topic)) {
-      log('rejecting offer with incorrect topic', { message });
+    if (message.swarmKey !== this._swarmKey) {
+      log('rejecting offer with incorrect swarmKey', { message });
       return { accept: false };
     }
 
@@ -238,7 +245,7 @@ export class Swarm {
       message.recipient.peerKey === this._ownPeer.peerKey,
       `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`,
     );
-    invariant(message.topic?.equals(this._topic));
+    invariant(message.swarmKey === this._swarmKey);
     invariant(message.author);
 
     const peer = this._getOrCreatePeer(message.author);
@@ -260,57 +267,58 @@ export class Swarm {
 
   private _getOrCreatePeer(peerInfo: PeerInfo): Peer {
     invariant(peerInfo.peerKey, 'PeerInfo.peerKey is required');
-    let peer = this._peers.get(peerInfo);
-    if (!peer) {
-      peer = new Peer(
-        peerInfo,
-        this._topic,
-        this._ownPeer,
-        this._swarmMessenger,
-        this._protocolProvider,
-        this._transportFactory,
-        this._connectionLimiter,
-        {
-          onInitiated: (connection) => {
-            this.connectionAdded.emit(connection);
-          },
-          onConnected: () => {
-            this.connected.emit(peerInfo);
-          },
-          onDisconnected: async () => {
-            if (this._isUnregistered(peer)) {
-              log.verbose('ignored onDisconnected for unregistered peer');
-              return;
-            }
-            if (!peer!.advertizing) {
-              await this._destroyPeer(peerInfo, 'peer disconnected');
-            }
-
-            this.disconnected.emit(peerInfo);
-            this._topology.update();
-          },
-          onRejected: () => {
-            // If the peer rejected our connection remove it from the set of candidates.
-            // TODO(dmaretskyi): Set flag instead.
-            if (!this._isUnregistered(peer)) {
-              log('peer rejected connection', { peerInfo });
-              void this._destroyPeer(peerInfo, 'peer rejected connection');
-            }
-          },
-          onAccepted: () => {
-            this._topology.update();
-          },
-          onOffer: (remoteId) => {
-            return this._topology.onOffer(PublicKey.from(remoteId.peerKey));
-          },
-          onPeerAvailable: () => {
-            this._topology.update();
-          },
-        },
-      );
-      this._peers.set(peerInfo, peer);
+    const existingPeer = this._peers.get(peerInfo);
+    if (existingPeer) {
+      return existingPeer;
     }
 
+    const peer = new Peer(
+      peerInfo,
+      this._swarmKey,
+      this._ownPeer,
+      this._swarmMessenger,
+      this._protocolProvider,
+      this._transportFactory,
+      this._connectionLimiter,
+      {
+        onInitiated: (connection) => {
+          this.connectionAdded.emit(connection);
+        },
+        onConnected: () => {
+          this.connected.emit(peerInfo);
+        },
+        onDisconnected: async () => {
+          if (this._isUnregistered(peer)) {
+            log.verbose('ignored onDisconnected for unregistered peer');
+            return;
+          }
+          if (!peer!.advertizing) {
+            await this._destroyPeer(peerInfo, 'peer disconnected');
+          }
+
+          this.disconnected.emit(peerInfo);
+          this._topology.update();
+        },
+        onRejected: () => {
+          // If the peer rejected our connection remove it from the set of candidates.
+          // TODO(dmaretskyi): Set flag instead.
+          if (!this._isUnregistered(peer)) {
+            log('peer rejected connection', { peerInfo });
+            void this._destroyPeer(peerInfo, 'peer rejected connection');
+          }
+        },
+        onAccepted: () => {
+          this._topology.update();
+        },
+        onOffer: (remoteId) => {
+          return this._topology.onOffer(remoteId.peerKey);
+        },
+        onPeerAvailable: () => {
+          this._topology.update();
+        },
+      },
+    );
+    this._peers.set(peerInfo, peer);
     return peer;
   }
 
@@ -325,14 +333,14 @@ export class Swarm {
   private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
-        ownPeerId: PublicKey.from(this._ownPeer.peerKey),
+        ownPeerId: this._ownPeer.peerKey,
         connected: Array.from(this._peers.entries())
           .filter(([_, peer]) => peer.connection)
-          .map(([info]) => PublicKey.from(info.peerKey)),
+          .map(([info]) => info.peerKey),
         candidates: Array.from(this._peers.entries())
           .filter(([_, peer]) => !peer.connection && peer.advertizing && peer.availableToConnect)
-          .map(([info]) => PublicKey.from(info.peerKey)),
-        allPeers: Array.from(this._peers.keys()).map((info) => PublicKey.from(info.peerKey)),
+          .map(([info]) => info.peerKey),
+        allPeers: Array.from(this._peers.keys()).map((info) => info.peerKey),
       }),
       connect: (peer) => {
         if (this._ctx.disposed) {
@@ -342,7 +350,7 @@ export class Swarm {
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
           try {
-            await this._initiateConnection({ peerKey: peer.toHex() });
+            await this._initiateConnection({ peerKey: peer });
           } catch (err: any) {
             log('initiation error', err);
           }
@@ -355,7 +363,7 @@ export class Swarm {
 
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
-          await this._closeConnection({ peerKey: peer.toHex() });
+          await this._closeConnection({ peerKey: peer });
           this._topology.update();
         });
       },

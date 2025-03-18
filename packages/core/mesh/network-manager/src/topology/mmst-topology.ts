@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type SwarmController, type Topology } from './topology';
@@ -66,7 +65,7 @@ export class MMSTTopology implements Topology {
     this.update();
   }
 
-  async onOffer(peer: PublicKey): Promise<boolean> {
+  async onOffer(peer: string): Promise<boolean> {
     invariant(this._controller, 'Not initialized');
     const { connected } = this._controller.getState();
     const accept = connected.length < this._maxPeers;
@@ -130,9 +129,12 @@ export class MMSTTopology implements Topology {
   }
 }
 
-const sortByXorDistance = (keys: PublicKey[], reference: PublicKey): PublicKey[] => {
+const sortByXorDistance = (keys: string[], reference: string): string[] => {
+  const referenceBuffer = Buffer.from(reference, 'utf-8');
   const sorted = keys.sort((a, b) => {
-    return compareXor(distXor(a.asBuffer(), reference.asBuffer()), distXor(b.asBuffer(), reference.asBuffer()));
+    const aBuffer = Buffer.from(a, 'utf-8');
+    const bBuffer = Buffer.from(b, 'utf-8');
+    return compareXor(distXor(aBuffer, referenceBuffer), distXor(bBuffer, referenceBuffer));
   });
   log('Sorted keys', { keys, reference, sorted });
   return sorted;

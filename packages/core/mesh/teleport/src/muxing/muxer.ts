@@ -8,7 +8,6 @@ import { scheduleTaskInterval, Event, Trigger, asyncTimeout } from '@dxos/async'
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { TimeoutError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
@@ -106,7 +105,7 @@ export class Muxer {
   private readonly _channelsByLocalId = new Map<number, Channel>();
   private readonly _channelsByTag = new Map<string, Channel>();
   private readonly _ctx = new Context();
-  private _sessionId?: PublicKey;
+  private _sessionId?: string;
 
   private _nextId = 1;
 
@@ -129,13 +128,13 @@ export class Muxer {
     });
   }
 
-  setSessionId(sessionId: PublicKey) {
+  setSessionId(sessionId: string) {
     this._sessionId = sessionId;
   }
 
   @logInfo
   get sessionIdString(): string {
-    return this._sessionId ? this._sessionId.truncate() : 'none';
+    return this._sessionId ?? 'none';
   }
 
   /**

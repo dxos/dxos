@@ -69,7 +69,7 @@ message ConnectionRequest {
   bool initiator = 2;
   string remote_peer_key = 3;
   string own_peer_key = 4;
-  string topic = 5;
+  string swarm_key = 5;
 
 }
 

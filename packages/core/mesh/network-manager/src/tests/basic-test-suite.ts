@@ -28,10 +28,10 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic = PublicKey.random();
-    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
+    const swarmKey = PublicKey.random().toHex();
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
-    await leaveSwarm([peer1, peer2], topic);
+    await leaveSwarm([peer1, peer2], swarmKey);
   });
 
   // TODO(burdon): Test with more peers (configure and test messaging).
@@ -42,10 +42,10 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     onTestFinished(() => peer2.close());
     await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic = PublicKey.random();
-    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new StarTopology(peer1.peerId)); // NOTE: Same peer.
+    const swarmKey = PublicKey.random().toHex();
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey, () => new StarTopology(peer1.peerId)); // NOTE: Same peer.
     await exchangeMessages(swarm1, swarm2);
-    await leaveSwarm([peer1, peer2], topic);
+    await leaveSwarm([peer1, peer2], swarmKey);
   });
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
@@ -54,24 +54,24 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic1 = PublicKey.random();
+    const swarmKey1 = PublicKey.random().toHex();
 
     {
-      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic1);
+      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey1);
       await exchangeMessages(swarm1, swarm2);
-      await leaveSwarm([peer1, peer2], topic1);
+      await leaveSwarm([peer1, peer2], swarmKey1);
     }
 
     // TODO(burdon): Add log marker like this to logging lib. Auto add between tests?
     // TODO(burdon): Enable new Error to take second context obj: new Error('msg', {}).
     log('————————————————————————————————————————');
 
-    const topic2 = PublicKey.random();
+    const swarmKey2 = PublicKey.random().toHex();
 
     {
-      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic2);
+      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey2);
       await exchangeMessages(swarm1, swarm2);
-      await leaveSwarm([peer1, peer2], topic2);
+      await leaveSwarm([peer1, peer2], swarmKey2);
     }
   });
 
@@ -89,13 +89,13 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
   test('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
-      const topicA = PublicKey.random();
+      const swarmKey = PublicKey.random().toHex();
       const peer1a = testBuilder.createPeer();
       const peer2a = testBuilder.createPeer();
       await openAndCloseAfterTest([peer1a, peer2a]);
 
-      const swarm1a = await peer1a.createSwarm(topicA).join();
-      const swarm2a = await peer2a.createSwarm(topicA).join();
+      const swarm1a = await peer1a.createSwarm(swarmKey).join();
+      const swarm2a = await peer2a.createSwarm(swarmKey).join();
 
       return { swarm1a, swarm2a, peer1a, peer2a };
     };
@@ -114,16 +114,16 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic = PublicKey.random();
-    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
+    const swarmKey = PublicKey.random().toHex();
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
 
     const disconnectedKeys = new Set();
     swarm1.protocol.disconnected.on((peerInfo) => {
-      disconnectedKeys.add(peerInfo.toHex());
+      disconnectedKeys.add(peerInfo);
     });
     swarm2.protocol.disconnected.on((peerInfo) => {
-      disconnectedKeys.add(peerInfo.toHex());
+      disconnectedKeys.add(peerInfo);
     });
 
     void swarm1.protocol.connections.get(swarm2.peer.peerId)!.closeConnection(new Error('test error'));
@@ -132,7 +132,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     await exchangeMessages(swarm1, swarm2);
 
-    await leaveSwarm([peer1, peer2], topic);
+    await leaveSwarm([peer1, peer2], swarmKey);
   });
 
   test('going offline and back online', { timeout: 2_000 }, async () => {
@@ -140,19 +140,19 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic = PublicKey.random();
-    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
+    const swarmKey = PublicKey.random().toHex();
+    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], swarmKey);
     await exchangeMessages(swarm1, swarm2);
 
     //
     // Going offline and back online
     //
     const connectionDropped = peer2._networkManager
-      .getSwarm(topic)
-      ?.disconnected.waitFor(({ peerKey }) => peer1.peerId.equals(peerKey!));
+      .getSwarm(swarmKey)
+      ?.disconnected.waitFor(({ peerKey }) => peer1.peerId === peerKey);
 
-    const peerLeft = peer2._signalManager.swarmEvent.waitFor(
-      (event) => !!event.peerLeft && peer1.peerId.equals(event.peerLeft.peer.peerKey),
+    const peerLeft = peer2._signalManager.swarmState.waitFor(
+      ({ peers }) => !peers?.some(({ peerKey }) => peer1.peerId === peerKey),
     );
 
     await peer1.goOffline();
@@ -161,7 +161,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     // Wait for peer to be removed from the swarm.
     await expect
-      .poll(() => !!peer2._networkManager.getSwarm(topic)!._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
+      .poll(() => !!peer2._networkManager.getSwarm(swarmKey)!._peers.get({ peerKey: peer1.peerId })?.advertizing, {
         timeout: 1_000,
       })
       .toBe(false);
@@ -169,18 +169,18 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await peer1.goOnline();
 
     await expect
-      .poll(() => peer1._networkManager.getSwarm(topic)?._peers.get({ peerKey: peer2.peerId.toHex() })?.advertizing, {
+      .poll(() => peer1._networkManager.getSwarm(swarmKey)!._peers.get({ peerKey: peer2.peerId })?.advertizing, {
         timeout: 2_000,
       })
       .toBe(true);
     await expect
-      .poll(() => peer2._networkManager.getSwarm(topic)?._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
+      .poll(() => peer2._networkManager.getSwarm(swarmKey)!._peers.get({ peerKey: peer1.peerId })?.advertizing, {
         timeout: 2_000,
       })
       .toBe(true);
 
     await exchangeMessages(swarm1, swarm2);
-    await leaveSwarm([peer1, peer2], topic);
+    await leaveSwarm([peer1, peer2], swarmKey);
   });
 
   // TODO(mykola): Fails with large amount of peers ~10.
@@ -192,13 +192,13 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await asyncTimeout(
       Promise.all(
         range(numTopics).map(async () => {
-          const topic = PublicKey.random();
+          const swarmKey = PublicKey.random().toHex();
 
           return Promise.all(
             range(peersPerTopic).map(async () => {
               const peer = testBuilder.createPeer();
               await openAndCloseAfterTest([peer]);
-              const swarm = peer.createSwarm(topic);
+              const swarm = peer.createSwarm(swarmKey);
 
               swarmsAllPeersConnected.push(
                 swarm.protocol.connected.waitFor(() => swarm.protocol.connections.size === peersPerTopic - 1),

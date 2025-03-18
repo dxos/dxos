@@ -3,7 +3,6 @@
 //
 
 import { asyncTimeout, Event } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TestExtension, TestExtensionWithStreams } from '@dxos/teleport';
 import type { TestStreamStats, TeleportExtension } from '@dxos/teleport';
@@ -19,14 +18,14 @@ export type TestTeleportExtension = {
 export type TestTeleportExtensionFactory = () => TestTeleportExtension[];
 
 export class TestWireProtocol {
-  public readonly connections = new ComplexMap<PublicKey, TestExtension>(PublicKey.hash);
-  public readonly streamConnections = new ComplexMap<PublicKey, TestExtensionWithStreams>(PublicKey.hash);
+  public readonly connections = new Map<string, TestExtension>();
+  public readonly streamConnections = new Map<string, TestExtensionWithStreams>();
 
-  public readonly connected = new Event<PublicKey>();
-  public readonly disconnected = new Event<PublicKey>();
+  public readonly connected = new Event<string>();
+  public readonly disconnected = new Event<string>();
 
-  public readonly otherConnections = new ComplexMap<{ remotePeerId: PublicKey; extension: string }, TeleportExtension>(
-    ({ remotePeerId, extension }) => remotePeerId.toHex() + extension,
+  public readonly otherConnections = new ComplexMap<{ remotePeerId: string; extension: string }, TeleportExtension>(
+    ({ remotePeerId, extension }) => remotePeerId + extension,
   );
 
   constructor(private readonly _extensionFactory: TestTeleportExtensionFactory = () => []) {}
@@ -59,26 +58,26 @@ export class TestWireProtocol {
     }
   });
 
-  async waitForConnection(peerId: PublicKey) {
+  async waitForConnection(peerId: string) {
     if (this.connections.has(peerId)) {
       return this.connections.get(peerId)!;
     }
     log('waitForConnection', { peerId });
     await asyncTimeout(
-      this.connected.waitFor((connectedId) => connectedId.equals(peerId)),
+      this.connected.waitFor((connectedId) => connectedId === peerId),
       // TODO(nf): Make this configurable.
       10_000,
     );
     return this.connections.get(peerId)!;
   }
 
-  async testConnection(peerId: PublicKey, message?: string) {
+  async testConnection(peerId: string, message?: string) {
     const connection = await this.waitForConnection(peerId);
     await connection.test(message);
   }
 
   async openStream(
-    peerId: PublicKey,
+    peerId: string,
     streamTag: string,
     streamLoadInterval: number,
     streamLoadChunkSize: number,
@@ -90,7 +89,7 @@ export class TestWireProtocol {
     return connection.addNewStream(streamLoadInterval, streamLoadChunkSize, streamTag);
   }
 
-  async closeStream(peerId: PublicKey, streamTag: string): Promise<TestStreamStats> {
+  async closeStream(peerId: string, streamTag: string): Promise<TestStreamStats> {
     if (!this.streamConnections.has(peerId)) {
       throw new Error('Connection does not exist.');
     }

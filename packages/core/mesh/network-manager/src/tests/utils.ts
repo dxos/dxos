@@ -5,7 +5,6 @@
 import { onTestFinished } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { type PublicKey } from '@dxos/keys';
 import { type Provider } from '@dxos/util';
 
 import { type TestPeer, type TestSwarmConnection } from '../testing';
@@ -28,8 +27,8 @@ export const openAndCloseAfterTest = async (peers: TestPeer[]) => {
 /**
  * Join and cleanly leave swarm.
  */
-export const joinSwarm = async (peers: TestPeer[], topic: PublicKey, topology?: Provider<Topology>) => {
-  const swarms = peers.map((peer) => peer.createSwarm(topic));
+export const joinSwarm = async (peers: TestPeer[], swarmKey: string, topology?: Provider<Topology>) => {
+  const swarms = peers.map((peer) => peer.createSwarm(swarmKey));
   await Promise.all(swarms.map((swarm) => swarm.join(topology?.())));
   await Promise.all(
     swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size >= 0)),
@@ -40,8 +39,8 @@ export const joinSwarm = async (peers: TestPeer[], topic: PublicKey, topology?: 
 /**
  * Cleanly leave swarm.
  */
-export const leaveSwarm = async (peers: TestPeer[], topic: PublicKey) => {
-  const swarms = peers.map((peer) => peer.getSwarm(topic));
+export const leaveSwarm = async (peers: TestPeer[], swarmKey: string) => {
+  const swarms = peers.map((peer) => peer.getSwarm(swarmKey));
   await Promise.all(swarms.map((swarm) => swarm.leave()));
   await Promise.all(
     swarms.map((swarm) => swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === 0)),

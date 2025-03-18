@@ -5,10 +5,8 @@
 import { DeferredTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError } from '@dxos/protocols';
-import { ComplexMap } from '@dxos/util';
 
 export const MAX_CONCURRENT_INITIATING_CONNECTIONS = 50;
 
@@ -25,9 +23,7 @@ export class ConnectionLimiter {
   /**
    * Queue of promises to resolve when initiating connections amount is below the limit.
    */
-  private readonly _waitingPromises = new ComplexMap<PublicKey, { resolve: () => void; reject: (err: Error) => void }>(
-    PublicKey.hash,
-  );
+  private readonly _waitingPromises = new Map<string, { resolve: () => void; reject: (err: Error) => void }>();
 
   resolveWaitingPromises = new DeferredTask(this._ctx, async () => {
     Array.from(this._waitingPromises.values())
@@ -44,7 +40,7 @@ export class ConnectionLimiter {
   /**
    * @returns Promise that resolves in queue when connections amount with 'CONNECTING' state is below the limit.
    */
-  async connecting(sessionId: PublicKey): Promise<void> {
+  async connecting(sessionId: string): Promise<void> {
     invariant(!this._waitingPromises.has(sessionId), 'Peer is already waiting for connection');
     log('waiting', { sessionId });
     await new Promise<void>((resolve, reject) => {
@@ -60,7 +56,7 @@ export class ConnectionLimiter {
   /**
    * Rejects promise returned by `connecting` method.
    */
-  doneConnecting(sessionId: PublicKey) {
+  doneConnecting(sessionId: string) {
     log('done', { sessionId });
     if (!this._waitingPromises.has(sessionId)) {
       return;

@@ -5,23 +5,25 @@
 import { asyncTimeout, type Event } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 
 import { PAYLOAD_1 } from './test-messages';
-import { type SignalMethods, type Message, type PeerInfo } from '../signal-methods';
+import { type Message, type PeerInfo } from '../signal-manager';
 
-export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
+export const expectPeerAvailable = (event: Event<SwarmResponse>, expectedTopic: string, peer: PeerInfo) =>
   asyncTimeout(
-    client.swarmEvent.waitFor(
-      ({ peerAvailable, topic }) =>
-        !!peerAvailable && peer.peerKey === peerAvailable.peer.peerKey && expectedTopic.equals(topic),
+    event.waitFor(
+      ({ swarmKey, peers }) =>
+        (!!swarmKey && swarmKey === expectedTopic && peers?.some((p) => p.peerKey === peer.peerKey)) ?? false,
     ),
     6000,
   );
 
-export const expectPeerLeft = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
+export const expectPeerLeft = (event: Event<SwarmResponse>, expectedTopic: string, peer: PeerInfo) =>
   asyncTimeout(
-    client.swarmEvent.waitFor(
-      ({ peerLeft, topic }) => !!peerLeft && peer.peerKey === peerLeft.peer.peerKey && expectedTopic.equals(topic),
+    event.waitFor(
+      ({ swarmKey, peers }) =>
+        (!!swarmKey && swarmKey === expectedTopic && peers?.some((p) => p.peerKey === peer.peerKey)) ?? false,
     ),
     6000,
   );

@@ -15,7 +15,6 @@ import "dxos/devtools/swarm.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/edge/messenger.proto";
-import "dxos/edge/signal.proto";
 import "dxos/error.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
@@ -530,14 +529,7 @@ enum ConnectionState {
 }
 
 message NetworkStatus {
-  message Signal {
-    string server = 1;
-    // TODO(burdon): Where is this defined?
-    dxos.mesh.signal.SignalState state = 2;
-  }
-
   ConnectionState swarm = 1;
-  repeated Signal signaling = 2;
   repeated dxos.devtools.swarm.SwarmInfo connection_info = 3;
 }
 
@@ -553,11 +545,11 @@ message SubscribeSwarmStateRequest {
 service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
-  rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
+  rpc JoinSwarm(dxos.mesh.signal.JoinRequest) returns (google.protobuf.Empty);
+  rpc LeaveSwarm(dxos.mesh.signal.LeaveRequest) returns (google.protobuf.Empty);
   rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
-  rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
-  rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
+  rpc SendMessage(dxos.mesh.signal.Message) returns (google.protobuf.Empty);
+  rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.mesh.signal.Message);
 }
 
 service EdgeAgentService {

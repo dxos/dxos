@@ -14,8 +14,7 @@ import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging'
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
-import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message } from './signal-methods';
+import { type SignalManager, type PeerInfo, type Message } from './signal-manager';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: Message) => Promise<void>;
@@ -177,7 +176,6 @@ export class Messenger {
   }): Promise<ListeningHandle> {
     invariant(!this._closed, 'Closed');
 
-    await this._signalManager.subscribeMessages(peer);
     let listeners: Set<OnMessage> | undefined;
     invariant(peer.peerKey, 'Peer key is required');
 

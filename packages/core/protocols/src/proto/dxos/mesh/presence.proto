@@ -16,8 +16,7 @@ message PeerState {
   /// Will be used to build network graph
   repeated dxos.keys.PublicKey connections = 1;
 
-  // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
-  dxos.keys.PublicKey identity_key = 2;
+  dxos.keys.PublicKey device_key = 2;
 
   /// Omitted when sent over the network.
   optional dxos.keys.PublicKey peer_id = 3;

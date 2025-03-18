@@ -101,9 +101,9 @@ export class RtcPeerConnection {
 
   public createTransportChannel(options: TransportOptions): RtcTransportChannel {
     const channel = new RtcTransportChannel(this, options);
-    this._transportChannels.set(options.topic, channel);
+    this._transportChannels.set(options.swarmKey, channel);
     channel.closed.on(() => {
-      this._transportChannels.delete(options.topic);
+      this._transportChannels.delete(options.swarmKey);
       if (this._transportChannels.size === 0) {
         this._lockAndCloseConnection();
       }
