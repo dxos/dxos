@@ -19,7 +19,7 @@ describe('Gossip', () => {
 
     const [messageReceived, inc] = latch({ count: 1 });
     agent2.gossip.listen('test_channel', (message) => {
-      expect(message.peerId.equals(agent1.peerId)).to.be.true;
+      expect(message.deviceKey.equals(agent1.peerId)).to.be.true;
       expect(message.channelId).to.equal('test_channel');
       inc();
     });
@@ -43,7 +43,7 @@ describe('Gossip', () => {
     // Check if first and third peers "see" each other.
     const [messageReceived, inc] = latch({ count: 1 });
     agent3.gossip.listen('test_channel', (message) => {
-      expect(message.peerId.equals(agent1.peerId)).to.be.true;
+      expect(message.deviceKey.equals(agent1.deviceKey)).to.be.true;
       expect(message.channelId).to.equal('test_channel');
       inc();
     });
@@ -67,13 +67,13 @@ describe('Gossip', () => {
     // Check if first and third peers "see" each other.
     const [messageReceived, inc] = latch({ count: 2 });
     agent3.gossip.listen('first', (message) => {
-      expect(message.peerId.equals(agent1.peerId)).to.be.true;
+      expect(message.deviceKey.equals(agent1.deviceKey)).to.be.true;
       expect(message.channelId).to.equal('first');
       inc();
     });
 
     agent3.gossip.listen('second', (message) => {
-      expect(message.peerId.equals(agent1.peerId)).to.be.true;
+      expect(message.deviceKey.equals(agent1.deviceKey)).to.be.true;
       expect(message.channelId).to.equal('second');
       inc();
     });

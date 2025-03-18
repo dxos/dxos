@@ -26,9 +26,9 @@ export type PresenceParams = {
   offlineTimeout: number;
 
   /**
-   * Identity key of the local peer.
+   * Halo device key of the local peer.
    */
-  identityKey: PublicKey; // TODO(mykola): Remove once IdentityKey can be obtained from DeviceKey.
+  deviceKey: PublicKey;
 
   gossip: Gossip;
 };
@@ -69,7 +69,7 @@ export class Presence extends Resource {
       async () => {
         const peerState: WithTypeUrl<PeerState> = {
           '@type': 'dxos.mesh.presence.PeerState',
-          identityKey: this._params.identityKey,
+          deviceKey: this._params.deviceKey,
           connections: this._params.gossip.getConnections(),
         };
         this._params.gossip.postMessage(PRESENCE_CHANNEL_ID, peerState);
@@ -121,37 +121,37 @@ export class Presence extends Resource {
 
   getLocalState(): PeerState {
     return {
-      identityKey: this._params.identityKey,
+      deviceKey: this._params.deviceKey,
       connections: this._params.gossip.getConnections(),
-      peerId: this._params.gossip.localPeerId,
+      peerId: this._params.gossip.deviceKey,
     };
   }
 
   private _receiveAnnounces(message: GossipMessage) {
     invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
-    const oldPeerState = this._peerStates.get(message.peerId);
+    const oldPeerState = this._peerStates.get(message.deviceKey);
     if (!oldPeerState || oldPeerState.timestamp.getTime() < message.timestamp.getTime()) {
       // Assign peer id to payload.
-      (message.payload as PeerState).peerId = message.peerId;
+      (message.payload as PeerState).peerId = message.deviceKey;
 
-      this._peerStates.set(message.peerId, message);
+      this._peerStates.set(message.deviceKey, message);
       this._updatePeerInIdentityKeyIndex(message);
       this.updated.emit();
     }
   }
 
   private _removePeerFromIdentityKeyIndex(peerState: GossipMessage) {
-    const identityPeerList = this._peersByIdentityKey.get((peerState.payload as PeerState).identityKey) ?? [];
-    const peerIdIndex = identityPeerList.findIndex((id) => id.peerId?.equals(peerState.peerId));
+    const identityPeerList = this._peersByIdentityKey.get((peerState.payload as PeerState).deviceKey) ?? [];
+    const peerIdIndex = identityPeerList.findIndex((identity) => identity.deviceKey?.equals(peerState.deviceKey));
     if (peerIdIndex >= 0) {
       identityPeerList.splice(peerIdIndex, 1);
     }
   }
 
   private _updatePeerInIdentityKeyIndex(newState: GossipMessage) {
-    const identityKey = (newState.payload as PeerState).identityKey;
+    const identityKey = (newState.payload as PeerState).deviceKey;
     const identityKeyPeers = this._peersByIdentityKey.get(identityKey) ?? [];
-    const existingIndex = identityKeyPeers.findIndex((p) => p.peerId && newState.peerId?.equals(p.peerId));
+    const existingIndex = identityKeyPeers.findIndex((p) => p.deviceKey && newState.deviceKey?.equals(p.deviceKey));
     if (existingIndex >= 0) {
       const oldState = identityKeyPeers.splice(existingIndex, 1, newState)[0];
       if (!this._isOnline(oldState)) {

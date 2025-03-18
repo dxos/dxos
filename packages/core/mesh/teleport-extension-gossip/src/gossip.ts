@@ -8,12 +8,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { ComplexMap, ComplexSet } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { GossipExtension } from './gossip-extension';
 
 export type GossipParams = {
-  localPeerId: PublicKey;
+  deviceKey: PublicKey;
 };
 
 const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
@@ -35,22 +35,22 @@ export class Gossip {
 
   private readonly _listeners = new Map<string, Set<(message: GossipMessage) => void>>();
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>(PublicKey.hash);
+  private readonly _receivedMessages = new Set<string>();
 
   /**
    * Keys scheduled to be cleared from _receivedMessages on the next iteration.
    */
-  private readonly _toClear = new ComplexSet<PublicKey>(PublicKey.hash);
+  private readonly _toClear = new Set<string>();
 
-  // remotePeerId -> PresenceExtension
+  // remote device key -> PresenceExtension
   private readonly _connections = new ComplexMap<PublicKey, GossipExtension>(PublicKey.hash);
 
   public readonly connectionClosed = new Event<PublicKey>();
 
   constructor(private readonly _params: GossipParams) {}
 
-  get localPeerId() {
-    return this._params.localPeerId;
+  get deviceKey() {
+    return this._params.deviceKey;
   }
 
   async open() {
@@ -72,7 +72,7 @@ export class Gossip {
     return Array.from(this._connections.keys());
   }
 
-  createExtension({ remotePeerId }: { remotePeerId: PublicKey }): GossipExtension {
+  createExtension({ remoteDeviceKey }: { remoteDeviceKey: PublicKey }): GossipExtension {
     const extension = new GossipExtension({
       onAnnounce: async (message) => {
         if (this._receivedMessages.has(message.messageId)) {
@@ -89,13 +89,13 @@ export class Gossip {
         });
       },
       onClose: async (err) => {
-        if (this._connections.has(remotePeerId)) {
-          this._connections.delete(remotePeerId);
+        if (this._connections.has(remoteDeviceKey)) {
+          this._connections.delete(remoteDeviceKey);
         }
-        this.connectionClosed.emit(remotePeerId);
+        this.connectionClosed.emit(remoteDeviceKey);
       },
     });
-    this._connections.set(remotePeerId, extension);
+    this._connections.set(remoteDeviceKey, extension);
 
     return extension;
   }
@@ -103,8 +103,8 @@ export class Gossip {
   postMessage(channel: string, payload: any) {
     for (const extension of this._connections.values()) {
       this._sendAnnounceWithTimeoutTracking(extension, {
-        peerId: this._params.localPeerId,
-        messageId: PublicKey.random(),
+        deviceKey: this._params.deviceKey,
+        messageId: PublicKey.random().toHex(),
         channelId: channel,
         timestamp: new Date(),
         payload,
@@ -147,8 +147,8 @@ export class Gossip {
 
   private _propagateAnnounce(message: GossipMessage) {
     return Promise.all(
-      [...this._connections.entries()].map(async ([remotePeerId, extension]) => {
-        if (this._params.localPeerId.equals(message.peerId) || remotePeerId.equals(message.peerId)) {
+      [...this._connections.entries()].map(async ([remoteDeviceKey, extension]) => {
+        if (this._params.deviceKey.equals(message.deviceKey) || remoteDeviceKey.equals(message.deviceKey)) {
           return;
         }
         return this._sendAnnounceWithTimeoutTracking(extension, message).catch((err) => log(err));

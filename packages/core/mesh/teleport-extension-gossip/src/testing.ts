@@ -11,7 +11,7 @@ import { Gossip } from './gossip';
 import { Presence } from './presence';
 
 export type TestAgentOptions = {
-  peerId?: PublicKey;
+  deviceKey?: PublicKey;
   announceInterval?: number;
   offlineTimeout?: number;
 };
@@ -19,24 +19,29 @@ export type TestAgentOptions = {
 export class TestAgent extends TestPeerBase {
   public readonly gossip: Gossip;
   public readonly presence: Presence;
+  public readonly deviceKey: PublicKey;
 
-  constructor({ peerId = PublicKey.random(), announceInterval = 25, offlineTimeout = 50 }: TestAgentOptions = {}) {
-    super(peerId);
+  constructor({ deviceKey = PublicKey.random(), announceInterval = 25, offlineTimeout = 50 }: TestAgentOptions = {}) {
+    super(deviceKey.toHex());
+    this.deviceKey = deviceKey;
     this.gossip = new Gossip({
-      localPeerId: peerId,
+      deviceKey,
     });
     void this.gossip.open();
     this.presence = new Presence({
       announceInterval,
       offlineTimeout,
-      identityKey: peerId,
+      deviceKey,
       gossip: this.gossip,
     });
     void this.presence.open();
   }
 
   override async onOpen(connection: TestConnection) {
-    const extension = this.gossip.createExtension({ remotePeerId: connection.teleport!.remotePeerId });
+    const extension = this.gossip.createExtension({
+      // TODO(leaky)
+      remoteDeviceKey: PublicKey.from(connection.teleport.remotePeerId),
+    });
     connection.teleport.addExtension('dxos.mesh.teleport.gossip', extension);
   }
 
@@ -44,8 +49,8 @@ export class TestAgent extends TestPeerBase {
     invariant(agents.length > 0, 'At least one agent is required.'); // We will wait for .updated event from the agent itself. And with zero connections it will never happen.
     return asyncTimeout(
       this.presence.updated.waitFor(() => {
-        const connections = this.presence.getPeersOnline().map((state) => state.identityKey.toHex());
-        const expectedConnections = agents.map((agent) => agent.peerId.toHex());
+        const connections = this.presence.getPeersOnline().map((state) => state.deviceKey.toHex());
+        const expectedConnections = agents.map((agent) => agent.deviceKey.toHex());
         return expectedConnections.every((value) => connections.includes(value));
       }),
       timeout,
