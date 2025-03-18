@@ -16,13 +16,13 @@ package dxos.mesh.swarm;
  */
 message SwarmMessage {
   /// Swarm identifier.
-  dxos.keys.PublicKey topic = 3;
+  string swarm_key = 1;
   /// Unique connection identifier.
-  dxos.keys.PublicKey session_id = 4;
+  string session_id = 2;
   /// Message payload.
-  MessageData data = 5;
+  MessageData data = 3;
   /// Unique message identifier. Used for ACK and matching Answers to Offers.
-  dxos.keys.PublicKey message_id = 6;
+  string message_id = 4;
 }
 
 message MessageData {
@@ -44,7 +44,7 @@ message Offer {
 message Answer {
   bool accept = 1;
   /// MessageId of the Offer being answered.
-  optional dxos.keys.PublicKey offer_message_id = 2;
+  optional string offer_message_id = 2;
 }
 
 //
