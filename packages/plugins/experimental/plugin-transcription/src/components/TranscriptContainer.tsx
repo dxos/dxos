@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState, type FC } from 'react';
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
 import { AIServiceEdgeClient, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
-import { create, getSpace, makeRef } from '@dxos/client/echo';
+import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -32,6 +32,7 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
   const edge = useEdgeClient();
   const ai = useAiServiceClient();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const attendableId = fullyQualifiedId(transcript);
 
   const queue = useQueue<TranscriptBlock>(edge, transcript.queue ? DXN.parse(transcript.queue) : undefined, {
     pollInterval: 1_000,
@@ -73,7 +74,7 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
         </Toolbar.Root>
       </StackItem.Heading>
       <ScrollContainer>
-        <Transcript blocks={queue?.items} />
+        <Transcript blocks={queue?.items} attendableId={attendableId} />
       </ScrollContainer>
     </StackItem.Content>
   );

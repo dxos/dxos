@@ -18,11 +18,9 @@ const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
   component: Transcript,
   render: (args) => (
-    <div className='flex w-[30rem] p-2'>
-      <ScrollContainer>
-        <Transcript {...args} />
-      </ScrollContainer>
-    </div>
+    <ScrollContainer classNames='is-[600px]'>
+      <Transcript {...args} />
+    </ScrollContainer>
   ),
   decorators: [
     withTheme,
@@ -59,7 +57,11 @@ export const Default: Story = {
         text: faker.lorem.paragraph(),
       })),
     })).reverse(),
+    ignoreAttention: true,
+    attendableId: 'story',
   },
 };
 
-export const Empty: Story = {};
+export const Empty: Story = {
+  args: { ignoreAttention: true, attendableId: 'story' },
+};
