@@ -162,6 +162,7 @@ export const Basic: Story = {
 export const SingleColumn: Story = {
   args: {
     id: 'story',
+    limitColumns: 1,
     columnDefault: {
       grid: {
         size: 180,
