@@ -9,6 +9,7 @@ export default [
     'en-US': {
       [translationKey]: {
         'fields label': 'Fields',
+        'hidden fields label': 'Hidden Fields',
 
         // TODO(burdon): Standardize field/property.
         'button add property': 'Add property',
