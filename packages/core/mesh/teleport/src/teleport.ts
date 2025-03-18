@@ -17,8 +17,8 @@ import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './
 
 export type TeleportParams = {
   initiator: boolean;
-  localPeerId: PublicKey;
-  remotePeerId: PublicKey;
+  localPeerId: string;
+  remotePeerId: string;
   controlHeartbeatInterval?: number;
   controlHeartbeatTimeout?: number;
 };
@@ -31,9 +31,9 @@ const CONTROL_HEARTBEAT_TIMEOUT = 60_000;
  */
 export class Teleport {
   public readonly initiator: boolean;
-  public readonly localPeerId: PublicKey;
-  public readonly remotePeerId: PublicKey;
-  public _sessionId?: PublicKey;
+  public readonly localPeerId: string;
+  public readonly remotePeerId: string;
+  public _sessionId?: string;
 
   private readonly _ctx = new Context({
     onError: (err) => {
@@ -61,8 +61,6 @@ export class Teleport {
 
   constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportParams) {
     invariant(typeof initiator === 'boolean');
-    invariant(PublicKey.isPublicKey(localPeerId));
-    invariant(PublicKey.isPublicKey(remotePeerId));
     this.initiator = initiator;
     this.localPeerId = localPeerId;
     this.remotePeerId = remotePeerId;
@@ -130,7 +128,7 @@ export class Teleport {
 
   @logInfo
   get sessionIdString(): string {
-    return this._sessionId ? this._sessionId.truncate() : 'none';
+    return this._sessionId ?? 'none';
   }
 
   get stream(): Duplex {
@@ -145,7 +143,7 @@ export class Teleport {
    * Blocks until the handshake is complete.
    */
 
-  async open(sessionId: PublicKey = PublicKey.random()) {
+  async open(sessionId: string = PublicKey.random().toHex()) {
     // invariant(sessionId);
     this._sessionId = sessionId;
     log('open');
@@ -282,8 +280,8 @@ export type ExtensionContext = {
    * One of the peers will be designated an initiator.
    */
   initiator: boolean;
-  localPeerId: PublicKey;
-  remotePeerId: PublicKey;
+  localPeerId: string;
+  remotePeerId: string;
   createStream(tag: string, opts?: CreateChannelOpts): Promise<Duplex>;
   createPort(tag: string, opts?: CreateChannelOpts): Promise<RpcPort>;
   close(err?: Error): void;

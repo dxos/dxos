@@ -53,12 +53,8 @@ export class TestBuilder {
     invariant(this._peers.has(peer1));
     invariant(this._peers.has(peer1));
 
-    const connection1 = Array.from(peer1.connections).find((connection) =>
-      connection.remotePeerId.equals(peer2.peerId),
-    );
-    const connection2 = Array.from(peer2.connections).find((connection) =>
-      connection.remotePeerId.equals(peer1.peerId),
-    );
+    const connection1 = Array.from(peer1.connections).find((connection) => connection.remotePeerId === peer2.peerId);
+    const connection2 = Array.from(peer2.connections).find((connection) => connection.remotePeerId === peer1.peerId);
 
     invariant(connection1);
     invariant(connection2);
@@ -70,12 +66,12 @@ export class TestBuilder {
 export class TestPeer {
   public readonly connections = new Set<TestConnection>();
 
-  constructor(public readonly peerId: PublicKey = PublicKey.random()) {}
+  constructor(public readonly peerId: string = PublicKey.random().toHex()) {}
 
   protected async onOpen(connection: TestConnection) {}
   protected async onClose(connection: TestConnection) {}
 
-  createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: PublicKey }) {
+  createConnection({ initiator, remotePeerId }: { initiator: boolean; remotePeerId: string }) {
     const connection = new TestConnection(this.peerId, remotePeerId, initiator);
     this.connections.add(connection);
     return connection;
@@ -83,7 +79,7 @@ export class TestPeer {
 
   async openConnection(connection: TestConnection) {
     invariant(this.connections.has(connection));
-    await connection.teleport.open(PublicKey.random());
+    await connection.teleport.open(PublicKey.random().toHex());
     await this.onOpen(connection);
   }
 
@@ -118,8 +114,8 @@ export class TestConnection {
   public teleport: Teleport;
 
   constructor(
-    public readonly localPeerId: PublicKey,
-    public readonly remotePeerId: PublicKey,
+    public readonly localPeerId: string,
+    public readonly remotePeerId: string,
     public readonly initiator: boolean,
   ) {
     this.teleport = new Teleport({
