@@ -310,6 +310,15 @@ export default (context: PluginsContext) =>
                     icon: 'ph--function--regular',
                   },
                 },
+                {
+                  id: Devtools.Edge.Traces,
+                  data: Devtools.Edge.Traces,
+                  type: DEVTOOLS_TYPE,
+                  properties: {
+                    label: ['traces label', { ns: DEBUG_PLUGIN }],
+                    icon: 'ph--line-segments--regular',
+                  },
+                },
               ],
             },
           ],
