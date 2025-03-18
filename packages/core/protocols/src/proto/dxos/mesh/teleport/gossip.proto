@@ -13,11 +13,12 @@ import "dxos/keys.proto";
 package dxos.mesh.teleport.gossip;
 
 message GossipMessage {
-  dxos.keys.PublicKey peer_id = 1;
+  /// Halo device key.
+  dxos.keys.PublicKey device_key = 5;
   /// Used to route different payload types to correct listeners.
   string channel_id = 2;
   /// Peer tracks what had been sent by message id.
-  dxos.keys.PublicKey message_id = 3;
+  string message_id = 3;
   google.protobuf.Timestamp timestamp = 4;
 
   google.protobuf.Any payload = 10;
