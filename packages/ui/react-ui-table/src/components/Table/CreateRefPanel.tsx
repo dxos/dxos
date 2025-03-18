@@ -17,7 +17,7 @@ export type CreateRefPanelProps = { model?: TableModel; modals: ModalController 
 // TODO(burdon): Factor out Space dependency (to plugin?)
 export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<CreateRefPanelProps>) => {
   const { id: gridId } = useGridContext('TableCellEditor', __gridScope);
-  const space = getSpace(model?.table);
+  const space = model?.space;
   const state = modals.state.value;
 
   const schema = useMemo<S.Schema<any> | undefined>(() => {
@@ -54,7 +54,7 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
     }
   }, [modals]);
 
-  if (!model?.table?.view || !model.projection) {
+  if (!model?.view || !model.projection) {
     return null;
   }
 

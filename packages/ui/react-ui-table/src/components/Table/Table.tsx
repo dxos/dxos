@@ -15,7 +15,7 @@ import React, {
 
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Filter } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
@@ -80,7 +80,7 @@ export type TableMainProps = {
 const TableMain = forwardRef<TableController, TableMainProps>(
   ({ model, presentation, ignoreAttention }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-    const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
+    const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
 
@@ -260,7 +260,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
       async ({ field, props }, text) => {
         if (model && props.referenceSchema && field.referencePath) {
-          const space = getSpace(model.table);
+          const space = model.space;
           invariant(space);
           const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
           if (schema) {
@@ -299,7 +299,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     }
 
     return (
-      <Grid.Root id={model.table.id ?? 'table-grid'}>
+      <Grid.Root id={model.id ?? 'table-grid'}>
         <TableCellEditor
           model={model}
           modals={modals}
@@ -313,7 +313,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           frozen={frozen}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
-          limitColumns={model.table.view?.target?.fields?.length ?? 0}
+          limitColumns={model.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}
           onKeyDown={handleKeyDown}

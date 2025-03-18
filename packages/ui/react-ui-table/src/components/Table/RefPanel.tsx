@@ -22,11 +22,11 @@ const getRefTargetObj = (space?: Space, id?: string) => {
 
 export const RefPanel = ({ model, modals }: RefPanelProps) => {
   const state = modals.state.value;
-  const space = getSpace(model.table);
+  const space = model?.space;
   const targetObj = getRefTargetObj(space, state?.type === 'refPanel' ? state.targetId : undefined);
   const schema = space && state?.type === 'refPanel' ? space.db.schemaRegistry.getSchema(state.typename) : undefined;
 
-  if (!model.table?.view || !model.projection) {
+  if (!model.view || !model.projection) {
     return null;
   }
 
