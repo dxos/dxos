@@ -409,7 +409,8 @@ export class DataSpaceManager extends Resource {
   private async _constructSpace(metadata: SpaceMetadata) {
     log('construct space', { metadata });
     const gossip = new Gossip({
-      localPeerId: this._signingContext.deviceKey,
+      localPeerId: this._signingContext.deviceKey.toHex(),
+      localDeviceKey: this._signingContext.deviceKey,
     });
     const presence = new Presence({
       announceInterval: this._runtimeParams?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
@@ -444,7 +445,8 @@ export class DataSpaceManager extends Resource {
             session.addExtension('dxos.mesh.teleport.admission-discovery', new CredentialServerExtension(space));
             session.addExtension(
               'dxos.mesh.teleport.gossip',
-              gossip.createExtension({ remotePeerId: session.remotePeerId }),
+              // TODO(mykola): Leaky, expects remote device key.
+              gossip.createExtension({ remoteDeviceKey: PublicKey.from(session.remotePeerId) }),
             );
             session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
             await this._connectEchoMeshReplicator(space, session);

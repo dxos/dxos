@@ -223,7 +223,7 @@ describe('RtcPeerTransportProxy', () => {
       const peer2 = await setupProxy({
         ownPeerKey: peer1.options.remotePeerKey,
         remotePeerKey: peer1.options.ownPeerKey,
-        topic: peer1.options.topic,
+        swarmKey: peer1.options.swarmKey,
         sendSignal: async (signal) => {
           await peer1.proxy.onSignal(signal);
         },
@@ -249,7 +249,7 @@ describe('RtcPeerTransportProxy', () => {
       const proxy2 = await createProxy(rpcClient, {
         ownPeerKey: proxy1.options.remotePeerKey,
         remotePeerKey: proxy1.options.ownPeerKey,
-        topic: proxy1.options.topic,
+        swarmKey: proxy1.options.swarmKey,
         sendSignal: async (signal) => {
           await proxy1.proxy.onSignal(signal);
         },
@@ -349,7 +349,7 @@ const createTransportOptions = (options: Partial<TransportOptions>): TransportOp
     sendSignal: async () => {},
     remotePeerKey: PublicKey.random().toHex(),
     ownPeerKey: PublicKey.random().toHex(),
-    topic: PublicKey.random().toHex(),
+    swarmKey: PublicKey.random().toHex(),
     ...options,
   };
 };

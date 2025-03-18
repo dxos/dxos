@@ -12,9 +12,9 @@ import { ConnectionLimiter } from './connection-limiter';
 describe('ConnectionLimiter', () => {
   function* setupPeers(
     limiter: ConnectionLimiter,
-  ): Generator<{ sessionId: PublicKey; connecting: () => Promise<void>; doneConnecting: () => void }> {
+  ): Generator<{ sessionId: string; connecting: () => Promise<void>; doneConnecting: () => void }> {
     while (true) {
-      const sessionId = PublicKey.random();
+      const sessionId = PublicKey.random().toHex();
       yield {
         sessionId,
         connecting: () => asyncTimeout(limiter.connecting(sessionId), 500),

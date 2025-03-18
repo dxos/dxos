@@ -72,7 +72,7 @@ export class RtcTransportService implements BridgeService {
 
       const transport = this._transportFactory.createTransport({
         initiator: request.initiator,
-        topic: request.topic,
+        swarmKey: request.swarmKey,
         ownPeerKey: request.ownPeerKey,
         remotePeerKey: request.remotePeerKey,
         stream: transportStream,

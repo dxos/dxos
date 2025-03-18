@@ -124,10 +124,10 @@ export class Connection {
   private _signallingDelay = STARTING_SIGNALLING_DELAY;
 
   constructor(
-    public readonly topic: PublicKey,
+    public readonly swarmKey: string,
     public readonly localInfo: PeerInfo,
     public readonly remoteInfo: PeerInfo,
-    public readonly sessionId: PublicKey,
+    public readonly sessionId: string,
     public readonly initiator: boolean,
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocol: WireProtocol,
@@ -135,8 +135,8 @@ export class Connection {
     private readonly _callbacks?: ConnectionCallbacks,
   ) {
     log.trace('dxos.mesh.connection.construct', {
+      swarmKey: this.swarmKey,
       sessionId: this.sessionId,
-      topic: this.topic,
       localPeer: this.localInfo,
       remotePeer: this.remoteInfo,
       initiator: this.initiator,
@@ -145,7 +145,7 @@ export class Connection {
 
   @logInfo
   get sessionIdString(): string {
-    return this.sessionId.truncate();
+    return this.sessionId;
   }
 
   get state() {
@@ -168,7 +168,7 @@ export class Connection {
     log.trace('dxos.mesh.connection.open-connection', trace.begin({ id: this._instanceId }));
     log.trace('dxos.mesh.connection.open', {
       sessionId: this.sessionId,
-      topic: this.topic,
+      swarmKey: this.swarmKey,
       localPeerId: this.localInfo,
       remotePeerId: this.remoteInfo,
       initiator: this.initiator,
@@ -203,7 +203,7 @@ export class Connection {
     this._transport = this._transportFactory.createTransport({
       ownPeerKey: this.localInfo.peerKey,
       remotePeerKey: this.remoteInfo.peerKey,
-      topic: this.topic.toHex(),
+      swarmKey: this.swarmKey,
       initiator: this.initiator,
       stream: this._protocol.stream,
       sendSignal: async (signal) => this._sendSignal(signal),
@@ -377,7 +377,7 @@ export class Connection {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
-        topic: this.topic,
+        swarmKey: this.swarmKey,
         data: { signalBatch: { signals } },
       });
     } catch (err) {
@@ -401,7 +401,7 @@ export class Connection {
    */
   async signal(msg: SignalMessage) {
     invariant(msg.sessionId);
-    if (!msg.sessionId.equals(this.sessionId)) {
+    if (msg.sessionId !== this.sessionId) {
       log('dropping signal for incorrect session id');
       return;
     }

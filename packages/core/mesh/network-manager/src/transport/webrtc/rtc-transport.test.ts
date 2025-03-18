@@ -115,7 +115,7 @@ describe('RtcTransport', () => {
       {
         ownPeerKey: peer1.options.remotePeerKey,
         remotePeerKey: peer1.options.ownPeerKey,
-        topic: peer1.options.topic,
+        swarmKey: peer1.options.swarmKey,
         sendSignal: peer2Signal.sendSignal,
       },
       peer1Signal.onChannelCreated,
@@ -173,7 +173,7 @@ describe('RtcTransport', () => {
       sendSignal: async () => {},
       remotePeerKey,
       ownPeerKey,
-      topic: PublicKey.random().toHex(),
+      swarmKey: PublicKey.random().toHex(),
       ...optionOverrides,
     };
     const connection = new RtcPeerConnection(connectionFactory, options);

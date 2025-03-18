@@ -47,7 +47,7 @@ export class RtcTransportProxy extends Resource implements Transport {
           proxyId: this._proxyId,
           remotePeerKey: this._options.remotePeerKey,
           ownPeerKey: this._options.ownPeerKey,
-          topic: this._options.topic,
+          swarmKey: this._options.swarmKey,
           initiator: this._options.initiator ?? false,
         },
         { timeout: RPC_TIMEOUT },

@@ -401,7 +401,8 @@ export class IdentityManager {
       onAuthorizedConnection: (session) => {
         session.addExtension(
           'dxos.mesh.teleport.gossip',
-          gossip.createExtension({ remotePeerId: session.remotePeerId }),
+          // TODO(mykola): Leaky, expects remote device key.
+          gossip.createExtension({ remoteDeviceKey: PublicKey.from(session.remotePeerId) }),
         );
       },
       onAuthFailure: () => {

@@ -23,7 +23,7 @@ export const propertyTestSuite = () => {
      * The simplified model of the system.
      */
     interface Model {
-      topic: PublicKey;
+      swarmKey: string;
       peers: ComplexSet<PublicKey>;
       joinedPeers: ComplexSet<PublicKey>;
     }
@@ -61,8 +61,8 @@ export const propertyTestSuite = () => {
       // }, 5_000);
 
       real.peers.forEach((peer) =>
-        peer.networkManager.topics.forEach((topic) => {
-          peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
+        peer.networkManager.swarmKeys.forEach((swarmKey) => {
+          peer.networkManager.getSwarm(swarmKey)!.errors.assertNoUnhandledErrors();
         }),
       );
     };
@@ -124,7 +124,7 @@ export const propertyTestSuite = () => {
             peerKey: this.peerId.toHex(),
             identityKey: this.peerId.toHex(),
           },
-          topic: model.topic,
+          swarmKey: model.swarmKey,
           protocolProvider: todo(),
           topology: new FullyConnectedTopology(),
           // presence
@@ -146,7 +146,7 @@ export const propertyTestSuite = () => {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;
-        await peer.networkManager.leaveSwarm(model.topic);
+        await peer.networkManager.leaveSwarm(model.swarmKey);
         peer.presence = undefined;
 
         await assertState(model, real);
@@ -169,7 +169,7 @@ export const propertyTestSuite = () => {
       fc.asyncProperty(fc.commands(allCommands, { maxCommands: 30 }), async (cmds) => {
         const setup: ModelRunSetup<Model, Real> = () => ({
           model: {
-            topic: PublicKey.random(),
+            swarmKey: PublicKey.random().toHex(),
             peers: new ComplexSet(PublicKey.hash),
             joinedPeers: new ComplexSet(PublicKey.hash),
           },

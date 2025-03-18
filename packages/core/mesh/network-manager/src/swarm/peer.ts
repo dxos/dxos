@@ -93,7 +93,7 @@ export class Peer {
 
   constructor(
     public readonly remoteInfo: PeerInfo,
-    public readonly topic: PublicKey,
+    public readonly swarmKey: string,
     public readonly localInfo: PeerInfo,
     private readonly _signalMessaging: SignalMessenger,
     private readonly _protocolProvider: WireProtocolProvider,
@@ -123,7 +123,7 @@ export class Peer {
         // TODO(nf): Gets stuck when remote connection is aborted (i.e. closed tab).
         log('close local connection', {
           localPeer: this.localInfo,
-          topic: this.topic,
+          swarmKey: this.swarmKey,
           remotePeer: this.remoteInfo,
           sessionId: this.connection?.sessionId,
         });
@@ -151,7 +151,12 @@ export class Peer {
           await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
-            log.info('connection error', { topic: this.topic, peerId: this.localInfo, remoteId: this.remoteInfo, err });
+            log.info('connection error', {
+              swarmKey: this.swarmKey,
+              peerId: this.localInfo,
+              remoteId: this.remoteInfo,
+              err,
+            });
           }
 
           // Calls `onStateChange` with CLOSED state.
@@ -170,8 +175,8 @@ export class Peer {
   async initiateConnection() {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
-    const sessionId = PublicKey.random();
-    log('initiating...', { local: this.localInfo, topic: this.topic, remote: this.remoteInfo, sessionId });
+    const sessionId = PublicKey.random().toHex();
+    log('initiating...', { local: this.localInfo, swarmKey: this.swarmKey, remote: this.remoteInfo, sessionId });
 
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;
@@ -185,16 +190,21 @@ export class Peer {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId,
-        topic: this.topic,
+        swarmKey: this.swarmKey,
         data: { offer: {} },
       });
-      log('received', { answer, topic: this.topic, local: this.localInfo, remote: this.remoteInfo });
+      log('received', { answer, swarmKey: this.swarmKey, local: this.localInfo, remote: this.remoteInfo });
       if (connection.state !== ConnectionState.INITIAL) {
         log('ignoring response');
         return;
       }
     } catch (err: any) {
-      log('initiation error: send offer', { err, topic: this.topic, local: this.localInfo, remote: this.remoteInfo });
+      log('initiation error: send offer', {
+        err,
+        swarmKey: this.swarmKey,
+        local: this.localInfo,
+        remote: this.remoteInfo,
+      });
       await connection.abort(err);
       throw err;
     } finally {
@@ -209,7 +219,7 @@ export class Peer {
     } catch (err: any) {
       log('initiation error: accept answer', {
         err,
-        topic: this.topic,
+        swarmKey: this.swarmKey,
         local: this.localInfo,
         remote: this.remoteInfo,
       });
@@ -226,7 +236,7 @@ export class Peer {
     } catch (err: any) {
       log('initiation error: open connection', {
         err,
-        topic: this.topic,
+        swarmKey: this.swarmKey,
         local: this.localInfo,
         remote: this.remoteInfo,
       });
@@ -244,9 +254,9 @@ export class Peer {
    * Create new connection.
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
-  private _createConnection(initiator: boolean, sessionId: PublicKey) {
+  private _createConnection(initiator: boolean, sessionId: string) {
     log('creating connection', {
-      topic: this.topic,
+      swarmKey: this.swarmKey,
       peerId: this.localInfo,
       remoteId: this.remoteInfo,
       initiator,
@@ -255,7 +265,7 @@ export class Peer {
     invariant(!this.connection, 'Already connected.');
 
     const connection = new Connection(
-      this.topic,
+      this.swarmKey,
       this.localInfo,
       this.remoteInfo,
       sessionId,
@@ -264,9 +274,9 @@ export class Peer {
       // TODO(dmaretskyi): Init only when connection is established.
       this._protocolProvider({
         initiator,
-        localPeerId: PublicKey.from(this.localInfo.peerKey),
-        remotePeerId: PublicKey.from(this.remoteInfo.peerKey),
-        topic: this.topic,
+        localPeerId: this.localInfo.peerKey,
+        remotePeerId: this.remoteInfo.peerKey,
+        swarmKey: this.swarmKey,
       }),
       this._transportFactory,
       {
@@ -277,7 +287,7 @@ export class Peer {
 
           this._connectionLimiter.doneConnecting(sessionId);
           log.trace('dxos.mesh.connection.connected', {
-            topic: this.topic,
+            swarmKey: this.swarmKey,
             localPeerId: this.localInfo,
             remotePeerId: this.remoteInfo,
             sessionId,
@@ -285,7 +295,7 @@ export class Peer {
           });
         },
         onClosed: (err) => {
-          const logMeta = { topic: this.topic, peerId: this.localInfo, remoteId: this.remoteInfo, initiator };
+          const logMeta = { swarmKey: this.swarmKey, peerId: this.localInfo, remoteId: this.remoteInfo, initiator };
           log('connection closed', logMeta);
 
           // Make sure none of the connections are stuck in the limiter.
@@ -294,7 +304,7 @@ export class Peer {
           invariant(this.connection === connection, 'Connection mismatch (race condition).');
 
           log.trace('dxos.mesh.connection.closed', {
-            topic: this.topic,
+            swarmKey: this.swarmKey,
             localPeerId: this.localInfo,
             remotePeerId: this.remoteInfo,
             sessionId,
@@ -336,14 +346,14 @@ export class Peer {
 
     connection.errors.handle((err) => {
       log.info('connection error, closing', {
-        topic: this.topic,
+        swarmKey: this.swarmKey,
         peerId: this.localInfo,
         remoteId: this.remoteInfo,
         initiator,
         err,
       });
       log.trace('dxos.mesh.connection.error', {
-        topic: this.topic,
+        swarmKey: this.swarmKey,
         localPeerId: this.localInfo,
         remotePeerId: this.remoteInfo,
         sessionId,
@@ -388,7 +398,7 @@ export class Peer {
   @synchronized
   async safeDestroy(reason?: Error) {
     await this._ctx.dispose();
-    log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
+    log('Destroying peer', { peerId: this.remoteInfo, swarmKey: this.swarmKey });
 
     // Won't throw.
     await this?.connection?.close(reason);

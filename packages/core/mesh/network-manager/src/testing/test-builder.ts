@@ -4,17 +4,10 @@
 
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  type SignalManager,
-  WebsocketSignalManager,
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { schema } from '@dxos/protocols/proto';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
-import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
@@ -24,14 +17,8 @@ import { MemoryTransportFactory, type TransportFactory, TransportKind } from '..
 import { createRtcTransportFactory, RtcTransportProxyFactory, RtcTransportService } from '../transport';
 
 // Signal server will be started by the setup script.
-const port = process.env.SIGNAL_PORT ?? 4000;
-export const TEST_SIGNAL_HOSTS: Runtime.Services.Signal[] = [
-  { server: `ws://localhost:${port}/.well-known/dx/signal` },
-];
 
 export type TestBuilderOptions = {
-  signalHosts?: Runtime.Services.Signal[];
-  bridge?: boolean;
   transport?: TransportKind;
 };
 
@@ -44,14 +31,10 @@ export class TestBuilder {
   constructor(public readonly options: TestBuilderOptions = {}) {}
 
   createSignalManager() {
-    if (this.options.signalHosts) {
-      return new WebsocketSignalManager(this.options.signalHosts);
-    }
-
     return new MemorySignalManager(this._signalContext);
   }
 
-  createPeer(peerId: PublicKey = PublicKey.random()) {
+  createPeer(peerId: string = PublicKey.random().toHex()) {
     return new TestPeer(this, peerId, this.options.transport);
   }
 }
@@ -60,7 +43,7 @@ export class TestBuilder {
  * Testing network peer.
  */
 export class TestPeer {
-  private readonly _swarms = new ComplexMap<PublicKey, TestSwarmConnection>(PublicKey.hash);
+  private readonly _swarms = new Map<string, TestSwarmConnection>();
 
   /**
    * @internal
@@ -77,70 +60,61 @@ export class TestPeer {
 
   constructor(
     private readonly testBuilder: TestBuilder,
-    public readonly peerId: PublicKey,
-    public readonly transport: TransportKind = testBuilder.options.signalHosts
-      ? TransportKind.WEB_RTC
-      : TransportKind.MEMORY,
+    public readonly peerId: string,
+    public readonly transport: TransportKind = TransportKind.MEMORY,
   ) {
     this._signalManager = this.testBuilder.createSignalManager();
     this._networkManager = this.createNetworkManager(this.transport);
-    this._networkManager.setPeerInfo({ identityKey: peerId.toHex(), peerKey: peerId.toHex() });
+    this._networkManager.setPeerInfo({ identityKey: this.peerId, peerKey: this.peerId });
   }
 
   // TODO(burdon): Move to TestBuilder.
   createNetworkManager(transport: TransportKind) {
     let transportFactory: TransportFactory;
-    if (this.testBuilder.options.signalHosts) {
-      log.info(`using ${transport} transport with signal server.`);
-      switch (transport) {
-        case TransportKind.MEMORY:
-          throw new Error('Memory transport not supported with signal server.');
-        case TransportKind.TCP:
-          transportFactory = TcpTransportFactory;
-          break;
-        case TransportKind.WEB_RTC:
-          transportFactory = createRtcTransportFactory();
-          break;
-        case TransportKind.WEB_RTC_PROXY:
-          {
-            // Simulates bridge to shared worker.
-            const [proxyPort, servicePort] = createLinkedPorts();
+    log.info(`using ${transport} transport with signal server.`);
+    switch (transport) {
+      case TransportKind.MEMORY:
+        transportFactory = MemoryTransportFactory;
+        break;
+      case TransportKind.TCP:
+        transportFactory = TcpTransportFactory;
+        break;
+      case TransportKind.WEB_RTC:
+        transportFactory = createRtcTransportFactory();
+        break;
+      case TransportKind.WEB_RTC_PROXY:
+        {
+          // Simulates bridge to shared worker.
+          const [proxyPort, servicePort] = createLinkedPorts();
 
-            this._proxy = createProtoRpcPeer({
-              port: proxyPort,
-              requested: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
-              noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
-            });
+          this._proxy = createProtoRpcPeer({
+            port: proxyPort,
+            requested: {
+              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+            },
+            noHandshake: true,
+            encodingOptions: {
+              preserveAny: true,
+            },
+          });
 
-            this._service = createProtoRpcPeer({
-              port: servicePort,
-              exposed: {
-                BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
-              },
-              handlers: { BridgeService: new RtcTransportService() },
-              noHandshake: true,
-              encodingOptions: {
-                preserveAny: true,
-              },
-            });
+          this._service = createProtoRpcPeer({
+            port: servicePort,
+            exposed: {
+              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+            },
+            handlers: { BridgeService: new RtcTransportService() },
+            noHandshake: true,
+            encodingOptions: {
+              preserveAny: true,
+            },
+          });
 
-            transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
-          }
-          break;
-        default:
-          throw new Error(`Unsupported transport: ${transport}`);
-      }
-    } else {
-      if (transport !== TransportKind.MEMORY && transport !== TransportKind.TCP) {
-        log.warn(`specified transport ${transport} but no signalling configured, using memory transport instead`);
-      }
-      log.info(`using ${transport} transport without signal server.`);
-      transportFactory = MemoryTransportFactory;
+          transportFactory = new RtcTransportProxyFactory().setBridgeService(this._proxy.rpc.BridgeService);
+        }
+        break;
+      default:
+        throw new Error(`Unsupported transport: ${transport}`);
     }
 
     return new SwarmNetworkManager({
@@ -164,23 +138,23 @@ export class TestPeer {
     await this._networkManager.close();
   }
 
-  getSwarm(topic: PublicKey): TestSwarmConnection {
-    const swarm = this._swarms.get(topic);
+  getSwarm(swarmKey: string): TestSwarmConnection {
+    const swarm = this._swarms.get(swarmKey);
     if (!swarm) {
-      throw new Error(`Swarm not found for topic: ${topic}`);
+      throw new Error(`Swarm not found for swarmKey: ${swarmKey}`);
     }
 
     return swarm;
   }
 
-  createSwarm(topic: PublicKey, extensionFactory: TestTeleportExtensionFactory = () => []): TestSwarmConnection {
+  createSwarm(swarmKey: string, extensionFactory: TestTeleportExtensionFactory = () => []): TestSwarmConnection {
     // TODO(burdon): Multiple.
     // if (this._swarms.get(topic)) {
     //   throw new Error(`Swarm already exists for topic: ${topic.truncate()}`);
     // }
 
-    const swarm = new TestSwarmConnection(this, topic, extensionFactory);
-    this._swarms.set(topic, swarm);
+    const swarm = new TestSwarmConnection(this, swarmKey, extensionFactory);
+    this._swarms.set(swarmKey, swarm);
     return swarm;
   }
 
@@ -199,7 +173,7 @@ export class TestSwarmConnection {
 
   constructor(
     readonly peer: TestPeer,
-    readonly topic: PublicKey,
+    readonly swarmKey: string,
     readonly extensionFactory: TestTeleportExtensionFactory,
   ) {
     // TODO(burdon): Configure plugins.
@@ -211,8 +185,8 @@ export class TestSwarmConnection {
   //  If so, then perhaps joinSwarm should return swarm object with access to plugins.
   async join(topology = new FullyConnectedTopology()) {
     await this.peer._networkManager.joinSwarm({
-      topic: this.topic,
-      peerInfo: { peerKey: this.peer.peerId.toHex(), identityKey: this.peer.peerId.toHex() },
+      swarmKey: this.swarmKey,
+      peerInfo: { peerKey: this.peer.peerId, identityKey: this.peer.peerId },
       protocolProvider: this.protocol.factory,
       topology,
     });
@@ -221,7 +195,7 @@ export class TestSwarmConnection {
   }
 
   async leave() {
-    await this.peer._networkManager.leaveSwarm(this.topic);
+    await this.peer._networkManager.leaveSwarm(this.swarmKey);
     return this;
   }
 }

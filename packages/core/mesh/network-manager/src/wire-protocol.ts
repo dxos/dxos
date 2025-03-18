@@ -4,14 +4,13 @@
 
 import { type Duplex } from 'node:stream';
 
-import { type PublicKey } from '@dxos/keys';
 import { Teleport, type TeleportParams } from '@dxos/teleport';
 
 export type WireProtocolParams = {
   initiator: boolean;
-  localPeerId: PublicKey;
-  remotePeerId: PublicKey;
-  topic: PublicKey;
+  localPeerId: string;
+  remotePeerId: string;
+  swarmKey: string;
 };
 
 export type WireProtocolProvider = (params: WireProtocolParams) => WireProtocol;
@@ -23,7 +22,7 @@ export type WireProtocolProvider = (params: WireProtocolParams) => WireProtocol;
 export interface WireProtocol {
   stream: Duplex;
 
-  open(sessionId?: PublicKey): Promise<void>;
+  open(sessionId?: string): Promise<void>;
   close(): Promise<void>;
   abort(): Promise<void>;
 }
@@ -42,7 +41,7 @@ export const createTeleportProtocolFactory = (
     const teleport = new Teleport({ ...defaultParams, ...params });
     return {
       stream: teleport.stream,
-      open: async (sessionId?: PublicKey) => {
+      open: async (sessionId?: string) => {
         await teleport.open(sessionId);
         await onConnection(teleport);
       },

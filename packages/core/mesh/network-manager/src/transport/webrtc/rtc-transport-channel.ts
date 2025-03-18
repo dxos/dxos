@@ -56,7 +56,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     invariant(!this._isChannelCreationInProgress);
     this._isChannelCreationInProgress = true;
     this._connection
-      .createDataChannel(this._options.topic)
+      .createDataChannel(this._options.swarmKey)
       .then((channel) => {
         if (this.isOpen) {
           this._channel = channel;
@@ -96,7 +96,7 @@ export class RtcTransportChannel extends Resource implements Transport {
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
       onopen: () => {
         if (!this.isOpen) {
-          log.warn('channel opened in a closed transport', { topic: this._options.topic });
+          log.warn('channel opened in a closed transport', { swarmKey: this._options.swarmKey });
           this._safeCloseChannel(channel);
           return;
         }
@@ -196,7 +196,7 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   async getStats(): Promise<TransportStats> {
-    return createRtcTransportStats(this._connection.currentConnection, this._options.topic);
+    return createRtcTransportStats(this._connection.currentConnection, this._options.swarmKey);
   }
 }
 

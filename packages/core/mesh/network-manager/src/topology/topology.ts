@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type PublicKey } from '@dxos/keys';
-
 export interface SwarmController {
   /**
    * Get current state.
@@ -13,34 +11,34 @@ export interface SwarmController {
   /**
    * Initiate a connection.
    */
-  connect(peer: PublicKey): void;
+  connect(peer: string): void;
 
   /**
    * Disconnect from a peer.
    */
-  disconnect(peer: PublicKey): void;
+  disconnect(peer: string): void;
 }
 
 export interface SwarmState {
   /**
    * This node's peer Id.
    */
-  ownPeerId: PublicKey;
+  ownPeerId: string;
 
   /**
    * Peers with established connections.
    */
-  connected: PublicKey[];
+  connected: string[];
 
   /**
    * Candidates for connection. Does not intersect with a set of already connected peers.
    */
-  candidates: PublicKey[];
+  candidates: string[];
 
   /**
    * All peers in the swarm, including candidates, connected peers and those we have connection timeout with.
    */
-  allPeers: PublicKey[];
+  allPeers: string[];
 }
 
 export interface Topology {
@@ -59,7 +57,7 @@ export interface Topology {
    * Called when remote peer offers a connection.
    * @returns true - to accept the connection, false - to reject.
    */
-  onOffer(peer: PublicKey): Promise<boolean>;
+  onOffer(peer: string): Promise<boolean>;
 
   /**
    * Called when swarm is destroyed or topology is changed.

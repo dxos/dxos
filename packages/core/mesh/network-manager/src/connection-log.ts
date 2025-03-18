@@ -40,8 +40,8 @@ export class ConnectionLog {
 
   joinedSwarm(swarm: Swarm) {
     const info: SwarmInfo = {
-      id: PublicKey.from(swarm._instanceId),
-      topic: swarm.topic,
+      id: swarm._instanceId,
+      swarmKey: swarm.key,
       isActive: true,
       label: swarm.label,
       connections: [],
@@ -54,7 +54,7 @@ export class ConnectionLog {
       const connectionInfo: ConnectionInfo = {
         state: ConnectionState.CREATED,
         closeReason: connection.closeReason,
-        remotePeerId: PublicKey.from(connection.remoteInfo.peerKey),
+        remotePeerId: connection.remoteInfo.peerKey,
         sessionId: connection.sessionId,
         transport: connection.transport && Object.getPrototypeOf(connection.transport).constructor.name,
         protocolExtensions: [], // TODO(dmaretskyi): Fix.
