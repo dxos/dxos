@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleMicroTask } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { cancelWithContext, Resource } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -16,14 +16,17 @@ import {
   SwarmResponseSchema,
   type Message as EdgeMessage,
   type PeerSchema,
-  type SwarmResponse,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
 import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash } from '../signal-methods';
 
 export class EdgeSignalManager extends Resource implements SignalManager {
+  /**
+   * @deprecated
+   */
   public swarmEvent = new Event<SwarmEvent>();
   public swarmState = new Event<SwarmResponse>();
   public onMessage = new Event<Message>();
@@ -92,6 +95,26 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
   }
 
+  async query({ topic }: { topic: PublicKey }): Promise<SwarmResponse> {
+    const response = cancelWithContext(
+      this._ctx,
+      this.swarmState.waitFor((state) => state.swarmKey === topic.toHex()),
+    );
+
+    await this._edgeConnection.send(
+      protocol.createMessage(SwarmRequestSchema, {
+        serviceId: EdgeService.SWARM,
+        source: createMessageSource(topic, {
+          peerKey: this._edgeConnection.peerKey,
+          identityKey: this._edgeConnection.identityKey,
+        }),
+        payload: { action: SwarmRequestAction.INFO, swarmKeys: [topic.toHex()] },
+      }),
+    );
+
+    return response;
+  }
+
   async sendMessage(message: Message): Promise<void> {
     if (!this._matchSelfPeerInfo(message.author)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
@@ -137,9 +160,9 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this.swarmState.emit(payload);
     const topic = PublicKey.from(payload.swarmKey);
     if (!this._swarmPeers.has(topic)) {
-      log.warn('Received message from wrong topic', { topic });
       return;
     }
+
     const { joinedPeers: oldPeers } = this._swarmPeers.get(topic)!;
     const timestamp = message.timestamp ? new Date(Date.parse(message.timestamp)) : new Date();
     const newPeers = new ComplexSet<PeerInfo>(PeerInfoHash, payload.peers);

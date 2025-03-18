@@ -555,6 +555,10 @@ service NetworkService {
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
   rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
+  /**
+   * Query the swarm state without joining it.
+   */ 
+  rpc QuerySwarm(dxos.edge.signal.QueryRequest) returns (dxos.edge.messenger.SwarmResponse);
   rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
   rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
   rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
