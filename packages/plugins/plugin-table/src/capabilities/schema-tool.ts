@@ -5,20 +5,10 @@
 import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
 
 import { defineTool, ToolResult } from '@dxos/artifact';
-import {
-  FormatEnum,
-  FormatEnums,
-  formatToType,
-  S,
-  TypedObject,
-  TypeEnum,
-  SelectOptionSchema,
-  GeoPoint,
-  toJsonSchema,
-} from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, S, SelectOptionSchema, GeoPoint, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
-import { makeSingleSelectAnnotations } from '@dxos/schema';
+import { echoSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 // TODO(ZaymonFC): Move this somewhere common.
 export const TypeNameSchema = S.String.pipe(
@@ -113,37 +103,8 @@ export const schemaTools = [
       invariant(extensions?.space, 'No space.');
       const space = extensions.space;
 
-      const typeToSchema: Record<TypeEnum, S.Any> = {
-        [TypeEnum.String]: S.String.pipe(S.optional),
-        [TypeEnum.Number]: S.Number.pipe(S.optional),
-        [TypeEnum.Boolean]: S.Boolean.pipe(S.optional),
-        [TypeEnum.Object]: S.Object.pipe(S.optional),
-        [TypeEnum.Ref]: S.String.pipe(S.optional), // TODO(burdon): Is this correct for refs?
-      };
-
-      // TODO(ZaymonFC): It would be better to construct the full JSON schema here, formats and all.
-      //   This way we are falling back to the primitive type only.
-      const fields: any = Object.fromEntries(
-        properties.map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
-      );
-
-      const schema = TypedObject({ typename, version: '0.1.0' })(fields);
+      const schema = echoSchemaFromPropertyDefinitions(typename, properties);
       const [registeredSchema] = await space.db.schemaRegistry.register([schema]);
-
-      // TODO(ZaymonFC): This is a temporary workaround.
-      //   We should consolidate schema manipulation logic between here and the ViewProjection.
-      //   Currently this just implements the SingleSelect format, but we need to extend this
-      //   to all formats.
-      for (const prop of properties) {
-        if (prop.format === FormatEnum.SingleSelect && prop.config?.options) {
-          makeSingleSelectAnnotations(registeredSchema.jsonSchema.properties![prop.name], [...prop.config.options]);
-        }
-
-        if (prop.format === FormatEnum.GeoPoint) {
-          registeredSchema.jsonSchema.properties![prop.name].format = FormatEnum.GeoPoint;
-          registeredSchema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
-        }
-      }
 
       return ToolResult.Success(registeredSchema);
     },
