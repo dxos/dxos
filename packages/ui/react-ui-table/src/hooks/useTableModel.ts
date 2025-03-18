@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { useEffect, useState } from 'react';
 
-import { type ReactiveObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, type ReactiveObject } from '@dxos/react-client/echo';
 import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -33,7 +33,13 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new TableModel<T>({ table, projection, ...props });
+      model = new TableModel<T>({
+        id: fullyQualifiedId(table),
+        space: getSpace(table),
+        view: table.view?.target,
+        projection,
+        ...props,
+      });
       await model.open();
       setModel(model);
     });
@@ -42,7 +48,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection]); // TODO(burdon): Trigger if callbacks change?
+  }, [table, projection, table?.view?.target]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
