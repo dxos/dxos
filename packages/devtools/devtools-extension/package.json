@@ -45,7 +45,7 @@
     "@types/react-dom": "~18.2.0",
     "@types/webextension-polyfill": "^0.10.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "body-parser": "1.19.0",
+    "body-parser": "1.20.3",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
     "crx": "^5.0.1",
