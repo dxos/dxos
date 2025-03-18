@@ -70,6 +70,12 @@ export class ViewType extends TypedObject({
   fields: S.mutable(S.Array(FieldSchema)),
 
   /**
+   * Array of fields that are part of the view's schema but hidden from UI display.
+   * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
+   */
+  hiddenFields: S.optional(S.mutable(S.Array(FieldSchema))),
+
+  /**
    * Additional metadata for the view.
    */
   metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),

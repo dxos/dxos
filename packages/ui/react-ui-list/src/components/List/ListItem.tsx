@@ -202,18 +202,30 @@ export const ListItemDeleteButton = ({
   autoHide = true,
   classNames,
   disabled,
+  icon = 'ph--x--regular',
   ...props
-}: Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
+}: Partial<Pick<IconButtonProps, 'icon'>> & Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
   const { state } = useListContext('DELETE_BUTTON');
   const isDisabled = state.type !== 'idle' || disabled;
   return (
     <IconButton
-      icon='ph--x--regular'
+      icon={icon}
       disabled={isDisabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
       {...props}
     />
   );
+};
+
+export const ListItemButton = ({
+  autoHide = true,
+  classNames,
+  disabled,
+  ...props
+}: IconButtonProps & { autoHide?: boolean }) => {
+  const { state } = useListContext('ITEM_BUTTON');
+  const isDisabled = state.type !== 'idle' || disabled;
+  return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
 };
 
 export const ListItemDragHandle = () => {

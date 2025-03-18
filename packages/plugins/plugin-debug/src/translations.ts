@@ -60,6 +60,7 @@ export default [
         'search label': 'Search',
         'edge label': 'Edge',
         'workflows label': 'Workflows',
+        'traces label': 'Traces',
       },
     },
   },
