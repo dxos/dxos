@@ -4,13 +4,12 @@
 
 import '@dxos-theme';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { log } from '@dxos/log';
 
 import { Popup, Container, type PopupProps } from './components';
-import { Parser } from './parser';
 
 // TODO(burdon): Google browser messaging API.
 
@@ -21,13 +20,11 @@ const runAsync = (cb: () => Promise<void>) => {
 };
 
 const Root = () => {
-  const [parser] = useState(new Parser());
-
   const handleAdd: PopupProps['onAdd'] = () => {
     return runAsync(async () => {
       // TODO(burdon): Send message to context extension.
-      const content = await parser.parse(window.location.href);
-      log.info('add', { content });
+      // const content = await parser.parse(window.location.href);
+      // log.info('add', { content });
     });
   };
 
