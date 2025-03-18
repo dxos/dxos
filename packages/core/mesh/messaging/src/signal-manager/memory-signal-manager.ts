@@ -140,14 +140,25 @@ export class MemorySignalManager extends Resource implements SignalManager {
       });
   }
 
+  /**
+   * Freezes the signal manager.
+   * Mocks the network delay.
+   */
   freeze() {
     this._freezeTrigger.reset();
   }
 
+  /**
+   * Unfreezes the signal manager.
+   */
   unfreeze() {
     this._freezeTrigger.wake();
   }
 
+  /**
+   * Saves the connection to the global context.
+   * This is needed to make signal manager discoverable by other signal managers.
+   */
   private _maybeSaveConnection(peerInfo?: PeerInfo) {
     this._peerInfo ??= peerInfo;
     if (!this._peerInfo) {
