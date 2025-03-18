@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { getSpace, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
