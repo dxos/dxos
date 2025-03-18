@@ -37,92 +37,11 @@ const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip',
 const usePopperScope = createPopperScope();
 
 /* -------------------------------------------------------------------------------------------------
- * TooltipProvider
- * ----------------------------------------------------------------------------------------------- */
-
-const PROVIDER_NAME = 'TooltipProvider';
-const DEFAULT_DELAY_DURATION = 700;
-const TOOLTIP_OPEN = 'tooltip.open';
-
-type TooltipProviderContextValue = {
-  isOpenDelayedRef: MutableRefObject<boolean>;
-  delayDuration: number;
-  onOpen(): void;
-  onClose(): void;
-  onPointerInTransitChange(inTransit: boolean): void;
-  isPointerInTransitRef: MutableRefObject<boolean>;
-  disableHoverableContent: boolean;
-};
-
-const [TooltipProviderContextProvider, useTooltipProviderContext] =
-  createTooltipContext<TooltipProviderContextValue>(PROVIDER_NAME);
-
-interface TooltipProviderProps {
-  children: ReactNode;
-  /**
-   * The duration from when the pointer enters the trigger until the tooltip gets opened.
-   * @defaultValue 700
-   */
-  delayDuration?: number;
-  /**
-   * How much time a user has to enter another trigger without incurring a delay again.
-   * @defaultValue 300
-   */
-  skipDelayDuration?: number;
-  /**
-   * When `true`, trying to hover the content will result in the tooltip closing as the pointer leaves the trigger.
-   * @defaultValue false
-   */
-  disableHoverableContent?: boolean;
-}
-
-const TooltipProvider: FC<TooltipProviderProps> = (props: ScopedProps<TooltipProviderProps>) => {
-  const {
-    __scopeTooltip,
-    delayDuration = DEFAULT_DELAY_DURATION,
-    skipDelayDuration = 300,
-    disableHoverableContent = false,
-    children,
-  } = props;
-  const isOpenDelayedRef = useRef(true);
-  const isPointerInTransitRef = useRef(false);
-  const skipDelayTimerRef = useRef(0);
-
-  useEffect(() => {
-    const skipDelayTimer = skipDelayTimerRef.current;
-    return () => window.clearTimeout(skipDelayTimer);
-  }, []);
-
-  return (
-    <TooltipProviderContextProvider
-      scope={__scopeTooltip}
-      isOpenDelayedRef={isOpenDelayedRef}
-      delayDuration={delayDuration}
-      onOpen={useCallback(() => {
-        window.clearTimeout(skipDelayTimerRef.current);
-        isOpenDelayedRef.current = false;
-      }, [])}
-      onClose={useCallback(() => {
-        window.clearTimeout(skipDelayTimerRef.current);
-        skipDelayTimerRef.current = window.setTimeout(() => (isOpenDelayedRef.current = true), skipDelayDuration);
-      }, [skipDelayDuration])}
-      isPointerInTransitRef={isPointerInTransitRef}
-      onPointerInTransitChange={useCallback((inTransit: boolean) => {
-        isPointerInTransitRef.current = inTransit;
-      }, [])}
-      disableHoverableContent={disableHoverableContent}
-    >
-      {children}
-    </TooltipProviderContextProvider>
-  );
-};
-
-TooltipProvider.displayName = PROVIDER_NAME;
-
-/* -------------------------------------------------------------------------------------------------
  * Tooltip
  * ----------------------------------------------------------------------------------------------- */
 
+const DEFAULT_DELAY_DURATION = 700;
+const TOOLTIP_OPEN = 'tooltip.open';
 const TOOLTIP_NAME = 'Tooltip';
 
 type TooltipContextValue = {
@@ -135,12 +54,14 @@ type TooltipContextValue = {
   onTriggerLeave(): void;
   onOpen(): void;
   onClose(): void;
+  onPointerInTransitChange(inTransit: boolean): void;
+  isPointerInTransitRef: MutableRefObject<boolean>;
   disableHoverableContent: boolean;
 };
 
 const [TooltipContextProvider, useTooltipContext] = createTooltipContext<TooltipContextValue>(TOOLTIP_NAME);
 
-interface TooltipProps {
+interface TooltipRootProps {
   children?: ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
@@ -156,41 +77,58 @@ interface TooltipProps {
    * @defaultValue false
    */
   disableHoverableContent?: boolean;
+  /**
+   * How much time a user has to enter another trigger without incurring a delay again.
+   * @defaultValue 300
+   */
+  skipDelayDuration?: number;
 }
 
-const Tooltip: FC<TooltipProps> = (props: ScopedProps<TooltipProps>) => {
+const TooltipRoot: FC<TooltipRootProps> = (props: ScopedProps<TooltipRootProps>) => {
   const {
     __scopeTooltip,
     children,
     open: openProp,
     defaultOpen = false,
     onOpenChange,
-    disableHoverableContent: disableHoverableContentProp,
-    delayDuration: delayDurationProp,
+    disableHoverableContent = false,
+    delayDuration = DEFAULT_DELAY_DURATION,
+    skipDelayDuration = 300,
   } = props;
-  const providerContext = useTooltipProviderContext(TOOLTIP_NAME, props.__scopeTooltip);
+  const isOpenDelayedRef = useRef(true);
+  const isPointerInTransitRef = useRef(false);
+  const skipDelayTimerRef = useRef(0);
+
+  useEffect(() => {
+    const skipDelayTimer = skipDelayTimerRef.current;
+    return () => window.clearTimeout(skipDelayTimer);
+  }, []);
+
   const popperScope = usePopperScope(__scopeTooltip);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const contentId = useId();
   const openTimerRef = useRef(0);
-  const disableHoverableContent = disableHoverableContentProp ?? providerContext.disableHoverableContent;
-  const delayDuration = delayDurationProp ?? providerContext.delayDuration;
   const wasOpenDelayedRef = useRef(false);
-  const [open = false, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen,
-    onChange: (open) => {
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
       if (open) {
-        providerContext.onOpen();
-
+        window.clearTimeout(skipDelayTimerRef.current);
+        isOpenDelayedRef.current = false;
         // as `onChange` is called within a lifecycle method we
         // avoid dispatching via `dispatchDiscreteCustomEvent`.
         document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN));
       } else {
-        providerContext.onClose();
+        window.clearTimeout(skipDelayTimerRef.current);
+        skipDelayTimerRef.current = window.setTimeout(() => (isOpenDelayedRef.current = true), skipDelayDuration);
       }
       onOpenChange?.(open);
     },
+    [skipDelayDuration, onOpenChange],
+  );
+  const [open = false, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen,
+    onChange: handleOpenChange,
   });
   const stateAttribute = useMemo(() => {
     return open ? (wasOpenDelayedRef.current ? 'delayed-open' : 'instant-open') : 'closed';
@@ -237,12 +175,12 @@ const Tooltip: FC<TooltipProps> = (props: ScopedProps<TooltipProps>) => {
         trigger={trigger}
         onTriggerChange={setTrigger}
         onTriggerEnter={useCallback(() => {
-          if (providerContext.isOpenDelayedRef.current) {
+          if (isOpenDelayedRef.current) {
             handleDelayedOpen();
           } else {
             handleOpen();
           }
-        }, [providerContext.isOpenDelayedRef, handleDelayedOpen, handleOpen])}
+        }, [isOpenDelayedRef, handleDelayedOpen, handleOpen])}
         onTriggerLeave={useCallback(() => {
           if (disableHoverableContent) {
             handleClose();
@@ -255,6 +193,10 @@ const Tooltip: FC<TooltipProps> = (props: ScopedProps<TooltipProps>) => {
         onOpen={handleOpen}
         onClose={handleClose}
         disableHoverableContent={disableHoverableContent}
+        isPointerInTransitRef={isPointerInTransitRef}
+        onPointerInTransitChange={useCallback((inTransit: boolean) => {
+          isPointerInTransitRef.current = inTransit;
+        }, [])}
       >
         {children}
       </TooltipContextProvider>
@@ -262,7 +204,7 @@ const Tooltip: FC<TooltipProps> = (props: ScopedProps<TooltipProps>) => {
   );
 };
 
-Tooltip.displayName = TOOLTIP_NAME;
+TooltipRoot.displayName = TOOLTIP_NAME;
 
 /* -------------------------------------------------------------------------------------------------
  * TooltipTrigger
@@ -278,7 +220,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
   (props: ScopedProps<TooltipTriggerProps>, forwardedRef) => {
     const { __scopeTooltip, ...triggerProps } = props;
     const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
-    const providerContext = useTooltipProviderContext(TRIGGER_NAME, __scopeTooltip);
     const popperScope = usePopperScope(__scopeTooltip);
     const ref = useRef<TooltipTriggerElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
@@ -303,7 +244,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
             if (event.pointerType === 'touch') {
               return;
             }
-            if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
+            if (!hasPointerMoveOpenedRef.current && !context.isPointerInTransitRef.current) {
               context.onTriggerEnter();
               hasPointerMoveOpenedRef.current = true;
             }
@@ -417,7 +358,6 @@ interface TooltipContentHoverableProps extends TooltipContentImplProps {}
 const TooltipContentHoverable = forwardRef<TooltipContentHoverableElement, TooltipContentHoverableProps>(
   (props: ScopedProps<TooltipContentHoverableProps>, forwardedRef) => {
     const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
-    const providerContext = useTooltipProviderContext(CONTENT_NAME, props.__scopeTooltip);
     const ref = useRef<TooltipContentHoverableElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
     const [pointerGraceArea, setPointerGraceArea] = useState<Polygon | null>(null);
@@ -425,7 +365,7 @@ const TooltipContentHoverable = forwardRef<TooltipContentHoverableElement, Toolt
     const { trigger, onClose } = context;
     const content = ref.current;
 
-    const { onPointerInTransitChange } = providerContext;
+    const { onPointerInTransitChange } = context;
 
     const handleRemoveGraceArea = useCallback(() => {
       setPointerGraceArea(null);
@@ -768,35 +708,14 @@ const getHullPresorted = <P extends Point>(points: Readonly<Array<P>>): Array<P>
   }
 };
 
-const Provider = TooltipProvider;
-const Root = Tooltip;
-const Trigger = TooltipTrigger;
-const Portal = TooltipPortal;
-const Content = TooltipContent;
-const Arrow = TooltipArrow;
+export const Tooltip = {
+  Root: TooltipRoot,
+  Trigger: TooltipTrigger,
+  Portal: TooltipPortal,
+  Content: TooltipContent,
+  Arrow: TooltipArrow,
+};
 
-export {
-  createTooltipScope,
-  //
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipPortal,
-  TooltipContent,
-  TooltipArrow,
-  //
-  Provider,
-  Root,
-  Trigger,
-  Portal,
-  Content,
-  Arrow,
-};
-export type {
-  TooltipProviderProps,
-  TooltipProps,
-  TooltipTriggerProps,
-  TooltipPortalProps,
-  TooltipContentProps,
-  TooltipArrowProps,
-};
+export { createTooltipScope };
+
+export type { TooltipRootProps, TooltipTriggerProps, TooltipPortalProps, TooltipContentProps, TooltipArrowProps };
