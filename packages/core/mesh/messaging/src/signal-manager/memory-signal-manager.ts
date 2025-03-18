@@ -42,25 +42,26 @@ export class MemorySignalManager extends Resource implements SignalManager {
   readonly swarmState = new Event<SwarmResponse>();
   readonly onMessage = new Event<Message>();
 
-  /**  Will be used to emit SwarmEvents on .open() and .close() */
+  /**  Will be used to emit swarmState on .open() and .close() */
   private _joinedSwarms = new ComplexSet<{ swarmKey: string; peer: PeerInfo }>(
     ({ swarmKey, peer }) => swarmKey + peer.peerKey,
   );
 
   // TODO(dmaretskyi): Replace with callback.
   private readonly _freezeTrigger = new Trigger().wake();
+  private readonly _context: MemorySignalManagerContext;
+  private _peerInfo?: PeerInfo = undefined;
 
-  constructor(
-    private readonly _context: MemorySignalManagerContext,
-    private readonly _peerInfo: PeerInfo,
-  ) {
+  constructor(context: MemorySignalManagerContext, peerInfo?: PeerInfo) {
     super();
+    this._context = context;
+    this._peerInfo = peerInfo;
   }
 
   protected override async _open() {
     this._ctx.onDispose(this._context.swarmState.on((data) => this.swarmState.emit(data)));
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
-    this._context.connections.set(this._peerInfo, this);
+    this._maybeSaveConnection();
   }
 
   protected override async _close() {
@@ -72,12 +73,12 @@ export class MemorySignalManager extends Resource implements SignalManager {
     await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(value)));
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
-    this._context.connections.delete(this._peerInfo);
 
     await this._ctx.dispose();
   }
 
   async join({ swarmKey, peer }: JoinRequest) {
+    this._maybeSaveConnection(peer);
     invariant(!this._ctx.disposed, 'Closed');
     this._joinedSwarms.add({ swarmKey, peer });
     if (!this._context.swarms.has(swarmKey)) {
@@ -107,6 +108,7 @@ export class MemorySignalManager extends Resource implements SignalManager {
   }
 
   async sendMessage({ author, recipient, payload }: Message) {
+    this._maybeSaveConnection(author);
     log('send message', { author, recipient, ...dec(payload) });
     invariant(recipient);
     invariant(!this._ctx.disposed, 'Closed');
@@ -144,6 +146,21 @@ export class MemorySignalManager extends Resource implements SignalManager {
 
   unfreeze() {
     this._freezeTrigger.wake();
+  }
+
+  private _maybeSaveConnection(peerInfo?: PeerInfo) {
+    this._peerInfo ??= peerInfo;
+    if (!this._peerInfo) {
+      return;
+    }
+    const existing = this._context.connections.get(this._peerInfo);
+    if (existing) {
+      return;
+    }
+
+    const currentInfo = this._peerInfo;
+    this._context.connections.set(currentInfo, this);
+    this._ctx.onDispose(() => this._context.connections.delete(currentInfo));
   }
 }
 
