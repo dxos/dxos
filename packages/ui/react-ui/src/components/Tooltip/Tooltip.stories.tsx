@@ -16,16 +16,12 @@ type StoryTooltipProps = {
 };
 
 const StoryTooltip = ({ content, defaultOpen }: StoryTooltipProps) => (
-  <Tooltip.Provider>
-    <Tooltip.Root defaultOpen={defaultOpen}>
-      <Tooltip.Trigger asChild>
-        <Button>Trigger tooltip</Button>
-      </Tooltip.Trigger>
-      <Tooltip.Content side='right'>
-        <Tooltip.Arrow />
-        {content}
-      </Tooltip.Content>
-    </Tooltip.Root>
+  <Tooltip.Provider defaultOpen={defaultOpen}>
+    <Tooltip.Trigger asChild>
+      <Button data-tooltip-content={content} data-tooltip-side='right'>
+        Trigger tooltip
+      </Button>
+    </Tooltip.Trigger>
   </Tooltip.Provider>
 );
 

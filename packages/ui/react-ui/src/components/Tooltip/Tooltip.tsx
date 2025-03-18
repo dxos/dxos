@@ -11,7 +11,7 @@ import type { Scope } from '@radix-ui/react-context';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { createPopperScope } from '@radix-ui/react-popper';
+import { createPopperScope, type PopperAnchorProps } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -31,6 +31,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
+
+import { useElevationContext, useThemeContext } from '../../hooks';
 
 type ScopedProps<P = {}> = P & { __scopeTooltip?: Scope };
 const [createTooltipContext, createTooltipScope] = createContextScope('Tooltip', [createPopperScope]);
@@ -61,7 +63,7 @@ type TooltipContextValue = {
 
 const [TooltipContextProvider, useTooltipContext] = createTooltipContext<TooltipContextValue>(TOOLTIP_NAME);
 
-interface TooltipRootProps {
+interface TooltipProviderProps {
   children?: ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
@@ -84,7 +86,7 @@ interface TooltipRootProps {
   skipDelayDuration?: number;
 }
 
-const TooltipRoot: FC<TooltipRootProps> = (props: ScopedProps<TooltipRootProps>) => {
+const TooltipProvider: FC<TooltipProviderProps> = (props: ScopedProps<TooltipProviderProps>) => {
   const {
     __scopeTooltip,
     children,
@@ -106,6 +108,15 @@ const TooltipRoot: FC<TooltipRootProps> = (props: ScopedProps<TooltipRootProps>)
 
   const popperScope = usePopperScope(__scopeTooltip);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
+  const [content, setContent] = useState<string>('');
+  const [side, setSide] = useState<Side | undefined>(undefined);
+  const triggerRef = useRef<HTMLButtonElement | null>(trigger);
+  const handleTriggerChange = useCallback((nextTrigger: HTMLButtonElement | null) => {
+    setTrigger(nextTrigger);
+    triggerRef.current = nextTrigger;
+    setContent(nextTrigger?.getAttribute('data-tooltip-content') ?? '');
+    setSide((nextTrigger?.getAttribute('data-tooltip-side') as Side | null) ?? undefined);
+  }, []);
   const contentId = useId();
   const openTimerRef = useRef(0);
   const wasOpenDelayedRef = useRef(false);
@@ -165,6 +176,9 @@ const TooltipRoot: FC<TooltipRootProps> = (props: ScopedProps<TooltipRootProps>)
     };
   }, []);
 
+  const { tx } = useThemeContext();
+  const elevation = useElevationContext();
+
   return (
     <PopperPrimitive.Root {...popperScope}>
       <TooltipContextProvider
@@ -173,7 +187,7 @@ const TooltipRoot: FC<TooltipRootProps> = (props: ScopedProps<TooltipRootProps>)
         open={open}
         stateAttribute={stateAttribute}
         trigger={trigger}
-        onTriggerChange={setTrigger}
+        onTriggerChange={handleTriggerChange}
         onTriggerEnter={useCallback(() => {
           if (isOpenDelayedRef.current) {
             handleDelayedOpen();
@@ -198,13 +212,27 @@ const TooltipRoot: FC<TooltipRootProps> = (props: ScopedProps<TooltipRootProps>)
           isPointerInTransitRef.current = inTransit;
         }, [])}
       >
+        <TooltipContent side={side} className={tx('tooltip.content', 'tooltip', { elevation })}>
+          {content}
+          <TooltipArrow className={tx('tooltip.arrow', 'tooltip__arrow')} />
+        </TooltipContent>
+        <TooltipVirtualTrigger virtualRef={triggerRef} />
         {children}
       </TooltipContextProvider>
     </PopperPrimitive.Root>
   );
 };
 
-TooltipRoot.displayName = TOOLTIP_NAME;
+TooltipProvider.displayName = TOOLTIP_NAME;
+
+/* -------------------------------------------------------------------------------------------------
+ * TooltipVirtualTrigger
+ * ----------------------------------------------------------------------------------------------- */
+
+const TooltipVirtualTrigger = ({ virtualRef, __scopeTooltip }: ScopedProps<Pick<PopperAnchorProps, 'virtualRef'>>) => {
+  const popperScope = usePopperScope(__scopeTooltip);
+  return <PopperPrimitive.Anchor asChild {...popperScope} virtualRef={virtualRef} />;
+};
 
 /* -------------------------------------------------------------------------------------------------
  * TooltipTrigger
@@ -220,7 +248,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
   (props: ScopedProps<TooltipTriggerProps>, forwardedRef) => {
     const { __scopeTooltip, ...triggerProps } = props;
     const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
-    const popperScope = usePopperScope(__scopeTooltip);
     const ref = useRef<TooltipTriggerElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
     const isPointerDownRef = useRef(false);
@@ -232,43 +259,43 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
     }, [handlePointerUp]);
 
     return (
-      <PopperPrimitive.Anchor asChild {...popperScope}>
-        <Primitive.button
-          // We purposefully avoid adding `type=button` here because tooltip triggers are also
-          // commonly anchors and the anchor `type` attribute signifies MIME type.
-          aria-describedby={context.open ? context.contentId : undefined}
-          data-state={context.stateAttribute}
-          {...triggerProps}
-          ref={composedRefs}
-          onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {
-            if (event.pointerType === 'touch') {
-              return;
-            }
-            if (!hasPointerMoveOpenedRef.current && !context.isPointerInTransitRef.current) {
-              context.onTriggerEnter();
-              hasPointerMoveOpenedRef.current = true;
-            }
-          })}
-          onPointerLeave={composeEventHandlers(props.onPointerLeave, () => {
-            context.onTriggerLeave();
-            hasPointerMoveOpenedRef.current = false;
-          })}
-          onPointerDown={composeEventHandlers(props.onPointerDown, () => {
-            if (context.open) {
-              context.onClose();
-            }
-            isPointerDownRef.current = true;
-            document.addEventListener('pointerup', handlePointerUp, { once: true });
-          })}
-          onFocus={composeEventHandlers(props.onFocus, () => {
-            if (!isPointerDownRef.current) {
-              context.onOpen();
-            }
-          })}
-          onBlur={composeEventHandlers(props.onBlur, context.onClose)}
-          onClick={composeEventHandlers(props.onClick, context.onClose)}
-        />
-      </PopperPrimitive.Anchor>
+      <Primitive.button
+        // We purposefully avoid adding `type=button` here because tooltip triggers are also
+        // commonly anchors and the anchor `type` attribute signifies MIME type.
+        aria-describedby={context.open ? context.contentId : undefined}
+        data-state={context.stateAttribute}
+        {...triggerProps}
+        ref={composedRefs}
+        onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {
+          if (event.pointerType === 'touch') {
+            return;
+          }
+          if (!hasPointerMoveOpenedRef.current && !context.isPointerInTransitRef.current) {
+            context.onTriggerChange(ref.current);
+            context.onTriggerEnter();
+            hasPointerMoveOpenedRef.current = true;
+          }
+        })}
+        onPointerLeave={composeEventHandlers(props.onPointerLeave, () => {
+          context.onTriggerLeave();
+          hasPointerMoveOpenedRef.current = false;
+        })}
+        onPointerDown={composeEventHandlers(props.onPointerDown, () => {
+          if (context.open) {
+            context.onClose();
+          }
+          isPointerDownRef.current = true;
+          document.addEventListener('pointerup', handlePointerUp, { once: true });
+        })}
+        onFocus={composeEventHandlers(props.onFocus, () => {
+          if (!isPointerDownRef.current) {
+            context.onTriggerChange(ref.current);
+            context.onOpen();
+          }
+        })}
+        onBlur={composeEventHandlers(props.onBlur, context.onClose)}
+        onClick={composeEventHandlers(props.onClick, context.onClose)}
+      />
     );
   },
 );
@@ -709,13 +736,10 @@ const getHullPresorted = <P extends Point>(points: Readonly<Array<P>>): Array<P>
 };
 
 export const Tooltip = {
-  Root: TooltipRoot,
+  Provider: TooltipProvider,
   Trigger: TooltipTrigger,
-  Portal: TooltipPortal,
-  Content: TooltipContent,
-  Arrow: TooltipArrow,
 };
 
 export { createTooltipScope };
 
-export type { TooltipRootProps, TooltipTriggerProps, TooltipPortalProps, TooltipContentProps, TooltipArrowProps };
+export type { TooltipProviderProps, TooltipTriggerProps };
