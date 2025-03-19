@@ -184,4 +184,3 @@ export const App = () => {
 - https://dxos.org/discord
 - https://dxos.org/composer
 - https://github.com/dxos/dxos
-
