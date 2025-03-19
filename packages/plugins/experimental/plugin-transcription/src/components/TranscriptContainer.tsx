@@ -19,7 +19,6 @@ import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { useConfig } from '@dxos/react-client';
 import { useEdgeClient, useQueue, type EdgeHttpClient } from '@dxos/react-edge-client';
 import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
-import { ScrollContainer } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TextType } from '@dxos/schema';
 
@@ -60,22 +59,18 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
   // TODO(dmaretskyi): Move action to menu.
   return (
     <StackItem.Content toolbar={true}>
-      <StackItem.Heading>
-        <Toolbar.Root classNames='flex gap-2'>
-          <IconButton
-            icon='ph--subtitles--regular'
-            iconOnly
-            size={5}
-            disabled={isSummarizing}
-            onClick={handleSummarize}
-            label={t('summary button')}
-          />
-          {isSummarizing && <div className='text-sm'>{t('summarizing label')}</div>}
-        </Toolbar.Root>
-      </StackItem.Heading>
-      <ScrollContainer>
-        <Transcript blocks={queue?.items} attendableId={attendableId} />
-      </ScrollContainer>
+      <Toolbar.Root classNames='flex gap-2'>
+        <IconButton
+          icon='ph--subtitles--regular'
+          iconOnly
+          size={5}
+          disabled={isSummarizing}
+          onClick={handleSummarize}
+          label={t('summary button')}
+        />
+        {isSummarizing && <div className='text-sm'>{t('summarizing label')}</div>}
+      </Toolbar.Root>
+      <Transcript blocks={queue?.items} attendableId={attendableId} />
     </StackItem.Content>
   );
 };
