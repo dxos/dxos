@@ -43,7 +43,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.13.3",
+    "effect": "3.13.3",
     "ulidx": "^2.3.0"
   },
   "publishConfig": {

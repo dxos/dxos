@@ -49,7 +49,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "chess.js": "^1.0.0",
-    "effect": "^3.13.3"
+    "effect": "3.13.3"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
