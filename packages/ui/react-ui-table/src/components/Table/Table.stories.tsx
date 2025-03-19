@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
