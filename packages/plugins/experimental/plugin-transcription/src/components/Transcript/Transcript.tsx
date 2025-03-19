@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
   type DxGridElement,
+  type DxGridAxisMeta,
   type DxGridPlaneCells,
   Grid,
   toPlaneCellIndex,
@@ -15,8 +17,13 @@ import {
 
 import { type TranscriptBlock } from '../../types';
 
-// TODO(burdon): react-ui-list.
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
+
+const lineHeight = 24;
+const columnWidth = 600;
+const cellSpacing = 12;
+// TODO(thure): This value was tuned using greeking in Storybook; tune further based on natural language, or refactor to compute the actual size of wrapped text.
+const monoCharacterWidthWithWrapBuffer = 10 * 1.03;
 
 export type TranscriptProps = {
   blocks?: TranscriptBlock[];
@@ -25,14 +32,14 @@ export type TranscriptProps = {
 };
 
 const transcriptColumns = {
-  grid: { size: 600 },
+  grid: { size: columnWidth },
 };
 
 const transcriptRows = {
-  grid: { size: 100 },
+  grid: { size: lineHeight },
 };
 
-type QueueRows = [number, number][];
+type QueueRows = [number, number, number][];
 
 const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
@@ -40,9 +47,14 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
   } else {
     return blocks.flatMap((block, blockIndex) => {
       return [
-        [blockIndex, -1],
-        ...block.segments.map((_, segmentIndex) => {
-          return [blockIndex, segmentIndex] as [number, number];
+        [blockIndex, -1, lineHeight + cellSpacing],
+        ...block.segments.map((segment, segmentIndex) => {
+          return [
+            blockIndex,
+            segmentIndex,
+            cellSpacing +
+              lineHeight * (Math.ceil((segment.text.length * monoCharacterWidthWithWrapBuffer) / columnWidth) + 1),
+          ] as [number, number, number];
         }),
       ];
     });
@@ -64,6 +76,17 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
+  const rows = useMemo(
+    () =>
+      ({
+        grid: queueMap.reduce((acc: DxGridAxisMeta['grid'], row, rowIndex) => {
+          acc[rowIndex] = { size: row[2] };
+          return acc;
+        }, {}),
+      }) satisfies DxGridAxisMeta,
+    [queueMap],
+  );
+
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks)) {
       dxGrid.getCells = (range, plane) => {
@@ -77,10 +100,11 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
                   ? {
                       value: blocks[blockIndex]!.author,
                       readonly: true,
+                      className: 'pli-2 place-content-end text-[16px] leading-[24px]',
                     }
                   : {
-                      value: blocks[blockIndex]!.segments[segmentIndex]!.text,
                       readonly: true,
+                      accessoryHtml: `<span class="dx-tag" data-hue="neutral">${formatDistanceToNow(blocks[blockIndex]!.segments[segmentIndex]!.started, { addSuffix: true })}</span><p class="pli-1 font-mono whitespace-normal hyphens-auto text-[16px] leading-[24px]">${blocks[blockIndex]!.segments[segmentIndex]!.text}</p>`,
                     }
               ) satisfies DxGridCellValue;
             }
@@ -98,46 +122,13 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
       <Grid.Content
         columnDefault={transcriptColumns}
         rowDefault={transcriptRows}
+        rows={rows}
         onWheel={handleWheel}
-        className='[--dx-grid-base:var(--surface-bg)]'
+        className='[--dx-grid-base:var(--surface-bg)] [--dx-grid-lines:var(--surface-bg)]'
         limitColumns={1}
         limitRows={queueMap.length}
         ref={setDxGrid}
       />
-      {/* {blocks?.map((block) => ( */}
-      {/*  <div */}
-      {/*    role='listitem' */}
-      {/*    key={block.id} */}
-      {/*    className='flex flex-col py-1 border border-transparent hover:border-separator rounded' */}
-      {/*  > */}
-      {/*    <div className='group flex items-center px-2'> */}
-      {/*      <Icon icon='ph--user--regular' /> */}
-      {/*      <div className='px-2 text-sm text-subdued'>{block.author}</div> */}
-      {/*      <div className='grow' /> */}
-      {/*      <IconButton disabled icon='ph--x--regular' label={t('delete button')} iconOnly size={4} classNames={[]} /> */}
-      {/*    </div> */}
-
-      {/*    {block.segments.map((segment, i) => ( */}
-      {/*      <div key={i} className='group flex flex-col'> */}
-      {/*        <div className='px-2'>{segment.text}</div> */}
-      {/*        <div className='flex gap-1 items-center justify-between px-2'> */}
-      {/*          <div className='grow' /> */}
-      {/*          <div className='truncate text-xs text-subdued'> */}
-      {/*            {formatDistanceToNow(segment.started, { addSuffix: true })} */}
-      {/*          </div> */}
-      {/*          <IconButton */}
-      {/*            disabled */}
-      {/*            icon='ph--bookmark-simple--regular' */}
-      {/*            label={t('bookmark button')} */}
-      {/*            iconOnly */}
-      {/*            size={4} */}
-      {/*            classNames={hoverButton} */}
-      {/*          /> */}
-      {/*        </div> */}
-      {/*      </div> */}
-      {/*    ))} */}
-      {/*  </div> */}
-      {/* ))} */}
     </Grid.Root>
   );
 };
