@@ -104,7 +104,7 @@
     "chalk": "^4.1.0",
     "cli-highlight": "^2.1.11",
     "depcheck": "^1.4.7",
-    "effect": "3.13.3",
+    "effect": "3.12.3",
     "esbuild": "^0.23.1",
     "esbuild-plugin-glsl": "^1.2.2",
     "esbuild-plugin-raw": "^0.1.8",
