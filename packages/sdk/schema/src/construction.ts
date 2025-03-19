@@ -2,62 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
-
-import {
-  FormatEnum,
-  FormatEnums,
-  formatToType,
-  S,
-  TypedObject,
-  TypeEnum,
-  SelectOptionSchema,
-  GeoPoint,
-  toJsonSchema,
-} from '@dxos/echo-schema';
+import { FormatEnum, formatToType, S, TypedObject, TypeEnum, type SelectOptionSchema } from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
 import { makeSingleSelectAnnotations } from './util';
 
-// TODO(ZaymonFC): Workout how to get the theme values! (Or enrich the schema at the tool level).
-// import { hues } from '@dxos/react-ui-theme';
-const hues = ['rose', 'emerald'];
-
-// TODO(ZaymonFC): Reconcile all duplication between this and schema-tool.ts
-
-// TODO(ZaymonFC): Move this somewhere common.
-export const TypeNameSchema = S.String.pipe(
-  S.pattern(/^\w+\.\w{2,}\/[\w/]+$/i),
-  S.annotations({
-    [TitleAnnotationId]: 'TypeName',
-    [DescriptionAnnotationId]:
-      'Domain-style type name path. Dashes are not allowed. Use camel case for the final component of the type name.',
-    [ExamplesAnnotationId]: ['example.com/type/Document', 'example.com/type/FlightList'],
-  }),
-);
-
-const formatDescription = `The format of the property. Additional information:
-  ${FormatEnum.GeoPoint}: ${JSON.stringify(toJsonSchema(GeoPoint))}
-  This tuple is GeoJSON. You must specify \`${FormatEnum.GeoPoint}\` as [Longitude, Latitude]`;
-
-// TODO(ZaymonFC): All properties are default optional, but maybe we should allow for required properties.
-export const PropertyDefinitionSchema = S.Struct({
-  name: S.String.annotations({ [DescriptionAnnotationId]: 'The name of the property.' }),
-  format: S.Union(...FormatEnums.map((format) => S.Literal(format))).annotations({
-    [DescriptionAnnotationId]: formatDescription,
-  }),
-  config: S.optional(
-    S.Struct({
-      options: S.optional(
-        S.Array(SelectOptionSchema).annotations({
-          description: `Options for SingleSelect/MultiSelect formats. Available colors: ${hues.join(', ')}`,
-        }),
-      ),
-    }),
-  ),
-}).pipe(S.mutable);
-
-type PropertyDefinition = typeof PropertyDefinitionSchema.Type;
+// TODO(ZaymonFC): Keep this in sync with the schema in `schema-tools.ts`.
+type PropertyDefinition = {
+  name: string;
+  format: FormatEnum;
+  config?: {
+    options?: Array<S.Schema.Type<typeof SelectOptionSchema>>;
+  };
+};
 
 export const echoSchemaFromPropertyDefinitions = (typename: string, properties: PropertyDefinition[]) => {
   const typeToSchema: Record<TypeEnum, S.Any> = {
