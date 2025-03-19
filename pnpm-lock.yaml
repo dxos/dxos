@@ -8817,6 +8817,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../experimental/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8904,12 +8907,21 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.12.12)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8941,9 +8953,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
