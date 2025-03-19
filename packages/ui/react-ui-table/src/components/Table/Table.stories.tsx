@@ -4,9 +4,10 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -15,7 +16,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewProjection, ViewType } from '@dxos/schema';
+import { type SchemaPropertyDefinition, ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table, type TableController } from './Table';
@@ -23,7 +24,7 @@ import { useTableModel, type UseTableModelParams } from '../../hooks';
 import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
-import { initializeTable } from '../../util';
+import { initializeTable, makeDynamicTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
 import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
@@ -170,6 +171,56 @@ const DefaultStory = () => {
   );
 };
 
+const DynamicTableStory = () => {
+  const properties = useMemo<SchemaPropertyDefinition[]>(
+    () => [
+      { name: 'name', format: FormatEnum.String },
+      { name: 'age', format: FormatEnum.Number },
+    ],
+    [],
+  );
+
+  const { table, viewProjection, schema } = useMemo(() => {
+    return makeDynamicTable('com.example/dynamic_table', properties);
+  }, [properties]);
+
+  const [objects, _setObjects] = useState<any[]>(
+    Array.from({ length: 100 }, () => ({
+      name: faker.person.fullName(),
+      age: faker.number.int({ min: 18, max: 80 }),
+    })),
+  );
+
+  const model = useTableModel({
+    table,
+    objects,
+    projection: viewProjection,
+  });
+
+  const presentation = useMemo(() => {
+    if (model) {
+      return new TablePresentation(model);
+    }
+  }, [model]);
+
+  const tableRef = useRef<TableController>(null);
+
+  return (
+    <div className='is-full bs-full grow grid grid-cols-[1fr_350px]'>
+      <div className='grid min-bs-0 overflow-hidden'>
+        <Table.Root>
+          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
+        </Table.Root>
+      </div>
+      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
+        <SyntaxHighlighter language='json' className='w-full text-xs'>
+          {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
+};
+
 type StoryProps = {
   rows?: number;
 } & Pick<SimulatorProps, 'insertInterval' | 'updateInterval'>;
@@ -248,6 +299,10 @@ const meta: Meta<StoryProps> = {
 export default meta;
 
 export const Default = {};
+
+export const DynamicTable: StoryObj = {
+  render: DynamicTableStory,
+};
 
 // TODO(ZaymonFC): Restore the performance stories.
 // type Story = StoryObj<StoryProps>;
