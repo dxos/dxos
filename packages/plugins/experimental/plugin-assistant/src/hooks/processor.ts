@@ -220,9 +220,18 @@ export class ChatProcessor {
       this.error.value = undefined;
     } catch (err) {
       log.catch(err);
-      this.error.value = new Error('AI service error', { cause: err });
+      if (err instanceof Error && err.message.includes('Overloaded')) {
+        this.error.value = new AIServiecOverloadedError('AI service overloaded', { cause: err });
+      } else {
+        this.error.value = new Error('AI service error', { cause: err });
+      }
     } finally {
       this._stream = undefined;
     }
   }
+}
+
+// TODO(wittjosiah): Refactor.
+export class AIServiecOverloadedError extends Error {
+  code = 'AI_SERVICE_OVERLOADED';
 }
