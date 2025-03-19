@@ -58,17 +58,15 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
 
   // TODO(dmaretskyi): Move action to menu.
   return (
-    <StackItem.Content toolbar={true}>
-      <Toolbar.Root classNames='flex gap-2'>
+    <StackItem.Content toolbar={false} classNames='relative'>
+      <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>
         <IconButton
-          icon='ph--subtitles--regular'
-          iconOnly
+          icon='ph--pen--regular'
           size={5}
           disabled={isSummarizing}
           onClick={handleSummarize}
-          label={t('summary button')}
+          label={t(isSummarizing ? 'summarizing label' : 'summary button')}
         />
-        {isSummarizing && <div className='text-sm'>{t('summarizing label')}</div>}
       </Toolbar.Root>
       <Transcript blocks={queue?.items} attendableId={attendableId} />
     </StackItem.Content>

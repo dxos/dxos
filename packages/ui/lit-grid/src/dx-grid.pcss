@@ -62,20 +62,20 @@
       /** This must match CellEditor styling in `CellEditor.tsx`. */
       padding: 2px 4px;
       box-sizing: border-box;
-      cursor: pointer;
       border: 1px solid transparent;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      cursor: pointer;
+
+      &[aria-readonly='true']{
+        cursor: text;
+      }
 
       &:focus:not([aria-readonly='true']), &:focus-visible {
         z-index: 2;
         border-color: var(--dx-accentSurface);
         outline: none;
-
-        &:not([aria-readonly='true']) {
-          cursor: text;
-        }
       }
 
       &.dx-grid__cell--commented {

@@ -39,6 +39,9 @@ const transcriptRows = {
   grid: { size: lineHeight },
 };
 
+const authorClasses = 'pli-2 place-content-end text-[16px] leading-[24px]';
+const segmentTextClasses = 'pli-1 font-mono whitespace-normal hyphens-auto text-[16px] leading-[24px]';
+
 type QueueRows = [number, number, number][];
 
 const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
@@ -100,11 +103,11 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
                   ? {
                       value: blocks[blockIndex]!.author,
                       readonly: true,
-                      className: 'pli-2 place-content-end text-[16px] leading-[24px]',
+                      className: authorClasses,
                     }
                   : {
                       readonly: true,
-                      accessoryHtml: `<span class="dx-tag" data-hue="neutral">${formatDistanceToNow(blocks[blockIndex]!.segments[segmentIndex]!.started, { addSuffix: true })}</span><p class="pli-1 font-mono whitespace-normal hyphens-auto text-[16px] leading-[24px]">${blocks[blockIndex]!.segments[segmentIndex]!.text}</p>`,
+                      accessoryHtml: `<span class="dx-tag" data-hue="neutral">${formatDistanceToNow(blocks[blockIndex]!.segments[segmentIndex]!.started, { addSuffix: true })}</span><p class="${segmentTextClasses}">${blocks[blockIndex]!.segments[segmentIndex]!.text}</p>`,
                     }
               ) satisfies DxGridCellValue;
             }
@@ -124,7 +127,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
         rowDefault={transcriptRows}
         rows={rows}
         onWheel={handleWheel}
-        className='[--dx-grid-base:var(--surface-bg)] [--dx-grid-lines:var(--surface-bg)]'
+        className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:select-auto'
         limitColumns={1}
         limitRows={queueMap.length}
         ref={setDxGrid}
