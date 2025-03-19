@@ -5,10 +5,8 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React from 'react';
 
 import { faker } from '@dxos/random';
-import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
@@ -17,17 +15,12 @@ import translations from '../../translations';
 const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
   component: Transcript,
-  render: (args) => (
-    <ScrollContainer classNames='is-[600px]'>
-      <Transcript {...args} />
-    </ScrollContainer>
-  ),
   decorators: [
     withTheme,
     withLayout({
       tooltips: true,
       fullscreen: true,
-      classNames: 'justify-center',
+      classNames: 'grid',
     }),
   ],
   parameters: {
