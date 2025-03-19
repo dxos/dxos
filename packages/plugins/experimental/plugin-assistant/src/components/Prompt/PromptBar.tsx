@@ -5,7 +5,7 @@
 import React, { useRef, useState } from 'react';
 
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
@@ -44,18 +44,27 @@ export const PromptBar = ({
     },
   });
 
-  // TODO(burdon): Tooltip for error.
   return (
     <div
       className={mx(
-        'flex shrink-0 w-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] overflow-hidden',
+        'shrink-0 w-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] overflow-hidden',
         classNames,
       )}
     >
       <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
-        {(error && <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />) || (
-          <Spinner active={processing} />
-        )}
+        {(error && (
+          <Tooltip.Root delayDuration={0}>
+            <Tooltip.Trigger>
+              <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content>
+                <div className='text-sm text-error-500'>{error.message}</div>
+                <Tooltip.Arrow />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        )) || <Spinner active={processing} />}
       </div>
       <Prompt
         ref={promptRef}

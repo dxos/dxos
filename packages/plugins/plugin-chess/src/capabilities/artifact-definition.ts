@@ -8,10 +8,10 @@ import { pipe } from 'effect';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space } from '@dxos/react-client/echo';
+import { Filter, parseId, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
@@ -24,6 +24,11 @@ declare global {
   }
 }
 
+const ArtifacftId = class extends S.String.annotations({
+  description: 'ID of the artifact in <spaceid>:<artifactid> format',
+}) {};
+type ArtifacftId = S.Schema.Type<typeof ArtifacftId>;
+
 export default () => {
   const definition = defineArtifact({
     id: meta.id,
@@ -31,7 +36,8 @@ export default () => {
     description: 'Provides a simple chess engine.',
     instructions: `
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
-    `,
+      - Always inspect the chess game at the start of every prompt realting to a chess game, as it might have changed since the interaction.
+   `,
     schema: ChessType,
     tools: [
       defineTool(meta.id, {
@@ -72,11 +78,12 @@ export default () => {
         name: 'inspect',
         description: 'Get the current state of the chess game.',
         caption: 'Inspecting game...',
-        schema: S.Struct({ id: ObjectId }),
+        schema: S.Struct({ id: ArtifacftId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
-          const game = games.find((game) => game.id === id);
+          const { objectId } = parseId(id);
+          const game = games.find((game) => game.id === objectId);
           invariant(isInstanceOf(ChessType, game));
           return ToolResult.Success(game.fen);
         },
@@ -86,7 +93,7 @@ export default () => {
         description: 'Make a move in the chess game.',
         caption: 'Making chess move...',
         schema: S.Struct({
-          id: ObjectId,
+          id: ArtifacftId,
           move: S.String.annotations({
             description: 'The move to make in the chess game.',
             examples: ['e4', 'Bf3'],
@@ -95,7 +102,8 @@ export default () => {
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
-          const game = games.find((game) => game.id === id);
+          const { objectId } = parseId(id);
+          const game = games.find((game) => game.id === objectId);
           invariant(isInstanceOf(ChessType, game));
           const board = new Chess(game.fen);
           try {
