@@ -8,7 +8,7 @@ import { createEchoSchema } from '@dxos/live-object/testing';
 import { makeSingleSelectAnnotations } from './util';
 
 // TODO(ZaymonFC): Keep this in sync with the schema in `schema-tools.ts`.
-type PropertyDefinition = {
+export type SchemaPropertyDefinition = {
   name: string;
   format: FormatEnum;
   config?: {
@@ -16,7 +16,7 @@ type PropertyDefinition = {
   };
 };
 
-export const echoSchemaFromPropertyDefinitions = (typename: string, properties: PropertyDefinition[]) => {
+export const echoSchemaFromPropertyDefinitions = (typename: string, properties: SchemaPropertyDefinition[]) => {
   const typeToSchema: Record<TypeEnum, S.Any> = {
     [TypeEnum.String]: S.String.pipe(S.optional),
     [TypeEnum.Number]: S.Number.pipe(S.optional),
