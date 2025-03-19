@@ -31,6 +31,7 @@ import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
+import { PlankContentError } from './PlankError';
 import { Sidebar } from './Sidebar';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
@@ -303,10 +304,10 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
         onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}
       >
         {dialogBlockAlign === 'end' ? (
-          <Surface role='dialog' data={dialogContent} limit={1} />
+          <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
         ) : (
           <Dialog.Overlay blockAlign={dialogBlockAlign}>
-            <Surface role='dialog' data={dialogContent} limit={1} />
+            <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
           </Dialog.Overlay>
         )}
       </Dialog.Root>
