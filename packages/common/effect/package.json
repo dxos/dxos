@@ -29,10 +29,10 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "effect": "3.12.3"
+    "effect": "3.12.12"
   },
   "peerDependencies": {
-    "effect": "3.12.3"
+    "effect": "3.12.12"
   },
   "publishConfig": {
     "access": "public"

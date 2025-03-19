@@ -58,11 +58,11 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.12.3",
+    "effect": "3.12.12",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {
-    "effect": "3.12.3"
+    "effect": "3.12.12"
   },
   "publishConfig": {
     "access": "public"

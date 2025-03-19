@@ -49,7 +49,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "3.12.3"
+    "effect": "3.12.12"
   },
   "devDependencies": {
     "@dxos/echo-schema": "workspace:*",
