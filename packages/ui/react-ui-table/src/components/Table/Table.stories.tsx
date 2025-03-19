@@ -19,12 +19,13 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type SchemaPropertyDefinition, ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { DynamicTable as DynamicTableComponent } from './DynamicTable';
 import { Table, type TableController } from './Table';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
 import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
-import { initializeTable, makeDynamicTable } from '../../util';
+import { initializeTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
 import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
@@ -180,10 +181,6 @@ const DynamicTableStory = () => {
     [],
   );
 
-  const { table, viewProjection, schema } = useMemo(() => {
-    return makeDynamicTable('com.example/dynamic_table', properties);
-  }, [properties]);
-
   const [objects, _setObjects] = useState<any[]>(
     Array.from({ length: 100 }, () => ({
       name: faker.person.fullName(),
@@ -191,34 +188,7 @@ const DynamicTableStory = () => {
     })),
   );
 
-  const model = useTableModel({
-    table,
-    objects,
-    projection: viewProjection,
-  });
-
-  const presentation = useMemo(() => {
-    if (model) {
-      return new TablePresentation(model);
-    }
-  }, [model]);
-
-  const tableRef = useRef<TableController>(null);
-
-  return (
-    <div className='is-full bs-full grow grid grid-cols-[1fr_350px]'>
-      <div className='grid min-bs-0 overflow-hidden'>
-        <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
-        </Table.Root>
-      </div>
-      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
-        </SyntaxHighlighter>
-      </div>
-    </div>
-  );
+  return <DynamicTableComponent properties={properties} data={objects} />;
 };
 
 type StoryProps = {
