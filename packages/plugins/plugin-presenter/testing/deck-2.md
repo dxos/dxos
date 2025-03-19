@@ -18,8 +18,11 @@ https://github.com/dxos/dxos
 </center>
 
 ---
+<!-- 
+.slide: data-background="#151515"
+-->
 
-| <img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/dxos-logotype.png?cache=2" style="height: 100px">  | <img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/composer-logotype.png?cache=2" style="height:  100px">  |
+| <img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/dxos-logotype.png?cache=3" style="height: 100px">  | <img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/composer-logotype.png?cache=3" style="height:  100px">  |
 |---|---|
 | _The Decentralized_<br> _Operating System_<br><br> - Privacy-preserving<br>- Decentralized agents <br> - P2P Graph DB | _An Open Source_<br>_Super App_<br><br> - Real time collaboration<br>- Open and extensible<br> - An IDE for your data | 
 
@@ -108,7 +111,7 @@ export type Task = Schema.Type<typeof Task>
 .slide: data-background="#151515"
 -->
 
-# API
+# Reactive API
 
 ```tsx
 import { create, useSpace, useQuery } from '@dxos/react-client'
@@ -177,8 +180,8 @@ export const App = () => {
 # GRAZIE MILLE
 
 - dmytro@dxos.org
-
-- https://dxos.org/discord
 - https://x.com/dxos_org
+- https://dxos.org/discord
+- https://dxos.org/composer
 - https://github.com/dxos/dxos
 
