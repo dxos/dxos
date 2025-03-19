@@ -8,8 +8,8 @@ import { IconButton, Input, type ThemedClassName, Toolbar, useTranslation } from
 import { mx } from '@dxos/react-ui-theme';
 
 export type PopupProps = ThemedClassName<{
-  onAdd?: () => void;
-  onSearch?: (text: string) => void;
+  onAdd?: () => Promise<string | null>;
+  onSearch?: (text: string) => Promise<string | null>;
   onLaunch?: () => void;
 }>;
 
@@ -17,18 +17,26 @@ export const Popup = ({ classNames, onAdd, onSearch, onLaunch }: PopupProps) => 
   const { t } = useTranslation('composer');
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [result, setResult] = useState<string | null>(null);
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     const str = text.trim();
     if (str.length > 0) {
-      onSearch?.(text);
+      const result = await onSearch?.(text);
+      if (result) {
+        setResult(result);
+      }
     }
 
     inputRef.current?.focus();
   }, [text, onSearch]);
 
-  const handleAdd = useCallback(() => {
-    onAdd?.();
+  const handleAdd = useCallback(async () => {
+    const result = await onAdd?.();
+    if (result) {
+      setResult(result);
+    }
+
     inputRef.current?.focus();
   }, [text, onAdd]);
 
@@ -48,6 +56,7 @@ export const Popup = ({ classNames, onAdd, onSearch, onLaunch }: PopupProps) => 
         </Input.Root>
         <IconButton icon='ph--plus--regular' iconOnly label={t('button.add')} onClick={handleAdd} />
       </Toolbar.Root>
+      {result && <div className='p-2'>{result}</div>}
     </div>
   );
 };

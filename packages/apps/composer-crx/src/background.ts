@@ -4,9 +4,10 @@
 
 import browser from 'webextension-polyfill';
 
+import { log } from '@dxos/log';
+
 const main = async () => {
-  // eslint-disable-next-line no-console
-  console.log(browser);
+  log.info('background', { browser });
 };
 
 void main();
