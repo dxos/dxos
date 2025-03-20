@@ -9,6 +9,7 @@ import { makeSingleSelectAnnotations } from './util';
 
 // TODO(ZaymonFC): Keep this in sync with the schema in `schema-tools.ts`.
 export type SchemaPropertyDefinition = {
+  // TODO(ZaymonFC): change `name` to `path`.
   name: string;
   format: FormatEnum;
   config?: {
@@ -28,7 +29,7 @@ export const echoSchemaFromPropertyDefinitions = (typename: string, properties: 
   // TODO(ZaymonFC): It would be better to construct the full JSON schema here, formats and all.
   //   This way we are falling back to the primitive type only.
   const fields: any = Object.fromEntries(
-    properties.map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
+    properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
   const schema = createEchoSchema(TypedObject({ typename, version: '0.1.0' })(fields));

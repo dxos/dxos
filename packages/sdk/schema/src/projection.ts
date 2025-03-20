@@ -307,12 +307,10 @@ export class ViewProjection {
    */
   private normalizeView(): void {
     untracked(() => {
-      // Get all valid properties from the schema (excluding 'id').
-      const schemaProperties = new Set(
-        Object.keys(this._schema.jsonSchema.properties ?? {}).filter((prop) => prop !== 'id'),
-      );
+      // Get all properties from the schema.
+      const schemaProperties = new Set(Object.keys(this._schema.jsonSchema.properties ?? {}));
 
-      // 1. Process view.fields - remove fields not in schema.
+      // 1. Process view.fields - keep ID fields, remove other fields not in schema.
       for (let i = this._view.fields.length - 1; i >= 0; i--) {
         const field = this._view.fields[i];
         if (!schemaProperties.has(field.path)) {
@@ -335,9 +333,9 @@ export class ViewProjection {
       const viewPaths = new Set(this._view.fields.map((field) => field.path));
       const hiddenPaths = new Set(this._view.hiddenFields?.map((field) => field.path) || []);
 
-      // 4. Add missing schema properties to hiddenFields.
+      // 4. Add missing schema properties to hiddenFields (excluding 'id').
       for (const prop of schemaProperties) {
-        if (!viewPaths.has(prop as JsonProp) && !hiddenPaths.has(prop as JsonProp)) {
+        if (prop !== 'id' && !viewPaths.has(prop as JsonProp) && !hiddenPaths.has(prop as JsonProp)) {
           // Initialize hiddenFields if needed.
           if (!this._view.hiddenFields) {
             this._view.hiddenFields = [];
