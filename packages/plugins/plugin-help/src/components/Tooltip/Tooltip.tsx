@@ -36,7 +36,7 @@ export const floaterProps: Props['floaterProps'] = {
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
   ({ step: { title, content }, index, size, isLastStep, backProps, closeProps, primaryProps }, forwardedRef) => {
     const arrowGroup = useArrowNavigationGroup({ axis: 'horizontal' });
-    const trapFocus = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const focusableGroupAttrs = window ? {} : useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
     return (
       <div
@@ -44,7 +44,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
-        {...trapFocus}
+        {...focusableGroupAttrs}
         ref={forwardedRef}
       >
         <div className='flex p-2'>

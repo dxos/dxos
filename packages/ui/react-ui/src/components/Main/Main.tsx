@@ -70,9 +70,9 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     },
     [propsOnKeyDown],
   );
-  const focusableAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
+  const focusableGroupAttrs = window ? {} : { tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
-  return { onKeyDown: handleKeyDown, [landmarkAttr]: landmark, tabIndex: 0, ...focusableAttrs };
+  return { onKeyDown: handleKeyDown, [landmarkAttr]: landmark, tabIndex: 0, ...focusableGroupAttrs };
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {

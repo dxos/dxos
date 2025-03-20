@@ -155,7 +155,7 @@ export const useTextEditor = (
     }
   }, [autoFocus, view]);
 
-  const focusableGroup = useFocusableGroup({
+  const focusableGroupAttrs = useFocusableGroup({
     tabBehavior: 'limited',
     ignoreDefaultKeydown: { Escape: view?.state.facet(editorInputMode).noTabster },
   });
@@ -176,6 +176,6 @@ export const useTextEditor = (
     [view],
   );
 
-  const focusAttributes = { tabIndex: 0 as const, ...focusableGroup, onKeyUp: handleKeyUp };
+  const focusAttributes = { tabIndex: 0 as const, ...focusableGroupAttrs, onKeyUp: handleKeyUp };
   return { parentRef, view, focusAttributes };
 };

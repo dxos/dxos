@@ -90,7 +90,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       onChange: propsOnOpenChange,
       defaultProp: defaultOpen,
     });
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+    const focusableGroupAttrs = window ? {} : useFocusableGroup({ tabBehavior: 'limited' });
     const arrowGroupAttrs = useArrowNavigationGroup({
       axis: 'horizontal',
       tabbable: false,
