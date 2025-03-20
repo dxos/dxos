@@ -22,6 +22,7 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
   const table = create(TableType, { name: 'dynamic-table' });
   const echoSchema = echoSchemaFromPropertyDefinitions(typename, properties);
   const propertyNames = properties.map((property) => property.name);
+
   const view = createView({
     name: 'dynamic-table',
     typename: echoSchema.typename,
@@ -40,7 +41,6 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
   }
 
   table.view = makeRef(view);
-
   const viewProjection = new ViewProjection(echoSchema, view);
 
   return {

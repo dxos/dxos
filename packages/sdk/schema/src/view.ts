@@ -131,7 +131,8 @@ export const createView = ({
   if (jsonSchema) {
     // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
-    for (const property of getSchemaProperties(schema.ast)) {
+    const properties = getSchemaProperties(schema.ast, {}, true);
+    for (const property of properties) {
       if (include && !include.includes(property.name)) {
         continue;
       }

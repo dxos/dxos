@@ -89,6 +89,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const objectProperties = useMemo(
     () => [
+      { name: 'id', format: FormatEnum.String },
       { name: 'type', format: FormatEnum.String },
       { name: 'deleted', format: FormatEnum.String, size: 100 },
       { name: 'version', format: FormatEnum.String, size: 100 },
@@ -99,12 +100,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const tableData = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
-      id: trimId(item.id),
+      id: item.id,
       deleted: isDeleted(item) ? '❌' : ' ',
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
       schemaAvailable: getSchema(item) ? 'YES' : 'NO',
-      _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
 
