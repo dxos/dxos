@@ -91,9 +91,26 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     () => [
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
-      { name: 'deleted', format: FormatEnum.String, size: 100 },
+      {
+        name: 'deleted',
+        format: FormatEnum.SingleSelect,
+        size: 100,
+        config: {
+          options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
+        },
+      },
       { name: 'version', format: FormatEnum.String, size: 100 },
-      { name: 'schemaAvailable', format: FormatEnum.String, size: 180 },
+      {
+        name: 'schemaAvailable',
+        format: FormatEnum.SingleSelect,
+        size: 180,
+        config: {
+          options: [
+            { id: 'YES', title: 'YES', color: 'green' },
+            { id: 'NO', title: 'NO', color: 'red' },
+          ],
+        },
+      },
     ],
     [],
   );
@@ -101,13 +118,14 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const tableData = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
-      deleted: isDeleted(item) ? '❌' : ' ',
+      deleted: isDeleted(item) ? 'DELETED' : ' ',
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
       schemaAvailable: getSchema(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
+
   const handleObjectSelectionChanged = useCallback(
     (selectedIds: string[]) => {
       if (selectedIds.length === 0) {
