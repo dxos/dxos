@@ -22,9 +22,15 @@ const Root = () => {
       return null;
     }
 
-    const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
-    log.info('handleAdd', { result });
-    return result;
+    try {
+      const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
+      log.info('handleAdd', { result });
+      return result;
+    } catch (err) {
+      log.catch(err);
+    }
+
+    return null;
   };
 
   const handleSearch: PopupProps['onSearch'] = async (text) => {
