@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 
 import { RevealPlayer } from './RevealPlayer';
-import CONTENT from '../../../testing/deck-2.md?raw';
+import CONTENT from '../../../testing/deck.md?raw';
 import translations from '../../translations';
 
 // https://revealjs.com/markdown
