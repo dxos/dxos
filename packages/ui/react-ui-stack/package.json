@@ -45,7 +45,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "9.23.3",
+    "@fluentui/react-tabster": "9.19.2",
     "@radix-ui/primitive": "1.1.1",
     "@radix-ui/react-compose-refs": "1.1.1",
     "@radix-ui/react-context": "1.1.1",

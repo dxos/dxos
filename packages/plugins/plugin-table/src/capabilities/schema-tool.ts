@@ -101,8 +101,10 @@ export const schemaTools = [
     caption: 'Creating schema...',
     schema: S.Struct({
       typename: TypeNameSchema.annotations({
-        description:
-          'The fully qualified schema typename. Must start with a domain, and then one or more path components (e.g., "example.com/type/TypeName").',
+        description: `
+        - The fully qualified schema typename. It must start with a domain, and then one or more path components (e.g., "example.com/type/TypeName").',
+        - When creating a schema for an event it is very important to include a geopoint property (lng,lat).
+      `,
       }),
       properties: S.Array(PropertyDefinitionSchema).pipe(
         S.annotations({ description: 'Array of property definitions for the schema.' }),
