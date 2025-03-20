@@ -24,7 +24,7 @@ export default () => {
       - Manage the calendar for the current space.
       - You can create a travel itinerary by creating a table from a list of events.
       - Always try to determine the geolocation from the location property of the event.
-      - When creating the schema for a travel itinerary you must include a geopoint property (in the form of [lng,lat]).
+      - When creating the schema for a travel itinerary you must include a geopoint property (in the form of lng,lat).
       - Suggest to view the itinerary on a map.
     `,
     schema: S.Struct({}),
