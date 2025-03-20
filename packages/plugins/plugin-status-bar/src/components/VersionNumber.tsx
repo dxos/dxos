@@ -20,6 +20,7 @@ export const VersionNumber = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
+  const isLabs = config.values.runtime?.app?.env?.DX_LABS;
 
   const releaseUrl =
     config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
@@ -31,7 +32,9 @@ export const VersionNumber = () => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Button classNames='text-xs'>v{v}</StatusBar.Button>
+        <StatusBar.Button classNames='text-xs'>
+          v{version} {isLabs ? commitHash : ''}
+        </StatusBar.Button>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
