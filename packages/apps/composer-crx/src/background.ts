@@ -7,6 +7,9 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
+/**
+ * Background worker.
+ */
 const main = async () => {
   log.info('background', { browser });
 
