@@ -16,6 +16,7 @@ type DynamicTableProps = {
   properties: TablePropertyDefinition[];
   tableName?: string;
   classNames?: string;
+  onSelectionChanged?: (selectedItems: string[]) => void;
 };
 
 /**
@@ -27,6 +28,7 @@ export const DynamicTable = ({
   properties,
   classNames,
   tableName = 'com.example/dynamic_table',
+  onSelectionChanged,
 }: DynamicTableProps) => {
   // TODO(ZaymonFC): Consider allowing the user to supply a schema directly instead of deriving it from
   //  the properties array. (Both should be viable).
@@ -47,6 +49,7 @@ export const DynamicTable = ({
     table,
     objects: data,
     projection: viewProjection,
+    onSelectionChanged,
     onCellUpdate: handleCellUpdate,
     onRowOrderChanged: handleRowOrderChanged,
   });

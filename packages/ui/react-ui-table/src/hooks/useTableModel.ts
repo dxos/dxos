@@ -17,12 +17,14 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
+  onSelectionChanged?: (selection: string[]) => void;
 } & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
 export const useTableModel = <T extends BaseTableRow = { id: string }>({
   objects,
   table,
   projection,
+  onSelectionChanged,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
@@ -65,7 +67,9 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
     }
 
     const unsubscribe = effect(() => {
-      select([...model.selection.selection.value]);
+      const selectedItems = [...model.selection.selection.value];
+      select(selectedItems);
+      onSelectionChanged?.(selectedItems);
     });
 
     // Maybe clear the selection here?
@@ -73,7 +77,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
       clear();
       unsubscribe();
     };
-  }, [model]);
+  }, [model, onSelectionChanged]);
 
   return model;
 };
