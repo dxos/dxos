@@ -49,10 +49,14 @@ export default defineFunction({
     context: { space },
   }: any) =>
     Effect.gen(function* () {
-      const { token } = yield* Effect.tryPromise(() =>
-        space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
-      );
-      const { objects } = yield* Effect.tryPromise(() => space.queues.queryQueue(DXN.parse(queueId)));
+      const { token } = yield* Effect.tryPromise({
+        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
+        catch: (e: any) => e,
+      });
+      const { objects } = yield* Effect.tryPromise({
+        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        catch: (e: any) => e,
+      });
       const backfill = objects.length === 0;
       const newMessages = yield* Ref.make(0);
       const lastMessage = yield* Ref.make(objects.at(-1));
@@ -79,7 +83,10 @@ export default defineFunction({
             )
             .toReversed();
           if (queueMessages.length > 0) {
-            yield* Effect.tryPromise(() => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages));
+            yield* Effect.tryPromise({
+              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
+              catch: (e: any) => e,
+            });
             yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);
             yield* Ref.update(lastMessage, (m: any) => queueMessages.at(-1));
           }

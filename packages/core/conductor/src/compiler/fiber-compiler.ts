@@ -299,7 +299,7 @@ export class GraphExecutor {
         return yield* Effect.fail(NotExecuted);
       }
       if (output.values[prop] == null) {
-        throw new Error(`No output for node: property ${prop} on node ${nodeId}`);
+        throw new Error(`No output for node: property ${prop} on node ${nodeId}: ${JSON.stringify(output)}`);
       }
 
       const value = yield* output.values[prop];

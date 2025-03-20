@@ -7,7 +7,7 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S, toEffectSchema, type ObjectMeta } from '@dxos/echo-schema';
+import { getTypename, isInstanceOf, ObjectId, S, toEffectSchema, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { create, getMeta } from '@dxos/live-object';
@@ -272,13 +272,13 @@ export const registry: Record<NodeType, Executable> = {
               }
               yield* Effect.promise(() => spaceService.db.flush());
             } else {
-              throw new Error('Unsupported ECHO container type');
+              throw new Error(`Unsupported ECHO container type: ${getTypename(container)}`);
             }
 
             return {};
           }
           default: {
-            throw new Error('Unsupported DXN');
+            throw new Error(`Unsupported DXN: ${dxn.toString()}`);
           }
         }
       }),
@@ -352,9 +352,12 @@ export const registry: Record<NodeType, Executable> = {
     output: AnyOutput,
     exec: synchronizedComputeFunction((input, node) =>
       Effect.gen(function* (): any {
-        const fn = yield* Effect.tryPromise(async () => node?.function?.load());
+        const fn = yield* Effect.tryPromise({
+          try: async () => node?.function?.load(),
+          catch: (e) => e,
+        });
         if (!node || !fn) {
-          return {};
+          throw new Error(`Function loading failed: ${node?.function?.dxn?.toString()}`);
         }
 
         const functionCallService = yield* FunctionCallService;
@@ -362,7 +365,7 @@ export const registry: Record<NodeType, Executable> = {
         const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
         const path = getUserFunctionUrlInMetadata(getMeta(fn));
         if (!path) {
-          throw new Error('Function not resolved');
+          throw new Error(`Function not resolved: ${node.function?.dxn?.toString()}`);
         }
 
         const result = yield* Effect.tryPromise({
