@@ -32,9 +32,7 @@ export const VersionNumber = () => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Button classNames='text-xs'>
-          v{version} {isLabs ? commitHash : ''}
-        </StatusBar.Button>
+        <StatusBar.Button classNames='text-xs'>{isLabs ? version : v}</StatusBar.Button>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
