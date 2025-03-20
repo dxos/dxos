@@ -18,7 +18,7 @@ const Root = () => {
     log.info('sending...');
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
-      log.error('no active tab found.');
+      log.error('no active tab found');
       return null;
     }
 
