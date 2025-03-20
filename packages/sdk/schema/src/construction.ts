@@ -43,9 +43,10 @@ export const echoSchemaFromPropertyDefinitions = (typename: string, properties: 
     }
 
     if (prop.format === FormatEnum.GeoPoint) {
-      schema.jsonSchema.properties![prop.name].format = FormatEnum.GeoPoint;
       schema.jsonSchema.properties![prop.name].type = TypeEnum.Object;
     }
+
+    schema.jsonSchema.properties![prop.name].format = prop.format;
   }
 
   return schema;

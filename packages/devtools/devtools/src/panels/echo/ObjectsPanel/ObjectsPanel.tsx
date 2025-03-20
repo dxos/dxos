@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
@@ -89,7 +89,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
   const objectProperties = useMemo(
     () => [
-      { name: 'id', format: FormatEnum.String },
+      { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
       { name: 'deleted', format: FormatEnum.String, size: 100 },
       { name: 'version', format: FormatEnum.String, size: 100 },
@@ -105,32 +105,63 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
       schemaAvailable: getSchema(item) ? 'YES' : 'NO',
+      _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
+  const handleObjectSelectionChanged = useCallback(
+    (selectedIds: string[]) => {
+      if (selectedIds.length === 0) {
+        setSelected(undefined);
+        setSelectedVersion(null);
+        setSelectedVersionObject(null);
+        return;
+      }
 
-  // TODO(ZaymonFC): Implement row selection support in DynamicTable and wire up selection
-  //   functionality when it becomes available. For now, selection is disabled.
+      const selectedId = selectedIds[selectedIds.length - 1];
+      const selectedObject = items.find((item) => item.id === selectedId);
+
+      if (selectedObject) {
+        objectSelect(selectedObject);
+      }
+    },
+    [items],
+  );
 
   const historyProperties = useMemo(
     () => [
-      { name: 'hash', format: FormatEnum.String },
-      { name: 'actor', format: FormatEnum.String },
+      { name: 'hash', format: FormatEnum.JSON },
+      { name: 'actor', format: FormatEnum.JSON, size: 380 },
       // Uncomment when time and message are used
       // { name: 'time', format: FormatEnum.Number },
       // { name: 'message', format: FormatEnum.String },
     ],
     [],
   );
-
   const historyData = useMemo(() => {
     return history.map((item) => ({
+      id: item.hash,
       hash: item.hash.slice(0, 8),
       actor: item.actor,
-      // time: item.time,
-      // message: item.message,
-      _original: item, // Store the original item for selection
     }));
-  }, [history]);
+  }, [history, selectedVersion]);
+
+  const handleHistorySelectionChanged = useCallback(
+    (selectedHashes: string[]) => {
+      if (selectedHashes.length === 0 || !selected) {
+        setSelectedVersion(null);
+        setSelectedVersionObject(null);
+        return;
+      }
+
+      const selectedHash = selectedHashes[0];
+      const versionItem = history.find((item) => item.hash.slice(0, 8) === selectedHash);
+
+      if (versionItem) {
+        onVersionClick(versionItem);
+      }
+    },
+    [history, onVersionClick, selected],
+  );
 
   return (
     <PanelContainer
@@ -142,7 +173,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       }
     >
       <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
-        <DynamicTable data={tableData} properties={objectProperties} />
+        <DynamicTable
+          data={tableData}
+          properties={objectProperties}
+          onSelectionChanged={handleObjectSelectionChanged}
+        />
 
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
@@ -153,7 +188,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </div>
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
-            <DynamicTable data={historyData} properties={historyProperties} />
+            <DynamicTable
+              data={historyData}
+              properties={historyProperties}
+              onSelectionChanged={handleHistorySelectionChanged}
+            />
           ) : (
             'Select an object to inspect the contents'
           )}
@@ -221,13 +260,11 @@ const ObjectDataViewer = ({ object, onNavigate }: ObjectDataViewerProps) => {
   };
 
   return (
-    <SyntaxHighlighter language='json' renderer={rowRenderer}>
+    <SyntaxHighlighter classNames='text-sm' language='json' renderer={rowRenderer}>
       {text}
     </SyntaxHighlighter>
   );
 };
-
-const trimId = (id: ObjectId) => `${id.substring(0, 4)}...${id.substring(id.length - 4)}`;
 
 interface rendererNode {
   type: 'element' | 'text';
