@@ -14,6 +14,7 @@ import { TableType } from '..';
 
 type PropertyDisplayProps = {
   size: number;
+  title: string;
 };
 
 export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<PropertyDisplayProps>;
@@ -30,18 +31,23 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
     fields: propertyNames,
   });
 
-  // Update size based on properties
+  table.view = makeRef(view);
+  const viewProjection = new ViewProjection(echoSchema, view);
+
   for (const property of properties) {
     if (property.size && view.fields) {
       const field = view.fields.find((field) => field.path === property.name);
       if (field) {
         field.size = property.size;
+
+        const fieldProjection = viewProjection.getFieldProjection(field.id);
+        viewProjection.setFieldProjection({
+          ...fieldProjection,
+          props: { ...fieldProjection.props, title: property.title },
+        });
       }
     }
   }
-
-  table.view = makeRef(view);
-  const viewProjection = new ViewProjection(echoSchema, view);
 
   return {
     table,
