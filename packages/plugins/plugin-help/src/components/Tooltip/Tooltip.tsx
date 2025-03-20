@@ -35,7 +35,7 @@ export const floaterProps: Props['floaterProps'] = {
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
   ({ step: { title, content }, index, size, isLastStep, backProps, closeProps, primaryProps }, forwardedRef) => {
-    const arrowGroup = useArrowNavigationGroup({ axis: 'horizontal' });
+    const arrowGroup = window ? {} : useArrowNavigationGroup({ axis: 'horizontal' });
     const focusableGroupAttrs = window ? {} : useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
     return (

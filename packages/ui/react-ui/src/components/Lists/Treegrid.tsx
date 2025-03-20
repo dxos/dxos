@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup, useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';

@@ -4,7 +4,7 @@
 
 import { EditorState, type EditorStateConfig } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useFocusableGroup } from '@fluentui/react-tabster';
+import { type TabsterTypes, useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type DependencyList,
   type KeyboardEventHandler,
@@ -26,7 +26,7 @@ export type UseTextEditor = {
   // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
-  focusAttributes: ReturnType<typeof useFocusableGroup> & {
+  focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
     tabIndex: 0;
     onKeyUp: KeyboardEventHandler<HTMLDivElement>;
   };
@@ -55,7 +55,7 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
 let instanceCount = 0;
 
 /**
- * Hook for creating editor.
+ * Creates codemirror text editor.
  */
 export const useTextEditor = (
   props: MaybeProvider<UseTextEditorProps> = {},
@@ -155,10 +155,12 @@ export const useTextEditor = (
     }
   }, [autoFocus, view]);
 
-  const focusableGroupAttrs = useFocusableGroup({
-    tabBehavior: 'limited',
-    ignoreDefaultKeydown: { Escape: view?.state.facet(editorInputMode).noTabster },
-  });
+  const focusableGroupAttrs = window
+    ? undefined
+    : useFocusableGroup({
+        tabBehavior: 'limited',
+        ignoreDefaultKeydown: { Escape: view?.state.facet(editorInputMode).noTabster },
+      });
 
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
@@ -176,6 +178,12 @@ export const useTextEditor = (
     [view],
   );
 
-  const focusAttributes = { tabIndex: 0 as const, ...focusableGroupAttrs, onKeyUp: handleKeyUp };
+  const focusAttributes: UseTextEditor['focusAttributes'] = focusableGroupAttrs
+    ? {
+        tabIndex: 0 as const,
+        ...focusableGroupAttrs,
+        onKeyUp: handleKeyUp,
+      }
+    : undefined;
   return { parentRef, view, focusAttributes };
 };
