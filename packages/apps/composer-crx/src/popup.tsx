@@ -24,7 +24,7 @@ const Root = () => {
 
     try {
       const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
-      log.info('handleAdd', { result });
+      log.info('result', { result });
       return result;
     } catch (err) {
       log.catch(err);
@@ -51,7 +51,6 @@ const Root = () => {
 
 const main = async () => {
   createRoot(document.getElementById('root')!).render(<Root />);
-  log.info('popup ok');
 };
 
 void main();

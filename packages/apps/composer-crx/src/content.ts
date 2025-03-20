@@ -2,29 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onMessage } from 'webext-bridge/content-script';
+import { sendMessage, onMessage } from 'webext-bridge/content-script';
 
 import { log } from '@dxos/log';
 
 const main = async () => {
-  log.info('content...');
+  log.info('content-script');
 
   onMessage('ping', async ({ sender, data }) => {
-    log.info('onMessage', { sender, data });
+    log.info('ping', { sender, data });
 
-    // const config = await sendMessage('config', { sync: false }, 'background');
-    // log.info('onMessage', { sender, data, config });
+    try {
+      const config = await sendMessage('config', {}, 'background');
+      log.info('config', { config });
+    } catch (err) {
+      log.catch(err);
+    }
 
     return window.location.href;
   });
-
-  // import browser from 'webextension-polyfill';
-  // browser.runtime.onMessage.addListener((message: any) => {
-  //   log.info('onMessage', { message });
-  //   return Promise.resolve({ ...message, url: window.location.href });
-  // });
-
-  log.info('content ok');
 };
 
 void main();
