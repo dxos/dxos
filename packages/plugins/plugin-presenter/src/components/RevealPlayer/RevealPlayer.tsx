@@ -25,7 +25,6 @@ const styles = `
 <style type="text/css">
   .reveal h1 {
     font-weight: 100;
-    // padding-left: 36px;
     font-size: 60px;
     opacity: 0.5;
   }

@@ -16,30 +16,19 @@ import { Popup, Container, type PopupProps } from './components';
 const Root = () => {
   const handleAdd: PopupProps['onAdd'] = async () => {
     log.info('sending...');
-    const result = await sendMessage('ping', { debug: true }, 'content-script');
-    log.info('handleAdd', { result });
-    return result;
-  };
-
-  const handleSearch: PopupProps['onSearch'] = async (text) => {
-    log.info('search', { text });
     const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
       log.error('no active tab found.');
       return null;
     }
 
-    try {
-      log.info('sending...', { tab, text });
-      const response = await browser.tabs.sendMessage(tab.id, { action: 'search', text });
-      log.info('response', { response });
-      if (typeof response === 'object' && response && 'url' in response) {
-        return response.url as string;
-      }
-    } catch (err) {
-      log.catch(err);
-    }
+    const result = await sendMessage('ping', { debug: true }, { context: 'content-script', tabId: tab.id });
+    log.info('handleAdd', { result });
+    return result;
+  };
 
+  const handleSearch: PopupProps['onSearch'] = async (text) => {
+    log.info('search', { text });
     return null;
   };
 
