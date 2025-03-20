@@ -27,10 +27,10 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
-    "comlink": "^4.4.2",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "react-router-dom": "^6.4.0",
+    "webext-bridge": "^6.0.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {

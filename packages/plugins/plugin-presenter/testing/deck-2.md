@@ -24,7 +24,7 @@ https://github.com/dxos/dxos
 
 | <img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/dxos-logotype.png?cache=3" style="height: 100px">  | <img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/composer-logotype.png?cache=3" style="height:  100px">  |
 |---|---|
-| _The Decentralized_<br> _Operating System_<br><br> - Privacy-preserving<br>- Decentralized agents <br> - P2P Graph DB | _An Open Source_<br>_Super App_<br><br> - Real time collaboration<br>- Open and extensible<br> - An IDE for your data | 
+| _The Decentralized_<br> _Operating System_<br><br>- Privacy-preserving<br>local-first app framework.<br>- P2P Graph DB. | _An Open Source_<br>_Super App_<br><br>- An IDE for your data.<br>- Real time collaboration<br>with agent-driven workflows. | 
 
 ---
 
@@ -55,14 +55,69 @@ https://github.com/dxos/dxos
 
 ---
 <!-- 
-.slide: data-background="#3A2862"
+.slide: data-background="#EEE"
+-->
+
+# Chat
+
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/gpt-chat.png"/>
+</center>
+
+---
+<!-- 
+.slide: data-background="#EEE"
+-->
+
+# Chat → RAG
+
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/gpt-rag.png"/>
+</center>
+
+---
+<!-- 
+.slide: data-background="#EEE"
+-->
+
+# RAG → Tools
+
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/gpt-tools.png"/>
+</center>
+
+---
+<!-- 
+.slide: data-background="#EEE"
+-->
+
+# Tools → Artifacts
+
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/gpt-artifact.png"/>
+</center>
+
+---
+<!-- 
+.slide: data-background="#D95B3C"
 -->
 
 # Agents
 
-- Context
-- Tools
-- Orchestration
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/agents-1.png?cache=1"/>
+</center>
+
+---
+<!-- 
+.slide: data-background="#D95B3C"
+-->
+
+# Agents
+
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/agents-2.png?cache=2"/>
+</center>
 
 ---
 <!-- 
@@ -89,16 +144,16 @@ _Eventually Consistent<br>Hierarchical Object Database_
 # Schema
 
 ```tsx
-import { Schema } from '@effect'
-import { Echo } from '@dxos/echo'
-import { Contact } from './Contact'
+import { Schema } from 'effect'
+import { ECHO } from '@dxos/client'
+import { Contact } from './contact'
 
 export const Task = Schema.Struct({
   title: Schema.String,
   description: Schema.optional(Schema.String),
   created: Schema.String,
-  assigned: Echo.Ref(Contact)
-}).pipe(Echo.Object({
+  assigned: ECHO.Ref(Contact)
+}).pipe(ECHO.Object({
   typename: 'example.com/schema/Task',
   version: '0.1.0'
 }))
@@ -115,7 +170,7 @@ export type Task = Schema.Type<typeof Task>
 
 ```tsx
 import { create, useSpace, useQuery } from '@dxos/react-client'
-import { Task } from './tasks'
+import { Task } from './task'
 
 export const App = () => {
   const space = useSpace()
@@ -154,23 +209,21 @@ export const App = () => {
 
 ---
 <!-- 
-.slide: data-background="#08754F"
+.slide: data-background="#EEE"
 -->
 
 # Edge Computing
 
+<center>
+<img src="https://pub-a497338ae2d34236b2cb010710733669.r2.dev/system-diagram.png"/>
+</center>
+
 ---
 <!-- 
-.slide: data-background="#151515"
+.slide: data-background="#08754F"
 -->
 
 # Conductor
-
----
-<!-- 
-.slide: data-background="#D95B3C"
--->
-
 
 ---
 <!-- 

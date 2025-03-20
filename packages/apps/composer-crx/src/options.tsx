@@ -7,6 +7,8 @@ import '@dxos-theme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { log } from '@dxos/log';
+
 import { Container, Options } from './components';
 
 const Root = () => {
@@ -20,6 +22,7 @@ const Root = () => {
 };
 
 const main = async () => {
+  log.info('options');
   createRoot(document.getElementById('root')!).render(<Root />);
 };
 

@@ -101,7 +101,10 @@ export default defineConfig({
         },
         options_page: 'options.html',
         background: {
-          service_worker: 'src/background.ts',
+          // service_worker: 'src/background.ts',
+          scripts: [
+            'src/background.ts'
+          ],
         },
         content_scripts: [
           {
