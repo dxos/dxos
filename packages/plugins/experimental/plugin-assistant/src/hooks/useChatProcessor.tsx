@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Tool } from '@dxos/artifact';
 import { DEFAULT_LLM_MODEL } from '@dxos/assistant';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
