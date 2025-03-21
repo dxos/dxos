@@ -23,10 +23,6 @@ import { createMenuAction } from '@dxos/react-ui-menu';
 import { type ViewState } from './view';
 import { SCRIPT_PLUGIN } from '../meta';
 
-const BANNER = {
-  js: 'import { defineFunction } from "npm:@dxos/functions@main";',
-};
-
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
 
 export type DeployState = ViewState & {
@@ -108,7 +104,7 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
     try {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
 
-      const bundler = new Bundler({ platform: 'browser', banner: BANNER, sandboxedModules: [], remoteModules: {} });
+      const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
       const buildResult = await bundler.bundle({ source: script.source.target!.content });
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;
