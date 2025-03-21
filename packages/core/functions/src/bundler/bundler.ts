@@ -253,7 +253,7 @@ const npmPlugin: Plugin = {
   name: 'npm',
   setup: (build) => {
     // Handle all non-relative imports through esm.sh
-    build.onResolve({ filter: /^[^./]|^[.][^/]/ }, (args) => {
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
       const moduleName = args.path;
       const version = (build.initialOptions.plugins?.[0] as any)?._moduleVersions?.get(moduleName);
       const url = new URL(moduleName, 'https://esm.sh/');
