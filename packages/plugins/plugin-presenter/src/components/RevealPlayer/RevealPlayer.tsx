@@ -25,7 +25,8 @@ const styles = `
 <style type="text/css">
   .reveal h1 {
     font-weight: 100;
-    padding-left: 36px;
+    // padding-left: 36px;
+    font-size: 60px;
     opacity: 0.5;
   }
   .reveal h2 {
@@ -50,9 +51,14 @@ const styles = `
     font-weight: 100;
     padding: 32px;
   }
+  .reveal pre {
+    margin-left: 0;
+  }
   .reveal code {
+    font-size: 20px;
     background: #111111;
     color: #eeeeee;
+    max-height: unset !important;
   }
 </style>
 `;
@@ -91,10 +97,12 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
         // https://revealjs.com/speaker-view
         showNotes: false,
 
-        center: true,
-        margin: 0.01,
-        minScale: 0.2,
-        maxScale: 1.4,
+        // width: 1600,
+        // height: 900,
+        margin: 0.1,
+        // center: false,
+        // minScale: 0.1,
+        // maxScale: 1.4,
 
         // https://revealjs.com/markdown
         // TODO(burdon): Requires server to serve popout window.
@@ -115,6 +123,7 @@ export const RevealPlayer = ({ classNames, content, slide, fullscreen = true, on
       });
 
       await deckRef.current.initialize();
+
       if (slide !== undefined) {
         deckRef.current.slide(slide < 0 ? deckRef.current?.getTotalSlides() + slide : slide - 1);
       }
