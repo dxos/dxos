@@ -26,6 +26,7 @@ export const KeyringPanel = () => {
       keys?.map((record: KeyRecord) => ({
         id: PublicKey.from(record.publicKey).toHex(),
         publicKey: PublicKey.from(record.publicKey).toHex(),
+        _original: record,
       })) || [],
     [keys],
   );
@@ -34,5 +35,5 @@ export const KeyringPanel = () => {
     return null;
   }
 
-  return <MasterDetailTable properties={properties} data={data} />;
+  return <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />;
 };
