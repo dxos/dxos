@@ -18,7 +18,7 @@ const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8788';
 
-describe('Gpt pipelines', () => {
+describe('GPT pipelines', () => {
   it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime();
@@ -300,4 +300,4 @@ const testEffect =
       }
     })
       .pipe(Effect.runPromise)
-      .then((f) => f());
+      .then((fn) => fn());
