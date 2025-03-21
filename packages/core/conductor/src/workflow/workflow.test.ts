@@ -56,13 +56,13 @@ describe('workflow', () => {
     const workflowLoader = new WorkflowLoader(createResolver(graph));
     const workflow = await workflowLoader.load(graph.graphDxn);
     const input = makeInput({ num1: 2, num2: 3 });
-    expect(() => workflow.run(input)).throws();
+    expect(() => workflow.run(input)).toThrow(/.*Ambiguous workflow.*entrypoint.*/);
     expect(await execute(workflow.runFrom('sum', input))).toEqual(5);
     expect(await execute(workflow.runFrom('product', input))).toBeUndefined();
     expect(sideEffect).toEqual(6);
   });
 
-  test('no outputs allowed', async () => {
+  test('workflow without outputs is allowed', async () => {
     let sumSideEffect = 0;
     let productSideEffect = 0;
     const graph = createGraphFromTransformMap(null, {
