@@ -4,6 +4,7 @@
 
 import React, { useRef, useMemo, useCallback } from 'react';
 
+import { type SortDirectionType } from '@dxos/echo-schema';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Table, type TableController } from './Table';
