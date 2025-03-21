@@ -57,7 +57,7 @@ export const LoggingPanel = () => {
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'timestamp', format: FormatEnum.DateTime },
+      { name: 'timestamp', format: FormatEnum.DateTime, sort: 'desc' as const },
       {
         name: 'level',
         format: FormatEnum.SingleSelect,

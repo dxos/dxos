@@ -24,7 +24,7 @@ const levelOptions = [
 export const LogTable = ({ logs = [] }: { logs: LogEntry[] }) => {
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'timestamp', format: FormatEnum.DateTime },
+      { name: 'timestamp', format: FormatEnum.DateTime, sort: 'desc' as const },
       { name: 'level', format: FormatEnum.SingleSelect, config: { options: levelOptions }, size: 80 },
       { name: 'file', format: FormatEnum.String, size: 160 },
       { name: 'message', format: FormatEnum.String },

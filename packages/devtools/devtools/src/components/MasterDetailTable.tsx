@@ -4,6 +4,7 @@
 
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { type SortDirectionType } from '@dxos/echo-schema';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -21,6 +22,7 @@ export type MasterDetailTableProps = {
 export const MasterDetailTable = ({
   properties,
   data,
+  statusBar,
   detailsTransform,
   detailsPosition = 'bottom',
 }: MasterDetailTableProps) => {
