@@ -10,7 +10,7 @@ import { keymap } from '@codemirror/view';
 import { type ViewUpdate, ViewPlugin } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { continueKeymap } from '@valtown/codemirror-continue';
-import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
+import { tsSync, tsFacet, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
 import React from 'react';
 
 import { log } from '@dxos/log';
@@ -92,7 +92,9 @@ export const TypescriptEditor = ({
             ? [
                 tsFacet.of({ env: compiler.environment, path: `./src/${id}.ts` }),
                 tsSync(),
-                tsLinter(),
+                // TODO(wittjosiah): Transitive deps are not working.
+                //   https://github.com/esm-dev/esm.sh/issues/1106
+                // tsLinter(),
                 tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
                 tsHttpTypeLoader({ compiler, path: `./src/${id}.ts` }),
               ]
