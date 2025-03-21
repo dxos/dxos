@@ -23,6 +23,8 @@ export type MapContainerProps = { role?: string; type?: MapControlType; map?: Ma
   'zoom' | 'center' | 'onChange'
 >;
 
+// TODO(burdon): Error: Map container is already initialized.
+
 export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
   const [markers, setMarkers] = useState<MapMarker[]>([]);

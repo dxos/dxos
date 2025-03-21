@@ -34,6 +34,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
   useEffect(() => {
     if (rootRef.current) {
       // https://github.com/vasturiano/force-graph
+      // https://github.com/vasturiano/3d-force-graph
       forceGraph.current = new ForceGraph(rootRef.current)
         .nodeRelSize(6)
         .nodeLabel((node: any) => {
