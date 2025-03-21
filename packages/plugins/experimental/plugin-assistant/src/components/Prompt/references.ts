@@ -1,4 +1,4 @@
-import type { Extension } from '@codemirror/state';
+import { Extension, RangeSet } from '@codemirror/state';
 import {
   autocompletion,
   completionKeymap,
@@ -49,13 +49,15 @@ export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: Pr
 
   const decorationField = ViewPlugin.fromClass(
     class ReferenceView {
-      _decorations: DecorationSet = Decoration.set([]);
-      _mutex = new Mutex();
+      private _mutex = new Mutex();
+
+      decorations: DecorationSet = Decoration.set([]);
+
       constructor(view: EditorView) {
         queueMicrotask(async () => {
           const guard = await this._mutex.acquire();
           try {
-            this._decorations = await this._computeDecorations(view);
+            this.decorations = await this._computeDecorations(view);
           } finally {
             guard.release();
           }
@@ -67,7 +69,7 @@ export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: Pr
           queueMicrotask(async () => {
             const guard = await this._mutex.acquire();
             try {
-              this._decorations = await this._computeDecorations(update.view);
+              this.decorations = await this._computeDecorations(update.view);
             } finally {
               guard.release();
             }
@@ -88,8 +90,6 @@ export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: Pr
             decorations.push(
               Decoration.replace({
                 widget: new ReferenceWidget(data),
-                side: -1,
-                inclusive: true,
               }).range(match.index!, match.index! + reference.length),
             );
           }
@@ -99,7 +99,14 @@ export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: Pr
       }
     },
     {
-      decorations: (v) => v._decorations,
+      decorations: (v) => v.decorations,
+      provide(plugin) {
+        return [
+          EditorView.atomicRanges.of(
+            (view): DecorationSet => view.plugin(decorationField)?.decorations ?? RangeSet.empty,
+          ),
+        ];
+      },
     },
   );
 
@@ -114,70 +121,6 @@ export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: Pr
         marginLeft: '0.25rem',
       },
     }),
-
-    // TODO(richburdon): Doesn't work. We should make it so reference pill are deleted entirely when backspace is pressed.
-    keymap.of([
-      {
-        key: 'Backspace',
-        run: (view) => {
-          const pos = view.state.selection.main.head;
-          const plugin = view.plugin(decorationField);
-          if (!plugin) return false;
-
-          const iter = plugin._decorations.iter();
-          while (iter.value) {
-            if (iter.from <= pos && iter.to >= pos) {
-              view.dispatch({
-                changes: { from: iter.from, to: iter.to },
-              });
-              return true;
-            }
-            iter.next();
-          }
-          return false;
-        },
-      },
-      {
-        key: 'ArrowLeft',
-        run: (view) => {
-          const pos = view.state.selection.main.head;
-          const plugin = view.plugin(decorationField);
-          if (!plugin) return false;
-
-          const iter = plugin._decorations.iter();
-          while (iter.value) {
-            if (iter.from <= pos && iter.to >= pos) {
-              view.dispatch({
-                selection: { anchor: iter.from },
-              });
-              return true;
-            }
-            iter.next();
-          }
-          return false;
-        },
-      },
-      {
-        key: 'ArrowRight',
-        run: (view) => {
-          const pos = view.state.selection.main.head;
-          const plugin = view.plugin(decorationField);
-          if (!plugin) return false;
-
-          const iter = plugin._decorations.iter();
-          while (iter.value) {
-            if (iter.from <= pos && iter.to >= pos) {
-              view.dispatch({
-                selection: { anchor: iter.to },
-              });
-              return true;
-            }
-            iter.next();
-          }
-          return false;
-        },
-      },
-    ]),
 
     autocompletion({
       activateOnTyping: true,
