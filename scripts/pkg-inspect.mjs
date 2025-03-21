@@ -14,14 +14,14 @@ const argv = yargs(hideBin(process.argv))
   .example('$0 effect', 'List all versions with details')
   .example('$0 effect@1.2.3', 'Get info about a specific version')
   .example('$0 effect@1.2.3 --manifest', 'Display full manifest in pretty JSON')
-  .example('$0 @effect/vitest --peer effect@3.12.12', 'Filter versions compatible with effect@3.12.12')
+  .example('$0 @effect/vitest --peer effect@3.13.3', 'Filter versions compatible with effect@3.13.3')
   .option('manifest', {
     type: 'boolean',
     description: 'Print full manifest in pretty JSON format',
   })
   .option('peer', {
     type: 'string',
-    description: 'Filter versions compatible with the specified peer dependency (e.g., effect@3.12.12)',
+    description: 'Filter versions compatible with the specified peer dependency (e.g., effect@3.13.3)',
   })
   .help().argv;
 
@@ -54,7 +54,7 @@ function parsePackageInput(input) {
 
 /**
  * Parse peer dependency option
- * @param {string} peerOption - The peer option string (e.g., 'effect@3.12.12')
+ * @param {string} peerOption - The peer option string (e.g., 'effect@3.13.3')
  * @returns {Object} - { name, version }
  */
 function parsePeerOption(peerOption) {
