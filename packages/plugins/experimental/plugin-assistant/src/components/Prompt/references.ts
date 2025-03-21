@@ -32,6 +32,10 @@ export interface ReferencesProvider {
 
 export type PromptReferencesOptions = {
   provider: ReferencesProvider;
+  /**
+   * Will prevent the autocomplete from closing when the user blurs the editor.
+   * @default false
+   */
   debug?: boolean;
   /**
    * @default '@'
@@ -42,7 +46,11 @@ export type PromptReferencesOptions = {
 /**
  * Include references into text.
  */
-export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: PromptReferencesOptions): Extension => {
+export const promptReferences = ({
+  provider,
+  debug = false,
+  triggerCharacter = '@',
+}: PromptReferencesOptions): Extension => {
   if (triggerCharacter.length !== 1) {
     throw new Error('triggerCharacter must be a single character');
   }
@@ -145,7 +153,7 @@ export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: Pr
           };
         },
       ],
-      closeOnBlur: false,
+      closeOnBlur: !debug,
       tooltipClass: () => 'shadow rounded',
     }),
 
