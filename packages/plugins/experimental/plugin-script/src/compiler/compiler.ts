@@ -32,8 +32,6 @@ const defaultOptions: ts.CompilerOptions = {
 
 type Mod = { source: string; deps: string[] };
 
-// TODO(wittjosiah): There either needs to be a compiler per space or the compiler needs to have multiple environments.
-//   Currently module versions are going to trample each other and so only one version can be used globally.
 export class Compiler {
   private _env: VirtualTypeScriptEnvironment | undefined;
   private _fsMap: Map<string, string> | undefined;
