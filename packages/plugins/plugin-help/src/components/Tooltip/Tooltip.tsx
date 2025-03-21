@@ -35,7 +35,7 @@ export const floaterProps: Props['floaterProps'] = {
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
   ({ step: { title, content }, index, size, isLastStep, backProps, closeProps, primaryProps }, forwardedRef) => {
-    const arrowGroup = useArrowNavigationGroup({ axis: 'horizontal' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
     return (
@@ -60,7 +60,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
           </Button>
         </div>
         <div className='flex grow pli-4 mlb-2'>{content}</div>
-        <div className='flex p-2 items-center justify-between' {...arrowGroup}>
+        <div className='flex p-2 items-center justify-between' {...arrowNavigationAttrs}>
           {
             <Button
               variant='primary'
