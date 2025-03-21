@@ -120,7 +120,7 @@ describe('workflow', () => {
         functions: {
           callFunction: async (path, { input }) => {
             expect(path).toEqual(functionUrl);
-            return Math.pow(input.num1, input.num2);
+            return { result: Math.pow(input.num1, input.num2) };
           },
         },
       });
