@@ -1,0 +1,232 @@
+import type { Extension } from '@codemirror/state';
+import {
+  autocompletion,
+  completionKeymap,
+  type CompletionSource,
+  type Completion,
+  type CompletionContext,
+  type CompletionResult,
+} from '@codemirror/autocomplete';
+import {
+  Decoration,
+  EditorView,
+  keymap,
+  ViewPlugin,
+  WidgetType,
+  type DecorationSet,
+  type ViewUpdate,
+} from '@codemirror/view';
+import { Mutex } from '@dxos/async';
+import { log } from 'handlebars';
+
+export type ReferenceData = {
+  uri: string;
+  label: string;
+};
+
+export interface ReferencesProvider {
+  getReferences({ query }: { query: string }): Promise<ReferenceData[]>;
+
+  resolveReference({ uri }: { uri: string }): Promise<ReferenceData | null>;
+}
+
+export type PromptReferencesOptions = {
+  provider: ReferencesProvider;
+  debug?: boolean;
+  /**
+   * @default '@'
+   */
+  triggerCharacter?: string;
+};
+
+/**
+ * Include references into text.
+ */
+export const promptReferences = ({ provider, debug, triggerCharacter = '@' }: PromptReferencesOptions): Extension => {
+  if (triggerCharacter.length !== 1) {
+    throw new Error('triggerCharacter must be a single character');
+  }
+
+  const decorationField = ViewPlugin.fromClass(
+    class ReferenceView {
+      _decorations: DecorationSet = Decoration.set([]);
+      _mutex = new Mutex();
+      constructor(view: EditorView) {
+        queueMicrotask(async () => {
+          const guard = await this._mutex.acquire();
+          try {
+            this._decorations = await this._computeDecorations(view);
+          } finally {
+            guard.release();
+          }
+        });
+      }
+
+      update(update: ViewUpdate) {
+        if (update.docChanged) {
+          queueMicrotask(async () => {
+            const guard = await this._mutex.acquire();
+            try {
+              this._decorations = await this._computeDecorations(update.view);
+            } finally {
+              guard.release();
+            }
+          });
+        }
+      }
+
+      private async _computeDecorations(view: EditorView): Promise<DecorationSet> {
+        const text = view.state.doc.toString();
+        const references = text.matchAll(new RegExp(`${triggerCharacter}[a-zA-Z0-9@:]+\\s`, 'g'));
+
+        const decorations = [];
+        for (const match of references) {
+          const reference = match[0];
+          const uri = reference.slice(1, -1);
+          const data = await provider.resolveReference({ uri });
+          if (data) {
+            decorations.push(
+              Decoration.replace({
+                widget: new ReferenceWidget(data),
+                side: -1,
+                inclusive: true,
+              }).range(match.index!, match.index! + reference.length),
+            );
+          }
+        }
+
+        return Decoration.set(decorations);
+      }
+    },
+    {
+      decorations: (v) => v._decorations,
+    },
+  );
+
+  return [
+    decorationField,
+
+    EditorView.theme({
+      '.cm-reference-pill': {
+        borderRadius: '0.25rem',
+        borderWidth: '1px',
+        marginRight: '0.25rem',
+        marginLeft: '0.25rem',
+      },
+    }),
+
+    // TODO(richburdon): Doesn't work. We should make it so reference pill are deleted entirely when backspace is pressed.
+    keymap.of([
+      {
+        key: 'Backspace',
+        run: (view) => {
+          const pos = view.state.selection.main.head;
+          const plugin = view.plugin(decorationField);
+          if (!plugin) return false;
+
+          const iter = plugin._decorations.iter();
+          while (iter.value) {
+            if (iter.from <= pos && iter.to >= pos) {
+              view.dispatch({
+                changes: { from: iter.from, to: iter.to },
+              });
+              return true;
+            }
+            iter.next();
+          }
+          return false;
+        },
+      },
+      {
+        key: 'ArrowLeft',
+        run: (view) => {
+          const pos = view.state.selection.main.head;
+          const plugin = view.plugin(decorationField);
+          if (!plugin) return false;
+
+          const iter = plugin._decorations.iter();
+          while (iter.value) {
+            if (iter.from <= pos && iter.to >= pos) {
+              view.dispatch({
+                selection: { anchor: iter.from },
+              });
+              return true;
+            }
+            iter.next();
+          }
+          return false;
+        },
+      },
+      {
+        key: 'ArrowRight',
+        run: (view) => {
+          const pos = view.state.selection.main.head;
+          const plugin = view.plugin(decorationField);
+          if (!plugin) return false;
+
+          const iter = plugin._decorations.iter();
+          while (iter.value) {
+            if (iter.from <= pos && iter.to >= pos) {
+              view.dispatch({
+                selection: { anchor: iter.to },
+              });
+              return true;
+            }
+            iter.next();
+          }
+          return false;
+        },
+      },
+    ]),
+
+    autocompletion({
+      activateOnTyping: true,
+      override: [
+        async (context): Promise<CompletionResult | null> => {
+          const match = context.matchBefore(new RegExp(`${triggerCharacter}[a-zA-Z0-9]+`));
+
+          if (!match || match?.to === match?.from) {
+            return null;
+          }
+
+          const query = match.text.slice(1);
+          const references = await provider.getReferences({ query });
+
+          return {
+            from: match.from,
+            filter: false,
+            options: references.map((reference) => ({
+              label: reference.label,
+              apply: `${triggerCharacter}${reference.uri} `,
+            })),
+          };
+        },
+      ],
+      closeOnBlur: false,
+      tooltipClass: () => 'shadow rounded',
+    }),
+
+    keymap.of(completionKeymap),
+  ];
+};
+
+class ReferenceWidget extends WidgetType {
+  constructor(private data: ReferenceData) {
+    super();
+  }
+
+  override toDOM() {
+    const span = document.createElement('span');
+    span.textContent = `@ ${this.data.label}`;
+    span.className = 'cm-reference-pill';
+    return span;
+  }
+
+  override eq(other: ReferenceWidget) {
+    return other.data.uri === this.data.uri;
+  }
+
+  override ignoreEvent() {
+    return true;
+  }
+}

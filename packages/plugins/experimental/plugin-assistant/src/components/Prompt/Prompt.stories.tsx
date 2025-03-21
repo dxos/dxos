@@ -12,6 +12,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 import { Prompt } from './Prompt';
 import { PromptBar } from './PromptBar';
 import translations from '../../translations';
+import type { ReferenceData } from './references';
 
 const meta: Meta<typeof Prompt> = {
   title: 'plugins/plugin-automation/Prompt',
@@ -77,3 +78,36 @@ export const Toolbar: Story = {
     );
   },
 };
+
+export const Includes: Story = {
+  args: {
+    classNames: 'w-96 p-4 rounded outline outline-gray-200',
+    references: {
+      async getReferences({ query }) {
+        const res = references.filter((i) => i.label.toLowerCase().startsWith(query.toLowerCase()));
+        console.log('getReferences', { query, res });
+        return res;
+      },
+      async resolveReference({ uri }) {
+        const res = references.find((i) => i.uri === uri);
+        console.log('resolveReference', { uri, res });
+        return res ?? null;
+      },
+    },
+  },
+};
+
+const references: ReferenceData[] = [
+  {
+    uri: 'dxn:echo:@:AAAAAAAA',
+    label: 'Meeting Notes',
+  },
+  {
+    uri: 'dxn:echo:@:BBBBBBBB',
+    label: 'Project Plan',
+  },
+  {
+    uri: 'dxn:echo:@:CCCCCCCC',
+    label: 'Meeting Plan',
+  },
+];
