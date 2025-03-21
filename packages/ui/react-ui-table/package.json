@@ -65,7 +65,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "9.19.2",
+    "@fluentui/react-tabster": "^9.24.2",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "1.1.1",
     "@radix-ui/react-primitive": "2.0.2",

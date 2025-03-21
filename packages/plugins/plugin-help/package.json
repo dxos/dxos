@@ -42,7 +42,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@fluentui/react-tabster": "9.19.2",
+    "@fluentui/react-tabster": "^9.24.2",
     "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },
