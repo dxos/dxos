@@ -85,8 +85,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
             gridClasses,
             (size === 'contain' || size === 'contain-fit-content') &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
-                : 'overflow-y-auto min-is-0 is-full max-is-full'),
+                ? 'overflow-x-auto min-bs-0 max-bs-full bs-full'
+                : 'overflow-y-auto min-is-0 max-is-full is-full'),
             classNames,
           )}
           data-rail={rail}
@@ -110,4 +110,5 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 );
 
 export { StackContext };
+
 export type { StackContextValue };
