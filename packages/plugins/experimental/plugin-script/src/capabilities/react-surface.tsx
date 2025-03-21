@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions';
 import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
 
 import { ScriptCapabilities } from './capabilities';
+import { type Compiler } from '../compiler';
 import { DebugPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
 import { useDeployState, useToolbarState } from '../hooks';
 import { SCRIPT_PLUGIN } from '../meta';
@@ -29,8 +30,13 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
       component: ({ data, role }) => {
-        const compiler = useCapability(ScriptCapabilities.Compiler);
+        const layout = useLayout();
+        const [compiler, setCompiler] = useState<Compiler>();
+        const getCompiler = useCapability(ScriptCapabilities.Compiler);
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)?.value;
+        useEffect(() => {
+          void getCompiler(layout.workspace).then(setCompiler);
+        }, [layout.workspace]);
         return <ScriptContainer role={role} script={data.subject} settings={settings} compiler={compiler} />;
       },
     }),

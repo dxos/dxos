@@ -4,9 +4,6 @@
 
 /* @version
 {
-  "dfx": "0.113.0",
-  "effect": "3.13.3",
-  "@effect/platform": "0.77.2",
   "@dxos/client": "0.7.5-main.b19bfc8",
   "@dxos/echo-schema": "0.7.5-main.b19bfc8",
   "@dxos/functions": "0.7.5-main.b19bfc8",

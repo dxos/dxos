@@ -104,7 +104,7 @@ export const TypescriptEditor = ({
       selection,
       scrollTo,
     }),
-    [id, extensions, themeMode, inputMode, selection, scrollTo],
+    [id, extensions, themeMode, inputMode, selection, scrollTo, compiler],
   );
 
   return (

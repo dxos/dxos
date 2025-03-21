@@ -4,8 +4,6 @@
 
 /* @version
 {
-  "effect": "3.13.3",
-  "@effect/platform": "0.77.2",
   "@dxos/echo-schema": "0.7.5-main.b19bfc8",
   "@dxos/functions": "0.7.5-main.b19bfc8"
 }

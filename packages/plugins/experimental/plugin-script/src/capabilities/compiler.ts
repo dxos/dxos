@@ -12,22 +12,20 @@ import { ScriptCapabilities } from './capabilities';
 import { Compiler } from '../compiler';
 
 export default async () => {
-  const compiler = new Compiler();
+  const compilers = new Map<string, Compiler>();
 
   (globalThis as any).composer ??= {};
-  (globalThis as any).composer.compiler = compiler;
+  (globalThis as any).composer.compilers = compilers;
 
-  await compiler.initialize();
   await initializeBundler({ wasmUrl });
 
-  return contributes(ScriptCapabilities.Compiler, compiler);
+  return contributes(ScriptCapabilities.Compiler, async (workspace) => {
+    if (compilers.has(workspace)) {
+      return compilers.get(workspace)!;
+    }
+    const compiler = new Compiler();
+    await compiler.initialize();
+    compilers.set(workspace, compiler);
+    return compiler;
+  });
 };
-
-const _globals = `
-  import { defineFunction } from 'npm:@dxos/functions@main';
-  type DefineFunction = typeof defineFunction;
-
-  declare global {
-    var defineFunction: DefineFunction;
-  }
-`;
