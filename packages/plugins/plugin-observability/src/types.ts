@@ -13,8 +13,10 @@ const Email = S.String.pipe(
   }),
 );
 
-const nonEmpty = (field: string) => S.nonEmptyString({ message: () => `${field} is required.` });
-const maxLength = (field: string, length: number) => S.maxLength(length, { message: () => `${field} is too long.` });
+const nonEmpty = <S extends S.Schema.Any>(field: string) =>
+  S.nonEmptyString<S>({ message: () => `${field} is required.` });
+const maxLength = <S extends S.Schema.Any>(field: string, length: number) =>
+  S.maxLength<S>(length, { message: () => `${field} is too long.` });
 
 export const UserFeedback = S.Struct({
   name: S.String.pipe(nonEmpty('Name'), maxLength('Name', 256)),

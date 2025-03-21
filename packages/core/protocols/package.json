@@ -86,10 +86,10 @@
   "devDependencies": {
     "@bufbuild/buf": "^1.43.0",
     "@bufbuild/protoc-gen-es": "^2.1.0",
-    "effect": "3.12.12"
+    "effect": "3.13.3"
   },
   "peerDependencies": {
-    "effect": "3.12.12"
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"
