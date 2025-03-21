@@ -38,8 +38,18 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received' },
-      { name: 'response', format: FormatEnum.String, size: 80 },
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', sort: 'desc' },
+      {
+        name: 'response',
+        format: FormatEnum.SingleSelect,
+        size: 100,
+        config: {
+          options: [
+            { id: 'Available', title: 'Available', color: 'green' },
+            { id: 'Left', title: 'Left', color: 'neutral' },
+          ],
+        },
+      },
       { name: 'peer', format: FormatEnum.DID },
       { name: 'since', format: FormatEnum.DateTime },
       { name: 'topic', format: FormatEnum.DID },

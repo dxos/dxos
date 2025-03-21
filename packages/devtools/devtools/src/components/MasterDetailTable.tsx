@@ -4,7 +4,6 @@
 
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { type SortDirectionType } from '@dxos/echo-schema';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -39,19 +38,25 @@ export const MasterDetailTable = ({
     setSelectedId(selectedIds[selectedIds.length - 1]);
   }, []);
 
-  const gridStyles = detailsPosition === 'right' ? 'grid grid-columns-[3fr_5fr]' : 'grid grid-rows-[3fr_5fr]';
+  // Adjust grid layout based on selection state and direction
+  const gridLayout = useMemo(() => {
+    if (detailsPosition === 'right') {
+      return selected ? 'grid grid-columns-[3fr_5fr]' : 'grid grid-columns-[1fr_min-content]';
+    } else {
+      return selected ? 'grid grid-rows-[3fr_5fr]' : 'grid grid-rows-[1fr_min-content]';
+    }
+  }, [selected, detailsPosition]);
 
   return (
-    <div className={mx('bs-full', gridStyles, styles.border)}>
+    <div className={mx('bs-full', gridLayout)}>
       <div>
         <DynamicTable data={data} properties={properties} onSelectionChanged={handleSelectionChanged} />
       </div>
-
-      <div className='bs-full overflow-auto text-sm border-t border-separator'>
+      <div className='bs-full overflow-auto text-sm border-bs border-separator'>
         {selected ? (
           <JsonView data={detailsTransform !== undefined ? detailsTransform(selected) : selected} />
         ) : (
-          'Make a selection for details'
+          <p className={mx('font-mono text-xs p-1')}>Make a selection for details.</p>
         )}
       </div>
     </div>
