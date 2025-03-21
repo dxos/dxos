@@ -40,7 +40,9 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', tabbable: false, circular: true });
+    const arrowNavigationAttrs = window
+      ? {}
+      : useArrowNavigationGroup({ axis: 'vertical', tabbable: false, circular: true });
     return (
       <Root
         role='treegrid'

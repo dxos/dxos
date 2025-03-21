@@ -72,11 +72,12 @@ const TabsRoot = ({
   );
 
   const { findFirstFocusable } = useFocusFinders();
-
   const tabsRoot = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    tabsRoot.current && findFirstFocusable(tabsRoot.current)?.focus();
+    if (tabsRoot.current) {
+      findFirstFocusable(tabsRoot.current)?.focus();
+    }
   }, [activePart]);
 
   return (

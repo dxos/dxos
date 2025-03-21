@@ -46,7 +46,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
   ) => {
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation });
+    const arrowNavigationAttrs = window ? {} : useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
