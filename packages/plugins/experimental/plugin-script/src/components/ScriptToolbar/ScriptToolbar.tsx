@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type ScriptType } from '@dxos/functions/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { stackItemContentToolbarClassNames } from '@dxos/react-ui-editor';

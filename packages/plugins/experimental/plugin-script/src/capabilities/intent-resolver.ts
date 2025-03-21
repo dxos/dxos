@@ -5,7 +5,7 @@
 import { Octokit } from '@octokit/core';
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 import { create, makeRef } from '@dxos/live-object';
 import { TextType } from '@dxos/schema';
 

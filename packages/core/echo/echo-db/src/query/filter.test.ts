@@ -5,9 +5,11 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Reference } from '@dxos/echo-protocol';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { ObjectId, S, TypedObject } from '@dxos/echo-schema';
+import { SpaceId } from '@dxos/keys';
 import { create } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { range } from '@dxos/util';
 
 import { Filter } from './filter';
 import { filterMatch } from './filter-match';
@@ -99,6 +101,19 @@ describe('Filter', () => {
     const filter = Filter.from({ __typename: 'example.com/type/Type' });
     expect(filter.type![0].toString()).to.equal('dxn:type:example.com/type/Type');
     expect(filter.properties).to.deep.equal({});
+  });
+
+  test('proto codec', async () => {
+    const objectIds = range(2, () => ObjectId.random());
+    const spaceId = SpaceId.random();
+    const fromObject = Filter.from({ id: objectIds }, { spaceIds: [spaceId] });
+
+    expect(fromObject.spaceIds).toStrictEqual([spaceId]);
+    expect(fromObject.objectIds).toStrictEqual(objectIds);
+
+    const fromProto = Filter.fromProto(fromObject.toProto());
+    expect(fromProto.spaceIds).toStrictEqual([spaceId]);
+    expect(fromProto.objectIds).toStrictEqual(objectIds);
   });
 });
 

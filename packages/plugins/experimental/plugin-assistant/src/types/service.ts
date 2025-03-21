@@ -4,7 +4,7 @@
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Ref, S, TypedObject, type Ref$ } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions/types';
 
 const ApiAuthorizationKey = S.Struct({
   type: S.Literal('api-key'),
