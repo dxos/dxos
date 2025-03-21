@@ -1,37 +1,63 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { useDevices, Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
-
-const { helper, builder } = createColumnBuilder<Device>();
-const columns: TableColumnDef<Device, any>[] = [
-  helper.accessor((device) => device.deviceKey, { id: 'key', ...builder.key({ tooltip: true }) }),
-  helper.accessor(
-    (device) => (device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence]),
-    {
-      id: 'state',
-      size: 80,
-      cell: (cell) => (
-        <div
-          className={cell.row.original.presence === Device.PresenceState.ONLINE ? 'text-green-500' : 'text-neutral-500'}
-        >
-          {cell.getValue()}
-        </div>
-      ),
-    },
-  ),
-  helper.accessor((device) => DeviceType[device.profile?.type || DeviceType.UNKNOWN], { id: 'type', size: 80 }),
-  helper.accessor((device) => device.profile?.label, { id: 'label', size: 120 }),
-];
 
 export const DeviceListPanel = () => {
   const devices = useDevices();
 
-  return <PanelContainer>{<MasterDetailTable<Device> columns={columns} data={devices} />}</PanelContainer>;
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'key', format: FormatEnum.DID },
+      {
+        name: 'state',
+        format: FormatEnum.SingleSelect,
+        size: 150,
+        config: {
+          options: [
+            { id: 'THIS DEVICE', title: 'THIS DEVICE', color: 'green' },
+            { id: 'ONLINE', title: 'ONLINE', color: 'green' },
+            { id: 'OFFLINE', title: 'OFFLINE', color: 'neutral' },
+          ],
+        },
+      },
+      {
+        name: 'type',
+        format: FormatEnum.SingleSelect,
+        size: 180,
+        config: {
+          options: Object.entries(DeviceType)
+            .filter(([key]) => isNaN(Number(key)))
+            .map(([key]) => ({ id: key, title: key, color: 'neutral' })),
+        },
+      },
+      { name: 'label', format: FormatEnum.String, size: 180 },
+    ],
+    [],
+  );
+
+  const data = useMemo(
+    () =>
+      devices.map((device) => ({
+        id: device.deviceKey.toString(),
+        key: device.deviceKey.toString(),
+        state: device.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
+        type: DeviceType[device.profile?.type || DeviceType.UNKNOWN],
+        label: device.profile?.label,
+      })),
+    [devices],
+  );
+
+  return (
+    <PanelContainer>
+      <MasterDetailTable properties={properties} data={data} />
+    </PanelContainer>
+  );
 };
