@@ -143,6 +143,7 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
       } else {
         log.verbose('no input schema in function metadata', { functionId });
       }
+
       if (meta.outputSchema) {
         deployedFunction.outputSchema = meta.outputSchema;
       } else {
@@ -150,8 +151,6 @@ export const useDeployHandler = ({ state, script }: { state: Partial<DeployState
       }
 
       setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${space.id}/${functionId}`);
-
-      state.view = 'split';
     } catch (err: any) {
       log.catch(err);
       state.error = t('upload failed label');

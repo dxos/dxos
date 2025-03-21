@@ -17,7 +17,7 @@ const CELL_NAME = 'Cell';
 
 const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext();
-  const domAttributes = useFocusableGroup({ tabBehavior: 'limited' });
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
   const pinned = tableContext.table.getState().rowPinning?.bottom?.includes(cell.row.id);
   const className = tdRoot({ ...tableContext, pinned }, cell.column.columnDef.meta?.cell?.classNames);
@@ -60,7 +60,7 @@ const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellPr
   }, []);
 
   return (
-    <td data-testid='table.cell' tabIndex={0} {...domAttributes} className={className} onKeyDown={handleKeyDown}>
+    <td data-testid='table.cell' tabIndex={0} {...focusableGroupAttrs} className={className} onKeyDown={handleKeyDown}>
       {children}
     </td>
   );
