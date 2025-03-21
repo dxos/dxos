@@ -41,10 +41,10 @@
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.12.12"
+    "effect": "3.13.3"
   },
   "peerDependencies": {
-    "effect": "3.12.12"
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"
