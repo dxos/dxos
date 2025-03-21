@@ -3,15 +3,16 @@
 //
 
 import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState, useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
@@ -21,10 +22,10 @@ export type View<T> = {
   title: string;
   filter: (object: T) => boolean;
   subFilter?: (match?: string) => (object: T) => boolean;
-  columns: TableColumnDef<T, any>[];
+  properties: TablePropertyDefinition[];
+  dataTransform: (response: T) => any;
 };
 
-const { helper, builder } = createColumnBuilder<SignalResponse>();
 const views: View<SignalResponse>[] = [
   {
     id: 'swarm-event',
@@ -36,34 +37,24 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Fixed width for date.
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
-    columns: [
-      helper.accessor('receivedAt', builder.date({ header: 'received' })),
-      helper.accessor(
-        (response) => {
-          if (response.swarmEvent?.peerAvailable) {
-            return 'Available';
-          } else if (response.swarmEvent?.peerLeft) {
-            return 'Left';
-          }
-        },
-        { id: 'response', size: 80 },
-      ),
-      helper.accessor(
-        (response) =>
-          (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer)) ||
-          (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer)),
-        { id: 'peer', ...builder.key({ tooltip: true }) },
-      ),
-      // TODO(burdon): Time delta since last message?
-      helper.accessor((response) => response.swarmEvent!.peerAvailable?.since ?? new Date(), {
-        id: 'since',
-        ...builder.date(),
-      }),
-      helper.accessor((response) => response.topic && PublicKey.from(response.topic), {
-        id: 'topic',
-        ...builder.key({ tooltip: true }),
-      }),
+    properties: [
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received' },
+      { name: 'response', format: FormatEnum.String, size: 80 },
+      { name: 'peer', format: FormatEnum.DID },
+      { name: 'since', format: FormatEnum.DateTime },
+      { name: 'topic', format: FormatEnum.DID },
     ],
+    dataTransform: (response: SignalResponse) => ({
+      id: `${response.receivedAt?.getTime()}-${Math.random()}`,
+      receivedAt: response.receivedAt,
+      response: response.swarmEvent?.peerAvailable ? 'Available' : response.swarmEvent?.peerLeft ? 'Left' : undefined,
+      peer:
+        (response.swarmEvent!.peerAvailable && PublicKey.from(response.swarmEvent!.peerAvailable.peer).toString()) ||
+        (response.swarmEvent!.peerLeft && PublicKey.from(response.swarmEvent!.peerLeft.peer).toString()),
+      since: response.swarmEvent!.peerAvailable?.since ?? new Date(),
+      topic: response.topic && PublicKey.from(response.topic).toString(),
+      _original: response,
+    }),
   },
   {
     id: 'message',
@@ -71,26 +62,22 @@ const views: View<SignalResponse>[] = [
     filter: (response: SignalResponse) => {
       return !!response.message;
     },
-    columns: [
-      helper.accessor('receivedAt', builder.date({ header: 'received' })),
-      helper.accessor((response) => PublicKey.from(response.message!.author), {
-        id: 'author',
-        ...builder.key({ tooltip: true }),
-      }),
-      helper.accessor((response) => PublicKey.from(response.message!.recipient), {
-        id: 'recipient',
-        ...builder.key({ tooltip: true }),
-      }),
-
-      helper.accessor((response) => response.message!.payload.messageId, {
-        id: 'message',
-        ...builder.key({ tooltip: true }),
-      }),
-      helper.accessor((response) => response.message!.payload?.payload?.topic, {
-        id: 'topic',
-        ...builder.key({ tooltip: true }),
-      }),
+    properties: [
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received' },
+      { name: 'author', format: FormatEnum.DID },
+      { name: 'recipient', format: FormatEnum.DID },
+      { name: 'message', format: FormatEnum.DID },
+      { name: 'topic', format: FormatEnum.DID },
     ],
+    dataTransform: (response: SignalResponse) => ({
+      id: `${response.receivedAt?.getTime()}-${Math.random()}`,
+      receivedAt: response.receivedAt,
+      author: PublicKey.from(response.message!.author).toString(),
+      recipient: PublicKey.from(response.message!.recipient).toString(),
+      message: response.message!.payload.messageId,
+      topic: response.message!.payload?.payload?.topic,
+      _original: response,
+    }),
   },
   {
     id: 'ack',
@@ -98,21 +85,20 @@ const views: View<SignalResponse>[] = [
     filter: (response: SignalResponse) => {
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
-    columns: [
-      helper.accessor('receivedAt', builder.date({ header: 'received' })),
-      helper.accessor((response) => PublicKey.from(response.message!.author), {
-        id: 'author',
-        ...builder.key({ tooltip: true }),
-      }),
-      helper.accessor((response) => PublicKey.from(response.message!.recipient), {
-        id: 'recipient',
-        ...builder.key({ tooltip: true }),
-      }),
-      helper.accessor((response) => response.message!.payload.messageId, {
-        id: 'message',
-        ...builder.key({ tooltip: true }),
-      }),
+    properties: [
+      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received' },
+      { name: 'author', format: FormatEnum.DID },
+      { name: 'recipient', format: FormatEnum.DID },
+      { name: 'message', format: FormatEnum.DID },
     ],
+    dataTransform: (response: SignalResponse) => ({
+      id: `${response.receivedAt?.getTime()}-${Math.random()}`,
+      receivedAt: response.receivedAt,
+      author: PublicKey.from(response.message!.author).toString(),
+      recipient: PublicKey.from(response.message!.recipient).toString(),
+      message: response.message!.payload.messageId,
+      _original: response,
+    }),
   },
 ];
 
@@ -176,6 +162,13 @@ export const SignalMessageTable = () => {
     }
   };
 
+  const tableData = useMemo(() => {
+    if (!view) {
+      return [];
+    }
+    return filteredMessages.map(view.dataTransform);
+  }, [filteredMessages, view]);
+
   return (
     <div className='flex flex-col flex-1 overflow-hidden'>
       <Toolbar.Root>
@@ -188,9 +181,9 @@ export const SignalMessageTable = () => {
         <ToggleConnection connection={connectionState} onToggleConnection={handleToggleConnection} />
       </Toolbar.Root>
 
-      <div className='flex grow overflow-hidden'>
-        {view && <MasterDetailTable<SignalResponse> columns={view.columns} data={filteredMessages} />}
-      </div>
+      {view && (
+        <MasterDetailTable properties={view.properties} data={tableData} detailsTransform={(d) => d._original} />
+      )}
     </div>
   );
 };

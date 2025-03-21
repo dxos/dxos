@@ -51,13 +51,14 @@ export const DeviceListPanel = () => {
         state: device.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
         type: DeviceType[device.profile?.type || DeviceType.UNKNOWN],
         label: device.profile?.label,
+        _original: device,
       })),
     [devices],
   );
 
   return (
     <PanelContainer>
-      <MasterDetailTable properties={properties} data={data} />
+      <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />
     </PanelContainer>
   );
 };
