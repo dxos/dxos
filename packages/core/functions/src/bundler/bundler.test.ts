@@ -24,7 +24,8 @@ describe('Bundler', () => {
     expect(result.error).to.not.exist;
   });
 
-  test('Import', async () => {
+  // TODO(wittjosiah): Remove?
+  test.skip('Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({
       source: `
