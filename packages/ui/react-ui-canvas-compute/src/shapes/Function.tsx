@@ -6,7 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { getSnapshot, S } from '@dxos/echo-schema';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { FunctionType, ScriptType } from '@dxos/functions/types';
 import { useClient } from '@dxos/react-client';
 import { Filter, makeRef, parseId } from '@dxos/react-client/echo';
 import {

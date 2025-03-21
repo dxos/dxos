@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
 

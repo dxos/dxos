@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type ScriptType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { type MenuAction, type MenuActionHandler } from '@dxos/react-ui-menu';
 

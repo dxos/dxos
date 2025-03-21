@@ -54,6 +54,14 @@ export const logCustomEvent = (data: any) =>
     });
   });
 
+export const createDefectLogger = <A, E, R>(): ((self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
+  Effect.catchAll((error) =>
+    Effect.gen(function* () {
+      log.error('unhandled effect error', { error });
+      throw error;
+    }),
+  );
+
 export const createDxosEventLogger = (level: LogLevel, message: string = 'event'): Context.Tag.Service<EventLogger> => {
   const logFunction = (
     {

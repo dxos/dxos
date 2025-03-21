@@ -12,7 +12,7 @@ import {
   TriggerKind,
   type FunctionTriggerType,
   ScriptType,
-} from '@dxos/functions';
+} from '@dxos/functions/types';
 import { type Client, useClient } from '@dxos/react-client';
 import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, useTranslation } from '@dxos/react-ui';

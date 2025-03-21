@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { FunctionType, FunctionTrigger } from '@dxos/functions';
+import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 
