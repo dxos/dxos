@@ -62,7 +62,7 @@
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {
-    "effect": "3.13.3"
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"
