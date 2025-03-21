@@ -181,8 +181,8 @@ const createLoader = (graphs: ComputeGraph[]) =>
       }
       return graph;
     },
-    nodeResolver: async (nodeType) => {
-      throw new Error(`Unknown node type: ${nodeType}.`);
+    nodeResolver: async (node) => {
+      throw new Error(`Unknown node type: ${node.type}.`);
     },
   });
 

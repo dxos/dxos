@@ -75,6 +75,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
       const rowIdx = Math.floor(Math.random() * items.length);
       const fields = table.view?.target?.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
+      // TODO(ZaymonFC): ... This is borked.
       const projection: ViewProjection = (table as any)._projection;
       const field = fields[columnIdx];
       const item = items[rowIdx];
