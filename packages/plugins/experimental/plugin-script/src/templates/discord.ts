@@ -7,11 +7,11 @@ import { createStatic, EchoObject, defineFunction, DXN, Filter, ObjectId, S } fr
 import {
   FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.12.12';
+} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
 // @ts-ignore
-import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.12.12';
+import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.13.3';
 // @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.12.12';
+import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
 
 const MessageSchema = S.Struct({
   id: S.String,
@@ -49,10 +49,14 @@ export default defineFunction({
     context: { space },
   }: any) =>
     Effect.gen(function* () {
-      const { token } = yield* Effect.tryPromise(() =>
-        space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
-      );
-      const { objects } = yield* Effect.tryPromise(() => space.queues.queryQueue(DXN.parse(queueId)));
+      const { token } = yield* Effect.tryPromise({
+        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
+        catch: (e: any) => e,
+      });
+      const { objects } = yield* Effect.tryPromise({
+        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        catch: (e: any) => e,
+      });
       const backfill = objects.length === 0;
       const newMessages = yield* Ref.make(0);
       const lastMessage = yield* Ref.make(objects.at(-1));
@@ -79,7 +83,10 @@ export default defineFunction({
             )
             .toReversed();
           if (queueMessages.length > 0) {
-            yield* Effect.tryPromise(() => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages));
+            yield* Effect.tryPromise({
+              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
+              catch: (e: any) => e,
+            });
             yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);
             yield* Ref.update(lastMessage, (m: any) => queueMessages.at(-1));
           }

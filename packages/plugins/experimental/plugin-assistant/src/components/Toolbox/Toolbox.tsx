@@ -6,7 +6,7 @@ import React, { useState, useEffect, Fragment, type FC } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { parseToolName, type ArtifactDefinition, type Tool } from '@dxos/artifact';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
