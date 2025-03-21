@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+// import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { CaretLeft, CaretRight, Circle, X } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 // TODO(thure): This needed to be imported in the package.json specifically to pacify TS2742. See if this is resolved with typescript@5.5.x.
@@ -35,8 +35,8 @@ export const floaterProps: Props['floaterProps'] = {
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
   ({ step: { title, content }, index, size, isLastStep, backProps, closeProps, primaryProps }, forwardedRef) => {
-    const arrowGroup = window ? {} : useArrowNavigationGroup({ axis: 'horizontal' });
-    const focusableGroupAttrs = window ? {} : useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const arrowGroup = {}; // useArrowNavigationGroup({ axis: 'horizontal' });
+    const focusableGroupAttrs = {}; // useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
 
     return (
       <div

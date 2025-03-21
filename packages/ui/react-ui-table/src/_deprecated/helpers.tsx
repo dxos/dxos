@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
+// import { useFocusFinders } from '@fluentui/react-tabster';
 import { Check, ClipboardText, type Icon, X } from '@phosphor-icons/react';
 import {
   createColumnHelper,
@@ -96,7 +96,7 @@ const ComboboxBuilderCell = <TData extends RowData>(cellContext: CellContext<TDa
 
 const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData, string>) => {
   const ref = useRef<HTMLInputElement>(null);
-  const { findPrevFocusable } = useFocusFinders();
+  // const { findPrevFocusable } = useFocusFinders();
 
   const { onUpdate, cell } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
 
@@ -114,7 +114,7 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   useEffect(() => setValue(getInitialValue()), [getInitialValue]);
 
   const handleSave = () => {
-    ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
+    // ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
 
     if (value !== initialValue) {
       onUpdate?.(cellContext.row.original, cellContext.column.id, value);
@@ -164,7 +164,7 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   const { onUpdate, digits } = cellContext.column.columnDef.meta as ColumnMeta<TData, string>;
   const value = cellContext.getValue();
   const [text, setText] = useState<string>(displayNumber(value, digits));
-  const { findPrevFocusable } = useFocusFinders();
+  // const { findPrevFocusable } = useFocusFinders();
   const ref = useRef<HTMLInputElement | null>(null);
 
   // Update display value if `digits` changes and input is not in focus.
@@ -187,12 +187,12 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
     }
 
     // Shift focus only if input is focused on save (e.g. on `Enter`).
-    ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
+    // ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
   };
 
   const _handleCancel = () => {
     setText(displayNumber(value, digits));
-    ref.current && findPrevFocusable(ref.current)?.focus();
+    // ref.current && findPrevFocusable(ref.current)?.focus();
   };
 
   return (

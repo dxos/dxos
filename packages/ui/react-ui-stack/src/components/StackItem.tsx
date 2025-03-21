@@ -11,7 +11,7 @@ import {
   extractClosestEdge,
   type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { useFocusableGroup } from '@fluentui/react-tabster';
+// import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
@@ -146,7 +146,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       );
     }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
 
-    const focusableGroupAttrs = window ? {} : useFocusableGroup({ tabBehavior: 'limited' });
+    const focusableGroupAttrs = {}; // useFocusableGroup({ tabBehavior: 'limited' });
 
     return (
       <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>

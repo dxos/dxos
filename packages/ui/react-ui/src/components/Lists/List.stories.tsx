@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+// import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
 import React, { type ReactNode, useState } from 'react';
 
@@ -199,7 +199,7 @@ export const Collapsible = {
 export const SelectableListbox = {
   render: () => {
     const [selectedId, setSelectedId] = useState<string>();
-    const arrowNavigationAttrs = window ? {} : useArrowNavigationGroup({ axis: 'vertical' });
+    const arrowNavigationAttrs = {}; // useArrowNavigationGroup({ axis: 'vertical' });
     const [items, _setItems] = useState(
       [...Array(12)].map((_, index) => ({
         id: `listItem-${index}`,

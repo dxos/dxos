@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
+// import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'di
 
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-  const focusableGroupAttrs = window ? {} : useFocusableGroup({ tabBehavior: 'limited' });
+  const focusableGroupAttrs = {}; // useFocusableGroup({ tabBehavior: 'limited' });
 
   return (
     <div

@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
+// import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type Dispatch,
-  forwardRef,
   type ReactNode,
   type SetStateAction,
+  forwardRef,
   useEffect,
 } from 'react';
 
@@ -94,12 +94,13 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
     const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME, __viewportScope);
     const isActive = id === activeView;
     const ref = useForwardedRef(forwardedRef);
-    const { findFirstFocusable } = useFocusFinders();
+    // const { findFirstFocusable } = useFocusFinders();
     useEffect(() => {
-      if (!focusManaged && isActive && document.body.hasAttribute('data-is-keyboard') && ref.current) {
-        findFirstFocusable(ref.current)?.focus();
-      }
+      // if (!focusManaged && isActive && document.body.hasAttribute('data-is-keyboard') && ref.current) {
+      // findFirstFocusable(ref.current)?.focus();
+      // }
     }, [focusManaged, ref.current, isActive]);
+
     return (
       <section
         {...props}

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+// import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { flexRender, type Row, type RowData } from '@tanstack/react-table';
 import React, { useContext } from 'react';
 
@@ -21,13 +21,13 @@ const TableBody = ({ rows }: TableBodyProps) => {
   const { table, keyAccessor, currentDatum, debug, expand, isGrid, onDatumClick } = useTableContext();
 
   const rowSelection = table.getState().rowSelection;
-  const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
+  const arrowNavigationAttrs = {}; // useArrowNavigationGroup({ axis: 'grid' });
   const canBeCurrent = !isGrid && !!onDatumClick;
 
   const { virtualizer } = useContext(TableRootContext);
 
   return (
-    <tbody {...(isGrid && domAttributes)}>
+    <tbody {...(isGrid && arrowNavigationAttrs)}>
       {rows.map((row) => {
         const isCurrent = currentDatum === row.original;
         const isSelected = rowSelection?.[row.id];
