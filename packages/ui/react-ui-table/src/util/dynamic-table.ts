@@ -41,22 +41,21 @@ export const makeDynamicTable = (typename: string, properties: TablePropertyDefi
       continue;
     }
 
-    if (property.size) {
-      const field = view.fields.find((field) => field.path === property.name);
-      if (field) {
+    const field = view.fields.find((field) => field.path === property.name);
+    if (field) {
+      if (property.size !== undefined) {
         field.size = property.size;
+      }
 
+      if (property.title !== undefined) {
         const fieldProjection = viewProjection.getFieldProjection(field.id);
         viewProjection.setFieldProjection({
           ...fieldProjection,
           props: { ...fieldProjection.props, title: property.title },
         });
       }
-    }
 
-    if (property.sort) {
-      const field = view.fields.find((field) => field.path === property.name);
-      if (field) {
+      if (property.sort) {
         const fieldId = field.id;
         view.query.sort = [{ fieldId, direction: property.sort }];
       }
