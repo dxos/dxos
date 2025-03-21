@@ -19,9 +19,9 @@ import {
   Dialog as NaturalDialog,
   Main,
   Popover,
-  useOnTransition,
   type MainProps,
   useMediaQuery,
+  useOnTransition,
 } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
@@ -304,7 +304,8 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
         onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}
       >
         {dialogBlockAlign === 'end' ? (
-          <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
+          // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
+          <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} placeholder={<div />} />
         ) : (
           <Dialog.Overlay blockAlign={dialogBlockAlign}>
             <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />

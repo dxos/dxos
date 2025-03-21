@@ -126,7 +126,7 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   let placeholder = false;
   const columns = cellContext.table.getVisibleFlatColumns();
 
-  // Calling getRowModel is expensive, so only do it when we're a cell in the first position
+  // Calling getRowModel is expensive, so only do it when we're a cell in the first position.
   if (columns[0].id === cellContext.column.id) {
     const rowCount = cellContext.table.getRowModel().rows.length;
     placeholder = cellContext.row.index === rowCount - 1 && columns[0].id === cellContext.column.id;
@@ -206,7 +206,7 @@ const NumberBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
         onFocus={handleEdit}
         onChange={({ target: { value } }) => setText(value)}
         onKeyDown={(event) => {
-          // TODO(thure): `Escape` is reserved for blurring the input and moving focus to the cell
+          // TODO(thure): `Escape` is reserved for blurring the input and moving focus to the cell.
           return /* (event.key === 'Escape' && handleCancel()) || */ event.key === 'Enter' && handleSave();
         }}
         autoComplete='off'

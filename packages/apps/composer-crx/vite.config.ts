@@ -8,6 +8,7 @@ import { defineConfig } from 'vite';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
+import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -20,7 +21,9 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 const rootDir = resolve(__dirname, '../../..');
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 
-// https://vitejs.dev/config
+/**
+ * https://vitejs.dev/config
+ */
 export default defineConfig({
   build: {
     rollupOptions: {
@@ -35,18 +38,24 @@ export default defineConfig({
       },
     },
   },
-  // TODO(burdon): Is this required?
+  resolve: {
+    alias: {
+      'node-fetch': 'isomorphic-fetch',
+    },
+  },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [
+    SourceMapsPlugin(),
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
       content: [
-        resolve(__dirname, './*.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        join(__dirname, './index.html'),
+        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),    
       ],
     }),
     IconsPlugin({
@@ -60,7 +69,6 @@ export default defineConfig({
       ],
     }),
 
-    TopLevelAwaitPlugin(),
     WasmPlugin(),
 
     // https://github.com/preactjs/signals/issues/269
@@ -72,7 +80,7 @@ export default defineConfig({
       manifest: {
         manifest_version: 3,
         version: packageJson.version,
-        author: 'DXOS.org',
+        author: { email: 'hello@dxos.org' },
         name: 'Composer',
         short_name: 'Composer',
         description: 'Composer browser extension.',
