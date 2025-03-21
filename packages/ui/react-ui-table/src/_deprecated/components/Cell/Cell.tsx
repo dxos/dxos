@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { useFocusableGroup } from '@fluentui/react-tabster';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { type Cell as CellType, type RowData } from '@tanstack/react-table';
 import React, { useCallback, type PropsWithChildren, type KeyboardEvent } from 'react';
 
@@ -17,7 +17,7 @@ const CELL_NAME = 'Cell';
 
 const FocusableCell = <TData extends RowData, TValue>({ cell, children }: CellProps<TData, TValue>) => {
   const tableContext = useTableContext();
-  const focusableGroupAttrs = {}; // useFocusableGroup({ tabBehavior: 'limited' });
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
   const pinned = tableContext.table.getState().rowPinning?.bottom?.includes(cell.row.id);
   const className = tdRoot({ ...tableContext, pinned }, cell.column.columnDef.meta?.cell?.classNames);

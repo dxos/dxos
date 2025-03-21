@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// import { useFocusFinders } from '@fluentui/react-tabster';
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -71,12 +71,12 @@ const TabsRoot = ({
     [value],
   );
 
-  // const { findFirstFocusable } = useFocusFinders();
+  const { findFirstFocusable } = useFocusFinders();
   const tabsRoot = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
     if (tabsRoot.current) {
-      // findFirstFocusable(tabsRoot.current)?.focus();
+      findFirstFocusable(tabsRoot.current)?.focus();
     }
   }, [activePart]);
 
@@ -182,7 +182,7 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
   const handleClick = useCallback(
-    // NOTE: this handler is only called if the tab is *already active*.
+    // NOTE: This handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('panel');
       onClick?.(event);

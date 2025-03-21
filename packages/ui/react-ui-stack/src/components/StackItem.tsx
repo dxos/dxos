@@ -96,6 +96,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       if (!itemElement || !onRearrange || disableRearrange) {
         return;
       }
+
       return combine(
         draggable({
           element: itemElement,
