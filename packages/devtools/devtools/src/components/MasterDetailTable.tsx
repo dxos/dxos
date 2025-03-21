@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -25,7 +25,10 @@ export const MasterDetailTable = ({
   detailsPosition = 'bottom',
 }: MasterDetailTableProps) => {
   const [selectedId, setSelectedId] = useState<string>();
-  const selected = selectedId ? data.find((item) => item.id === selectedId) : undefined;
+  const selected = useMemo(() => {
+    return selectedId ? data.find((item) => item.id === selectedId) : undefined;
+  }, [selectedId, data]);
+
   const handleSelectionChanged = useCallback((selectedIds: string[]) => {
     if (selectedIds.length === 0) {
       setSelectedId(undefined);
