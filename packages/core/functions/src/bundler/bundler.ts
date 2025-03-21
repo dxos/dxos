@@ -74,6 +74,7 @@ export class Bundler {
     }
 
     const imports = source ? analyzeSourceFileImports(source) : [];
+    this.parseImportVersions(source ?? '');
 
     // https://esbuild.github.io/api/#build
     try {
@@ -173,13 +174,6 @@ export class Bundler {
       const moduleIdentifier = capture[4];
       const quotes = capture[5];
 
-      // Check for version comment before the import
-      const importLine = code.substring(0, code.indexOf(capture[0])).split('\n').pop()?.trim() ?? '';
-      const versionMatch = importLine.match(/\/\/\s*@version\s+([^\s]+)/);
-      if (versionMatch) {
-        this._moduleVersions.set(moduleIdentifier, versionMatch[1]);
-      }
-
       return {
         defaultImportName: capture[1],
         namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
@@ -188,6 +182,20 @@ export class Bundler {
         quotes,
       };
     });
+  }
+
+  parseImportVersions(code: string) {
+    const firstComment = code.match(/\/\* @version\n([\s\S]*?)\*\//);
+    if (firstComment) {
+      try {
+        const versions = JSON.parse(firstComment[1]);
+        for (const [module, version] of Object.entries(versions)) {
+          this._moduleVersions.set(module, version as string);
+        }
+      } catch (err) {
+        log.catch(err);
+      }
+    }
   }
 }
 
