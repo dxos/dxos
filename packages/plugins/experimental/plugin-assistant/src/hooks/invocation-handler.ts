@@ -5,7 +5,7 @@
 import { sleep } from '@dxos/async';
 import { getObjectCore, ResultFormat } from '@dxos/echo-db';
 import { type AnyObjectData } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions';
+import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { type FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
@@ -53,7 +53,7 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
       .query({ __typename: FunctionType.typename }, { format: ResultFormat.Plain })
       .run();
     const func = functions.find((fn) => referenceEquals(fn.source, trigger.function!)) as AnyObjectData | undefined;
-    const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
+    const funcSlug = func && getUserFunctionUrlInMetadata(func.__meta);
     if (!funcSlug) {
       log.warn('function not deployed', { scriptId: script.id, name: script.name });
       return 404;
@@ -71,8 +71,6 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
     return 400;
   }
 };
-
-const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
 
 const getFunctionUrl = (config: Config, slug: string, spaceId?: string) => {
   const baseUrl = new URL('functions/', config.values.runtime?.services?.edge?.url);

@@ -7,16 +7,17 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { type Tool, Message } from '@dxos/artifact';
 import { ToolTypes } from '@dxos/assistant';
-import { getTypename, isInstanceOf, ObjectId, S, toEffectSchema, type ObjectMeta } from '@dxos/echo-schema';
+import { getTypename, isInstanceOf, ObjectId, S, toEffectSchema } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { create, getMeta } from '@dxos/live-object';
+import { create } from '@dxos/live-object';
 import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { safeParseJson } from '@dxos/util';
 
+import { executeFunction, resolveFunctionPath } from './function';
 import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { computeTemplate } from './template/generic';
+import { computeTemplate } from './template';
 import {
   AppendInput,
   ConstantOutput,
@@ -32,7 +33,7 @@ import {
   TemplateOutput,
   TextToImageOutput,
 } from './types';
-import { FunctionCallService, GptService, QueueService, SpaceService } from '../services';
+import { GptService, QueueService, SpaceService } from '../services';
 import {
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
@@ -352,28 +353,17 @@ export const registry: Record<NodeType, Executable> = {
     output: AnyOutput,
     exec: synchronizedComputeFunction((input, node) =>
       Effect.gen(function* (): any {
-        const fn = yield* Effect.tryPromise({
-          try: async () => node?.function?.load(),
+        const functionRef = node?.function;
+        if (!node || !functionRef) {
+          throw new Error(`Function not specified on ${node?.id}.`);
+        }
+        const { path } = yield* Effect.tryPromise({
+          try: () => resolveFunctionPath(functionRef),
           catch: (e) => e,
         });
-        if (!node || !fn) {
-          throw new Error(`Function loading failed: ${node?.function?.dxn?.toString()}`);
-        }
-
-        const functionCallService = yield* FunctionCallService;
 
         const outputSchema = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
-        const path = getUserFunctionUrlInMetadata(getMeta(fn));
-        if (!path) {
-          throw new Error(`Function not resolved: ${node.function?.dxn?.toString()}`);
-        }
-
-        const result = yield* Effect.tryPromise({
-          try: () => functionCallService.callFunction(path, input),
-          catch: (e) => e,
-        });
-
-        return yield* S.decodeUnknown(outputSchema)(result);
+        return executeFunction(path, input, outputSchema);
       }),
     ),
   }),
@@ -425,11 +415,4 @@ const textToImageTool: Tool = {
     // TODO(burdon): Testing.
     // model: '@testing/kitten-in-bubble',
   },
-};
-
-// TODO(dmaretskyi): Reconcile with `getUserFunctionUrlInMetadata` in `@dxos/functions/edge`.
-const FUNCTIONS_META_KEY = 'dxos.org/service/function';
-
-const getUserFunctionUrlInMetadata = (meta: ObjectMeta) => {
-  return meta.keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
 };
