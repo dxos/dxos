@@ -5,7 +5,7 @@
 import { Effect } from 'effect';
 
 import { type Ref, S } from '@dxos/echo-schema';
-import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions';
+import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions/types';
 import { getMeta } from '@dxos/live-object';
 
 import { FunctionCallService } from '../services';

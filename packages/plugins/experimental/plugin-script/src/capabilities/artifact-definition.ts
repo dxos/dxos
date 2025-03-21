@@ -6,7 +6,7 @@ import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher }
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';

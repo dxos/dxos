@@ -5,7 +5,7 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';

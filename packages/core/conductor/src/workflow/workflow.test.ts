@@ -7,7 +7,7 @@ import { type Context, Effect, Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
 import { ObjectId, type Ref } from '@dxos/echo-schema';
-import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, setUserFunctionUrlInMetadata } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { create, getMeta, refFromDXN, type RefResolver, setRefResolver } from '@dxos/live-object';

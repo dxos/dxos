@@ -5,8 +5,8 @@
 import { sleep } from '@dxos/async';
 import { getObjectCore, ResultFormat } from '@dxos/echo-db';
 import { type AnyObjectData } from '@dxos/echo-schema';
-import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
-import { type FunctionTrigger } from '@dxos/functions';
+import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
+import { type FunctionTrigger } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { log } from '@dxos/log';

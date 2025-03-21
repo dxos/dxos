@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type ScriptType } from '@dxos/functions/types';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
