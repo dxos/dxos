@@ -46,13 +46,13 @@ export default defineFunction({
     const game = new Chess();
     game.load_pgn(pgn);
     if (game.turn() !== player) {
-      throw new Error('Invalid turn');
+      return new Response('Invalid turn', { status: 409 });
     }
 
     const moves = game.moves();
     const move = moves[Math.floor(Math.random() * moves.length)];
     if (!move) {
-      throw new Error('No legal moves');
+      return new Response('No legal moves', { status: 406 });
     }
 
     game.move(move);
