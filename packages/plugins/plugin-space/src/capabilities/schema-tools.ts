@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
+import { DescriptionAnnotationId, ExamplesAnnotationId, TitleAnnotationId } from 'effect/SchemaAST';
 
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
