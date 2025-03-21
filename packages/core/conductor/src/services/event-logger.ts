@@ -7,6 +7,8 @@ import { Effect, Context } from 'effect';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
 
+import { type ComputeRequirements } from '../types';
+
 export type ComputeEvent =
   | {
       type: 'begin-compute';
@@ -34,6 +36,10 @@ export type ComputeEvent =
       type: 'custom';
       nodeId: string;
       event: any;
+    }
+  | {
+      type: 'defect';
+      error: any;
     };
 
 export class EventLogger extends Context.Tag('EventLogger')<
@@ -54,6 +60,17 @@ export const logCustomEvent = (data: any) =>
     });
   });
 
+export const createDefectLogger = <A, E>(): ((
+  self: Effect.Effect<A, E, ComputeRequirements>,
+) => Effect.Effect<A, E, ComputeRequirements>) =>
+  Effect.catchAll((error) =>
+    Effect.gen(function* () {
+      const logger = yield* EventLogger;
+      logger.log({ type: 'defect', error });
+      throw error;
+    }),
+  );
+
 export const createDxosEventLogger = (level: LogLevel, message: string = 'event'): Context.Tag.Service<EventLogger> => {
   const logFunction = (
     {
@@ -67,7 +84,11 @@ export const createDxosEventLogger = (level: LogLevel, message: string = 'event'
   invariant(logFunction);
   return {
     log: (event: ComputeEvent) => {
-      logFunction(message, event);
+      if (event.type === 'defect') {
+        log.error(message, event);
+      } else {
+        logFunction(message, event);
+      }
     },
     nodeId: undefined,
   };

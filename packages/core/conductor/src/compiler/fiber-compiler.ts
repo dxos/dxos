@@ -10,7 +10,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
-import { EventLogger, GptService } from '../services';
+import { createDefectLogger, EventLogger, GptService } from '../services';
 import {
   type ComputeGraphModel,
   type ComputeEffect,
@@ -123,7 +123,9 @@ export const compile = async ({
           // Log the output node inputs.
           logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: Object.keys(outputs.values) });
           return outputs;
-        }).pipe(Effect.withSpan('compile/compute'));
+        })
+          .pipe(createDefectLogger())
+          .pipe(Effect.withSpan('compile/compute'));
       },
     },
 
