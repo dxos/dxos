@@ -272,15 +272,6 @@ export default (context: PluginsContext) =>
                     icon: 'ph--computer-tower--regular',
                   },
                 },
-                {
-                  id: Devtools.Agent.Search,
-                  data: Devtools.Agent.Search,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['search label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--magnifying-glass--regular',
-                  },
-                },
               ],
             },
             {

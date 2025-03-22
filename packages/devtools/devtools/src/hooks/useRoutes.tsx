@@ -27,7 +27,6 @@ import {
   TracingPanel,
   DashboardPanel,
   EdgeDashboardPanel,
-  SearchPanel,
   AutomergePanel,
   WorkflowPanel,
   InvocationTracePanel,
