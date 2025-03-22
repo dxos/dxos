@@ -63,6 +63,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../experimental/artifact"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -73,6 +76,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"

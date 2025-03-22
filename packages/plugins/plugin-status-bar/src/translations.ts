@@ -43,7 +43,7 @@ const translations: Record<Language, TranslationEntry> = {
     'feedback text area placeholder': 'Please describe your issue or suggestion.',
     'send feedback label': 'Send Feedback',
     'warning title': 'WARNING',
-    'technology preview message': 'Composer is still in technology preview.',
+    'technology preview message': 'Composer is currently in beta.',
     'learn more label': 'Learn more',
     'released message': 'This version released {{released}}.',
     'see release label': 'See release on GitHub',

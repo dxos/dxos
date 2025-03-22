@@ -240,11 +240,14 @@ export class Filter<T extends BaseObject = any> {
       {
         type: proto.type?.map((type) => DXN.parse(type)),
         properties: proto.properties,
+        objectIds: proto.objectIds,
         text: proto.text,
         not: proto.not,
         and: proto.and?.map((filter) => Filter.fromProto(filter)),
         or: proto.or?.map((filter) => Filter.fromProto(filter)),
-      },
+        metaKeys: undefined,
+        predicate: undefined,
+      } satisfies Record<keyof FilterParams, any>,
       options,
     );
   }

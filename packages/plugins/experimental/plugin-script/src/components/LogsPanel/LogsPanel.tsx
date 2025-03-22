@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type TraceEvent, type InvocationTraceEvent, type ScriptType } from '@dxos/functions';
+import { type TraceEvent, type InvocationTraceEvent, type ScriptType } from '@dxos/functions/types';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Icon, List, ListItem, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

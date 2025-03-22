@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
+import { intervalToDuration } from 'date-fns/intervalToDuration';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
+import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
@@ -14,70 +16,61 @@ import {
   Grid,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
+const timeWidth = 70;
 const lineHeight = 24;
-const columnWidth = 600;
 const cellSpacing = 12;
-// TODO(thure): This value was tuned using greeking in Storybook; tune further based on natural language, or refactor to compute the actual size of wrapped text.
-const monoCharacterWidthWithWrapBuffer = 10 * 1.03;
 
-export type TranscriptProps = {
-  blocks?: TranscriptBlock[];
-  attendableId: string;
-  ignoreAttention?: boolean;
-};
+const authorClasses = 'text-[16px] leading-[24px] dx-tag';
 
-const transcriptColumns = {
-  grid: { size: columnWidth },
-};
-
-const transcriptRows = {
-  grid: { size: lineHeight },
-};
-
-const authorClasses = 'pli-2 place-content-end text-[16px] leading-[24px]';
-const segmentTextClasses = 'pli-1 font-mono whitespace-normal hyphens-auto text-[16px] leading-[24px]';
+// NOTE: These classes are required for synchronous measurement.
+const segmentTextClasses = 'text-[16px] leading-[24px] whitespace-pre-wrap break-words hyphens-none';
 
 type QueueRows = [number, number, number][];
 
-const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
-  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
-    return [];
-  } else {
-    return blocks.flatMap((block, blockIndex) => {
-      return [
-        [blockIndex, -1, lineHeight + cellSpacing],
-        ...block.segments.map((segment, segmentIndex) => {
-          return [
-            blockIndex,
-            segmentIndex,
-            cellSpacing +
-              lineHeight * (Math.ceil((segment.text.length * monoCharacterWidthWithWrapBuffer) / columnWidth) + 1),
-          ] as [number, number, number];
-        }),
-      ];
-    });
-  }
+export type TranscriptProps = {
+  attendableId: string;
+  ignoreAttention?: boolean;
+  blocks?: TranscriptBlock[];
 };
 
-export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
+export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention, blocks }) => {
   const { hasAttention } = useAttention(attendableId);
-  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+  const { ref, width } = useResizeDetector();
+  const measureRef = useRef<HTMLDivElement>(null);
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
+  const textWidth = width ? width - timeWidth : 0;
+  const transcriptColumns = width
+    ? {
+        grid: {
+          0: { size: timeWidth },
+          1: { size: textWidth },
+        },
       }
-    },
-    [hasAttention, ignoreAttention],
-  );
+    : undefined;
 
-  const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
+  const transcriptRows = {
+    grid: { size: lineHeight },
+  };
+
+  const [queueMap, setQueueMap] = useState<QueueRows>([]);
+  useEffect(() => {
+    if (measureRef.current) {
+      // TODO(burdon): Only measure rows that have changed. Cache other values.
+      // TODO(burdon): Build into grid with estimated height and correct on the fly.
+      void mapTranscriptQueue(measureRef.current, blocks, true).then((queueMap) => {
+        setQueueMap(queueMap);
+        if (measureRef.current) {
+          void mapTranscriptQueue(measureRef.current, blocks, false).then(setQueueMap);
+        }
+      });
+    }
+  }, [blocks, measureRef.current]);
 
   const rows = useMemo(
     () =>
@@ -90,27 +83,43 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     [queueMap],
   );
 
+  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks)) {
+      const start = blocks[0]?.segments[0]?.started ?? 0;
+
       dxGrid.getCells = (range, plane) => {
         switch (plane) {
           case 'grid': {
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < queueMap.length; row++) {
               const [blockIndex, segmentIndex] = queueMap[row];
+              const { author, segments } = blocks[blockIndex] ?? { author: '', segments: [] };
+              const { started: end, text } = segments[segmentIndex] ?? { started: 0, text: '' };
+
               cells[toPlaneCellIndex({ col: 0, row })] = (
+                segmentIndex === 0
+                  ? {
+                      readonly: true,
+                      accessoryHtml: `<span class="pbs-1 text-xs text-neutral-500">${formatElapsed(start, end)}</span>`,
+                    }
+                  : {}
+              ) satisfies DxGridCellValue;
+
+              cells[toPlaneCellIndex({ col: 1, row })] = (
                 segmentIndex < 0
                   ? {
-                      value: blocks[blockIndex]!.author,
+                      value: author,
                       readonly: true,
                       className: authorClasses,
                     }
                   : {
                       readonly: true,
-                      accessoryHtml: `<span class="dx-tag" data-hue="neutral">${formatDistanceToNow(blocks[blockIndex]!.segments[segmentIndex]!.started, { addSuffix: true })}</span><p class="${segmentTextClasses}">${blocks[blockIndex]!.segments[segmentIndex]!.text}</p>`,
+                      accessoryHtml: `<div class="${segmentTextClasses}">${text}</div>`,
                     }
               ) satisfies DxGridCellValue;
             }
+
             return cells;
           }
           default:
@@ -118,20 +127,111 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
         }
       };
     }
-  }, [dxGrid, blocks]);
+  }, [dxGrid, queueMap, blocks]);
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!ignoreAttention && !hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention, ignoreAttention],
+  );
 
   return (
-    <Grid.Root id={`${attendableId}--transcript`}>
-      <Grid.Content
-        columnDefault={transcriptColumns}
-        rowDefault={transcriptRows}
-        rows={rows}
-        onWheel={handleWheel}
-        className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:select-auto'
-        limitColumns={1}
-        limitRows={queueMap.length}
-        ref={setDxGrid}
-      />
-    </Grid.Root>
+    <div role='none' ref={ref} className='grow'>
+      {transcriptColumns && (
+        <>
+          <div className='relative'>
+            <div
+              className='absolute top-0 z-10 p-1 border invisible'
+              style={{ left: timeWidth, width: transcriptColumns.grid['1'].size }}
+            >
+              <div ref={measureRef} className={mx(segmentTextClasses)} />
+            </div>
+          </div>
+          <Grid.Root id={`${attendableId}--transcript`}>
+            <Grid.Content
+              ref={setDxGrid}
+              className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:select-auto'
+              columns={transcriptColumns}
+              rowDefault={transcriptRows}
+              rows={rows}
+              limitColumns={2}
+              limitRows={queueMap.length}
+              onWheel={handleWheel}
+            />
+          </Grid.Root>
+        </>
+      )}
+    </div>
   );
+};
+
+const mapTranscriptQueue = async (
+  div: HTMLDivElement,
+  blocks?: TranscriptBlock[],
+  estimate = false,
+): Promise<QueueRows> => {
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+    return [];
+  } else {
+    const ts = Date.now();
+    await document.fonts.ready;
+
+    const rows: QueueRows = [];
+    let blockIndex = 0;
+    for (const block of blocks) {
+      rows.push([blockIndex, -1, lineHeight + cellSpacing]);
+      let segmentIndex = 0;
+      for (const segment of block.segments) {
+        const height = await measureSegment(div, segment.text, estimate);
+        rows.push([blockIndex, segmentIndex, height + cellSpacing]);
+        segmentIndex++;
+      }
+      blockIndex++;
+    }
+
+    log.info('render', { duration: Date.now() - ts });
+    return rows;
+
+    // return blocks.flatMap((block, blockIndex) => {
+    //   return [
+    //     [blockIndex, -1, lineHeight + cellSpacing],
+    //     ...block.segments.map((segment, segmentIndex) => {
+    //       div.innerHTML = segment.text;
+    //       const height = measureSegmentSync(div, segment.text) + cellSpacing;
+    //       return [blockIndex, segmentIndex, height] as [number, number, number];
+    //     }),
+    //   ];
+    // });
+  }
+};
+
+// TODO(burdon): Occasional random measurement error (-1 actual lines).
+// const measureSegmentSync = (div: HTMLDivElement, text: string): number => {
+//   div.innerHTML = text;
+//   void div.offsetHeight;
+//   return div.offsetHeight;
+// };
+
+const measureSegment = async (div: HTMLDivElement, text: string, estimate = false): Promise<number> => {
+  return new Promise((resolve) => {
+    div.innerHTML = text;
+    if (estimate) {
+      const { height } = div.getBoundingClientRect();
+      resolve(height);
+    } else {
+      requestAnimationFrame(() => {
+        const { height } = div.getBoundingClientRect();
+        resolve(height);
+      });
+    }
+  });
+};
+
+export const formatElapsed = (start: Date, end: Date) => {
+  const { hours, minutes, seconds } = intervalToDuration({ start, end });
+  const pad = (n = 0) => String(n).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };

@@ -8,9 +8,9 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type Dispatch,
-  forwardRef,
   type ReactNode,
   type SetStateAction,
+  forwardRef,
   useEffect,
 } from 'react';
 
@@ -100,6 +100,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
         findFirstFocusable(ref.current)?.focus();
       }
     }, [focusManaged, ref.current, isActive]);
+
     return (
       <section
         {...props}

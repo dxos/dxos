@@ -17,6 +17,7 @@ import {
   ComputeShapeLayout,
   computeShapes,
   type Services,
+  useComputeGraphController,
   useGraphMonitor,
 } from '@dxos/react-ui-canvas-compute';
 import {
@@ -86,6 +87,7 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
   const graphMonitor = useGraphMonitor(controller?.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
   const editorRef = useRef<EditorController>(null);
+  useComputeGraphController({ controller, graph, editorRef });
 
   // Layout.
   const layout = useMemo(

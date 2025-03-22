@@ -6,7 +6,7 @@ import { TitleAnnotationId } from 'effect/SchemaAST';
 
 import { SpaceSchema } from '@dxos/client/echo';
 import { S } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 
 import { SCRIPT_PLUGIN } from './meta';

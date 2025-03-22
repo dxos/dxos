@@ -59,7 +59,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.12.3",
+    "effect": "3.13.3",
     "react-dropzone": "^14.2.3"
   },
   "devDependencies": {

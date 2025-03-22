@@ -10,7 +10,6 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
 import { OllamaClient } from '@dxos/assistant';
-import { type UnsubscribeCallback } from '@dxos/async';
 import { EdgeGpt, type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
@@ -23,7 +22,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
 import { type ComputeGraphController } from './graph';
-import { ComputeContext, useGraphMonitor } from './hooks';
+import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
@@ -43,35 +42,24 @@ import {
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
 
-// TODO(burdon): Move to async/context?
-const combine = (...cbs: UnsubscribeCallback[]) => {
-  return () => {
-    for (const cb of cbs) {
-      cb();
-    }
-  };
-};
-
 type RenderProps = EditorRootProps<ComputeShape> &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'canvas' | 'compute' | 'controller' | 'selected';
     computeGraph?: ComputeGraphModel;
-    controller?: ComputeGraphController;
+    controller?: ComputeGraphController | null;
   }>;
 
 const Render = ({
   id = 'test',
   children,
   graph,
-  controller,
+  controller = null,
   init,
   sidebar: _sidebar,
   registry,
   ...props
 }: RenderProps) => {
-  const [, forceUpdate] = useState({});
-
   const editorRef = useRef<EditorController>(null);
 
   // Selection.
@@ -102,41 +90,7 @@ const Render = ({
   }, [graph, controller, sidebar, selected]);
 
   // Controller.
-  useEffect(() => {
-    if (!controller || !graph) {
-      return;
-    }
-
-    void controller.open();
-    const off = combine(
-      controller.update.on(() => {
-        void editorRef.current?.update();
-        forceUpdate({});
-      }),
-
-      // TODO(burdon): Every node is called on every update.
-      controller.output.on(({ nodeId, property, value }) => {
-        if (value.type === 'not-executed') {
-          // If the node didn't execute, don't trigger.
-          return;
-        }
-
-        const edge = graph.edges.find((edge) => {
-          const source = graph.getNode(edge.source);
-          return (source as ComputeShape).node === nodeId && edge.output === property;
-        });
-
-        if (edge) {
-          void editorRef.current?.action?.({ type: 'trigger', edges: [edge] });
-        }
-      }),
-    );
-
-    return () => {
-      void controller.close();
-      off();
-    };
-  }, [graph, controller]);
+  useComputeGraphController({ controller, graph, editorRef });
 
   // Sync monitor.
   const graphMonitor = useGraphMonitor(controller?.graph);

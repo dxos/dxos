@@ -37,7 +37,10 @@ import {
   createTemplate,
 } from '../shapes';
 
-export const createComputeGraphController = (graph?: CanvasGraphModel<ComputeShape>, services?: Partial<Services>) => {
+export const createComputeGraphController = (
+  graph = CanvasGraphModel.create<ComputeShape>(),
+  services?: Partial<Services>,
+) => {
   const computeGraph = createComputeGraph(graph);
   const controller = new ComputeGraphController(computeGraph);
   controller.setServices(services ?? {});
