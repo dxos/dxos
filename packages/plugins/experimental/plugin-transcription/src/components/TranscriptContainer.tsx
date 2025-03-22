@@ -65,10 +65,10 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
     <StackItem.Content toolbar={false} classNames='relative'>
       <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>
         <IconButton
-          icon='ph--pen--regular'
+          icon='ph--subtitles--regular'
           size={5}
           disabled={isSummarizing}
-          label={t(isSummarizing ? 'summarizing label' : 'summary button')}
+          label={t(isSummarizing ? 'summarizing label' : 'summarize label')}
           onClick={handleSummarize}
         />
       </Toolbar.Root>
