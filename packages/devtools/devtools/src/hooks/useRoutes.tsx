@@ -152,10 +152,6 @@ export const useRoutes = () => {
               path: '/agent/dashboard',
               element: <DashboardPanel />,
             },
-            {
-              path: '/agent/search',
-              element: <SearchPanel />,
-            },
           ],
         },
         {
