@@ -33,7 +33,6 @@ import {
   TracingPanel,
   DashboardPanel,
   EdgeDashboardPanel,
-  SearchPanel,
   AutomergePanel,
   WorkflowPanel,
   QueuesPanel,
@@ -293,12 +292,6 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
       component: () => <DashboardPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/agent/search`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Agent.Search,
-      component: () => <SearchPanel />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/dashboard`,

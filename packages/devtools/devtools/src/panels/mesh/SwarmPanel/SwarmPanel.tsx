@@ -2,15 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ArrowDown, ArrowUp } from '@phosphor-icons/react';
 import bytes from 'bytes';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 import { ComplexMap } from '@dxos/util';
 
@@ -18,73 +18,66 @@ import { ConnectionInfoView } from './ConnectionInfoView';
 import { PanelContainer } from '../../../components';
 import { styles } from '../../../styles';
 
-type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
+// Extend with table-specific properties
+type TableSwarmConnection = {
+  id: string; // String ID for table
+  swarmId: PublicKey; // Original ID
+  swarmTopic: PublicKey; // Original topic
+  isActive: string; // For SingleSelect
+  label?: string;
+  session?: string;
+  remotePeer?: string;
+  identity?: string;
+  state?: string;
+  buffer?: string;
+  transportDetails?: string;
+  statsDisplay?: string;
+  closeReason?: string;
+  connection?: ConnectionInfo;
+};
 
-// TODO(burdon): Add peers/connect/disconnect/error info.
-const { helper, builder } = createColumnBuilder<SwarmConnection>();
-const columns: TableColumnDef<SwarmConnection, any>[] = [
-  helper.accessor('id', builder.key({ header: 'swarm', tooltip: true })),
-  helper.accessor(
-    'topic',
-    builder.key({
-      tooltip: true,
-      getGroupingValue: (value) => value.topic.truncate(),
-    }),
-  ),
-  helper.accessor('label', {
-    header: 'label',
-    meta: { cell: { classNames: textPadding } },
-  }), // TODO(burdon): Has promise string.
-  helper.accessor('isActive', { ...builder.icon({ header: 'active' }), size: 80 }),
-  helper.accessor((connection) => connection.connection?.sessionId, {
-    id: 'session',
-    ...builder.key({ tooltip: true }),
-  }),
-  helper.accessor((connection) => connection.connection?.remotePeerId, {
-    id: 'remote peer',
-    ...builder.key({ label: 'remote', tooltip: true }),
-    getGroupingValue: (value) => value.connection?.remotePeerId?.truncate(),
-    size: 80,
-  }),
-  helper.accessor((connection) => connection.connection?.identity, {
-    id: 'identity',
-    meta: { cell: { classNames: textPadding } },
-    size: 160,
-  }),
-  helper.accessor((connection) => connection.connection?.state, {
-    id: 'state',
-    getGroupingValue: (value) => value.connection?.state,
-    meta: { cell: { classNames: textPadding } },
-    cell: (cell) => <span className={stateFormat[cell.getValue()]?.className}>{cell.getValue()}</span>,
-  }),
-  helper.accessor(
-    (connection) =>
-      (connection.connection?.readBufferSize ?? 0) + ' / ' + (connection.connection?.writeBufferSize ?? 0),
-    {
-      id: 'buffer (r/w)',
+const stateOptions = [
+  { id: 'CONNECTED', title: 'CONNECTED', color: 'green' },
+  { id: 'CONNECTING', title: 'CONNECTING', color: 'blue' },
+  { id: 'INITIAL', title: 'INITIAL', color: 'blue' },
+  { id: 'CREATED', title: 'CREATED', color: 'blue' },
+  { id: 'CLOSING', title: 'CLOSING', color: 'red' },
+  { id: 'CLOSED', title: 'CLOSED', color: 'red' },
+  { id: 'ABORTING', title: 'ABORTING', color: 'amber' },
+  { id: 'ABORTED', title: 'ABORTED', color: 'amber' },
+];
+
+const properties: TablePropertyDefinition[] = [
+  { name: 'swarmId', format: FormatEnum.DID, title: 'swarm', size: 120 },
+  { name: 'swarmTopic', format: FormatEnum.DID, title: 'topic', size: 140 },
+  { name: 'label', format: FormatEnum.String },
+  {
+    name: 'isActive',
+    format: FormatEnum.SingleSelect,
+    size: 100,
+    title: 'active',
+    config: {
+      options: [
+        { id: 'true', title: 'YES', color: 'green' },
+        { id: 'false', title: 'NO', color: 'red' },
+      ],
     },
-  ),
-  helper.accessor((connection) => connection.connection?.transportDetails, {
-    id: 'details',
-  }),
-  helper.accessor((connection) => connection.connection && getStats(connection.connection), {
-    id: 'stats',
-    meta: { cell: { classNames: textPadding } },
-    cell: (cell) =>
-      cell.getValue() && (
-        <span className='flex flex-row items-baseline gap-1'>
-          <ArrowUp />
-          {bytes(cell.getValue().bytesSent)}
-          <ArrowDown />
-          {bytes(cell.getValue().bytesReceived)}
-        </span>
-      ),
-  }),
-  helper.accessor((connection) => connection.connection?.closeReason, {
-    id: 'close reason',
-    meta: { cell: { classNames: textPadding } },
-    size: 400,
-  }),
+  },
+  { name: 'session', format: FormatEnum.DID },
+  { name: 'remotePeer', format: FormatEnum.DID, size: 140, title: 'remote peer' },
+  { name: 'identity', format: FormatEnum.DID, size: 160 },
+  {
+    name: 'state',
+    format: FormatEnum.SingleSelect,
+    size: 140,
+    config: {
+      options: stateOptions,
+    },
+  },
+  { name: 'buffer', format: FormatEnum.JSON, title: 'buffer (r/w)', size: 140 },
+  { name: 'transportDetails', format: FormatEnum.JSON, title: 'details' },
+  { name: 'statsDisplay', format: FormatEnum.JSON, title: 'stats' },
+  { name: 'closeReason', format: FormatEnum.JSON, title: 'close reason', size: 400 },
 ];
 
 export const SwarmPanel = () => {
@@ -104,48 +97,83 @@ export const SwarmPanel = () => {
   }
 
   const [sessionId, setSessionId] = useState<PublicKey>();
-  const handleSelect = (selected: SwarmConnection[] | undefined) => {
-    setSessionId(selected?.[0].connection?.sessionId);
-  };
-
   const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
   const connection = sessionId ? connectionMap.get(sessionId) : undefined;
-  const items = swarms.reduce<SwarmConnection[]>((connections, swarm) => {
-    if (!swarm.connections?.length) {
-      connections.push(swarm);
-    } else {
-      for (const connection of swarm.connections ?? []) {
-        const identity = identityMap.get(connection.remotePeerId)?.identity;
-        if (identity) {
-          connection.identity = identity.identityKey.truncate();
-          if (identity.profile?.displayName) {
-            connection.identity = connection.identity + ' (' + identity.profile?.displayName + ')';
+
+  // The state options order determines the sorting priority
+
+  const data = useMemo(() => {
+    const connections: TableSwarmConnection[] = [];
+
+    for (const swarm of swarms) {
+      if (!swarm.connections?.length) {
+        connections.push({
+          id: swarm.id.toHex(), // For table key
+          swarmId: swarm.id,
+          swarmTopic: swarm.topic,
+          label: swarm.label,
+          isActive: swarm.isActive ? 'true' : 'false',
+        });
+      } else {
+        for (const connection of swarm.connections) {
+          let identityDisplay = '';
+          const identity = identityMap.get(connection.remotePeerId)?.identity;
+          if (identity) {
+            identityDisplay = identity.identityKey.truncate();
+            if (identity.profile?.displayName) {
+              identityDisplay = identityDisplay + ' (' + identity.profile?.displayName + ')';
+            }
           }
+
+          connectionMap.set(connection.sessionId, connection);
+
+          const stats = getStats(connection);
+          const statsDisplay = stats ? `↑ ${bytes(stats.bytesSent)} ↓ ${bytes(stats.bytesReceived)}` : '';
+
+          connections.push({
+            id: `${swarm.id.toHex()}-${connection.sessionId.toHex()}`, // For table key
+            swarmId: swarm.id,
+            swarmTopic: swarm.topic,
+            label: swarm.label,
+            isActive: swarm.isActive ? 'true' : 'false',
+            connection,
+            session: connection.sessionId.toHex(),
+            remotePeer: connection.remotePeerId?.toHex() ?? '',
+            identity: identityDisplay,
+            state: connection.state,
+            buffer: `${connection.readBufferSize ?? 0} / ${connection.writeBufferSize ?? 0}`,
+            transportDetails: connection.transportDetails,
+            statsDisplay,
+            closeReason: connection.closeReason,
+          });
         }
-        connectionMap.set(connection.sessionId, connection);
-        connections.push({ ...swarm, connection });
       }
     }
 
     return connections;
-  }, []) ?? [swarms];
+  }, [swarms, identityMap]);
 
-  // TODO(dmaretskyi): Grid already has some sort features.
-  items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
+  const handleSelectionChanged = useCallback(
+    (selectedIds: string[]) => {
+      if (selectedIds.length === 0) {
+        setSessionId(undefined);
+        return;
+      }
+
+      const selectedId = selectedIds[selectedIds.length - 1];
+      const selected = data.find((item) => item.id === selectedId);
+      if (selected?.connection?.sessionId) {
+        setSessionId(selected.connection.sessionId);
+      }
+    },
+    [data],
+  );
 
   return (
     <PanelContainer classNames={mx('divide-y', styles.border)}>
-      <Table.Root>
-        <Table.Viewport classNames='h-1/2'>
-          <Table.Main<SwarmConnection>
-            columns={columns}
-            data={items}
-            keyAccessor={(row) => row.id.toHex()}
-            grouping={['topic']}
-            onDatumClick={(datum) => handleSelect([datum])}
-          />
-        </Table.Viewport>
-      </Table.Root>
+      <div className='h-1/2 overflow-auto'>
+        <DynamicTable properties={properties} data={data} onSelectionChanged={handleSelectionChanged} />
+      </div>
 
       <div className='h-1/2 overflow-auto'>
         {sessionId ? (
@@ -170,17 +198,6 @@ export const SwarmPanel = () => {
   );
 };
 
-const stateFormat: Record<string, { className?: string }> = {
-  CONNECTED: { className: 'text-green-500' },
-  CONNECTING: {},
-  INITIAL: {},
-  CREATED: {},
-  CLOSING: { className: 'text-red-500' },
-  CLOSED: { className: 'text-red-500' },
-  ABORTING: { className: 'text-red-300' },
-  ABORTED: { className: 'text-red-300' },
-};
-
 const getStats = (connection: ConnectionInfo) => {
   const stats = {
     bytesSent: 0,
@@ -197,9 +214,3 @@ const getStats = (connection: ConnectionInfo) => {
 
   return stats;
 };
-
-// TODO(dmaretskyi): Move to util.
-const comparer =
-  <T,>(accessor: (x: T) => number, reverse?: boolean) =>
-  (a: T, b: T) =>
-    reverse ? accessor(b) - accessor(a) : accessor(a) - accessor(b);

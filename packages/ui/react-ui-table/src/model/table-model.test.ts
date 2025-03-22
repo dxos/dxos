@@ -108,5 +108,5 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
   const table = create(TableType, { view: makeRef(view) });
-  return new TableModel({ table, projection, ...props });
+  return new TableModel({ id: table.id, space: undefined, view, projection, ...props });
 };
