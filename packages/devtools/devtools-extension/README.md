@@ -26,6 +26,7 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 pnpm -w nx bundle devtools-extension
 ```
 ### Manifest
+
 We use Vite to bundle extension, you can find manifest setup inside `vite.config.ts`
 
 ### Chromium

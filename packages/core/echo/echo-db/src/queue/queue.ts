@@ -13,6 +13,7 @@ import type { Queue } from './types';
 /**
  * Client-side view onto an EDGE queue.
  */
+// TODO(burdon): Need offline alternative.
 export class QueueImpl<T> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 

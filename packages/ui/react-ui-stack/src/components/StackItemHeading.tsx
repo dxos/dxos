@@ -16,6 +16,7 @@ export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'di
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
   const { orientation } = useStack();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+
   return (
     <div
       role='heading'
@@ -38,6 +39,7 @@ export type StackItemHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'
 export const StackItemHeadingLabel = forwardRef<HTMLHeadingElement, StackItemHeadingLabelProps>(
   ({ attendableId, related, classNames, ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
+
     return (
       <h1
         {...props}

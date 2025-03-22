@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup, useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContextScope, type Scope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
@@ -41,6 +41,7 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', tabbable: false, circular: true });
+
     return (
       <Root
         role='treegrid'
@@ -97,6 +98,7 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       circular: false,
       memorizeCurrent: false,
     });
+
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
         <Root

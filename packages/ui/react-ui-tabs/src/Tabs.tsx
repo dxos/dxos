@@ -72,11 +72,12 @@ const TabsRoot = ({
   );
 
   const { findFirstFocusable } = useFocusFinders();
-
   const tabsRoot = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    tabsRoot.current && findFirstFocusable(tabsRoot.current)?.focus();
+    if (tabsRoot.current) {
+      findFirstFocusable(tabsRoot.current)?.focus();
+    }
   }, [activePart]);
 
   return (
@@ -181,7 +182,7 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
   const handleClick = useCallback(
-    // NOTE: this handler is only called if the tab is *already active*.
+    // NOTE: This handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('panel');
       onClick?.(event);

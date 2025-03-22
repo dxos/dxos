@@ -7,24 +7,22 @@ import '@dxos-theme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { log } from '@dxos/log';
 
-import { Options } from './components';
+import { Container, Options } from './components';
 
 const Root = () => {
   return (
-    <ThemeProvider tx={defaultTx} themeMode='dark'>
-      <div className='absolute inset-0 flex justify-center overflow-hidden dark bg-baseSurface'>
-        <div className='flex flex-col overflow-y-auto max-w-[640px] w-full'>
-          <Options />
-        </div>
+    <Container classNames='absolute inset-0 flex justify-center overflow-hidden bg-modalSurface'>
+      <div className='flex flex-col max-w-[50rem] grow'>
+        <Options />
       </div>
-    </ThemeProvider>
+    </Container>
   );
 };
 
 const main = async () => {
+  log.info('options');
   createRoot(document.getElementById('root')!).render(<Root />);
 };
 
