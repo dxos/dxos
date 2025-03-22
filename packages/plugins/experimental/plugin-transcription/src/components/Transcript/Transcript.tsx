@@ -111,11 +111,12 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
                   ? {
                       value: author,
                       readonly: true,
+                      // TODO(burdon): Color based on username.
                       className: authorClasses,
                     }
                   : {
                       readonly: true,
-                      accessoryHtml: `<div class="${segmentTextClasses}">${text}</div>`,
+                      accessoryHtml: `<div class="${segmentTextClasses}">${text.trim()}</div>`,
                     }
               ) satisfies DxGridCellValue;
             }
@@ -192,7 +193,7 @@ const mapTranscriptQueue = async (
       blockIndex++;
     }
 
-    log.info('render', { duration: Date.now() - ts });
+    log('render', { duration: Date.now() - ts });
     return rows;
 
     // return blocks.flatMap((block, blockIndex) => {
