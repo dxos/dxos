@@ -17,7 +17,6 @@ import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel
 import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
 export const WorkflowPanel = () => {
   const { space } = useDevtoolsState();
