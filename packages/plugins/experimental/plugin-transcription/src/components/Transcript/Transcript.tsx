@@ -34,7 +34,7 @@ const segmentTextClasses = 'text-[16px] leading-[24px] whitespace-pre-wrap break
 type QueueRows = [number, number, number][];
 
 export type TranscriptProps = {
-  attendableId: string;
+  attendableId?: string;
   ignoreAttention?: boolean;
   blocks?: TranscriptBlock[];
 };
