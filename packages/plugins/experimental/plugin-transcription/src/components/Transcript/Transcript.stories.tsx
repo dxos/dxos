@@ -8,7 +8,6 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
@@ -17,19 +16,19 @@ import translations from '../../translations';
 const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
   component: Transcript,
-  render: (args) => (
-    <div className='flex w-[30rem] p-2'>
-      <ScrollContainer>
+  render: (args) => {
+    return (
+      <div className='flex w-[50rem] h-full'>
         <Transcript {...args} />
-      </ScrollContainer>
-    </div>
-  ),
+      </div>
+    );
+  },
   decorators: [
     withTheme,
     withLayout({
       tooltips: true,
       fullscreen: true,
-      classNames: 'justify-center',
+      classNames: 'flex justify-center',
     }),
   ],
   parameters: {
@@ -51,10 +50,12 @@ const names = Array.from({ length: 3 }, () => faker.person.fullName());
 
 export const Default: Story = {
   args: {
-    blocks: Array.from({ length: 6 + Math.floor(Math.random()) * 15 }, () => ({
+    ignoreAttention: true,
+    attendableId: 'story',
+    blocks: Array.from({ length: 200 }, () => ({
       id: faker.string.uuid(),
       author: faker.helpers.arrayElement(names),
-      segments: Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => ({
+      segments: Array.from({ length: 1 + Math.floor(Math.random() * 2) }, () => ({
         started: next(),
         text: faker.lorem.paragraph(),
       })),
@@ -62,4 +63,9 @@ export const Default: Story = {
   },
 };
 
-export const Empty: Story = {};
+export const Empty: Story = {
+  args: {
+    ignoreAttention: true,
+    attendableId: 'story',
+  },
+};
