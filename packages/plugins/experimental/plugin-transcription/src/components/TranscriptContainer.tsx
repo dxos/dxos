@@ -60,7 +60,6 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
     }
   }, [transcript, edge]);
 
-  // TODO(dmaretskyi): Move action to menu.
   return (
     <StackItem.Content toolbar={false} classNames='relative'>
       <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>

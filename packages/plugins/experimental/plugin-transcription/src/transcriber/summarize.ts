@@ -22,7 +22,7 @@ export const summarizeTranscript = async (
   ai: AIServiceClient,
   transcript: TranscriptType,
 ): Promise<DocumentType> => {
-  invariant(transcript.queue, 'No queue found for transcript');
+  invariant(transcript.queue, 'No queue for transcript');
 
   const queue = new QueueImpl(edge, DXN.parse(transcript.queue));
   await queue.refresh();
