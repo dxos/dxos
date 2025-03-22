@@ -26,7 +26,9 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "effect": "3.13.3"
+  },
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
