@@ -48,7 +48,7 @@ const UX: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer>
-        <Transcript blocks={blocks} />
+        <Transcript blocks={blocks} attendableId='story' />
       </ScrollContainer>
     </div>
   );
