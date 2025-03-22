@@ -22,6 +22,7 @@ import { log } from 'handlebars';
 export type ReferenceData = {
   uri: string;
   label: string;
+  // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 };
 
 export interface ReferencesProvider {

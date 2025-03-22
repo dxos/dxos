@@ -2,16 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getSpace } from '@dxos/react-client/echo';
+import { Filter, getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Thread, type ThreadProps } from './Thread';
+import { Thread, type ContextProvider, type ThreadProps } from './Thread';
 import { useChatProcessor, useMessageQueue } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
+import type { ReferenceData } from '../Prompt/references';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { getDXN, isInstanceOf } from '@dxos/echo-schema';
 
 export type ThreadContainerProps = {
   chat?: AIChatType;
@@ -28,6 +31,46 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
 }) => {
   // Push up capabilities hooks out of components.
   const space = getSpace(chat);
+
+  const contextProvider = useMemo<ContextProvider | undefined>((): ContextProvider | undefined => {
+    if (!space) {
+      return undefined;
+    }
+
+    return {
+      async query({ query }) {
+        const { objects } = await space.db.query(Filter.schema(DocumentType)).run();
+        return objects
+          .filter((document) =>
+            (document.name ?? document.fallbackName ?? '').toLowerCase().startsWith(query.toLowerCase()),
+          )
+          .filter((document) => !!getDXN(document))
+          .map((document) => ({
+            uri: getDXN(document)!.toString(),
+            label: document.name ?? document.fallbackName ?? '',
+          }));
+      },
+      async resolveMetadata({ uri }) {
+        const document = await space.db.query({ id: uri }).first();
+        if (!isInstanceOf(DocumentType, document)) {
+          return null;
+        }
+        return {
+          uri,
+          label: document.name ?? document.fallbackName ?? '',
+        };
+      },
+      async resolveData({ uri }) {
+        const document = await space.db.query({ id: uri }).first();
+        if (!isInstanceOf(DocumentType, document)) {
+          return null;
+        }
+        // TODO(dmaretskyi): Types
+        return (await document.content.load()).content;
+      },
+    };
+  }, [space]);
+
   const processor = useChatProcessor(space, settings);
   const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
@@ -73,6 +116,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       onCancel={handleCancel}
       onPrompt={handleSubmit}
       onOpenChange={onOpenChange}
+      contextProvider={contextProvider}
       {...props}
     />
   );

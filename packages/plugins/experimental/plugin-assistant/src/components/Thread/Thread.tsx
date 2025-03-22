@@ -12,9 +12,18 @@ import { ScrollContainer, type ScrollController } from '@dxos/react-ui-component
 import { mx } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
+import { PromptBar, type PromptBarProps } from '../Prompt';
+import type { ReferenceData, ReferencesProvider } from '../Prompt/references';
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { messageReducer } from './reducer';
-import { PromptBar, type PromptBarProps } from '../Prompt';
+
+export interface ContextProvider {
+  query({ query }: { query: string }): Promise<ReferenceData[]>;
+
+  resolveMetadata({ uri }: { uri: string }): Promise<ReferenceData | null>;
+
+  resolveData({ uri }: { uri: string }): Promise<string | null>;
+}
 
 export type ThreadProps = ThemedClassName<{
   space?: Space;
@@ -22,6 +31,7 @@ export type ThreadProps = ThemedClassName<{
   collapse?: boolean;
   transcription?: boolean;
   onOpenChange?: (open: boolean) => void;
+  contextProvider?: ContextProvider;
 }> &
   Pick<PromptBarProps, 'processing' | 'error' | 'onSubmit' | 'onSuggest' | 'onCancel'> &
   Pick<ThreadMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete'>;
@@ -40,6 +50,7 @@ export const Thread = ({
   onSubmit,
   onCancel,
   onOpenChange,
+  contextProvider,
   ...props
 }: ThreadProps) => {
   const scroller = useRef<ScrollController>(null);
@@ -68,6 +79,21 @@ export const Thread = ({
     }
   }, [messages, collapse]);
 
+  const references = useMemo<ReferencesProvider | undefined>(() => {
+    if (!contextProvider) {
+      return undefined;
+    }
+
+    return {
+      async getReferences({ query }: { query: string }) {
+        return contextProvider.query({ query });
+      },
+      async resolveReference({ uri }: { uri: string }) {
+        return contextProvider.resolveMetadata({ uri });
+      },
+    };
+  }, [contextProvider]);
+
   return (
     <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <ScrollContainer ref={scroller} fade>
@@ -90,6 +116,7 @@ export const Thread = ({
           onSubmit={handleSubmit}
           onCancel={onCancel}
           onOpenChange={onOpenChange}
+          references={references}
         />
       )}
     </div>

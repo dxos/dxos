@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
-import { type ObjectMeta, getTypename } from './object';
+import { ObjectId, type ObjectMeta, getTypename } from './object';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_META = '@meta';
@@ -142,7 +142,7 @@ export const requireTypeReference = (schema: S.Schema<any>): Reference => {
 };
 
 // TODO(dmaretskyi): Unify with `getTypeReference`.
-export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => {
+export const getSchemaDXN = (schema: S.Schema.All): DXN | undefined => {
   // TODO(dmaretskyi): Add support for dynamic schema.
   const objectAnnotation = getObjectAnnotation(schema);
   if (!objectAnnotation) {
@@ -184,3 +184,22 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
  * The object can be used with {@link isInstanceOf} to check if it is an instance of a schema.
  */
 export type HasTypename = {};
+
+/**
+ * Returns a DXN for an object or schema.
+ */
+export const getDXN = (object: any): DXN | undefined => {
+  if (S.isSchema(object)) {
+    return getSchemaDXN(object as any);
+  }
+
+  if (typeof object !== 'object' || object == null) {
+    throw new TypeError('Object is not an object.');
+  }
+
+  if (!ObjectId.isValid(object.id)) {
+    throw new TypeError('Object id is not valid.');
+  }
+
+  return DXN.fromLocalObjectId(object.id);
+};
