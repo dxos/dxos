@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState, type FC } from 'react';
 import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Message } from '@dxos/artifact';
 import { AIServiceEdgeClient, DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
-import { create, getSpace, makeRef } from '@dxos/client/echo';
+import { create, fullyQualifiedId, getSpace, makeRef } from '@dxos/client/echo';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -19,7 +19,6 @@ import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { useConfig } from '@dxos/react-client';
 import { useEdgeClient, useQueue, type EdgeHttpClient } from '@dxos/react-edge-client';
 import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
-import { ScrollContainer } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TextType } from '@dxos/schema';
 
@@ -32,6 +31,7 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
   const edge = useEdgeClient();
   const ai = useAiServiceClient();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const attendableId = fullyQualifiedId(transcript);
 
   const queue = useQueue<TranscriptBlock>(edge, transcript.queue ? DXN.parse(transcript.queue) : undefined, {
     pollInterval: 1_000,
@@ -58,23 +58,17 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
 
   // TODO(dmaretskyi): Move action to menu.
   return (
-    <StackItem.Content toolbar={true}>
-      <StackItem.Heading>
-        <Toolbar.Root classNames='flex gap-2'>
-          <IconButton
-            icon='ph--subtitles--regular'
-            iconOnly
-            size={5}
-            disabled={isSummarizing}
-            onClick={handleSummarize}
-            label={t('summary button')}
-          />
-          {isSummarizing && <div className='text-sm'>{t('summarizing label')}</div>}
-        </Toolbar.Root>
-      </StackItem.Heading>
-      <ScrollContainer>
-        <Transcript blocks={queue?.items} />
-      </ScrollContainer>
+    <StackItem.Content toolbar={false} classNames='relative'>
+      <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>
+        <IconButton
+          icon='ph--pen--regular'
+          size={5}
+          disabled={isSummarizing}
+          onClick={handleSummarize}
+          label={t(isSummarizing ? 'summarizing label' : 'summary button')}
+        />
+      </Toolbar.Root>
+      <Transcript blocks={queue?.items} attendableId={attendableId} />
     </StackItem.Content>
   );
 };
