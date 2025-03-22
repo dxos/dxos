@@ -9,7 +9,7 @@ import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from
 import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
-import { QueryOptions, useQuery } from '@dxos/react-client/echo';
+import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
@@ -110,8 +110,9 @@ const historyColumns: TableColumnDef<HistoryRow, any>[] = [
   // }),
 ];
 
-export const ObjectsPanel = () => {
-  const { space } = useDevtoolsState();
+export const ObjectsPanel = (props: { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
   // TODO(burdon): Sort by type?
   const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
@@ -149,7 +150,7 @@ export const ObjectsPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
       }
