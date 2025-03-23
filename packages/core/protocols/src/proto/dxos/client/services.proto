@@ -433,6 +433,28 @@ message JoinBySpaceKeyRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+message SpaceArchive {
+  string filename = 1;
+  bytes contents = 2;
+}
+
+message ExportSpaceRequest {
+  string space_id = 1;
+}
+
+message ExportSpaceResponse {
+  SpaceArchive archive = 1;
+}
+
+message ImportSpaceRequest {
+  SpaceArchive archive = 1;
+}
+
+message ImportSpaceResponse {
+  /// the ID of the new space.
+  string new_space_id = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
@@ -454,6 +476,9 @@ service SpacesService {
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
   rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
+
+  rpc ExportSpace(ExportSpaceRequest) returns (ExportSpaceResponse);
+  rpc ImportSpace(ImportSpaceRequest) returns (ImportSpaceResponse);
 }
 
 //
