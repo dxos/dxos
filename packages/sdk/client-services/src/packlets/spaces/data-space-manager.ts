@@ -3,8 +3,8 @@
 //
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { type Doc } from '@dxos/automerge/automerge';
-import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { loadIncremental, type Doc } from '@dxos/automerge/automerge';
+import { type AutomergeUrl, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
@@ -26,8 +26,15 @@ import {
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
+  type DatabaseRoot,
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import {
+  SpaceDocVersion,
+  createIdFromSpaceKey,
+  encodeReference,
+  type ObjectStructure,
+  type SpaceDoc,
+} from '@dxos/echo-protocol';
 import { createObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
@@ -53,6 +60,7 @@ import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
+import { init } from '@dxos/automerge/automerge/next';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -115,6 +123,11 @@ export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceOfflineTimeout?: number;
   activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
+};
+
+export type CreateSpaceOptions = {
+  rootUrl?: AutomergeUrl;
+  documents?: Record<DocumentId, Uint8Array>;
 };
 
 @trackLeaks('open', 'close')
@@ -224,7 +237,7 @@ export class DataSpaceManager extends Resource {
    * Creates a new space writing the genesis credentials to the control feed.
    */
   @synchronized
-  async createSpace() {
+  async createSpace(options: CreateSpaceOptions = {}) {
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
@@ -239,7 +252,21 @@ export class DataSpaceManager extends Resource {
 
     log('creating space...', { spaceKey });
 
-    const root = await this._echoHost.createSpaceRoot(spaceKey);
+    if (options.documents) {
+      await Promise.all(
+        Object.entries(options.documents).map(async ([documentId, data]) => {
+          await this._echoHost.createDoc(data, { preserveHistory: true });
+        }),
+      );
+    }
+
+    let root: DatabaseRoot;
+    if (options.rootUrl) {
+      root = await this._echoHost.openSpaceRoot(await createIdFromSpaceKey(spaceKey), options.rootUrl);
+    } else {
+      root = await this._echoHost.createSpaceRoot(spaceKey);
+    }
+
     const space = await this._constructSpace(metadata);
     await space.open();
 

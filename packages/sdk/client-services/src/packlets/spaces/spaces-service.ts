@@ -53,8 +53,9 @@ import { type Provider } from '@dxos/util';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 import { type IdentityManager } from '../identity';
-import { SpaceArchiveWriter } from '../space-export';
+import { extractSpaceArchive, SpaceArchiveWriter } from '../space-export';
 import { SpaceId } from '@dxos/keys';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -282,7 +283,15 @@ export class SpacesServiceImpl implements SpacesService {
   }
 
   async importSpace(request: ImportSpaceRequest): Promise<ImportSpaceResponse> {
-    throw new Error('Not implemented');
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const extracted = await extractSpaceArchive(request.archive);
+    invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
+    const space = await dataSpaceManager.createSpace({
+      documents: extracted.documents,
+      rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
+    });
+    await this._updateMetrics();
+    return { newSpaceId: space.id };
   }
 
   private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {

@@ -240,14 +240,23 @@ export class AutomergeHost extends Resource {
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T | Doc<T>, opts?: CreateDocOptions): DocHandle<T> {
+  createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
     if (opts?.preserveHistory) {
+      if (initialValue instanceof Uint8Array) {
+        return this._repo.import(initialValue);
+      }
+
       if (!isAutomerge(initialValue)) {
         throw new TypeError('Initial value must be an Automerge document');
       }
+
       // TODO(dmaretskyi): There's a more efficient way.
       return this._repo.import(save(initialValue as Doc<T>));
     } else {
+      if (initialValue instanceof Uint8Array) {
+        throw new Error('Cannot create document from Uint8Array without preserving history');
+      }
+
       return this._repo.create(initialValue);
     }
   }

@@ -501,7 +501,7 @@ describe('Spaces', () => {
     expect(epochs.length).to.eq(2);
   });
 
-  test.only('export space archive', async () => {
+  test('export space archive', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     registerTypes(client);
 
@@ -510,6 +510,20 @@ describe('Spaces', () => {
     await space.db.flush();
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
+  });
+
+  test('import space archive', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    registerTypes(client);
+
+    const space = await client.spaces.create();
+    const doc1 = space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export();
+    expect(archive.contents.length).to.be.greaterThan(0);
+
+    const importedSpace = await client.spaces.import(archive);
+    expect((await importedSpace.db.query({ id: doc1.id }).first()).title).toEqual(doc1.title);
   });
 
   const createInitializedClients = async (
