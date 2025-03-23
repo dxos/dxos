@@ -46,13 +46,17 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     }
   };
 
-  const handleBackup = async (spaceKey: PublicKey) => {
+  const handleSnapshot = async (spaceKey: PublicKey) => {
     const space = spaces.find((space) => space.key.equals(spaceKey))!;
     await space.waitUntilReady();
     const backupBlob = await exportData(space);
     const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
 
     download(backupBlob, `${filename}.json`);
+  };
+
+  const handleArchive = async (spaceKey: PublicKey) => {
+    alert('Not implemented');
   };
 
   const handleImport = async (backup: Blob) => {
@@ -104,16 +108,31 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       maxSize: 60,
     }),
     helper.display({
-      id: 'backup',
+      id: 'snapshot',
       cell: (context) => (
         <Button
           onClick={(event) => {
             event.stopPropagation();
-            void handleBackup(context.row.original.key);
+            void handleSnapshot(context.row.original.key);
           }}
           classNames='flex shrink-0 m-1'
         >
-          {'Download backup'}
+          Snapshot
+        </Button>
+      ),
+      maxSize: 85,
+    }),
+    helper.display({
+      id: 'archive',
+      cell: (context) => (
+        <Button
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleArchive(context.row.original.key);
+          }}
+          classNames='flex shrink-0 m-1'
+        >
+          Archive
         </Button>
       ),
     }),
