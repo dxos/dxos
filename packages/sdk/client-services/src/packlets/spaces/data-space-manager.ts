@@ -33,7 +33,7 @@ import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -185,6 +185,10 @@ export class DataSpaceManager extends Resource {
   // TODO(burdon): Remove.
   get spaces() {
     return this._spaces;
+  }
+
+  getSpaceById(spaceId: SpaceId): DataSpace | undefined {
+    return [...this._spaces.values()].find((space) => space.id === spaceId);
   }
 
   @synchronized

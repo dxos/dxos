@@ -59,3 +59,8 @@ export interface SpaceArchiveMetadata {
     currentRootUrl?: string;
   };
 }
+
+export const SpaceArchiveFileStructure = {
+  metadata: 'metadata.json',
+  documents: 'documents',
+} as const;

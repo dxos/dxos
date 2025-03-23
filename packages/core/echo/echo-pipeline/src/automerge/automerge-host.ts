@@ -23,6 +23,7 @@ import {
   type PeerId,
   type StorageAdapterInterface,
   type StorageKey,
+  interpretAsDocumentId,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
 import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
@@ -41,6 +42,7 @@ import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
+import { bufferToArray } from '@dxos/util';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -226,6 +228,13 @@ export class AutomergeHost extends Resource {
     }
 
     return handle;
+  }
+
+  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    const documentId = interpretAsDocumentId(id);
+
+    const chunks = await this._storage.loadRange([documentId]);
+    return bufferToArray(Buffer.concat(chunks.map((c) => c.data!)));
   }
 
   /**
