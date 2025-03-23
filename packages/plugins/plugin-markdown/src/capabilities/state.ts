@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type EditorViewMode, createEditorStateStore } from '@dxos/react-ui-editor';
+import { type EditorViewMode, createEditorStateStore, createFoldStateStore } from '@dxos/react-ui-editor';
 
 import { MarkdownCapabilities } from './capabilities';
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -17,6 +17,7 @@ export default (context: PluginsContext) => {
 
   // TODO(wittjosiah): Fold into state.
   const editorState = createEditorStateStore(`${MARKDOWN_PLUGIN}/editor`);
+  const foldState = createFoldStateStore(`${MARKDOWN_PLUGIN}/fold`);
 
   const getViewMode = (id: string) => {
     const defaultViewMode = context
@@ -27,5 +28,11 @@ export default (context: PluginsContext) => {
 
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
-  return contributes(MarkdownCapabilities.State, { state: state.values, editorState, getViewMode, setViewMode });
+  return contributes(MarkdownCapabilities.State, {
+    state: state.values,
+    editorState,
+    foldState,
+    getViewMode,
+    setViewMode,
+  });
 };

@@ -22,7 +22,7 @@ export default () =>
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
-        const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+        const { state, editorState, foldState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
 
         return (
           <MarkdownContainer
@@ -33,6 +33,7 @@ export default () =>
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(fullyQualifiedId(data.subject))}
             editorStateStore={editorState}
+            foldStateStore={foldState}
             onViewModeChange={setViewMode}
           />
         );
@@ -45,7 +46,7 @@ export default () =>
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
-        const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+        const { state, editorState, foldState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
 
         return (
           <MarkdownContainer
@@ -56,6 +57,7 @@ export default () =>
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(data.subject.id)}
             editorStateStore={editorState}
+            foldStateStore={foldState}
             onViewModeChange={setViewMode}
           />
         );

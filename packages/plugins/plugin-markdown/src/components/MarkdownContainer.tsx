@@ -6,6 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { type FoldStateStore } from '@dxos/react-ui-editor';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -19,6 +20,7 @@ export type MarkdownContainerProps = Pick<
   id: string;
   object: DocumentType | any;
   settings: MarkdownSettingsProps;
+  foldStateStore?: FoldStateStore;
 };
 
 // TODO(burdon): Move toolbar here.
@@ -30,11 +32,12 @@ const MarkdownContainer = ({
   settings,
   viewMode,
   editorStateStore,
+  foldStateStore,
   onViewModeChange,
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = object instanceof DocumentType ? object : undefined;
-  const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore });
+  const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore, foldStateStore });
 
   if (doc) {
     return (

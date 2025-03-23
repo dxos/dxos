@@ -31,6 +31,7 @@ import {
   listener,
   selectionState,
   typewriter,
+  type FoldStateStore,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
@@ -46,10 +47,17 @@ type ExtensionsOptions = {
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
+  foldStateStore?: FoldStateStore;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
-export const useExtensions = ({ document, settings, viewMode, editorStateStore }: ExtensionsOptions): Extension[] => {
+export const useExtensions = ({
+  document,
+  settings,
+  viewMode,
+  editorStateStore,
+  foldStateStore,
+}: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
@@ -65,6 +73,7 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
         settings,
         viewMode,
         dispatch,
+        foldStateStore,
         // query,
       }),
     [
@@ -127,10 +136,17 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
 /**
  * Create extension instances for editor.
  */
-const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
+const createBaseExtensions = ({
+  document,
+  dispatch,
+  settings,
+  query,
+  viewMode,
+  foldStateStore,
+}: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings.folding && folding(),
+    settings.folding && folding({ store: foldStateStore }),
   ].filter(isNotFalsy);
 
   //
