@@ -32,26 +32,8 @@ export default (context: PluginsContext) => {
 
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
-  // TODO(wittjosiah): Remove.
-  const selectionStateStore = {
-    getState: (id: string) => state.values.selectionState[id],
-    setState: (id: string, selectionState: EditorSelectionState) => {
-      state.values.selectionState[id] = selectionState;
-    },
-  };
-
-  // TODO(wittjosiah): Remove.
-  const foldStateStore = {
-    getState: (id: string) => state.values.foldState[id],
-    setState: (id: string, foldState: FoldState) => {
-      state.values.foldState[id] = foldState;
-    },
-  };
-
   return contributes(MarkdownCapabilities.State, {
     state: state.values,
-    editorState: selectionStateStore,
-    foldState: foldStateStore,
     getViewMode,
     setViewMode,
   });

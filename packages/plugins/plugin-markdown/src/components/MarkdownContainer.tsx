@@ -6,7 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { type FoldStateStore } from '@dxos/react-ui-editor';
+import { type EditorSelectionState, type FoldState } from '@dxos/react-ui-editor';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -15,12 +15,13 @@ import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,
-  'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
+  'role' | 'extensionProviders' | 'viewMode' | 'onViewModeChange'
 > & {
   id: string;
   object: DocumentType | any;
   settings: MarkdownSettingsProps;
-  foldStateStore?: FoldStateStore;
+  selection?: Record<string, EditorSelectionState>;
+  folding?: Record<string, FoldState>;
 };
 
 // TODO(burdon): Move toolbar here.
@@ -31,13 +32,14 @@ const MarkdownContainer = ({
   object,
   settings,
   viewMode,
-  editorStateStore,
-  foldStateStore,
+  selection,
+  folding,
   onViewModeChange,
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = object instanceof DocumentType ? object : undefined;
-  const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore, foldStateStore });
+  const extensions = useExtensions({ document: doc, settings, viewMode, selection, folding });
+  const selectionState = selection?.[fullyQualifiedId(object)];
 
   if (doc) {
     return (
@@ -49,6 +51,8 @@ const MarkdownContainer = ({
         viewMode={viewMode}
         settings={settings}
         scrollPastEnd={scrollPastEnd}
+        selection={selectionState?.selection}
+        scrollTo={selectionState?.scrollTo}
         onViewModeChange={onViewModeChange}
       />
     );
@@ -63,14 +67,16 @@ const MarkdownContainer = ({
         toolbar={settings.toolbar}
         inputMode={settings.editorInputMode}
         scrollPastEnd={scrollPastEnd}
+        selection={selectionState?.selection}
+        scrollTo={selectionState?.scrollTo}
         onViewModeChange={onViewModeChange}
       />
     );
   }
 };
 
-type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
-  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions'> & {
+type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'selection' | 'folding'> &
+  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'scrollTo' | 'selection'> & {
     document: DocumentType;
   };
 

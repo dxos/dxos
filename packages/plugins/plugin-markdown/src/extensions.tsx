@@ -18,7 +18,6 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import {
   type AutocompleteResult,
-  type EditorStateStore,
   type EditorViewMode,
   type Extension,
   InputModeExtensions,
@@ -31,7 +30,8 @@ import {
   listener,
   selectionState,
   typewriter,
-  type FoldStateStore,
+  type EditorSelectionState,
+  type FoldState,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
@@ -46,18 +46,12 @@ type ExtensionsOptions = {
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
-  editorStateStore?: EditorStateStore;
-  foldStateStore?: FoldStateStore;
+  selection?: Record<string, EditorSelectionState>;
+  folding?: Record<string, FoldState>;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
-export const useExtensions = ({
-  document,
-  settings,
-  viewMode,
-  editorStateStore,
-  foldStateStore,
-}: ExtensionsOptions): Extension[] => {
+export const useExtensions = ({ document, settings, viewMode, selection, folding }: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
@@ -73,7 +67,7 @@ export const useExtensions = ({
         settings,
         viewMode,
         dispatch,
-        foldStateStore,
+        folding,
         // query,
       }),
     [
@@ -121,7 +115,7 @@ export const useExtensions = ({
             space,
             identity,
           }),
-        selectionState(editorStateStore),
+        selectionState(selection),
         document &&
           listener({
             onChange: (text) => setFallbackName(document, text),
@@ -142,11 +136,11 @@ const createBaseExtensions = ({
   settings,
   query,
   viewMode,
-  foldStateStore,
+  folding: foldingState,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings.folding && folding({ store: foldStateStore }),
+    settings.folding && folding(foldingState),
   ].filter(isNotFalsy);
 
   //
