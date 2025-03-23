@@ -26,6 +26,7 @@ import {
   Invitation,
   SpaceState,
   type Contact,
+  type SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
@@ -127,6 +128,7 @@ export class SpaceProxy implements Space {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
+      export: this._export.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -549,6 +551,11 @@ export class SpaceProxy implements Space {
     if (!this._initialized) {
       throw new Error('Space is not initialized.');
     }
+  }
+
+  private async _export(): Promise<SpaceArchive> {
+    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({ spaceId: this.id });
+    return archive;
   }
 }
 

@@ -17,7 +17,9 @@ export const assertArgument: (condition: unknown, message: string) => asserts co
   message: string,
 ): asserts condition => {
   if (!condition) {
-    throw new TypeError(message);
+    const error = new TypeError(message);
+    Error.captureStackTrace(error, assertArgument);
+    throw error;
   }
 };
 
@@ -44,7 +46,9 @@ export const assertState: (condition: unknown, message: string) => asserts condi
   message: string,
 ): asserts condition => {
   if (!condition) {
-    throw new InvalidStateError(message);
+    const error = new InvalidStateError(message);
+    Error.captureStackTrace(error, assertState);
+    throw error;
   }
 };
 

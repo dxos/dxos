@@ -34,7 +34,7 @@ export class SpaceArchiveWriter extends Resource {
 
   async begin(meta: SpaceArchiveBeginProps) {
     assertState(this._tar, 'Not open');
-    assertState(this._meta, 'Already started');
+    assertState(!this._meta, 'Already started');
     this._meta = meta;
     this._archive = new this._tar.Archive();
     this._documentsDir = this._archive.addDirectory(SpaceArchiveFileStructure.documents);
@@ -51,8 +51,6 @@ export class SpaceArchiveWriter extends Resource {
     assertArgument(!documentId.startsWith('automerge:'), 'Invalid document ID');
     assertState(this._documentsDir, 'Not open');
     this._documentsDir.addBinaryFile(`${documentId}.bin`, data);
-
-    throw new Error('Not implemented');
   }
 
   async finish(): Promise<SpaceArchive> {

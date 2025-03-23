@@ -501,6 +501,14 @@ describe('Spaces', () => {
     expect(epochs.length).to.eq(2);
   });
 
+  test.only('export space archive', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create();
+    const archive = await space.internal.export();
+    expect(archive.contents.length).to.be.greaterThan(0);
+  });
+
   const createInitializedClients = async (
     count: number,
     options?: CreateInitializedClientsOptions,
