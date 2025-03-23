@@ -56,7 +56,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   };
 
   const handleArchive = async (spaceKey: PublicKey) => {
-    alert('Not implemented');
+    const space = spaces.find((space) => space.key.equals(spaceKey))!;
+    const archive = await space.internal.export();
+    download(new Blob([archive.contents]), archive.filename);
   };
 
   const handleImport = async (backup: Blob) => {

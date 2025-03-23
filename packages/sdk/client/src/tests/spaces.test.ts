@@ -503,8 +503,11 @@ describe('Spaces', () => {
 
   test.only('export space archive', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
+    registerTypes(client);
 
     const space = await client.spaces.create();
+    space.db.add(createDocument());
+    await space.db.flush();
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
   });
