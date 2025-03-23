@@ -27,8 +27,6 @@ const lineHeight = 24;
 const cellSpacing = 12;
 
 const authorClasses = 'text-[16px] leading-[24px] dx-tag';
-
-// NOTE: These classes are required for synchronous measurement.
 const segmentTextClasses = 'text-[16px] leading-[24px] whitespace-pre-wrap break-words hyphens-none';
 
 type QueueRows = [number, number, number][];
@@ -58,29 +56,16 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
     grid: { size: lineHeight },
   };
 
-  const [queueMap, setQueueMap] = useState<QueueRows>([]);
-  useEffect(() => {
-    if (measureRef.current) {
-      // TODO(burdon): Only measure rows that have changed. Cache other values.
-      // TODO(burdon): Build into grid with estimated height and correct on the fly.
-      void mapTranscriptQueue(measureRef.current, blocks, true).then((queueMap) => {
-        setQueueMap(queueMap);
-        if (measureRef.current) {
-          void mapTranscriptQueue(measureRef.current, blocks, false).then(setQueueMap);
-        }
-      });
-    }
-  }, [blocks, measureRef.current]);
-
+  const items = useItems(measureRef.current, blocks);
   const rows = useMemo(
     () =>
       ({
-        grid: queueMap.reduce((acc: DxGridAxisMeta['grid'], row, rowIndex) => {
+        grid: items.reduce((acc: DxGridAxisMeta['grid'], row, rowIndex) => {
           acc[rowIndex] = { size: row[2] };
           return acc;
         }, {}),
       }) satisfies DxGridAxisMeta,
-    [queueMap],
+    [items],
   );
 
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -92,8 +77,8 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
         switch (plane) {
           case 'grid': {
             const cells: DxGridPlaneCells = {};
-            for (let row = range.start.row; row <= range.end.row && row < queueMap.length; row++) {
-              const [blockIndex, segmentIndex] = queueMap[row];
+            for (let row = range.start.row; row <= range.end.row && row < items.length; row++) {
+              const [blockIndex, segmentIndex] = items[row];
               const { author, segments } = blocks[blockIndex] ?? { author: '', segments: [] };
               const { started: end, text } = segments[segmentIndex] ?? { started: 0, text: '' };
 
@@ -128,7 +113,7 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
         }
       };
     }
-  }, [dxGrid, queueMap, blocks]);
+  }, [dxGrid, items, blocks]);
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
@@ -159,7 +144,7 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
               rowDefault={transcriptRows}
               rows={rows}
               limitColumns={2}
-              limitRows={queueMap.length}
+              limitRows={items.length}
               onWheel={handleWheel}
             />
           </Grid.Root>
@@ -169,11 +154,37 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
   );
 };
 
-const mapTranscriptQueue = async (
-  div: HTMLDivElement,
-  blocks?: TranscriptBlock[],
-  estimate = false,
-): Promise<QueueRows> => {
+export const formatElapsed = (start: Date, end: Date) => {
+  const { hours, minutes, seconds } = intervalToDuration({ start, end });
+  const pad = (n = 0) => String(n).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+};
+
+/**
+ * Measure rows for grid.
+ * @param div - Measuring DIV with the same styles as the grid cells.
+ * @param blocks - Transcript blocks.
+ * @returns
+ */
+const useItems = (div: HTMLDivElement | null, blocks?: TranscriptBlock[]) => {
+  const [items, setItems] = useState<QueueRows>([]);
+  useEffect(() => {
+    if (div) {
+      // TODO(burdon): Only measure rows that have changed. Cache other values.
+      // TODO(burdon): Build into grid with estimated height and correct on the fly.
+      void mapBlocks(div, blocks, true).then((items) => {
+        setItems(items);
+        if (div) {
+          void mapBlocks(div, blocks, false).then(setItems);
+        }
+      });
+    }
+  }, [div, blocks]);
+
+  return items;
+};
+
+const mapBlocks = async (div: HTMLDivElement, blocks?: TranscriptBlock[], estimate = false): Promise<QueueRows> => {
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
     return [];
   } else {
@@ -229,10 +240,4 @@ const measureSegment = async (div: HTMLDivElement, text: string, estimate = fals
       });
     }
   });
-};
-
-export const formatElapsed = (start: Date, end: Date) => {
-  const { hours, minutes, seconds } = intervalToDuration({ start, end });
-  const pad = (n = 0) => String(n).padStart(2, '0');
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
