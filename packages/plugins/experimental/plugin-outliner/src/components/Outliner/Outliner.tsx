@@ -259,6 +259,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
     }),
     [item, themeMode],
   );
+
   useEffect(() => {
     if (active) {
       view?.focus();
