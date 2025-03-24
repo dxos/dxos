@@ -4,7 +4,13 @@
 
 import { S } from '@dxos/echo-schema';
 // TODO(wittjosiah): This pulls in UI code into the types entrypoint.
-import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
+import {
+  type Extension,
+  EditorInputMode,
+  type EditorSelectionState,
+  EditorViewMode,
+  type FoldState,
+} from '@dxos/react-ui-editor';
 
 import { DocumentType } from './schema';
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -45,6 +51,12 @@ export type MarkdownPluginState = {
   // TODO(burdon): Extend view mode per document to include scroll position, etc.
   // View mode per document.
   viewMode: Record<string, EditorViewMode>;
+
+  // Selection state per document
+  selectionState: Record<string, EditorSelectionState>;
+
+  // Fold state per document
+  foldState: Record<string, FoldState>;
 };
 
 export const MarkdownSettingsSchema = S.mutable(
