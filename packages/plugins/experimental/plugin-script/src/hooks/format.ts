@@ -7,7 +7,7 @@ import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 import { useCallback } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type ScriptType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 

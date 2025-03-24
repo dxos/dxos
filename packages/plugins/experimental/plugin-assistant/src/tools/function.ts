@@ -5,8 +5,8 @@
 import { defineTool, ToolResult } from '@dxos/artifact';
 import type { Tool } from '@dxos/artifact';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
-import type { FunctionType } from '@dxos/functions';
+import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions/types';
+import type { FunctionType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import type { SpaceId } from '@dxos/react-client/echo';
 import { getMeta } from '@dxos/react-client/echo';

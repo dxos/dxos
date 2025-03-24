@@ -12,7 +12,7 @@ import {
   type FunctionTrigger,
   ScriptType,
   TriggerKind,
-} from '@dxos/functions';
+} from '@dxos/functions/types';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput, TextInput } from '@dxos/react-ui-form';

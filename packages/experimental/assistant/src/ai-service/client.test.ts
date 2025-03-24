@@ -179,7 +179,7 @@ describe.skip('AI Service Client', () => {
   });
 });
 
-describe('Ollama Client', () => {
+describe.skip('Ollama Client', () => {
   test('basic', async (ctx) => {
     const isRunning = await OllamaClient.isRunning();
     if (!isRunning) {

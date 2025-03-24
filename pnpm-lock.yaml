@@ -909,9 +909,12 @@ importers:
       react-router-dom:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      webext-bridge:
+        specifier: ^6.0.1
+        version: 6.0.1
       webextension-polyfill:
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.12.0
+        version: 0.12.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -944,8 +947,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       '@types/webextension-polyfill':
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.12.3
+        version: 0.12.3
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
@@ -3045,6 +3048,9 @@ importers:
       cron:
         specifier: ^3.1.6
         version: 3.1.6
+      cron-schedule:
+        specifier: ^5.0.4
+        version: 5.0.4
       effect:
         specifier: 3.13.3
         version: 3.13.3
@@ -4527,8 +4533,8 @@ importers:
         specifier: ^6.4.0
         version: 6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       webextension-polyfill:
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.12.0
+        version: 0.12.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -4552,8 +4558,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       '@types/webextension-polyfill':
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.12.3
+        version: 0.12.3
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
@@ -6033,6 +6039,9 @@ importers:
 
   packages/plugins/experimental/plugin-explorer:
     dependencies:
+      3d-force-graph:
+        specifier: ^1.76.1
+        version: 1.77.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
@@ -6088,8 +6097,8 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
       force-graph:
-        specifier: 1.49.3
-        version: 1.49.3
+        specifier: ^1.49.4
+        version: 1.49.5
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6818,9 +6827,15 @@ importers:
       '@dxos/react-edge-client':
         specifier: workspace:*
         version: link:../../../sdk/react-edge-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../../ui/react-ui-components
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-grid
       '@dxos/react-ui-sfx':
         specifier: workspace:*
         version: link:../../../ui/react-ui-sfx
@@ -7432,8 +7447,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7636,8 +7651,8 @@ importers:
         specifier: workspace:*
         version: link:../../sdk/react-client
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -8817,6 +8832,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/artifact':
+        specifier: workspace:*
+        version: link:../../experimental/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8904,6 +8922,12 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
@@ -8941,9 +8965,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -9017,8 +9038,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -9087,8 +9108,8 @@ importers:
         specifier: workspace:*
         version: link:../../sdk/schema
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -10522,8 +10543,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(emoji-mart@5.5.2)(react@18.2.0)
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-accordion':
         specifier: 1.2.3
         version: 1.2.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10784,8 +10805,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/primitive':
         specifier: 1.1.1
         version: 1.1.1
@@ -11539,8 +11560,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -12435,8 +12456,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/primitive':
         specifier: 1.1.1
         version: 1.1.1
@@ -12617,8 +12638,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -12699,8 +12720,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@fluentui/react-tabster':
-        specifier: 9.23.3
-        version: 9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^9.24.2
+        version: 9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/primitive':
         specifier: 1.1.1
         version: 1.1.1
@@ -13480,6 +13501,10 @@ importers:
         version: 16.0.4
 
 packages:
+
+  3d-force-graph@1.77.0:
+    resolution: {integrity: sha512-w2MlrCeMJxXwhz5gtRZ7mLU4xW5DD2U6VSEfFv8pvnvSNPYPuAIKjbJoZekfv7yFmMaWnNy/2RfRcgC5oGr2KQ==}
+    engines: {node: '>=12'}
 
   '@aashutoshrathi/word-wrap@1.2.6':
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
@@ -16433,14 +16458,14 @@ packages:
   '@fluentui/keyboard-keys@9.0.8':
     resolution: {integrity: sha512-iUSJUUHAyTosnXK8O2Ilbfxma+ZyZPMua5vB028Ys96z80v+LFwntoehlFsdH3rMuPsA8GaC1RE7LMezwPBPdw==}
 
-  '@fluentui/react-shared-contexts@9.21.2':
-    resolution: {integrity: sha512-5hw9CfCmKaEbxmFi+ZF4EZzYWFKrfRLq9pXFIoJWprP1D3ZAds/ymtIOG/CsJzig8zQ1LQ3cNSUzNB75XWg6IQ==}
+  '@fluentui/react-shared-contexts@9.23.0':
+    resolution: {integrity: sha512-coQLGRZj7cgSlR8ojCLzZURwQjsZOAlubBQanJvdMR20zCCrJCMUNt6vT2+jhIrQJT0nyqrjNJSeHtBnsPMucw==}
     peerDependencies:
       '@types/react': ~18.2.0
       react: ~18.2.0
 
-  '@fluentui/react-tabster@9.23.3':
-    resolution: {integrity: sha512-sGLePr6QmUbYq/rGkaE6MUTRCFucY5HphKEvWoB8ec32btQmAsMlv9YT5BzJ+YQ2Byc39mm1Uthz/Pw5H+tCpA==}
+  '@fluentui/react-tabster@9.24.2':
+    resolution: {integrity: sha512-aSTwb4SshZluwNa2VYCVczYvb/pabSoCdaUGE+fyTcxi3y42VWAO5BipNkSBTIXp4Cgg/tKPDVl9nMiSMbTyxw==}
     peerDependencies:
       '@types/react': ~18.2.0
       '@types/react-dom': ~18.2.0
@@ -16450,8 +16475,8 @@ packages:
   '@fluentui/react-theme@9.1.24':
     resolution: {integrity: sha512-OhVKYD7CMYHxzJEn4PtIszledj8hbQJNWBMfIZsp4Sytdp9vCi0txIQUx4BhS1WqtQPhNGCF16eW9Q3NRrnIrQ==}
 
-  '@fluentui/react-utilities@9.18.20':
-    resolution: {integrity: sha512-4uIgf4e4yP1HWAQapFQKNN88+L88NqbzXyQPf+NWE9lmP5xRyyMePKRX7i4PcJFdSt7lN4BYvwUxJ7DkQ/Npnw==}
+  '@fluentui/react-utilities@9.18.22':
+    resolution: {integrity: sha512-MruiqeyUfk1Tlx+5DALXmwS1UBqHjBNYcZL14mpW12Bmig0SNt7aO4bsJL5Gv/uABrRiESBkF0Yl353huCD+EQ==}
     peerDependencies:
       '@types/react': ~18.2.0
       react: ~18.2.0
@@ -21666,8 +21691,11 @@ packages:
   '@types/web-bluetooth@0.0.20':
     resolution: {integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==}
 
-  '@types/webextension-polyfill@0.10.0':
-    resolution: {integrity: sha512-If4EcaHzYTqcbNMp/FdReVdRmLL/Te42ivnJII551bYjhX19bWem5m14FERCqdJA732OloGuxCRvLBvcMGsn4A==}
+  '@types/webextension-polyfill@0.12.3':
+    resolution: {integrity: sha512-F58aDVSeN/MjUGazXo/cPsmR76EvqQhQ1v4x23hFjUX0cfAJYE+JBWwiOGW36/VJGGxoH74sVlRIF3z7SJCKyg==}
+
+  '@types/webextension-polyfill@0.8.3':
+    resolution: {integrity: sha512-GN+Hjzy9mXjWoXKmaicTegv3FJ0WFZ3aYz77Wk8TMp1IY3vEzvzj1vnsa0ggV7vMI1i+PUxe4qqnIJKCzf9aTg==}
 
   '@types/webxr@0.5.20':
     resolution: {integrity: sha512-JGpU6qiIJQKUuVSKx1GtQnHJGxRjtfGIhzO2ilq43VZZS//f1h1Sgexbdk+Lq+7569a6EYhOWrUpIruR/1Enmg==}
@@ -23812,6 +23840,10 @@ packages:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
 
+  cron-schedule@5.0.4:
+    resolution: {integrity: sha512-nH0a49E/kSVk6BeFgKZy4uUsy6D2A16p120h5bYD9ILBhQu7o2sJFH+WI4R731TSBQ0dB1Ik7inB/dRAB4C8QQ==}
+    engines: {node: '>=18'}
+
   cron@3.1.6:
     resolution: {integrity: sha512-cvFiQCeVzsA+QPM6fhjBtlKGij7tLLISnTSvFxVdnFGLdz+ZdXN37kNe0i2gefmdD17XuZA6n2uPVwzl4FxW/w==}
 
@@ -24216,6 +24248,10 @@ packages:
   dashify@2.0.0:
     resolution: {integrity: sha512-hpA5C/YrPjucXypHPPc0oJ1l9Hf6wWbiOL7Ik42cxnsUOhWiCB/fylKbKqqJalW9FgkNQCw16YO8uW9Hs0Iy1A==}
     engines: {node: '>=4'}
+
+  data-bind-mapper@1.0.2:
+    resolution: {integrity: sha512-OJBssRDE5jGqPatqFfZzKWQ16oXzz7/2lSdEU84y6syEbJAqV3Ckr/1gzpX387tIuXiZZ6+g3tKvvBHT+umWnA==}
+    engines: {node: '>=12'}
 
   data-uri-to-buffer@2.0.2:
     resolution: {integrity: sha512-ND9qDTLc6diwj+Xe5cdAgVTbLVdXbtxTJRXRhli8Mowuaan+0EJOtdqJ0QCHNSSPyoXGx9HX2/VMnKeC34AChA==}
@@ -25588,8 +25624,8 @@ packages:
     resolution: {integrity: sha512-7EwmXrOjyL+ChxMhmG5lnW9MPt1aIeZEwKhQzoBUdTV0N3zuwWDZYVJatDvZ2OyzPUvdIAZDsCetk3coyMfcnQ==}
     engines: {node: '>=0.10.0'}
 
-  force-graph@1.49.3:
-    resolution: {integrity: sha512-blBqeFq3vdIzqGgvWrML9xA2R0nS5nvjHsEt9lcWVZ29IcdWQ6wa4G0CG/Uv8bP9olwpsJPZSJe3W8vNhiMCnQ==}
+  force-graph@1.49.5:
+    resolution: {integrity: sha512-mCTLxsaOPfp4Jq4FND8sHTpa8aZDLNXgkwAN98IDZ8Ve3nralz0gNsmE4Nx6NFm48olJ0gzCQYYLJrrYDqifew==}
     engines: {node: '>=12'}
 
   foreground-child@2.0.0:
@@ -28556,6 +28592,10 @@ packages:
   nanoerror@1.3.4:
     resolution: {integrity: sha512-X6APJZ1MCZP+NRjfTv4VWaXZOpVU3qa/PPNGesa7vh2Ovx/bXNQbUzkDaN7d9RaHcrEdX0zxUFBQPuhvIpNxVQ==}
 
+  nanoevents@6.0.2:
+    resolution: {integrity: sha512-FRS2otuFcPPYDPYViNWQ42+1iZqbXydinkRHTHFxrF4a1CpBfmydR9zkI44WSXAXCyPrkcGtPk5CnpW6Y3lFKQ==}
+    engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
+
   nanoguard@1.3.0:
     resolution: {integrity: sha512-K/ON5wyflyPyZskdeT3m7Y2gJVkm3QLdKykMCquAbK8A2erstyMpZUc3NG8Nz5jKdfatiYndONrlmLF8+pGl+A==}
 
@@ -28617,6 +28657,21 @@ packages:
 
   next-tick@1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
+
+  ngraph.events@1.2.2:
+    resolution: {integrity: sha512-JsUbEOzANskax+WSYiAPETemLWYXmixuPAlmZmhIbIj6FH/WDgEGCGnRwUQBK0GjOnVm8Ui+e5IJ+5VZ4e32eQ==}
+
+  ngraph.forcelayout@3.3.1:
+    resolution: {integrity: sha512-MKBuEh1wujyQHFTW57y5vd/uuEOK0XfXYxm3lC7kktjJLRdt/KEKEknyOlc6tjXflqBKEuYBBcu7Ax5VY+S6aw==}
+
+  ngraph.graph@20.0.1:
+    resolution: {integrity: sha512-VFsQ+EMkT+7lcJO1QP8Ik3w64WbHJl27Q53EO9hiFU9CRyxJ8HfcXtfWz/U8okuoYKDctbciL6pX3vG5dt1rYA==}
+
+  ngraph.merge@1.0.0:
+    resolution: {integrity: sha512-5J8YjGITUJeapsomtTALYsw7rFveYkM+lBj3QiYZ79EymQcuri65Nw3knQtFxQBU1r5iOaVRXrSwMENUPK62Vg==}
+
+  ngraph.random@1.1.0:
+    resolution: {integrity: sha512-h25UdUN/g8U7y29TzQtRm/GvGr70lK37yQPvPKXXuVfs7gCm82WipYFZcksQfeKumtOemAzBIcT7lzzyK/edLw==}
 
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
@@ -31051,6 +31106,10 @@ packages:
     resolution: {integrity: sha512-2G2y++21dhj2R7iHAdd0FIzjGwuKZld+7Pl/bTU6YIkrC2ZMbVUjm+luj6A6V34Rv9XfKJDKpTWu9W4Gse1D9g==}
     engines: {node: '>=14.16'}
 
+  serialize-error@9.1.1:
+    resolution: {integrity: sha512-6uZQLGyUkNA4N+Zii9fYukmNu9PEA1F5rqcwXzN/3LtBjwl2dFBbVZ1Zyn08/CGkB4H440PIemdOQBt1Wvjbrg==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
   serialize-javascript@4.0.0:
     resolution: {integrity: sha512-GaNA54380uFefWghODBWEGisLZFj00nS5ACs6yHa9nLqlLpVLO8ChDGeKRjZnV4Nh4n0Qi7nhYZD/9fCPzEqkw==}
 
@@ -31755,8 +31814,8 @@ packages:
     resolution: {integrity: sha512-ulAk51I9UVUyJgxlv9M6lFot2WP3e7t8Kz9+IS6D4rVba1tR9kON+Ey69f+1R4Q8cd45Lod6a4IcJIxnzGc/zA==}
     engines: {node: '>=18'}
 
-  tabster@8.4.0:
-    resolution: {integrity: sha512-OMiLKtIBKrpuKLL06SzF/58fvyounm+BVGphSa5fbVW96J5MjQQirP8gkDL0whRPtkseswrbtDu6OnhVSIEF9A==}
+  tabster@8.5.2:
+    resolution: {integrity: sha512-0kVcNM09sefFE5FybfX/bLuyPziuQDnGzZW7RQWJuBKh438vh3Y0fARrkiPaMwMD/4uph7ScwETfOvdDwOaJNQ==}
 
   tailwind-merge@2.2.1:
     resolution: {integrity: sha512-o+2GTLkthfa5YUt4JxPfzMIpQzZ3adD1vLVkvKE1Twl9UAhGsEbIZhHHZVRttyW177S8PDJI3bTQNaebyofK3Q==}
@@ -31878,11 +31937,23 @@ packages:
     peerDependencies:
       tslib: ^2
 
+  three-forcegraph@1.42.13:
+    resolution: {integrity: sha512-BoG5fB3nlAFeIyiLuFquvWIjt8DA2gdPWlqW/8V8xQcEO7otMmeN2/WWHCP7cWzKEImULxpJ6bNLmmt7TTJaiw==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      three: '>=0.118.3'
+
   three-mesh-bvh@0.7.8:
     resolution: {integrity: sha512-BGEZTOIC14U0XIRw3tO4jY7IjP7n7v24nv9JXS1CyeVRWOCkcOMhRnmENUjuV39gktAw4Ofhr0OvIAiTspQrrw==}
     deprecated: Deprecated due to three.js version incompatibility. Please use v0.8.0, instead.
     peerDependencies:
       three: '>= 0.151.0'
+
+  three-render-objects@1.39.3:
+    resolution: {integrity: sha512-x5oNbAGzStIH0vTKyUqJVr+ojmhjQV8m3f1LdphMpohfjjbYQamoOVt/+gaYq1BiYlRnrzP/fULVYgmrGiGtNw==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      three: '>=0.168'
 
   three-stdlib@2.33.0:
     resolution: {integrity: sha512-V/uycBuqQOP/3Z+FBtpMdj2Ds5PyfJ3VDfMzktEmG4niOIzv7q1y5uMSbMcng0+057m1l0N147FQxsodQo9zBg==}
@@ -31925,6 +31996,9 @@ packages:
 
   tiny-typed-emitter@2.1.0:
     resolution: {integrity: sha512-qVtvMxeXbVej0cQWKqVSSAHmKZEHAvxdF8HEUBFWts8h+xEo5m/lEiPakuyZ3BnCBjOD8i24kzNOiOLLgsSxhA==}
+
+  tiny-uid@1.1.2:
+    resolution: {integrity: sha512-0beRFXR+fv4C40ND2PqgNjq6iyB1dKXciKJjslLw0kPYCcR82aNd2b+Tt2yy06LimIlvtoehgvrm/fUZCutSfg==}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -33345,8 +33419,14 @@ packages:
       devtools:
         optional: true
 
-  webextension-polyfill@0.10.0:
-    resolution: {integrity: sha512-c5s35LgVa5tFaHhrZDnr3FpQpjj1BB+RXhLTYUxGqBVN460HkbM8TBtEqdXWbpTKfzwCcjAZVF7zXCYSKtcp9g==}
+  webext-bridge@6.0.1:
+    resolution: {integrity: sha512-GruIrN+vNwbxVCi8UW4Dqk5YkcGA9V0ZfJ57jXP9JXHbrsDs5k2N6NNYQR5e+wSCnQpGYOGAGihwUpKlhg8QIw==}
+
+  webextension-polyfill@0.12.0:
+    resolution: {integrity: sha512-97TBmpoWJEE+3nFBQ4VocyCdLKfw54rFaJ6EVQYLBCXqCIpLSZkwGgASpv4oPt9gdKCJ80RJlcmNzNn008Ag6Q==}
+
+  webextension-polyfill@0.9.0:
+    resolution: {integrity: sha512-LTtHb0yR49xa9irkstDxba4GATDAcDw3ncnFH9RImoFwDlW47U95ME5sn5IiQX2ghfaECaf6xyXM8yvClIBkkw==}
 
   webgl-constants@1.1.1:
     resolution: {integrity: sha512-LkBXKjU5r9vAW7Gcu3T5u+5cvSvh5WwINdr0C+9jpzVB41cjQAP5ePArDtk/WHYdVj0GefCgM73BA7FlIiNtdg==}
@@ -33975,6 +34055,14 @@ packages:
     hasBin: true
 
 snapshots:
+
+  3d-force-graph@1.77.0:
+    dependencies:
+      accessor-fn: 1.5.1
+      kapsule: 1.16.0
+      three: 0.165.0
+      three-forcegraph: 1.42.13(three@0.165.0)
+      three-render-objects: 1.39.3(three@0.165.0)
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
@@ -38454,18 +38542,18 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.1
 
-  '@fluentui/react-shared-contexts@9.21.2(@types/react@18.2.79)(react@18.2.0)':
+  '@fluentui/react-shared-contexts@9.23.0(@types/react@18.2.79)(react@18.2.0)':
     dependencies:
       '@fluentui/react-theme': 9.1.24
       '@swc/helpers': 0.5.1
       '@types/react': 18.2.79
       react: 18.2.0
 
-  '@fluentui/react-tabster@9.23.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+  '@fluentui/react-tabster@9.24.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
-      '@fluentui/react-shared-contexts': 9.21.2(@types/react@18.2.79)(react@18.2.0)
+      '@fluentui/react-shared-contexts': 9.23.0(@types/react@18.2.79)(react@18.2.0)
       '@fluentui/react-theme': 9.1.24
-      '@fluentui/react-utilities': 9.18.20(@types/react@18.2.79)(react@18.2.0)
+      '@fluentui/react-utilities': 9.18.22(@types/react@18.2.79)(react@18.2.0)
       '@griffel/react': 1.5.29(react@18.2.0)
       '@swc/helpers': 0.5.1
       '@types/react': 18.2.79
@@ -38473,17 +38561,17 @@ snapshots:
       keyborg: 2.6.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      tabster: 8.4.0
+      tabster: 8.5.2
 
   '@fluentui/react-theme@9.1.24':
     dependencies:
       '@fluentui/tokens': 1.0.0-alpha.21
       '@swc/helpers': 0.5.1
 
-  '@fluentui/react-utilities@9.18.20(@types/react@18.2.79)(react@18.2.0)':
+  '@fluentui/react-utilities@9.18.22(@types/react@18.2.79)(react@18.2.0)':
     dependencies:
       '@fluentui/keyboard-keys': 9.0.8
-      '@fluentui/react-shared-contexts': 9.21.2(@types/react@18.2.79)(react@18.2.0)
+      '@fluentui/react-shared-contexts': 9.23.0(@types/react@18.2.79)(react@18.2.0)
       '@swc/helpers': 0.5.1
       '@types/react': 18.2.79
       react: 18.2.0
@@ -45182,7 +45270,9 @@ snapshots:
 
   '@types/web-bluetooth@0.0.20': {}
 
-  '@types/webextension-polyfill@0.10.0': {}
+  '@types/webextension-polyfill@0.12.3': {}
+
+  '@types/webextension-polyfill@0.8.3': {}
 
   '@types/webxr@0.5.20': {}
 
@@ -48006,6 +48096,8 @@ snapshots:
     dependencies:
       luxon: 3.4.4
 
+  cron-schedule@5.0.4: {}
+
   cron@3.1.6:
     dependencies:
       '@types/luxon': 3.3.5
@@ -48493,6 +48585,10 @@ snapshots:
       lodash-es: 4.17.21
 
   dashify@2.0.0: {}
+
+  data-bind-mapper@1.0.2:
+    dependencies:
+      accessor-fn: 1.5.1
 
   data-uri-to-buffer@2.0.2: {}
 
@@ -50200,7 +50296,7 @@ snapshots:
 
   for-in@1.0.2: {}
 
-  force-graph@1.49.3:
+  force-graph@1.49.5:
     dependencies:
       '@tweenjs/tween.js': 23.1.3
       accessor-fn: 1.5.1
@@ -53949,6 +54045,8 @@ snapshots:
     dependencies:
       quick-format-unescaped: 3.0.3
 
+  nanoevents@6.0.2: {}
+
   nanoguard@1.3.0: {}
 
   nanoid@3.3.7: {}
@@ -54004,6 +54102,22 @@ snapshots:
   netmask@2.0.2: {}
 
   next-tick@1.1.0: {}
+
+  ngraph.events@1.2.2: {}
+
+  ngraph.forcelayout@3.3.1:
+    dependencies:
+      ngraph.events: 1.2.2
+      ngraph.merge: 1.0.0
+      ngraph.random: 1.1.0
+
+  ngraph.graph@20.0.1:
+    dependencies:
+      ngraph.events: 1.2.2
+
+  ngraph.merge@1.0.0: {}
+
+  ngraph.random@1.1.0: {}
 
   no-case@3.0.4:
     dependencies:
@@ -56921,6 +57035,10 @@ snapshots:
     dependencies:
       type-fest: 2.19.0
 
+  serialize-error@9.1.1:
+    dependencies:
+      type-fest: 2.19.0
+
   serialize-javascript@4.0.0:
     dependencies:
       randombytes: 2.1.0
@@ -57857,7 +57975,7 @@ snapshots:
 
   system-architecture@0.1.0: {}
 
-  tabster@8.4.0:
+  tabster@8.5.2:
     dependencies:
       keyborg: 2.6.0
       tslib: 2.8.1
@@ -58048,8 +58166,31 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  three-forcegraph@1.42.13(three@0.165.0):
+    dependencies:
+      accessor-fn: 1.5.1
+      d3-array: 3.2.4
+      d3-force-3d: 3.0.5
+      d3-scale: 4.0.2
+      d3-scale-chromatic: 3.0.0
+      data-bind-mapper: 1.0.2
+      kapsule: 1.16.0
+      ngraph.forcelayout: 3.3.1
+      ngraph.graph: 20.0.1
+      three: 0.165.0
+      tinycolor2: 1.6.0
+
   three-mesh-bvh@0.7.8(three@0.165.0):
     dependencies:
+      three: 0.165.0
+
+  three-render-objects@1.39.3(three@0.165.0):
+    dependencies:
+      '@tweenjs/tween.js': 23.1.3
+      accessor-fn: 1.5.1
+      float-tooltip: 1.7.4
+      kapsule: 1.16.0
+      polished: 4.3.1
       three: 0.165.0
 
   three-stdlib@2.33.0(three@0.165.0):
@@ -58091,6 +58232,8 @@ snapshots:
   tiny-jsonc@1.0.1: {}
 
   tiny-typed-emitter@2.1.0: {}
+
+  tiny-uid@1.1.2: {}
 
   tinybench@2.9.0: {}
 
@@ -59691,7 +59834,17 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  webextension-polyfill@0.10.0: {}
+  webext-bridge@6.0.1:
+    dependencies:
+      '@types/webextension-polyfill': 0.8.3
+      nanoevents: 6.0.2
+      serialize-error: 9.1.1
+      tiny-uid: 1.1.2
+      webextension-polyfill: 0.9.0
+
+  webextension-polyfill@0.12.0: {}
+
+  webextension-polyfill@0.9.0: {}
 
   webgl-constants@1.1.1: {}
 
