@@ -14,7 +14,6 @@ import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table
 import { mx } from '@dxos/react-ui-theme';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionInfoView } from './ConnectionInfoView';
 import { PanelContainer } from '../../../components';
 import { styles } from '../../../styles';
 
@@ -173,26 +172,6 @@ export const SwarmPanel = () => {
     <PanelContainer classNames={mx('divide-y', styles.border)}>
       <div className='h-1/2 overflow-auto'>
         <DynamicTable properties={properties} data={data} onSelectionChanged={handleSelectionChanged} />
-      </div>
-
-      <div className='h-1/2 overflow-auto'>
-        {sessionId ? (
-          connection ? (
-            <ConnectionInfoView connection={connection} />
-          ) : (
-            <div className='bs-full flex items-center justify-center'>
-              <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
-                No connection for session
-              </p>
-            </div>
-          )
-        ) : (
-          <div className='bs-full flex items-center justify-center'>
-            <p role='alert' className='p-4 rounded-lg border border-dashed border-neutral-500/20'>
-              Select a session
-            </p>
-          </div>
-        )}
       </div>
     </PanelContainer>
   );
