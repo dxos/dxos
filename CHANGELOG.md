@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.8.1](https://github.com/dxos/dxos/compare/v0.8.0...v0.8.1) (2025-03-24)
+
+
+### Features
+
+* Add ability to query swarm; Bump effect versions ([#8830](https://github.com/dxos/dxos/issues/8830)) ([303c73a](https://github.com/dxos/dxos/commit/303c73add621d5d9cb5c09734ce99b14a69bc41a))
+* Binary space import/export ([#8838](https://github.com/dxos/dxos/issues/8838)) ([cc029fb](https://github.com/dxos/dxos/commit/cc029fb57115e32201461c2c7119517d0e954a25))
+* Browser extension ([#8818](https://github.com/dxos/dxos/issues/8818)) ([ff709d5](https://github.com/dxos/dxos/commit/ff709d5da4dd176a12e0c15fd43ca5b3a0f00ae3))
+* expose some devtools panels in spaces ([#8833](https://github.com/dxos/dxos/issues/8833)) ([08c4fbf](https://github.com/dxos/dxos/commit/08c4fbf3b42a68a1e33dd7e37c431b62e5116d13))
+* function invocation logs ([#8819](https://github.com/dxos/dxos/issues/8819)) ([1b7687a](https://github.com/dxos/dxos/commit/1b7687a447bb4c1795f69b1ff530063fb6e3b427))
+* Normalize AI service client types and name ([#8816](https://github.com/dxos/dxos/issues/8816)) ([ae460ac](https://github.com/dxos/dxos/commit/ae460ac081e68cce5ef1f09c395ba5a248df5762))
+* persist folded sections locally ([#8837](https://github.com/dxos/dxos/issues/8837)) ([391c573](https://github.com/dxos/dxos/commit/391c5736b24218bab55ba5842c1cee5ed19b99dc))
+* **views:** Hidden fields ([#8795](https://github.com/dxos/dxos/issues/8795)) ([188147e](https://github.com/dxos/dxos/commit/188147e06e68fc53b2b25aa31b9ec17cab89bd07))
+
+
+### Bug Fixes
+
+* compute graph reactivity ([#8829](https://github.com/dxos/dxos/issues/8829)) ([1b02958](https://github.com/dxos/dxos/commit/1b02958c0c95feb11bb4c77653a610a6d76f403c))
+* **plugin-deck:** Add an ErrorBoundary to DeckLayout’s Dialogs ([#8826](https://github.com/dxos/dxos/issues/8826)) ([804758d](https://github.com/dxos/dxos/commit/804758d2e2614caa4761c237c3cd43e7835b6045))
+* **plugin-registry:** Overflow issues ([#8813](https://github.com/dxos/dxos/issues/8813)) ([4ec0a24](https://github.com/dxos/dxos/commit/4ec0a2471510506cb30993c32d3330ad37fd079f))
+* prompt bar error message & chess instructions ([#8828](https://github.com/dxos/dxos/issues/8828)) ([b018277](https://github.com/dxos/dxos/commit/b018277bc7c09a5942caaf382a72cc0bc48e5446))
+* workflow error handling, functions preloading, filter codec ([#8834](https://github.com/dxos/dxos/issues/8834)) ([ba2dec9](https://github.com/dxos/dxos/commit/ba2dec9c6b8f7c38f4571bd3fbf5ca4842e0859d))
+
 ## [0.8.0](https://github.com/dxos/dxos/compare/v0.7.4...v0.8.0) (2025-03-14)
 
 
