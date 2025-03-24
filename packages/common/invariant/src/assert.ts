@@ -53,8 +53,4 @@ export const assertState: (condition: unknown, message: string) => asserts condi
 };
 
 // TODO(dmaretskyi): Consider how this correlates to effect errors. Intuitively, this should be a defect, not a checked error.
-export class InvalidStateError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
+export class InvalidStateError extends Error {}

@@ -4,7 +4,6 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
-import * as am from '@dxos/automerge/automerge/next';
 import {
   interpretAsDocumentId,
   type AutomergeUrl,

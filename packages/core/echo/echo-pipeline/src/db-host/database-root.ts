@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as A from '@dxos/automerge/automerge';
+import type * as A from '@dxos/automerge/automerge';
 import {
   interpretAsDocumentId,
   type AutomergeUrl,

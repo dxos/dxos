@@ -3,6 +3,7 @@
 //
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { save } from '@dxos/automerge/automerge';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
@@ -49,7 +50,6 @@ import { EdgeFeedReplicator } from './edge-feed-replicator';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
-import { save } from '@dxos/automerge/automerge';
 
 export type DataSpaceCallbacks = {
   /**

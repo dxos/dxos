@@ -3,6 +3,7 @@
 //
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   createAdmissionCredentials,
@@ -14,6 +15,7 @@ import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   ApiError,
@@ -54,8 +56,6 @@ import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 import { type IdentityManager } from '../identity';
 import { extractSpaceArchive, SpaceArchiveWriter } from '../space-export';
-import { SpaceId } from '@dxos/keys';
-import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(

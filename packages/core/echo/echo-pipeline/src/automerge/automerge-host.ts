@@ -35,6 +35,7 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
+import { bufferToArray } from '@dxos/util';
 
 import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -42,7 +43,6 @@ import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
-import { bufferToArray } from '@dxos/util';
 
 export type PeerIdProvider = () => string | undefined;
 
