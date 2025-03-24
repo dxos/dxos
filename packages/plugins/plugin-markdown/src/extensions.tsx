@@ -18,7 +18,6 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import {
   type AutocompleteResult,
-  type EditorStateStore,
   type EditorViewMode,
   type Extension,
   InputModeExtensions,
@@ -31,6 +30,8 @@ import {
   listener,
   selectionState,
   typewriter,
+  type EditorSelectionState,
+  type FoldState,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
@@ -45,11 +46,12 @@ type ExtensionsOptions = {
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
-  editorStateStore?: EditorStateStore;
+  selection?: Record<string, EditorSelectionState>;
+  folding?: Record<string, FoldState>;
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
-export const useExtensions = ({ document, settings, viewMode, editorStateStore }: ExtensionsOptions): Extension[] => {
+export const useExtensions = ({ document, settings, viewMode, selection, folding }: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
@@ -65,6 +67,7 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
         settings,
         viewMode,
         dispatch,
+        folding,
         // query,
       }),
     [
@@ -112,7 +115,7 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
             space,
             identity,
           }),
-        selectionState(editorStateStore),
+        selectionState(selection),
         document &&
           listener({
             onChange: (text) => setFallbackName(document, text),
@@ -127,10 +130,17 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
 /**
  * Create extension instances for editor.
  */
-const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }: ExtensionsOptions): Extension[] => {
+const createBaseExtensions = ({
+  document,
+  dispatch,
+  settings,
+  query,
+  viewMode,
+  folding: foldingState,
+}: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings.folding && folding(),
+    settings.folding && folding(foldingState),
   ].filter(isNotFalsy);
 
   //
