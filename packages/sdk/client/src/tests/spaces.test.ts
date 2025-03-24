@@ -512,7 +512,7 @@ describe('Spaces', () => {
     expect(archive.contents.length).to.be.greaterThan(0);
   });
 
-  test.only('import space archive', { timeout: 3_000, retry: 1 }, async () => {
+  test('import space archive', { timeout: 3_000, retry: 1 }, async () => {
     const [client1, client2] = await createInitializedClients(2, { storage: true });
     [client1, client2].forEach(registerTypes);
 
@@ -534,7 +534,7 @@ describe('Spaces', () => {
     const context = new Context();
     onTestFinished(async () => {
       await context.dispose();
-    }, 1_000);
+    });
     return createInitializedClientsWithContext(context, count, options);
   };
 
