@@ -16,21 +16,17 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { OUTLINER_PLUGIN } from '../../meta';
 import translations from '../../translations';
-
-type Item = {
-  id: string;
-  text: string;
-};
+import { type TreeItemType } from '../../types';
 
 // TODO(burdon): Indent (Task graph).
 // TODO(burdon): Create/delete.
 
 type ItemEditorProps = ThemedClassName<{
-  item: Item;
+  item: TreeItemType;
   focus?: 'start' | 'end';
-  onFocus?: (item: Item) => void;
-  onNavigate?: (event: { item: Item; direction: 'previous' | 'next' }) => void;
-  onDelete?: (item: Item) => void;
+  onFocus?: (item: TreeItemType) => void;
+  onNavigate?: (event: { item: TreeItemType; direction: 'previous' | 'next' }) => void;
+  onDelete?: (item: TreeItemType) => void;
   onCreate?: () => void;
 }>;
 
@@ -159,7 +155,7 @@ const ItemEditor: FC<ItemEditorProps> = ({ classNames, item, focus, onFocus, onN
 };
 
 const ItemList = () => {
-  const [items, setItems] = useState<Item[]>(
+  const [items, setItems] = useState<TreeItemType[]>(
     Array.from({ length: 50 }, () => ({
       id: faker.string.uuid(),
       text: faker.lorem.sentences(1),

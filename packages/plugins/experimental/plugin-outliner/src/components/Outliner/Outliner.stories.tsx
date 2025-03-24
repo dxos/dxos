@@ -25,7 +25,7 @@ const DefaultStory = ({
   const [root] = useState<TreeItemType>(
     create<TreeItemType>({
       id: 'root',
-      content: '',
+      text: '',
       items: faker.helpers.multiple(
         () => {
           let text = '';
@@ -45,7 +45,7 @@ const DefaultStory = ({
 
           return makeRef(
             create(TreeItemType, {
-              content: text,
+              text,
               items: [],
             }),
           );
@@ -57,7 +57,7 @@ const DefaultStory = ({
 
   const handleCreate = (text = '') =>
     create(TreeItemType, {
-      content: text,
+      text,
       items: [],
     });
 
