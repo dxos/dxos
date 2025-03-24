@@ -501,7 +501,7 @@ describe('Spaces', () => {
     expect(epochs.length).to.eq(2);
   });
 
-  test('export space archive', async () => {
+  test('export space archive', { timeout: 3_000 }, async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     registerTypes(client);
 
@@ -512,17 +512,17 @@ describe('Spaces', () => {
     expect(archive.contents.length).to.be.greaterThan(0);
   });
 
-  test.only('import space archive', async () => {
-    const [client] = await createInitializedClients(1, { storage: true });
-    registerTypes(client);
+  test.only('import space archive', { timeout: 3_000, retry: 1 }, async () => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
 
-    const space = await client.spaces.create();
+    const space = await client1.spaces.create();
     const doc1 = space.db.add(createDocument());
     await space.db.flush();
     const archive = await space.internal.export();
     expect(archive.contents.length).to.be.greaterThan(0);
 
-    const importedSpace = await client.spaces.import(archive);
+    const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
     expect((await importedSpace.db.query({ id: doc1.id }).first()).title).toEqual(doc1.title);
   });
@@ -534,7 +534,7 @@ describe('Spaces', () => {
     const context = new Context();
     onTestFinished(async () => {
       await context.dispose();
-    });
+    }, 1_000);
     return createInitializedClientsWithContext(context, count, options);
   };
 

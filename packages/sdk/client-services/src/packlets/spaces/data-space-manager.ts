@@ -4,9 +4,15 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
-import { type AutomergeUrl, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
+import * as am from '@dxos/automerge/automerge/next';
+import {
+  interpretAsDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocumentId,
+} from '@dxos/automerge/automerge-repo';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
-import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
+import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   createAdmissionCredentials,
   getCredentialAssertion,
@@ -15,6 +21,7 @@ import {
   type MemberInfo,
 } from '@dxos/credentials';
 import {
+  DatabaseRoot,
   findInlineObjectOfType,
   type EchoEdgeReplicator,
   type EchoHost,
@@ -26,7 +33,6 @@ import {
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
-  type DatabaseRoot,
 } from '@dxos/echo-pipeline';
 import {
   SpaceDocVersion,
@@ -38,7 +44,7 @@ import {
 import { createObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -237,7 +243,9 @@ export class DataSpaceManager extends Resource {
    */
   @synchronized
   async createSpace(options: CreateSpaceOptions = {}) {
-    invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
+    assertArgument(!!options.rootUrl === !!options.documents, 'root url must be required when providing documents');
+
+    assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -251,6 +259,8 @@ export class DataSpaceManager extends Resource {
 
     log.info('creating space...', { spaceKey });
 
+    // New document IDs for the space.
+    const documentIdMapping: Record<DocumentId, DocumentId> = {};
     if (options.documents) {
       invariant(
         Object.keys(options.documents).every((documentId) => /^[a-zA-Z0-9]+$/.test(documentId)),
@@ -260,7 +270,8 @@ export class DataSpaceManager extends Resource {
       await Promise.all(
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log.info('creating document...', { documentId });
-          await this._echoHost.createDoc(data, { preserveHistory: true });
+          const newDoc = await this._echoHost.createDoc(data, { preserveHistory: true });
+          documentIdMapping[documentId as DocumentId] = newDoc.documentId;
         }),
       );
     }
@@ -269,7 +280,14 @@ export class DataSpaceManager extends Resource {
 
     let root: DatabaseRoot;
     if (options.rootUrl) {
-      root = await this._echoHost.openSpaceRoot(await createIdFromSpaceKey(spaceKey), options.rootUrl);
+      const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
+      const rootDocHandle = await this._echoHost.loadDoc<SpaceDoc>(Context.default(), newRootDocId);
+      DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
+
+      root = await this._echoHost.openSpaceRoot(
+        await createIdFromSpaceKey(spaceKey),
+        `automerge:${newRootDocId}` as AutomergeUrl,
+      );
     } else {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
