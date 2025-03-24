@@ -6,6 +6,8 @@ import { type Extension, Transaction, type TransactionSpec } from '@codemirror/s
 import { EditorView, keymap } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
+import { isNotFalsy } from '@dxos/util';
 
 import { singleValueFacet } from '../util';
 
@@ -24,6 +26,11 @@ export type EditorSelectionState = {
   selection?: EditorSelection;
 };
 
+export type EditorStateStore = {
+  setState: (id: string, state: EditorSelectionState) => void;
+  getState: (id: string) => EditorSelectionState | undefined;
+};
+
 const stateRestoreAnnotation = 'dxos.org/cm/state-restore';
 
 export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSelectionState): TransactionSpec => {
@@ -35,13 +42,23 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
   };
 };
 
+export const createEditorStateStore = (keyPrefix: string): EditorStateStore => ({
+  getState: (id) => {
+    invariant(id);
+    const state = localStorage.getItem(`${keyPrefix}/${id}`);
+    return state ? JSON.parse(state) : undefined;
+  },
+
+  setState: (id, state) => {
+    invariant(id);
+    localStorage.setItem(`${keyPrefix}/${id}`, JSON.stringify(state));
+  },
+});
+
 /**
  * Track scrolling and selection state to be restored when switching to document.
  */
-export const selectionState = (state: Record<string, EditorSelectionState> = {}): Extension => {
-  const setState = (id: string, selectionState: EditorSelectionState) => {
-    state[id] = selectionState;
-  };
+export const selectionState = ({ getState, setState }: Partial<EditorStateStore> = {}): Extension => {
   const setStateDebounced = debounce(setState!, 1_000);
 
   return [
@@ -57,24 +74,27 @@ export const selectionState = (state: Record<string, EditorSelectionState> = {})
         return;
       }
 
-      const { scrollTop } = view.scrollDOM;
-      const pos = view.posAtCoords({ x: 0, y: scrollTop });
-      if (pos !== null) {
-        const { anchor, head } = view.state.selection.main;
-        setStateDebounced(id, { scrollTo: pos, selection: { anchor, head } });
+      if (setState) {
+        const { scrollTop } = view.scrollDOM;
+        const pos = view.posAtCoords({ x: 0, y: scrollTop });
+        if (pos !== null) {
+          const { anchor, head } = view.state.selection.main;
+          setStateDebounced(id, { scrollTo: pos, selection: { anchor, head } });
+        }
       }
     }),
-    keymap.of([
-      {
-        key: 'ctrl-r', // TODO(burdon): Setting to jump back to selection.
-        run: (view) => {
-          const selection = state[view.state.facet(documentId)];
-          if (selection) {
-            view.dispatch(createEditorStateTransaction(selection));
-          }
-          return true;
+    getState &&
+      keymap.of([
+        {
+          key: 'ctrl-r', // TODO(burdon): Setting to jump back to selection.
+          run: (view) => {
+            const state = getState(view.state.facet(documentId));
+            if (state) {
+              view.dispatch(createEditorStateTransaction(state));
+            }
+            return true;
+          },
         },
-      },
-    ]),
-  ];
+      ]),
+  ].filter(isNotFalsy);
 };
