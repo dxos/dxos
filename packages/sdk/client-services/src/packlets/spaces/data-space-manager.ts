@@ -248,6 +248,9 @@ export class DataSpaceManager extends Resource {
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
+
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+
     const metadata: SpaceMetadata = {
       key: spaceKey,
       genesisFeedKey: controlFeedKey,
@@ -256,7 +259,7 @@ export class DataSpaceManager extends Resource {
       state: SpaceState.SPACE_ACTIVE,
     };
 
-    log.info('creating space...', { spaceKey });
+    log.info('creating space...', { spaceId, spaceKey });
 
     // New document IDs for the space.
     const documentIdMapping: Record<DocumentId, DocumentId> = {};
@@ -268,14 +271,14 @@ export class DataSpaceManager extends Resource {
 
       await Promise.all(
         Object.entries(options.documents).map(async ([documentId, data]) => {
-          log.info('creating document...', { documentId });
+          log('creating document...', { documentId });
           const newDoc = await this._echoHost.createDoc(data, { preserveHistory: true });
           documentIdMapping[documentId as DocumentId] = newDoc.documentId;
         }),
       );
     }
 
-    log.info('opening space...', { spaceKey });
+    log('opening space...', { spaceKey });
 
     let root: DatabaseRoot;
     if (options.rootUrl) {
@@ -283,20 +286,17 @@ export class DataSpaceManager extends Resource {
       const rootDocHandle = await this._echoHost.loadDoc<SpaceDoc>(Context.default(), newRootDocId);
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
-      root = await this._echoHost.openSpaceRoot(
-        await createIdFromSpaceKey(spaceKey),
-        `automerge:${newRootDocId}` as AutomergeUrl,
-      );
+      root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
 
-    log.info('constructing space...', { spaceKey });
+    log('constructing space...', { spaceKey });
 
     const space = await this._constructSpace(metadata);
     await space.open();
 
-    log.info('adding space...', { spaceKey });
+    log('adding space...', { spaceKey });
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
@@ -307,7 +307,7 @@ export class DataSpaceManager extends Resource {
 
     await space.initializeDataPipeline();
 
-    log.info('space ready.', { spaceKey });
+    log('space ready.', { spaceId, spaceKey });
 
     this.updated.emit();
     return space;
