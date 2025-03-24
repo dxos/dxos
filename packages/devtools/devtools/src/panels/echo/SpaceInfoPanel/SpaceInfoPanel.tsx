@@ -8,6 +8,7 @@ import React, { type FC, useState } from 'react';
 import { MulticastObservable } from '@dxos/async';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -21,13 +22,15 @@ import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 export type SpaceInfoPanelProps = {
+  space?: Space;
   onSelectFeed?: FeedTableProps['onSelect'];
   onSelectPipeline?: PipelineTableProps['onSelect'];
 };
 
 export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
   const [, forceUpdate] = useState({});
-  const { space } = useDevtoolsState();
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
 
   // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const spacesInfo = useSpacesInfo();
@@ -56,7 +59,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <Toolbar.Button onClick={() => forceUpdate({})}>
             <ArrowClockwise className={getSize(5)} />
           </Toolbar.Button>
