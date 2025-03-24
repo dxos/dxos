@@ -19,12 +19,11 @@ import { Tree, type TreeComponentProps } from './Tree';
 
 // TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
 // TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
-// TODO(burdon): Factor out to gem?
 
 faker.seed(1);
 
 const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
-  return range(count, () => create(TreeItemType, { content: '', items: items.map((item) => makeRef(item)) }));
+  return range(count, () => create(TreeItemType, { text: '', items: items.map((item) => makeRef(item)) }));
 };
 
 const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {
