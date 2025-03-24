@@ -31,7 +31,7 @@ export const DynamicTable = ({
   classNames,
   tableName = 'com.example/dynamic_table',
   onSelectionChanged,
-  rowActions = [],
+  rowActions,
   onRowAction,
 }: DynamicTableProps) => {
   // TODO(ZaymonFC): Consider allowing the user to supply a schema directly instead of deriving it from
