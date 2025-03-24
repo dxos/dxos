@@ -6,6 +6,7 @@ import React from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Button, useFileDownload } from '@dxos/react-ui';
@@ -61,19 +62,30 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     download(new Blob([archive.contents]), archive.filename);
   };
 
-  const handleImport = async (backup: Blob) => {
-    // Validate backup.
+  const handleImport = async (backup: File) => {
     try {
-      const backupString = await backup.text();
-      JSON.parse(backupString);
+      if (backup.type === 'application/json') {
+        // Validate backup.
+        const backupString = await backup.text();
+        JSON.parse(backupString);
+
+        // Import space.
+        const space = await client.spaces.create();
+        await space.waitUntilReady();
+        await importData(space, backup);
+        space.properties.name = space.properties.name + ' - IMPORTED';
+      } else if (backup.type === 'application/x-tar') {
+        const archive = {
+          filename: backup.name,
+          contents: new Uint8Array(await backup.arrayBuffer()),
+        } satisfies SpaceArchive;
+        await client.spaces.import(archive);
+      } else {
+        throw new Error('Invalid backup type');
+      }
     } catch (err) {
       log.catch(err);
     }
-
-    const space = await client.spaces.create();
-    await space.waitUntilReady();
-    await importData(space, backup);
-    space.properties.name = space.properties.name + ' - IMPORTED';
   };
 
   // TODO(burdon): Get builder from hook.

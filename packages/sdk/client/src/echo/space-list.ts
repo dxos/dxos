@@ -15,7 +15,7 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
-import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import { failUndefined, inspectObject } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query, type QueryOptions } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
@@ -29,7 +29,6 @@ import {
   type SpaceArchive,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
@@ -318,7 +317,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   async import(archive: SpaceArchive): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
-    const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace({ archive });
+    const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
+      { archive },
+      { timeout: CREATE_SPACE_TIMEOUT },
+    );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some((space) => space.id === newSpaceId);
