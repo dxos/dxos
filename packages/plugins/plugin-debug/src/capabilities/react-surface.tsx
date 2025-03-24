@@ -10,6 +10,7 @@ import {
   createIntent,
   createSurface,
   LayoutAction,
+  useCapability,
   type PluginsContext,
 } from '@dxos/app-framework';
 import {
@@ -40,6 +41,7 @@ import {
   InvocationTracePanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
@@ -49,6 +51,7 @@ import {
   type ReactiveEchoObject,
   type ReactiveObject,
   type Space,
+  parseId,
 } from '@dxos/react-client/echo';
 
 import {
@@ -74,6 +77,15 @@ type GraphDebug = {
 
 const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph;
+
+// TODO(wittjosiah): Factor out?
+const useCurrentSpace = () => {
+  const layout = useCapability(Capabilities.Layout);
+  const client = useCapability(ClientCapabilities.Client);
+  const { spaceId } = parseId(layout.workspace);
+  const space = spaceId ? client.spaces.get(spaceId) : undefined;
+  return space;
+};
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.ReactSurface, [
@@ -226,12 +238,13 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
       component: () => {
+        const space = useCurrentSpace();
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
           [dispatch],
         );
-        return <SpaceInfoPanel onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
+        return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
       },
     }),
     createSurface({
@@ -244,7 +257,10 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/objects`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Objects,
-      component: () => <ObjectsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <ObjectsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/automerge`,
@@ -316,6 +332,9 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/edge/traces`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
-      component: () => <InvocationTracePanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <InvocationTracePanel space={space} />;
+      },
     }),
   ]);
