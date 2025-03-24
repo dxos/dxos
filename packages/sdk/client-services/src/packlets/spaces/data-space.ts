@@ -3,6 +3,7 @@
 //
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { save } from '@dxos/automerge/automerge';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
@@ -17,7 +18,7 @@ import {
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { failedInvariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -347,6 +348,18 @@ export class DataSpace {
     log('waiting for space to be ready');
     await ready;
     log('space is ready');
+  }
+
+  async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
+    invariant(this._databaseRoot, 'Space is not ready');
+    const doc = this._databaseRoot.docSync() ?? failedInvariant();
+    const root = save(doc);
+    yield [this._databaseRoot.documentId, root];
+
+    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
+      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
+      yield [documentUrl.replace(/^automerge:/, ''), data];
+    }
   }
 
   private async _enterReadyState() {

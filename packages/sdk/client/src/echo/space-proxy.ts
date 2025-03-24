@@ -8,7 +8,14 @@ import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } 
 import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
-import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
+import {
+  inspectCustom,
+  loadashEqualityFn,
+  todo,
+  warnAfterTimeout,
+  type CustomInspectable,
+  type CustomInspectFunction,
+} from '@dxos/debug';
 import {
   type CoreDatabase,
   type EchoClient,
@@ -26,6 +33,7 @@ import {
   Invitation,
   SpaceState,
   type Contact,
+  type SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
@@ -45,7 +53,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
 
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
-export class SpaceProxy implements Space {
+export class SpaceProxy implements Space, CustomInspectable {
   private _ctx = new Context();
 
   /**
@@ -127,6 +135,7 @@ export class SpaceProxy implements Space {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
+      export: this._export.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -205,6 +214,17 @@ export class SpaceProxy implements Space {
   get error(): Error | undefined {
     return this._error;
   }
+
+  get [Symbol.toStringTag](): string {
+    return 'SpaceProxy';
+  }
+
+  [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
+    return `${options.stylize(this[Symbol.toStringTag], 'special')} ${inspect({
+      id: this.id,
+      state: SpaceState[this.state.get()],
+    })}`;
+  };
 
   /**
    * Current state of the space.
@@ -549,6 +569,11 @@ export class SpaceProxy implements Space {
     if (!this._initialized) {
       throw new Error('Space is not initialized.');
     }
+  }
+
+  private async _export(): Promise<SpaceArchive> {
+    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({ spaceId: this.id });
+    return archive;
   }
 }
 
