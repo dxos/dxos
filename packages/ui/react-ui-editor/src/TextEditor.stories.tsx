@@ -409,14 +409,22 @@ const headings = str(
     .flat(),
 );
 
-const global: Record<string, EditorSelectionState> = {};
+const global = new Map<string, EditorSelectionState>();
 
 export const Folding = {
   render: () => <DefaultStory text={text} extensions={[folding()]} />,
 };
 
 export const Scrolling = {
-  render: () => <DefaultStory text={str('# Large Document', '', longText)} extensions={selectionState(global)} />,
+  render: () => (
+    <DefaultStory
+      text={str('# Large Document', '', longText)}
+      extensions={selectionState({
+        setState: (id, state) => global.set(id, state),
+        getState: (id) => global.get(id),
+      })}
+    />
+  ),
 };
 
 export const ScrollingWithImages = {
