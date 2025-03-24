@@ -3,6 +3,7 @@
 //
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
+import type { AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
   createAdmissionCredentials,
@@ -13,7 +14,8 @@ import {
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, assertState, invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   ApiError,
@@ -40,6 +42,10 @@ import {
   type JoinSpaceResponse,
   type JoinBySpaceKeyRequest,
   type CreateEpochResponse,
+  type ExportSpaceResponse,
+  type ExportSpaceRequest,
+  type ImportSpaceRequest,
+  type ImportSpaceResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -49,6 +55,7 @@ import { type Provider } from '@dxos/util';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 import { type IdentityManager } from '../identity';
+import { extractSpaceArchive, SpaceArchiveWriter } from '../space-export';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -254,6 +261,37 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
     return this._joinByAdmission({ credential });
+  }
+
+  async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
+    await using writer = await new SpaceArchiveWriter().open();
+    assertArgument(SpaceId.isValid(request.spaceId), 'Invalid space ID');
+
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
+    await writer.begin({ spaceId: space.id });
+    const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
+    assertState(rootUrl, 'Space does not have a root URL');
+    await writer.setCurrentRootUrl(rootUrl);
+
+    for await (const [documentId, data] of space.getAllDocuments()) {
+      await writer.writeDocument(documentId, data);
+    }
+
+    const archive = await writer.finish();
+    return { archive };
+  }
+
+  async importSpace(request: ImportSpaceRequest): Promise<ImportSpaceResponse> {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const extracted = await extractSpaceArchive(request.archive);
+    invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
+    const space = await dataSpaceManager.createSpace({
+      documents: extracted.documents,
+      rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
+    });
+    await this._updateMetrics();
+    return { newSpaceId: space.id };
   }
 
   private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {

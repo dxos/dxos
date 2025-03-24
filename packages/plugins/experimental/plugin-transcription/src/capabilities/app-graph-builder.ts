@@ -22,7 +22,7 @@ export default (context: PluginsContext) =>
           },
           properties: {
             label: ['summarize label', { ns: TRANSCRIPTION_PLUGIN }],
-            icon: 'ph--subtitles--regular',
+            icon: 'ph--book-open-text--regular',
           },
         },
       ],

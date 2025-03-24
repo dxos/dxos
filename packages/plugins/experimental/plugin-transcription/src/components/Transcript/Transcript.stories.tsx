@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -35,13 +35,13 @@ const meta: Meta<typeof Transcript> = {
   component: Transcript,
   render: ({ blocks: initialBlocks = [], ...args }) => {
     const [blocks, setBlocks] = useState(initialBlocks);
-    // useEffect(() => {
-    //   const i = setInterval(() => {
-    //     setBlocks((blocks) => [...blocks, createBlock()]);
-    //   }, 5_000);
+    useEffect(() => {
+      const i = setInterval(() => {
+        setBlocks((blocks) => [...blocks, createBlock()]);
+      }, 5_000);
 
-    //   return () => clearInterval(i);
-    // }, []);
+      return () => clearInterval(i);
+    }, []);
 
     return (
       <div className='flex w-[50rem] h-full'>

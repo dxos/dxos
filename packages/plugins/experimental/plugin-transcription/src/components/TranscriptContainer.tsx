@@ -64,7 +64,7 @@ export const TranscriptionContainer: FC<{ transcript: TranscriptType }> = ({ tra
     <StackItem.Content toolbar={false} classNames='relative'>
       <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>
         <IconButton
-          icon='ph--subtitles--regular'
+          icon='ph--book-open-text--regular'
           size={5}
           disabled={isSummarizing}
           label={t(isSummarizing ? 'summarizing label' : 'summarize label')}
