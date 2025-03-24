@@ -21,4 +21,11 @@ export default (context: PluginsContext) =>
         return { data: { object: transcript } };
       },
     }),
+
+    createResolver({
+      intent: TranscriptionAction.Summarize,
+      resolve: () => {
+        // TODO(burdon): Trigger summary generation.
+      },
+    }),
   ]);
