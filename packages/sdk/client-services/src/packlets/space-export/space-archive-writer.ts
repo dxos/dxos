@@ -1,9 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type * as tar from '@obsidize/tar-browserify';
+
 import { Resource, type Context } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
 import { SpaceArchiveFileStructure, SpaceArchiveVersion, type SpaceArchiveMetadata } from '@dxos/protocols';
 import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
-import type { Archive } from '@obsidize/tar-browserify';
 
 export type SpaceArchiveBeginProps = {
   spaceId?: SpaceId;
@@ -17,9 +22,8 @@ export type SpaceArchiveBeginProps = {
 const CURRENT_VERSION = SpaceArchiveVersion.V1;
 
 export class SpaceArchiveWriter extends Resource {
-  private _tar?: typeof import('@obsidize/tar-browserify');
-  private _archive?: Archive;
-  private _documentsDir?: Archive;
+  private _tar?: typeof tar;
+  private _archive?: tar.Archive;
 
   private _meta?: SpaceArchiveBeginProps = undefined;
   private _currentRootUrl?: string = undefined;
@@ -37,7 +41,6 @@ export class SpaceArchiveWriter extends Resource {
     assertState(!this._meta, 'Already started');
     this._meta = meta;
     this._archive = new this._tar.Archive();
-    this._documentsDir = this._archive.addDirectory(SpaceArchiveFileStructure.documents);
   }
 
   async setCurrentRootUrl(url: string) {
@@ -49,8 +52,8 @@ export class SpaceArchiveWriter extends Resource {
 
   async writeDocument(documentId: string, data: Uint8Array) {
     assertArgument(!documentId.startsWith('automerge:'), 'Invalid document ID');
-    assertState(this._documentsDir, 'Not open');
-    this._documentsDir.addBinaryFile(`${documentId}.bin`, data);
+    assertState(this._archive, 'Not open');
+    this._archive.addBinaryFile(`${SpaceArchiveFileStructure.documents}/${documentId}.bin`, data);
   }
 
   async finish(): Promise<SpaceArchive> {

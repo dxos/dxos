@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { loadIncremental, type Doc } from '@dxos/automerge/automerge';
+import { type Doc } from '@dxos/automerge/automerge';
 import { type AutomergeUrl, type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
@@ -60,7 +60,6 @@ import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
-import { init } from '@dxos/automerge/automerge/next';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -250,15 +249,23 @@ export class DataSpaceManager extends Resource {
       state: SpaceState.SPACE_ACTIVE,
     };
 
-    log('creating space...', { spaceKey });
+    log.info('creating space...', { spaceKey });
 
     if (options.documents) {
+      invariant(
+        Object.keys(options.documents).every((documentId) => /^[a-zA-Z0-9]+$/.test(documentId)),
+        'Invalid document IDs',
+      );
+
       await Promise.all(
         Object.entries(options.documents).map(async ([documentId, data]) => {
+          log.info('creating document...', { documentId });
           await this._echoHost.createDoc(data, { preserveHistory: true });
         }),
       );
     }
+
+    log.info('opening space...', { spaceKey });
 
     let root: DatabaseRoot;
     if (options.rootUrl) {
@@ -267,8 +274,12 @@ export class DataSpaceManager extends Resource {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
 
+    log.info('constructing space...', { spaceKey });
+
     const space = await this._constructSpace(metadata);
     await space.open();
+
+    log.info('adding space...', { spaceKey });
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
@@ -278,6 +289,8 @@ export class DataSpaceManager extends Resource {
     await this._signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline();
+
+    log.info('space ready.', { spaceKey });
 
     this.updated.emit();
     return space;

@@ -512,7 +512,7 @@ describe('Spaces', () => {
     expect(archive.contents.length).to.be.greaterThan(0);
   });
 
-  test('import space archive', async () => {
+  test.only('import space archive', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     registerTypes(client);
 
@@ -523,6 +523,7 @@ describe('Spaces', () => {
     expect(archive.contents.length).to.be.greaterThan(0);
 
     const importedSpace = await client.spaces.import(archive);
+    expect(importedSpace.id).not.toEqual(space.id);
     expect((await importedSpace.db.query({ id: doc1.id }).first()).title).toEqual(doc1.title);
   });
 
