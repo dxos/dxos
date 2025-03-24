@@ -3,17 +3,15 @@
 //
 
 import { intervalToDuration } from 'date-fns/intervalToDuration';
-import React, { type FC, useCallback, useEffect, useRef, useState, type WheelEvent } from 'react';
+import React, { type FC, useCallback, useEffect, useLayoutEffect, useRef, useState, type WheelEvent } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
   type DxGridElement,
   type DxGridAxisMeta,
   type DxGridPlaneCells,
-  type DxGridPlaneRange,
   Grid,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
@@ -25,7 +23,7 @@ import { type TranscriptBlock } from '../../types';
 
 const timeWidth = 70;
 const lineHeight = 24;
-const cellSpacing = 12;
+const cellSpacing = 6;
 
 const authorClasses = 'text-[16px] leading-[24px] dx-tag';
 const segmentTextClasses = 'text-[16px] leading-[24px] whitespace-pre-wrap break-words hyphens-none';
@@ -45,7 +43,6 @@ export type TranscriptProps = {
 export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention, blocks }) => {
   const { hasAttention } = useAttention(attendableId);
   const { ref, width } = useResizeDetector();
-  const measureRef = useRef<HTMLDivElement>(null);
 
   const textWidth = width ? width - timeWidth : 0;
   const columnMeta = width
@@ -57,42 +54,25 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
       }
     : undefined;
 
-  // TODO(burdon): Consolidate these two hooks.
-  const rows = useTranscriptRows(measureRef.current, blocks);
+  const rows = useRows(blocks);
   const [rowMeta, setRowMeta] = useState<DxGridAxisMeta>({ grid: {} });
-  useEffect(() => {
-    setRowMeta(createRowMeta(rows));
-  }, [rows]);
-
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks)) {
       const start = blocks[0]?.segments[0]?.started ?? 0;
 
       dxGrid.getCells = (range, plane) => {
-        // Update measurement.
-        void updateBlocks(measureRef.current!, rows, range).then((mod) => {
-          if (mod) {
-            setRowMeta(createRowMeta(rows));
-          }
-        });
-
         switch (plane) {
           case 'grid': {
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < rows.length; row++) {
               const { author, ts, text } = rows[row];
 
-              // cells[toPlaneCellIndex({ col: 0, row })] = {
-              //   readonly: true,
-              //   accessoryHtml: `<span class="pbs-1 text-xs text-neutral-500">${row}</span>`,
-              // };
-
               cells[toPlaneCellIndex({ col: 0, row })] = (
                 ts
                   ? {
                       readonly: true,
-                      accessoryHtml: `<span class="pbs-1 text-xs text-neutral-500">${formatElapsed(start, ts)}</span>`,
+                      accessoryHtml: `<span class="pbs-1 text-xs text-neutral-500">${formatTimestamp(start, ts)}</span>`,
                     }
                   : {}
               ) satisfies DxGridCellValue;
@@ -126,9 +106,9 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
   }, [dxGrid, rows, blocks]);
 
   const handleWheel = useCallback(
-    (event: WheelEvent) => {
+    (ev: WheelEvent) => {
       if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
+        ev.stopPropagation();
       }
     },
     [hasAttention, ignoreAttention],
@@ -138,14 +118,11 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
     <div role='none' ref={ref} className='grow'>
       {columnMeta && (
         <>
-          <div className='relative'>
-            <div
-              className='absolute top-0 p-1 bg-black text-white border z-10 invisible'
-              style={{ left: timeWidth, width: columnMeta.grid['1'].size }}
-            >
-              <div ref={measureRef} className={mx(segmentTextClasses)} />
-            </div>
-          </div>
+          <Measuring
+            rows={rows}
+            width={columnMeta.grid['1'].size}
+            onUpdate={(rows) => setRowMeta(createRowMeta(rows))}
+          />
           <Grid.Root id={`${attendableId}--transcript`}>
             <Grid.Content
               ref={setDxGrid}
@@ -163,12 +140,18 @@ export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention,
   );
 };
 
-export const formatElapsed = (start: Date, end: Date) => {
+/**
+ * Format elapsed time.
+ */
+export const formatTimestamp = (start: Date, end: Date) => {
   const { hours, minutes, seconds } = intervalToDuration({ start, end });
   const pad = (n = 0) => String(n).padStart(2, '0');
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
 
+/**
+ * Create row meta (with heights)from rows.
+ */
 const createRowMeta = (rows: TranscriptRow[]): DxGridAxisMeta => ({
   grid: rows.reduce<DxGridAxisMeta['grid']>((acc, item, rowIndex) => {
     const size = item.size;
@@ -178,97 +161,57 @@ const createRowMeta = (rows: TranscriptRow[]): DxGridAxisMeta => ({
 });
 
 /**
- * Flatten blocks and measure rows for grid.
- * Implements a fast synchronous estimation phase then a much slower (10x) accurate async measurement phase.
- * @param div - Measuring DIV with the same styles as the grid cells.
- * @param blocks - Transcript blocks.
- * @returns
+ * Compute flattened rows from blocks.
  */
-// TODO(burdon): Only measure rows that have changed. Cache other values.
-// TODO(burdon): Build into grid with estimated height and correct on-the-fly.
-// TODO(burdon): Instead of measuring twice, use async measurement for actually rendered rows.
-const useTranscriptRows = (div: HTMLDivElement | null, blocks?: TranscriptBlock[]): TranscriptRow[] => {
+const useRows = (blocks?: TranscriptBlock[]): TranscriptRow[] => {
   const [rows, setRows] = useState<TranscriptRow[]>([]);
   useEffect(() => {
-    if (div) {
-      void mapBlocks(div, blocks, true).then((items) => {
-        setRows(items);
-      });
-    }
-  }, [div, blocks]);
-
-  return rows;
-};
-
-const mapBlocks = async (
-  div: HTMLDivElement,
-  blocks: TranscriptBlock[] = [],
-  estimate = false,
-): Promise<TranscriptRow[]> => {
-  const ts = Date.now();
-  await document.fonts.ready;
-
-  const rows: TranscriptRow[] = [];
-  for (const block of blocks) {
-    const { author, segments } = block;
-    rows.push({ blockId: block.id, size: lineHeight + cellSpacing, author });
-    for (const segment of segments) {
-      const { started: end, text: raw } = segment;
-      const text = raw.trim();
-      const height = await measureSegment(div, text, estimate);
-      rows.push({ blockId: block.id, size: height + cellSpacing, ts: new Date(end), text });
-    }
-  }
-
-  log('mapBlocks', { n: blocks.length, duration: Date.now() - ts });
-  return rows;
-};
-
-const updateBlocks = async (div: HTMLDivElement, rows: TranscriptRow[], range: DxGridPlaneRange): Promise<boolean> => {
-  let mod = false;
-  if (!rows.length) {
-    return mod;
-  }
-
-  const {
-    start: { row: start },
-    end: { row: end },
-  } = range;
-  for (let row = start; row < end; row++) {
-    const { text, size } = rows[row];
-    if (text?.length) {
-      const height = await measureSegment(div, text, true);
-      if (size !== height + cellSpacing && !mod) {
-        log('update', {
-          i: row,
-          previous: size,
-          next: height + cellSpacing,
-          text: text.slice(0, 8) + '...',
-        });
-        rows[row].size = height + cellSpacing;
-        mod = true;
+    for (const block of blocks ?? []) {
+      const { author, segments } = block;
+      rows.push({ blockId: block.id, author, size: lineHeight });
+      for (const segment of segments) {
+        const { started, text } = segment;
+        rows.push({ blockId: block.id, ts: started, text: text.trim(), size: lineHeight });
       }
     }
-  }
+    setRows(rows);
+  }, [blocks]);
 
-  return mod;
+  return rows;
 };
 
-const measureSegment = async (div: HTMLDivElement, text: string, estimate = false): Promise<number> => {
-  return new Promise((resolve) => {
-    div.innerHTML = text;
-    if (estimate) {
-      void div.offsetHeight;
-      const height = div.offsetHeight;
-      // const { height } = div.getBoundingClientRect();
-      resolve(height);
-    } else {
-      requestAnimationFrame(() => {
-        void div.offsetHeight;
-        const height = div.offsetHeight;
-        // const { height } = div.getBoundingClientRect();
-        resolve(height);
-      });
+/**
+ * Render rows offscreen and measure heights.
+ */
+const Measuring = ({
+  rows,
+  width,
+  onUpdate,
+}: {
+  rows: TranscriptRow[];
+  width: number;
+  onUpdate: (rows: TranscriptRow[]) => void;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const div = ref.current;
+    if (div) {
+      for (let i = 0; i < div.children.length; i++) {
+        const row: HTMLDivElement = div.children[i].children[0] as HTMLDivElement;
+        rows[i].size = row.offsetHeight + cellSpacing;
+      }
+
+      onUpdate(rows);
     }
-  });
+  }, [rows]);
+
+  return (
+    <div ref={ref} className='absolute top-0 z-10 invisible'>
+      {rows.map(({ author, text }, i) => (
+        <div key={i} className='p-1 border' style={{ width }}>
+          <div className={mx(segmentTextClasses)}>{author ?? text}</div>
+        </div>
+      ))}
+    </div>
+  );
 };

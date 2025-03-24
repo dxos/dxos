@@ -70,7 +70,7 @@ export const Default: Story = {
   args: {
     ignoreAttention: true,
     attendableId: 'story',
-    blocks: Array.from({ length: 200 }, createBlock),
+    blocks: Array.from({ length: 10 }, createBlock),
   },
 };
 
