@@ -15,16 +15,20 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
-import { failUndefined, inspectObject, todo } from '@dxos/debug';
+import { failUndefined, inspectObject } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query, type QueryOptions } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { Invitation, SpaceState, type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  Invitation,
+  SpaceState,
+  type Space as SerializedSpace,
+  type SpaceArchive,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
@@ -311,23 +315,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  // TODO(burdon): ?
-  async clone(snapshot: SpaceSnapshot): Promise<Space> {
-    return todo();
-    // invariant(this._serviceProvider.services.SpaceService, 'SpaceService is not available.');
-    // const space = await this._serviceProvider.services.SpaceService.cloneSpace(snapshot);
+  async import(archive: SpaceArchive): Promise<Space> {
+    invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
+    const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
+      { archive },
+      { timeout: CREATE_SPACE_TIMEOUT },
+    );
+    invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
+    await this._spaceCreated.waitForCondition(() => {
+      return this.get().some((space) => space.id === newSpaceId);
+    });
 
-    // const proxy = new Trigger<SpaceProxy>();
-    // const unsubscribe = this._spaceCreated.on((spaceKey) => {
-    //   if (spaceKey.equals(space.publicKey)) {
-    //     const spaceProxy = this._spaces.get(space.publicKey)!;
-    //     proxy.wake(spaceProxy);
-    //   }
-    // });
-
-    // const spaceProxy = await proxy.wait();
-    // unsubscribe();
-    // return spaceProxy;
+    const spaceProxy = this.get(newSpaceId) ?? failedInvariant();
+    await spaceProxy.waitUntilReady();
+    return spaceProxy;
   }
 
   join(invitation: Invitation | string) {

@@ -206,6 +206,10 @@ export class EchoHost extends Resource {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
+  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(ctx, id);
+  }
+
   /**
    * Create new persisted document.
    */

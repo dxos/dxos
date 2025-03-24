@@ -3,3 +3,4 @@
 //
 
 export * from './invariant';
+export * from './assert';

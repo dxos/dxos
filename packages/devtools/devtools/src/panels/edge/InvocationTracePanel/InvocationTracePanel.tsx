@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { type Queue } from '@dxos/echo-db';
 import { decodeReference } from '@dxos/echo-protocol';
 import { type TraceEvent, type InvocationTraceEvent } from '@dxos/functions/types';
+import { type Space } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
@@ -62,9 +63,10 @@ const traceEventColumns: TableColumnDef<TraceEvent, any>[] = [
   }),
 ];
 
-export const InvocationTracePanel = () => {
+export const InvocationTracePanel = (props: { space?: Space }) => {
   const edgeClient = useEdgeClient();
-  const { space } = useDevtoolsState();
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
   const invocationsQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
   const eventQueue = useQueue<TraceEvent>(
@@ -92,7 +94,7 @@ export const InvocationTracePanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <DataSpaceSelector />
+          {!props.space && <DataSpaceSelector />}
           <ControlledSelector
             placeholder={'Invocation target'}
             values={[...invocationsByTarget.keys()]}
