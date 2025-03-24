@@ -24,6 +24,11 @@ import { touch } from '../util';
 
 export type BaseTableRow = Record<JsonProp, any> & { id: string };
 
+export type TableRowAction = {
+  id: string;
+  translationKey: string;
+};
+
 export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   id?: string;
   space?: Space;
@@ -36,6 +41,8 @@ export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
   onRowOrderChanged?: () => void;
+  rowActions?: TableRowAction[];
+  onRowAction?: (actionId: string, data: T) => void;
 };
 
 export class TableModel<T extends BaseTableRow = { id: string }> extends Resource {
@@ -54,6 +61,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
+  private readonly _rowActions: TableRowAction[];
+  private readonly _onRowAction?: TableModelProps<T>['onRowAction'];
 
   private readonly _rows = signal<T[]>([]);
   private readonly _sorting: TableSorting<T>;
@@ -74,6 +83,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     onDeleteRows,
     onInsertRow,
     onRowOrderChanged,
+    rowActions = [],
+    onRowAction,
   }: TableModelProps<T>) {
     super();
     this._id = id;
@@ -94,6 +105,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     this._onDeleteColumn = onDeleteColumn;
     this._onCellUpdate = onCellUpdate;
     this._onRowOrderChanged = onRowOrderChanged;
+    this._rowActions = rowActions;
+    this._onRowAction = onRowAction;
   }
 
   public get id() {
@@ -139,6 +152,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   /** @reactive */
   public get isViewDirty(): boolean {
     return this._sorting.isDirty;
+  }
+
+  public get rowActions(): TableRowAction[] {
+    return this._rowActions;
   }
 
   //
@@ -227,6 +244,19 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     }
 
     this._onDeleteRows?.(row, objectsToDelete);
+  };
+
+  public handleRowAction = (actionId: string, rowIndex: number): void => {
+    if (!this._onRowAction) {
+      return;
+    }
+
+    const row = this._sorting.getDataIndex(rowIndex);
+    const data = this._rows.value[row];
+
+    if (data) {
+      this._onRowAction(actionId, data);
+    }
   };
 
   public getCellData = ({ col, row }: DxGridPlanePosition): any => {

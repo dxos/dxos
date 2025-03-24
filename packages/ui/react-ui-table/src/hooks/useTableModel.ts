@@ -10,7 +10,7 @@ import { useSelectionActions } from '@dxos/react-ui-attention';
 import { type ViewProjection } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type BaseTableRow, TableModel, type TableModelProps } from '../model';
+import { type BaseTableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
 import { type TableType } from '../types';
 
 export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
@@ -18,6 +18,8 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
   onSelectionChanged?: (selection: string[]) => void;
+  rowActions?: TableRowAction[];
+  onRowAction?: (actionId: string, data: T) => void;
 } & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
 export const useTableModel = <T extends BaseTableRow = { id: string }>({
@@ -25,6 +27,8 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
   table,
   projection,
   onSelectionChanged,
+  rowActions,
+  onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
@@ -40,6 +44,8 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
         space: getSpace(table),
         view: table.view?.target,
         projection,
+        rowActions,
+        onRowAction,
         ...props,
       });
       await model.open();
@@ -50,7 +56,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, table?.view?.target]); // TODO(burdon): Trigger if callbacks change?
+  }, [table, projection, table?.view?.target, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {

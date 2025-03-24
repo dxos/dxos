@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
-import { TablePresentation } from '../../model';
+import { TablePresentation, type TableRowAction } from '../../model';
 import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
 
 type DynamicTableProps = {
@@ -17,6 +17,8 @@ type DynamicTableProps = {
   tableName?: string;
   classNames?: string;
   onSelectionChanged?: (selectedItems: string[]) => void;
+  rowActions?: TableRowAction[];
+  onRowAction?: (actionId: string, datum: any) => void;
 };
 
 /**
@@ -29,6 +31,8 @@ export const DynamicTable = ({
   classNames,
   tableName = 'com.example/dynamic_table',
   onSelectionChanged,
+  rowActions = [],
+  onRowAction,
 }: DynamicTableProps) => {
   // TODO(ZaymonFC): Consider allowing the user to supply a schema directly instead of deriving it from
   //  the properties array. (Both should be viable).
@@ -52,6 +56,8 @@ export const DynamicTable = ({
     onSelectionChanged,
     onCellUpdate: handleCellUpdate,
     onRowOrderChanged: handleRowOrderChanged,
+    rowActions,
+    onRowAction,
   });
 
   const presentation = useMemo(() => {
