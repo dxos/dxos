@@ -1,5 +1,10 @@
-import { log } from '@dxos/log';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
+
+import { log } from '@dxos/log';
 
 type ItemRecord = {
   /**
