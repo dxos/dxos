@@ -7,15 +7,12 @@ import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { DEFAULT_OLLAMA_ENDPOINT } from './defs';
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AIServiceClient, type GenerationStream } from './service';
 import { GenerationStreamImpl } from './stream';
 import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './types';
 import { isToolUse, runTools } from '../conversation';
-
-// TODO(burdon): Config.
-export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
-export const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
 
 export type OllamaClientParams = {
   endpoint?: string;
@@ -94,7 +91,7 @@ export class OllamaClient implements AIServiceClient {
       messages: [],
       stream: true,
       options: {
-        temperature: this._temperatureOverride ?? 0.7,
+        temperature: this._temperatureOverride,
       },
     };
 

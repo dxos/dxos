@@ -40,10 +40,11 @@ export default [
         'microphone button': 'Click to speak',
         'cancel processing button': 'Stop processing',
 
+        'settings default label': 'Default',
         'settings custom prompts label': 'Custom prompts',
         'settings llm provider label': 'Enable Ollama integration',
-        'settings llm model label': 'LLM model',
-        'settings default llm model label': 'Default Model',
+        'settings edge llm model label': 'EDGE language model',
+        'settings ollama llm model label': 'Ollama language model',
       },
     },
   },

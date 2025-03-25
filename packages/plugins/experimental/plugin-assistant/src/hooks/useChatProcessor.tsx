@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { createSystemPrompt, type Tool } from '@dxos/artifact';
-import { DEFAULT_LLM_MODEL } from '@dxos/assistant';
+import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -64,17 +64,18 @@ export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProp
     [artifactDefinitions],
   );
 
+  // TODO(burdon): Remove default (let backend decide if not specified).
+  const model =
+    settings?.llmProvider === 'ollama'
+      ? settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL
+      : settings?.edgeModel ?? DEFAULT_EDGE_MODEL;
+
   // Create processor.
-  // TODO(burdon): Updated on each query update above. Should just update current processor.
+  // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
     log('creating processor...', { settings });
-    return new ChatProcessor(aiClient.value, tools, extensions, {
-      // TODO(burdon): Remove defualt (let backend decide if not specified).
-      model: settings?.llmModel ?? DEFAULT_LLM_MODEL,
-      // TOOD(burdon): Query.
-      systemPrompt,
-    });
-  }, [aiClient.value, tools, extensions, systemPrompt, settings?.llmModel]);
+    return new ChatProcessor(aiClient.value, tools, extensions, { model, systemPrompt });
+  }, [aiClient.value, tools, extensions, model, systemPrompt]);
 
   return processor;
 };

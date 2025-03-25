@@ -136,7 +136,7 @@ describe('Artifacts', () => {
     ]);
 
     const stream = await client.generate({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',
@@ -164,7 +164,7 @@ describe('Artifacts', () => {
     ]);
 
     const stream2 = await client.generate({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',

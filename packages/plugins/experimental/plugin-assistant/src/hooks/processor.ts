@@ -12,7 +12,7 @@ import {
   type GenerateRequest,
   type GenerationStream,
   MixedStreamParser,
-  DEFAULT_LLM_MODEL,
+  DEFAULT_EDGE_MODEL,
   type AIServiceClient,
 } from '@dxos/assistant';
 import { createStatic } from '@dxos/echo-schema';
@@ -36,7 +36,7 @@ type RequestOptions = {
 export type ChatProcessorOptions = Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: ChatProcessorOptions = {
-  model: DEFAULT_LLM_MODEL,
+  model: DEFAULT_EDGE_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
 
@@ -50,14 +50,14 @@ export class ChatProcessor {
   /** SSE stream parser. */
   private readonly _parser = new MixedStreamParser();
 
-  /** Current streaming response. */
-  private _stream: GenerationStream | undefined;
-
   /** Pending messages (incl. the current user request). */
   private readonly _pending: Signal<Message[]> = signal([]);
 
   /** Current streaming block (from the AI service). */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
+
+  /** Current streaming response. */
+  private _stream: GenerationStream | undefined;
 
   /** Prior history from queue. */
   private _history: Message[] = [];
