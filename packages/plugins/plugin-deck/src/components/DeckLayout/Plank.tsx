@@ -102,7 +102,7 @@ const PlankImpl = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode
     () =>
       node && {
         subject: node.data,
-        surfaceVariant,
+        variant: surfaceVariant,
         path,
         popoverAnchorId,
       },
@@ -173,7 +173,6 @@ const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const Plank = (props: PlankProps) => {
-  console.log('[plank]', props.companionId);
   if (props.companionId) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (

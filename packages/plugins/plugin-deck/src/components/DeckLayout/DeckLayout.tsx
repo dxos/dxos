@@ -48,8 +48,8 @@ export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;
 };
 
-const PlankSeparator = ({ index }: { index: number }) =>
-  index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
+const PlankSeparator = ({ order }: { order: number }) =>
+  order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -198,6 +198,8 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     ).result;
   }, [active, activeCompanions]);
 
+  console.log('[companions]', JSON.stringify(activeCompanions), JSON.stringify(order), JSON.stringify(active));
+
   return (
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
@@ -268,9 +270,9 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                   style={padding}
                   ref={deckRef}
                 >
-                  {active.map((entryId, index) => (
+                  {active.map((entryId) => (
                     <Fragment key={entryId}>
-                      <PlankSeparator index={index} />
+                      <PlankSeparator order={order[entryId] - 1} />
                       <Plank
                         id={entryId}
                         companionId={activeCompanions[entryId]}
