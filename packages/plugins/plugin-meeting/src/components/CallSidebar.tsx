@@ -4,7 +4,6 @@
 
 import React, { useEffect, type FC } from 'react';
 
-import { type PublicKey } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 
 import { Call } from './Call';
@@ -13,7 +12,7 @@ import { useCallGlobalContext } from '../hooks';
 
 export type CallSidebarProps = {
   space: Space;
-  roomId: PublicKey;
+  roomId: string;
 };
 
 export const CallSidebar: FC<CallSidebarProps> = ({ space, roomId }) => {

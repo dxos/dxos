@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, type FC } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { TranscriptionAction, type TranscriptType } from '@dxos/plugin-transcription/types';
 import { type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
@@ -19,7 +18,7 @@ import { useCallGlobalContext } from '../hooks';
 
 export type CallContainerProps = {
   space: Space;
-  roomId: PublicKey;
+  roomId: string;
 };
 
 export const CallContainer: FC<CallContainerProps> = ({ space, roomId }) => {

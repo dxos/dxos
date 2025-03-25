@@ -7958,6 +7958,9 @@ importers:
       extendable-media-recorder-wav-encoder:
         specifier: ^7.0.123
         version: 7.0.124
+      md5-hex:
+        specifier: 5.0.0
+        version: 5.0.0
       react-resize-detector:
         specifier: ^12.0.2
         version: 12.0.2(react@18.2.0)
@@ -22885,6 +22888,9 @@ packages:
   bluebird@3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
 
+  blueimp-md5@2.19.0:
+    resolution: {integrity: sha512-DRQrD6gJyy8FbiE4s+bDoXS9hiW3Vbx5uCdwvcCf3zLHL+Iv7LtGHLpr+GZV8rHG8tK766FGYBwRbu8pELTt+w==}
+
   bn.js@4.12.0:
     resolution: {integrity: sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==}
 
@@ -27974,6 +27980,10 @@ packages:
     resolution: {integrity: sha512-vARWETUx75+kR2K9qBV20n6NYtGXCuQKX8Zo4+AhJI5LX+ukSM1NYebv+wLnJG8KMvEe9H01sJUyC5bMciA4Tg==}
     engines: {node: '>= 18'}
     hasBin: true
+
+  md5-hex@5.0.0:
+    resolution: {integrity: sha512-18TKd0nxBzMLflLBSCM/I9n50izl7NQGuujgbKjVUs/9acY+a5uzpDUVd4wV130vaK67TzDnPin2gze88u+e4Q==}
+    engines: {node: '>=18'}
 
   md5.js@1.3.5:
     resolution: {integrity: sha512-xitP+WxNPcTTOgnTJcrhM0xvdPepipPSf3I8EIpGKeFLjt3PlJLIDG3u8EX53ZIubkb+5U2+3rELYpEhHhzdkg==}
@@ -46972,6 +46982,8 @@ snapshots:
 
   bluebird@3.7.2: {}
 
+  blueimp-md5@2.19.0: {}
+
   bn.js@4.12.0: {}
 
   bn.js@5.2.1: {}
@@ -53054,6 +53066,10 @@ snapshots:
       seedrandom: 3.0.5
       tiny-emitter: 2.1.0
       typed-function: 4.2.1
+
+  md5-hex@5.0.0:
+    dependencies:
+      blueimp-md5: 2.19.0
 
   md5.js@1.3.5:
     dependencies:
