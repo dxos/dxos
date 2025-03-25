@@ -22,11 +22,12 @@ export default (context: PluginsContext) => {
   const ai = signal<AIServiceClient>(new AIServiceEdgeClient({ endpoint }));
 
   const unsubscribe = effect(() => {
+    // TODO(burdon): Could be undefined.
     const settings = context
       .requestCapability(Capabilities.SettingsStore)
-      .getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)!.value;
+      .getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
 
-    if (settings.llmProvider === 'ollama') {
+    if (settings?.llmProvider === 'ollama') {
       ai.value = new OllamaClient();
     } else {
       ai.value = new AIServiceEdgeClient({ endpoint });
