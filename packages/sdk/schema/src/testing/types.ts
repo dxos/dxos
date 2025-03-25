@@ -62,7 +62,6 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     // id: S.String,
-    label: S.optional(S.String),
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
