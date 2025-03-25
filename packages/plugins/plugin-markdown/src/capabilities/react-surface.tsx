@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
@@ -18,7 +19,7 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;

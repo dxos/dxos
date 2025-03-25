@@ -5,6 +5,9 @@
 import { flow, Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
 import { type Simplify } from 'effect/Types';
 
+import { getField, type JsonPath } from '@dxos/effect';
+import { assertArgument } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
@@ -58,9 +61,15 @@ export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => {
   return getObjectAnnotation(schema)?.kind;
 };
 
+/**
+ * @returns Schema typename (without dxn: prefix or version number).
+ */
 // TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
+/**
+ * @returns Schema version in semver format.
+ */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
 
 export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
@@ -71,8 +80,10 @@ export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
 
 // TODO(burdon): Rename ObjectAnnotation.
 // TODO(dmaretskyi): Add `id` property to the schema type.
-export const EchoObject = (typename: string, version: string) => {
-  return <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<HasId & ToMutable<A>>> => {
+export const EchoObject: {
+  (typename: string, version: string): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
+} = (typename: string, version: string) => {
+  return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
@@ -83,11 +94,60 @@ export const EchoObject = (typename: string, version: string) => {
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     const ast = AST.annotations(schemaWithId.ast, {
+      // TODO(dmaretskyi): `extend`` kills the annotations.
+      ...self.ast.annotations,
       [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
-    return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
+    return makeEchoObjectSchemaClass<Self>(typename, version, ast);
   };
 };
+
+const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
+  typename: string,
+  version: string,
+  ast: AST.AST,
+): EchoObjectSchema<Self> => {
+  return class EchoObjectSchemaClass extends S.make<
+    EchoObjectSchemaData<S.Schema.Type<Self>>,
+    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+    S.Schema.Context<Self>
+  >(ast) {
+    static override annotations(
+      annotations: S.Annotations.Schema<EchoObjectSchemaData<S.Schema.Type<Self>>>,
+    ): EchoObjectSchema<Self> {
+      return makeEchoObjectSchemaClass(
+        typename,
+        version,
+        S.make<EchoObjectSchemaData<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
+      );
+    }
+
+    static readonly typename = typename;
+    static readonly version = version;
+  };
+};
+
+type EchoObjectSchemaData<T> = Simplify<HasId & ToMutable<T>>;
+
+export interface EchoObjectSchema<Self extends S.Schema.Any>
+  extends S.AnnotableClass<
+    EchoObjectSchema<Self>,
+    EchoObjectSchemaData<S.Schema.Type<Self>>,
+    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+    S.Schema.Context<Self>
+  > {
+  /**
+   * Fully qualified type name.
+   * @example `dxos.org/type/Contact`
+   **/
+  readonly typename: string;
+
+  /**
+   * Semver schema version.
+   * @example `0.1.0`
+   */
+  readonly version: string;
+}
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).
@@ -127,7 +187,7 @@ export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Referen
 
 export type ReferenceAnnotationValue = ObjectAnnotation;
 
-export const getReferenceAnnotation = (schema: S.Schema<any>) =>
+export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
   pipe(
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
@@ -147,6 +207,7 @@ export type SchemaMeta = {
 
 /**
  * Identifies label property or JSON path expression.
+ * Either a string or an array of strings representing field accessors each matched in priority order.
  */
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 
@@ -159,3 +220,34 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  * Generate test data.
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const getLabel = <S extends S.Schema.Any>(schema: S, object: S.Schema.Type<S>): string | undefined => {
+  let annotation = schema.ast.annotations[LabelAnnotationId];
+  if (!annotation) {
+    return undefined;
+  }
+  if (!Array.isArray(annotation)) {
+    annotation = [annotation];
+  }
+  for (const accessor of annotation as string[]) {
+    assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
+    const value = getField(object, accessor as JsonPath);
+    log.info('getLabel', { annotation, accessor, value });
+    switch (typeof value) {
+      case 'string':
+      case 'number':
+      case 'boolean':
+      case 'bigint':
+      case 'symbol':
+        return value.toString();
+      case 'undefined':
+      case 'object':
+      case 'function':
+        continue;
+    }
+  }
+  return undefined;
+};

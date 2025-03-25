@@ -25,7 +25,8 @@
   "dependencies": {
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "jsonpath-plus": "10.2.0"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",

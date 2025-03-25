@@ -35,6 +35,36 @@
       "group": {
         "kind": "build"
       }
+    },
+    {
+      "label": "storybook",
+      "type": "shell",
+      "command": "pnpm -w nx storybook stories",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
+    },
+    {
+      "label": "serve composer-app",
+      "type": "shell",
+      "command": "pnpm -w nx serve composer-app",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "test"
+      }
     }
   ]
 }

@@ -24,7 +24,7 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
   isDeleted(target: T): boolean;
 
   // TODO(dmaretskyi): Remove and use schemaSymbol.
-  getSchema(target: T): S.Schema<any> | undefined;
+  getSchema(target: T): S.Schema.AnyNoContext | undefined;
 
   /**
    * We always store a type reference together with an object, but schema might not have been

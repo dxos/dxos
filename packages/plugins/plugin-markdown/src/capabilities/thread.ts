@@ -3,6 +3,7 @@
 //
 
 import { contributes } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ThreadCapabilities } from '@dxos/plugin-space';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 
@@ -10,7 +11,7 @@ import { DocumentType } from '../types';
 
 export default () =>
   contributes(ThreadCapabilities.Thread, {
-    predicate: (obj) => obj instanceof DocumentType,
+    predicate: (obj) => isInstanceOf(DocumentType, obj),
     createSort: (doc: DocumentType) => {
       const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
       if (!accessor) {

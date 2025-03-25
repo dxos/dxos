@@ -4,6 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject, createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { type EchoSchema, toJsonSchema } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
@@ -33,7 +34,7 @@ export const createContext = async (
 
   // Get text from comment.
   let text: string | undefined;
-  if (object instanceof DocumentType) {
+  if (isInstanceOf(DocumentType, object)) {
     await loadObjectReferences(object, (doc) => doc.threads ?? []);
     const comment = object.threads?.find((t) => t.target === thread);
     if (object.content && comment?.target?.anchor) {
