@@ -155,4 +155,12 @@ export namespace DeckAction {
     }),
     output: S.Void,
   }) {}
+
+  export class ChangeCompanion extends S.TaggedClass<ChangeCompanion>()(`${DECK_ACTION}/change-companion`, {
+    input: S.Struct({
+      primary: S.String,
+      companion: S.Union(S.String, S.Null),
+    }),
+    output: S.Void,
+  }) {}
 }

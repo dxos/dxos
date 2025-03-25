@@ -322,6 +322,17 @@ export default (context: PluginsContext) =>
       },
     }),
     createResolver({
+      intent: DeckAction.ChangeCompanion,
+      resolve: (data) => {
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        if (data.companion === null) {
+          delete state.deck.activeCompanions[data.primary];
+        } else {
+          state.deck.activeCompanions[data.primary] = data.companion;
+        }
+      },
+    }),
+    createResolver({
       intent: DeckAction.Adjust,
       resolve: (adjustment) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
