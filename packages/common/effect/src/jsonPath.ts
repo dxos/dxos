@@ -59,7 +59,7 @@ export const createJsonPath = (path: (string | number)[]): JsonPath => {
 
 /**
  * Converts Effect validation path format (e.g. "addresses.[0].zip")
- * to JsonPath format (e.g. "addresses[0].zip")
+ * to JsonPath format (e.g., "addresses[0].zip")
  */
 export const fromEffectValidationPath = (effectPath: string): JsonPath => {
   // Handle array notation: convert "prop.[0]" to "prop[0]"
