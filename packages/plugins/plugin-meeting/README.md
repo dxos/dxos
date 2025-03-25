@@ -1,6 +1,6 @@
-# @dxos/plugin-calls
+# @dxos/plugin-meeting
 
-Surface plugin for Video meetings.
+Video calls plugin for DXOS Composer.
 
 ## DXOS Resources
 
