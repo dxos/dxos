@@ -40,7 +40,7 @@ export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <S extends S.Schema<any>>(
+export const RawObject = <S extends S.Schema.AnyNoContext>(
   schema: S,
 ): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
@@ -104,12 +104,12 @@ export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): 
 /**
  * Returns a typename of a schema.
  */
-export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
+export const getTypenameOrThrow = (schema: S.Schema.AnyNoContext): string => requireTypeReference(schema).objectId;
 
 /**
  * Returns a reference that will be used to point to a schema.
  */
-export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
+export const getTypeReference = (schema: S.Schema.AnyNoContext | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
   }
@@ -131,7 +131,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
  * Returns a reference that will be used to point to a schema.
  * @throws If it is not possible to reference this schema.
  */
-export const requireTypeReference = (schema: S.Schema<any>): Reference => {
+export const requireTypeReference = (schema: S.Schema.AnyNoContext): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).

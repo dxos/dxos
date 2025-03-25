@@ -181,14 +181,14 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
-const validateSchema = (schema: S.Schema<any>) => {
+const validateSchema = (schema: S.Schema.AnyNoContext) => {
   requireTypeReference(schema);
   const entityKind = getEntityKind(schema);
   invariant(entityKind === 'object' || entityKind === 'relation');
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema.AnyNoContext | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
 

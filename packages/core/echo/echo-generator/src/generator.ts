@@ -30,15 +30,15 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     private readonly _provider?: TestObjectProvider<T>,
   ) {}
 
-  get schemas(): (EchoSchema | S.Schema<any>)[] {
+  get schemas(): (EchoSchema | S.Schema.AnyNoContext)[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): EchoSchema | S.Schema<any> | undefined {
+  getSchema(type: T): EchoSchema | S.Schema.AnyNoContext | undefined {
     return this.schemas.find((schema) => getObjectAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: EchoSchema | S.Schema<any>) {
+  protected setSchema(type: T, schema: EchoSchema | S.Schema.AnyNoContext) {
     this._schemas[type] = schema;
   }
 
@@ -82,9 +82,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   async addSchemas() {
-    const result: (EchoSchema | S.Schema<any>)[] = [];
+    const result: (EchoSchema | S.Schema.AnyNoContext)[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>);
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema.AnyNoContext);
       this.setSchema(typename as T, echoSchema);
       result.push(echoSchema);
     }
@@ -98,8 +98,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   private async _maybeRegisterSchema(
     typename: string,
-    schema: EchoSchema | S.Schema<any>,
-  ): Promise<EchoSchema | S.Schema<any>> {
+    schema: EchoSchema | S.Schema.AnyNoContext,
+  ): Promise<EchoSchema | S.Schema.AnyNoContext> {
     if (schema instanceof EchoSchema) {
       const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {

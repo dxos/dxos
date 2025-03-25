@@ -130,7 +130,7 @@ export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Referen
 
 export type ReferenceAnnotationValue = ObjectAnnotation;
 
-export const getReferenceAnnotation = (schema: S.Schema<any>) =>
+export const getReferenceAnnotation = (schema: S.Schema.AnyNoContext) =>
   pipe(
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
