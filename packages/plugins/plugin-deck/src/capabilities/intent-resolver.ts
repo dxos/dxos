@@ -325,10 +325,15 @@ export default (context: PluginsContext) =>
       intent: DeckAction.ChangeCompanion,
       resolve: (data) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
         if (data.companion === null) {
-          delete state.deck.activeCompanions[data.primary];
+          const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions;
+          state.deck.activeCompanions = nextActiveCompanions;
         } else {
-          state.deck.activeCompanions[data.primary] = data.companion;
+          state.deck.activeCompanions = {
+            ...state.deck.activeCompanions,
+            [data.primary]: data.companion,
+          };
         }
       },
     }),
