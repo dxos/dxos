@@ -361,7 +361,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
   }
 
-  getSchema(target: ProxyTarget): S.Schema<any> | undefined {
+  getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
     if (target[symbolNamespace] === META_NAMESPACE) {
       return ObjectMetaSchema;
     }
@@ -565,7 +565,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
       // TODO(dmaretskyi): FIX ME! This should be a space ID not a space key.
-      return new Reference(otherObjId, undefined, foreignDatabase.spaceKey.toHex());
+      return Reference.fromObjectIdAndSpaceKey(otherObjId, foreignDatabase.spaceKey);
     }
 
     return Reference.localObjectReference(otherObjId);

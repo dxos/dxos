@@ -9,7 +9,7 @@ import { type ReactiveObject } from '@dxos/live-object';
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
 
-export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | S.Schema<any>>;
+export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | S.Schema.AnyNoContext>;
 
 export type TestObjectProvider<T extends string = string> = (type: T) => Promise<ReactiveObject<any>[]>;
 
