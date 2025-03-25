@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
 import { inspect } from 'node:util';
 
-import { Schema as S } from 'effect';
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
   DEFAULT_CLIENT_CHANNEL,
@@ -21,7 +21,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getTypename, type TypedObject } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

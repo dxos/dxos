@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from 'effect';
 import { effect } from '@preact/signals-core';
+import { type Schema as S } from 'effect';
 
-import { EchoSchema, getSchemaTypename, StoredSchema, toJsonSchema, type TypedObject } from '@dxos/echo-schema';
+import { EchoSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 
