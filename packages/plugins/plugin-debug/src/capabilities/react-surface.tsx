@@ -113,7 +113,7 @@ export default (context: PluginsContext) =>
           [data.subject.space],
         );
 
-        <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />;
+        return <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />;
       },
     }),
     createSurface({
