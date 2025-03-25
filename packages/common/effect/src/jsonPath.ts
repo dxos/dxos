@@ -6,6 +6,7 @@ import { Schema as S } from 'effect';
 import { isSome } from 'effect/Option';
 
 import { invariant } from '@dxos/invariant';
+import { JSONPath } from 'jsonpath-plus';
 
 export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
@@ -82,4 +83,12 @@ export const splitJsonPath = (path: JsonPath): string[] => {
       .match(/[a-zA-Z_$][\w$]*|\[\d+\]/g)
       ?.map((part) => (part.startsWith('[') ? part.replace(/[[\]]/g, '') : part)) ?? []
   );
+};
+
+/**
+ * Applies a JsonPath to an object.
+ */
+export const getField = (object: any, path: JsonPath): any => {
+  // By default, JSONPath returns an array of results.
+  return JSONPath({ path, json: object })[0];
 };

@@ -62,6 +62,7 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     // id: S.String,
+    label: S.optional(S.String),
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
@@ -78,7 +79,7 @@ export namespace Testing {
     // TODO(burdon): This breaks the table view.
     // address: S.optional(AddressSchema),
   }).annotations({
-    [LabelAnnotationId]: 'name',
+    [LabelAnnotationId]: ['label', 'name'],
   });
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;

@@ -21,8 +21,6 @@ export interface ContextProvider {
   query({ query }: { query: string }): Promise<ReferenceData[]>;
 
   resolveMetadata({ uri }: { uri: string }): Promise<ReferenceData | null>;
-
-  resolveData({ uri }: { uri: string }): Promise<string | null>;
 }
 
 export type ThreadProps = ThemedClassName<{

@@ -156,6 +156,7 @@ export const promptReferences = ({
       ],
       closeOnBlur: !debug,
       tooltipClass: () => 'shadow rounded',
+      aboveCursor: true,
     }),
 
     keymap.of(completionKeymap),

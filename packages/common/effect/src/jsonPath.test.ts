@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { createJsonPath, isJsonPath, type JsonPath, splitJsonPath } from './jsonPath';
+import { createJsonPath, getField, isJsonPath, type JsonPath, splitJsonPath } from './jsonPath';
 
 describe('createJsonPath', () => {
   test('supported path subset', () => {
@@ -92,5 +92,10 @@ describe('createJsonPath', () => {
     expect(isJsonPath('.foo')).toBe(false); // Starts with dot
     expect(isJsonPath('foo.')).toBe(false); // Ends with dot
     expect(isJsonPath('[0]foo')).toBe(false); // Starts with bracket
+  });
+
+  test('getField', () => {
+    expect(getField({ a: { b: { c: 1 } } }, 'a.b.c' as JsonPath)).toBe(1);
+    expect(getField({ a: 'foo' }, 'a' as JsonPath)).toBe('foo');
   });
 });

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Ref, S, TypedObject } from '@dxos/echo-schema';
+import { LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
 
@@ -11,6 +11,8 @@ export const DocumentSchema = S.Struct({
   fallbackName: S.optional(S.String),
   content: Ref(TextType),
   threads: S.mutable(S.Array(Ref(ThreadType))),
+}).annotations({
+  [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
 export class DocumentType extends TypedObject({
