@@ -7,6 +7,8 @@ import type { HaloProxy } from '../halo/halo-proxy';
 import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { Shell } from '../services';
 
+// Because Rich wanted it.
+//            - Josiah 2025
 export class ClientRuntime {
   readonly spaces: SpaceList;
   readonly halo: HaloProxy;

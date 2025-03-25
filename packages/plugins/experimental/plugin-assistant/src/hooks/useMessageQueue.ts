@@ -6,8 +6,8 @@ import { useMemo } from 'react';
 
 import { type Message } from '@dxos/artifact';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
-import { getSpace } from '@dxos/react-client/echo';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { getSpace, useQueue } from '@dxos/react-client/echo';
+import { useEdgeClient } from '@dxos/react-edge-client';
 
 import { type AIChatType } from '../types';
 
@@ -18,6 +18,5 @@ export const useMessageQueue = (chat?: AIChatType) => {
     return dxn ? new DXN(DXN.kind.QUEUE, [QueueSubspaceTags.DATA, space.id, dxn.parts.at(-1)!]) : undefined;
   }, [space, chat?.queue.dxn]);
 
-  const edgeClient = useEdgeClient();
-  return useQueue<Message>(edgeClient, queueDxn);
+  return useQueue<Message>(queueDxn);
 };

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import React, {
   type Dispatch,
   type FC,
@@ -21,16 +21,17 @@ import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { useEdgeClient } from '@dxos/react-edge-client';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Transcript } from './Transcript';
-import { useTranscriber, useAudioFile, useAudioTrack } from '../hooks';
+import { useAudioFile, useAudioTrack, useTranscriber } from '../hooks';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
 import { randomQueueDxn } from '../util';
+import { Transcript } from './Transcript';
+import { useQueue } from '@dxos/react-client/echo';
 
 const TranscriptionStory: FC<{
   playing: boolean;
@@ -62,8 +63,7 @@ const Microphone = () => {
 
   // Queue.
   const queueDxn = useMemo(() => randomQueueDxn(), []);
-  const echoClient = useEdgeClient();
-  const queue = useQueue<TranscriptBlock>(echoClient, queueDxn, { pollInterval: 500 });
+  const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
 
   // Transcriber.
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
@@ -119,8 +119,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   }, [audio, playing]);
 
   // Transcriber.
-  const echoClient = useEdgeClient();
-  const queue = useQueue<TranscriptBlock>(echoClient, queueDxn, { pollInterval: 500 });
+  const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
       const block = createStatic(TranscriptBlock, { author: 'test', segments });

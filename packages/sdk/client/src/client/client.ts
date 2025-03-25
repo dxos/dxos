@@ -20,7 +20,7 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { EchoClient } from '@dxos/echo-db';
+import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -36,6 +36,7 @@ import { ClientRuntime } from './client-runtime';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
+import { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
 
 /**
  * This options object configures the DXOS Client.
@@ -101,6 +102,9 @@ export class Client {
    */
   @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
+
+  private _edgeClient?: EdgeHttpClient = undefined;
+  private _queuesService?: QueuesService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -383,6 +387,14 @@ export class Client {
     });
     await this._services.open();
 
+    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    if (edgeUrl) {
+      this._edgeClient = new EdgeHttpClient(edgeUrl);
+      this._queuesService = new QueueServiceImpl(this._edgeClient);
+    } else {
+      this._queuesService = new QueueServiceStub();
+    }
+
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
@@ -391,7 +403,14 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
+    const spaces = new SpaceList(
+      this._config,
+      this._services,
+      this._echoClient,
+      halo,
+      this._queuesService!,
+      this._instanceId,
+    );
 
     const shell = this._shellManager
       ? new Shell({
@@ -485,6 +504,7 @@ export class Client {
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
+    this._edgeClient = undefined;
     log('closed');
   }
 

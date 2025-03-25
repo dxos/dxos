@@ -16,14 +16,14 @@ import { CollectionType } from '@dxos/plugin-space/types';
 import { Transcript, TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { TranscriptType, type TranscriptBlock } from '@dxos/plugin-transcription/types';
 import { Config, useClient } from '@dxos/react-client';
-import { create, Filter, makeRef, useQuery } from '@dxos/react-client/echo';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { create, Filter, makeRef, useQuery, useQueue } from '@dxos/react-client/echo';
+import { useEdgeClient } from '@dxos/react-edge-client';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CallContainer, type CallContainerProps } from './CallContainer';
 import { CallsPlugin } from '../CallsPlugin';
 import translations from '../translations';
+import { CallContainer, type CallContainerProps } from './CallContainer';
 
 const Render = (props: CallContainerProps) => {
   const client = useClient();
@@ -31,7 +31,7 @@ const Render = (props: CallContainerProps) => {
   const space = client.spaces.get().at(-1);
   const transcripts = useQuery(space, Filter.schema(TranscriptType));
   const dxn = transcripts[0]?.queue;
-  const queue = useQueue<TranscriptBlock>(edge, dxn ? DXN.parse(dxn) : undefined, { pollInterval: 500 });
+  const queue = useQueue<TranscriptBlock>(dxn ? DXN.parse(dxn) : undefined, { pollInterval: 500 });
 
   if (!space) {
     return <div />;
