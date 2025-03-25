@@ -432,7 +432,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
 };
 
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
-  const annotations: Types.Mutable<S.AnnotationS.Schema.AnyNoContext> = {};
+  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement != null) {
