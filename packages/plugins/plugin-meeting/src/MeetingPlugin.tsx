@@ -32,7 +32,6 @@ export const MeetingPlugin = () =>
           id: 'meeting',
           label: ['meeting activity label', { ns: MEETING_PLUGIN }],
           icon: 'ph--video-camera--regular',
-          handler: () => alert('meeting activity'),
         }),
     }),
     defineModule({
