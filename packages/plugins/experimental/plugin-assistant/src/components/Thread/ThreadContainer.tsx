@@ -14,6 +14,7 @@ import { getDXN, getLabel, getSchema } from '@dxos/echo-schema';
 import { useChatProcessor, useMessageQueue } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 import { Thread, type ContextProvider, type ThreadProps } from './Thread';
+import { DocumentSchema, DocumentType } from '@dxos/plugin-markdown/types';
 
 export type ThreadContainerProps = {
   chat?: AIChatType;

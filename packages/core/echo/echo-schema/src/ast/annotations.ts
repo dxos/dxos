@@ -94,6 +94,8 @@ export const EchoObject: {
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     const ast = AST.annotations(schemaWithId.ast, {
+      // TODO(dmaretskyi): `extend`` kills the annotations.
+      ...self.ast.annotations,
       [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
     return makeEchoObjectSchemaClass<Self>(typename, version, ast);

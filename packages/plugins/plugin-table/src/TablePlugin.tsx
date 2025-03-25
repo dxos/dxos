@@ -17,6 +17,7 @@ import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
 import { CreateTableSchema, TableAction } from './types';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -33,7 +34,8 @@ export const TablePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
           metadata: {
-            label: (object: any) => (object instanceof TableType ? object.name : undefined),
+            // TODO(dmaretskyi): Use `getLabel` from `echo-schema`.
+            label: (object: any) => (isInstanceOf(TableType, object) ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.

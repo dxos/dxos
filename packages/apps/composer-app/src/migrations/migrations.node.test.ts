@@ -243,7 +243,7 @@ describe('Composer migrations', () => {
     expect(migratedSketch1?.canvas.target?.content?.id).to.equal('test string');
 
     const migratedTable1 = space.db.getObjectById<TableType>(table1.id);
-    expect(migratedTable1 instanceof TableType).to.be.true;
+    expect(isInstanceOf(TableType, migratedTable1)).to.be.true;
     expect(migratedTable1?.name).to.equal('My Table');
   });
 });

@@ -18,6 +18,7 @@ import { ScriptEvents } from './events';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 export const ScriptPlugin = () =>
   definePlugin(meta, [
@@ -59,7 +60,7 @@ export const ScriptPlugin = () =>
           label: ['function panel label', { ns: SCRIPT_PLUGIN }],
           icon: 'ph--terminal--regular',
           fixed: true,
-          filter: (node) => node.data instanceof ScriptType && !!getSpace(node.data),
+          filter: (node) => isInstanceOf(ScriptType, node.data) && !!getSpace(node.data),
         }),
     }),
     defineModule({
