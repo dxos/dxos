@@ -9,3 +9,4 @@ export * from './useLocalTriggerManager';
 export * from './useMessageQueue';
 export * from './useServices';
 export * from './useTextInputEvents';
+export * from './useContextProvider';
