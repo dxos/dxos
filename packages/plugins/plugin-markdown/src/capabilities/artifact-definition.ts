@@ -3,10 +3,10 @@
 //
 
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { isInstanceOf, S } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
-import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { invariant, assertArgument } from '@dxos/invariant';
+import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { DocumentType } from '../types';
@@ -56,20 +56,13 @@ export default () => {
         description: 'Read the content of a markdown document.',
         caption: 'Inspecting markdown document...',
         schema: S.Struct({
-          id: S.String.annotations({
-            description: 'The fully qualified ID of the document `spaceID:objectID`',
-          }),
+          id: ArtifactId,
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
-          const document = documents.find((doc) => fullyQualifiedId(doc) === id);
-          if (!document) {
-            return ToolResult.Error(`Document not found: ${id}`);
-          }
+          const document = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
+          assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
 
-          invariant(isInstanceOf(DocumentType, document));
           const { content } = await document.content?.load();
           return ToolResult.Success({
             id: fullyQualifiedId(document),

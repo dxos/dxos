@@ -13,7 +13,7 @@ import { Prompt, type PromptController, type PromptProps } from './Prompt';
 import { ASSISTANT_PLUGIN } from '../../meta';
 
 export type PromptBarProps = ThemedClassName<
-  Pick<PromptProps, 'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest' | 'onOpenChange'> & {
+  Pick<PromptProps, 'placeholder' | 'lineWrapping' | 'onSubmit' | 'onSuggest' | 'onOpenChange' | 'references'> & {
     processing?: boolean;
     error?: Error;
     microphone?: boolean;
@@ -28,6 +28,7 @@ export const PromptBar = ({
   error,
   microphone,
   onCancel,
+  references,
   ...props
 }: PromptBarProps) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
@@ -72,6 +73,7 @@ export const PromptBar = ({
         classNames='pbs-2'
         lineWrapping={true}
         placeholder={placeholder ?? t('prompt placeholder')}
+        references={references}
         {...props}
       />
       {(onCancel || microphone) && (

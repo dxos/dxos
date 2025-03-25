@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, useCallback } from 'react';
+import React, { useCallback, type FC } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -10,7 +10,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Thread, type ThreadProps } from './Thread';
-import { useChatProcessor, useMessageQueue } from '../../hooks';
+import { useChatProcessor, useContextProvider, useMessageQueue } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
 
 export type ThreadContainerProps = {
@@ -26,8 +26,8 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   onOpenChange,
   ...props
 }) => {
-  // Push up capabilities hooks out of components.
   const space = getSpace(chat);
+  const contextProvider = useContextProvider(space);
   const processor = useChatProcessor(space, settings);
   const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
@@ -73,6 +73,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
       onCancel={handleCancel}
       onPrompt={handleSubmit}
       onOpenChange={onOpenChange}
+      contextProvider={contextProvider}
       {...props}
     />
   );

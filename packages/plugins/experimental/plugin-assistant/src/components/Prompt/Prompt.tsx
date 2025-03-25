@@ -16,6 +16,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { createAutocompleteExtension, type AutocompleteOptions } from './autocomplete';
+import { promptReferences, type ReferencesProvider } from './references';
 
 // TODO(burdon): Handle object references.
 
@@ -27,16 +28,21 @@ export interface PromptController {
 export type PromptProps = ThemedClassName<
   {
     onOpenChange?: (open: boolean) => void;
+    references?: ReferencesProvider;
   } & AutocompleteOptions &
     Pick<UseTextEditorProps, 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
 export const Prompt = forwardRef<PromptController, PromptProps>(
-  ({ classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onOpenChange }, forwardRef) => {
+  (
+    { classNames, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onOpenChange, references },
+    forwardRef,
+  ) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor(
       {
+        debug: true,
         autoFocus,
         extensions: [
           createBasicExtensions({
@@ -45,6 +51,7 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
             placeholder,
           }),
           createThemeExtensions({ themeMode }),
+          references ? promptReferences({ provider: references }) : [],
           createAutocompleteExtension({ onSubmit, onSuggest }),
           keymap.of([
             {
@@ -95,6 +102,6 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
       [view, onSubmit],
     );
 
-    return <div ref={parentRef} className={mx('w-full overflow-hidden', classNames)} />;
+    return <div ref={parentRef} className={mx('w-full', classNames)} />;
   },
 );
