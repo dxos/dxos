@@ -86,7 +86,7 @@ export class MigrationBuilder {
   }
 
   createReference(id: string) {
-    return encodeReference(new Reference(id));
+    return encodeReference(Reference.localObjectReference(id));
   }
 
   deleteObject(id: string) {
