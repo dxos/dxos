@@ -76,6 +76,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
+    "@obsidize/tar-browserify": "^5.2.0",
     "cbor-x": "^1.5.4",
     "platform": "^1.3.6"
   },

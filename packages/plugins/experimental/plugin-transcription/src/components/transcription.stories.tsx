@@ -32,7 +32,7 @@ import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
 import { randomQueueDxn } from '../util';
 
-const UX: FC<{
+const TranscriptionStory: FC<{
   playing: boolean;
   setPlaying: Dispatch<SetStateAction<boolean>>;
   blocks?: TranscriptBlock[];
@@ -48,7 +48,7 @@ const UX: FC<{
         />
       </Toolbar.Root>
       <ScrollContainer>
-        <Transcript blocks={blocks} />
+        <Transcript blocks={blocks} attendableId='story' />
       </ScrollContainer>
     </div>
   );
@@ -90,7 +90,7 @@ const Microphone = () => {
     }
   }, [transcriber, playing, transcriber?.isOpen]);
 
-  return <UX playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
+  return <TranscriptionStory playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
 };
 
 const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; transcriptUrl: string }) => {
@@ -153,7 +153,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
     }
   }, [transcriber, track?.readyState, transcriber?.isOpen]);
 
-  return <UX playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
+  return <TranscriptionStory playing={playing} setPlaying={setPlaying} blocks={queue?.items} />;
 };
 
 const meta: Meta<typeof AudioFile> = {

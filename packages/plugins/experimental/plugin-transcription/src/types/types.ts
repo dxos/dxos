@@ -3,6 +3,7 @@
 //
 
 import { S, isInstanceOf } from '@dxos/echo-schema';
+import { DocumentSchema } from '@dxos/plugin-markdown/types';
 import { isReactiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptSchema, TranscriptType } from './schema';
@@ -25,6 +26,15 @@ export namespace TranscriptionAction {
     }),
     output: S.Struct({
       object: TranscriptSchema,
+    }),
+  }) {}
+
+  export class Summarize extends S.TaggedClass<Summarize>()(`${TRANSCRIPTION_ACTION}/summarize`, {
+    input: S.Struct({
+      object: TranscriptSchema,
+    }),
+    output: S.Struct({
+      object: DocumentSchema,
     }),
   }) {}
 }

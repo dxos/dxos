@@ -73,6 +73,7 @@ export const TypescriptEditor = ({
           '.cm-gutters': {
             // Match margin from content.
             marginTop: '16px',
+            background: 'var(--dx-baseSurface)',
           },
         }),
         InputModeExtensions[inputMode],

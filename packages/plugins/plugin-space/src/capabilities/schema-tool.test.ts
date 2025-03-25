@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 
-import { TypeNameSchema } from './schema-tool';
+import { TypeNameSchema } from './schema-tools';
 
 describe('TypeNameSchema format', () => {
   const valid = [

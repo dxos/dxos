@@ -11,7 +11,6 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -51,7 +50,6 @@ export default (context: PluginsContext) =>
             }
 
             if (!chat) {
-              log.warn('no chat found');
               return;
             }
 

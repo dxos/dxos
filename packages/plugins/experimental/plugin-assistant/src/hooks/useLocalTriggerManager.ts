@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Mutex } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createSubscriptionTrigger, type TriggerFactory } from '@dxos/functions';
-import { FunctionTrigger } from '@dxos/functions';
+import { FunctionTrigger } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';

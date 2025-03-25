@@ -28,6 +28,7 @@ import {
   ReactRoot,
   ReactSurface,
   Schema,
+  Tools,
   SpaceCapabilities,
   SpaceSettings,
   SpacesReady,
@@ -177,6 +178,11 @@ export const SpacePlugin = ({
         ClientEvents.SpacesReady,
       ),
       activate: SpacesReady,
+    }),
+    defineModule({
+      id: `${meta.id}/module/tools`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: Tools,
     }),
   ]);
 };

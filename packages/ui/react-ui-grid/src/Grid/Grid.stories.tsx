@@ -4,41 +4,46 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
 import { defaultSizeRow } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
-import { PopoverCombobox } from '@dxos/react-ui-searchlist';
+import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridContentProps, type GridRootProps } from './Grid';
-
-export { defaultSizeCol, defaultSizeRow } from '@dxos/lit-grid';
-
-type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
+import { Grid, type GridEditing, type GridContentProps, type GridRootProps } from './Grid';
 
 const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
 
-const storybookInitialCells = (value?: string) => ({
-  grid: {
-    '1,1': {
-      accessoryHtml:
-        '<button class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu"><svg><use href="/icons.svg#ph--arrow-right--regular"/></svg></button>',
-      value: 'Weekly sales report',
-    },
-    '2,2': {
-      accessoryHtml: `<dx-grid-multiselect-cell ${value ? `values='${JSON.stringify([{ label: value }])}'` : ''} placeholder="Select…"></dx-grid-multiselect-cell>`,
-    },
-  },
-});
+type GridStoryProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
-const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
+const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
+  const triggerRef = useRef<HTMLButtonElement>(null) as MutableRefObject<HTMLButtonElement>;
+
+  const [cells, setCells] = useState<GridContentProps['initialCells']>(initialCells);
+
+  const [editing, setEditing] = useState<GridEditing>(null);
+  const handleEditingChange = useCallback<NonNullable<GridRootProps['onEditingChange']>>((event) => {
+    // TODO(burdon): Not working?
+    setEditing(event ? { index: event.index, initialContent: '' } : null);
+  }, []);
+
+  // Multiselect
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [multiSelectValue, setInternalMultiselectValue] = useState('');
-  const triggerRef = useRef<HTMLButtonElement>(null) as MutableRefObject<HTMLButtonElement>;
+  const setMultiselectValue = useCallback<NonNullable<PopoverComboboxRootProps['onValueChange']>>((nextValue) => {
+    setInternalMultiselectValue(nextValue);
+    setCells((cells) => {
+      // TODO(burdon): How can we get the cell address to update?
+      console.log('[setMultiselectValue]', nextValue);
+      return cells;
+    });
+  }, []);
+
+  // Menu
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleClick = useCallback((event: MouseEvent) => {
     const closestStoryAction = (event.target as HTMLElement).closest('button[data-story-action]');
@@ -50,27 +55,22 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
     if (closestAccessory) {
       const action = closestAccessory.getAttribute('data-dx-grid-accessory');
       switch (action) {
-        case 'invoke-multiselect':
+        case 'invoke-multiselect': {
           triggerRef.current = closestAccessory as HTMLButtonElement;
           return setPopoverOpen(true);
+        }
       }
     }
   }, []);
 
-  const [initialCells, setInitialCells] = useState<GridContentProps['initialCells']>(storybookInitialCells());
-
-  const setMultiselectValue = useCallback((nextValue: string) => {
-    const nextInitialCells = storybookInitialCells(nextValue);
-    console.log('[set initial cells]', nextInitialCells);
-    setInitialCells(nextInitialCells);
-    setInternalMultiselectValue(nextValue);
-  }, []);
-
   return (
-    <>
-      <Grid.Root id='story' onEditingChange={onEditingChange}>
-        <Grid.Content {...props} initialCells={initialCells} onClick={handleClick} />
+    <div role='none' className='fixed inset-0 grid'>
+      <Grid.Root id='story' editing={editing} onEditingChange={handleEditingChange}>
+        {/* TODO(burdon): Why is this property not just "cells" or "values" */}
+        <Grid.Content {...props} initialCells={cells} onClick={handleClick} />
       </Grid.Root>
+
+      {/* Menu */}
       <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
         <DropdownMenu.Content>
@@ -78,6 +78,8 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Root>
+
+      {/* Multiselect */}
       <PopoverCombobox.Root
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
@@ -95,18 +97,22 @@ const StoryGrid = ({ onEditingChange, ...props }: StoryGridProps) => {
           <PopoverCombobox.Arrow />
         </PopoverCombobox.Content>
       </PopoverCombobox.Root>
-    </>
+    </div>
   );
 };
 
-export default {
+const meta: Meta<GridStoryProps> = {
   title: 'ui/react-ui-grid/Grid',
-  component: StoryGrid,
+  component: GridStory,
   decorators: [withTheme],
   parameters: { layout: 'fullscreen' },
 };
 
-export const Basic: StoryObj<StoryGridProps> = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Basic: Story = {
   args: {
     id: 'story',
     columnDefault: {
@@ -130,11 +136,48 @@ export const Basic: StoryObj<StoryGridProps> = {
         4: { size: 270 },
       },
     },
+    initialCells: {
+      grid: {
+        '1,1': {
+          value: 'Demo decoration',
+          accessoryHtml: `
+            <button class="dx-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-1" data-story-action="menu">
+              <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
+            </button>
+          `,
+        },
+        '2,1': {
+          // accessoryHtml: `<dx-grid-multiselect-cell ${value ? `values='${JSON.stringify([{ label: value }])}'` : ''} placeholder="Select…"></dx-grid-multiselect-cell>`,
+          accessoryHtml: '<dx-grid-multiselect-cell placeholder="Select…"></dx-grid-multiselect-cell>',
+        },
+      },
+    },
     onAxisResize: (event) => {
       console.log('[axis resize]', event);
     },
-    onEditingChange: (event) => {
-      console.log('[edit]', event);
+  },
+};
+
+// TODO(burdon): How to make single-column?
+export const SingleColumn: Story = {
+  args: {
+    id: 'story',
+    limitColumns: 1,
+    columnDefault: {
+      grid: {
+        size: 180,
+      },
+    },
+    rowDefault: {
+      grid: {
+        size: defaultSizeRow,
+        resizeable: false,
+      },
+    },
+    columns: {
+      grid: {
+        0: { size: 200 },
+      },
     },
   },
 };

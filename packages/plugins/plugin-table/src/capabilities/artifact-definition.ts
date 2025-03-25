@@ -13,7 +13,6 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
-import { schemaTools } from './schema-tool';
 import { meta } from '../meta';
 import { TableAction } from '../types';
 
@@ -44,7 +43,6 @@ export default () => {
     `,
     schema: TableType,
     tools: [
-      ...schemaTools,
       defineTool(meta.id, {
         name: 'create',
         description: `

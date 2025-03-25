@@ -5,31 +5,56 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { ScrollContainer } from '@dxos/react-ui-components';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Transcript } from './Transcript';
 import translations from '../../translations';
 
+let start = new Date(Date.now() - 24 * 60 * 60 * 10_000);
+const next = () => {
+  start = new Date(start.getTime() + Math.random() * 10_000);
+  return start;
+};
+
+const names = Array.from({ length: 3 }, () => faker.person.fullName());
+
+const createBlock = () => ({
+  id: faker.string.uuid(),
+  author: faker.helpers.arrayElement(names),
+  segments: Array.from({ length: 1 + Math.floor(Math.random() * 2) }, () => ({
+    started: next(),
+    text: faker.lorem.paragraph(),
+  })),
+});
+
 const meta: Meta<typeof Transcript> = {
   title: 'plugins/plugin-transcription/Transcript',
   component: Transcript,
-  render: (args) => (
-    <div className='flex w-[30rem] p-2'>
-      <ScrollContainer>
-        <Transcript {...args} />
-      </ScrollContainer>
-    </div>
-  ),
+  render: ({ blocks: initialBlocks = [], ...args }) => {
+    const [blocks, setBlocks] = useState(initialBlocks);
+    useEffect(() => {
+      const i = setInterval(() => {
+        setBlocks((blocks) => [...blocks, createBlock()]);
+      }, 5_000);
+
+      return () => clearInterval(i);
+    }, []);
+
+    return (
+      <div className='flex w-[50rem] h-full'>
+        <Transcript {...args} blocks={blocks} />
+      </div>
+    );
+  },
   decorators: [
     withTheme,
     withLayout({
       tooltips: true,
       fullscreen: true,
-      classNames: 'justify-center',
+      classNames: 'flex justify-center',
     }),
   ],
   parameters: {
@@ -41,25 +66,17 @@ export default meta;
 
 type Story = StoryObj<typeof Transcript>;
 
-let start = new Date();
-const next = () => {
-  start = new Date(start.getTime() - Math.random() * 30_000);
-  return start;
-};
-
-const names = Array.from({ length: 3 }, () => faker.person.fullName());
-
 export const Default: Story = {
   args: {
-    blocks: Array.from({ length: 6 + Math.floor(Math.random()) * 15 }, () => ({
-      id: faker.string.uuid(),
-      author: faker.helpers.arrayElement(names),
-      segments: Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => ({
-        started: next(),
-        text: faker.lorem.paragraph(),
-      })),
-    })).reverse(),
+    ignoreAttention: true,
+    attendableId: 'story',
+    blocks: Array.from({ length: 10 }, createBlock),
   },
 };
 
-export const Empty: Story = {};
+export const Empty: Story = {
+  args: {
+    ignoreAttention: true,
+    attendableId: 'story',
+  },
+};

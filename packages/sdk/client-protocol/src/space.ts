@@ -14,6 +14,7 @@ import {
   type SpaceState,
   type UpdateMemberRoleRequest,
   type Contact,
+  type SpaceArchive,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -43,6 +44,8 @@ export interface SpaceInternal {
   migrate(): Promise<void>;
 
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
+
+  export(): Promise<SpaceArchive>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
