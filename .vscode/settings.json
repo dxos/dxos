@@ -19,6 +19,7 @@
     "Expando",
     "Faas",
     "Hypergraph",
+    "keymap",
     "mykola",
     "protobuf",
     "testutils",

@@ -78,7 +78,7 @@ export namespace Testing {
     // TODO(burdon): This breaks the table view.
     // address: S.optional(AddressSchema),
   }).annotations({
-    [LabelAnnotationId]: 'name',
+    [LabelAnnotationId]: ['label', 'name'],
   });
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;

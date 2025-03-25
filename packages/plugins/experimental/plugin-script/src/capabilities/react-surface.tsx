@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
@@ -27,7 +28,7 @@ export default () =>
     createSurface({
       id: `${SCRIPT_PLUGIN}/article`,
       role: 'article',
-      filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
@@ -39,7 +40,7 @@ export default () =>
       id: `${SCRIPT_PLUGIN}/automation`,
       role: 'complementary--function',
       position: 'hoist',
-      filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
       component: ({ data }) => {
         // TODO(wittjosiah): Decouple hooks from toolbar state.
         const state = useToolbarState({ view: 'editor' });
@@ -50,7 +51,7 @@ export default () =>
     createSurface({
       id: `${SCRIPT_PLUGIN}/settings-panel`,
       role: 'complementary--settings',
-      filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+      filter: (data): data is { subject: ScriptType } => isInstanceOf(ScriptType, data.subject),
       component: ({ data }) => (
         <Clipboard.Provider>
           <ScriptSettingsPanel script={data.subject} />
