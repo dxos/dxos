@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { FormatEnum, type ObjectId } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar } from '@dxos/react-ui';

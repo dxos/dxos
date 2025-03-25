@@ -3,7 +3,7 @@
 //
 
 import bytes from 'bytes';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -95,9 +95,7 @@ export const SwarmPanel = () => {
     }
   }
 
-  const [sessionId, setSessionId] = useState<PublicKey>();
   const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
-  const connection = sessionId ? connectionMap.get(sessionId) : undefined;
 
   // The state options order determines the sorting priority
 
@@ -152,26 +150,10 @@ export const SwarmPanel = () => {
     return connections;
   }, [swarms, identityMap]);
 
-  const handleSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
-        setSessionId(undefined);
-        return;
-      }
-
-      const selectedId = selectedIds[selectedIds.length - 1];
-      const selected = data.find((item) => item.id === selectedId);
-      if (selected?.connection?.sessionId) {
-        setSessionId(selected.connection.sessionId);
-      }
-    },
-    [data],
-  );
-
   return (
     <PanelContainer classNames={mx('divide-y', styles.border)}>
       <div className='h-1/2 overflow-auto'>
-        <DynamicTable properties={properties} data={data} onSelectionChanged={handleSelectionChanged} />
+        <DynamicTable properties={properties} data={data} />
       </div>
     </PanelContainer>
   );
