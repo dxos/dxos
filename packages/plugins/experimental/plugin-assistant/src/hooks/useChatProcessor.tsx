@@ -68,13 +68,13 @@ export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProp
   // TODO(burdon): Updated on each query update above. Should just update current processor.
   const processor = useMemo(() => {
     log('creating processor...', { settings });
-    return new ChatProcessor(aiClient, tools, extensions, {
+    return new ChatProcessor(aiClient.value, tools, extensions, {
       // TODO(burdon): Remove defualt (let backend decide if not specified).
       model: settings?.llmModel ?? DEFAULT_LLM_MODEL,
       // TOOD(burdon): Query.
       systemPrompt,
     });
-  }, [aiClient, tools, extensions, systemPrompt, settings?.llmModel]);
+  }, [aiClient.value, tools, extensions, systemPrompt, settings?.llmModel]);
 
   return processor;
 };

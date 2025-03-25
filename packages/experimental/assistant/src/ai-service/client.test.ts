@@ -16,7 +16,7 @@ import { AIServiceEdgeClient } from './edge-client';
 import { OllamaClient } from './ollama-client';
 import { MixedStreamParser } from './parser';
 import { ToolTypes } from './types';
-import { AI_SERVICE_ENDPOINT } from '../testing';
+import { createTestOllamaClient, AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });
 
@@ -186,7 +186,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient();
+    const client = createTestOllamaClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
@@ -207,7 +207,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient({
+    const client = createTestOllamaClient({
       tools: [
         defineTool('test', {
           name: 'encrypt',
@@ -242,7 +242,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient();
+    const client = createTestOllamaClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(

@@ -23,6 +23,13 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
         />
       </DeprecatedFormInput>
 
+      <DeprecatedFormInput label={t('settings llm provider label')}>
+        <Input.Switch
+          checked={!!settings.llmProvider}
+          onCheckedChange={(checked) => (settings.llmProvider = checked ? 'ollama' : 'edge')}
+        />
+      </DeprecatedFormInput>
+
       <DeprecatedFormInput label={t('settings llm model label')}>
         <Select.Root
           value={settings.llmModel ?? 'default'}

@@ -14,8 +14,8 @@ import { ToolTypes, type GenerateRequest, type GenerationStreamEvent } from './t
 import { isToolUse, runTools } from '../conversation';
 
 // TODO(burdon): Config.
-const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
-const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
+export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
+export const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
 
 export type OllamaClientParams = {
   endpoint?: string;
@@ -43,22 +43,12 @@ export type OllamaClientParams = {
 
 export class OllamaClient implements AIServiceClient {
   /**
-   * Create a test client with small local model and no temperature for predictable results.
-   */
-  static createClient(options?: Pick<OllamaClientParams, 'tools'>) {
-    return new OllamaClient({
-      tools: options?.tools,
-      overrides: { model: DEFAULT_OLLAMA_MODEL, temperature: 0 },
-    });
-  }
-
-  /**
    * Check if Ollama server is running and accessible.
    * @returns Promise that resolves to true if Ollama is running, false otherwise.
    */
   static async isRunning(): Promise<boolean> {
     try {
-      const response = await fetch(`${DEFAULT_OLLAMA_URL}/api/version`, {
+      const response = await fetch(`${DEFAULT_OLLAMA_ENDPOINT}/api/version`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -78,8 +68,8 @@ export class OllamaClient implements AIServiceClient {
   private readonly _temperatureOverride?: number;
   private readonly _maxToolInvocations: number;
 
-  constructor({ endpoint, tools, overrides, maxToolInvocations }: OllamaClientParams) {
-    this._endpoint = endpoint ?? DEFAULT_OLLAMA_URL;
+  constructor({ endpoint, tools, overrides, maxToolInvocations }: OllamaClientParams = {}) {
+    this._endpoint = endpoint ?? DEFAULT_OLLAMA_ENDPOINT;
     this._tools = tools ?? [];
     this._modelOverride = overrides?.model;
     this._temperatureOverride = overrides?.temperature;
