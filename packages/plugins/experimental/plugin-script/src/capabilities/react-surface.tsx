@@ -27,12 +27,21 @@ export default () =>
     createSurface({
       id: `${SCRIPT_PLUGIN}/article`,
       role: 'article',
-      filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+      filter: (data): data is { subject: ScriptType; variant: 'logs' | undefined } =>
+        data.subject instanceof ScriptType,
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)?.value;
-        return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
+        return (
+          <ScriptContainer
+            role={role}
+            script={data.subject}
+            variant={data.variant}
+            settings={settings}
+            env={compiler.environment}
+          />
+        );
       },
     }),
     createSurface({
@@ -42,7 +51,7 @@ export default () =>
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
       component: ({ data }) => {
         // TODO(wittjosiah): Decouple hooks from toolbar state.
-        const state = useToolbarState({ view: 'editor' });
+        const state = useToolbarState();
         useDeployState({ state, script: data.subject });
         return <DebugPanel functionUrl={state.functionUrl} />;
       },

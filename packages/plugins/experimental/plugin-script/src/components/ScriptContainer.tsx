@@ -20,6 +20,7 @@ import { type ScriptSettingsProps } from '../types';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
+  variant?: 'logs';
   settings?: ScriptSettingsProps;
   role?: string;
 }> &
@@ -29,6 +30,7 @@ export const ScriptContainer = ({
   role,
   classNames,
   script,
+  variant,
   settings = { editorInputMode: 'vscode' },
   env,
 }: ScriptEditorProps) => {
@@ -54,7 +56,7 @@ export const ScriptContainer = ({
     [script, script.source.target, space, identity],
   );
 
-  const state = useToolbarState({ view: 'editor' });
+  const state = useToolbarState();
   useDeployState({ state, script });
 
   if (!space) {
@@ -65,7 +67,9 @@ export const ScriptContainer = ({
     <StackItem.Content toolbar>
       <ScriptToolbar state={state} role={role} script={script} />
       <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-        {state.view !== 'logs' && (
+        {variant === 'logs' ? (
+          <LogsPanel script={script} classNames='grow' />
+        ) : (
           <TypescriptEditor
             id={script.id}
             env={env}
@@ -76,8 +80,6 @@ export const ScriptContainer = ({
             toolbar
           />
         )}
-
-        {state.view !== 'editor' && <LogsPanel script={script} classNames='grow' />}
       </div>
     </StackItem.Content>
   );

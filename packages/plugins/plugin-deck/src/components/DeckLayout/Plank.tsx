@@ -31,7 +31,7 @@ import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
 import { useNode, useMainSize } from '../../hooks';
-import { DeckAction, type LayoutMode, type Part, type ResolvedPart } from '../../types';
+import { DeckAction, type LayoutMode, type Part, type ResolvedPart, surfaceVariantSeparator } from '../../types';
 
 const UNKNOWN_ID = 'unknown_id';
 
@@ -47,9 +47,10 @@ export type PlankProps = {
 
 type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
   part: ResolvedPart;
+  surfaceVariant?: string;
 };
 
-const PlankImpl = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankImplProps) => {
+const PlankImpl = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode, surfaceVariant }: PlankImplProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
   const { graph } = useAppGraph();
@@ -101,10 +102,11 @@ const PlankImpl = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode
     () =>
       node && {
         subject: node.data,
+        surfaceVariant,
         path,
         popoverAnchorId,
       },
-    [node, node?.data, path, popoverAnchorId],
+    [node, node?.data, path, popoverAnchorId, surfaceVariant],
   );
 
   // TODO(wittjosiah): Change prop to accept a component.
@@ -171,6 +173,7 @@ const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
 };
 
 export const Plank = (props: PlankProps) => {
+  console.log('[plank]', props.companionId);
   if (props.companionId) {
     const Root = props.part === 'solo' ? SplitFrame : Fragment;
     return (
@@ -178,7 +181,9 @@ export const Plank = (props: PlankProps) => {
         <PlankImpl {...props} {...(props.part === 'solo' ? { part: 'solo-primary' } : {})} />
         <PlankImpl
           {...props}
-          id={props.companionId}
+          {...(props.companionId.startsWith(surfaceVariantSeparator)
+            ? { surfaceVariant: props.companionId.substring(2) }
+            : { id: props.companionId })}
           {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
         />
       </Root>
