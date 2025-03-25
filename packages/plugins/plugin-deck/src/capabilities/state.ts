@@ -10,7 +10,7 @@ import { type SidebarState } from '@dxos/react-ui';
 
 import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
-import { getMode, type Deck, type DeckState } from '../types';
+import { getMode, type Deck, type DeckState, defaultDeck } from '../types';
 
 const boolean = /true|false/;
 
@@ -48,14 +48,7 @@ export default () => {
     activeDeck: 'default',
     previousDeck: 'default',
     decks: {
-      default: {
-        initialized: false,
-        active: [],
-        inactive: [],
-        fullscreen: false,
-        solo: undefined,
-        plankSizing: {},
-      },
+      default: { ...defaultDeck },
     },
     get deck() {
       const deck = this.decks[this.activeDeck];

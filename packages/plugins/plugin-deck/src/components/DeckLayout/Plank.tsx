@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import React, {
+  Fragment,
+  type KeyboardEvent,
+  memo,
+  type PropsWithChildren,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import {
   createIntent,
@@ -17,25 +26,30 @@ import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
-import { NodePlankHeading, type NodePlankHeadingProps } from './NodePlankHeading';
+import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckCapabilities } from '../../capabilities';
 import { useNode, useMainSize } from '../../hooks';
-import { DeckAction, type LayoutMode } from '../../types';
+import { DeckAction, type LayoutMode, type Part, type ResolvedPart } from '../../types';
 
 const UNKNOWN_ID = 'unknown_id';
 
 export type PlankProps = {
   id?: string;
-  part: NodePlankHeadingProps['part'];
+  companionId?: string;
+  part: Part;
   path?: string[];
   order?: number;
   active?: string[];
   layoutMode: LayoutMode;
 };
 
-export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankProps) => {
+type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
+  part: ResolvedPart;
+};
+
+const PlankImpl = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutMode }: PlankImplProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
   const { graph } = useAppGraph();
@@ -147,3 +161,29 @@ export const Plank = memo(({ id = UNKNOWN_ID, part, path, order, active, layoutM
     </Root>
   );
 });
+
+const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
+  return (
+    <div role='none' className='contents md:grid md:grid-rows-1 md:grid-cols-[1fr_1fr]'>
+      {children}
+    </div>
+  );
+};
+
+export const Plank = (props: PlankProps) => {
+  if (props.companionId) {
+    const Root = props.part === 'solo' ? SplitFrame : Fragment;
+    return (
+      <Root>
+        <PlankImpl {...props} {...(props.part === 'solo' ? { part: 'solo-primary' } : {})} />
+        <PlankImpl
+          {...props}
+          id={props.companionId}
+          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
+        />
+      </Root>
+    );
+  } else {
+    return <PlankImpl {...props} />;
+  }
+};

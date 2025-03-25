@@ -12,13 +12,13 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
+import { DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
   id: string;
-  part: 'solo' | 'deck' | 'complementary';
+  part: ResolvedPart;
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;

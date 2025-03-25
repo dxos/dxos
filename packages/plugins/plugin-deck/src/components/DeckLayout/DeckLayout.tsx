@@ -68,7 +68,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     deck,
     toasts,
   } = context;
-  const { active, fullscreen, solo, plankSizing } = deck;
+  const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
@@ -187,6 +187,17 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
   );
   const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
 
+  const order: Record<string, number> = useMemo(() => {
+    return active.reduce(
+      (acc: { result: Record<string, number>; cursor: number }, entryId) => {
+        acc.result[entryId] = acc.cursor + 1;
+        acc.cursor += activeCompanions[entryId] ? 3 : 2;
+        return acc;
+      },
+      { result: {}, cursor: 0 },
+    ).result;
+  }, [active, activeCompanions]);
+
   return (
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
@@ -260,7 +271,14 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                   {active.map((entryId, index) => (
                     <Fragment key={entryId}>
                       <PlankSeparator index={index} />
-                      <Plank id={entryId} part='deck' order={index * 2 + 1} active={active} layoutMode={layoutMode} />
+                      <Plank
+                        id={entryId}
+                        companionId={activeCompanions[entryId]}
+                        part='deck'
+                        order={order[entryId]}
+                        active={active}
+                        layoutMode={layoutMode}
+                      />
                     </Fragment>
                   ))}
                 </Stack>
@@ -273,7 +291,12 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                 {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
                 {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
-                  <Plank id={solo} part='solo' layoutMode={layoutMode} />
+                  <Plank
+                    id={solo}
+                    companionId={solo ? activeCompanions[solo] : undefined}
+                    part='solo'
+                    layoutMode={layoutMode}
+                  />
                 </StackContext.Provider>
               </div>
             </Main.Content>

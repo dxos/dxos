@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { DeckCapabilities } from './capabilities';
 import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
-import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode } from '../types';
+import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode, defaultDeck } from '../types';
 import { setActive } from '../util';
 
 export default (context: PluginsContext) =>
@@ -201,7 +201,7 @@ export default (context: PluginsContext) =>
           }
           state.activeDeck = subject;
           if (!state.decks[subject]) {
-            state.decks[subject] = { initialized: false, active: [], inactive: [], fullscreen: false, plankSizing: {} };
+            state.decks[subject] = { ...defaultDeck };
           }
         });
 

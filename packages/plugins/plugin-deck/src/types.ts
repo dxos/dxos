@@ -17,6 +17,9 @@ export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 export const OverscrollOptions = ['none', 'centering'] as const;
 export type Overscroll = (typeof OverscrollOptions)[number];
 
+export type Part = 'solo' | 'deck' | 'complementary';
+export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
+
 export type Panel = {
   id: string;
   label: Label;
@@ -53,12 +56,25 @@ export const Deck = S.Struct({
     description: "If false, the deck has not yet left solo mode and new planks should be solo'd.",
   }),
   active: S.mutable(S.Array(S.String)),
+  activeCompanions: S.Record({ key: S.String, value: S.String }).pipe(S.mutable),
   inactive: S.mutable(S.Array(S.String)),
   solo: S.optional(S.String),
   fullscreen: S.Boolean,
   plankSizing: S.mutable(PlankSizing),
+  companionFrameSizing: S.mutable(PlankSizing),
 });
 export type Deck = S.Schema.Type<typeof Deck>;
+
+export const defaultDeck = {
+  initialized: false,
+  active: [],
+  activeCompanions: {},
+  inactive: [],
+  fullscreen: false,
+  solo: undefined,
+  plankSizing: {},
+  companionFrameSizing: {},
+} satisfies Deck;
 
 export const DeckState = S.mutable(
   S.Struct({
