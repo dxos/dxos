@@ -1,7 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema as S } from 'effect';
 import { describe, test } from 'vitest';
+
 import { EchoObject, getLabel, LabelAnnotationId } from './annotations';
-import { log } from '@dxos/log';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = S.Struct({

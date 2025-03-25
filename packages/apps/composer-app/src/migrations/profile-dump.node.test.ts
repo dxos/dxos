@@ -13,6 +13,7 @@ import { Client, Config, PublicKey } from '@dxos/client';
 import { type SpaceId, SpaceState, getTypename, loadObjectReferences, type Space } from '@dxos/client/echo';
 import { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -24,7 +25,6 @@ import { TextType } from '@dxos/schema';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
-import { getSchemaTypename } from '@dxos/echo-schema';
 
 const DATA_DIR = 'data';
 

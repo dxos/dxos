@@ -5,13 +5,13 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
 import { DocumentType, type MarkdownSettingsProps } from '../types';
 import { getFallbackName } from '../util';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,

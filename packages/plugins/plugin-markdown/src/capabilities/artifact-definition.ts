@@ -5,10 +5,9 @@
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { isInstanceOf, S } from '@dxos/echo-schema';
-import { assertState, invariant } from '@dxos/invariant';
+import { invariant, assertArgument } from '@dxos/invariant';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
-import { assertArgument } from '@dxos/invariant';
 import { meta } from '../meta';
 import { DocumentType } from '../types';
 
@@ -62,7 +61,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const document = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
-          assertArgument(isInstanceOf(DocumentType, document), `Invalid type`);
+          assertArgument(isInstanceOf(DocumentType, document), 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

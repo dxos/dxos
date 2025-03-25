@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -13,7 +14,6 @@ import { PresenterCapabilities } from './capabilities';
 import { MarkdownSlide, PresenterSettings, PresenterMain, RevealMain } from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterContext, type PresenterSettingsProps } from '../types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

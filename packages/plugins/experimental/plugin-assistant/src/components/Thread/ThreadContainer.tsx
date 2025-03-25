@@ -4,17 +4,16 @@
 
 import React, { useCallback, useMemo, type FC } from 'react';
 
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { getDXN, getLabel, getSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Filter, getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { getDXN, getLabel, getSchema } from '@dxos/echo-schema';
+import { Thread, type ContextProvider, type ThreadProps } from './Thread';
 import { useChatProcessor, useMessageQueue } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
-import { Thread, type ContextProvider, type ThreadProps } from './Thread';
-import { DocumentSchema, DocumentType } from '@dxos/plugin-markdown/types';
 
 export type ThreadContainerProps = {
   chat?: AIChatType;
@@ -39,7 +38,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
     }
 
     return {
-      async query({ query }) {
+      query: async ({ query }) => {
         const artifactSchemas = artifactDefinitions.map((artifact) => artifact.schema);
         const { objects } = await space.db
           .query(Filter.or(...artifactSchemas.map((schema) => Filter.schema(schema))))
@@ -56,7 +55,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
             label: getLabel(getSchema(object)!, object) ?? '',
           }));
       },
-      async resolveMetadata({ uri }) {
+      resolveMetadata: async ({ uri }) => {
         const object = await space.db.query({ id: uri }).first();
         return {
           uri,

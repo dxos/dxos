@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
@@ -12,7 +13,6 @@ import { MarkdownCapabilities } from './capabilities';
 import { MarkdownContainer, MarkdownSettings } from '../components';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

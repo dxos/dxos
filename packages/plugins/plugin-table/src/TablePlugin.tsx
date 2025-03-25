@@ -3,6 +3,7 @@
 //
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -17,7 +18,6 @@ import { meta, TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
 import { CreateTableSchema, TableAction } from './types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export const TablePlugin = () =>
   definePlugin(meta, [

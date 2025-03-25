@@ -3,6 +3,7 @@
 //
 
 import { contributes, type PluginsContext, Capabilities, createIntent } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -10,7 +11,6 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterAction, type PresenterSettingsProps } from '../types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export default (context: PluginsContext) =>
   contributes(

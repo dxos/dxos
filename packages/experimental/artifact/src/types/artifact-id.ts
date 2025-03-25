@@ -1,5 +1,10 @@
-import { DXN } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
+
+import { DXN } from '@dxos/keys';
 
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId) => DXN;

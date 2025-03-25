@@ -5,6 +5,7 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -18,7 +19,6 @@ import { ScriptEvents } from './events';
 import { meta, SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction } from './types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export const ScriptPlugin = () =>
   definePlugin(meta, [

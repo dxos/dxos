@@ -3,11 +3,11 @@
 //
 
 import { contributes } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ThreadCapabilities } from '@dxos/plugin-space';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 
 import { DocumentType } from '../types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export default () =>
   contributes(ThreadCapabilities.Thread, {

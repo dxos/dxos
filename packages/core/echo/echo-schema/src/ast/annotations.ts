@@ -5,14 +5,14 @@
 import { flow, Option, pipe, SchemaAST as AST, Schema as S } from 'effect';
 import { type Simplify } from 'effect/Types';
 
+import { getField, type JsonPath } from '@dxos/effect';
+import { assertArgument } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Primitive } from '@dxos/util';
 
 import { EntityKind } from './entity-kind';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
-import { assertArgument } from '@dxos/invariant';
-import { findAnnotation, getField, type JsonPath } from '@dxos/effect';
-import { log } from '@dxos/log';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -121,6 +121,7 @@ const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
         S.make<EchoObjectSchemaData<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
       );
     }
+
     static readonly typename = typename;
     static readonly version = version;
   };

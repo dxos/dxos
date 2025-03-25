@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, LabelAnnotationId, Ref, S } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
 

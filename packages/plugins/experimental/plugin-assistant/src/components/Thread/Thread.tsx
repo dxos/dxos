@@ -12,10 +12,10 @@ import { ScrollContainer, type ScrollController } from '@dxos/react-ui-component
 import { mx } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
-import { PromptBar, type PromptBarProps } from '../Prompt';
-import type { ReferenceData, ReferencesProvider } from '../Prompt/references';
 import { ThreadMessage, type ThreadMessageProps } from './ThreadMessage';
 import { messageReducer } from './reducer';
+import { PromptBar, type PromptBarProps } from '../Prompt';
+import type { ReferenceData, ReferencesProvider } from '../Prompt/references';
 
 export interface ContextProvider {
   query({ query }: { query: string }): Promise<ReferenceData[]>;
@@ -83,12 +83,8 @@ export const Thread = ({
     }
 
     return {
-      async getReferences({ query }: { query: string }) {
-        return contextProvider.query({ query });
-      },
-      async resolveReference({ uri }: { uri: string }) {
-        return contextProvider.resolveMetadata({ uri });
-      },
+      getReferences: async ({ query }: { query: string }) => contextProvider.query({ query }),
+      resolveReference: async ({ uri }: { uri: string }) => contextProvider.resolveMetadata({ uri }),
     };
   }, [contextProvider]);
 

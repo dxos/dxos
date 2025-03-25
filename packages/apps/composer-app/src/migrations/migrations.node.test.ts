@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Client, PublicKey } from '@dxos/client';
 import { create, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { MigrationBuilder } from '@dxos/migrations';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
@@ -16,7 +17,6 @@ import { setDeep } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 const testBuilder = new TestBuilder();
 

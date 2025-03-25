@@ -4,9 +4,9 @@
 
 import { Schema as S } from 'effect';
 import { isSome } from 'effect/Option';
+import { JSONPath } from 'jsonpath-plus';
 
 import { invariant } from '@dxos/invariant';
-import { JSONPath } from 'jsonpath-plus';
 
 export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };

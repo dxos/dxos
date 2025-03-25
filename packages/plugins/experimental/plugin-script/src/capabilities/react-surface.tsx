@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
@@ -14,7 +15,6 @@ import { DebugPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from
 import { useDeployState, useToolbarState } from '../hooks';
 import { SCRIPT_PLUGIN } from '../meta';
 import { type ScriptSettingsProps } from '../types';
-import { isInstanceOf } from '@dxos/echo-schema';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

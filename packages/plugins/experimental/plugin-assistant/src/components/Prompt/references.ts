@@ -1,12 +1,9 @@
-import { Extension, RangeSet } from '@codemirror/state';
-import {
-  autocompletion,
-  completionKeymap,
-  type CompletionSource,
-  type Completion,
-  type CompletionContext,
-  type CompletionResult,
-} from '@codemirror/autocomplete';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { autocompletion, completionKeymap, type CompletionResult } from '@codemirror/autocomplete';
+import { type Extension, RangeSet } from '@codemirror/state';
 import {
   Decoration,
   EditorView,
@@ -16,8 +13,8 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from '@codemirror/view';
+
 import { Mutex } from '@dxos/async';
-import { log } from '@dxos/log';
 
 export type ReferenceData = {
   uri: string;
@@ -109,13 +106,11 @@ export const promptReferences = ({
     },
     {
       decorations: (v) => v.decorations,
-      provide(plugin) {
-        return [
-          EditorView.atomicRanges.of(
-            (view): DecorationSet => view.plugin(decorationField)?.decorations ?? RangeSet.empty,
-          ),
-        ];
-      },
+      provide: (plugin) => [
+        EditorView.atomicRanges.of(
+          (view): DecorationSet => view.plugin(decorationField)?.decorations ?? RangeSet.empty,
+        ),
+      ],
     },
   );
 

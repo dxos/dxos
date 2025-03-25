@@ -11,7 +11,7 @@ import { createArtifactElement } from '@dxos/assistant';
 import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, parseId, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
