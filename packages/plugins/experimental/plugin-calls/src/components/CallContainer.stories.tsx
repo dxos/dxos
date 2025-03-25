@@ -15,7 +15,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Transcript, TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { TranscriptType, type TranscriptBlock } from '@dxos/plugin-transcription/types';
-import { Config, PublicKey, useClient } from '@dxos/react-client';
+import { Config, useClient } from '@dxos/react-client';
 import { create, Filter, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { ScrollContainer } from '@dxos/react-ui-components';
@@ -97,8 +97,6 @@ type Story = StoryObj<CallContainerProps>;
 export const Default: Story = {
   args: {
     // Fixed room for testing.
-    roomId: PublicKey.fromHex(
-      '04a1d1911703b8e929d0649021a965767483e9be254b488809946dfa1eb4a3b939a5d78a56495077b00f5c88e8cf8b8ec76ca9c77f19c138b5132c7b325c27e1a8',
-    ),
+    roomId: '04a1d1911703b8e929d0649021a965',
   },
 };

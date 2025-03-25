@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import md5Hex from 'md5-hex';
+
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { TranscriptionSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
@@ -59,7 +61,7 @@ export class CallSwarmSynchronizer extends Resource {
   private _displayName?: string = undefined;
 
   private _stream?: Stream<SwarmResponse> = undefined;
-  private _roomId?: PublicKey = undefined;
+  private _roomId?: string = undefined;
   private _sendStateTask?: DeferredTask = undefined;
 
   constructor({ networkService }: CallSwarmSynchronizerParams) {
@@ -136,7 +138,7 @@ export class CallSwarmSynchronizer extends Resource {
   /**
    * @internal
    */
-  _setRoomId(roomId?: PublicKey) {
+  _setRoomId(roomId?: string) {
     if (this._stream) {
       log.verbose('joined to a different room', { roomId });
       return;
@@ -158,7 +160,7 @@ export class CallSwarmSynchronizer extends Resource {
   @synchronized
   async join() {
     invariant(this._roomId);
-    this._stream = this._networkService.subscribeSwarmState({ topic: this._roomId });
+    this._stream = this._networkService.subscribeSwarmState({ topic: getTopic(this._roomId) });
     this._stream.subscribe((event) => this._processSwarmEvent(event));
 
     this._notifyAndSchedule();
@@ -171,7 +173,7 @@ export class CallSwarmSynchronizer extends Resource {
     this._stream = undefined;
     if (roomId && this._identityKey && this._deviceKey) {
       void this._networkService.leaveSwarm({
-        topic: roomId,
+        topic: getTopic(roomId),
         peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
       });
     }
@@ -202,7 +204,7 @@ export class CallSwarmSynchronizer extends Resource {
     };
 
     await this._networkService.joinSwarm({
-      topic: this._roomId,
+      topic: getTopic(this._roomId),
       peer: {
         identityKey: this._identityKey,
         peerKey: this._deviceKey,
@@ -253,3 +255,6 @@ class LamportTimestampCrdt {
     };
   }
 }
+
+// TODO(mykola): Delete once we refactor swarm to accept string as topic.
+const getTopic = (roomId: string): PublicKey => PublicKey.fromHex(md5Hex(roomId));

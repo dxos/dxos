@@ -3,7 +3,7 @@
 //
 
 import { synchronized } from '@dxos/async';
-import { type PublicKey, type Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -83,7 +83,7 @@ export class CallManager extends Resource {
     return name ? this._state.media.pulledVideoStreams[name]?.stream : undefined;
   }
 
-  setRoomId(roomId: PublicKey) {
+  setRoomId(roomId: string) {
     this._swarmSynchronizer._setRoomId(roomId);
   }
 

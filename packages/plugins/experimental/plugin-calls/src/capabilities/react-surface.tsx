@@ -17,7 +17,7 @@ export default () =>
       id: `${CALLS_PLUGIN}/article`,
       role: 'article',
       filter: (data): data is { subject: Call } => isCall(data.subject),
-      component: ({ data, role }) => <CallContainer space={data.subject.space} roomId={data.subject.space.key} />,
+      component: ({ data, role }) => <CallContainer space={data.subject.space} roomId={data.subject.space.id} />,
     }),
     createSurface({
       id: `${CALLS_PLUGIN}/assistant`,
@@ -28,7 +28,7 @@ export default () =>
           return null;
         }
 
-        return <CallSidebar space={space} roomId={space.key} />;
+        return <CallSidebar space={space} roomId={space.id} />;
       },
     }),
   ]);
