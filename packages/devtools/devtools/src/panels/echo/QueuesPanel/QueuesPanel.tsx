@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { Toolbar } from '@dxos/react-ui';

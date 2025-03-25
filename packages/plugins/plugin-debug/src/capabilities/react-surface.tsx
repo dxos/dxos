@@ -53,15 +53,7 @@ import {
   parseId,
 } from '@dxos/react-client/echo';
 
-import {
-  DebugApp,
-  DebugObjectPanel,
-  DebugSettings,
-  DebugSpace,
-  DebugStatus,
-  SpaceGenerator,
-  Wireframe,
-} from '../components';
+import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -121,12 +113,7 @@ export default (context: PluginsContext) =>
           [data.subject.space],
         );
 
-        const deprecated = false;
-        return deprecated ? (
-          <DebugSpace space={data.subject.space} onAddObjects={handleCreateObject} />
-        ) : (
-          <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-        );
+        <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />;
       },
     }),
     createSurface({
