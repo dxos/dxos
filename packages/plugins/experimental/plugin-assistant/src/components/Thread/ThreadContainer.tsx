@@ -9,9 +9,9 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 
+import { Thread, type ThreadProps } from './Thread';
 import { useChatProcessor, useContextProvider, useMessageQueue } from '../../hooks';
 import { type AIChatType, type AssistantSettingsProps } from '../../types';
-import { Thread, type ThreadProps } from './Thread';
 
 export type ThreadContainerProps = {
   chat?: AIChatType;
@@ -78,5 +78,3 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
     />
   );
 };
-
-const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());
