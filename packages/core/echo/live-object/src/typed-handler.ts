@@ -40,7 +40,7 @@ type ProxyTarget = {
   /**
    * Schema for the root.
    */
-  [symbolSchema]: S.Schema<any>;
+  [symbolSchema]: S.Schema.AnyNoContext;
 
   /**
    * For get and set operations on value properties.
@@ -208,7 +208,7 @@ const toJSON = (target: ProxyTarget): any => {
 /**
  * Recursively set AST on all potential proxy targets.
  */
-const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
+const setSchemaProperties = (obj: any, schema: S.Schema.AnyNoContext) => {
   defineHiddenProperty(obj, symbolSchema, schema);
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {

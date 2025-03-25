@@ -231,7 +231,7 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
 /**
  * Get the AST node for the given property (dot-path).
  */
-export const findProperty = (schema: S.Schema<any>, path: JsonPath | JsonProp): AST.AST | undefined => {
+export const findProperty = (schema: S.Schema.AnyNoContext, path: JsonPath | JsonProp): AST.AST | undefined => {
   const getProp = (node: AST.AST, path: JsonProp[]): AST.AST | undefined => {
     const [name, ...rest] = path;
     const typeNode = findNode(node, AST.isTypeLiteral);
