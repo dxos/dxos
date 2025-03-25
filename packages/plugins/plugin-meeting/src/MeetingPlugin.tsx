@@ -3,11 +3,14 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
+import { ThreadEvents, ThreadCapabilities } from '@dxos/plugin-thread';
 
 import { AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { MEETING_PLUGIN, meta } from './meta';
 import translations from './translations';
+import { MeetingType } from './types';
 
 export const MeetingPlugin = () =>
   definePlugin(meta, [
@@ -15,6 +18,22 @@ export const MeetingPlugin = () =>
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () => contributes(ClientCapabilities.Schema, [MeetingType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/activity`,
+      activatesOn: ThreadEvents.SetupActivity,
+      activate: () =>
+        contributes(ThreadCapabilities.Activity, {
+          id: 'meeting',
+          label: ['meeting activity label', { ns: MEETING_PLUGIN }],
+          icon: 'ph--video-camera--regular',
+          handler: () => alert('meeting activity'),
+        }),
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,

@@ -2,22 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { Schema as S } from 'effect';
 
+import { MeetingSchema, MeetingType } from './schema';
 import { MEETING_PLUGIN } from '../meta';
 
-/**
- * Endpoint to the calls service.
- */
-export const CALLS_URL = 'https://calls-service.dxos.workers.dev';
+export namespace MeetingAction {
+  const MEETING_ACTION = `${MEETING_PLUGIN}/action`;
 
-export namespace CallsAction {
-  // const CALLS_ACTION = `${MEETING_PLUGIN}/action`;
+  export class Create extends S.TaggedClass<Create>()(`${MEETING_ACTION}/create`, {
+    input: MeetingSchema,
+    output: S.Struct({
+      object: MeetingType,
+    }),
+  }) {}
 }
-
-export type Call = {
-  type: string;
-  space: Space;
-};
-
-export const isCall = (data: any): data is Call => data?.type === `${MEETING_PLUGIN}/space` && isSpace(data?.space);

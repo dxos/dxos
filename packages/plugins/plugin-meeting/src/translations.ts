@@ -11,6 +11,8 @@ export default [
         'plugin name': 'Meeting',
         'meeting room label': 'New meeting room',
         'meeting panel label': 'Active Meeting',
+        'meeting activity label': 'Meeting',
+        'meetings label': 'All Meetings',
 
         'join call': 'Join',
         'leave call': 'Leave',

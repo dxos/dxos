@@ -85,7 +85,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     STATUS_BAR_PLUGIN,
     THEME_PLUGIN,
     TOKEN_MANAGER_PLUGIN,
-    TRANSCRIPTION_PLUGIN,
     WELCOME_PLUGIN,
   ]
     .filter(isNotFalsy)
@@ -102,6 +101,7 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     SKETCH_PLUGIN,
     TABLE_PLUGIN,
     THREAD_PLUGIN,
+    TRANSCRIPTION_PLUGIN,
     WNFS_PLUGIN,
 
     // Labs

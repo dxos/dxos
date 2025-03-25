@@ -3,7 +3,7 @@
 //
 
 import { S, isInstanceOf } from '@dxos/echo-schema';
-import { DocumentSchema } from '@dxos/plugin-markdown/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 import { isReactiveObject } from '@dxos/react-client/echo';
 
 import { TranscriptSchema, TranscriptType } from './schema';
@@ -25,7 +25,7 @@ export namespace TranscriptionAction {
       name: S.optional(S.String),
     }),
     output: S.Struct({
-      object: TranscriptSchema,
+      object: TranscriptType,
     }),
   }) {}
 
@@ -34,7 +34,7 @@ export namespace TranscriptionAction {
       object: TranscriptSchema,
     }),
     output: S.Struct({
-      object: DocumentSchema,
+      object: DocumentType,
     }),
   }) {}
 }

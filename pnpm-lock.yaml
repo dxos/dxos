@@ -7907,6 +7907,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../experimental/plugin-transcription
@@ -9362,6 +9365,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack

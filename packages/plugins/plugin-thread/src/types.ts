@@ -80,6 +80,8 @@ export type ViewState = { showResolvedThreads: boolean };
 export type ViewStore = Record<SubjectId, ViewState>;
 
 export type ThreadState = {
+  /** Current channel activity. */
+  activities: Record<string, string | undefined>;
   /** In-memory draft threads. */
   drafts: Record<string, ThreadType[]>;
   current?: string | undefined;

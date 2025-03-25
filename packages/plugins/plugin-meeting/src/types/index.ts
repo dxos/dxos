@@ -3,4 +3,5 @@
 //
 
 export * from './calls';
+export * from './schema';
 export * from './types';

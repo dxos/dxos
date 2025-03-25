@@ -21,11 +21,11 @@ import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CallContainer, type CallContainerProps } from './CallContainer';
+import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 import { MeetingPlugin } from '../MeetingPlugin';
 import translations from '../translations';
 
-const Render = (props: CallContainerProps) => {
+const Render = (props: MeetingContainerProps) => {
   const client = useClient();
   const edge = useEdgeClient();
   const space = client.spaces.get().at(-1);
@@ -40,7 +40,7 @@ const Render = (props: CallContainerProps) => {
   return (
     <div className='flex grow gap-8 justify-center'>
       <div className='flex h-full border border-neutral-500'>
-        <CallContainer {...props} space={space} />
+        <MeetingContainer {...props} />
       </div>
       <div className='flex h-full w-[30rem] border border-neutral-500'>
         <ScrollContainer>
@@ -51,9 +51,9 @@ const Render = (props: CallContainerProps) => {
   );
 };
 
-const meta: Meta<CallContainerProps> = {
-  title: 'plugins/plugin-calls/CallContainer',
-  component: CallContainer,
+const meta: Meta<MeetingContainerProps> = {
+  title: 'plugins/plugin-meeting/MeetingContainer',
+  component: MeetingContainer,
   render: Render,
   decorators: [
     withPluginManager({
@@ -92,7 +92,7 @@ const meta: Meta<CallContainerProps> = {
 
 export default meta;
 
-type Story = StoryObj<CallContainerProps>;
+type Story = StoryObj<MeetingContainerProps>;
 
 export const Default: Story = {
   args: {
