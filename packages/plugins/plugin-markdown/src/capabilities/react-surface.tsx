@@ -12,13 +12,14 @@ import { MarkdownCapabilities } from './capabilities';
 import { MarkdownContainer, MarkdownSettings } from '../components';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;

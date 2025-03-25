@@ -10,6 +10,7 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterAction, type PresenterSettingsProps } from '../types';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 export default (context: PluginsContext) =>
   contributes(
@@ -21,8 +22,8 @@ export default (context: PluginsContext) =>
           .requestCapabilities(Capabilities.SettingsStore)[0]
           ?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value;
         return settings?.presentCollections
-          ? node.data instanceof CollectionType || node.data instanceof DocumentType
-          : node.data instanceof DocumentType;
+          ? isInstanceOf(CollectionType, node.data) || isInstanceOf(DocumentType, node.data)
+          : isInstanceOf(DocumentType, node.data);
       },
       actions: ({ node }) => {
         const object = node.data;

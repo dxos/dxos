@@ -16,6 +16,7 @@ import { setDeep } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 const testBuilder = new TestBuilder();
 
@@ -218,7 +219,7 @@ describe('Composer migrations', () => {
     await (builder as any)._commit();
 
     const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);
-    expect(migratedDoc1 instanceof DocumentType).to.be.true;
+    expect(isInstanceOf(DocumentType, migratedDoc1)).to.be.true;
     expect(migratedDoc1?.threads?.[0].target instanceof ThreadType).to.be.true;
     expect(migratedDoc1?.threads?.[0].target?.id).to.equal(thread1.id);
     expect(migratedDoc1?.threads?.[0].target?.anchor).to.equal(cursor);

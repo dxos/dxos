@@ -11,6 +11,7 @@ import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
 import { DocumentType, type MarkdownSettingsProps } from '../types';
 import { getFallbackName } from '../util';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,
@@ -33,7 +34,7 @@ const MarkdownContainer = ({
   onViewModeChange,
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
-  const doc = object instanceof DocumentType ? object : undefined;
+  const doc = isInstanceOf(DocumentType, object) ? object : undefined;
   const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore });
 
   if (doc) {

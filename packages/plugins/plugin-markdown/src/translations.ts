@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { MARKDOWN_PLUGIN } from './meta';
 import { DocumentType } from './types';
 
 export default [
   {
     'en-US': {
-      [DocumentType.typename]: {
+      [getSchemaTypename(DocumentType)!]: {
         'typename label': 'Document',
       },
       [MARKDOWN_PLUGIN]: {

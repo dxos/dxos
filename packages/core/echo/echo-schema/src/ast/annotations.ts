@@ -61,9 +61,15 @@ export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => {
   return getObjectAnnotation(schema)?.kind;
 };
 
+/**
+ * @returns Schema typename (without dxn: prefix or version number).
+ */
 // TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
+/**
+ * @returns Schema version in semver format.
+ */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
 
 export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
@@ -74,8 +80,10 @@ export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
 
 // TODO(burdon): Rename ObjectAnnotation.
 // TODO(dmaretskyi): Add `id` property to the schema type.
-export const EchoObject = (typename: string, version: string) => {
-  return <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<HasId & ToMutable<A>>> => {
+export const EchoObject: {
+  (typename: string, version: string): <S extends S.Schema.Any>(self: S) => EchoObjectSchema<S>;
+} = (typename: string, version: string) => {
+  return <Self extends S.Schema.Any>(self: Self): EchoObjectSchema<Self> => {
     if (!AST.isTypeLiteral(self.ast)) {
       throw new Error('EchoObject can only be applied to an S.Struct type.');
     }
@@ -88,9 +96,55 @@ export const EchoObject = (typename: string, version: string) => {
     const ast = AST.annotations(schemaWithId.ast, {
       [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
-    return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
+    return makeEchoObjectSchemaClass<Self>(typename, version, ast);
   };
 };
+
+const makeEchoObjectSchemaClass = <Self extends S.Schema.Any>(
+  typename: string,
+  version: string,
+  ast: AST.AST,
+): EchoObjectSchema<Self> => {
+  return class EchoObjectSchemaClass extends S.make<
+    EchoObjectSchemaData<S.Schema.Type<Self>>,
+    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+    S.Schema.Context<Self>
+  >(ast) {
+    static override annotations(
+      annotations: S.Annotations.Schema<EchoObjectSchemaData<S.Schema.Type<Self>>>,
+    ): EchoObjectSchema<Self> {
+      return makeEchoObjectSchemaClass(
+        typename,
+        version,
+        S.make<EchoObjectSchemaData<S.Schema.Type<Self>>>(ast).annotations(annotations).ast,
+      );
+    }
+    static readonly typename = typename;
+    static readonly version = version;
+  };
+};
+
+type EchoObjectSchemaData<T> = Simplify<HasId & ToMutable<T>>;
+
+export interface EchoObjectSchema<Self extends S.Schema.Any>
+  extends S.AnnotableClass<
+    EchoObjectSchema<Self>,
+    EchoObjectSchemaData<S.Schema.Type<Self>>,
+    EchoObjectSchemaData<S.Schema.Encoded<Self>>,
+    S.Schema.Context<Self>
+  > {
+  /**
+   * Fully qualified type name.
+   * @example `dxos.org/type/Contact`
+   **/
+  readonly typename: string;
+
+  /**
+   * Semver schema version.
+   * @example `0.1.0`
+   */
+  readonly version: string;
+}
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).

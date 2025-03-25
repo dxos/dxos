@@ -17,7 +17,7 @@ import {
   type ViewUpdate,
 } from '@codemirror/view';
 import { Mutex } from '@dxos/async';
-import { log } from 'handlebars';
+import { log } from '@dxos/log';
 
 export type ReferenceData = {
   uri: string;

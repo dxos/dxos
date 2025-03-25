@@ -13,6 +13,7 @@ import { PresenterCapabilities } from './capabilities';
 import { MarkdownSlide, PresenterSettings, PresenterMain, RevealMain } from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterContext, type PresenterSettingsProps } from '../types';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -20,7 +21,7 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'main',
       position: 'hoist',
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data }) => <RevealMain document={data.subject} />,
     }),
     createSurface({
@@ -47,7 +48,7 @@ export default () =>
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
       role: 'slide',
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({

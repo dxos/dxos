@@ -11,11 +11,12 @@ import { isSpace } from '@dxos/react-client/echo';
 import { MARKDOWN_PLUGIN } from '../meta';
 import translations from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
+import { getSchemaTypename } from '@dxos/echo-schema';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
-      inputType: DocumentType.typename,
+      inputType: getSchemaTypename(DocumentType)!,
       outputType: 'text/markdown',
       // Reconcile with metadata serializers.
       serialize: async (node) => {

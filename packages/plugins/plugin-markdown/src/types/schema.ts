@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, LabelAnnotationId, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { TextType } from '@dxos/schema';
 
@@ -15,10 +15,8 @@ export const DocumentSchema = S.Struct({
   [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
-export class DocumentType extends TypedObject({
-  typename: 'dxos.org/type/Document',
-  version: '0.1.0',
-})(DocumentSchema.fields) {}
+export const DocumentType = DocumentSchema.pipe(EchoObject('dxos.org/type/Document', '0.1.0'));
+export type DocumentType = S.Schema.Type<typeof DocumentType>;
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.
