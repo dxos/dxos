@@ -64,12 +64,12 @@ export const ScriptContainer = ({
   }
 
   return (
-    <StackItem.Content toolbar>
-      <ScriptToolbar state={state} role={role} script={script} />
-      <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-        {variant === 'logs' ? (
-          <LogsPanel script={script} classNames='grow' />
-        ) : (
+    <StackItem.Content toolbar={variant !== 'logs'}>
+      {variant === 'logs' ? (
+        <LogsPanel script={script} />
+      ) : (
+        <>
+          <ScriptToolbar state={state} role={role} script={script} />
           <TypescriptEditor
             id={script.id}
             env={env}
@@ -79,8 +79,8 @@ export const ScriptContainer = ({
             inputMode={settings.editorInputMode}
             toolbar
           />
-        )}
-      </div>
+        </>
+      )}
     </StackItem.Content>
   );
 };

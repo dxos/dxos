@@ -198,8 +198,6 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     ).result;
   }, [active, activeCompanions]);
 
-  console.log('[companions]', JSON.stringify(activeCompanions), JSON.stringify(order), JSON.stringify(active));
-
   return (
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
