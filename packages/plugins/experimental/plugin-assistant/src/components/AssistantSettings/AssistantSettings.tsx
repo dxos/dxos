@@ -11,6 +11,8 @@ import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-for
 import { ASSISTANT_PLUGIN } from '../../meta';
 import { type AssistantSettingsProps } from '../../types';
 
+const DEFAULT_VALUE = '__default';
+
 export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
   const { t } = useTranslation(ASSISTANT_PLUGIN);
 
@@ -27,14 +29,14 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
         <Select.Root
           value={settings.edgeModel ?? 'default'}
           onValueChange={(value) => {
-            settings.edgeModel = value;
+            settings.edgeModel = value === DEFAULT_VALUE ? undefined : value;
           }}
         >
           <Select.TriggerButton placeholder={t('settings default llm model label')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                <Select.Option value={''}>{t('settings default')}</Select.Option>
+                <Select.Option value={DEFAULT_VALUE}>{t('settings default')}</Select.Option>
                 {DEFAULT_EDGE_MODELS.map((model) => (
                   <Select.Option key={model} value={model}>
                     {model}
@@ -57,14 +59,14 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
         <Select.Root
           value={settings.ollamaModel ?? 'default'}
           onValueChange={(value) => {
-            settings.ollamaModel = value;
+            settings.ollamaModel = value === DEFAULT_VALUE ? undefined : value;
           }}
         >
           <Select.TriggerButton placeholder={t('settings default llm model label')} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                <Select.Option value={''}>{t('settings default')}</Select.Option>
+                <Select.Option value={DEFAULT_VALUE}>{t('settings default')}</Select.Option>
                 {DEFAULT_OLLAMA_MODELS.map((model) => (
                   <Select.Option key={model} value={model}>
                     {model}
