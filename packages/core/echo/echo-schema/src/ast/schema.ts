@@ -13,7 +13,7 @@ export const symbolSchema = Symbol.for('@dxos/schema/Schema');
  * Returns the schema for the given object if one is defined.
  */
 // TODO(burdon): Reconcile with `getTypename`.
-export const getSchema = (obj: unknown | undefined): S.Schema<any> | undefined => {
+export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | undefined => {
   if (obj) {
     return (obj as any)[symbolSchema];
   }
@@ -24,7 +24,7 @@ export const getSchema = (obj: unknown | undefined): S.Schema<any> | undefined =
 /**
  * Internal use only.
  */
-export const setSchema = (obj: any, schema: S.Schema<any>) => {
+export const setSchema = (obj: any, schema: S.Schema.AnyNoContext) => {
   Object.defineProperty(obj, symbolSchema, {
     value: schema,
     writable: false,

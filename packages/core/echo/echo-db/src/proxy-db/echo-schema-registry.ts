@@ -197,7 +197,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return results;
   }
 
-  public hasSchema(schema: S.Schema<any>): boolean {
+  public hasSchema(schema: S.Schema.AnyNoContext): boolean {
     const schemaId = schema instanceof EchoSchema ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -276,7 +276,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
   // TODO(burdon): Tighten type signature to TypedObject?
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: S.Schema<any>): EchoSchema {
+  private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
       schema = schema.getSchemaSnapshot().annotations({
         [EchoIdentifierAnnotationId]: undefined,
@@ -347,7 +347,7 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
   return true;
 };
 
-const getObjectIdFromSchema = (schema: S.Schema<any>): ObjectId | undefined => {
+const getObjectIdFromSchema = (schema: S.Schema.AnyNoContext): ObjectId | undefined => {
   const echoIdentifier = getEchoIdentifierAnnotation(schema);
   if (!echoIdentifier) {
     return undefined;

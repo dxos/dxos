@@ -94,6 +94,7 @@ export const SpaceForm = S.Struct({
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {
+  // TODO(dmaretskyi): Change to S.Schema.AnyNoContext
   objectSchema: TypedObject;
   formSchema?: S.Schema<T, any>;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;

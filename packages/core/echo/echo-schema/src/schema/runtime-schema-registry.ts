@@ -18,25 +18,25 @@ import { getTypenameOrThrow } from '../types';
 // TODO(burdon): Reconcile with EchoSchemaRegistry.
 export class RuntimeSchemaRegistry {
   // TODO(burdon): Change to TypedObject
-  private readonly _schema = new Map<string, S.Schema<any>[]>();
+  private readonly _schema = new Map<string, S.Schema.AnyNoContext[]>();
 
   constructor() {
     this._schema.set(StoredSchema.typename, [StoredSchema]);
   }
 
   // TODO(burdon): Rename types, hasType, etc.
-  get schemas(): S.Schema<any>[] {
+  get schemas(): S.Schema.AnyNoContext[] {
     return Array.from(this._schema.values()).flat();
   }
 
   // TODO(burdon): TypedObject
-  hasSchema<S extends S.Schema<any>>(schema: S): boolean {
+  hasSchema<S extends S.Schema.AnyNoContext>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
     const arr = this._schema.get(typename);
     return arr?.some((s) => getSchemaVersion(s) === getSchemaVersion(schema)) ?? false;
   }
 
-  getSchemaByDXN(dxn: DXN): S.Schema<any> | undefined {
+  getSchemaByDXN(dxn: DXN): S.Schema.AnyNoContext | undefined {
     const components = dxn.asTypeDXN();
     if (!components) {
       return undefined;
@@ -58,12 +58,12 @@ export class RuntimeSchemaRegistry {
    * @deprecated Use getSchemaByDXN.
    */
   // TODO(burdon): TypedObject
-  getSchema(typename: string): S.Schema<any> | undefined {
+  getSchema(typename: string): S.Schema.AnyNoContext | undefined {
     return this._schema.get(typename)?.[0];
   }
 
   // TODO(burdon): TypedObject
-  addSchema(types: S.Schema<any>[]) {
+  addSchema(types: S.Schema.AnyNoContext[]) {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version.'));

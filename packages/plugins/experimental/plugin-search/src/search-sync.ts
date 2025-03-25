@@ -12,7 +12,7 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (schema: S.Schema<any> | undefined): string | undefined => {
+const getIcon = (schema: S.Schema.AnyNoContext | undefined): string | undefined => {
   if (!(schema && AST.isTypeLiteral(schema.ast))) {
     return undefined;
   }
