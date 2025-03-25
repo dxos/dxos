@@ -51,7 +51,7 @@ describe('annotations', () => {
       expect(getLabel(TestObject, obj)).toBeUndefined();
     });
 
-    test.only('should return label from echo object', ({ expect }) => {
+    test('should return label from echo object', ({ expect }) => {
       const obj: TestEchoSchema = {
         id: 'test',
         name: 'Primary Name',
