@@ -153,7 +153,7 @@ export class Filter<T extends BaseObject = any> {
   ): Filter<S.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to TypedObject.
-  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
+  static schema(schema: S.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
     if (!schema) {
       throw new TypeError('`schema` parameter is required.');
     }

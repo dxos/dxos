@@ -565,7 +565,7 @@ describe('Reactive Object with ECHO database', () => {
         '@id': employee.id,
         '@meta': { keys: [] },
         name: 'John',
-        worksAt: encodeReference(new Reference(org.id)),
+        worksAt: encodeReference(Reference.localObjectReference(org.id)),
       });
     });
   });

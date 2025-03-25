@@ -531,7 +531,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   // TODO(burdon): Convert most commands to work with this.
   async execWithSpace<T>(
     callback: (props: { client: Client; space: Space }) => Promise<T | void>,
-    options: { spaceKeys?: string[]; all?: boolean; types?: S.Schema<any>[]; verbose?: boolean } = {},
+    options: { spaceKeys?: string[]; all?: boolean; types?: S.Schema.AnyNoContext[]; verbose?: boolean } = {},
   ): Promise<T[] | void> {
     const client = await this.getClient();
     await this.onClientInit(client);
