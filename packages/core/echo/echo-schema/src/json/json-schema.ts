@@ -205,13 +205,13 @@ const withEchoRefinements = (
  * @param root
  * @param definitions
  */
-export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): S.Schema<any> => {
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): S.Schema.AnyNoContext => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }
 
-  let result: S.Schema<any> = S.Unknown;
+  let result: S.Schema.AnyNoContext = S.Unknown;
   if ('$id' in root) {
     switch (root.$id as string) {
       case '/schemas/any': {
@@ -293,7 +293,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   return result;
 };
 
-const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): S.Schema<any> => {
+const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): S.Schema.AnyNoContext => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
@@ -302,7 +302,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 
   let fields: S.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
-  let immutableIdField: S.Schema<any> | undefined;
+  let immutableIdField: S.Schema.AnyNoContext | undefined;
   for (const [key, value] of propertyList) {
     if (isEchoObject && key === 'id') {
       immutableIdField = toEffectSchema(value, defs);
@@ -346,7 +346,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   return schema.annotations(annotations) as any;
 };
 
-const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
+const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema.AnyNoContext => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
     const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
@@ -357,7 +357,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 };
 
 // TODO(dmaretskyi): Types.
-const refToEffectSchema = (root: any): S.Schema<any> => {
+const refToEffectSchema = (root: any): S.Schema.AnyNoContext => {
   if (!('reference' in root)) {
     return Ref(Expando);
   }
@@ -432,7 +432,7 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
 };
 
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations => {
-  const annotations: Types.Mutable<S.Annotations.Schema<any>> = {};
+  const annotations: Types.Mutable<S.AnnotationS.Schema.AnyNoContext> = {};
 
   const echoRefinement: EchoRefinement = (schema as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement != null) {

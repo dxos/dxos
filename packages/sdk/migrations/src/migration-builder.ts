@@ -45,7 +45,7 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: S.Schema<any>; props: any }>,
+    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: S.Schema.AnyNoContext; props: any }>,
   ) {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
@@ -80,7 +80,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle);
   }
 
-  async addObject(schema: S.Schema<any>, props: any) {
+  async addObject(schema: S.Schema.AnyNoContext, props: any) {
     const core = this._createObject({ schema, props });
     return core.id;
   }
@@ -156,7 +156,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
+  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema.AnyNoContext; props: any }) {
     const core = new ObjectCore();
     if (id) {
       core.id = id;

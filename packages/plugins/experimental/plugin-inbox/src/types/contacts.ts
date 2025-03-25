@@ -8,4 +8,4 @@ export class ContactsType extends TypedObject({ typename: 'dxos.org/type/Contact
 
 // Workaround for TS error. You need `S` in scope so TSC can generate types.
 // The inferred type of 'AddressBookType' cannot be named without a reference to 'packages/common/util/node_modules/@effect/schema/dist/dts/Schema'. This is likely not portable. A type annotation is necessary.
-type _ = S.Schema<any>;
+type _ = S.Schema.AnyNoContext;

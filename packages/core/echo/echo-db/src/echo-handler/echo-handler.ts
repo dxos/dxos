@@ -361,7 +361,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
   }
 
-  getSchema(target: ProxyTarget): S.Schema<any> | undefined {
+  getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
     if (target[symbolNamespace] === META_NAMESPACE) {
       return ObjectMetaSchema;
     }
