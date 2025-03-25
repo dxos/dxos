@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Client, PublicKey } from '@dxos/client';
 import { create, createDocAccessor, Expando, Filter, makeRef, type Space, toCursorRange } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { MigrationBuilder } from '@dxos/migrations';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
@@ -218,7 +219,7 @@ describe('Composer migrations', () => {
     await (builder as any)._commit();
 
     const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);
-    expect(migratedDoc1 instanceof DocumentType).to.be.true;
+    expect(isInstanceOf(DocumentType, migratedDoc1)).to.be.true;
     expect(migratedDoc1?.threads?.[0].target instanceof ThreadType).to.be.true;
     expect(migratedDoc1?.threads?.[0].target?.id).to.equal(thread1.id);
     expect(migratedDoc1?.threads?.[0].target?.anchor).to.equal(cursor);
@@ -242,7 +243,7 @@ describe('Composer migrations', () => {
     expect(migratedSketch1?.canvas.target?.content?.id).to.equal('test string');
 
     const migratedTable1 = space.db.getObjectById<TableType>(table1.id);
-    expect(migratedTable1 instanceof TableType).to.be.true;
+    expect(isInstanceOf(TableType, migratedTable1)).to.be.true;
     expect(migratedTable1?.name).to.equal('My Table');
   });
 });

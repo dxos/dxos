@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
@@ -33,7 +34,7 @@ const MarkdownContainer = ({
   onViewModeChange,
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
-  const doc = object instanceof DocumentType ? object : undefined;
+  const doc = isInstanceOf(DocumentType, object) ? object : undefined;
   const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore });
 
   if (doc) {
