@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { type BaseObject } from '@dxos/echo-schema';
+import { isInstanceOf, type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
@@ -53,7 +53,8 @@ export const MarkdownPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DocumentType.typename,
           metadata: {
-            label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
+            label: (object: any) =>
+              isInstanceOf(DocumentType, object) ? object.name || object.fallbackName : undefined,
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
             graphProps: {

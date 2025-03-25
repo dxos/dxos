@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { type Ref, type S } from '@dxos/echo-schema';
+import { isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
@@ -22,13 +22,13 @@ export default () =>
     createSurface({
       id: `${TABLE_PLUGIN}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: TableType } => data.subject instanceof TableType,
+      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
       component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
     }),
     createSurface({
       id: `${TABLE_PLUGIN}/settings-panel`,
       role: 'complementary--settings',
-      filter: (data): data is { subject: TableType } => data.subject instanceof TableType,
+      filter: (data): data is { subject: TableType } => isInstanceOf(TableType, data.subject),
       component: ({ data }) => <TableViewEditor table={data.subject} />,
     }),
     createSurface({
