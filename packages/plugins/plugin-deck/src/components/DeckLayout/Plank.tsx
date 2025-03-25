@@ -152,6 +152,8 @@ const PlankImpl = memo(
               canIncrementStart={canIncrementStart}
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
+              companioned={companioned}
+              surfaceVariant={surfaceVariant}
             />
             <Surface
               key={node.id}
