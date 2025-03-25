@@ -10,7 +10,7 @@ import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
-import { PlankControls } from './PlankControls';
+import { PlankComplimentControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
 import { useBreakpoints } from '../../util';
@@ -116,6 +116,7 @@ export const NodePlankHeading = memo(
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag',
           part === 'solo' ? soloInlinePadding : 'pli-1',
+          surfaceVariant && 'pis-3',
         ]}
       >
         {!surfaceVariant && (
@@ -149,12 +150,16 @@ export const NodePlankHeading = memo(
           </StackItem.HeadingLabel>
         </TextTooltip>
         {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
-        <PlankControls
-          capabilities={capabilities}
-          isSolo={part === 'solo'}
-          onClick={handlePlankAction}
-          close={part === 'complementary' ? 'minify-end' : true}
-        />
+        {surfaceVariant ? (
+          <PlankComplimentControls primary={id} />
+        ) : (
+          <PlankControls
+            capabilities={capabilities}
+            isSolo={part === 'solo'}
+            onClick={handlePlankAction}
+            close={part === 'complementary' ? 'minify-end' : true}
+          />
+        )}
       </StackItem.Heading>
     );
   },

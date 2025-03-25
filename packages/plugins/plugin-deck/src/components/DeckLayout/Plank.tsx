@@ -59,7 +59,7 @@ const PlankImpl = memo(
     const node = useNode(graph, id);
     const rootElement = useRef<HTMLDivElement | null>(null);
     const canResize = layoutMode === 'deck';
-    const Root = part === 'solo' ? 'article' : StackItem.Root;
+    const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
 
     const attendableAttrs = useAttendableAttributes(id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
@@ -67,13 +67,13 @@ const PlankImpl = memo(
     const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
     const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
 
-    const key = id.split('+')[0];
-    const size = deck.plankSizing[key] as number | undefined;
+    const sizeKey = `${id.split('+')[0]}${surfaceVariant ? `${surfaceVariantSeparator}${surfaceVariant}` : ''}`;
+    const size = deck.plankSizing[sizeKey] as number | undefined;
     const setSize = useCallback(
       debounce((nextSize: number) => {
-        return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: key, size: nextSize }));
+        return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
       }, 200),
-      [dispatch, key],
+      [dispatch, sizeKey],
     );
 
     // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
@@ -118,11 +118,10 @@ const PlankImpl = memo(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
-      isSolo
-        ? 'grid absolute inset-0'
-        : companioned === 'companion'
-          ? '!border-separator border-ie'
-          : '!border-separator border-li',
+      isSolo && 'grid absolute inset-0',
+      part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
+      part.startsWith('solo-') && 'row-span-2 min-is-0',
+      part === 'solo-companion' && '!border-separator border-is',
     );
 
     return (
@@ -130,7 +129,7 @@ const PlankImpl = memo(
         ref={rootElement}
         data-testid='deck.plank'
         tabIndex={0}
-        {...(part === 'solo'
+        {...(part.startsWith('solo')
           ? ({ ...sizeAttrs, className } as any)
           : {
               item: { id },
@@ -147,7 +146,7 @@ const PlankImpl = memo(
           <>
             <NodePlankHeading
               id={id}
-              part={part}
+              part={part.startsWith('solo-') ? 'solo' : part}
               node={node}
               canIncrementStart={canIncrementStart}
               canIncrementEnd={canIncrementEnd}
@@ -174,8 +173,13 @@ const PlankImpl = memo(
 );
 
 const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
+  const sizeAttrs = useMainSize();
   return (
-    <div role='none' className='contents md:grid md:grid-rows-subgrid md:grid-cols-[1fr_1fr]'>
+    <div
+      role='none'
+      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
+      {...sizeAttrs}
+    >
       {children}
     </div>
   );
