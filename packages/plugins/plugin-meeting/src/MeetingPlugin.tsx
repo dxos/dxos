@@ -7,7 +7,14 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { ThreadEvents, ThreadCapabilities } from '@dxos/plugin-thread';
 
-import { AppGraphBuilder, CallManager, IntentResolver, ReactRoot, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  CallManager,
+  IntentResolver,
+  MeetingCapabilities,
+  ReactRoot,
+  ReactSurface,
+} from './capabilities';
 import { MEETING_PLUGIN, meta } from './meta';
 import translations from './translations';
 import { MeetingType } from './types';
@@ -62,13 +69,19 @@ export const MeetingPlugin = () =>
     defineModule({
       id: `${meta.id}/module/complementary-panels`,
       activatesOn: DeckEvents.SetupComplementaryPanels,
-      activate: () => [
-        contributes(DeckCapabilities.ComplementaryPanel, {
-          id: 'meeting',
-          label: ['meeting panel label', { ns: MEETING_PLUGIN }],
-          icon: 'ph--phone-call--regular',
-          fixed: true,
-        }),
-      ],
+      activate: (context) => {
+        const call = context.requestCapability(MeetingCapabilities.CallManager);
+
+        return [
+          contributes(DeckCapabilities.ComplementaryPanel, {
+            id: 'meeting',
+            label: ['meeting panel label', { ns: MEETING_PLUGIN }],
+            icon: 'ph--phone-call--regular',
+            position: 'hoist',
+            fixed: true,
+            filter: () => call.joined,
+          }),
+        ];
+      },
     }),
   ]);

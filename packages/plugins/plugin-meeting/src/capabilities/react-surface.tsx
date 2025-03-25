@@ -7,7 +7,6 @@ import React from 'react';
 import { Capabilities, contributes, createSurface, Surface } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ChannelType } from '@dxos/plugin-space/types';
-import { isSpace, getSpace } from '@dxos/react-client/echo';
 
 import { CallSidebar, MeetingContainer } from '../components';
 import { MEETING_PLUGIN } from '../meta';
@@ -32,14 +31,7 @@ export default () =>
     }),
     createSurface({
       id: `${MEETING_PLUGIN}/assistant`,
-      role: 'complementary--calls',
-      component: ({ data }) => {
-        const space = isSpace(data.subject) ? data.subject : getSpace(data.subject)!;
-        if (!space) {
-          return null;
-        }
-
-        return <CallSidebar space={space} roomId={space.id} />;
-      },
+      role: 'complementary--meeting',
+      component: () => <CallSidebar />,
     }),
   ]);

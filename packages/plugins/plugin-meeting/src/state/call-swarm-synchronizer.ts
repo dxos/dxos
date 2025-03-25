@@ -25,6 +25,7 @@ export type CallState = {
    * All users states in the swarm.
    */
   users?: UserState[];
+
   /**
    * Self state inside swarm.
    */
