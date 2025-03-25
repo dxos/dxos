@@ -6,11 +6,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { type InvocationTraceEvent, type ScriptType, type TraceEvent } from '@dxos/functions/types';
-import { useEdgeClient } from '@dxos/react-edge-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { Icon, List, ListItem, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useQueue } from '@dxos/react-client/echo';
 import { useDeployDeps } from '../../hooks';
 import { SCRIPT_PLUGIN } from '../../meta';
 
@@ -61,9 +60,7 @@ const InvocationTraceItem = ({
   open?: boolean;
   setOpen?: (trace: InvocationTraceEvent, open: boolean) => void;
 }) => {
-  const eventQueue = useQueue<TraceEvent>(
-    open ? decodeReference(trace.invocationTraceQueue).dxn : undefined,
-  );
+  const eventQueue = useQueue<TraceEvent>(open ? decodeReference(trace.invocationTraceQueue).dxn : undefined);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {

@@ -17,17 +17,15 @@ import { Transcript, TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { TranscriptType, type TranscriptBlock } from '@dxos/plugin-transcription/types';
 import { Config, useClient } from '@dxos/react-client';
 import { create, Filter, makeRef, useQuery, useQueue } from '@dxos/react-client/echo';
-import { useEdgeClient } from '@dxos/react-edge-client';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { CallContainer, type CallContainerProps } from './CallContainer';
 import { CallsPlugin } from '../CallsPlugin';
 import translations from '../translations';
-import { CallContainer, type CallContainerProps } from './CallContainer';
 
 const Render = (props: CallContainerProps) => {
   const client = useClient();
-  const edge = useEdgeClient();
   const space = client.spaces.get().at(-1);
   const transcripts = useQuery(space, Filter.schema(TranscriptType));
   const dxn = transcripts[0]?.queue;

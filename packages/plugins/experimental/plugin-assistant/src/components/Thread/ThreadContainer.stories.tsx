@@ -21,7 +21,6 @@ import { Message, type Tool } from '@dxos/artifact';
 import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
-import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';

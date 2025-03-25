@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { useEdgeClient } from '@dxos/react-edge-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
@@ -17,7 +17,6 @@ import { PanelContainer, Searchbar } from '../../../components';
 // import { DataSpaceSelector } from '../../../containers';
 // import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
-import { useQueue } from '@dxos/react-client/echo';
 
 const { helper, builder } = createColumnBuilder<any>();
 const columns: TableColumnDef<any, any>[] = [

@@ -20,18 +20,17 @@ import { createStatic } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Config } from '@dxos/react-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useEdgeClient } from '@dxos/react-edge-client';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { Transcript } from './Transcript';
 import { useAudioFile, useAudioTrack, useTranscriber } from '../hooks';
 import { type TranscriberParams } from '../transcriber';
 import { TranscriptBlock } from '../types';
 import { randomQueueDxn } from '../util';
-import { Transcript } from './Transcript';
-import { useQueue } from '@dxos/react-client/echo';
 
 const TranscriptionStory: FC<{
   playing: boolean;

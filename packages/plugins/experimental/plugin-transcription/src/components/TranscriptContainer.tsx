@@ -11,15 +11,15 @@ import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { useConfig } from '@dxos/react-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { useQueue } from '@dxos/react-client/echo';
+import { Transcript } from './Transcript';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import { summarizeTranscript } from '../transcriber';
 import { type TranscriptBlock, type TranscriptType } from '../types';
-import { Transcript } from './Transcript';
 
 // TODO(dmaretskyi): Factor out.
 //  Also this conflicts with plugin automation providing the ai client via a capability. Need to reconcile.

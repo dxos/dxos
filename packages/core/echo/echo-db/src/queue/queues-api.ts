@@ -1,10 +1,15 @@
-import type { DXN } from '@dxos/keys';
-import type { Queue } from './types';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Resource } from '@dxos/context';
-import type { QueuesService } from './queue-service';
-import { QueueImpl } from './queue';
+import type { BaseEchoObject } from '@dxos/echo-schema';
 import { assertState } from '@dxos/invariant';
+import type { DXN } from '@dxos/keys';
+
+import { QueueImpl } from './queue';
+import type { QueuesService } from './queue-service';
+import type { Queue } from './types';
 
 export interface QueuesAPI {
   get<T extends BaseEchoObject = BaseEchoObject>(dxn: DXN): Queue<T>;

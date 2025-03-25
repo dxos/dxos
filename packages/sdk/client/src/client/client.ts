@@ -22,6 +22,7 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,7 +37,6 @@ import { ClientRuntime } from './client-runtime';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-import { EdgeClient, EdgeHttpClient } from '@dxos/edge-client';
 
 /**
  * This options object configures the DXOS Client.

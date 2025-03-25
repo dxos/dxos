@@ -4,10 +4,11 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { raise } from '@dxos/debug';
 import type { Queue } from '@dxos/client/echo';
+import { raise } from '@dxos/debug';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
+
 import { useClient } from '../client';
 
 const MIN_POLL_INTERVAL = 1_000;

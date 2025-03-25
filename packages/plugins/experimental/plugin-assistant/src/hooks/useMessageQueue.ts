@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { type Message } from '@dxos/artifact';
 import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { getSpace, useQueue } from '@dxos/react-client/echo';
-import { useEdgeClient } from '@dxos/react-edge-client';
 
 import { type AIChatType } from '../types';
 

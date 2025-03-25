@@ -7,8 +7,8 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 
-import type { Queue } from './types';
 import type { QueuesService } from './queue-service';
+import type { Queue } from './types';
 
 /**
  * Client-side view onto an EDGE queue.

@@ -16,14 +16,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import {
-  type EchoClient,
-  type FilterSource,
-  type Query,
-  type QueryOptions,
-  type QueueServiceImpl,
-  type QueuesService,
-} from '@dxos/echo-db';
+import { type EchoClient, type FilterSource, type Query, type QueryOptions, type QueuesService } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { create } from '@dxos/live-object';
