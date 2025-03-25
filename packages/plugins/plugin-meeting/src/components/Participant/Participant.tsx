@@ -4,7 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { useCallGlobalContext } from '../../hooks';
+import { useCapability } from '@dxos/app-framework';
+
+import { MeetingCapabilities } from '../../capabilities';
 import { type EncodedTrackName, type UserState } from '../../types';
 import { VideoObject } from '../Media';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid';
@@ -12,7 +14,7 @@ import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveG
 export const SCREENSHARE_SUFFIX = '_screenshare';
 
 export const Participant = ({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
-  const { call } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
   const isSelf: boolean = call.self.id !== undefined && user.id !== undefined && user.id.startsWith(call.self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
   const pulledVideoStream = call.getVideoStream(

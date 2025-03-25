@@ -4,15 +4,14 @@
 
 import React, { type PropsWithChildren, type FC } from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { useCallGlobalContext } from '../../hooks';
+import { MeetingCapabilities } from '../../capabilities';
 import { AudioStream } from '../Media';
 
 export const CallAudio: FC<PropsWithChildren<ThemedClassName>> = () => {
-  const {
-    call: { pulledAudioTracks },
-  } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
 
-  return <AudioStream tracks={pulledAudioTracks} />;
+  return <AudioStream tracks={call.pulledAudioTracks} />;
 };

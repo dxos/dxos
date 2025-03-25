@@ -4,15 +4,16 @@
 
 import React from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { useCallGlobalContext } from '../../hooks';
+import { MeetingCapabilities } from '../../capabilities';
 import { MEETING_PLUGIN } from '../../meta';
 
 export const MediaButtons = () => {
   const { t } = useTranslation(MEETING_PLUGIN);
-  const { call } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
   return (
     <>
       <IconButton

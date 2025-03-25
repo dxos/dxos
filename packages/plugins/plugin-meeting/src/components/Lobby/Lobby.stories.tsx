@@ -7,24 +7,22 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Lobby } from './Lobby';
+import { MeetingPlugin } from '../../MeetingPlugin';
 import translations from '../../translations';
-import { CallGlobalContextProvider } from '../CallGlobalContextProvider';
 
 const meta: Meta<typeof Lobby> = {
   title: 'plugins/plugin-calls/Lobby',
   component: Lobby,
-  // TODO(burdon): Create decorator for CallContextProvider.
   render: () => {
     return (
-      <CallGlobalContextProvider>
-        <div className='flex w-[30rem] h-full overflow-hidden'>
-          <Lobby />
-        </div>
-      </CallGlobalContextProvider>
+      <div className='flex w-[30rem] h-full overflow-hidden'>
+        <Lobby />
+      </div>
     );
   },
   decorators: [
@@ -35,6 +33,7 @@ const meta: Meta<typeof Lobby> = {
       fullscreen: true,
       classNames: 'justify-center',
     }),
+    withPluginManager({ plugins: [MeetingPlugin()] }),
   ],
   parameters: {
     translations,

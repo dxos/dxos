@@ -5,7 +5,7 @@
 import { Effect } from 'effect';
 import React, { useCallback, useEffect, type FC } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type ChannelType } from '@dxos/plugin-space/types';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
@@ -14,7 +14,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { Call } from './Call';
 import { Lobby } from './Lobby';
-import { useCallGlobalContext } from '../hooks';
+import { MeetingCapabilities } from '../capabilities';
 import { MeetingAction, type MeetingType } from '../types';
 
 const generateName = () => {
@@ -34,7 +34,7 @@ export type MeetingContainerProps = {
 
 export const MeetingContainer: FC<MeetingContainerProps> = ({ channel, roomId: _roomId }) => {
   const { dispatch } = useIntentDispatcher();
-  const { call } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
 
   useEffect(() => {
     const roomId = channel ? fullyQualifiedId(channel) : _roomId;

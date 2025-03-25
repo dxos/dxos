@@ -4,11 +4,12 @@
 
 import React, { useEffect, type FC } from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 
 import { Call } from './Call';
 import { Lobby } from './Lobby';
-import { useCallGlobalContext } from '../hooks';
+import { MeetingCapabilities } from '../capabilities';
 
 export type CallSidebarProps = {
   space: Space;
@@ -16,7 +17,7 @@ export type CallSidebarProps = {
 };
 
 export const CallSidebar: FC<CallSidebarProps> = ({ space, roomId }) => {
-  const { call } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
 
   useEffect(() => {
     call.setRoomId(roomId);

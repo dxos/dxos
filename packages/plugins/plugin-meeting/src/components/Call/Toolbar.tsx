@@ -5,12 +5,13 @@
 import { Effect } from 'effect';
 import React, { useRef } from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { useCallGlobalContext } from '../../hooks';
+import { MeetingCapabilities } from '../../capabilities';
 import { MEETING_PLUGIN } from '../../meta';
 import { type MeetingType, type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
@@ -23,7 +24,7 @@ export type CallToolbarProps = {
 // TODO(mykola): Move transcription related logic to a separate component.
 export const CallToolbar = ({ onTranscriptionStart, onTranscriptionStop }: CallToolbarProps) => {
   const { t } = useTranslation(MEETING_PLUGIN);
-  const { call } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
   const ref = useRef<MeetingType>();
 
   // Screen sharing.

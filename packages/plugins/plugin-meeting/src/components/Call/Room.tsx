@@ -4,9 +4,11 @@
 
 import React, { type FC } from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { useCallGlobalContext, useDebugMode } from '../../hooks';
+import { MeetingCapabilities } from '../../capabilities';
+import { useDebugMode } from '../../hooks';
 import { ParticipantGrid } from '../Participant';
 
 /**
@@ -14,11 +16,9 @@ import { ParticipantGrid } from '../Participant';
  */
 export const CallRoom: FC<ThemedClassName> = ({ classNames }) => {
   const debug = useDebugMode();
-  const {
-    call: { users, self },
-  } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
 
-  return <ParticipantGrid self={self} users={users} debug={debug} />;
+  return <ParticipantGrid self={call.self} users={call.users} debug={debug} />;
 };
 
 CallRoom.displayName = 'CallRoom';

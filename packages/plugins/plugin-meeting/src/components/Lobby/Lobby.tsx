@@ -4,19 +4,20 @@
 
 import React, { type FC, useCallback } from 'react';
 
+import { useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useCallGlobalContext } from '../../hooks';
+import { MeetingCapabilities } from '../../capabilities';
 import { MEETING_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
-  const { call } = useCallGlobalContext();
+  const call = useCapability(MeetingCapabilities.CallManager);
   // const sessionError = call.media.peer?.sessionError;
   // TODO(mykola): Users number is not correct now, we are joining swarm on press of join button.
   // So we can not scan users list before joining.
