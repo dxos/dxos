@@ -8,7 +8,7 @@ import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/re
 import { Waveform } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CALLS_PLUGIN } from '../../meta';
+import { MEETING_PLUGIN } from '../../meta';
 
 const hover = mx('transition-opacity duration-300 opacity-0 group-hover:opacity-100');
 
@@ -45,7 +45,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   speaking,
   onClick,
 }: ResponsiveGridItemProps<T>) => {
-  const { t } = useTranslation(CALLS_PLUGIN);
+  const { t } = useTranslation(MEETING_PLUGIN);
   const iconProps: Record<string, { icon: string; label: string; classNames?: string }> = {
     wave: {
       icon: 'ph--hand-waving--duotone',

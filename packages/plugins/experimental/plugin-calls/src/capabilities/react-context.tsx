@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes } from '@dxos/app-framework';
 
 import { CallGlobalContextProvider } from '../components';
-import { CALLS_PLUGIN } from '../meta';
+import { MEETING_PLUGIN } from '../meta';
 
 export type CallsPluginOptions = {};
 
@@ -15,7 +15,7 @@ export default (_options: CallsPluginOptions = {}) => {
   return contributes(
     Capabilities.ReactContext,
     {
-      id: CALLS_PLUGIN,
+      id: MEETING_PLUGIN,
       context: ({ children }) => {
         return <CallGlobalContextProvider>{children}</CallGlobalContextProvider>;
       },

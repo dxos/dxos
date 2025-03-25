@@ -4,7 +4,7 @@
 
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
-import { CALLS_PLUGIN } from '../meta';
+import { MEETING_PLUGIN } from '../meta';
 
 /**
  * Endpoint to the calls service.
@@ -12,7 +12,7 @@ import { CALLS_PLUGIN } from '../meta';
 export const CALLS_URL = 'https://calls-service.dxos.workers.dev';
 
 export namespace CallsAction {
-  // const CALLS_ACTION = `${CALLS_PLUGIN}/action`;
+  // const CALLS_ACTION = `${MEETING_PLUGIN}/action`;
 }
 
 export type Call = {
@@ -20,4 +20,4 @@ export type Call = {
   space: Space;
 };
 
-export const isCall = (data: any): data is Call => data?.type === `${CALLS_PLUGIN}/space` && isSpace(data?.space);
+export const isCall = (data: any): data is Call => data?.type === `${MEETING_PLUGIN}/space` && isSpace(data?.space);

@@ -4,4 +4,4 @@
 
 export * from './meta';
 
-export * from './CallsPlugin';
+export * from './MeetingPlugin';

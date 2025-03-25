@@ -11,7 +11,7 @@ import { Toolbar, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
 import { useCallGlobalContext } from '../../hooks';
-import { CALLS_PLUGIN } from '../../meta';
+import { MEETING_PLUGIN } from '../../meta';
 import { type TranscriptionState } from '../../types';
 import { MediaButtons } from '../Media';
 
@@ -21,7 +21,7 @@ export type CallToolbarProps = {
 
 // TODO(mykola): Move transcription related logic to a separate component.
 export const CallToolbar = ({ onTranscription }: CallToolbarProps) => {
-  const { t } = useTranslation(CALLS_PLUGIN);
+  const { t } = useTranslation(MEETING_PLUGIN);
   const { call } = useCallGlobalContext();
 
   // Screen sharing.

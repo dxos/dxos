@@ -10,12 +10,12 @@ import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useCallGlobalContext } from '../../hooks';
-import { CALLS_PLUGIN } from '../../meta';
+import { MEETING_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
 export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
-  const { t } = useTranslation(CALLS_PLUGIN);
+  const { t } = useTranslation(MEETING_PLUGIN);
   const { call } = useCallGlobalContext();
   // const sessionError = call.media.peer?.sessionError;
   // TODO(mykola): Users number is not correct now, we are joining swarm on press of join button.

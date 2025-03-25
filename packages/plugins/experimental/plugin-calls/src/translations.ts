@@ -2,17 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CALLS_PLUGIN } from './meta';
+import { MEETING_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [CALLS_PLUGIN]: {
-        'plugin name': 'Meetings',
-        'calls label': 'Meeting room',
-        'calls panel label': 'Meeting',
-        'create calls label': 'Create meeting room',
-        'delete calls label': 'Delete',
+      [MEETING_PLUGIN]: {
+        'plugin name': 'Meeting',
+        'meeting room label': 'New meeting room',
+        'meeting panel label': 'Active Meeting',
 
         'join call': 'Join',
         'leave call': 'Leave',

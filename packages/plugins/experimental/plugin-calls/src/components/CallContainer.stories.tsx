@@ -22,7 +22,7 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CallContainer, type CallContainerProps } from './CallContainer';
-import { CallsPlugin } from '../CallsPlugin';
+import { MeetingPlugin } from '../MeetingPlugin';
 import translations from '../translations';
 
 const Render = (props: CallContainerProps) => {
@@ -77,7 +77,7 @@ const meta: Meta<CallContainerProps> = {
         }),
         SpacePlugin({ observability: false }),
         IntentPlugin(),
-        CallsPlugin(),
+        MeetingPlugin(),
         TranscriptionPlugin(),
         SettingsPlugin(),
       ],

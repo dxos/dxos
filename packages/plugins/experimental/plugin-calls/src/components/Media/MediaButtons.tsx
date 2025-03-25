@@ -8,10 +8,10 @@ import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { useCallGlobalContext } from '../../hooks';
-import { CALLS_PLUGIN } from '../../meta';
+import { MEETING_PLUGIN } from '../../meta';
 
 export const MediaButtons = () => {
-  const { t } = useTranslation(CALLS_PLUGIN);
+  const { t } = useTranslation(MEETING_PLUGIN);
   const { call } = useCallGlobalContext();
   return (
     <>
