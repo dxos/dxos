@@ -10,21 +10,23 @@ import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
-import { PlankControls } from './PlankControls';
+import { PlankComplimentControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
-import { DeckAction, SLUG_PATH_SEPARATOR } from '../../types';
+import { DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
 import { useBreakpoints } from '../../util';
 import { soloInlinePadding } from '../fragments';
 
 export type NodePlankHeadingProps = {
   id: string;
-  part: 'solo' | 'deck' | 'complementary';
+  part: ResolvedPart;
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
   actions?: StackItemSigilAction[];
+  companioned?: 'primary' | 'companion';
+  surfaceVariant?: string;
 };
 
 export const NodePlankHeading = memo(
@@ -37,6 +39,8 @@ export const NodePlankHeading = memo(
     popoverAnchorId,
     pending,
     actions = [],
+    companioned,
+    surfaceVariant,
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useAppGraph();
@@ -44,7 +48,14 @@ export const NodePlankHeading = memo(
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
-      : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
+      : toLocalizedString(
+          (surfaceVariant
+            ? Array.isArray(node?.properties?.label)
+              ? [`${surfaceVariant} plank heading`, node.properties.label[1]]
+              : ['companion plank heading fallback label', { ns: DECK_PLUGIN }]
+            : node?.properties?.label) ?? ['plank heading fallback label', { ns: DECK_PLUGIN }],
+          t,
+        );
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
 
@@ -105,27 +116,30 @@ export const NodePlankHeading = memo(
         classNames={[
           'plb-1 border-be border-separator items-stretch gap-1 sticky inline-start-12 app-drag',
           part === 'solo' ? soloInlinePadding : 'pli-1',
+          surfaceVariant && 'pis-3',
         ]}
       >
-        <ActionRoot>
-          {node && sigilActions ? (
-            <StackItem.Sigil
-              icon={icon}
-              related={part === 'complementary'}
-              attendableId={attendableId}
-              triggerLabel={t('actions menu label')}
-              actions={sigilActions}
-              onAction={handleAction}
-            >
-              <Surface role='menu-footer' data={{ subject: node.data }} />
-            </StackItem.Sigil>
-          ) : (
-            <StackItem.SigilButton>
-              <span className='sr-only'>{label}</span>
-              <Icon icon={icon} size={5} />
-            </StackItem.SigilButton>
-          )}
-        </ActionRoot>
+        {!surfaceVariant && (
+          <ActionRoot>
+            {node && sigilActions ? (
+              <StackItem.Sigil
+                icon={icon}
+                related={part === 'complementary'}
+                attendableId={attendableId}
+                triggerLabel={t('actions menu label')}
+                actions={sigilActions}
+                onAction={handleAction}
+              >
+                <Surface role='menu-footer' data={{ subject: node.data }} />
+              </StackItem.Sigil>
+            ) : (
+              <StackItem.SigilButton>
+                <span className='sr-only'>{label}</span>
+                <Icon icon={icon} size={5} />
+              </StackItem.SigilButton>
+            )}
+          </ActionRoot>
+        )}
         <TextTooltip text={label} onlyWhenTruncating>
           <StackItem.HeadingLabel
             attendableId={attendableId}
@@ -136,12 +150,16 @@ export const NodePlankHeading = memo(
           </StackItem.HeadingLabel>
         </TextTooltip>
         {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
-        <PlankControls
-          capabilities={capabilities}
-          isSolo={part === 'solo'}
-          onClick={handlePlankAction}
-          close={part === 'complementary' ? 'minify-end' : true}
-        />
+        {surfaceVariant ? (
+          <PlankComplimentControls primary={id} />
+        ) : (
+          <PlankControls
+            capabilities={capabilities}
+            isSolo={part === 'solo'}
+            onClick={handlePlankAction}
+            close={part === 'complementary' ? 'minify-end' : true}
+          />
+        )}
       </StackItem.Heading>
     );
   },
