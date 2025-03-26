@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
+import { type StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { create, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { attentionSurface } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { type Meta, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerRootProps } from './Outliner';
 import { TreeItemType } from '../../types';
@@ -24,7 +25,7 @@ const DefaultStory = ({
   const [root] = useState<TreeItemType>(
     create<TreeItemType>({
       id: 'root',
-      content: '',
+      text: '',
       items: faker.helpers.multiple(
         () => {
           let text = '';
@@ -44,7 +45,7 @@ const DefaultStory = ({
 
           return makeRef(
             create(TreeItemType, {
-              content: text,
+              text,
               items: [],
             }),
           );
@@ -56,7 +57,7 @@ const DefaultStory = ({
 
   const handleCreate = (text = '') =>
     create(TreeItemType, {
-      content: text,
+      text,
       items: [],
     });
 
@@ -74,31 +75,7 @@ const DefaultStory = ({
   );
 };
 
-export const Empty = {};
-
-export const Default = {
-  args: {
-    count: 3,
-    data: 'sentences',
-  },
-};
-
-export const Short = {
-  args: {
-    count: 5,
-    data: 'words',
-  },
-};
-
-export const Checkbox = {
-  args: {
-    count: 5,
-    data: 'sentences',
-    isTasklist: true,
-  },
-};
-
-const meta = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-outliner/Outliner',
   render: DefaultStory,
   decorators: [withTheme],
@@ -108,3 +85,29 @@ const meta = {
 };
 
 export default meta;
+
+type Story = StoryObj<typeof DefaultStory>;
+
+export const Empty: Story = {};
+
+export const Default: Story = {
+  args: {
+    count: 3,
+    data: 'sentences',
+  },
+};
+
+export const Short: Story = {
+  args: {
+    count: 5,
+    data: 'words',
+  },
+};
+
+export const Checkbox: Story = {
+  args: {
+    count: 5,
+    data: 'sentences',
+    isTasklist: true,
+  },
+};

@@ -11,12 +11,12 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DEFAULT_LLM_MODEL } from './defs';
+import { DEFAULT_EDGE_MODEL } from './defs';
 import { AIServiceEdgeClient } from './edge-client';
 import { OllamaClient } from './ollama-client';
 import { MixedStreamParser } from './parser';
 import { ToolTypes } from './types';
-import { AI_SERVICE_ENDPOINT } from '../testing';
+import { createTestOllamaClient, AI_SERVICE_ENDPOINT } from '../testing';
 
 // log.config({ filter: 'debug' });
 
@@ -40,7 +40,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     const stream = await client.exec({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a poet',
@@ -85,7 +85,7 @@ describe.skip('AI Service Client', () => {
 
     {
       const stream1 = await client.exec({
-        model: DEFAULT_LLM_MODEL,
+        model: DEFAULT_EDGE_MODEL,
         spaceId,
         threadId,
         systemPrompt: 'You are a helpful assistant.',
@@ -119,7 +119,7 @@ describe.skip('AI Service Client', () => {
 
     {
       const stream2 = await client.exec({
-        model: DEFAULT_LLM_MODEL,
+        model: DEFAULT_EDGE_MODEL,
         spaceId,
         threadId,
         systemPrompt: 'You are a helpful assistant.',
@@ -157,7 +157,7 @@ describe.skip('AI Service Client', () => {
     ]);
 
     const stream = await client.exec({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       tools: [
@@ -186,7 +186,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient();
+    const client = createTestOllamaClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(
@@ -207,7 +207,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient({
+    const client = createTestOllamaClient({
       tools: [
         defineTool('test', {
           name: 'encrypt',
@@ -242,7 +242,7 @@ describe.skip('Ollama Client', () => {
       ctx.skip();
     }
 
-    const client = OllamaClient.createClient();
+    const client = createTestOllamaClient();
     const parser = new MixedStreamParser();
 
     const messages = await parser.parse(

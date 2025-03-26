@@ -37,6 +37,14 @@ export type ToolboxConfig = {
     fixedKeys?: string[];
     pathMapping?: {
       /**
+       * Root packages that will use tsconfig paths.
+       * Used to verify dep graph integrity.
+       * Ensures there are no "holes" in the dependency graph where a package
+       * in the middle of the graph is not included while its dependencies are.
+       */
+      roots?: string[];
+
+      /**
        * Array of globs for package names.
        */
       include: string[];
@@ -374,6 +382,39 @@ export class Toolbox {
         return relative(this.rootDir!, project.path).match(re.regex);
       }),
     );
+
+    if (this.config.tsconfig?.pathMapping?.roots) {
+      const roots = this.config.tsconfig.pathMapping.roots;
+      if (!roots.every((root) => this.graph.hasPackage(root))) {
+        throw new Error('Missing packages');
+      }
+
+      const allDepsFromRoot = this.graph.getTransitiveWorkspaceDeps(roots);
+
+      const missingPackages = this.graph.projects.filter(
+        (project) =>
+          !roots.includes(project.name) &&
+          allDepsFromRoot.includes(project.name) &&
+          !includedPackages.includes(project) &&
+          this.graph
+            .getWorkspaceDependencies(project.name, { devDeps: false })
+            .some((dep) => includedPackages.find((p) => p.name === dep) != null),
+      );
+      if (missingPackages.length > 0) {
+        console.error(
+          `These packages must be included in the tsconfig.paths.json file because their dependencies are included:\n${missingPackages
+            .map(
+              (p) =>
+                `${relative(this.rootDir, p.path)} because it depends on ${this.graph
+                  .getWorkspaceDependencies(p.name)
+                  .filter((dep) => includedPackages.find((p) => p.name === dep) != null)
+                  .join(', ')}`,
+            )
+            .join('\n')}`,
+        );
+        throw new Error('Missing packages');
+      }
+    }
 
     const tsconfigPaths = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.paths.json'));
     tsconfigPaths.compilerOptions.paths = Object.fromEntries(

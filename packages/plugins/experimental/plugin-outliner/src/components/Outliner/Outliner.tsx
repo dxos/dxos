@@ -9,6 +9,7 @@ import React, { type ComponentPropsWithoutRef, StrictMode, useEffect, useMemo, u
 import { createRoot } from 'react-dom/client';
 
 import { Ref } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { RefArray } from '@dxos/live-object';
 import { createDocAccessor, makeRef } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -245,7 +246,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
 
   const { parentRef, view } = useTextEditor(
     () => ({
-      initialValue: item.content,
+      initialValue: item.text,
       extensions: [
         EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
         createBasicExtensions({ placeholder }),
@@ -253,12 +254,13 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         createThemeExtensions({ themeMode }),
         decorateMarkdown({ renderLinkButton: onRenderLink }),
         formattingKeymap(),
-        automerge(createDocAccessor(item, ['content'])),
+        automerge(createDocAccessor(item, ['text'])),
         keymap,
       ],
     }),
     [item, themeMode],
   );
+
   useEffect(() => {
     if (active) {
       view?.focus();
@@ -344,7 +346,7 @@ const OutlinerBranch = ({
     <div className={className}>
       {root.items
         ?.map((ref) => ref.target)
-        .filter((item): item is TreeItemType => item?.content != null)
+        .filter((item): item is TreeItemType => item?.text != null)
         .map((item) => (
           <div key={item.id}>
             <OutlinerItem
@@ -411,7 +413,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       // TODO(dmaretskyi): Line splitting.
       // if (state?.after) {
       //   // Split line.
-      //   const text = current.text!.content;
+      //   const text = current.text!.text;
       //   text.delete(state.from, text.length);
       // }
 
@@ -443,15 +445,15 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
 
     // Remove and add children.
-    const children = RefArray.allResolvedTargets(item.items);
+    const children = RefArray.allResolvedTargets(item.items ?? []);
     items.splice(idx, 1);
     onDelete!(item);
 
     // Join to previous line.
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]!);
-      if (active.content) {
-        const text = active.content;
+      if (active.text) {
+        const text = active.text;
         const from = text.length;
 
         // TODO(dmaretskyi): Line joining.
@@ -464,7 +466,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
-      const text = parent.content;
+      const text = parent.text;
       const from = text.length;
       setActive({ itemId: parent.id, anchor: from });
     }
@@ -508,7 +510,11 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   // Move lines.
   //
   const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
-    const idx = parent.items.findIndex(Ref.hasObjectId(item.id));
+    const idx = parent.items?.findIndex(Ref.hasObjectId(item.id));
+    if (idx === undefined) {
+      return;
+    }
+
     switch (direction) {
       case 'up': {
         if (idx > 0) {
@@ -533,11 +539,13 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, anchor) => {
     switch (direction) {
       case 'home': {
+        invariant(root.items);
         setActive({ itemId: root.items[0]!.target!.id, anchor: 0 });
         break;
       }
 
       case 'end': {
+        invariant(root.items);
         const last = getLastDescendent(root.items[root.items.length - 1]!.target!);
         if (last) {
           setActive({ itemId: last.id, anchor: 0 });
