@@ -23,8 +23,6 @@ import { type TranscriptBlock } from '../../types';
 const lineHeight = 24;
 const initialColumnWidth = 600;
 const cellSpacing = 8 + 2;
-// TODO(thure): This value was tuned using greeking in Storybook; tune further based on natural language, or refactor to compute the actual size of wrapped text.
-const monoCharacterWidthWithWrapBuffer = 10 * 1.03;
 
 export type TranscriptProps = {
   blocks?: TranscriptBlock[];
@@ -48,7 +46,7 @@ const measureClasses = mx(
   segmentTextClasses,
 );
 
-type QueueRows = [number, number, number][];
+type QueueRows = [number, number][];
 
 const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
@@ -58,13 +56,7 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
       return [
         [blockIndex, -1, lineHeight + cellSpacing],
         ...block.segments.map((segment, segmentIndex) => {
-          return [
-            blockIndex,
-            segmentIndex,
-            cellSpacing +
-              lineHeight *
-                (Math.ceil((segment.text.length * monoCharacterWidthWithWrapBuffer) / initialColumnWidth) + 1),
-          ] as [number, number, number];
+          return [blockIndex, segmentIndex] as [number, number];
         }),
       ];
     });
