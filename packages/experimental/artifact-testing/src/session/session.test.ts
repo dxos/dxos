@@ -24,7 +24,7 @@ describe('AISession with Ollama', () => {
     // const aiClient = new OllamaClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
-    const session = new AISession();
+    const session = new AISession({ operationModel: 'planning' });
 
     // Define calendar artifact
     const calendarArtifact = defineArtifact({
