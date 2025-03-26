@@ -3,10 +3,9 @@
 //
 
 import { S, isInstanceOf } from '@dxos/echo-schema';
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { isReactiveObject } from '@dxos/react-client/echo';
 
-import { TranscriptSchema, TranscriptType } from './schema';
+import { TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 
 // TODO(burdon): Move to separate proto.
@@ -23,6 +22,8 @@ export namespace TranscriptionAction {
   export class Create extends S.TaggedClass<Create>()(`${TRANSCRIPTION_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
+      // TODO(wittjosiah): SpaceId.
+      spaceId: S.String,
     }),
     output: S.Struct({
       object: TranscriptType,
@@ -31,11 +32,10 @@ export namespace TranscriptionAction {
 
   export class Summarize extends S.TaggedClass<Summarize>()(`${TRANSCRIPTION_ACTION}/summarize`, {
     input: S.Struct({
-      object: TranscriptSchema,
+      transcript: TranscriptType,
+      context: S.optional(S.String),
     }),
-    output: S.Struct({
-      object: DocumentType,
-    }),
+    output: S.String,
   }) {}
 }
 

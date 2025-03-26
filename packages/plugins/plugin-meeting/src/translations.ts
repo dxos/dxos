@@ -14,6 +14,13 @@ export default [
         'meeting activity label': 'Meeting',
         'meetings label': 'All Meetings',
 
+        'transcript tab label': 'Transcript',
+        'notes tab label': 'Notes',
+        'summary tab label': 'Summary',
+
+        'summarize label': 'Summarize',
+        'summarizing label': 'Summarizing...',
+
         'join call': 'Join',
         'leave call': 'Leave',
 

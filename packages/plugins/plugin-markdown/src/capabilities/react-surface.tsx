@@ -5,8 +5,10 @@
 import React from 'react';
 
 import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
 import { MarkdownContainer, MarkdownSettings } from '../components';
@@ -18,7 +20,7 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data, role }) => {
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
@@ -32,6 +34,30 @@ export default () =>
             settings={settings}
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(fullyQualifiedId(data.subject))}
+            editorStateStore={editorState}
+            onViewModeChange={setViewMode}
+          />
+        );
+      },
+    }),
+    createSurface({
+      id: `${MARKDOWN_PLUGIN}/text`,
+      role: ['article', 'section'],
+      filter: (data): data is { id: string; subject: TextType } =>
+        typeof data.id === 'string' && isInstanceOf(TextType, data.subject),
+      component: ({ data, role }) => {
+        const settingsStore = useCapability(Capabilities.SettingsStore);
+        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+        const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+
+        return (
+          <MarkdownContainer
+            id={data.id}
+            object={data.subject}
+            role={role}
+            settings={settings}
+            extensionProviders={state.extensionProviders}
+            viewMode={getViewMode(data.id)}
             editorStateStore={editorState}
             onViewModeChange={setViewMode}
           />

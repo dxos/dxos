@@ -2,83 +2,72 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect } from 'effect';
-import React, { useCallback, useEffect, type FC } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { invariant } from '@dxos/invariant';
-import { type ChannelType } from '@dxos/plugin-space/types';
+import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
-import { fullyQualifiedId, getSpace, makeRef } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
+import { Tabs } from '@dxos/react-ui-tabs';
 
-import { Call } from './Call';
-import { Lobby } from './Lobby';
-import { MeetingCapabilities } from '../capabilities';
-import { MeetingAction, type MeetingType } from '../types';
+import { MEETING_PLUGIN } from '../meta';
+import { type MeetingType } from '../types';
 
-const generateName = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  const hours = String(today.getHours()).padStart(2, '0');
-  const minutes = String(today.getMinutes()).padStart(2, '0');
-  return `${year}/${month}/${day} ${hours}:${minutes}`;
-};
+export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
+  const { t } = useTranslation(MEETING_PLUGIN);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const [activeTab, setActiveTab] = useState<string>('transcript');
+  const transcript = meeting.transcript?.target;
+  const notes = meeting.notes?.target;
+  const summary = meeting.summary?.target;
 
-export type MeetingContainerProps = {
-  channel?: ChannelType;
-  roomId?: string;
-};
+  // TODO(dmaretskyi): Pending state and errors should be handled by the framework!!!
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const handleSummarize = useCallback(async () => {
+    if (!transcript || !summary) {
+      return;
+    }
 
-export const MeetingContainer: FC<MeetingContainerProps> = ({ channel, roomId: _roomId }) => {
-  const { dispatch } = useIntentDispatcher();
-  const call = useCapability(MeetingCapabilities.CallManager);
-
-  useEffect(() => {
-    const roomId = channel ? fullyQualifiedId(channel) : _roomId;
-    invariant(roomId);
-    call.setRoomId(roomId);
-  }, [channel, call.joined]);
-
-  const handleTranscriptionStart = useCallback(
-    () =>
-      Effect.gen(function* () {
-        const space = getSpace(channel);
-        invariant(space);
-        const { object: transcript } = yield* dispatch(createIntent(TranscriptionAction.Create));
-        const { object } = yield* dispatch(
-          createIntent(MeetingAction.Create, {
-            name: generateName(),
-            participants: [],
-            channel: channel ? makeRef(channel) : undefined,
-            transcript: makeRef(transcript),
-          }),
-        );
-        // NOTE: Not using intent as these should not be directly added to a collection.
-        space.db.add(object);
-        return object;
-      }),
-    [dispatch, channel],
-  );
-
-  // TODO(wittjosiah): On transcription stop, update meeting participants.
-  const handleTranscriptionStop = useCallback(
-    (meeting: MeetingType) => Effect.gen(function* () {}),
-    [dispatch, channel],
-  );
+    setIsSummarizing(true);
+    try {
+      const { data: summaryText, error } = await dispatch(
+        createIntent(TranscriptionAction.Summarize, { transcript, context: notes?.content }),
+      );
+      summary.content = summaryText ?? error?.message ?? t('summarizing transcript error');
+      setActiveTab('summary');
+    } finally {
+      setIsSummarizing(false);
+    }
+  }, [transcript, summary, notes, dispatch, t]);
 
   return (
-    <StackItem.Content toolbar={false}>
-      {call.joined ? (
-        <>
-          <Call.Room />
-          <Call.Toolbar onTranscriptionStart={handleTranscriptionStart} onTranscriptionStop={handleTranscriptionStop} />
-        </>
-      ) : (
-        <Lobby />
-      )}
+    <StackItem.Content toolbar={false} classNames='relative'>
+      <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>
+        <IconButton
+          icon='ph--book-open-text--regular'
+          size={5}
+          disabled={isSummarizing}
+          label={t(isSummarizing ? 'summarizing label' : 'summarize label')}
+          onClick={handleSummarize}
+        />
+      </Toolbar.Root>
+      <Tabs.Root orientation='horizontal' value={activeTab} onValueChange={setActiveTab} classNames='flex flex-col'>
+        <Tabs.Tablist>
+          <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
+          <Tabs.Tab value='notes'>{t('notes tab label')}</Tabs.Tab>
+          <Tabs.Tab value='summary'>{t('summary tab label')}</Tabs.Tab>
+        </Tabs.Tablist>
+        <Tabs.Tabpanel value='transcript' classNames='grow'>
+          {transcript && <Surface role='section' data={{ subject: transcript }} />}
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='notes' classNames='grow'>
+          {notes && <Surface role='section' data={{ id: fullyQualifiedId(meeting), subject: notes }} />}
+        </Tabs.Tabpanel>
+        <Tabs.Tabpanel value='summary' classNames='grow'>
+          {summary && <Surface role='section' data={{ id: fullyQualifiedId(meeting), subject: summary }} />}
+        </Tabs.Tabpanel>
+      </Tabs.Root>
     </StackItem.Content>
   );
 };
