@@ -4700,6 +4700,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema

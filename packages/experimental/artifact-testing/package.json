@@ -24,6 +24,7 @@
     "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/conductor": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
