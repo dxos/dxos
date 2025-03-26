@@ -11,7 +11,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
-import { AIServiceEdgeClient, DEFAULT_LLM_MODEL } from '../ai-service';
+import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../ai-service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // TODO(burdon): Local live LLM test.
@@ -25,7 +25,7 @@ describe.skip('Conversation tests', () => {
     const threadId = ObjectId.random();
 
     const result = await runLLM({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       history: [createUserMessage(spaceId, threadId, 'Hello, how are you?')],
       tools: [],
       client,
@@ -56,7 +56,7 @@ describe.skip('Conversation tests', () => {
     const threadId = ObjectId.random();
 
     const result = await runLLM({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       history: [createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')],
       tools: [custodian],
       client,
