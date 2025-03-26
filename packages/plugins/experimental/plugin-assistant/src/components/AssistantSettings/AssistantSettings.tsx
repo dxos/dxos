@@ -11,6 +11,7 @@ import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-for
 import { ASSISTANT_PLUGIN } from '../../meta';
 import { type AssistantSettingsProps } from '../../types';
 
+// TODO(burdon): Factor out.
 const DEFAULT_VALUE = '__default';
 
 export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
@@ -34,7 +35,7 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
 
       <DeprecatedFormInput label={t('settings edge llm model label')}>
         <Select.Root
-          value={settings.edgeModel ?? 'default'}
+          value={settings.edgeModel ?? DEFAULT_VALUE}
           onValueChange={(value) => {
             settings.edgeModel = value === DEFAULT_VALUE ? undefined : value;
           }}
@@ -43,7 +44,7 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                <Select.Option value={DEFAULT_VALUE}>{t('settings default')}</Select.Option>
+                <Select.Option value={DEFAULT_VALUE}>{t('settings default label')}</Select.Option>
                 {DEFAULT_EDGE_MODELS.map((model) => (
                   <Select.Option key={model} value={model}>
                     {model}
@@ -57,7 +58,7 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
 
       <DeprecatedFormInput label={t('settings ollama llm model label')}>
         <Select.Root
-          value={settings.ollamaModel ?? 'default'}
+          value={settings.ollamaModel ?? DEFAULT_VALUE}
           onValueChange={(value) => {
             settings.ollamaModel = value === DEFAULT_VALUE ? undefined : value;
           }}
@@ -66,7 +67,7 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                <Select.Option value={DEFAULT_VALUE}>{t('settings default')}</Select.Option>
+                <Select.Option value={DEFAULT_VALUE}>{t('settings default label')}</Select.Option>
                 {DEFAULT_OLLAMA_MODELS.map((model) => (
                   <Select.Option key={model} value={model}>
                     {model}

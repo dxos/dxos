@@ -189,7 +189,9 @@ export class OllamaClient implements AIServiceClient {
     });
 
     // log.info('ollama response', { response: await response.text() });
+    console.log(response);
 
+    // TODO(burdon): Test if model is not found.
     if (!response.ok) {
       throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
     }

@@ -28,4 +28,12 @@ export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
 
 export const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
 
-export const DEFAULT_OLLAMA_MODELS = ['llama3.2:1b'];
+/**
+ * https://ollama.com/library
+ */
+export const DEFAULT_OLLAMA_MODELS = [
+  //
+  'llama3.2:1b',
+  'llama3:70b',
+  'deepseek-r1:latest',
+];
