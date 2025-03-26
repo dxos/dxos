@@ -76,10 +76,12 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
       }
     >
       {space && metadata && (
-        <div className='flex flex-col gap-4'>
-          <SpaceProperties space={space} metadata={metadata} />
-          <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
-          <FeedTable onSelect={props.onSelectFeed} />
+        <div className='bs-full is-full grid grid-rows-[1fr_1fr] '>
+          <div>
+            <SpaceProperties space={space} metadata={metadata} />
+            <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+            <FeedTable onSelect={props.onSelectFeed} />
+          </div>
           <SyncStateInfo />
         </div>
       )}
