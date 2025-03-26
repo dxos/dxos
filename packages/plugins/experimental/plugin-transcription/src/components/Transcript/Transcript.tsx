@@ -39,8 +39,8 @@ const transcriptRows = {
 };
 
 const authorClasses = 'text-[16px] leading-[24px]';
-const segmentTextClasses = 'pli-1 whitespace-normal hyphens-auto text-[16px] leading-[24px]';
-const timestampClasses = 'pbs-1 text-xs text-description leading-[24px]';
+const timestampClasses = 'mis-2 text-xs text-description leading-[24px]';
+const segmentTextClasses = 'whitespace-normal hyphens-auto text-[16px] leading-[24px]';
 
 type QueueRows = [number, number, number][];
 
