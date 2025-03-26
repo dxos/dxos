@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import {
   Button,
   ButtonGroup,
@@ -15,7 +16,7 @@ import {
 } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../../meta';
-import { type DeckAction } from '../../types';
+import { DeckAction } from '../../types';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 
@@ -50,6 +51,33 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
   );
 };
 
+const plankControlSpacing = 'pli-2 plb-3';
+
+type PlankComplimentControlsProps = {
+  primary: string;
+};
+
+export const PlankComplimentControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
+  ({ primary }, forwardedRef) => {
+    const { t } = useTranslation(DECK_PLUGIN);
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const handleCloseCompanion = useCallback(() => {
+      return dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
+    }, []);
+    return (
+      <div ref={forwardedRef} className='contents app-no-drag'>
+        <PlankControl
+          label={t('close companion label')}
+          variant='ghost'
+          icon='ph--minus--regular'
+          onClick={handleCloseCompanion}
+          classNames={plankControlSpacing}
+        />
+      </div>
+    );
+  },
+);
+
 // TODO(wittjosiah): Duplicate of stack LayoutControls?
 //   Translations were to be duplicated between packages.
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
@@ -59,7 +87,8 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(DECK_PLUGIN);
-    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden pli-2 plb-3' : 'pli-2 plb-3';
+    const buttonClassNames =
+      variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 
     return (
       <ButtonGroup {...props} classNames={['app-no-drag', classNames]} ref={forwardedRef}>
