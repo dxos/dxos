@@ -7,9 +7,8 @@ import { useMemo } from 'react';
 import { create } from '@dxos/live-object';
 
 import { type DeployState } from './deploy';
-import { type ViewState } from './view';
 
-export type ScriptToolbarState = Partial<DeployState & ViewState>;
+export type ScriptToolbarState = Partial<DeployState>;
 
 // TODO(burdon): Replace with context provider?
 export const useToolbarState = (initialState: ScriptToolbarState = {}) => {
