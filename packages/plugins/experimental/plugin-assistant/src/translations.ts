@@ -16,6 +16,7 @@ export default [
       },
       [ASSISTANT_PLUGIN]: {
         'chat title placeholder': 'AI Chat',
+        'templates label': 'Templates',
         'template title placeholder': 'Template',
 
         'open ambient chat label': 'Open AI chat',
