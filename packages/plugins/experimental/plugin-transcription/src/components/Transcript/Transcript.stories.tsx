@@ -43,18 +43,13 @@ const meta: Meta<typeof Transcript> = {
       return () => clearInterval(i);
     }, []);
 
-    return (
-      <div className='flex w-[50rem] h-full'>
-        <Transcript {...args} blocks={blocks} />
-      </div>
-    );
+    return <Transcript {...args} blocks={blocks} />;
   },
   decorators: [
     withTheme,
     withLayout({
       tooltips: true,
       fullscreen: true,
-      classNames: 'flex justify-center',
     }),
   ],
   parameters: {
