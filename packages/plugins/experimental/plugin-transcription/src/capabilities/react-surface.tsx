@@ -14,7 +14,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: TRANSCRIPTION_PLUGIN,
-      role: ['article', 'section'],
+      role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: TranscriptType } => isTranscript(data.subject),
       component: ({ data, role }) => <TranscriptionContainer transcript={data.subject} role={role} />,
     }),

@@ -42,7 +42,7 @@ export default () =>
     }),
     createSurface({
       id: `${MARKDOWN_PLUGIN}/text`,
-      role: ['article', 'section'],
+      role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { id: string; subject: TextType } =>
         typeof data.id === 'string' && isInstanceOf(TextType, data.subject),
       component: ({ data, role }) => {

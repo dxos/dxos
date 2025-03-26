@@ -52,20 +52,25 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
           onClick={handleSummarize}
         />
       </Toolbar.Root>
-      <Tabs.Root orientation='horizontal' value={activeTab} onValueChange={setActiveTab} classNames='flex flex-col'>
-        <Tabs.Tablist>
+      <Tabs.Root
+        orientation='horizontal'
+        value={activeTab}
+        onValueChange={setActiveTab}
+        classNames='grid grid-rows-[min-content_1fr] [&>[role="tabpanel"]]:min-bs-0'
+      >
+        <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
           <Tabs.Tab value='notes'>{t('notes tab label')}</Tabs.Tab>
           <Tabs.Tab value='summary'>{t('summary tab label')}</Tabs.Tab>
         </Tabs.Tablist>
-        <Tabs.Tabpanel value='transcript' classNames='grow'>
-          {transcript && <Surface role='section' data={{ subject: transcript }} />}
+        <Tabs.Tabpanel value='transcript'>
+          {transcript && <Surface role='tabpanel' data={{ subject: transcript }} />}
         </Tabs.Tabpanel>
-        <Tabs.Tabpanel value='notes' classNames='grow'>
-          {notes && <Surface role='section' data={{ id: fullyQualifiedId(meeting), subject: notes }} />}
+        <Tabs.Tabpanel value='notes'>
+          {notes && <Surface role='tabpanel' data={{ id: fullyQualifiedId(meeting), subject: notes }} />}
         </Tabs.Tabpanel>
-        <Tabs.Tabpanel value='summary' classNames='grow'>
-          {summary && <Surface role='section' data={{ id: fullyQualifiedId(meeting), subject: summary }} />}
+        <Tabs.Tabpanel value='summary'>
+          {summary && <Surface role='tabpanel' data={{ id: fullyQualifiedId(meeting), subject: summary }} />}
         </Tabs.Tabpanel>
       </Tabs.Root>
     </StackItem.Content>
