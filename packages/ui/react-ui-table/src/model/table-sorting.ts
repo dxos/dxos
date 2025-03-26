@@ -82,6 +82,7 @@ export class TableSorting<T extends BaseTableRow> {
     if (local?.type === 'active') {
       return local.sort;
     }
+
     return this._view?.query.sort?.[0];
   }
 

@@ -4,7 +4,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
@@ -17,7 +16,7 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
   const [newField, setNewField] = useState<FieldType>();
   const state = modals.state.value;
 
-  const space = getSpace(model?.table);
+  const space = model?.space;
 
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
@@ -34,11 +33,11 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.table?.view?.target?.fields.find((f) => f.id === mode.fieldId);
+        return model?.view?.fields.find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.table?.view?.target?.fields, state]);
+  }, [model?.view?.fields, state]);
 
   const field = existingField ?? newField;
 
@@ -52,7 +51,7 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
     }
   }, [model?.projection, state, newField]);
 
-  if (!model?.table?.view?.target || !model.projection || !field) {
+  if (!model?.view || !model.projection || !field) {
     return null;
   }
 
@@ -63,7 +62,7 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
         <DropdownMenu.Content classNames='md:is-64'>
           <DropdownMenu.Viewport>
             <FieldEditor
-              view={model.table.view.target!}
+              view={model.view!}
               projection={model.projection}
               field={field}
               registry={space?.db.schemaRegistry}

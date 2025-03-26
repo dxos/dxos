@@ -3,43 +3,16 @@
 //
 
 import { formatDistance } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { FormatEnum } from '@dxos/echo-schema';
 import { type SignalStatus } from '@dxos/messaging';
 import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { AnchoredOverflow } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
-
-const states = {
-  [SignalState.CONNECTING]: {
-    label: 'connecting',
-    className: 'text-orange-500',
-  },
-  [SignalState.RECONNECTING]: {
-    label: 'reconnecting',
-    className: 'text-orange-500',
-  },
-  [SignalState.CONNECTED]: {
-    label: 'connected',
-    className: 'text-green-500',
-  },
-  [SignalState.DISCONNECTED]: {
-    label: 'disconnected',
-    className: 'text-orange-500',
-  },
-  [SignalState.ERROR]: {
-    label: 'error',
-    className: 'text-red-500',
-  },
-  [SignalState.CLOSED]: {
-    label: 'closed',
-    className: 'text-neutral-500',
-  },
-};
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 export interface SignalStatusProps {
   status: SignalStatus[];
@@ -54,6 +27,55 @@ const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): 
     state: server.state!,
   };
 };
+
+const signalStateLabels = {
+  [SignalState.CONNECTING]: 'CONNECTING',
+  [SignalState.RECONNECTING]: 'RECONNECTING',
+  [SignalState.CONNECTED]: 'CONNECTED',
+  [SignalState.DISCONNECTED]: 'DISCONNECTED',
+  [SignalState.ERROR]: 'ERROR',
+  [SignalState.CLOSED]: 'CLOSED',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+const stateColors = {
+  CONNECTING: 'orange',
+  RECONNECTING: 'orange',
+  CONNECTED: 'green',
+  DISCONNECTED: 'orange',
+  ERROR: 'red',
+  CLOSED: 'neutral',
+  UNKNOWN: 'neutral',
+} as const;
+
+const getStateLabel = (state: SignalState): string => {
+  return signalStateLabels[state] ?? 'UNKNOWN';
+};
+
+const tableProperties: TablePropertyDefinition[] = [
+  {
+    name: 'host',
+    format: FormatEnum.String,
+    size: 240,
+  },
+  {
+    name: 'status',
+    format: FormatEnum.SingleSelect,
+    size: 140,
+    config: {
+      options: Object.values(signalStateLabels).map((label) => ({
+        id: label,
+        title: label,
+        color: stateColors[label],
+      })),
+    },
+  },
+  {
+    name: 'connected',
+    format: FormatEnum.String,
+    size: 240,
+  },
+];
 
 export const SignalStatusTable = () => {
   const devtoolsHost = useDevtools();
@@ -79,45 +101,22 @@ export const SignalStatusTable = () => {
     return null;
   }
 
-  const { helper } = createColumnBuilder<SignalStatus>();
-  const columns: TableColumnDef<SignalStatus, any>[] = [
-    helper.accessor((status) => new URL(status.host).origin, {
-      id: 'host',
-      cell: (props) => <div className='font-mono'>{props.getValue()}</div>,
-      meta: { cell: { classNames: textPadding } },
-      size: 240,
-    }),
-    helper.accessor((status) => states[status.state].label, {
-      id: 'status',
-      meta: { cell: { classNames: textPadding } },
-      size: 140,
-      cell: (cell) => <div className={states[cell.row.original.state]?.className}>{cell.getValue().toUpperCase()}</div>,
-    }),
-    // TODO(burdon): Date format helper.
-    helper.accessor(
-      (status) => {
-        return status.state === SignalState.CONNECTED
-          ? formatDistance(status.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
-          : `Reconnecting ${formatDistance(time.getTime(), status.lastStateChange.getTime() + status.reconnectIn, {
-              addSuffix: true,
-            })}`;
-      },
-      {
-        id: 'connected',
-        size: 240,
-        meta: { cell: { classNames: textPadding } },
-        cell: (props) => <div className='text-xs'>{props.getValue()}</div>,
-      },
-    ),
-    helper.accessor('error', {}),
-  ];
+  const properties = useMemo(() => tableProperties, []);
 
-  return (
-    <Table.Root>
-      <Table.Viewport classNames='overflow-anchored'>
-        <Table.Main<SignalStatus> columns={columns} data={status} />
-        <AnchoredOverflow.Anchor />
-      </Table.Viewport>
-    </Table.Root>
-  );
+  const tableData = useMemo(() => {
+    return status.map((s, index) => ({
+      id: `${index}-${s.host}`,
+      host: new URL(s.host).origin,
+      status: getStateLabel(s.state),
+      connected:
+        s.state === SignalState.CONNECTED
+          ? formatDistance(s.lastStateChange.getTime(), time.getTime(), { includeSeconds: true, addSuffix: true })
+          : `Reconnecting ${formatDistance(time.getTime(), s.lastStateChange.getTime() + s.reconnectIn, {
+              addSuffix: true,
+            })}`,
+      _original: s,
+    }));
+  }, [status, time]);
+
+  return <DynamicTable properties={properties} data={tableData} />;
 };
