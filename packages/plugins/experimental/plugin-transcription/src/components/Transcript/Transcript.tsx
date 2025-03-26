@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
 
 import { useAttention } from '@dxos/react-ui-attention';
@@ -39,8 +38,9 @@ const transcriptRows = {
   grid: { size: lineHeight },
 };
 
-const authorClasses = 'pli-2 place-content-end text-[16px] leading-[24px]';
+const authorClasses = 'text-[16px] leading-[24px]';
 const segmentTextClasses = 'pli-1 whitespace-normal hyphens-auto text-[16px] leading-[24px]';
+const timestampClasses = 'pbs-1 text-xs text-description leading-[24px]';
 
 type QueueRows = [number, number, number][];
 
@@ -101,13 +101,13 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
               cells[toPlaneCellIndex({ col: 0, row })] = (
                 segmentIndex < 0
                   ? {
-                      value: blocks[blockIndex]!.author,
                       readonly: true,
-                      className: authorClasses,
+                      accessoryHtml: `<span class="${authorClasses}">${blocks[blockIndex]!.author}</span><span class="${timestampClasses}">${blocks[0]?.segments[0]?.started}</span>`,
                     }
                   : {
                       readonly: true,
-                      accessoryHtml: `<span class="dx-tag" data-hue="neutral">${formatDistanceToNow(blocks[blockIndex]!.segments[segmentIndex]!.started, { addSuffix: true })}</span><p class="${segmentTextClasses}">${blocks[blockIndex]!.segments[segmentIndex]!.text}</p>`,
+                      value: blocks[blockIndex]!.segments[segmentIndex]!.text,
+                      className: segmentTextClasses,
                     }
               ) satisfies DxGridCellValue;
             }
