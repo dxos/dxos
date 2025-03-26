@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -164,6 +164,35 @@ export default defineConfig((env) => ({
         ],
       ],
     }),
+    importMapPlugin({
+      modules: [
+        '@dxos/app-framework',
+        '@dxos/app-graph',
+        '@dxos/client',
+        '@dxos/client/devtools',
+        '@dxos/client/echo',
+        '@dxos/client/halo',
+        '@dxos/client/invitations',
+        '@dxos/client/mesh',
+        '@dxos/client-protocol',
+        '@dxos/client-services',
+        '@dxos/config',
+        '@dxos/echo-schema',
+        '@dxos/echo-signals',
+        '@dxos/live-object',
+        '@dxos/react-client',
+        '@dxos/react-client/devtools',
+        '@dxos/react-client/echo',
+        '@dxos/react-client/halo',
+        '@dxos/react-client/invitations',
+        '@dxos/react-client/mesh',
+        '@dxos/schema',
+        '@effect/platform',
+        'effect',
+        'react',
+        'react-dom',
+      ],
+    }),
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
       // No PWA in dev to make it easier to ensure the latest version is being used.
@@ -274,4 +303,51 @@ function chunkFileNames(chunkInfo: any) {
   }
 
   return 'assets/[name]-[hash].js';
+}
+
+function importMapPlugin(options: { modules: string[] }) {
+  const chunkRefIds: Record<string, string> = {};
+  let imports: Record<string, string> = {};
+
+  return [
+    {
+      name: 'import-map:get-chunk-ref-ids',
+      async buildStart() {
+        for (const m of options.modules) {
+          const resolved = await this.resolve(m);
+          if (resolved) {
+            // Emit the chunk during build start.
+            chunkRefIds[m] = this.emitFile({
+              type: 'chunk',
+              id: resolved.id,
+              // Preserve the original exports.
+              preserveSignature: 'strict',
+            });
+          }
+        }
+      },
+
+      generateBundle() {
+        imports = Object.fromEntries(options.modules.map(m => [m, `/${this.getFileName(chunkRefIds[m])}`]));
+      }
+    },
+    {
+      name: 'import-map:transform-index-html',
+      enforce: 'post',
+      transformIndexHtml(html: string) {
+        const tags = [{
+          tag: 'script',
+          attrs: {
+            type: 'importmap',
+          },
+          children: JSON.stringify({ imports }, null, 2),
+        }];
+
+        return {
+          html,
+          tags,
+        }
+      }
+    }
+  ] satisfies Plugin[];
 }
