@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema as S } from 'effect';
 
 import { type MessageContentBlock, defineTool, type Tool, ToolResult } from '@dxos/artifact';
-import { ObjectId, S } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -195,7 +195,7 @@ export class OllamaClient implements AIServiceClient {
 
     // TODO(burdon): Test if model is not found.
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status} ${response.statusText} ${await response.text()}`);
+      throw await parseErrorResponse(response);
     }
 
     if (!response.body) {
@@ -463,10 +463,29 @@ class OllamaDecoderStream extends TransformStream<string, OllamaResponseData> {
   }
 }
 
-class ModelDoesNotSupportToolsError extends Schema.TaggedError('ModelDoesNotSupportToolsError')<{
-  model: string;
-}> {}
+class ModelDoesNotSupportToolsError extends S.TaggedError<ModelDoesNotSupportToolsError>()(
+  'ModelDoesNotSupportToolsError',
+  {
+    model: S.String,
+  },
+) {}
 
 const parseOllamaError = (error: string): Error => {
-  const match = error.match(/^([^']+) does not support tools$/);
+  {
+    const match = error.match(/^([^']+) does not support tools$/);
+    if (match) {
+      return new ModelDoesNotSupportToolsError({ model: match[1] });
+    }
+  }
+
+  throw new Error(`Ollama API error: ${error}`);
+};
+
+const parseErrorResponse = async (response: Response): Promise<Error> => {
+  if (response.headers.get('content-type')?.includes('application/json')) {
+    const body = await response.json();
+    return parseOllamaError(body.error);
+  }
+
+  throw new Error(`Ollama API error: ${response.status} ${response.statusText} ${await response.text()}`);
 };
