@@ -241,7 +241,7 @@ export class OllamaClient implements AIServiceClient {
           break;
         }
 
-        log.info('ollama data', { data });
+        log('ollama data', { data });
 
         // Ollama sends chunks of text, we convert them to our event format.
         if (data.message?.content) {
