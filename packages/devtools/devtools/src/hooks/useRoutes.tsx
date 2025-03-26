@@ -27,7 +27,6 @@ import {
   TracingPanel,
   DashboardPanel,
   EdgeDashboardPanel,
-  SearchPanel,
   AutomergePanel,
   WorkflowPanel,
   InvocationTracePanel,
@@ -151,10 +150,6 @@ export const useRoutes = () => {
             {
               path: '/agent/dashboard',
               element: <DashboardPanel />,
-            },
-            {
-              path: '/agent/search',
-              element: <SearchPanel />,
             },
           ],
         },

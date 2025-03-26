@@ -2,79 +2,105 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AnchoredOverflow } from '@dxos/react-ui';
-import { Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
+import { type MaybePromise } from '@dxos/util';
 
 import { JsonView } from './JsonView';
-import { styles } from '../styles';
 
-export type MasterTableProps<T extends {}> = {
-  columns: TableColumnDef<T>[];
-  data: T[];
-  pinToBottom?: boolean;
+export type MasterDetailTableProps = {
+  properties: TablePropertyDefinition[];
+  data: Array<{ id: string; [key: string]: any }>;
   statusBar?: ReactNode;
-  detailsTransform?: (data: T) => any;
+  detailsTransform?: (data: any) => MaybePromise<any>;
   detailsPosition?: 'bottom' | 'right';
+  onSelectionChanged?: (id: string | undefined) => void;
 };
 
-export const MasterDetailTable = <T extends {}>({
-  columns,
+export const MasterDetailTable = ({
+  properties,
   data,
-  pinToBottom,
   statusBar,
   detailsTransform,
   detailsPosition = 'bottom',
-}: MasterTableProps<T>) => {
-  const [selected, setSelected] = useState<T>();
+  onSelectionChanged,
+}: MasterDetailTableProps) => {
+  const [selectedId, setSelectedId] = useState<string>();
+  const [transformedData, setTransformedData] = useState<any>(undefined);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const TableContainer = pinToBottom ? AnchoredOverflow.Root : 'div';
-  const containerStyles = detailsPosition === 'right' ? 'flex-row divide-x' : 'flex-col divide-y';
-  const tableContainerStyles = pinToBottom ? '' : 'overflow-auto' + detailsPosition === 'right' ? ' w-1/2' : ' h-1/2';
-  const detailsContainerStyles = detailsPosition === 'right' ? 'w-1/2' : 'h-1/2';
+  const selected = useMemo(() => {
+    return selectedId ? data.find((item) => item.id === selectedId) : undefined;
+  }, [selectedId, data]);
+
+  const handleSelectionChanged = useCallback(
+    (selectedIds: string[]) => {
+      if (selectedIds.length === 0) {
+        setSelectedId(undefined);
+        onSelectionChanged?.(undefined);
+      } else {
+        setSelectedId(selectedIds[selectedIds.length - 1]);
+        onSelectionChanged?.(selectedIds[selectedIds.length - 1]);
+      }
+    },
+    [onSelectionChanged, setSelectedId],
+  );
+
+  useEffect(() => {
+    if (!selected) {
+      setTransformedData(undefined);
+      return;
+    }
+
+    if (!detailsTransform) {
+      setTransformedData(selected);
+      return;
+    }
+
+    const result = detailsTransform(selected);
+    if (result instanceof Promise) {
+      setIsLoading(true);
+      result
+        .then((data) => {
+          setTransformedData(data);
+        })
+        .catch((error) => {
+          setTransformedData({ error: String(error) });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setTransformedData(result);
+    }
+  }, [selected, detailsTransform]);
+
+  const gridLayout = useMemo(() => {
+    if (detailsPosition === 'right') {
+      return selected ? 'grid grid-columns-[3fr_5fr]' : 'grid grid-columns-[1fr_min-content]';
+    } else {
+      return selected ? 'grid grid-rows-[3fr_5fr]' : 'grid grid-rows-[1fr_min-content]';
+    }
+  }, [selected, detailsPosition]);
 
   return (
-    <>
-      <div className={mx('flex grow', containerStyles, 'overflow-hidden', styles.border)}>
-        <Table.Root>
-          <Table.Viewport asChild>
-            <TableContainer className={tableContainerStyles}>
-              <Table.Main<T>
-                columns={columns}
-                data={data}
-                rowsSelectable
-                currentDatum={selected}
-                onDatumClick={setSelected}
-                fullWidth
-              />
-              {pinToBottom && <AnchoredOverflow.Anchor />}
-            </TableContainer>
-          </Table.Viewport>
-        </Table.Root>
-
-        <div className={mx('flex overflow-auto', detailsContainerStyles)}>
-          {selected ? (
-            <JsonView data={detailsTransform !== undefined ? detailsTransform(selected) : selected} />
-          ) : (
-            'Details'
-          )}
-        </div>
+    <div className={mx('bs-full', gridLayout)}>
+      <div>
+        <DynamicTable data={data} properties={properties} onSelectionChanged={handleSelectionChanged} />
       </div>
-      {statusBar && (
-        <div
-          className={mx(
-            'bs-[--statusbar-size]',
-            'flex justify-end items-center gap-2',
-            'bg-baseSurface text-description',
-            'border-bs border-separator',
-            'text-lg pointer-fine:text-xs',
-          )}
-        >
-          {statusBar}
-        </div>
-      )}
-    </>
+      <div className='bs-full overflow-auto text-sm border-bs border-separator'>
+        {selected ? (
+          isLoading ? (
+            <p className={mx('font-mono text-xs p-1')}>Loading details...</p>
+          ) : (
+            <JsonView data={transformedData} />
+          )
+        ) : (
+          <p className={mx('font-mono text-xs p-1')}>Make a selection for details.</p>
+        )}
+      </div>
+    </div>
   );
 };
