@@ -54,7 +54,7 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
   } else {
     return blocks.flatMap((block, blockIndex) => {
       return [
-        [blockIndex, -1, lineHeight + cellSpacing],
+        [blockIndex, -1],
         ...block.segments.map((segment, segmentIndex) => {
           return [blockIndex, segmentIndex] as [number, number];
         }),
