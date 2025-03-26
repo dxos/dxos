@@ -6,6 +6,8 @@
     display: contents;
     --dx-grid-gap: 1px;
     --dx-plane-gap: 1px;
+    --dx-grid-cell-padding-block: .25rem;
+    --dx-grid-cell-padding-inline: .5rem;
   }
 
   .dx-grid {
@@ -60,7 +62,7 @@
       position: relative;
       background: var(--dx-grid-base, var(--dx-baseSurface));
       /** This must match CellEditor styling in `CellEditor.tsx`. */
-      padding: 2px 4px;
+      padding: var(--dx-grid-cell-padding-block) var(--dx-grid-cell-padding-inline);
       box-sizing: border-box;
       border: 1px solid transparent;
       overflow: hidden;
