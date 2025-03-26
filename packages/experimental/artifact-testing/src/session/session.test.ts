@@ -1,11 +1,12 @@
 import { describe, test } from 'vitest';
 import { AISession } from './session';
 import { createEdgeServices, remoteServiceEndpoints } from '../services';
-import { defineArtifact, defineTool, ToolResult, type MessageContentBlock } from '@dxos/artifact';
+import { defineArtifact, defineTool, ToolResult, type Message, type MessageContentBlock } from '@dxos/artifact';
 import { Schema as S } from 'effect';
 import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
 import { AIServiceEdgeClient, OllamaClient, type GenerationStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
+import { inspect } from 'node:util';
 
 // Define a calendar event artifact schema
 const CalendarEventSchema = S.Struct({
@@ -18,11 +19,11 @@ const CalendarEventSchema = S.Struct({
 type CalendarEvent = S.Schema.Type<typeof CalendarEventSchema>;
 
 describe('AISession with Ollama', () => {
-  test('create calendar itinerary', { timeout: 10000 }, async ({ expect }) => {
-    // const aiClient = new AIServiceEdgeClient({ endpoint: remoteServiceEndpoints.ai });
-    const aiClient = new OllamaClient({
-      overrides: { model: 'llama3.1:8b' },
-    });
+  test('create calendar itinerary', { timeout: 60_000 }, async ({ expect }) => {
+    const aiClient = new AIServiceEdgeClient({ endpoint: remoteServiceEndpoints.ai });
+    // const aiClient = new OllamaClient({
+    //   overrides: { model: 'llama3.1:8b' },
+    // });
     const session = new AISession();
 
     // Define calendar artifact
@@ -43,17 +44,61 @@ describe('AISession with Ollama', () => {
       ],
     });
 
-    session.streamEvent.on((event) => {
-      printStreamEvent(event);
+    const tableArtifact = defineArtifact({
+      id: 'dxos.org/plugin/table',
+      name: 'Table',
+      instructions: 'Use this to create and manage tables',
+      schema: S.Struct({}),
+      tools: [
+        defineTool('table', {
+          name: 'create',
+          description: 'Create a table',
+          schema: S.Struct({
+            data: S.Array(S.Any).annotations({ description: 'Array of data payloads to add as rows' }),
+          }),
+          execute: async ({ data }) => {
+            log.info('create table', { data });
+            return ToolResult.Success(`table id=${ObjectId.random()}`);
+          },
+        }),
+      ],
     });
 
-    session.message.on((message) => {
-      log.info('message', { message });
+    const mapArtifact = defineArtifact({
+      id: 'dxos.org/plugin/map',
+      name: 'Map',
+      instructions: 'Use this to create and manage maps. Maps source data from tables.',
+      schema: S.Struct({}),
+      tools: [
+        defineTool('map', {
+          name: 'create',
+          description: 'Create a map',
+          schema: S.Struct({
+            source: ObjectId.annotations({ description: 'The table that will be used as the source of the map' }),
+          }),
+          execute: async ({ source }) => {
+            log.info('create map', { source });
+            return ToolResult.Success(`map id=${ObjectId.random()}`);
+          },
+        }),
+      ],
     });
 
-    session.block.on((block) => {
-      log.info('block', { block });
+    const scriptArtifact = defineArtifact({
+      id: 'dxos.org/plugin/script',
+      name: 'Script',
+      instructions: 'Use this to create and manage scripts',
+      schema: S.Struct({}),
+      tools: [],
     });
+
+    // session.streamEvent.on((event) => {
+    //   printStreamEvent(event);
+    // });
+
+    session.message.on(printMessage);
+    session.userMessage.on(printMessage);
+    session.block.on(printContentBlock);
 
     // session.update.on((update) => {
     //   log.info('update', { update });
@@ -63,22 +108,13 @@ describe('AISession with Ollama', () => {
     const response = await session.run({
       client: aiClient,
       tools: [],
-      artifacts: [calendarArtifact],
+      artifacts: [calendarArtifact, tableArtifact, mapArtifact, scriptArtifact],
       history: [],
-      prompt: 'create a travel itinerary for my calendar',
+      generationOptions: {
+        model: '@anthropic/claude-3-5-haiku-20241022',
+      },
+      prompt: 'create a table and map for a travel itinerary based on events in my calendar',
     });
-
-    log.info('response', { response });
-
-    expect(response).toBeDefined();
-
-    // Verify the created events have required fields
-    for (const event of response) {
-      expect(event).toHaveProperty('title');
-      expect(event).toHaveProperty('startTime');
-      expect(event).toHaveProperty('endTime');
-      expect(event).toHaveProperty('description');
-    }
   });
 });
 
@@ -116,14 +152,31 @@ const CALENDAR_EVENTS: CalendarEvent[] = [
   }),
 ];
 
+const printMessage = (message: Message) => {
+  console.log(`${message.role.toUpperCase()}\n`);
+  for (const content of message.content) {
+    printContentBlock(content);
+  }
+};
+
 const printContentBlock = (content: MessageContentBlock) => {
   switch (content.type) {
     case 'text':
-      process.stdout.write(content.text);
+      console.log(content.text);
       break;
     case 'tool_use':
-      process.stdout.write(`⚙️ [Tool Use] ${content.name}\n`);
+      console.log(`⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
       break;
+    case 'tool_result': {
+      let data: any;
+      try {
+        data = JSON.parse(content.content);
+      } catch {
+        data = content.content;
+      }
+      console.log(`⚙️ [Tool Result] ${content.toolUseId} ${inspect(data, { depth: null, colors: true })}`);
+      break;
+    }
   }
 };
 

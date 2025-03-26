@@ -9,7 +9,14 @@
  * Could be personal or shared.
  */
 
-import { Message, type ArtifactDefinition, type MessageContentBlock, type Tool } from '@dxos/artifact';
+import {
+  defineTool,
+  Message,
+  ToolResult,
+  type ArtifactDefinition,
+  type MessageContentBlock,
+  type Tool,
+} from '@dxos/artifact';
 import {
   isToolUse,
   MixedStreamParser,
@@ -18,11 +25,11 @@ import {
   type GenerateRequest,
   type GenerationStream,
 } from '@dxos/assistant';
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Schema } from 'effect';
+import { Schema as S } from 'effect';
 
 export type SessionRunOptions = {
   client: AIServiceClient;
@@ -73,6 +80,11 @@ export class AISession {
 
   public streamEvent = this._parser.streamEvent;
 
+  /**
+   * User prompt or tool result.
+   */
+  public readonly userMessage = new Event<Message>();
+
   constructor() {
     // Message complete.
     this._parser.message.on((message) => {
@@ -82,6 +94,44 @@ export class AISession {
 
   @synchronized
   async run(options: SessionRunOptions): Promise<Message[]> {
+    const systemTools: Tool[] = [
+      defineTool('system', {
+        name: 'query_artifacts',
+        description: 'Query the available artifacts',
+        schema: S.Struct({}),
+        execute: async () => {
+          return ToolResult.Success({
+            artifacts: options.artifacts.map((artifact) => ({
+              id: artifact.id,
+              name: artifact.name,
+              description: artifact.description,
+            })),
+          });
+        },
+      }),
+      defineTool('system', {
+        name: 'require_artifacts',
+        description:
+          'Require the use of specific artifacts. This will allow the model to interact with artifacts and use their tools.',
+        schema: S.Struct({
+          artifactIds: S.Array(S.String).annotations({ description: 'The ids of the artifacts to require' }),
+        }),
+        execute: async ({ artifactIds }) => {
+          const missingArtifactIds = artifactIds.filter(
+            (artifactId) => !options.artifacts.some((artifact) => artifact.id === artifactId),
+          );
+          if (missingArtifactIds.length > 0) {
+            return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
+          }
+
+          for (const artifactId of artifactIds) {
+            requiredArtifactIds.add(artifactId);
+          }
+
+          return ToolResult.Success({});
+        },
+      }),
+    ];
     this._history = options.history;
     this._pending = [
       createStatic(Message, {
@@ -89,16 +139,26 @@ export class AISession {
         content: [{ type: 'text', text: options.prompt }],
       }),
     ];
+    this.userMessage.emit(this._pending.at(-1)!);
     this._stream = undefined;
     let error: Error | undefined = undefined;
 
+    let requiredArtifactIds = new Set<string>();
     try {
       let more = false;
       do {
-        log.info('request', {
+        const tools = [
+          ...systemTools,
+          ...options.tools,
+          ...options.artifacts
+            .filter((artifact) => requiredArtifactIds.has(artifact.id))
+            .flatMap((artifact) => artifact.tools),
+        ];
+
+        log('request', {
           pending: this._pending.length,
           history: this._history.length,
-          tools: options.tools.map((tool) => tool.name),
+          tools: tools.map((tool) => tool.name),
         });
 
         // Open request stream.
@@ -106,7 +166,8 @@ export class AISession {
           ...(options.generationOptions ?? {}),
           // TODO(burdon): Rename messages or separate history/message.
           history: [...this._history, ...this._pending],
-          tools: options.tools, // TODO(dmaretskyi): add in required artifacts
+          tools,
+          systemPrompt: BASE_INSTRUCTIONS,
         });
 
         // Wait until complete.
@@ -114,7 +175,7 @@ export class AISession {
         await this._stream.complete();
 
         // Add messages.
-        log.info('response', { pending: this._pending });
+        log('response', { pending: this._pending });
 
         // Resolve tool use locally.
         more = false;
@@ -124,7 +185,7 @@ export class AISession {
           log('tool request...');
           const response = await runTools({
             message: this._pending.at(-1)!,
-            tools: options.tools,
+            tools: tools,
             extensions: options.extensions ?? {},
           });
 
@@ -132,6 +193,7 @@ export class AISession {
           switch (response.type) {
             case 'continue': {
               this._pending = [...this._pending, response.message];
+              this.userMessage.emit(response.message);
               more = true;
               break;
             }
@@ -157,7 +219,24 @@ export class AISession {
   }
 }
 
-export class AIServiecOverloadedError extends Schema.TaggedError<AIServiecOverloadedError>()(
+const BASE_INSTRUCTIONS = `
+
+You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
+Your task is to process user commands and questions and decide how best to respond.
+In some cases, you will need to create or reference data objects called artifacts.
+
+Follow these guidelines carefully:
+
+Decision-making:
+
+ - Analyze the structure and type of the content in the user's message.
+ - Identify which artifacts are relevant to the user's request.
+ - Query the list of available artifacts using the appropriate tool.
+ - Select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
+ - The require'd artifact tools will be available for use after require.
+`;
+
+export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedError>()(
   'AIServiecOverloadedError',
   {},
 ) {}
