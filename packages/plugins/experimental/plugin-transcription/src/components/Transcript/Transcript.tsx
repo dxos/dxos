@@ -14,6 +14,7 @@ import {
   Grid,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type TranscriptBlock } from '../../types';
 
@@ -39,9 +40,13 @@ const transcriptInitialRows = {
   grid: { size: lineHeight + cellSpacing },
 };
 
-const authorClasses = 'text-[16px] leading-[24px]';
+const authorClasses = 'font-medium text-base leading-[24px]';
 const timestampClasses = 'mis-2 text-xs text-description leading-[24px]';
-const segmentTextClasses = 'whitespace-normal hyphens-auto text-[16px] leading-[24px]';
+const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
+const measureClasses = mx(
+  'absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block]',
+  segmentTextClasses,
+);
 
 type QueueRows = [number, number, number][];
 
@@ -162,13 +167,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
           ref={setDxGrid}
         />
       </Grid.Root>
-      <div
-        role='none'
-        {...{ inert: '' }}
-        aria-hidden
-        className='absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block]'
-        ref={measureRef}
-      />
+      <div role='none' {...{ inert: '' }} aria-hidden className={measureClasses} ref={measureRef} />
     </>
   );
 };
