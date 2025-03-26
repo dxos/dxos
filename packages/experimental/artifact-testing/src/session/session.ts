@@ -175,6 +175,7 @@ export class AISession {
                       
                       While you know the plan's goal only focus on your subtask
                       Use the data from the previous step to complete your task.
+                      Return all of the data from "dataReturned" in your last message.
                       
                       Current step (that you need to complete):
                       ${JSON.stringify(
