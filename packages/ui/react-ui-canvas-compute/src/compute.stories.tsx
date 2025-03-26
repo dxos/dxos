@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, createEdgeServices } from '@dxos/artifact-testing';
-import { OllamaClient } from '@dxos/assistant';
+import { createTestOllamaClient } from '@dxos/assistant/testing';
 import { EdgeGpt, type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
@@ -307,7 +307,7 @@ export const ImageGen: Story = {
     sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createGptCircuit({ image: true, artifact: true }), {
-      gpt: new EdgeGpt(OllamaClient.createClient()),
+      gpt: new EdgeGpt(createTestOllamaClient()),
     }),
   },
 };

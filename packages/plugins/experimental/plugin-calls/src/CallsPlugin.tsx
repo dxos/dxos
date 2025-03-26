@@ -43,7 +43,7 @@ export const CallsPlugin = () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'calls',
           label: ['calls panel label', { ns: CALLS_PLUGIN }],
-          icon: 'ph--phone-call--regular',
+          icon: 'ph--video-conference--regular',
           fixed: true,
         }),
       ],

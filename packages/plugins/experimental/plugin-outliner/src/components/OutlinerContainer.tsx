@@ -24,7 +24,7 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
         className={mx(attentionSurface, 'p-4')}
         isTasklist={tree.checkbox}
         root={tree.root.target!}
-        onCreate={(text?: string) => create(TreeItemType, { content: text ?? '', items: [] })}
+        onCreate={(text?: string) => create(TreeItemType, { text: text ?? '', items: [] })}
         onDelete={({ id }) => {
           const item = space.db.getObjectById(id);
           item && space.db.remove(item);
