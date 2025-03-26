@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Schema } from 'effect';
+
 import { type MessageContentBlock, defineTool, type Tool, ToolResult } from '@dxos/artifact';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -193,7 +195,7 @@ export class OllamaClient implements AIServiceClient {
 
     // TODO(burdon): Test if model is not found.
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Ollama API error: ${response.status} ${response.statusText} ${await response.text()}`);
     }
 
     if (!response.body) {
@@ -460,3 +462,11 @@ class OllamaDecoderStream extends TransformStream<string, OllamaResponseData> {
     });
   }
 }
+
+class ModelDoesNotSupportToolsError extends Schema.TaggedError('ModelDoesNotSupportToolsError')<{
+  model: string;
+}> {}
+
+const parseOllamaError = (error: string): Error => {
+  const match = error.match(/^([^']+) does not support tools$/);
+};
