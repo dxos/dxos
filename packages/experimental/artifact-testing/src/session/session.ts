@@ -14,8 +14,7 @@ import {
   Message,
   ToolResult,
   type ArtifactDefinition,
-  type MessageContentBlock,
-  type Tool,
+  type Tool
 } from '@dxos/artifact';
 import {
   isToolUse,
@@ -131,6 +130,29 @@ export class AISession {
           return ToolResult.Success({});
         },
       }),
+      defineTool('system', {
+        name: 'create_plan',
+        description: 'Create a plan.',
+        schema: S.Struct({
+          steps: S.Array(
+            S.Struct({
+              action: S.String.annotations({ description: 'Full, detailed action to perform' }),
+              requiredArtifactIds: S.Array(S.String).annotations({
+                description: 'The ids of the artifacts required to perform this step.',
+              }),
+            }),
+          ).annotations({ description: 'Steps' }),
+        }),
+        execute: async ({ steps }) => {
+          const missingArtifactIds = steps
+            .flatMap((step) => step.requiredArtifactIds)
+            .filter((artifactId) => !options.artifacts.some((artifact) => artifact.id === artifactId));
+          if (missingArtifactIds.length > 0) {
+            return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
+          }
+          return ToolResult.Success(`plan created`);
+        },
+      }),
     ];
     this._history = options.history;
     this._pending = [
@@ -230,9 +252,10 @@ Follow these guidelines carefully:
 Decision-making:
 
  - Analyze the structure and type of the content in the user's message.
- - Identify which artifacts are relevant to the user's request.
  - Query the list of available artifacts using the appropriate tool.
- - Select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
+ - Identify which artifacts are relevant to the user's request.
+ - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
+ - After the plan is created, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
  - The require'd artifact tools will be available for use after require.
 `;
 
