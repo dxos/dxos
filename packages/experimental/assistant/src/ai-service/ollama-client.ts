@@ -470,11 +470,22 @@ class ModelDoesNotSupportToolsError extends S.TaggedError<ModelDoesNotSupportToo
   },
 ) {}
 
+class ModelNotFoundError extends S.TaggedError<ModelNotFoundError>()('ModelNotFoundError', {
+  model: S.String,
+}) {}
+
 const parseOllamaError = (error: string): Error => {
   {
     const match = error.match(/^([^']+) does not support tools$/);
     if (match) {
       return new ModelDoesNotSupportToolsError({ model: match[1] });
+    }
+  }
+
+  {
+    const match = error.match(/^model "([^"]+)" not found, try pulling it first$/);
+    if (match) {
+      return new ModelNotFoundError({ model: match[1] });
     }
   }
 
