@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import {
+  allOf,
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+} from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -99,7 +107,7 @@ export const AssistantPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/ai-client`,
-      activatesOn: ClientEvents.ClientReady,
+      activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
       activate: AiClient,
     }),
   ]);

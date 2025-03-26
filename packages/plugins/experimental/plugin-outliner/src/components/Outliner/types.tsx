@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 import { RefArray } from '@dxos/live-object';
 
 import { type TreeItemType } from '../../types';
@@ -38,10 +39,11 @@ export const getLastDescendent = (item: TreeItemType): TreeItemType => {
 
 export const getPrevious = (root: TreeItemType, item: TreeItemType): TreeItemType | undefined => {
   const parent = getParent(root, item)!;
-  const idx = RefArray.allResolvedTargets(parent.items).findIndex(({ id }) => id === item.id);
+  const idx = RefArray.allResolvedTargets(parent.items ?? []).findIndex(({ id }) => id === item.id);
   if (idx > 0) {
+    invariant(parent.items);
     const previous = parent.items[idx - 1];
-    if (previous?.target?.items.length) {
+    if (previous?.target?.items?.length) {
       return getLastDescendent(previous.target);
     }
 
@@ -58,7 +60,7 @@ export const getNext = (root: TreeItemType, item: TreeItemType, descend = true):
   } else {
     const parent = getParent(root, item);
     if (parent) {
-      const idx = RefArray.allResolvedTargets(parent.items).findIndex(({ id }) => id === item.id);
+      const idx = RefArray.allResolvedTargets(parent.items ?? []).findIndex(({ id }) => id === item.id);
       if (idx < parent.items!.length - 1) {
         return parent.items![idx + 1].target;
       } else {
