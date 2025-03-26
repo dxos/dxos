@@ -80,7 +80,8 @@ describe('AISession with Ollama', () => {
     const mapArtifact = defineArtifact({
       id: 'artifact:dxos.org/plugin/map',
       name: 'Map',
-      instructions: 'Use this to create and manage maps. Maps source data from tables (by table id).',
+      instructions:
+        'Use this to create and manage maps. Maps source data from tables. Table id is required to create a map.',
       schema: S.Struct({}),
       tools: [
         defineTool('map', {

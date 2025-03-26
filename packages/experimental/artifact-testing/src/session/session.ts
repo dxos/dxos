@@ -127,15 +127,17 @@ export class AISession {
             description:
               'Create a plan. Make sure that each step is independent and can be executed solely on the data returned by the previous step. The steps only share the data that is specified in the plan.',
             schema: S.Struct({
-              goal: S.String.annotations({ description: 'The goal that the plan will achieve' }),
+              goal: S.String.annotations({ description: 'The goal that the plan will achieve.' }),
               steps: S.Array(
                 S.Struct({
-                  action: S.String.annotations({ description: 'Full, detailed action to perform' }),
-                  dataRequired: S.String.annotations({
-                    description: 'The data required to perform this step.',
+                  action: S.String.annotations({
+                    description: 'Complete, detailed action to perform.',
                   }),
-                  dataReturned: S.String.annotations({
-                    description: 'The data returned by this step.',
+                  input: S.String.annotations({
+                    description: 'The required input data for this step. First step must not require any data.',
+                  }),
+                  output: S.String.annotations({
+                    description: 'The output data from this step. This is passed to the next step as input.',
                   }),
                   requiredArtifactIds: S.Array(S.String).annotations({
                     description: 'The ids of the artifacts required to perform this step.',
@@ -171,27 +173,27 @@ export class AISession {
                   generationOptions: options.generationOptions,
                   requiredArtifactIds: step.requiredArtifactIds.slice(),
                   prompt: `
-                      You are an agent that executes the subtask in a plan.
-                      
-                      While you know the plan's goal only focus on your subtask
-                      Use the data from the previous step to complete your task.
-                      Return all of the data from "dataReturned" in your last message.
-                      
-                      Current step (that you need to complete):
-                      ${JSON.stringify(
-                        {
-                          goal,
-                          dataRequired: step.dataRequired,
-                          dataReturned: step.dataReturned,
-                          yourTask: step.action,
-                        },
-                        null,
-                        2,
-                      )}
-                      
-                      Previous step results:
-                      ${JSON.stringify(stepResults.at(-1))}.
-                    `,
+                    You are an agent that executes the subtask in a plan.
+                    
+                    While you know the plan's goal only focus on your subtask
+                    Use the data from the previous step to complete your task.
+                    Return all of the data from "output" in your last message.
+                    
+                    Current step (that you need to complete):
+                    ${JSON.stringify(
+                      {
+                        goal,
+                        input: step.input,
+                        output: step.output,
+                        yourTask: step.action,
+                      },
+                      null,
+                      2,
+                    )}
+                    
+                    Previous step results:
+                    ${JSON.stringify(stepResults.at(-1))}.
+                  `,
                 });
                 const result = messages.at(-1);
                 stepResults.push(result);
@@ -323,7 +325,7 @@ export class AISession {
   }
 }
 
-// TODO(dmaretskyi): template
+// TODO(burdon): Use handlebars template with effect-schema input.
 const createBaseInstructions = ({
   availableArtifacts,
   operationModel,
@@ -331,31 +333,31 @@ const createBaseInstructions = ({
   availableArtifacts: string[];
   operationModel: OperationModel;
 }) => `
-You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
-Your task is to process user commands and questions and decide how best to respond.
-In some cases, you will need to create or reference data objects called artifacts.
+  You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
+  Your task is to process user commands and questions and decide how best to respond.
+  In some cases, you will need to create or reference data objects called artifacts.
 
-Follow these guidelines carefully:
+  Follow these guidelines carefully:
 
-Decision-making:
+  Decision-making:
 
- - Analyze the structure and type of the content in the user's message.
- - Can you complete the task using the available artifacts?
- - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
- - Identify which artifacts are relevant to the user's request.
- ${
-   operationModel === 'planning'
-     ? `
-      - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
+  - Analyze the structure and type of the content in the user's message.
+  - Can you complete the task using the available artifacts?
+  - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
+  - Identify which artifacts are relevant to the user's request.
+  ${
+    operationModel === 'planning'
+      ? `
+        - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
+      `
+      : `
+      - Are the required artifacts already available?
+      - If not, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
+      - The require'd artifact tools will be available for use after require.
     `
-     : `
-    - Are the required artifacts already available?
-    - If not, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
-    - The require'd artifact tools will be available for use after require.
-  `
- }
+  }
 
-Artifacts already required: ${availableArtifacts.join('\n')}
+  Artifacts already required: ${availableArtifacts.join('\n')}
 `;
 
 export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedError>()(
