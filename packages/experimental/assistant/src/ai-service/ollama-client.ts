@@ -190,9 +190,6 @@ export class OllamaClient implements AIServiceClient {
       signal,
     });
 
-    // log.info('ollama response', { response: await response.text() });
-    console.log(response);
-
     // TODO(burdon): Test if model is not found.
     if (!response.ok) {
       throw await parseErrorResponse(response);
