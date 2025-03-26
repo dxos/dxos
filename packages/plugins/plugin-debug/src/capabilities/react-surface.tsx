@@ -34,7 +34,6 @@ import {
   TracingPanel,
   DashboardPanel,
   EdgeDashboardPanel,
-  SearchPanel,
   AutomergePanel,
   WorkflowPanel,
   QueuesPanel,
@@ -54,15 +53,7 @@ import {
   parseId,
 } from '@dxos/react-client/echo';
 
-import {
-  DebugApp,
-  DebugObjectPanel,
-  DebugSettings,
-  DebugSpace,
-  DebugStatus,
-  SpaceGenerator,
-  Wireframe,
-} from '../components';
+import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -122,12 +113,7 @@ export default (context: PluginsContext) =>
           [data.subject.space],
         );
 
-        const deprecated = false;
-        return deprecated ? (
-          <DebugSpace space={data.subject.space} onAddObjects={handleCreateObject} />
-        ) : (
-          <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-        );
+        return <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />;
       },
     }),
     createSurface({
@@ -309,12 +295,6 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
       component: () => <DashboardPanel />,
-    }),
-    createSurface({
-      id: `${DEBUG_PLUGIN}/agent/search`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Agent.Search,
-      component: () => <SearchPanel />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/edge/dashboard`,

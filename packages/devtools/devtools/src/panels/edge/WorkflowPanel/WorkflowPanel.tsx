@@ -2,70 +2,71 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo-db';
-import { AST } from '@dxos/echo-schema';
+import { AST, FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
-import { ControlledSelector, PanelContainer } from '../../../components';
+import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
-
-const { helper, builder } = createColumnBuilder<ComputeGraph>();
-const columns: TableColumnDef<ComputeGraph, any>[] = [
-  helper.accessor(
-    'id',
-    builder.string({
-      header: 'id',
-      size: 140,
-      meta: { cell: { classNames: ['font-mono'] } },
-    }),
-  ),
-  helper.accessor((item) => item.graph.nodes.length, {
-    id: 'nodes',
-    ...builder.number(),
-    size: 40,
-  }),
-  helper.accessor((item) => item.graph.edges.length, {
-    id: 'edges',
-    ...builder.number(),
-    size: 40,
-  }),
-];
 
 export const WorkflowPanel = () => {
   const { space } = useDevtoolsState();
   const [displayMode, setDisplayMode] = useState(DisplayMode.COMPILED);
   const [executionMode, setExecutionMode] = useState(WorkflowDebugPanelMode.LOCAL);
   const graphs = useQuery(space, Filter.schema(ComputeGraph));
-  const [selected, setSelected] = useState<ComputeGraph>();
-  const [presentation, setPresentation] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string>();
+  const selected = useMemo(() => graphs.find((graph) => graph.id === selectedId), [graphs, selectedId]);
 
   const loader = useMemo(() => createLoader(graphs), [graphs]);
 
-  useEffect(() => {
-    if (!selected) {
-      setPresentation(null);
-      return;
-    }
-    toPresentation(loader, selected, displayMode)
-      .then(setPresentation)
-      .catch((err) => log.catch(err));
-  }, [loader, selected, displayMode]);
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'id', format: FormatEnum.String },
+      { name: 'nodes', format: FormatEnum.Number, size: 100 },
+      { name: 'edges', format: FormatEnum.Number, size: 100 },
+    ],
+    [],
+  );
 
-  const objectSelect = (object: ComputeGraph) => {
-    setSelected(object);
-  };
+  const tableData = useMemo(() => {
+    return graphs.map((graph) => ({
+      id: graph.id,
+      nodes: graph.graph.nodes.length,
+      edges: graph.graph.edges.length,
+      _original: graph,
+    }));
+  }, [graphs]);
+
+  const detailsTransform = useMemo(() => {
+    return async (data: any) => {
+      const graph = data._original;
+      if (!graph) {
+        return null;
+      }
+
+      try {
+        if (displayMode === DisplayMode.COMPILED) {
+          return await toWorkflow(loader, graph);
+        } else if (displayMode === DisplayMode.GRAPH) {
+          return toCompactGraph(graph);
+        } else {
+          // RAW mode - show the original graph
+          return graph;
+        }
+      } catch (err: any) {
+        return { error: err.message, stack: err.stack };
+      }
+    };
+  }, [loader, displayMode]);
 
   return (
     <PanelContainer
@@ -81,31 +82,15 @@ export const WorkflowPanel = () => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
-        <Table.Root>
-          <Table.Viewport asChild>
-            <div className='flex-col divide-y'>
-              <Table.Main<ComputeGraph>
-                columns={columns}
-                data={graphs}
-                rowsSelectable
-                currentDatum={selected}
-                onDatumClick={objectSelect}
-                fullWidth
-              />
-            </div>
-          </Table.Viewport>
-        </Table.Root>
+      <div className={'bs-full grid grid-rows-[4fr_3fr]'}>
+        <MasterDetailTable
+          properties={properties}
+          data={tableData}
+          detailsTransform={detailsTransform}
+          onSelectionChanged={setSelectedId}
+        />
 
-        <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {presentation ? (
-            <SyntaxHighlighter language='json'>{presentation}</SyntaxHighlighter>
-          ) : (
-            'Select an object to inspect the contents'
-          )}
-        </div>
-
-        <div className={mx('flex overflow-auto', 'h-1/2')}>
+        <div className={mx('bs-full')}>
           {selected ? (
             <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />
           ) : (
@@ -113,29 +98,8 @@ export const WorkflowPanel = () => {
           )}
         </div>
       </div>
-      <div
-        className={mx(
-          'bs-[--statusbar-size]',
-          'flex justify-end items-center gap-2',
-          'bg-baseSurface text-description',
-          'border-bs border-separator',
-          'text-lg pointer-fine:text-xs',
-        )}
-      >
-        <div>Objects: {graphs.length}</div>
-      </div>
     </PanelContainer>
   );
-};
-
-const toPresentation = async (loader: WorkflowLoader, graph: ComputeGraph, mode: DisplayMode): Promise<string> => {
-  let object: any = graph;
-  if (mode === DisplayMode.COMPILED) {
-    object = await toWorkflow(loader, graph);
-  } else if (mode === DisplayMode.GRAPH) {
-    object = toCompactGraph(object);
-  }
-  return JSON.stringify(object, null, 2);
 };
 
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {

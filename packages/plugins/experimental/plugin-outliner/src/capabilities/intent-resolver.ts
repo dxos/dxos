@@ -17,8 +17,8 @@ export default () =>
             name,
             root: makeRef(
               create(TreeItemType, {
-                content: '',
-                items: [makeRef(create(TreeItemType, { content: '', items: [] }))],
+                text: '',
+                items: [makeRef(create(TreeItemType, { text: '', items: [] }))],
               }),
             ),
           }),

@@ -7,6 +7,7 @@ import { Cause, Chunk, Console, Effect, Exit, Fiber, Option, Scope, Stream } fro
 import { describe, expect, test, type TaskContext } from 'vitest';
 
 import { AIServiceEdgeClient, OllamaClient, ToolTypes, type GenerationStreamEvent } from '@dxos/assistant';
+import { createTestOllamaClient } from '@dxos/assistant/testing';
 import { log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT, registry, type GptInput } from '../nodes';
@@ -240,7 +241,7 @@ describe.skip('GPT pipelines', () => {
           Effect.provide(
             testServices({
               enableLogging: ENABLE_LOGGING,
-              gpt: new EdgeGpt(OllamaClient.createClient()),
+              gpt: new EdgeGpt(createTestOllamaClient()),
             }),
           ),
         );

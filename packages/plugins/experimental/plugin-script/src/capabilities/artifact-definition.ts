@@ -31,6 +31,7 @@ export default () => {
     instructions: `
       If the user explicitly requests you to write a script, you can create one.
       If the user requests you to change one of the existing script, you can update it.
+      You must not create a script unless the user explicitly requests it.
       Scripts are short code pieces of executable code that can be used to perform computations, integrate with external systems, and perform automated tasks.
       Each script must follow as strict shape for the definition but the body can contain any valid executable code.
       Scripts are written in JavaScript or TypeScript.

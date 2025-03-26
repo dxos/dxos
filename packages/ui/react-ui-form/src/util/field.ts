@@ -140,6 +140,7 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
     case FormatEnum.Currency:
       return ['text-right'];
     case FormatEnum.JSON:
+    case FormatEnum.DID:
       return ['font-mono'];
     default:
       return undefined;

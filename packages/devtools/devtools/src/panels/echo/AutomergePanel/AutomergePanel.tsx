@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import { type SpaceDoc } from '@dxos/echo-protocol';
+import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -48,19 +48,10 @@ const getStoredObjectType = (data: Data): string | undefined => {
   return isSpaceRoot(data.accessor()) ? '' : getStoredObject(data.accessor())?.object?.system?.type?.['/'];
 };
 
-const { helper, builder } = createColumnBuilder<Data>();
-const columns: TableColumnDef<Data>[] = [
-  helper.accessor((handle) => handle.documentId, { id: 'documentId', ...builder.string() }),
-  helper.accessor(({ accessor }) => (isSpaceRoot(accessor()) ? 'space root doc' : getStoredObject(accessor())?.id), {
-    id: 'content',
-    ...builder.string(),
-  }),
-  helper.accessor(getStoredObjectType, { id: 'type', ...builder.string() }),
-];
-
 type Data = {
   documentId: string;
   accessor: () => SpaceDoc;
+  id: string;
 };
 
 export const AutomergePanel = () => {
@@ -77,9 +68,29 @@ export const AutomergePanel = () => {
 
   const [filter, setFilter] = useState('');
 
-  const data = handles
-    .map((handle) => ({ documentId: handle.documentId, accessor: () => handle.docSync() }))
-    .filter(textFilter(filter));
+  const properties = useMemo(
+    () => [
+      { name: 'documentId', format: FormatEnum.DID, size: 320 },
+      { name: 'content', format: FormatEnum.String, size: 320 },
+      { name: 'type', format: FormatEnum.String, size: 320 },
+    ],
+    [],
+  );
+
+  const data = useMemo(() => {
+    return handles
+      .map((handle) => {
+        const doc = handle.docSync();
+        return {
+          id: handle.documentId,
+          documentId: handle.documentId,
+          content: isSpaceRoot(doc) ? 'space root doc' : getStoredObject(doc)?.id,
+          type: getStoredObjectType({ documentId: handle.documentId, accessor: () => doc, id: handle.documentId }),
+          accessor: () => doc,
+        };
+      })
+      .filter(textFilter(filter));
+  }, [handles, filter]);
 
   return (
     <PanelContainer
@@ -90,8 +101,8 @@ export const AutomergePanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<Data>
-        columns={columns}
+      <MasterDetailTable
+        properties={properties}
         data={data}
         statusBar={<div>Handles: {handles.length}</div>}
         detailsTransform={({ accessor }) => accessor()}

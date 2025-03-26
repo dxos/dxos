@@ -2,42 +2,61 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
-const { helper, builder } = createColumnBuilder<SpaceMember>();
-const columns: TableColumnDef<SpaceMember, any>[] = [
-  helper.accessor((member) => member.identity.identityKey, { id: 'key', ...builder.key({ tooltip: true }) }),
-  helper.accessor((member) => member.identity.profile?.displayName, {
-    id: 'name',
-    meta: { cell: { classNames: textPadding } },
-  }),
-  helper.accessor(
-    (member) => {
-      switch (member.presence) {
-        case SpaceMember.PresenceState.ONLINE:
-          return 'online';
-        case SpaceMember.PresenceState.OFFLINE:
-          return 'offline';
-      }
-    },
-    {
-      id: 'status',
-      meta: { cell: { classNames: textPadding } },
-    },
-  ),
-];
-
 export const MembersPanel = () => {
   const { space } = useDevtoolsState();
   const members = useMembers(space?.key);
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'identityKey', format: FormatEnum.DID },
+      { name: 'displayName', format: FormatEnum.String },
+      {
+        name: 'status',
+        format: FormatEnum.SingleSelect,
+        config: {
+          options: [
+            { id: 'online', title: 'online', color: 'green' },
+            { id: 'offline', title: 'offline', color: 'neutral' },
+            { id: 'unknown', title: 'unknown', color: 'red' },
+          ],
+        },
+      },
+    ],
+    [],
+  );
+
+  const data = useMemo(() => {
+    return members.map((member) => {
+      let status = 'unknown';
+      switch (member.presence) {
+        case SpaceMember.PresenceState.ONLINE:
+          status = 'online';
+          break;
+        case SpaceMember.PresenceState.OFFLINE:
+          status = 'offline';
+          break;
+      }
+
+      return {
+        id: member.identity.identityKey.toString(),
+        identityKey: member.identity.identityKey,
+        displayName: member.identity.profile?.displayName,
+        status,
+        _original: member,
+      };
+    });
+  }, [members]);
 
   return (
     <PanelContainer
@@ -47,7 +66,7 @@ export const MembersPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<SpaceMember> columns={columns} data={members} />
+      <MasterDetailTable properties={properties} data={data} detailsTransform={(item) => item._original} />
     </PanelContainer>
   );
 };

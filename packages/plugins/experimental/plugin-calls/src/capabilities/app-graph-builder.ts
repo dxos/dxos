@@ -22,7 +22,7 @@ export default (context: PluginsContext) =>
             data: { space, type: `${CALLS_PLUGIN}/space` },
             properties: {
               label: ['calls label', { ns: CALLS_PLUGIN }],
-              icon: 'ph--phone-call--regular',
+              icon: 'ph--video-conference--regular',
             },
           },
         ];
