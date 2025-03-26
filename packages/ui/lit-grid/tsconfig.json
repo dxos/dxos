@@ -4,7 +4,9 @@
     "emitDeclarationOnly": false,
     "types": [
       "node"
-    ]
+    ],
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
   },
   "include": [
     "src/**/*.ts",
