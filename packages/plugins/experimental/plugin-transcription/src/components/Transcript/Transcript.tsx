@@ -3,6 +3,7 @@
 //
 
 import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
+import { useResizeDetector, type OnResizeCallback } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -18,8 +19,8 @@ import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
-const lineHeight = 24;
-const columnWidth = 600;
+const lineHeight = 28;
+const initialColumnWidth = 600;
 const cellSpacing = 12;
 // TODO(thure): This value was tuned using greeking in Storybook; tune further based on natural language, or refactor to compute the actual size of wrapped text.
 const monoCharacterWidthWithWrapBuffer = 10 * 1.03;
@@ -30,11 +31,11 @@ export type TranscriptProps = {
   ignoreAttention?: boolean;
 };
 
-const transcriptColumns = {
-  grid: { size: columnWidth },
+const transcriptInitialColumns = {
+  grid: { size: initialColumnWidth },
 };
 
-const transcriptRows = {
+const transcriptInitialRows = {
   grid: { size: lineHeight },
 };
 
@@ -56,7 +57,8 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
             blockIndex,
             segmentIndex,
             cellSpacing +
-              lineHeight * (Math.ceil((segment.text.length * monoCharacterWidthWithWrapBuffer) / columnWidth) + 1),
+              lineHeight *
+                (Math.ceil((segment.text.length * monoCharacterWidthWithWrapBuffer) / initialColumnWidth) + 1),
           ] as [number, number, number];
         }),
       ];
@@ -67,6 +69,7 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
 export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+  const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
@@ -79,16 +82,45 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
-  const rows = useMemo(
-    () =>
-      ({
-        grid: queueMap.reduce((acc: DxGridAxisMeta['grid'], row, rowIndex) => {
-          acc[rowIndex] = { size: row[2] };
-          return acc;
-        }, {}),
-      }) satisfies DxGridAxisMeta,
-    [queueMap],
+  const handleResize = useCallback<OnResizeCallback>(
+    ({ width }) => {
+      const host = measureRef.current;
+      if (width && host && blocks && queueMap) {
+        setRows({
+          grid: queueMap
+            .map(([blockIndex, segmentIndex]) => {
+              if (segmentIndex < 0) {
+                return lineHeight;
+              } else {
+                measureRef.current.textContent = blocks[blockIndex]!.segments[segmentIndex]!.text;
+                return measureRef.current.offsetHeight;
+              }
+            })
+            .reduce((acc: DxGridAxisMeta['grid'], size, row) => {
+              acc[row] = { size };
+              return acc;
+            }, {}),
+        });
+      } else {
+        setRows(undefined);
+      }
+    },
+    [blocks, queueMap],
   );
+
+  const { width, ref: measureRef } = useResizeDetector({
+    refreshMode: 'debounce',
+    refreshRate: 200,
+    onResize: handleResize,
+  });
+
+  const columns = useMemo(() => {
+    if (width) {
+      return { grid: { size: width } };
+    } else {
+      return transcriptInitialColumns;
+    }
+  }, [width]);
 
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks)) {
@@ -121,17 +153,26 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   }, [dxGrid, blocks]);
 
   return (
-    <Grid.Root id={`${attendableId}--transcript`}>
-      <Grid.Content
-        columnDefault={transcriptColumns}
-        rowDefault={transcriptRows}
-        rows={rows}
-        onWheel={handleWheel}
-        className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:select-auto'
-        limitColumns={1}
-        limitRows={queueMap.length}
-        ref={setDxGrid}
+    <>
+      <Grid.Root id={`${attendableId}--transcript`}>
+        <Grid.Content
+          columnDefault={columns}
+          rowDefault={transcriptInitialRows}
+          rows={rows}
+          onWheel={handleWheel}
+          className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:select-auto'
+          limitColumns={1}
+          limitRows={queueMap.length}
+          ref={setDxGrid}
+        />
+      </Grid.Root>
+      <div
+        role='none'
+        {...{ inert: '' }}
+        aria-hidden
+        className='absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block]'
+        ref={measureRef}
       />
-    </Grid.Root>
+    </>
   );
 };

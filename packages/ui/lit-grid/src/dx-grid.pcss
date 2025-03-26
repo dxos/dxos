@@ -1,13 +1,18 @@
 @import './dx-grid-axis-resize-handle.pcss';
 @import './dx-grid-multiselect-cell.pcss';
 
+@layer tokens {
+  :root{
+    --dx-grid-cell-padding-block: .25rem;
+    --dx-grid-cell-padding-inline: .5rem;
+  }
+}
+
 @layer dx-components {
   dx-grid {
     display: contents;
     --dx-grid-gap: 1px;
     --dx-plane-gap: 1px;
-    --dx-grid-cell-padding-block: .25rem;
-    --dx-grid-cell-padding-inline: .5rem;
   }
 
   .dx-grid {
