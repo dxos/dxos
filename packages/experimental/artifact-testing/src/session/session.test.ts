@@ -1,12 +1,20 @@
 import { describe, test } from 'vitest';
 import { AISession } from './session';
 import { createEdgeServices, remoteServiceEndpoints } from '../services';
-import { defineArtifact, defineTool, ToolResult, type Message, type MessageContentBlock } from '@dxos/artifact';
+import {
+  ArtifactId,
+  defineArtifact,
+  defineTool,
+  ToolResult,
+  type Message,
+  type MessageContentBlock,
+} from '@dxos/artifact';
 import { Schema as S } from 'effect';
 import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
 import { AIServiceEdgeClient, OllamaClient, type GenerationStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { inspect } from 'node:util';
+import { DXN } from '@dxos/keys';
 
 // Define a calendar event artifact schema
 const CalendarEventSchema = S.Struct({
@@ -24,13 +32,15 @@ describe('AISession with Ollama', () => {
     // const aiClient = new OllamaClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
-    const session = new AISession({ operationModel: 'planning' });
+    const session = new AISession({ operationModel: 'immediate' });
+
+    const objects = new Set<string>();
 
     // Define calendar artifact
     const calendarArtifact = defineArtifact({
-      id: 'dxos.org/plugin/calendar',
+      id: 'artifact:dxos.org/plugin/calendar',
       name: 'Calendar',
-      instructions: 'Use this to create and manage calendar events',
+      instructions: 'Use this to create and query calendar events.',
       schema: CalendarEventSchema,
       tools: [
         defineTool('calendar', {
@@ -45,9 +55,9 @@ describe('AISession with Ollama', () => {
     });
 
     const tableArtifact = defineArtifact({
-      id: 'dxos.org/plugin/table',
+      id: 'artifact:dxos.org/plugin/table',
       name: 'Table',
-      instructions: 'Use this to create and manage tables',
+      instructions: 'Use this to create and manage tables. Each table has a unique id.',
       schema: S.Struct({}),
       tools: [
         defineTool('table', {
@@ -58,34 +68,47 @@ describe('AISession with Ollama', () => {
           }),
           execute: async ({ data }) => {
             log.info('create table', { data });
-            return ToolResult.Success(`table id=${ObjectId.random()}`);
+            const id = DXN.fromLocalObjectId(ObjectId.random()).toString();
+            objects.add(id);
+            // TODO(dmaretskyi): consider xml for refs instead of @dxn:echo:@:XXXXX
+            return ToolResult.Success(`table @${id}`);
           },
         }),
       ],
     });
 
     const mapArtifact = defineArtifact({
-      id: 'dxos.org/plugin/map',
+      id: 'artifact:dxos.org/plugin/map',
       name: 'Map',
-      instructions: 'Use this to create and manage maps. Maps source data from tables.',
+      instructions: 'Use this to create and manage maps. Maps source data from tables (by table id).',
       schema: S.Struct({}),
       tools: [
         defineTool('map', {
           name: 'create',
           description: 'Create a map',
           schema: S.Struct({
-            source: ObjectId.annotations({ description: 'The table that will be used as the source of the map' }),
+            source: ArtifactId.annotations({
+              description: 'The table that will be used as the source of the map',
+            }),
           }),
           execute: async ({ source }) => {
-            log.info('create map', { source });
-            return ToolResult.Success(`map id=${ObjectId.random()}`);
+            // TODO(dmaretskyi): Use effect-schema decode instead of manual parsing.
+            const sourceId = ArtifactId.toDXN(source);
+            if (!objects.has(sourceId.toString())) {
+              return ToolResult.Error(`table id=${source} not found`);
+            }
+            log.info('create map', { sourceId });
+            const id = DXN.fromLocalObjectId(ObjectId.random()).toString();
+            objects.add(id);
+            // TODO(dmaretskyi): consider xml for refs instead of @dxn:echo:@:XXXXX
+            return ToolResult.Success(`map @${id}`);
           },
         }),
       ],
     });
 
     const scriptArtifact = defineArtifact({
-      id: 'dxos.org/plugin/script',
+      id: 'artifact:dxos.org/plugin/script',
       name: 'Script',
       instructions: 'Use this to create and manage scripts',
       schema: S.Struct({}),
@@ -114,6 +137,11 @@ describe('AISession with Ollama', () => {
         model: '@anthropic/claude-3-5-haiku-20241022',
       },
       prompt: 'create a table and map for a travel itinerary based on events in my calendar',
+    });
+
+    log.info('result', {
+      objects,
+      finalMessage: response.at(-1),
     });
   });
 });

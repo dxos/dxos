@@ -48,7 +48,7 @@ export type SessionRunOptions = {
   requiredArtifactIds?: string[];
 };
 
-type OperationModel = 'planning' | 'require';
+type OperationModel = 'planning' | 'immediate';
 
 export type AiSessionOptions = {
   /**
@@ -124,14 +124,22 @@ export class AISession {
         systemTools.push(
           defineTool('system', {
             name: 'create_plan',
-            description: 'Create a plan.',
+            description:
+              'Create a plan. Make sure that each step is independent and can be executed solely on the data returned by the previous step. The steps only share the data that is specified in the plan.',
             schema: S.Struct({
               goal: S.String.annotations({ description: 'The goal that the plan will achieve' }),
               steps: S.Array(
                 S.Struct({
                   action: S.String.annotations({ description: 'Full, detailed action to perform' }),
+                  dataRequired: S.String.annotations({
+                    description: 'The data required to perform this step.',
+                  }),
+                  dataReturned: S.String.annotations({
+                    description: 'The data returned by this step.',
+                  }),
                   requiredArtifactIds: S.Array(S.String).annotations({
                     description: 'The ids of the artifacts required to perform this step.',
+                    examples: [['artifact:dxos.org/example/Test']],
                   }),
                 }),
               ).annotations({ description: 'Steps' }),
@@ -147,7 +155,7 @@ export class AISession {
               let stepResults: any[] = [];
               for (const step of steps) {
                 console.log(`\nExecuting step: ${step.action}`);
-                const session = new AISession({ operationModel: 'require' });
+                const session = new AISession({ operationModel: 'immediate' });
                 session.message.on((e) => this.message.emit(e));
                 session.block.on((e) => this.block.emit(e));
                 session.update.on((e) => this.update.emit(e));
@@ -164,9 +172,24 @@ export class AISession {
                   requiredArtifactIds: step.requiredArtifactIds.slice(),
                   prompt: `
                       You are an agent that executes the subtask in a plan.
-                      The plan's goal is to ${goal}.
-                      Only focus on your subtask. Which is: ${step.action}.
-                      Use the data from the previous step to complete your task: ${JSON.stringify(stepResults.at(-1))}.
+                      
+                      While you know the plan's goal only focus on your subtask
+                      Use the data from the previous step to complete your task.
+                      
+                      Current step (that you need to complete):
+                      ${JSON.stringify(
+                        {
+                          goal,
+                          dataRequired: step.dataRequired,
+                          dataReturned: step.dataReturned,
+                          yourTask: step.action,
+                        },
+                        null,
+                        2,
+                      )}
+                      
+                      Previous step results:
+                      ${JSON.stringify(stepResults.at(-1))}.
                     `,
                 });
                 const result = messages.at(-1);
@@ -178,14 +201,17 @@ export class AISession {
           }),
         );
         break;
-      case 'require':
+      case 'immediate':
         systemTools.push(
           defineTool('system', {
             name: 'require_artifacts',
             description:
               'Require the use of specific artifacts. This will allow the model to interact with artifacts and use their tools.',
             schema: S.Struct({
-              artifactIds: S.Array(S.String).annotations({ description: 'The ids of the artifacts to require' }),
+              artifactIds: S.Array(S.String).annotations({
+                description: 'The ids of the artifacts to require',
+                examples: [['artifact:dxos.org/example/Test']],
+              }),
             }),
             execute: async ({ artifactIds }) => {
               const missingArtifactIds = artifactIds.filter(
@@ -313,7 +339,8 @@ Follow these guidelines carefully:
 Decision-making:
 
  - Analyze the structure and type of the content in the user's message.
- - Query the list of available artifacts using the appropriate tool.
+ - Can you complete the task using the available artifacts?
+ - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
  - Identify which artifacts are relevant to the user's request.
  ${
    operationModel === 'planning'
@@ -321,7 +348,8 @@ Decision-making:
       - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
     `
      : `
-    - Select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
+    - Are the required artifacts already available?
+    - If not, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
     - The require'd artifact tools will be available for use after require.
   `
  }
