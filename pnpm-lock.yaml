@@ -6723,6 +6723,9 @@ importers:
       extendable-media-recorder-wav-encoder:
         specifier: ^7.0.123
         version: 7.0.124
+      main-thread-scheduling:
+        specifier: ^14.1.1
+        version: 14.2.0
       react-resize-detector:
         specifier: ^12.0.2
         version: 12.0.2(react@18.2.0)

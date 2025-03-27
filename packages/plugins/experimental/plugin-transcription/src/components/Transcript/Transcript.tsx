@@ -3,8 +3,9 @@
 //
 
 import { intervalToDuration } from 'date-fns/intervalToDuration';
-import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import { yieldOrContinue } from 'main-thread-scheduling';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
+import { useResizeDetector, type OnResizeCallback } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -40,10 +41,10 @@ const transcriptInitialRows = {
 };
 
 const authorClasses = 'font-medium text-base leading-[20px]';
-const timestampClasses = 'mie-1 text-xs text-description leading-[20px]';
+const timestampClasses = 'mie-1 text-xs text-description';
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
-  'absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block]',
+  'absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
   segmentTextClasses,
 );
 
@@ -77,6 +78,31 @@ const renderCell = (transcriptStart: Date, segmentStart: Date, segmentText: stri
     segmentStart,
   )}</span><span class="${segmentTextClasses}">${segmentText}</span>`;
 
+const measureRows = async (
+  host: HTMLDivElement,
+  blocks: TranscriptBlock[],
+  queueMap: QueueRows,
+  signal: AbortSignal,
+) => {
+  const transcriptStart = blocks[0]!.segments[0]!.started;
+  const result: DxGridAxisMeta = { grid: {} };
+  for (let row = 0; row < queueMap.length; row++) {
+    await yieldOrContinue('smooth', signal);
+    const [blockIndex, segmentIndex] = queueMap[row];
+    if (segmentIndex < 0) {
+      result.grid[row] = { size: lineHeight + cellSpacing };
+    } else {
+      host.innerHTML = renderCell(
+        transcriptStart,
+        blocks[blockIndex]!.segments[segmentIndex]!.started,
+        blocks[blockIndex]!.segments[segmentIndex]!.text,
+      );
+      result.grid[row] = { size: host.offsetHeight };
+    }
+  }
+  return result;
+};
+
 export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -93,42 +119,29 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
-  const { width, ref: measureRef } = useResizeDetector({
-    // TODO(thure): Ideally this should kick off a remeasurement of `rows`, abort the remeasurement if width changes
-    //  before it’s complete, and remeasure as often as it’s able otherwise. Maybe a use-case
-    //  for `main-thread-scheduling`.
-    refreshOptions: { leading: true },
-    refreshMode: 'throttle',
-    refreshRate: 200,
-  });
+  const abortControllerRef = useRef<AbortController>();
 
-  useEffect(() => {
-    const host = measureRef.current;
-    if (width && host && blocks && queueMap) {
-      const transcriptStart = blocks[0]!.segments[0]!.started;
-      setRows({
-        grid: queueMap
-          .map(([blockIndex, segmentIndex]) => {
-            if (segmentIndex < 0) {
-              return lineHeight + cellSpacing;
-            } else {
-              measureRef.current.innerHTML = renderCell(
-                transcriptStart,
-                blocks[blockIndex]!.segments[segmentIndex]!.started,
-                blocks[blockIndex]!.segments[segmentIndex]!.text,
-              );
-              return measureRef.current.offsetHeight;
+  const handleResize = useCallback<OnResizeCallback>(
+    ({ width }) => {
+      if (width && measureRef.current && Array.isArray(blocks) && blocks[0] && queueMap) {
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        measureRows(measureRef.current, blocks, queueMap, controller.signal)
+          .then((result) => {
+            if (!controller.signal.aborted) {
+              setRows(result);
             }
           })
-          .reduce((acc: DxGridAxisMeta['grid'], size, row) => {
-            acc[row] = { size };
-            return acc;
-          }, {}),
-      });
-    } else {
-      setRows(undefined);
-    }
-  }, [queueMap, blocks, width]);
+          .catch(() => {});
+      }
+    },
+    [blocks, queueMap],
+  );
+
+  const { width, ref: measureRef } = useResizeDetector({
+    onResize: handleResize,
+  });
 
   const columns = useMemo(() => {
     if (width) {
@@ -139,7 +152,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   }, [width]);
 
   useEffect(() => {
-    if (dxGrid && Array.isArray(blocks)) {
+    if (dxGrid && Array.isArray(blocks) && blocks[0]) {
       const transcriptStart = blocks[0]!.segments[0]!.started;
       dxGrid.getCells = (range, plane) => {
         switch (plane) {
@@ -156,6 +169,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
                     }
                   : {
                       readonly: true,
+                      className: 'leading-[20px]',
                       accessoryHtml: renderCell(
                         transcriptStart,
                         blocks[blockIndex]!.segments[segmentIndex]!.started,
