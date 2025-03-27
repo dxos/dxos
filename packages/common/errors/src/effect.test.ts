@@ -2,19 +2,12 @@ import { Schema, Data } from 'effect';
 import { test, describe } from 'vitest';
 import { SystemError, UnknownError } from './errors';
 
-new Error('test error', { cause: new Error('cause error') });
-
 class MyError extends Schema.TaggedError<MyError>()('MyError', {
   extraData: Schema.String,
-}) {
-  // constructor(...args) {
-  //   super(...args);
-  //   Error.captureStackTrace(this, new.target);
-  // }
-}
+}) {}
 
-describe.skip('effect error handling', () => {
-  test('default error class', () => {
+describe('effect error handling', () => {
+  test.only('default error class', () => {
     function throwError() {
       throw new MyError({ extraData: 'extra data' });
     }
@@ -22,7 +15,7 @@ describe.skip('effect error handling', () => {
     throwError();
   });
 
-  test.only('error causes', () => {
+  test('error causes', () => {
     function libFn() {
       throw new Error('lib error');
     }
@@ -31,7 +24,7 @@ describe.skip('effect error handling', () => {
       try {
         libFn();
       } catch (error) {
-        throw new MyError({ extraData: 'app error' }, { cause: error });
+        throw new MyError({ extraData: 'app error' });
       }
     }
 
@@ -39,8 +32,8 @@ describe.skip('effect error handling', () => {
   });
 });
 
-describe('normal errors', () => {
-  test.only('error causes', () => {
+describe.skip('normal errors', () => {
+  test('error causes', () => {
     function libFn() {
       throw new Error('lib error');
     }
@@ -54,5 +47,10 @@ describe('normal errors', () => {
     }
 
     appFn();
+  });
+
+  test('aggregate errors', () => {
+    const errors = [new Error('error 1'), new Error('error 2')];
+    throw new AggregateError(errors);
   });
 });
