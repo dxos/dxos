@@ -55,6 +55,7 @@ export default [
         'close current label': 'Close current plank',
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',
+        'companion plank heading fallback label': 'Related',
       },
     },
   },

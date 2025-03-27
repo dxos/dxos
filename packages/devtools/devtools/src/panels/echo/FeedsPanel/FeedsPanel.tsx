@@ -3,9 +3,10 @@
 //
 
 import { ArrowClockwise } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
+import { FormatEnum } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import {
@@ -16,7 +17,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useContacts } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
@@ -27,14 +28,6 @@ type FeedTableRow = SubscribeToFeedBlocksResponse.Block & {
   type: string;
   issuer: string;
 };
-
-const { helper, builder } = createColumnBuilder<FeedTableRow>();
-const columns: TableColumnDef<FeedTableRow, any>[] = [
-  helper.accessor('type', builder.string({})),
-  helper.accessor('issuer', builder.string({})),
-  helper.accessor('feedKey', builder.key({ header: 'key', tooltip: true })),
-  helper.accessor('seq', builder.number({})),
-];
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();
@@ -88,6 +81,23 @@ export const FeedsPanel = () => {
     return `${formatIdentity(client, contacts, feed?.owner)}${feedLength}`;
   };
 
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'type', format: FormatEnum.String },
+      { name: 'issuer', format: FormatEnum.String },
+      { name: 'feedKey', format: FormatEnum.JSON, size: 180 },
+      { name: 'seq', format: FormatEnum.Number, size: 80 },
+    ],
+    [],
+  );
+
+  const tableData = useMemo(() => {
+    return tableRows.map((row) => ({
+      id: `${row.feedKey.toHex()}-${row.seq}`,
+      ...row,
+    }));
+  }, [tableRows]);
+
   return (
     <PanelContainer
       toolbar={
@@ -107,9 +117,9 @@ export const FeedsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <div className='flex flex-col overflow-hidden'>
+      <div className='bs-full'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable<FeedTableRow> columns={columns} data={tableRows} />
+        <MasterDetailTable properties={properties} data={tableData} />
       </div>
     </PanelContainer>
   );

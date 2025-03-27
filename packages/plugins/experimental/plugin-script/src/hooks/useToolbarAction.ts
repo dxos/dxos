@@ -4,8 +4,11 @@
 
 import { useCallback } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type ScriptType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
+import { DeckAction, surfaceVariant } from '@dxos/plugin-deck/types';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type MenuAction, type MenuActionHandler } from '@dxos/react-ui-menu';
 
 import { type DeployActionProperties, useDeployHandler, useCopyHandler } from './deploy';
@@ -27,14 +30,20 @@ export const useToolbarAction = (props: { state: ScriptToolbarState; script: Scr
   const handleFormat = useFormatHandler(props);
   const handleDeploy = useDeployHandler(props);
   const handleCopy = useCopyHandler(props);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   return useCallback(
     ((action: ScriptToolbarAction) => {
       switch (action.properties.type) {
+        case 'view':
+          void dispatch(
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: fullyQualifiedId(props.script),
+              companion: surfaceVariant('logs'),
+            }),
+          );
+          break;
         case 'template':
           handleTemplateSelect(action.properties.value);
-          break;
-        case 'view':
-          props.state.view = action.properties.value;
           break;
         case 'format':
           void handleFormat();

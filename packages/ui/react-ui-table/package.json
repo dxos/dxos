@@ -10,9 +10,9 @@
   "type": "module",
   "exports": {
     "./deprecated": {
-      "types": "./dist/types/src/_deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/_deprecated/index.mjs",
-      "node": "./dist/lib/node-esm/_deprecated/index.mjs"
+      "types": "./dist/types/src/deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/deprecated/index.mjs",
+      "node": "./dist/lib/node-esm/deprecated/index.mjs"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -29,7 +29,7 @@
   "typesVersions": {
     "*": {
       "deprecated": [
-        "dist/types/src/_deprecated/index.d.ts"
+        "dist/types/src/deprecated/index.d.ts"
       ],
       "types": [
         "dist/types/src/types/index.d.ts"

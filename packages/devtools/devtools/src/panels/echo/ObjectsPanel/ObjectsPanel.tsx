@@ -2,17 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
-import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
+import { FormatEnum, getSchemaVersion } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { DynamicTable } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { PanelContainer, Searchbar } from '../../../components';
@@ -35,39 +35,6 @@ const textFilter = (text?: string) => {
   };
 };
 
-const { helper, builder } = createColumnBuilder<ReactiveEchoObject<any>>();
-const columns: TableColumnDef<ReactiveEchoObject<any>, any>[] = [
-  helper.accessor(
-    'id',
-    builder.string({
-      header: 'id',
-      accessorFn: (item) => trimId(item.id),
-      size: 140,
-      // TODO(dmaretskyi): font-mono doesn't work.
-      meta: { cell: { classNames: ['font-mono'] } },
-    }),
-  ),
-  helper.accessor((item) => (isDeleted(item) ? '❌' : ' '), {
-    id: 'deleted',
-    size: 80,
-    meta: { cell: { classNames: [textPadding, 'text-center'] } },
-  }),
-  helper.accessor((item) => getTypename(item), {
-    id: 'type',
-    ...builder.string(),
-  }),
-  helper.accessor((item) => (getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined), {
-    id: 'version',
-    size: 80,
-    ...builder.string(),
-  }),
-  helper.accessor((item) => (getSchema(item) ? 'YES' : 'NO'), {
-    id: 'Schema Available',
-    ...builder.string(),
-    size: 80,
-  }),
-];
-
 type HistoryRow = {
   hash: string;
   actor: string;
@@ -83,32 +50,6 @@ const mapHistoryRow = (item: AmState<any>): HistoryRow => {
     message: item.change.message,
   };
 };
-
-const cb = createColumnBuilder<HistoryRow>();
-const historyColumns: TableColumnDef<HistoryRow, any>[] = [
-  cb.helper.accessor((item) => item.hash.slice(0, 8), {
-    ...cb.builder.string(),
-    header: 'Hash',
-    size: 80,
-  }),
-  // TODO(dmaretskyi): Correlate with identity.
-  cb.helper.accessor((item) => item.actor, {
-    ...cb.builder.string(),
-    header: 'Author (Actor ID)',
-    size: 80,
-  }),
-  // Currently not set.
-  // cb.helper.accessor((item) => item.time, {
-  //   ...cb.builder.number(),
-  //   header: 'Timestamp',
-  //   size: 80,
-  // }),
-  // cb.helper.accessor((item) => item.message, {
-  //   ...cb.builder.string(),
-  //   header: 'Message',
-  //   size: 80,
-  // }),
-];
 
 export const ObjectsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
@@ -146,6 +87,100 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
   };
 
+  const objectProperties = useMemo(
+    () => [
+      { name: 'id', format: FormatEnum.DID },
+      { name: 'type', format: FormatEnum.String },
+      {
+        name: 'deleted',
+        format: FormatEnum.SingleSelect,
+        size: 100,
+        config: {
+          options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
+        },
+      },
+      { name: 'version', format: FormatEnum.String, size: 100 },
+      {
+        name: 'schemaAvailable',
+        format: FormatEnum.SingleSelect,
+        size: 180,
+        config: {
+          options: [
+            { id: 'YES', title: 'YES', color: 'green' },
+            { id: 'NO', title: 'NO', color: 'red' },
+          ],
+        },
+      },
+    ],
+    [],
+  );
+
+  const tableData = useMemo(() => {
+    return items.filter(textFilter(filter)).map((item) => ({
+      id: item.id,
+      deleted: isDeleted(item) ? 'DELETED' : ' ',
+      type: getTypename(item),
+      version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
+      schemaAvailable: getSchema(item) ? 'YES' : 'NO',
+      _original: item, // Store the original item for selection
+    }));
+  }, [items, filter]);
+
+  const handleObjectSelectionChanged = useCallback(
+    (selectedIds: string[]) => {
+      if (selectedIds.length === 0) {
+        setSelected(undefined);
+        setSelectedVersion(null);
+        setSelectedVersionObject(null);
+        return;
+      }
+
+      const selectedId = selectedIds[selectedIds.length - 1];
+      const selectedObject = items.find((item) => item.id === selectedId);
+
+      if (selectedObject) {
+        objectSelect(selectedObject);
+      }
+    },
+    [items],
+  );
+
+  const historyProperties = useMemo(
+    () => [
+      { name: 'hash', format: FormatEnum.JSON },
+      { name: 'actor', format: FormatEnum.JSON, size: 380 },
+      // Uncomment when time and message are used
+      // { name: 'time', format: FormatEnum.Number },
+      // { name: 'message', format: FormatEnum.String },
+    ],
+    [],
+  );
+  const historyData = useMemo(() => {
+    return history.map((item) => ({
+      id: item.hash,
+      hash: item.hash.slice(0, 8),
+      actor: item.actor,
+    }));
+  }, [history, selectedVersion]);
+
+  const handleHistorySelectionChanged = useCallback(
+    (selectedHashes: string[]) => {
+      if (selectedHashes.length === 0 || !selected) {
+        setSelectedVersion(null);
+        setSelectedVersionObject(null);
+        return;
+      }
+
+      const selectedHash = selectedHashes[0];
+      const versionItem = history.find((item) => item.hash.slice(0, 8) === selectedHash);
+
+      if (versionItem) {
+        onVersionClick(versionItem);
+      }
+    },
+    [history, onVersionClick, selected],
+  );
+
   return (
     <PanelContainer
       toolbar={
@@ -156,20 +191,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       }
     >
       <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
-        <Table.Root>
-          <Table.Viewport asChild>
-            <div className='flex-col divide-y'>
-              <Table.Main<ReactiveEchoObject<any>>
-                columns={columns}
-                data={items.filter(textFilter(filter))}
-                rowsSelectable
-                currentDatum={selected}
-                onDatumClick={objectSelect}
-                fullWidth
-              />
-            </div>
-          </Table.Viewport>
-        </Table.Root>
+        <DynamicTable
+          data={tableData}
+          properties={objectProperties}
+          onSelectionChanged={handleObjectSelectionChanged}
+        />
 
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
@@ -180,22 +206,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </div>
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
-            <>
-              <Table.Root>
-                <Table.Viewport asChild>
-                  <div className='flex-col divide-y'>
-                    <Table.Main<HistoryRow>
-                      columns={historyColumns}
-                      data={history}
-                      rowsSelectable
-                      currentDatum={selectedVersion ?? undefined}
-                      onDatumClick={onVersionClick}
-                      fullWidth
-                    />
-                  </div>
-                </Table.Viewport>
-              </Table.Root>
-            </>
+            <DynamicTable
+              data={historyData}
+              properties={historyProperties}
+              onSelectionChanged={handleHistorySelectionChanged}
+            />
           ) : (
             'Select an object to inspect the contents'
           )}
@@ -263,13 +278,11 @@ const ObjectDataViewer = ({ object, onNavigate }: ObjectDataViewerProps) => {
   };
 
   return (
-    <SyntaxHighlighter language='json' renderer={rowRenderer}>
+    <SyntaxHighlighter classNames='text-sm' language='json' renderer={rowRenderer}>
       {text}
     </SyntaxHighlighter>
   );
 };
-
-const trimId = (id: ObjectId) => `${id.substring(0, 4)}...${id.substring(id.length - 4)}`;
 
 interface rendererNode {
   type: 'element' | 'text';

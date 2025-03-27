@@ -3,7 +3,7 @@
 //
 
 import { Message } from '@dxos/artifact';
-import { DEFAULT_LLM_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
+import { DEFAULT_EDGE_MODEL, MixedStreamParser, type AIServiceClient } from '@dxos/assistant';
 import { QueueImpl } from '@dxos/echo-db';
 import { createStatic, isInstanceOf } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -34,7 +34,7 @@ export const summarizeTranscript = async (
   log.info('summarizing transcript', { blockCount: queue.items.length });
   const output = await parser.parse(
     await ai.exec({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
       history: [createStatic(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
     }),

@@ -5,6 +5,7 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -59,7 +60,7 @@ export const ScriptPlugin = () =>
           label: ['function panel label', { ns: SCRIPT_PLUGIN }],
           icon: 'ph--terminal--regular',
           fixed: true,
-          filter: (node) => node.data instanceof ScriptType && !!getSpace(node.data),
+          filter: (node) => isInstanceOf(ScriptType, node.data) && !!getSpace(node.data),
         }),
     }),
     defineModule({

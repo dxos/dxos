@@ -13,6 +13,7 @@ import { Client, Config, PublicKey } from '@dxos/client';
 import { type SpaceId, SpaceState, getTypename, loadObjectReferences, type Space } from '@dxos/client/echo';
 import { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } from '@dxos/client-services';
 import { raise } from '@dxos/debug';
+import { getSchemaTypename } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -189,12 +190,12 @@ describe('Run migrations on profile dump', () => {
             break;
 
           case LegacyTypes.DocumentType.typename: {
-            if (getTypename(migratedObject) !== DocumentType.typename) {
+            if (getTypename(migratedObject) !== getSchemaTypename(DocumentType)) {
               log.info('failed document', { objectId, data, spaceId: space?.id, spaceName: space?.properties.name });
               failed[LegacyTypes.DocumentType.typename] = (failed[LegacyTypes.DocumentType.typename] ?? 0) + 1;
               continue;
             }
-            expect(getTypename(migratedObject)).to.equal(DocumentType.typename);
+            expect(getTypename(migratedObject)).to.equal(getSchemaTypename(DocumentType));
             expect(data.title).to.equal(migratedObject.name);
             const content = await loadObjectReferences(migratedObject, (doc) => doc.content);
             expect(getTypename(content)).to.equal(TextType.typename);

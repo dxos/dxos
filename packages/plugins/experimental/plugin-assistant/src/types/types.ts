@@ -33,7 +33,9 @@ export namespace AssistantAction {
 
 export const AssistantSettingsSchema = S.mutable(
   S.Struct({
-    llmModel: S.optional(S.String),
+    llmProvider: S.optional(S.Literal('edge', 'ollama')),
+    edgeModel: S.optional(S.String),
+    ollamaModel: S.optional(S.String),
     customPrompts: S.optional(S.Boolean),
   }),
 );

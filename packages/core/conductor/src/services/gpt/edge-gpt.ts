@@ -7,7 +7,7 @@ import { Effect, Stream } from 'effect';
 
 import { type Tool, type Message, type ImageContentBlock } from '@dxos/artifact';
 import {
-  DEFAULT_LLM_MODEL,
+  DEFAULT_EDGE_MODEL,
   MixedStreamParser,
   type AIServiceClient,
   type GenerateRequest,
@@ -44,7 +44,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
       log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const generationStream = yield* Effect.promise(() =>
         generate(this._ai, {
-          model: DEFAULT_LLM_MODEL,
+          model: DEFAULT_EDGE_MODEL,
           history: messages,
           systemPrompt,
           tools: tools as Tool[],

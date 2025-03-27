@@ -1,34 +1,39 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable } from '../../../components';
-
-const { helper, builder } = createColumnBuilder<KeyRecord>();
-const columns: TableColumnDef<KeyRecord, any>[] = [
-  helper.accessor((record) => PublicKey.from(record.publicKey), {
-    id: 'public',
-    ...builder.key({ header: 'public key', tooltip: true }),
-  }),
-  helper.accessor((record) => record.privateKey && PublicKey.from(record.privateKey), {
-    id: 'private',
-    ...builder.key({ header: 'private key', tooltip: true }),
-  }),
-];
 
 export const KeyringPanel = () => {
   const devtoolsHost = useDevtools();
   const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [{ name: 'publicKey', title: 'Public Key', format: FormatEnum.DID }],
+    [],
+  );
+
+  const data = useMemo(
+    () =>
+      keys?.map((record: KeyRecord) => ({
+        id: PublicKey.from(record.publicKey).toHex(),
+        publicKey: PublicKey.from(record.publicKey).toHex(),
+        _original: record,
+      })) || [],
+    [keys],
+  );
+
   if (keys === undefined) {
     return null;
   }
 
-  return <MasterDetailTable columns={columns} data={keys} />;
+  return <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />;
 };
