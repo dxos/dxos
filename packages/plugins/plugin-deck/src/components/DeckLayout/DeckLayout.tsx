@@ -191,7 +191,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     return active.reduce(
       (acc: { result: Record<string, number>; cursor: number }, entryId) => {
         acc.result[entryId] = acc.cursor + 1;
-        acc.cursor += activeCompanions[entryId] ? 3 : 2;
+        acc.cursor += activeCompanions?.[entryId] ? 3 : 2;
         return acc;
       },
       { result: {}, cursor: 0 },
@@ -273,7 +273,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                       <PlankSeparator order={order[entryId] - 1} />
                       <Plank
                         id={entryId}
-                        companionId={activeCompanions[entryId]}
+                        companionId={activeCompanions?.[entryId]}
                         part='deck'
                         order={order[entryId]}
                         active={active}
@@ -293,7 +293,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
                   <Plank
                     id={solo}
-                    companionId={solo ? activeCompanions[solo] : undefined}
+                    companionId={solo ? activeCompanions?.[solo] : undefined}
                     part='solo'
                     layoutMode={layoutMode}
                   />
