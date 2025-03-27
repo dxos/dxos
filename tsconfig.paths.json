@@ -256,9 +256,6 @@
       "@dxos/shell/testing": [
         "packages/sdk/shell/src/testing/index.ts"
       ],
-      "@dxos/brand": [
-        "packages/ui/brand/src/index.ts"
-      ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"
       ],
