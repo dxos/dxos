@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { format, isToday } from 'date-fns';
+import { intervalToDuration } from 'date-fns/intervalToDuration';
 import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -21,7 +21,7 @@ import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
-const lineHeight = 24;
+const lineHeight = 20;
 const initialColumnWidth = 600;
 const cellSpacing = 8 + 2;
 
@@ -39,8 +39,8 @@ const transcriptInitialRows = {
   grid: { size: lineHeight + cellSpacing },
 };
 
-const authorClasses = 'font-medium text-base leading-[24px]';
-const timestampClasses = 'mis-2 text-xs text-description leading-[24px]';
+const authorClasses = 'font-medium text-base leading-[20px]';
+const timestampClasses = 'mie-1 text-xs text-description leading-[20px]';
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
   'absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block]',
@@ -64,7 +64,18 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
   }
 };
 
-const formatDate = (date: Date) => format(date, `${isToday(date) ? '' : 'PPP '}h:mm:ss aaa`);
+const pad = (n = 0) => String(n).padStart(2, '0');
+
+const formatTimestamp = (start: Date, end: Date) => {
+  const { hours, minutes, seconds } = intervalToDuration({ start, end });
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+};
+
+const renderCell = (transcriptStart: Date, segmentStart: Date, segmentText: string) =>
+  `<span class="${timestampClasses}">${formatTimestamp(
+    transcriptStart,
+    segmentStart,
+  )}</span><span class="${segmentTextClasses}">${segmentText}</span>`;
 
 export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
   const { hasAttention } = useAttention(attendableId);
@@ -83,6 +94,9 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
   const { width, ref: measureRef } = useResizeDetector({
+    // TODO(thure): Ideally this should kick off a remeasurement of `rows`, abort the remeasurement if width changes
+    //  before it’s complete, and remeasure as often as it’s able otherwise. Maybe a use-case
+    //  for `main-thread-scheduling`.
     refreshOptions: { leading: true },
     refreshMode: 'throttle',
     refreshRate: 200,
@@ -91,13 +105,18 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   useEffect(() => {
     const host = measureRef.current;
     if (width && host && blocks && queueMap) {
+      const transcriptStart = blocks[0]!.segments[0]!.started;
       setRows({
         grid: queueMap
           .map(([blockIndex, segmentIndex]) => {
             if (segmentIndex < 0) {
               return lineHeight + cellSpacing;
             } else {
-              measureRef.current.textContent = blocks[blockIndex]!.segments[segmentIndex]!.text;
+              measureRef.current.innerHTML = renderCell(
+                transcriptStart,
+                blocks[blockIndex]!.segments[segmentIndex]!.started,
+                blocks[blockIndex]!.segments[segmentIndex]!.text,
+              );
               return measureRef.current.offsetHeight;
             }
           })
@@ -121,6 +140,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks)) {
+      const transcriptStart = blocks[0]!.segments[0]!.started;
       dxGrid.getCells = (range, plane) => {
         switch (plane) {
           case 'grid': {
@@ -131,12 +151,16 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
                 segmentIndex < 0
                   ? {
                       readonly: true,
-                      accessoryHtml: `<span class="${authorClasses}">${blocks[blockIndex]!.author}</span><span class="${timestampClasses}">${formatDate(blocks[0]?.segments[0]?.started)}</span>`,
+                      value: blocks[blockIndex]!.author,
+                      className: authorClasses,
                     }
                   : {
                       readonly: true,
-                      value: blocks[blockIndex]!.segments[segmentIndex]!.text,
-                      className: segmentTextClasses,
+                      accessoryHtml: renderCell(
+                        transcriptStart,
+                        blocks[blockIndex]!.segments[segmentIndex]!.started,
+                        blocks[blockIndex]!.segments[segmentIndex]!.text,
+                      ),
                     }
               ) satisfies DxGridCellValue;
             }
