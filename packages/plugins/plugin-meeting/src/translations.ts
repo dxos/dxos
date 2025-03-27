@@ -20,6 +20,7 @@ export default [
 
         'summarize label': 'Summarize',
         'summarizing label': 'Summarizing...',
+        'create summary message': 'A summary doesn’t exist for this meeting yet. Create one now?',
 
         'join call': 'Join',
         'leave call': 'Leave',

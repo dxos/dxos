@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
-import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 
@@ -42,15 +42,6 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
 
   return (
     <StackItem.Content toolbar={false} classNames='relative'>
-      <Toolbar.Root classNames='absolute block-start-1 inline-end-1 z-[1] is-min'>
-        <IconButton
-          icon='ph--book-open-text--regular'
-          size={5}
-          disabled={isSummarizing}
-          label={t(isSummarizing ? 'summarizing label' : 'summarize label')}
-          onClick={handleSummarize}
-        />
-      </Toolbar.Root>
       <Tabs.Root
         orientation='horizontal'
         value={activeTab}
@@ -60,7 +51,18 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
         <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
           <Tabs.Tab value='notes'>{t('notes tab label')}</Tabs.Tab>
-          <Tabs.Tab value='summary'>{t('summary tab label')}</Tabs.Tab>
+          <ButtonGroup>
+            <Tabs.Tab value='summary'>{t('summary tab label')}</Tabs.Tab>
+            <IconButton
+              variant={activeTab === 'summary' ? 'default' : 'ghost'}
+              icon='ph--arrows-clockwise--regular'
+              iconOnly
+              size={5}
+              disabled={isSummarizing}
+              label={t(isSummarizing ? 'summarizing label' : 'summarize label')}
+              onClick={handleSummarize}
+            />
+          </ButtonGroup>
         </Tabs.Tablist>
         <Tabs.Tabpanel value='transcript'>
           {transcript && <Surface role='tabpanel' data={{ subject: transcript }} />}
@@ -69,7 +71,21 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
           {notes && <Surface role='tabpanel' data={{ id: meeting.id, subject: notes }} />}
         </Tabs.Tabpanel>
         <Tabs.Tabpanel value='summary'>
-          {summary && <Surface role='tabpanel' data={{ id: meeting.id, subject: summary }} />}
+          {(summary?.content.length ?? 0) > 0 ? (
+            <Surface role='tabpanel' data={{ id: meeting.id, subject: summary }} />
+          ) : (
+            <div role='none' className='place-self-center is-full min-is-64 max-is-96 p-4'>
+              <p>{t('create summary message')}</p>
+              <IconButton
+                icon='ph--book-open-text--regular'
+                size={5}
+                disabled={isSummarizing}
+                label={t(isSummarizing ? 'summarizing label' : 'summarize label')}
+                onClick={handleSummarize}
+                classNames='is-full mbs-4'
+              />
+            </div>
+          )}
         </Tabs.Tabpanel>
       </Tabs.Root>
     </StackItem.Content>
