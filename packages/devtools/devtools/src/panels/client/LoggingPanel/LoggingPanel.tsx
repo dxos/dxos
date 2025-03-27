@@ -79,8 +79,8 @@ export const LoggingPanel = () => {
   );
 
   const tableData = useMemo(() => {
-    return logs.map((entry) => ({
-      id: `${entry.timestamp}-${Math.random()}`, // Unique ID
+    return logs.map((entry, index) => ({
+      id: `${entry.timestamp}-${index}`, // Stable ID based on position and timestamp
       timestamp: entry.timestamp,
       level: Object.entries(levels)
         .find(([, level]) => level === entry.level)?.[0]
