@@ -38,7 +38,7 @@ const meta: Meta<typeof Transcript> = {
     useEffect(() => {
       const i = setInterval(() => {
         setBlocks((blocks) => [...blocks, createBlock()]);
-      }, 5_000);
+      }, 1_000);
 
       return () => clearInterval(i);
     }, []);
