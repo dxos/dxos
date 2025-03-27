@@ -5,6 +5,7 @@
 import { Match, type Schema as S } from 'effect';
 import React, { type ChangeEvent, useCallback } from 'react';
 
+import { debounce } from '@dxos/async';
 import { Input, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -31,25 +32,26 @@ export const TemplateContainer = ({ template, role }: { template: TemplateType; 
   );
 
   const handleTypenameChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
+    debounce((event: ChangeEvent<HTMLInputElement>) => {
       if (template.kind.include === 'schema-matching') {
         template.kind.typename = event.target.value;
       }
-    },
-    [template],
+    }, 300),
+    [template.kind.include],
   );
 
   const handleDescriptionChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
+    debounce((event: ChangeEvent<HTMLInputElement>) => {
       if (template.kind.include === 'automatically') {
         template.kind.description = event.target.value;
       }
-    },
-    [template],
+    }, 300),
+    [template.kind.include],
   );
 
   return (
     <StackItem.Content toolbar role={role} classNames='mli-auto w-full max-w-[50rem]'>
+      {/* TODO(wittjosiah): Move this toolbar into c11y sidebar. */}
       <Toolbar.Root>
         <Select.Root value={template.kind.include} onValueChange={handleKindChange}>
           <Toolbar.Button asChild>
@@ -71,7 +73,7 @@ export const TemplateContainer = ({ template, role }: { template: TemplateType; 
           <Input.Root>
             <Input.TextInput
               placeholder={t('typename placeholder')}
-              value={template.kind.typename}
+              defaultValue={template.kind.typename}
               onChange={handleTypenameChange}
             />
           </Input.Root>
@@ -80,7 +82,7 @@ export const TemplateContainer = ({ template, role }: { template: TemplateType; 
           <Input.Root>
             <Input.TextInput
               placeholder={t('description placeholder')}
-              value={template.kind.description}
+              defaultValue={template.kind.description}
               onChange={handleDescriptionChange}
             />
           </Input.Root>
