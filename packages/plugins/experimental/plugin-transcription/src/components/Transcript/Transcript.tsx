@@ -125,15 +125,12 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     ({ width }) => {
       if (width && measureRef.current && Array.isArray(blocks) && blocks[0] && queueMap) {
         abortControllerRef.current?.abort();
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-        measureRows(measureRef.current, blocks, queueMap, controller.signal)
-          .then((result) => {
-            if (!controller.signal.aborted) {
-              setRows(result);
-            }
-          })
-          .catch(() => {});
+        abortControllerRef.current = new AbortController();
+        measureRows(measureRef.current, blocks, queueMap, abortControllerRef.current.signal)
+          .then(setRows)
+          .catch(() => {
+            /* Aborted mid-measurement by new size. */
+          });
       }
     },
     [blocks, queueMap],
