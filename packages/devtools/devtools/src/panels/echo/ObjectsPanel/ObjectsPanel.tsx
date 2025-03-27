@@ -190,30 +190,32 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
+      <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
         <DynamicTable
           data={tableData}
           properties={objectProperties}
           onSelectionChanged={handleObjectSelectionChanged}
         />
 
-        <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selected ? (
-            <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
-          ) : (
-            'Select an object to inspect the contents'
-          )}
-        </div>
-        <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selected ? (
-            <DynamicTable
-              data={historyData}
-              properties={historyProperties}
-              onSelectionChanged={handleHistorySelectionChanged}
-            />
-          ) : (
-            'Select an object to inspect the contents'
-          )}
+        <div className='grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
+          <div className={mx('p-1 overflow-auto ')}>
+            {selected ? (
+              <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
+            ) : (
+              'Select an object to inspect the contents'
+            )}
+          </div>
+          <div className={mx('overflow-auto', !selected && 'p-1 border-bs !border-separator')}>
+            {selected ? (
+              <DynamicTable
+                data={historyData}
+                properties={historyProperties}
+                onSelectionChanged={handleHistorySelectionChanged}
+              />
+            ) : (
+              'Select an object to inspect the contents'
+            )}
+          </div>
         </div>
       </div>
       <div
