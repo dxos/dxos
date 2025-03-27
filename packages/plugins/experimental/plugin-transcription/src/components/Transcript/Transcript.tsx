@@ -83,7 +83,8 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
   const { width, ref: measureRef } = useResizeDetector({
-    refreshMode: 'debounce',
+    refreshOptions: { leading: true },
+    refreshMode: 'throttle',
     refreshRate: 200,
   });
 
