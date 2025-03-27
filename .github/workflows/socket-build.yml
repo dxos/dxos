@@ -82,6 +82,8 @@ jobs:
 
       - name: Build Socket Runtime Build Action
         run: cd .github/socket-runtime-build-action && npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
       - name: Bundle Application
         uses: ./.github/socket-runtime-build-action/
