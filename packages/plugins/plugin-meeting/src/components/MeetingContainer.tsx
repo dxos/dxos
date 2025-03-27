@@ -56,7 +56,7 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
         orientation='horizontal'
         value={activeTab}
         onValueChange={setActiveTab}
-        classNames='grid grid-rows-[min-content_1fr] [&>[role="tabpanel"]]:min-bs-0'
+        classNames='grid grid-rows-[min-content_1fr] [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid'
       >
         <Tabs.Tablist classNames='border-be border-separator'>
           <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
