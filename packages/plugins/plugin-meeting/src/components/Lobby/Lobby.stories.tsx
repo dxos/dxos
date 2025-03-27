@@ -21,7 +21,7 @@ const meta: Meta<typeof Lobby> = {
   render: () => {
     return (
       <div className='flex w-[30rem] h-full overflow-hidden'>
-        <Lobby />
+        <Lobby roomId='test' />
       </div>
     );
   },

@@ -22,6 +22,11 @@ import { codec, type TranscriptionState, type UserState } from '../types';
 
 export type CallState = {
   /**
+   * Room id.
+   */
+  roomId?: string;
+
+  /**
    * All users states in the swarm.
    */
   users?: UserState[];
@@ -52,8 +57,10 @@ export type CallSwarmSynchronizerParams = { networkService: NetworkService };
  * Sends and receives state to/from Swarm network.
  */
 export class CallSwarmSynchronizer extends Resource {
-  private readonly _state: CallState = { transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } } };
   public readonly stateUpdated = new Event<CallState>();
+  private readonly _state: CallState = {
+    transcription: { enabled: false, lamportTimestamp: { id: '', version: 0 } },
+  };
 
   private readonly _networkService: NetworkService;
 
@@ -62,7 +69,6 @@ export class CallSwarmSynchronizer extends Resource {
   private _displayName?: string = undefined;
 
   private _stream?: Stream<SwarmResponse> = undefined;
-  private _roomId?: string = undefined;
   private _sendStateTask?: DeferredTask = undefined;
 
   constructor({ networkService }: CallSwarmSynchronizerParams) {
@@ -145,7 +151,7 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
-    this._roomId = roomId;
+    this._state.roomId = roomId;
   }
 
   protected override async _open() {
@@ -160,8 +166,8 @@ export class CallSwarmSynchronizer extends Resource {
 
   @synchronized
   async join() {
-    invariant(this._roomId);
-    this._stream = this._networkService.subscribeSwarmState({ topic: getTopic(this._roomId) });
+    invariant(this._state.roomId);
+    this._stream = this._networkService.subscribeSwarmState({ topic: getTopic(this._state.roomId) });
     this._stream.subscribe((event) => this._processSwarmEvent(event));
 
     this._notifyAndSchedule();
@@ -169,7 +175,7 @@ export class CallSwarmSynchronizer extends Resource {
 
   @synchronized
   async leave() {
-    const roomId = this._roomId;
+    const roomId = this._state.roomId;
     void this._stream?.close();
     this._stream = undefined;
     if (roomId && this._identityKey && this._deviceKey) {
@@ -193,7 +199,7 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _sendState() {
-    if (!this._roomId || !this._identityKey || !this._deviceKey) {
+    if (!this._state.roomId || !this._identityKey || !this._deviceKey) {
       return;
     }
 
@@ -205,7 +211,7 @@ export class CallSwarmSynchronizer extends Resource {
     };
 
     await this._networkService.joinSwarm({
-      topic: getTopic(this._roomId),
+      topic: getTopic(this._state.roomId),
       peer: {
         identityKey: this._identityKey,
         peerKey: this._deviceKey,

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { MeetingCapabilities } from '../../capabilities';
 import { MEETING_PLUGIN } from '../../meta';
@@ -15,7 +15,7 @@ export const MediaButtons = () => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const call = useCapability(MeetingCapabilities.CallManager);
   return (
-    <>
+    <ButtonGroup>
       <IconButton
         icon={call.media.audioEnabled ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
         label={call.media.audioEnabled ? t('mic off') : t('mic on')}
@@ -36,6 +36,6 @@ export const MediaButtons = () => {
         }
         iconOnly
       />
-    </>
+    </ButtonGroup>
   );
 };

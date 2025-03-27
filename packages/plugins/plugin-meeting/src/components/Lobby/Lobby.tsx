@@ -15,19 +15,30 @@ import { MEETING_PLUGIN } from '../../meta';
 import { MediaButtons, VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';
 
-export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
+type LobbyProps = ThemedClassName & {
+  roomId: string;
+};
+
+export const Lobby: FC<LobbyProps> = ({ classNames, roomId }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const call = useCapability(MeetingCapabilities.CallManager);
   // const sessionError = call.media.peer?.sessionError;
   // TODO(mykola): Users number is not correct now, we are joining swarm on press of join button.
   // So we can not scan users list before joining.
-  const numUsers = call.users?.filter((user) => user.joined).length ?? 0;
+  // const numUsers = call.users?.filter((user) => user.joined).length ?? 0;
 
   const joinSound = useSoundEffect('JoinCall');
-  const handleJoin = useCallback(() => {
-    void call.join().catch((err) => log.catch(err));
-    void joinSound.play().catch((err) => log.catch(err));
-  }, [joinSound]);
+  const handleJoin = useCallback(async () => {
+    try {
+      if (call.joined) {
+        await call.leave();
+      }
+      call.setRoomId(roomId);
+      await Promise.all([call.join(), joinSound.play()]);
+    } catch (err) {
+      log.catch(err);
+    }
+  }, [joinSound, roomId, call.joined, call.leave, call.setRoomId, call.join]);
 
   return (
     <div className={mx('flex flex-col w-full h-full overflow-hidden', classNames)}>
@@ -37,9 +48,9 @@ export const Lobby: FC<ThemedClassName> = ({ classNames }) => {
 
       <Toolbar.Root classNames='justify-between'>
         <IconButton variant='primary' label={t('join call')} onClick={handleJoin} icon='ph--phone-incoming--regular' />
-        <div className='grow text-sm text-subdued'>
-          {/* sessionError ?? */ `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
-        </div>
+        {/* <div className='grow text-sm text-subdued'>
+          {sessionError ?? `${numUsers} ${numUsers === 1 ? t('lobby participant') : t('lobby participants')}`}
+        </div> */}
         <MediaButtons />
       </Toolbar.Root>
     </div>

@@ -789,9 +789,18 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -813,6 +822,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-icons
+      '@effect/platform':
+        specifier: 0.75.1
+        version: 0.75.1(effect@3.13.3)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1417,6 +1429,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      jsonpath-plus:
+        specifier: 10.2.0
+        version: 10.2.0
     devDependencies:
       '@dxos/log':
         specifier: workspace:*
@@ -4669,6 +4684,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
@@ -4679,9 +4697,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      effect:
-        specifier: 3.13.3
-        version: 3.13.3
 
   packages/experimental/artifact-testing:
     dependencies:
@@ -6130,6 +6145,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object

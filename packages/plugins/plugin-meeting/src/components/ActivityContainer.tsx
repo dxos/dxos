@@ -37,12 +37,14 @@ export type ActivityContainerProps = {
 export const ActivityContainer: FC<ActivityContainerProps> = ({ channel, roomId: _roomId }) => {
   const { dispatch } = useIntentDispatcher();
   const call = useCapability(MeetingCapabilities.CallManager);
+  const roomId = channel ? fullyQualifiedId(channel) : _roomId;
+  invariant(roomId);
 
   useEffect(() => {
-    const roomId = channel ? fullyQualifiedId(channel) : _roomId;
-    invariant(roomId);
-    call.setRoomId(roomId);
-  }, [channel, call.joined]);
+    if (!call.joined) {
+      call.setRoomId(roomId);
+    }
+  }, [roomId, call.joined, call.roomId]);
 
   const handleTranscriptionStart = useCallback(
     () =>
@@ -75,13 +77,13 @@ export const ActivityContainer: FC<ActivityContainerProps> = ({ channel, roomId:
 
   return (
     <StackItem.Content toolbar={false}>
-      {call.joined ? (
+      {call.joined && call.roomId === roomId ? (
         <>
           <Call.Room />
           <Call.Toolbar onTranscriptionStart={handleTranscriptionStart} onTranscriptionStop={handleTranscriptionStop} />
         </>
       ) : (
-        <Lobby />
+        <Lobby roomId={roomId} />
       )}
     </StackItem.Content>
   );

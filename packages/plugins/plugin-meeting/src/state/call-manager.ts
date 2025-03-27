@@ -16,7 +16,10 @@ import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer
 import { MediaManager, type MediaState } from './media-manager';
 import { type TranscriptionState, CALLS_URL, type EncodedTrackName, TrackNameCodec } from '../types';
 
-export type GlobalState = { call: CallState; media: MediaState };
+export type GlobalState = {
+  call: CallState;
+  media: MediaState;
+};
 
 /**
  * Top level manager for call state.
@@ -34,6 +37,12 @@ export class CallManager extends Resource {
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
   private readonly _transcriptionManager: TranscriptionManager;
+
+  /** @reactive */
+  get roomId() {
+    return this._state.call.roomId;
+  }
+
   /** @reactive */
   get raisedHand() {
     return this._state.call.raisedHand ?? false;
