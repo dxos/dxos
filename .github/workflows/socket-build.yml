@@ -78,7 +78,7 @@ jobs:
           path: .github/socket-runtime-build-action
 
       - name: Build Socket Runtime Build Action
-        run: cd .github/socket-runtime-build-action && pnpm install
+        run: cd .github/socket-runtime-build-action && npm install
 
       - name: Bundle Application
         uses: ./.github/socket-runtime-build-action/
