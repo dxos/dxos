@@ -14,7 +14,7 @@ import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { AssistantCapabilities } from '../capabilities';
-import { ChatProcessor } from '../hooks';
+import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
 import { type AssistantSettingsProps, ServiceType } from '../types';
 
@@ -65,10 +65,10 @@ export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProp
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).
-  const model =
+  const model: ChatProcessorOptions['model'] =
     settings?.llmProvider === 'ollama'
-      ? settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL
-      : settings?.edgeModel ?? DEFAULT_EDGE_MODEL;
+      ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
+      : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
