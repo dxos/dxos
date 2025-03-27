@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { format, isToday } from 'date-fns';
 import React, { type FC, useCallback, useEffect, useMemo, useState, type WheelEvent } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -62,6 +63,8 @@ const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
     });
   }
 };
+
+const formatDate = (date: Date) => format(date, `${isToday(date) ? '' : 'PPP '}h:mm:ss aaa`);
 
 export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
   const { hasAttention } = useAttention(attendableId);
@@ -127,7 +130,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
                 segmentIndex < 0
                   ? {
                       readonly: true,
-                      accessoryHtml: `<span class="${authorClasses}">${blocks[blockIndex]!.author}</span><span class="${timestampClasses}">${blocks[0]?.segments[0]?.started}</span>`,
+                      accessoryHtml: `<span class="${authorClasses}">${blocks[blockIndex]!.author}</span><span class="${timestampClasses}">${formatDate(blocks[0]?.segments[0]?.started)}</span>`,
                     }
                   : {
                       readonly: true,
