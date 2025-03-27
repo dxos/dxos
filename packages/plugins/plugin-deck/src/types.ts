@@ -56,7 +56,8 @@ export const Deck = S.Struct({
     description: "If false, the deck has not yet left solo mode and new planks should be solo'd.",
   }),
   active: S.mutable(S.Array(S.String)),
-  activeCompanions: S.Record({ key: S.String, value: S.String }).pipe(S.mutable),
+  // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
+  activeCompanions: S.optional(S.mutable(S.Record({ key: S.String, value: S.String }))),
   inactive: S.mutable(S.Array(S.String)),
   solo: S.optional(S.String),
   fullscreen: S.Boolean,
