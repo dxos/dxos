@@ -27,6 +27,7 @@ import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode, defaultDeck } from '../types';
 import { setActive } from '../util';
+import { invariant } from '@dxos/invariant';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -330,6 +331,7 @@ export default (context: PluginsContext) =>
           const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
           state.deck.activeCompanions = nextActiveCompanions;
         } else {
+          invariant(data.companion !== data.primary);
           state.deck.activeCompanions = {
             ...state.deck.activeCompanions,
             [data.primary]: data.companion,

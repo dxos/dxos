@@ -10,18 +10,24 @@ import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions/types';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { AssistantCapabilities } from '../capabilities';
 import { ChatProcessor } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
-import { type AssistantSettingsProps, ServiceType } from '../types';
+import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
+
+type UseChatProcessorProps = {
+  chat?: AIChatType;
+  space?: Space;
+  settings?: AssistantSettingsProps;
+};
 
 /**
  * Configure and create ChatProcessor.
  */
-export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProps): ChatProcessor => {
+export const useChatProcessor = ({ chat, space, settings }: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -41,6 +47,7 @@ export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProp
   // Tools and context.
   const config = useConfig();
   const functions = useQuery(space, Filter.schema(FunctionType));
+  const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
   const [tools, extensions] = useMemo(() => {
     log('creating tools...');
     const tools = [
@@ -51,9 +58,9 @@ export const useChatProcessor = (space?: Space, settings?: AssistantSettingsProp
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
-    const extensions = { space, dispatch };
+    const extensions = { space, dispatch, pivotId: chatId };
     return [tools, extensions];
-  }, [dispatch, globalTools, artifactDefinitions, space, serviceTools, functions]);
+  }, [dispatch, globalTools, artifactDefinitions, space, chatId, serviceTools, functions]);
 
   // Prompt.
   const systemPrompt = useMemo(

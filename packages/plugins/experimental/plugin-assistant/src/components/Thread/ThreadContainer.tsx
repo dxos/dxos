@@ -28,7 +28,7 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
 }) => {
   const space = getSpace(chat);
   const contextProvider = useContextProvider(space);
-  const processor = useChatProcessor(space, settings);
+  const processor = useChatProcessor({ chat, space, settings });
   const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 
