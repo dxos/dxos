@@ -354,7 +354,6 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
           };
         }
 
-        console.log('target', target, hidden);
         if (target instanceof CollectionType) {
           target.objects.push(makeRef(object as HasId));
         } else if (isSpace(target) && hidden) {
