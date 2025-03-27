@@ -15,18 +15,18 @@ const minSize = 5;
 // TODO(burdon): Factor out.
 export const AmbientDialog = ({
   children,
-  open: _open,
+  open: controlledOpen,
   title,
   onOpenChange,
 }: PropsWithChildren<{ open?: boolean; onOpenChange?: (open: boolean) => void; title?: string }>) => {
   const [resizeKey, setReizeKey] = useState(0);
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = useState(_open);
+  const [open, setOpen] = useState(controlledOpen);
 
   // Update controlled value.
   useEffect(() => {
-    setOpen(_open);
-  }, [_open]);
+    setOpen(controlledOpen);
+  }, [controlledOpen]);
 
   // Update size and key.
   useEffect(() => {
@@ -52,7 +52,7 @@ export const AmbientDialog = ({
         {...resizeAttributes}
         style={{
           ...sizeStyle(size, 'vertical', true),
-          maxBlockSize: 'calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 8rem)',
+          maxBlockSize: 'calc(100dvh - env(safe-area-inset-bottom) - env(safe-area-inset-top) - 9rem)',
         }}
         onInteractOutside={preventDefault}
       >

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Prec } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -53,24 +54,26 @@ export const Prompt = forwardRef<PromptController, PromptProps>(
           createThemeExtensions({ themeMode }),
           references ? promptReferences({ provider: references }) : [],
           createAutocompleteExtension({ onSubmit, onSuggest }),
-          keymap.of([
-            {
-              key: 'Alt-ArrowUp',
-              preventDefault: true,
-              run: (view) => {
-                onOpenChange?.(true);
-                return true;
+          Prec.highest(
+            keymap.of([
+              {
+                key: 'cmd-ArrowUp',
+                preventDefault: true,
+                run: (view) => {
+                  onOpenChange?.(true);
+                  return true;
+                },
               },
-            },
-            {
-              key: 'Alt-ArrowDown',
-              preventDefault: true,
-              run: (view) => {
-                onOpenChange?.(false);
-                return true;
+              {
+                key: 'cmd-ArrowDown',
+                preventDefault: true,
+                run: (view) => {
+                  onOpenChange?.(false);
+                  return true;
+                },
               },
-            },
-          ]),
+            ]),
+          ),
         ],
       },
       [themeMode, onSubmit, onSuggest],
