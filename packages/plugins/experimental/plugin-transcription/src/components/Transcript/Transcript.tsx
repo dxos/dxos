@@ -26,7 +26,7 @@ const cellSpacing = 8 + 2;
 
 export type TranscriptProps = {
   blocks?: TranscriptBlock[];
-  attendableId: string;
+  attendableId?: string;
   ignoreAttention?: boolean;
 };
 
