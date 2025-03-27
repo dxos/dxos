@@ -13,3 +13,5 @@ export class UnimplementedError extends BaseError.extend('UNIMPLEMENTED') {}
 export class ApiError extends BaseError.extend('API_ERROR') {}
 
 export class SystemError extends BaseError.extend('SYSTEM_ERROR') {}
+
+export class UnknownError extends BaseError.extend('UNKNOWN_ERROR') {}

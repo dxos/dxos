@@ -24,8 +24,8 @@ export class BaseError extends Error {
         return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
       }
 
-      constructor(message: string, options?: BaseErrorOptions) {
-        super(code, message, options);
+      constructor(message: string, context?: Record<string, unknown>, options?: ErrorOptions) {
+        super(code, message, context, options);
       }
     };
   }
@@ -33,11 +33,11 @@ export class BaseError extends Error {
   #code: string;
   #context: Record<string, unknown>;
 
-  constructor(code: string, message: string, options?: BaseErrorOptions) {
-    super(message, options);
+  constructor(code: string, message: string, { cause, ...context }: Record<string, unknown> = {}) {
+    super(message, { cause });
 
     this.#code = code;
-    this.#context = options?.context ?? {};
+    this.#context = context;
     Object.setPrototypeOf(this, new.target.prototype);
   }
 

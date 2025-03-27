@@ -1,42 +1,58 @@
-import { Cause, Effect, Schema } from 'effect';
-import { it as test } from '@effect/vitest';
+import { Schema, Data } from 'effect';
+import { test, describe } from 'vitest';
+import { SystemError, UnknownError } from './errors';
 
-class MyError extends Schema.TaggedError<MyError>('MyError')('MyError', {
-  module: Schema.String,
-  method: Schema.String,
-  description: Schema.String,
+new Error('test error', { cause: new Error('cause error') });
+
+class MyError extends Schema.TaggedError<MyError>()('MyError', {
+  extraData: Schema.String,
 }) {
-  override get message(): string {
-    return `${this.module}.${this.method}: ${this.description}`;
-  }
+  // constructor(...args) {
+  //   super(...args);
+  //   Error.captureStackTrace(this, new.target);
+  // }
 }
-const e = Effect.fail(
-  new MyError({ module: 'myModule', method: 'test', description: 'foo' }, { cause: new Error('bar') }),
-);
-test.effect('fmt', () => {
-  throw new MyError({ module: 'myModule', method: 'test', description: 'foo' }, { cause: new Error('bar') });
+
+describe.skip('effect error handling', () => {
+  test('default error class', () => {
+    function throwError() {
+      throw new MyError({ extraData: 'extra data' });
+    }
+
+    throwError();
+  });
+
+  test.only('error causes', () => {
+    function libFn() {
+      throw new Error('lib error');
+    }
+
+    function appFn() {
+      try {
+        libFn();
+      } catch (error) {
+        throw new MyError({ extraData: 'app error' }, { cause: error });
+      }
+    }
+
+    appFn();
+  });
 });
 
-test('log', () => {
-  const error = new MyError({ module: 'myModule', method: 'test', description: 'foo' }, { cause: new Error('bar') });
-  console.error(error);
-});
+describe('normal errors', () => {
+  test.only('error causes', () => {
+    function libFn() {
+      throw new Error('lib error');
+    }
 
-test.only('causes', () => {
-  const e = Effect.fail(
-    new MyError({ module: 'myModule', method: 'test', description: 'foo' }, { cause: new Error('bar') }),
-  );
+    function appFn() {
+      try {
+        libFn();
+      } catch (error) {
+        throw new SystemError('Unknown error', { foo: 'bar', cause: error });
+      }
+    }
 
-  const e2 = Effect.fail(
-    new MyError({ module: 'myModule', method: 'test', description: 'foo' }, { cause: new Error('bar') }),
-  );
-
-  Effect.all([e, e2], { concurrency: 'unbounded' }).pipe(
-    Effect.catchAllCause((cause) => {
-      console.log(cause);
-      return Effect.succeed('ok');
-    }),
-    Effect.runPromise,
-    console.log,
-  );
+    appFn();
+  });
 });
