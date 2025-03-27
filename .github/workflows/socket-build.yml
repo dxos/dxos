@@ -18,6 +18,7 @@ jobs:
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           SENTRY_RELEASE_AUTH_TOKEN: ${{ secrets.SENTRY_RELEASE_AUTH_TOKEN }}
           CLI_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
@@ -31,6 +32,8 @@ jobs:
           DX_OTEL_AUTHORIZATION: ${{ secrets.DX_OTEL_AUTHORIZATION }}
           DX_LOKI_ENDPOINT: ${{ secrets.DX_LOKI_ENDPOINT }}
           DX_LOKI_AUTHORIZATION: ${{ secrets.DX_LOKI_AUTHORIZATION }}
+          # TODO(wittjosiah): Remove.
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
       - name: Install system dependencies
         run: sudo apt-get install libxtst-dev libpng++-dev
