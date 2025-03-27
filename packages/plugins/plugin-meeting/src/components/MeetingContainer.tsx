@@ -6,7 +6,6 @@ import React, { useCallback, useState } from 'react';
 
 import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -67,10 +66,10 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
           {transcript && <Surface role='tabpanel' data={{ subject: transcript }} />}
         </Tabs.Tabpanel>
         <Tabs.Tabpanel value='notes'>
-          {notes && <Surface role='tabpanel' data={{ id: fullyQualifiedId(meeting), subject: notes }} />}
+          {notes && <Surface role='tabpanel' data={{ id: meeting.id, subject: notes }} />}
         </Tabs.Tabpanel>
         <Tabs.Tabpanel value='summary'>
-          {summary && <Surface role='tabpanel' data={{ id: fullyQualifiedId(meeting), subject: summary }} />}
+          {summary && <Surface role='tabpanel' data={{ id: meeting.id, subject: summary }} />}
         </Tabs.Tabpanel>
       </Tabs.Root>
     </StackItem.Content>
