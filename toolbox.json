@@ -52,7 +52,7 @@
       "include": [
         "packages/plugins/*",
         "packages/plugins/experimental/*",
-        "packages/ui/*",
+        "packages/ui/react-ui*",
         "packages/devtools/devtools",
         "packages/sdk/app-graph",
         "packages/sdk/app-framework",
