@@ -288,8 +288,16 @@ export default (context: PluginsContext) =>
         const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
+
+        const clearCompanionIntents = subject
+          .filter((id) => state.deck.activeCompanions && id in state.deck.activeCompanions)
+          .map((primary) => createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
+
         return {
-          intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
+          intents: [
+            ...clearCompanionIntents,
+            ...(toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : []),
+          ],
         };
       },
     }),
