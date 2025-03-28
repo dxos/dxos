@@ -140,13 +140,13 @@ const components: Record<string, BlockComponent> = {
       case 'select': {
         const { options = [] }: { options: string[] } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return (
-          <ButtonGroup>
+          <div className='flex flex-wrap gap-1'>
             {options.map((option) => (
-              <Button key={option} onClick={() => onPrompt?.(option)}>
+              <Button classNames='text-sm' key={option} onClick={() => onPrompt?.(option)}>
                 {option}
               </Button>
             ))}
-          </ButtonGroup>
+          </div>
         );
       }
 
