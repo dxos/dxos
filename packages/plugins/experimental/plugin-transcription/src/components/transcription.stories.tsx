@@ -121,7 +121,7 @@ const AudioFile = ({ queueDxn, audioUrl }: { queueDxn: DXN; audioUrl: string; tr
   const queue = useQueue<TranscriptBlock>(queueDxn, { pollInterval: 500 });
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (segments) => {
-      const block = createStatic(TranscriptBlock, { author: 'test', segments });
+      const block = createStatic(TranscriptBlock, { authorName: 'test', authorHue: 'cyan', segments });
       queue?.append([block]);
     },
     [queue],

@@ -26,7 +26,7 @@ export const summarizeTranscript = async (
   await queue.refresh();
   const content = queue.items
     .filter((block) => isInstanceOf(TranscriptBlock, block))
-    .map((block) => `${block.author}: ${block.segments.map((segment) => segment.text).join('\n')}`)
+    .map((block) => `${block.authorName}: ${block.segments.map((segment) => segment.text).join('\n')}`)
     .join('\n\n');
 
   const parser = new MixedStreamParser();
