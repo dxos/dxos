@@ -19,6 +19,8 @@ When writing code:
 - Use proper error handling with Effect.
 - Include proper event handler types for React components.
 - All comments should be in English and end with a period.
+- Do not use boolean coersion for non boolean types, especially numbers and strings.
+- Use != null when checking if value is both not null or undefined.
 
 Technologies to consider:
 - Use Effect-TS for schema validation.

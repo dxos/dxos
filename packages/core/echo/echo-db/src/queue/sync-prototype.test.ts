@@ -357,15 +357,18 @@ class ItemStore {
       // Format successor info if present
       const succInfo =
         item.succSeq !== null && item.succActor !== null
-          ? `S: ${item.succGlobalId ?? '_'}:${item.succSeq}:\x1b[90m${item.succActor}\x1b[0m`
+          ? `S ${item.succGlobalId ?? '_'}:${item.succSeq}:\x1b[90m${item.succActor}\x1b[0m`
           : '';
 
       // Format predecessor info if present
-      const predInfo = item.predSeq && item.predActor ? `P: ${item.predSeq}:\x1b[90m${item.predActor}\x1b[0m` : '';
+      const predInfo =
+        item.predSeq !== null && item.predActor !== null ? `P ${item.predSeq}:\x1b[90m${item.predActor}\x1b[0m` : '';
 
       // Only show latestData if it doesn't match data
       const latestDataInfo =
-        item.latestData !== null && item.latestData !== item.data ? `\x1b[90mlatest\x1b[0m: \x1b[1m${item.latestData}\x1b[0m` : '';
+        item.latestData !== null && item.latestData !== item.data
+          ? `\x1b[90mlatest\x1b[0m: \x1b[1m${item.latestData}\x1b[0m`
+          : '';
       // Color-code the status
       let coloredStatus;
       if (status === 'ADD') {
@@ -1045,9 +1048,9 @@ describe('queue sync prototype', () => {
 
     // Verify integrity after concurrent edits
     bench.verifyIntegrity();
-    bench.verifyIntegrity();
 
-    console.log('\nAfter local edits:');
+    log.break();
+    log.info('After local edits:');
     bench.dumpAllPeers();
 
     // Sync to resolve the concurrent edits
@@ -1055,6 +1058,10 @@ describe('queue sync prototype', () => {
 
     // Force another sync to make sure any pending updates are applied
     bench.syncAllPeers();
+
+    log.break();
+    log.info('After sync');
+    bench.dumpAllPeers();
 
     // Verify integrity after sync
     bench.verifyIntegrity();
