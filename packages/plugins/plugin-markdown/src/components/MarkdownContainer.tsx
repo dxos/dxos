@@ -7,6 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { TextType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -18,7 +19,7 @@ export type MarkdownContainerProps = Pick<
   'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
-  object: DocumentType | any;
+  object: DocumentType | TextType | any;
   settings: MarkdownSettingsProps;
 };
 
@@ -35,7 +36,8 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = isInstanceOf(DocumentType, object) ? object : undefined;
-  const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore });
+  const text = isInstanceOf(TextType, object) ? object : undefined;
+  const extensions = useExtensions({ document: doc, text, id, settings, viewMode, editorStateStore });
 
   if (doc) {
     return (
@@ -46,6 +48,21 @@ const MarkdownContainer = ({
         extensions={extensions}
         viewMode={viewMode}
         settings={settings}
+        scrollPastEnd={scrollPastEnd}
+        onViewModeChange={onViewModeChange}
+      />
+    );
+  } else if (text) {
+    return (
+      <MarkdownEditor
+        id={id}
+        role={role}
+        initialValue={text.content}
+        extensions={extensions}
+        viewMode={viewMode}
+        toolbar={settings.toolbar}
+        comment={false}
+        inputMode={settings.editorInputMode}
         scrollPastEnd={scrollPastEnd}
         onViewModeChange={onViewModeChange}
       />

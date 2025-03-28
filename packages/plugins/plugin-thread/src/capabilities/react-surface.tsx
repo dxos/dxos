@@ -10,7 +10,7 @@ import { SettingsStore } from '@dxos/local-storage';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ThreadContainer, ThreadComplementary, ThreadSettings } from '../components';
+import { ChannelContainer, ThreadComplementary, ThreadSettings } from '../components';
 import { THREAD_PLUGIN } from '../meta';
 import { type ThreadSettingsProps } from '../types';
 
@@ -21,23 +21,12 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: ChannelType } =>
         data.subject instanceof ChannelType && !!data.subject.threads[0],
-      component: ({ data, role }) => {
+      component: ({ data: { subject: channel }, role }) => {
         const layout = useLayout();
-        const channel = data.subject;
-        void channel.threads[0].load();
-        const thread = channel.threads[0].target;
-        if (!thread) {
-          return null;
-        }
-
         const currentPosition = layout.active.findIndex((id) => id === channel.id);
-        if (currentPosition > 0) {
-          const objectToTheLeft = layout.active[currentPosition - 1];
-          const context = getSpace(channel)?.db.getObjectById(objectToTheLeft);
-          return <ThreadContainer role={role} thread={thread} context={context} />;
-        }
-
-        return <ThreadContainer role={role} thread={thread} />;
+        const objectToTheLeft = layout.active[currentPosition - 1];
+        const context = currentPosition > 0 ? getSpace(channel)?.db.getObjectById(objectToTheLeft) : undefined;
+        return <ChannelContainer role={role} channel={channel} context={context} />;
       },
     }),
     createSurface({

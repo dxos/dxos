@@ -11,7 +11,7 @@ import { type ThreadState, type ViewStore } from '../types';
 const initialViewState = { showResolvedThreads: false };
 
 export default () => {
-  const state = create<ThreadState>({ drafts: {} });
+  const state = create<ThreadState>({ activities: {}, drafts: {} });
   const viewStore = create<ViewStore>({});
 
   const getViewState = (subjectId: string) => {
