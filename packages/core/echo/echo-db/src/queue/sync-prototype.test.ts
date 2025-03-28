@@ -180,30 +180,31 @@ class ItemStore {
    */
   insert(items: ItemRecord[]) {
     for (const item of items) {
-      // Check if there's already an item with the same actorId and sequence
-      if (item.actor !== null && item.seq !== null) {
-        const existingItemIndex = this._items.findIndex(
-          (existing) => existing.actor === item.actor && existing.seq === item.seq,
-        );
-
-        if (existingItemIndex !== -1) {
-          const existingItem = this._items[existingItemIndex];
-
-          // If the existing item has a globalId and it's different from the new item's globalId
-          if (existingItem.globalId !== null && item.globalId !== null && existingItem.globalId !== item.globalId) {
-            throw new Error(
-              `Conflict: Item with actorId=${item.actor} and sequence=${item.seq} already exists with different globalId`,
-            );
-          }
-
-          // Update the existing item's globalId
-          this._items[existingItemIndex].globalId = item.globalId;
-          continue;
-        }
+      if (item.actor === null || item.seq === null) {
+        throw new Error('actor or seq is null');
       }
 
-      // If no existing item with same actorId and sequence, add the new item
-      this._items.push(item);
+      // Check if there's already an item with the same actorId and sequence
+      const existingItemIndex = this._items.findIndex(
+        (existing) => existing.actor === item.actor && existing.seq === item.seq,
+      );
+
+      if (existingItemIndex !== -1) {
+        const existingItem = this._items[existingItemIndex];
+
+        // If the existing item has a globalId and it's different from the new item's globalId
+        if (existingItem.globalId !== null && item.globalId !== null && existingItem.globalId !== item.globalId) {
+          throw new Error(
+            `Conflict: Item with actorId=${item.actor} and sequence=${item.seq} already exists with different globalId`,
+          );
+        }
+
+        // Update the existing item's globalId
+        this._items[existingItemIndex].globalId = item.globalId;
+      } else {
+        // If no existing item with same actorId and sequence, add the new item
+        this._items.push(item);
+      }
 
       // Handle compaction for mutations and deletions
       if (item.replace === true && item.predSeq !== null && item.predActor !== null) {
@@ -224,6 +225,13 @@ class ItemStore {
               { globalId: predItem.succGlobalId, seq: predItem.succSeq, actor: predItem.succActor },
             ) > 0;
 
+          log.info('inserting', {
+            new: `${item.globalId ?? '_'}:${item.seq}:${item.actor}`,
+            pred: `${predItem.globalId ?? '_'}:${predItem.seq}:${predItem.actor}`,
+            existing: `${predItem.succGlobalId ?? '_'}:${predItem.succSeq}:${predItem.succActor}`,
+            shouldUpdateSuccessor,
+          });
+
           if (shouldUpdateSuccessor) {
             // Update predecessor's successor pointer to point to this item
             this._items[predIndex].succGlobalId = item.globalId;
@@ -234,6 +242,8 @@ class ItemStore {
             this._items[predIndex].latestData = item.data;
           }
         }
+      } else {
+        log.info('inserting', { new: `${item.globalId ?? '_'}:${item.seq}:${item.actor}` });
       }
     }
 
@@ -364,7 +374,6 @@ class ItemStore {
     console.log('\x1b[1mID         | Type | Predecessor    | Successor      | Data\x1b[0m');
     console.log('─'.repeat(90));
 
-    
     for (const item of this._items) {
       const status = item.replace === true ? (item.data ? 'EDIT' : 'DELETE') : 'ADD';
 
@@ -379,16 +388,14 @@ class ItemStore {
 
       // Format predecessor info if present
       const predInfo =
-        item.predSeq !== null && item.predActor !== null 
-          ? `${formatID(null, item.predSeq, item.predActor)}` 
-          : '';
+        item.predSeq !== null && item.predActor !== null ? `${formatID(null, item.predSeq, item.predActor)}` : '';
 
       // Only show latestData if it doesn't match data
       const latestDataInfo =
         item.latestData !== null && item.latestData !== item.data
           ? `\x1b[90mlatest\x1b[0m: \x1b[1m${item.latestData}\x1b[0m`
           : '';
-          
+
       // Color-code the status
       let coloredStatus;
       if (status === 'ADD') {
@@ -646,7 +653,7 @@ class Peer {
   }
 
   syncFrom(server: SyncServer) {
-    log('before syncFrom', { peer: this.id, items: this._store.items });
+    log.info('before syncFrom', { peer: this.id });
     const lastGlobalId = this._store.lastGlobalId();
     const items = structuredClone(server.get({ from: lastGlobalId === null ? null : lastGlobalId + 1 }));
 
@@ -659,7 +666,7 @@ class Peer {
     this._store.insert(items);
 
     log('syncFrom', { peer: this.id, lastGlobalId, items: items.map((item) => item.data) });
-    log('after syncFrom', { peer: this.id, items: this._store.items });
+    log.info('after syncFrom', { peer: this.id });
   }
 }
 
@@ -1047,7 +1054,7 @@ describe('queue sync prototype', () => {
     expect(originalItem?.succActor).not.toBeNull();
   });
 
-  test.only('concurrent edits last writer wins', () => {
+  test('concurrent edits last writer wins', () => {
     const bench = new Bench();
     bench.addPeers(2);
     const [peer1, peer2] = bench.peers;
@@ -1200,7 +1207,7 @@ function padEndVisible(str: string, length: number, padChar: string = ' '): stri
   return str + padChar.repeat(paddingLength);
 }
 
-test.only('padEndVisible handles ANSI color codes correctly', () => {
+test('padEndVisible handles ANSI color codes correctly', () => {
   // Test with no color codes
   expect(padEndVisible('test', 8)).toBe('test    ');
 
