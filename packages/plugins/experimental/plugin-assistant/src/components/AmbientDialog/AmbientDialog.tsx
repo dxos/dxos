@@ -12,13 +12,13 @@ const preventDefault = (event: Event) => event.preventDefault();
 
 const minSize = 5;
 
-// TODO(burdon): Factor out.
-export const AmbientDialog = ({
-  children,
-  open: controlledOpen,
-  title,
-  onOpenChange,
-}: PropsWithChildren<{ open?: boolean; onOpenChange?: (open: boolean) => void; title?: string }>) => {
+export type AmbientDialogProps = PropsWithChildren<{
+  open?: boolean;
+  title?: string;
+  onOpenChange?: (open: boolean) => void;
+}>;
+
+export const AmbientDialog = ({ children, open: controlledOpen, title, onOpenChange }: AmbientDialogProps) => {
   const [resizeKey, setReizeKey] = useState(0);
   const [size, setSize] = useState<Size>('min-content');
   const [open, setOpen] = useState(controlledOpen);
