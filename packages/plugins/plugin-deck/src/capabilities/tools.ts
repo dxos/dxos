@@ -14,12 +14,14 @@ import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';
+import { DeckAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
     dispatch?: PromiseIntentDispatcher;
     pivotId?: string;
+    part?: 'deck' | 'dialog';
   }
 }
 
@@ -27,10 +29,9 @@ export default () =>
   contributes(Capabilities.Tools, [
     defineTool(meta.id, {
       name: 'show',
-      // TODO(ZaymonFC): We should update the prompt to teach the LLM the difference between object ids and fully qualified ids.
       description: `
-        Show an item in the app. Use this tool to open an artifact. 
-        When supplying IDs to show, they must be fully qualified like space:object.
+        Show an item as a companion to an existing plank. This will make the item appear alongside the primary content.
+        When supplying IDs, they must be fully qualified like space:object.
       `,
       caption: 'Showing item...',
       // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
@@ -38,29 +39,40 @@ export default () =>
         id: S.String.annotations({
           description: 'The ID of the item to show.',
         }),
-        pivotId: S.optional(
-          S.String.annotations({
-            description: 'The ID of the chat. If provided, the item will be added after the pivot item.',
-          }),
-        ),
       }),
       execute: async ({ id }, { extensions }) => {
+        invariant(extensions?.pivotId, 'No pivot ID');
         invariant(extensions?.dispatch, 'No intent dispatcher');
-        const { data, error } = await extensions.dispatch(
-          createIntent(LayoutAction.Open, {
-            subject: [id],
-            part: 'main',
-            options: {
-              pivotId: extensions.pivotId,
-              positioning: 'end',
-            },
-          }),
-        );
-        if (error) {
-          return ToolResult.Error(error.message);
-        }
 
-        return ToolResult.Success(data);
+        if (extensions.part === 'deck') {
+          const { data, error } = await extensions.dispatch(
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: extensions.pivotId,
+              companion: id,
+            }),
+          );
+          if (error) {
+            return ToolResult.Error(error.message);
+          }
+
+          return ToolResult.Success(data);
+        } else {
+          const { data, error } = await extensions.dispatch(
+            createIntent(LayoutAction.Open, {
+              subject: [id],
+              part: 'main',
+              options: {
+                pivotId: extensions.pivotId,
+                positioning: 'end',
+              },
+            }),
+          );
+          if (error) {
+            return ToolResult.Error(error.message);
+          }
+
+          return ToolResult.Success(data);
+        }
       },
     }),
   ]);

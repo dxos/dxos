@@ -23,7 +23,13 @@ export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
 
   return (
     <AmbientDialog open={open} onOpenChange={setOpen} title={t('assistant dialog title')}>
-      <ThreadContainer chat={chat} onOpenChange={setOpen} settings={settings} transcription={transcription} />
+      <ThreadContainer
+        chat={chat}
+        onOpenChange={setOpen}
+        settings={settings}
+        part={'dialog'}
+        transcription={transcription}
+      />
     </AmbientDialog>
   );
 };

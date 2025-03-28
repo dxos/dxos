@@ -10,7 +10,7 @@ import { Icon, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
-import { PlankComplimentControls, PlankControls } from './PlankControls';
+import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
 import { DeckAction, type ResolvedPart, SLUG_PATH_SEPARATOR } from '../../types';
 import { useBreakpoints } from '../../util';
@@ -26,6 +26,7 @@ export type NodePlankHeadingProps = {
   pending?: boolean;
   actions?: StackItemSigilAction[];
   companioned?: 'primary' | 'companion';
+  primaryId?: string;
   surfaceVariant?: string;
 };
 
@@ -40,6 +41,7 @@ export const NodePlankHeading = memo(
     pending,
     actions = [],
     companioned,
+    primaryId,
     surfaceVariant,
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
@@ -150,8 +152,8 @@ export const NodePlankHeading = memo(
           </StackItem.HeadingLabel>
         </TextTooltip>
         {node && part !== 'complementary' && <Surface role='navbar-end' data={{ subject: node.data }} />}
-        {surfaceVariant ? (
-          <PlankComplimentControls primary={id} />
+        {companioned === 'companion' ? (
+          <PlankCompanionControls primary={surfaceVariant ? id : primaryId} />
         ) : (
           <PlankControls
             capabilities={capabilities}
