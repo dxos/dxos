@@ -27,7 +27,7 @@ export const AssistantDialog: FC<{ chat?: AIChatType }> = ({ chat }) => {
         chat={chat}
         onOpenChange={setOpen}
         settings={settings}
-        situatedInDeck={false}
+        part={'dialog'}
         transcription={transcription}
       />
     </AmbientDialog>

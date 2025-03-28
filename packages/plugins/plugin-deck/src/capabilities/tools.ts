@@ -21,7 +21,7 @@ declare global {
   interface ToolContextExtensions {
     dispatch?: PromiseIntentDispatcher;
     pivotId?: string;
-    situatedInDeck?: boolean;
+    part?: 'deck' | 'dialog';
   }
 }
 
@@ -44,7 +44,7 @@ export default () =>
         invariant(extensions?.pivotId, 'No pivot ID');
         invariant(extensions?.dispatch, 'No intent dispatcher');
 
-        if (extensions.situatedInDeck) {
+        if (extensions.part === 'deck') {
           const { data, error } = await extensions.dispatch(
             createIntent(DeckAction.ChangeCompanion, {
               primary: extensions.pivotId,

@@ -16,7 +16,7 @@ import { type AIChatType, type AssistantSettingsProps } from '../../types';
 export type ThreadContainerProps = {
   chat?: AIChatType;
   settings?: AssistantSettingsProps;
-  situatedInDeck?: boolean;
+  part?: 'deck' | 'dialog';
 } & Pick<ThreadProps, 'debug' | 'transcription' | 'onOpenChange'>;
 
 // TODO(burdon): Since this only wraps Thread, just separate out hook?
@@ -24,13 +24,13 @@ export const ThreadContainer: FC<ThemedClassName<ThreadContainerProps>> = ({
   classNames,
   chat,
   settings,
-  situatedInDeck,
+  part,
   onOpenChange,
   ...props
 }) => {
   const space = getSpace(chat);
   const contextProvider = useContextProvider(space);
-  const processor = useChatProcessor({ chat, space, settings, situatedInDeck });
+  const processor = useChatProcessor({ chat, space, settings, part });
   const messageQueue = useMessageQueue(chat);
   const messages = [...(messageQueue?.items ?? []), ...processor.messages.value];
 

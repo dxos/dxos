@@ -22,18 +22,13 @@ type UseChatProcessorProps = {
   chat?: AIChatType;
   space?: Space;
   settings?: AssistantSettingsProps;
-  situatedInDeck?: boolean;
+  part?: 'deck' | 'dialog';
 };
 
 /**
  * Configure and create ChatProcessor.
  */
-export const useChatProcessor = ({
-  chat,
-  space,
-  settings,
-  situatedInDeck = true,
-}: UseChatProcessorProps): ChatProcessor => {
+export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseChatProcessorProps): ChatProcessor => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const globalTools = useCapabilities(Capabilities.Tools);
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -64,7 +59,7 @@ export const useChatProcessor = ({
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
-    const extensions = { space, dispatch, pivotId: chatId, situatedInDeck };
+    const extensions = { space, dispatch, pivotId: chatId, part };
     return [tools, extensions];
   }, [dispatch, globalTools, artifactDefinitions, space, chatId, serviceTools, functions]);
 
