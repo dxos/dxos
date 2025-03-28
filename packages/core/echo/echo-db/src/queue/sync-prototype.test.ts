@@ -176,6 +176,7 @@ class ItemStore {
 
   /**
    * Insert an item into the store and maintain sort order by globalId.
+   * Also handles compaction for items that mutate or delete previous items.
    */
   insert(items: ItemRecord[]) {
     for (const item of items) {
@@ -203,23 +204,115 @@ class ItemStore {
 
       // If no existing item with same actorId and sequence, add the new item
       this._items.push(item);
+
+      // Handle compaction for mutations and deletions
+      if (item.replace === true && item.predSeq !== null && item.predActor !== null) {
+        // Find the predecessor item that is being mutated or deleted
+        const predIndex = this._items.findIndex(
+          (existing) => existing.seq === item.predSeq && existing.actor === item.predActor,
+        );
+
+        if (predIndex !== -1) {
+          const predItem = this._items[predIndex];
+
+          // Check if we need to update the successor pointer on the predecessor
+          // Only update if the new item has higher priority (by globalId or by seq/actor ordering)
+          const shouldUpdateSuccessor =
+            !predItem.succGlobalId ||
+            this.compareItems(
+              { globalId: item.globalId, seq: item.seq, actor: item.actor },
+              { globalId: predItem.succGlobalId, seq: predItem.succSeq, actor: predItem.succActor },
+            ) > 0;
+
+          if (shouldUpdateSuccessor) {
+            // Update predecessor's successor pointer to point to this item
+            this._items[predIndex].succGlobalId = item.globalId;
+            this._items[predIndex].succSeq = item.seq;
+            this._items[predIndex].succActor = item.actor;
+
+            // Update the predecessor's latestData with the new data (compaction)
+            this._items[predIndex].latestData = item.data;
+          }
+        }
+      }
     }
 
     // Sort by globalId
-    this._items.sort((a, b) => (a.globalId ?? Infinity) - (b.globalId ?? Infinity));
+    this._items.sort((a, b) => this.compareItems(a, b));
+  }
+
+  /**
+   * Compare two items for ordering based on globalId or [seq; actor] tuple.
+   * Returns positive if a > b, negative if a < b, and 0 if equal.
+   */
+  compareItems(
+    a: { globalId: number | null; seq: number | null; actor: string | null } | null,
+    b: { globalId: number | null; seq: number | null; actor: string | null } | null,
+  ): number {
+    // Handle null cases
+    if (!a && !b) return 0;
+    if (!a) return -1;
+    if (!b) return 1;
+
+    // If both items have globalId set, order by globalId ASC
+    if (a.globalId !== null && b.globalId !== null) {
+      return a.globalId - b.globalId;
+    }
+
+    // If only one item has globalId set, it should be ordered before
+    if (a.globalId !== null && b.globalId === null) {
+      return -1;
+    }
+    if (a.globalId === null && b.globalId !== null) {
+      return 1;
+    }
+
+    // If no items have globalId set, order by [seq; actor] ASC (lamport timestamp rules)
+    // First compare seq
+    if (a.seq !== null && b.seq !== null && a.seq !== b.seq) {
+      return a.seq - b.seq;
+    }
+
+    // If seq is equal or null, compare actor lexicographically
+    if (a.actor !== null && b.actor !== null) {
+      return a.actor.localeCompare(b.actor);
+    }
+
+    return 0;
   }
 
   /**
    * Get items with globalId in the specified range.
+   * Returns up-to-date data by using compacted data.
    * @param range - Range object with optional from (inclusive) and to (exclusive)
    */
   get(range: Range = {}) {
     const { from = null, to = null } = range;
-    return this._items.filter(
+
+    // First filter by the requested range
+    const itemsInRange = this._items.filter(
       (item) =>
         (from === null || (item.globalId !== null && item.globalId >= from)) &&
         (to === null || (item.globalId !== null && item.globalId <= to)),
     );
+
+    // Map items to return the latest data
+    return itemsInRange.map((item) => {
+      // Clone the item so we don't modify the original
+      const result = structuredClone(item);
+
+      // Check if this item has a successor and latestData is null
+      // This would indicate the item has been deleted by a successor
+      if (item.succSeq !== null && item.succActor !== null && item.latestData === null) {
+        result.data = null; // Mark as deleted
+      }
+      // Otherwise, apply the latest data if available
+      else if (item.latestData !== null) {
+        result.data = item.latestData;
+      }
+
+      return result;
+    });
   }
 
   /**
@@ -246,10 +339,23 @@ class ItemStore {
     return null;
   }
 
+  /**
+   * Find an item by its [seq; actor] id.
+   */
+  findItem(seq: number, actor: string): ItemRecord | undefined {
+    return this._items.find((item) => item.seq === seq && item.actor === actor);
+  }
+
   dump() {
     for (const item of this._items) {
+      const status = item.replace === true ? (item.data ? 'EDIT' : 'DELETE') : 'ADD';
+      const dataToShow = item.latestData !== null ? item.latestData : item.data;
+      const succInfo =
+        item.succSeq !== null && item.succActor !== null
+          ? `(succ: ${item.succGlobalId ?? ''}:${item.succSeq}:${item.succActor})`
+          : '';
       console.log(
-        `${(item.globalId ?? '').toString().padEnd(3)} [${(item.actor ?? '').padEnd(10)} ${(item.seq ?? '').toString().padEnd(3)}] ${item.data}`,
+        `${(item.globalId ?? '').toString().padEnd(3)} [${(item.actor ?? '').padEnd(10)} ${(item.seq ?? '').toString().padEnd(3)}] ${status} ${dataToShow} ${item.predSeq && item.predActor ? `(pred: ${item.predSeq}:${item.predActor})` : ''} ${succInfo}`,
       );
     }
   }
@@ -305,6 +411,77 @@ class Peer {
     log('after append', { peer: this.id, items: this._store.items });
   }
 
+  /**
+   * Edit a previously added item
+   * @param seq Sequence number of the item to edit
+   * @param actor Actor ID of the item to edit
+   * @param newData New data to replace the old data
+   */
+  edit(seq: number, actor: string, newData: string) {
+    const targetItem = this._store.findItem(seq, actor);
+    if (!targetItem) {
+      throw new Error(`Item with seq=${seq} and actor=${actor} not found`);
+    }
+
+    const nextSeq = this._store.getLastSequenceNumber() + 1;
+    log('before edit', { peer: this.id, targetItem, newData, nextSeq });
+
+    this._store.insert([
+      {
+        globalId: null,
+        seq: nextSeq,
+        actor: this.id,
+        predSeq: seq,
+        predActor: actor,
+        succGlobalId: null,
+        succSeq: null,
+        succActor: null,
+        replace: true,
+        data: newData,
+        latestData: null,
+      },
+    ]);
+
+    log('after edit', { peer: this.id, items: this._store.items });
+  }
+
+  /**
+   * Delete a previously added item
+   * @param seq Sequence number of the item to delete
+   * @param actor Actor ID of the item to delete
+   */
+  delete(seq: number, actor: string) {
+    const targetItem = this._store.findItem(seq, actor);
+    if (!targetItem) {
+      throw new Error(`Item with seq=${seq} and actor=${actor} not found`);
+    }
+
+    const nextSeq = this._store.getLastSequenceNumber() + 1;
+    log('before delete', { peer: this.id, targetItem, nextSeq });
+
+    // When deleting, also directly update the original item's latestData
+    // This ensures the compaction will show the item as deleted
+    targetItem.latestData = null;
+
+    this._store.insert([
+      {
+        globalId: null,
+        seq: nextSeq,
+        actor: this.id,
+        predSeq: seq,
+        predActor: actor,
+        succGlobalId: null,
+        succSeq: null,
+        succActor: null,
+        replace: true,
+        data: null,
+        latestData: null,
+      },
+    ]);
+
+    log('after delete', { peer: this.id, items: this._store.items });
+  }
+
   get(range: Range = {}) {
     return this._store.get(range);
   }
@@ -332,11 +509,15 @@ class Peer {
     log('before syncFrom', { peer: this.id, items: this._store.items });
     const lastGlobalId = this._store.lastGlobalId();
     const items = structuredClone(server.get({ from: lastGlobalId === null ? null : lastGlobalId + 1 }));
+
     // Assert every item has a globalId
     if (items.some((item) => item.globalId === null)) {
       throw new Error('Received items without globalId from server');
     }
+
+    // Let insert handle the compaction
     this._store.insert(items);
+
     log('syncFrom', { peer: this.id, lastGlobalId, items: items.map((item) => item.data) });
     log('after syncFrom', { peer: this.id, items: this._store.items });
   }
@@ -589,5 +770,217 @@ describe('queue sync prototype', () => {
         expect(peerMessages[i].seq).toBe(peerMessages[i - 1].seq! + 1);
       }
     });
+  });
+
+  test('edit item and sync', () => {
+    const bench = new Bench();
+    bench.addPeers(2);
+    const [peer1, peer2] = bench.peers;
+
+    // Peer 1 writes a message and syncs
+    peer1.append('original message');
+    bench.syncPeer(0);
+
+    // Get the item that was just added to edit it
+    const item = peer1.get()[0];
+
+    // Peer 1 edits the message
+    peer1.edit(item.seq!, item.actor!, 'edited message');
+
+    // Sync to propagate the edit
+    bench.syncAllPeers();
+
+    // Check that both peers see the edited message
+    const peer1Items = peer1.get();
+    const peer2Items = peer2.get();
+
+    // Check that the data is correct, rather than comparing the entire state
+    expect(peer1Items[0].data).toBe('edited message');
+    expect(peer2Items[0].data).toBe('edited message');
+
+    // There should be two items total (the original and the edit)
+    expect(peer1._store.items.length).toBe(2);
+    expect(peer2._store.items.length).toBe(2);
+
+    // The first item should have a successor pointer to the edit
+    expect(peer1._store.items[0].succSeq).not.toBeNull();
+    expect(peer1._store.items[0].succActor).not.toBeNull();
+  });
+
+  test('delete item and sync', () => {
+    const bench = new Bench();
+    bench.addPeers(2);
+    const [peer1, peer2] = bench.peers;
+
+    // Peer 1 writes messages and syncs
+    peer1.append('message to keep');
+    peer1.append('message to delete');
+    bench.syncPeer(0);
+
+    // Get the items that were added
+    const items = peer1.get();
+    console.log(
+      'Initial items:',
+      items.map((item) => ({ data: item.data, latestData: item.latestData })),
+    );
+    const itemToDelete = items[1]; // Second message
+
+    // Peer 1 deletes the second message
+    peer1.delete(itemToDelete.seq!, itemToDelete.actor!);
+
+    // Check item state right after deletion
+    const afterDeleteItem = peer1._store.findItem(itemToDelete.seq!, itemToDelete.actor!);
+    console.log('Item after deletion:', {
+      data: afterDeleteItem?.data,
+      latestData: afterDeleteItem?.latestData,
+      succSeq: afterDeleteItem?.succSeq,
+      succActor: afterDeleteItem?.succActor,
+    });
+
+    // Check get() results right after deletion
+    const getResultAfterDelete = peer1.get();
+    console.log(
+      'get() after deletion:',
+      getResultAfterDelete.map((item) => item.data),
+    );
+
+    // Sync to propagate the deletion
+    bench.syncAllPeers();
+
+    // Check data content rather than full state
+    const peer1Data = peer1.get().map((item) => item.data);
+    const peer2Data = peer2.get().map((item) => item.data);
+
+    console.log('Final peer1 data:', peer1Data);
+    console.log('Final peer2 data:', peer2Data);
+
+    // Check the actual store items
+    console.log('Final peer1 items:');
+    peer1._store.dump();
+
+    // Both peers should have the same data
+    expect(peer1Data).toEqual(peer2Data);
+
+    // Verify the data for the original item is null (because it was deleted)
+    expect(peer1Data[1]).toBeNull();
+
+    // Verify the data for the deletion operation itself is null
+    expect(peer1Data[2]).toBeNull();
+
+    // The original item should have a successor pointer
+    const originalItem = peer1._store.items.find(
+      (item) => item.seq === itemToDelete.seq && item.actor === itemToDelete.actor,
+    );
+    expect(originalItem?.succSeq).not.toBeNull();
+    expect(originalItem?.succActor).not.toBeNull();
+  });
+
+  test('concurrent edits last writer wins', () => {
+    const bench = new Bench();
+    bench.addPeers(2);
+    const [peer1, peer2] = bench.peers;
+
+    // Peer 1 writes a message and both peers sync
+    peer1.append('original message');
+    bench.syncAllPeers();
+
+    // Get the item that was just added
+    const item = peer1.get()[0];
+
+    // Both peers edit the same message concurrently
+    peer1.edit(item.seq!, item.actor!, 'peer1 edit');
+    peer2.edit(item.seq!, item.actor!, 'peer2 edit');
+
+    console.log('\nAfter local edits:');
+    console.log('peer1:');
+    peer1._store.dump();
+    console.log('peer2:');
+    peer2._store.dump();
+
+    // Sync to resolve the concurrent edits
+    bench.syncAllPeers();
+
+    // Force another sync to make sure any pending updates are applied
+    bench.syncAllPeers();
+
+    console.log('\nAfter sync:');
+    console.log('Server:');
+    bench.server._store.dump();
+    console.log('peer1:');
+    peer1._store.dump();
+    console.log('peer2:');
+    peer2._store.dump();
+
+    // Check data content returned by get()
+    const peer1Data = peer1.get();
+    const peer2Data = peer2.get();
+
+    console.log('\nget() results:');
+    console.log(
+      'peer1 data:',
+      peer1Data.map((item) => item.data),
+    );
+    console.log(
+      'peer2 data:',
+      peer2Data.map((item) => item.data),
+    );
+
+    // The important thing is that both peers have the same set of items
+    expect(peer1._store.items.length).toEqual(peer2._store.items.length);
+    expect(peer1._store.items.length).toBe(3);
+
+    // Count occurrences of each edit in the returned data
+    const countEdits = (data: (string | null)[]) => {
+      return {
+        peer1: data.filter((d) => d === 'peer1 edit').length,
+        peer2: data.filter((d) => d === 'peer2 edit').length,
+        null: data.filter((d) => d === null).length,
+        original: data.filter((d) => d === 'original message').length,
+      };
+    };
+
+    const peer1Counts = countEdits(peer1Data.map((item) => item.data));
+    const peer2Counts = countEdits(peer2Data.map((item) => item.data));
+
+    console.log('Count of edits in peer1:', peer1Counts);
+    console.log('Count of edits in peer2:', peer2Counts);
+
+    // Both should have seen both edits
+    expect(peer1Counts.peer1).toBeGreaterThan(0);
+    expect(peer1Counts.peer2).toBeGreaterThan(0);
+    expect(peer2Counts.peer1).toBeGreaterThan(0);
+    expect(peer2Counts.peer2).toBeGreaterThan(0);
+
+    // Verify the total counts are the same (3 items total)
+    expect(peer1Counts.peer1 + peer1Counts.peer2 + peer1Counts.null + peer1Counts.original).toBe(3);
+    expect(peer2Counts.peer1 + peer2Counts.peer2 + peer2Counts.null + peer2Counts.original).toBe(3);
+  });
+
+  test('compaction updates latestData field', () => {
+    const bench = new Bench();
+    bench.addPeers(1);
+    const peer = bench.peers[0];
+
+    // Peer writes a message
+    peer.append('original message');
+
+    // Get the item
+    const item = peer._store.items[0];
+
+    // Edit the message multiple times
+    peer.edit(item.seq!, item.actor!, 'first edit');
+    peer.edit(item.seq!, item.actor!, 'second edit');
+    peer.edit(item.seq!, item.actor!, 'third edit');
+
+    // Check the original item has a successor pointer
+    const originalItem = peer._store.items.find((i) => i.seq === item.seq && i.actor === item.actor);
+
+    expect(originalItem).not.toBeNull();
+    expect(originalItem!.succSeq).not.toBeNull();
+    expect(originalItem!.succActor).not.toBeNull();
+
+    // Check that get() returns the compacted data
+    const queriedItem = peer.get()[0];
+    expect(queriedItem.data).toBe('third edit');
   });
 });
