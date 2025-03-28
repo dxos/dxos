@@ -24,7 +24,7 @@ export const MasterDetailTable = ({
   data,
   statusBar,
   detailsTransform,
-  detailsPosition = 'bottom',
+  detailsPosition = 'right',
   onSelectionChanged,
 }: MasterDetailTableProps) => {
   const [selectedId, setSelectedId] = useState<string>();
@@ -79,7 +79,7 @@ export const MasterDetailTable = ({
 
   const gridLayout = useMemo(() => {
     if (detailsPosition === 'right') {
-      return selected ? 'grid grid-columns-[3fr_5fr]' : 'grid grid-columns-[1fr_min-content]';
+      return selected ? 'grid grid-cols-[4fr_3fr]' : 'grid grid-cols-[1fr_min-content]';
     } else {
       return selected ? 'grid grid-rows-[3fr_5fr]' : 'grid grid-rows-[1fr_min-content]';
     }
@@ -90,15 +90,17 @@ export const MasterDetailTable = ({
       <div>
         <DynamicTable data={data} properties={properties} onSelectionChanged={handleSelectionChanged} />
       </div>
-      <div className='bs-full overflow-auto text-sm border-bs border-separator'>
+      <div
+        className={mx('overflow-auto text-sm border-separator border-bs', detailsPosition === 'right' && 'border-is')}
+      >
         {selected ? (
           isLoading ? (
-            <p className={mx('font-mono text-xs p-1')}>Loading details...</p>
+            <p className={mx('font-mono text-xs p-1 ')}>Loading details...</p>
           ) : (
             <JsonView data={transformedData} />
           )
         ) : (
-          <p className={mx('font-mono text-xs p-1')}>Make a selection for details.</p>
+          <p className={mx('font-mono text-xs text-center p-1')}>Make selection for details.</p>
         )}
       </div>
     </div>
