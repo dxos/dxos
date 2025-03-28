@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, type FC } from 'react';
 import { type MessageContentBlock, type Message, type ToolType } from '@dxos/artifact';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, ButtonGroup, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,
@@ -54,7 +54,7 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
   // TODO(burdon): Restructure types to make check unnecessary.
   if (isToolMessage(message)) {
     return (
-      <MessageContainer classNames={classNames}>
+      <MessageContainer classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
         <ToolBlock space={space} classNames={panelClassNames} message={message} tools={tools} />
       </MessageContainer>
     );
@@ -69,7 +69,11 @@ export const ThreadMessage: FC<ThreadMessageProps> = ({ classNames, space, messa
     const Component = components[block.type] ?? components.default;
 
     return (
-      <MessageContainer key={idx} classNames={classNames} user={block.type === 'text' && role === 'user'}>
+      <MessageContainer
+        key={idx}
+        classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
+        user={block.type === 'text' && role === 'user'}
+      >
         <Component space={space} block={block} onPrompt={onPrompt} />
       </MessageContainer>
     );
@@ -87,7 +91,7 @@ const components: Record<string, BlockComponent> = {
     // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
-      return <MarkdownViewer content={block.text} />;
+      return <MarkdownViewer classNames='[&>p]:animate-[fadeIn_0.5s]' content={block.text} />;
     }
 
     // TOOD(burdon): Store last time user opened/closed COT.
@@ -141,8 +145,12 @@ const components: Record<string, BlockComponent> = {
         const { options = [] }: { options: string[] } = safeParseJson(block.json ?? '{}') ?? ({} as any);
         return (
           <div className='flex flex-wrap gap-1'>
-            {options.map((option) => (
-              <Button classNames='text-sm' key={option} onClick={() => onPrompt?.(option)}>
+            {options.map((option, idx) => (
+              <Button
+                classNames={'animate-[fadeIn_0.5s] rounded-2xl text-sm'}
+                key={option}
+                onClick={() => onPrompt?.(option)}
+              >
                 {option}
               </Button>
             ))}
