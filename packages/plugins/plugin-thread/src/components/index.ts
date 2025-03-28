@@ -4,7 +4,7 @@
 
 import { lazy } from 'react';
 
-export const ThreadContainer = lazy(() => import('./ThreadContainer'));
+export const ChannelContainer = lazy(() => import('./ChannelContainer'));
 
 // TODO(wittjosiah): Suspense boundary for sidebar?
 export * from './CommentContainer';

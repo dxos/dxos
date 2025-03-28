@@ -82,9 +82,6 @@
       "path": "../../plugins/experimental/plugin-automation"
     },
     {
-      "path": "../../plugins/experimental/plugin-calls"
-    },
-    {
       "path": "../../plugins/experimental/plugin-conductor"
     },
     {
@@ -149,6 +146,9 @@
     },
     {
       "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-meeting"
     },
     {
       "path": "../../plugins/plugin-mermaid"

@@ -47,6 +47,8 @@ export type MarkdownEditorProps = {
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
+  // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
+  comment?: boolean;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
@@ -68,6 +70,7 @@ export const MarkdownEditor = ({
   extensionProviders,
   scrollPastEnd,
   toolbar,
+  comment,
   viewMode,
   editorStateStore,
   onFileUpload,
@@ -121,8 +124,8 @@ export const MarkdownEditor = ({
       initialValue,
       extensions: [
         formattingObserver,
-        commentObserver,
-        commentClickObserver,
+        comment && commentObserver,
+        comment && commentClickObserver,
         createBasicExtensions({
           readonly: viewMode === 'readonly',
           placeholder: t('editor placeholder'),
@@ -148,7 +151,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
+    [id, formattingObserver, comment, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);
@@ -215,6 +218,7 @@ export const MarkdownEditor = ({
             attendableId={id}
             role={role}
             state={toolbarState}
+            comment={comment}
             customActions={onFileUpload ? createUploadAction : undefined}
             onAction={handleAction}
           />

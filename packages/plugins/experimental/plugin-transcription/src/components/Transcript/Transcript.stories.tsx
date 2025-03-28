@@ -38,23 +38,18 @@ const meta: Meta<typeof Transcript> = {
     useEffect(() => {
       const i = setInterval(() => {
         setBlocks((blocks) => [...blocks, createBlock()]);
-      }, 5_000);
+      }, 1_000);
 
       return () => clearInterval(i);
     }, []);
 
-    return (
-      <div className='flex w-[50rem] h-full'>
-        <Transcript {...args} blocks={blocks} />
-      </div>
-    );
+    return <Transcript {...args} blocks={blocks} />;
   },
   decorators: [
     withTheme,
     withLayout({
       tooltips: true,
       fullscreen: true,
-      classNames: 'flex justify-center',
     }),
   ],
   parameters: {
