@@ -72,11 +72,10 @@ const formatTimestamp = (start: Date, end: Date) => {
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
 
-const renderCell = (transcriptStart: Date, segmentStart: Date, segmentText: string) =>
-  `<span class="${timestampClasses}">${formatTimestamp(
-    transcriptStart,
-    segmentStart,
-  )}</span><span class="${segmentTextClasses}">${segmentText}</span>`;
+const renderCell = (transcriptStart: Date, segmentStart: Date, segmentText: string) => `
+  <span class="${timestampClasses}">${formatTimestamp(transcriptStart, segmentStart)}</span>
+  <span class="${segmentTextClasses}">${segmentText}</span>
+`;
 
 const measureRows = async (
   host: HTMLDivElement,
@@ -108,6 +107,8 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
 
+  const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
+
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       if (!ignoreAttention && !hasAttention) {
@@ -116,8 +117,6 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     },
     [hasAttention, ignoreAttention],
   );
-
-  const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
   const abortControllerRef = useRef<AbortController>();
 
@@ -157,7 +156,9 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < queueMap.length; row++) {
               const [blockIndex, segmentIndex] = queueMap[row];
-              cells[toPlaneCellIndex({ col: 0, row })] = (
+              cells[toPlaneCellIndex({ col: 0, row })] = {};
+
+              cells[toPlaneCellIndex({ col: 1, row })] = (
                 segmentIndex < 0
                   ? {
                       readonly: true,
@@ -188,13 +189,13 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     <>
       <Grid.Root id={`${attendableId}--transcript`}>
         <Grid.Content
+          className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
           columnDefault={columns}
           rowDefault={transcriptInitialRows}
           rows={rows}
-          onWheel={handleWheel}
-          className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
-          limitColumns={1}
+          limitColumns={2}
           limitRows={queueMap.length}
+          onWheel={handleWheel}
           ref={setDxGrid}
         />
       </Grid.Root>
