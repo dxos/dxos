@@ -5,7 +5,7 @@
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
-import { useResizeDetector, type OnResizeCallback } from 'react-resize-detector';
+import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -30,7 +30,8 @@ const authorClasses = 'font-medium text-base leading-[20px]';
 const timestampClasses = 'text-xs leading-[20px] text-description pie-0 tabular-nums';
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
-  'absolute inline-start-[71px] inline-end-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
+  // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
+  'absolute inline-start-[69px] inline-end-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
   segmentTextClasses,
 );
 
@@ -92,9 +93,12 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
+  const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
+      setAutoScroll(false);
       if (!ignoreAttention && !hasAttention) {
         event.stopPropagation();
       }
@@ -106,32 +110,37 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   const abortControllerRef = useRef<AbortController>();
 
-  const handleResize = useCallback<OnResizeCallback>(
-    ({ width }) => {
-      if (width && measureRef.current && Array.isArray(blocks) && blocks[0] && queueMap) {
+  const handleResize = useCallback(
+    ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
+      if (entry?.target && Array.isArray(blocks) && blocks[0] && queueMap) {
         abortControllerRef.current?.abort();
         abortControllerRef.current = new AbortController();
-        measureRows(measureRef.current, blocks, queueMap, abortControllerRef.current.signal)
+        measureRows(entry.target, blocks, queueMap, abortControllerRef.current.signal)
           .then(setRows)
           .catch(() => {
             /* Aborted mid-measurement by new size. */
           });
+        setColumns({ grid: { 0: { size: timestampColumnWidth }, 1: { size: entry.target.offsetWidth } } });
       }
     },
     [blocks, queueMap],
   );
 
   const { width, ref: measureRef } = useResizeDetector({
-    onResize: handleResize,
+    onResize: handleResize as OnResizeCallback,
+    refreshOptions: { leading: true },
   });
 
-  const columns = useMemo(() => {
-    if (width) {
-      return { grid: { 0: { size: timestampColumnWidth }, 1: { size: width } } };
-    } else {
-      return undefined;
+  useEffect(() => {
+    if (queueMap.length !== Object.keys(rows?.grid ?? {}).length) {
+      handleResize({ entry: { target: measureRef.current } });
+      if (autoScroll) {
+        // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a
+        //  new `maxPosBlock`.
+        setTimeout(() => dxGrid?.scrollToEndRow(), 50);
+      }
     }
-  }, [width]);
+  }, [blocks, queueMap, width, autoScroll]);
 
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks) && blocks[0]) {
