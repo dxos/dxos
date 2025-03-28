@@ -31,12 +31,6 @@
       "@dxos/plugin-automation": [
         "packages/plugins/experimental/plugin-automation/src/index.ts"
       ],
-      "@dxos/plugin-calls": [
-        "packages/plugins/experimental/plugin-calls/src/index.ts"
-      ],
-      "@dxos/plugin-calls/types": [
-        "packages/plugins/experimental/plugin-calls/src/types/index.ts"
-      ],
       "@dxos/plugin-conductor": [
         "packages/plugins/experimental/plugin-conductor/src/index.ts"
       ],
@@ -156,6 +150,12 @@
       ],
       "@dxos/plugin-markdown/types": [
         "packages/plugins/plugin-markdown/src/types/index.ts"
+      ],
+      "@dxos/plugin-meeting": [
+        "packages/plugins/plugin-meeting/src/index.ts"
+      ],
+      "@dxos/plugin-meeting/types": [
+        "packages/plugins/plugin-meeting/src/types/index.ts"
       ],
       "@dxos/plugin-mermaid": [
         "packages/plugins/plugin-mermaid/src/index.ts"

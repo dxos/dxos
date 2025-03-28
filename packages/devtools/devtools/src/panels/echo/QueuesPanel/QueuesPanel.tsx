@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -18,11 +18,10 @@ import { PanelContainer, Searchbar } from '../../../components';
 import { styles } from '../../../styles';
 
 export const QueuesPanel = () => {
-  const edgeClient = useEdgeClient();
   // const { space } = useDevtoolsState();
   const [queueInput, setQueueInput] = useState('');
   const queueDxn = DXN.tryParse(queueInput);
-  const queue = useQueue<any>(edgeClient, queueDxn);
+  const queue = useQueue<any>(queueDxn);
   const [selected, setSelected] = useState<any>();
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 

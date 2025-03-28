@@ -70,4 +70,8 @@ export class QueueMock<T> implements Queue<T> {
     this._items = this._items.filter((item) => !ids.includes((item as HasId).id));
     this._signal.notifyWrite();
   }
+
+  async refresh(): Promise<void> {
+    // No-op.
+  }
 }

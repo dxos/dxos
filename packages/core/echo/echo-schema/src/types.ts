@@ -207,3 +207,5 @@ export const getDXN = (object: any): DXN | undefined => {
 
   return DXN.fromLocalObjectId(object.id);
 };
+
+export type BaseEchoObject = HasId & HasTypename;

@@ -484,11 +484,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-calls/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
@@ -600,6 +595,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-meeting/package.json",
           "jsonpath": "$.version"
         },
         {
