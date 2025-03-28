@@ -21,7 +21,7 @@ import { ToolBlock, isToolMessage } from './ToolInvocations';
 import { ToolboxContainer } from '../Toolbox';
 
 const panelClassNames = 'flex flex-col w-full px-2 bg-groupSurface rounded-md';
-const userClassNames = 'bg-[--user-fill]';
+const userClassNames = 'bg-[--user-fill] text-inverse';
 
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
