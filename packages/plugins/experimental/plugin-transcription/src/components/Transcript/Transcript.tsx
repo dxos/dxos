@@ -212,7 +212,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
         label={t('scroll to end label')}
         tooltipSide='left'
         data-state={autoScroll ? 'invisible' : 'visible'}
-        classNames='absolute inline-end-2 block-end-2 opacity-0 data-[state="visible"]:opacity-100 transition-opacity'
+        classNames='absolute inline-end-2 block-end-2 opacity-0 pointer-events-none data-[state="visible"]:pointer-events-auto data-[state="visible"]:opacity-100 transition-opacity'
         onClick={handleScrollToEnd}
       />
     </>
