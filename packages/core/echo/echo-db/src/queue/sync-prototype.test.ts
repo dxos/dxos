@@ -225,7 +225,7 @@ class ItemStore {
               { globalId: predItem.succGlobalId, seq: predItem.succSeq, actor: predItem.succActor },
             ) > 0;
 
-          log.info('inserting', {
+          log('inserting', {
             new: `${item.globalId ?? '_'}:${item.seq}:${item.actor}`,
             pred: `${predItem.globalId ?? '_'}:${predItem.seq}:${predItem.actor}`,
             existing: `${predItem.succGlobalId ?? '_'}:${predItem.succSeq}:${predItem.succActor}`,
@@ -243,7 +243,7 @@ class ItemStore {
           }
         }
       } else {
-        log.info('inserting', { new: `${item.globalId ?? '_'}:${item.seq}:${item.actor}` });
+        log('inserting', { new: `${item.globalId ?? '_'}:${item.seq}:${item.actor}` });
       }
     }
 
@@ -296,7 +296,7 @@ class ItemStore {
    * Returns up-to-date data by using compacted data.
    * @param range - Range object with optional from (inclusive) and to (exclusive)
    */
-  get(range: Range = {}) {
+  getLogRange(range: Range = {}) {
     const { from = null, to = null } = range;
 
     // First filter by the requested range
@@ -320,6 +320,47 @@ class ItemStore {
       else if (item.latestData !== null) {
         result.data = item.latestData;
       }
+
+      return result;
+    });
+  }
+
+  /**
+   * Get items with globalId in the specified range.
+   * Returns up-to-date data by using compacted data.
+   * Skips items that are mutations of other items (replace: true).
+   * Only returns the original items with their latest data.
+   * @param range - Range object with optional from (inclusive) and to (exclusive)
+   */
+  getItemsRange(range: Range = {}) {
+    const { from = null, to = null } = range;
+
+    // First filter by the requested range
+    const itemsInRange = this._items.filter(
+      (item) =>
+        // Filter by range
+        (from === null || (item.globalId !== null && item.globalId >= from)) &&
+        (to === null || (item.globalId !== null && item.globalId <= to)) &&
+        // Skip items that are mutations (have replace flag set to true)
+        item.replace !== true,
+    );
+
+    // Map items to return the latest data
+    return itemsInRange.map((item) => {
+      // Clone the item so we don't modify the original
+      const result = structuredClone(item);
+
+      // Check if this item has a successor and latestData is null
+      // This would indicate the item has been deleted by a successor
+      if (item.succSeq !== null && item.succActor !== null && item.latestData === null) {
+        result.data = null; // Mark as deleted
+      }
+      // Otherwise, apply the latest data if available
+      else if (item.latestData !== null) {
+        result.data = item.latestData;
+      }
+
+      item.latestData = null;
 
       return result;
     });
@@ -522,8 +563,12 @@ class SyncServer {
     }
   }
 
-  get(range: Range = {}) {
-    return this._store.get(range);
+  getLogRange(range: Range = {}) {
+    return this._store.getLogRange(range);
+  }
+
+  getItemsRange(range: Range = {}) {
+    return this._store.getItemsRange(range);
   }
 }
 
@@ -630,7 +675,7 @@ class Peer {
   }
 
   get(range: Range = {}) {
-    return this._store.get(range);
+    return this._store.getLogRange(range);
   }
 
   getSyncMessage(limit = 100): SyncMessage | null {
@@ -653,9 +698,9 @@ class Peer {
   }
 
   syncFrom(server: SyncServer) {
-    log.info('before syncFrom', { peer: this.id });
+    log('before syncFrom', { peer: this.id });
     const lastGlobalId = this._store.lastGlobalId();
-    const items = structuredClone(server.get({ from: lastGlobalId === null ? null : lastGlobalId + 1 }));
+    const items = structuredClone(server.getLogRange({ from: lastGlobalId === null ? null : lastGlobalId + 1 }));
 
     // Assert every item has a globalId
     if (items.some((item) => item.globalId === null)) {
@@ -666,7 +711,7 @@ class Peer {
     this._store.insert(items);
 
     log('syncFrom', { peer: this.id, lastGlobalId, items: items.map((item) => item.data) });
-    log.info('after syncFrom', { peer: this.id });
+    log('after syncFrom', { peer: this.id });
   }
 }
 
@@ -1183,6 +1228,175 @@ describe('queue sync prototype', () => {
 
     // After all edits, verify final integrity
     bench.verifyIntegrity();
+  });
+
+  test('randomized stress test with unified model', () => {
+    // Create a bench with multiple peers
+    const bench = new Bench();
+    const NUM_PEERS = 5;
+    const NUM_OPERATIONS = 50;
+
+    bench.addPeers(NUM_PEERS);
+    const peers = bench.peers;
+
+    // Create a unified model of the global state for comparison
+    // This is a simple array of objects representing the current state of each item
+    type UnifiedItem = {
+      id: { seq: number; actor: string }; // Original item ID
+      data: string | null; // Current data (null means deleted)
+      editor: string | null; // Last peer that edited this item
+      version: number; // Number of edits
+    };
+
+    const unifiedModel: UnifiedItem[] = [];
+
+    // Helper function to find an item in the unified model
+    const findUnifiedItem = (seq: number, actor: string) => {
+      return unifiedModel.find((item) => item.id.seq === seq && item.id.actor === actor);
+    };
+
+    // Perform random operations
+    for (let i = 0; i < NUM_OPERATIONS; i++) {
+      // Choose a random peer
+      const peerIndex = Math.floor(Math.random() * NUM_PEERS);
+      const peer = peers[peerIndex];
+
+      // Choose a random operation: append (40%), edit (30%), delete (20%), sync (10%)
+      const operationType = Math.random();
+
+      if (operationType < 0.4) {
+        // Append operation
+        const data = `msg-${peer.id}-${i}`;
+        peer.append(data);
+
+        // Update unified model
+        const items = peer._store.items;
+        const newItem = items[items.length - 1]; // Get the latest added item
+
+        unifiedModel.push({
+          id: { seq: newItem.seq!, actor: newItem.actor! },
+          data,
+          editor: peer.id,
+          version: 1,
+        });
+
+        console.log(`${peer.id} appends "${data}"`);
+      } else if (operationType < 0.7) {
+        // Edit operation - first find a random item to edit
+        const items = peer._store.getItemsRange();
+
+        if (items.length > 0) {
+          // Choose a random item to edit
+          const itemToEdit = items[Math.floor(Math.random() * items.length)];
+          const newData = `edit-${peer.id}-${i}-of-${itemToEdit.data}`;
+
+          try {
+            peer.edit(itemToEdit.seq!, itemToEdit.actor!, newData);
+
+            // Update unified model
+            const unifiedItem = findUnifiedItem(itemToEdit.seq!, itemToEdit.actor!);
+            if (unifiedItem) {
+              unifiedItem.data = newData;
+              unifiedItem.editor = peer.id;
+              unifiedItem.version++;
+              console.log(
+                `${peer.id} edits [${itemToEdit.seq}, ${itemToEdit.actor}] from "${itemToEdit.data}" to "${newData}"`,
+              );
+            }
+          } catch (e) {
+            // Item might not be found, that's okay in a random test
+            console.log(`${peer.id} failed to edit [${itemToEdit.seq}, ${itemToEdit.actor}]`);
+          }
+        }
+      } else if (operationType < 0.9) {
+        // Delete operation - first find a random item to delete
+        const items = peer._store.getItemsRange();
+
+        if (items.length > 0) {
+          // Choose a random item to delete
+          const itemToDelete = items[Math.floor(Math.random() * items.length)];
+
+          try {
+            peer.delete(itemToDelete.seq!, itemToDelete.actor!);
+
+            // Update unified model
+            const unifiedItem = findUnifiedItem(itemToDelete.seq!, itemToDelete.actor!);
+            if (unifiedItem) {
+              unifiedItem.data = null; // Mark as deleted
+              unifiedItem.editor = peer.id;
+              unifiedItem.version++;
+              console.log(`${peer.id} deletes [${itemToDelete.seq}, ${itemToDelete.actor}] "${itemToDelete.data}"`);
+            }
+          } catch (e) {
+            // Item might not be found, that's okay in a random test
+            console.log(`${peer.id} failed to delete [${itemToDelete.seq}, ${itemToDelete.actor}]`);
+          }
+        }
+      } else {
+        // Sync operation - randomly sync with server
+        bench.syncPeer(peerIndex);
+        console.log(`${peer.id} syncs with server`);
+      }
+
+      // Periodically verify the integrity of all stores
+      if (i % 10 === 0) {
+        bench.verifyIntegrity();
+      }
+    }
+
+    // Final sync to ensure all peers have the same state
+    bench.syncAllPeers();
+
+    // One final integrity check
+    bench.verifyIntegrity();
+
+    // Dump the state of all peers for debugging
+    console.log('\n=== Final State ===');
+    bench.dumpAllPeers();
+
+    // Compare each peer's data view with the unified model
+    console.log('\n=== Comparing with Unified Model ===');
+
+    // Loop through each peer
+    for (const peer of peers) {
+      // Get all items that this peer can see (using getItemsRange to skip mutations)
+      const peerItems = peer._store.getItemsRange();
+
+      // Check that every item in the peer's view matches the unified model
+      for (const peerItem of peerItems) {
+        if (peerItem.seq === null || peerItem.actor === null) continue;
+
+        const unifiedItem = findUnifiedItem(peerItem.seq, peerItem.actor);
+
+        // The item must exist in the unified model
+        expect(unifiedItem).toBeDefined();
+
+        if (unifiedItem) {
+          // Either both are null (deleted) or both have the same data
+          if (unifiedItem.data === null) {
+            expect(peerItem.data).toBeNull();
+          } else if (peerItem.data !== null) {
+            expect(peerItem.data).toBe(unifiedItem.data);
+          }
+
+          console.log(
+            `Item [${peerItem.seq}, ${peerItem.actor}]: ` +
+              `Peer data: "${peerItem.data}", ` +
+              `Model data: "${unifiedItem.data}"`,
+          );
+        }
+      }
+
+      // Also check that the peer has the correct number of items
+      // Count only non-deleted items in the unified model
+      const activeUnifiedItems = unifiedModel.filter((item) => item.data !== null).length;
+      const activePeerItems = peerItems.filter((item) => item.data !== null).length;
+
+      console.log(`${peer.id}: Active items count - Peer: ${activePeerItems}, Model: ${activeUnifiedItems}`);
+
+      // Only check if all peers are synced, as peers might not yet see all deletes without sync
+      expect(activePeerItems).toBe(activeUnifiedItems);
+    }
   });
 });
 
