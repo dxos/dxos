@@ -10,7 +10,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { TranscriptionManager } from '@dxos/plugin-transcription';
-import { isNonNullable } from '@dxos/util';
+import { isNonNullable, keyToFallback } from '@dxos/util';
 
 import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
@@ -149,6 +149,9 @@ export class CallManager extends Resource {
       if (identity) {
         this._swarmSynchronizer._setIdentity(identity);
         this._transcriptionManager.setName(identity.profile?.displayName ?? generateName(identity.identityKey.toHex()));
+        const fallbackValue = keyToFallback(identity!.identityKey);
+        const userHue = identity!.profile?.data?.hue || fallbackValue.hue;
+        this._transcriptionManager.setHue(userHue);
       }
       if (this._client.halo.device) {
         this._swarmSynchronizer._setDevice(this._client.halo.device);
