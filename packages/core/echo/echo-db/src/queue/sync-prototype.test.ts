@@ -218,7 +218,7 @@ class ItemStore {
           // Check if we need to update the successor pointer on the predecessor
           // Only update if the new item has higher priority (by globalId or by seq/actor ordering)
           const shouldUpdateSuccessor =
-            !predItem.succGlobalId ||
+            predItem.succGlobalId === null ||
             this.compareItems(
               { globalId: item.globalId, seq: item.seq, actor: item.actor },
               { globalId: predItem.succGlobalId, seq: predItem.succSeq, actor: predItem.succActor },
@@ -347,28 +347,48 @@ class ItemStore {
   }
 
   dump() {
+    /**
+     * Format an item ID as globalId:seq:peerId with appropriate styling
+     * @param globalId The global ID (or null)
+     * @param seq The sequence number (or null)
+     * @param peer The peer/actor ID (or null)
+     * @returns Formatted and colored ID string
+     */
+    const formatID = (globalId: number | null, seq: number | null, peer: string | null): string => {
+      const globalIdStr = globalId !== null ? `\x1b[35m${globalId}\x1b[0m` : '\x1b[35m_\x1b[0m';
+      const seqStr = seq !== null ? seq : '_';
+      const peerStr = peer !== null ? `\x1b[90m${peer}\x1b[0m` : '\x1b[90m_\x1b[0m';
+      return `${globalIdStr}:${seqStr}:${peerStr}`;
+    };
+
+    console.log('\x1b[1mID         | Type | Predecessor    | Successor      | Data\x1b[0m');
+    console.log('─'.repeat(90));
+
+    
     for (const item of this._items) {
       const status = item.replace === true ? (item.data ? 'EDIT' : 'DELETE') : 'ADD';
 
-      // Format the item ID as globalId:seq:peerId with peerId in gray and globalId in purple
-      const globalIdStr = item.globalId !== null ? `\x1b[35m${item.globalId}\x1b[0m` : '\x1b[35m_\x1b[0m';
-      const itemId = `${globalIdStr}:${item.seq ?? '_'}:\x1b[90m${item.actor ?? '_'}\x1b[0m`;
+      // Format the item ID
+      const itemId = formatID(item.globalId, item.seq, item.actor);
 
       // Format successor info if present
       const succInfo =
         item.succSeq !== null && item.succActor !== null
-          ? `S ${item.succGlobalId ?? '_'}:${item.succSeq}:\x1b[90m${item.succActor}\x1b[0m`
+          ? `${formatID(item.succGlobalId, item.succSeq, item.succActor)}`
           : '';
 
       // Format predecessor info if present
       const predInfo =
-        item.predSeq !== null && item.predActor !== null ? `P ${item.predSeq}:\x1b[90m${item.predActor}\x1b[0m` : '';
+        item.predSeq !== null && item.predActor !== null 
+          ? `${formatID(null, item.predSeq, item.predActor)}` 
+          : '';
 
       // Only show latestData if it doesn't match data
       const latestDataInfo =
         item.latestData !== null && item.latestData !== item.data
           ? `\x1b[90mlatest\x1b[0m: \x1b[1m${item.latestData}\x1b[0m`
           : '';
+          
       // Color-code the status
       let coloredStatus;
       if (status === 'ADD') {
