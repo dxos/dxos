@@ -80,6 +80,7 @@ export class MixedStreamParser {
     const messagesCollected: Message[] = [];
 
     for await (const event of stream) {
+      log('streamEvent', { event });
       this.streamEvent.emit(event);
 
       // log.info('event', { type: event.type, event });

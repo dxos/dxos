@@ -15,6 +15,11 @@ import { type TreeItemType } from '../../types';
 // TODO(burdon): Indent (Task graph).
 // TODO(burdon): Create/delete.
 
+// Data model:
+// - Tree of nodes (base type for task list).
+// - Journal.
+// - Hierarchical document of tasks.
+
 //
 // Editor.
 //

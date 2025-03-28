@@ -156,6 +156,10 @@ export const isInstanceOf = <Schema extends S.Schema.AnyNoContext>(
   schema: Schema,
   object: any,
 ): object is S.Schema.Type<Schema> => {
+  if (schema == null) {
+    return false;
+  }
+
   const schemaDXN = getSchemaDXN(schema);
   if (!schemaDXN) {
     throw new Error('Schema must have an object annotation.');
