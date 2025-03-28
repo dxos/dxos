@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, createIntent, Capabilities, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import {
+  contributes,
+  createIntent,
+  Capabilities,
+  LayoutAction,
+  type PromiseIntentDispatcher,
+} from '@dxos/app-framework';
 import { defineTool, ToolResult } from '@dxos/artifact';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -15,6 +21,7 @@ declare global {
   interface ToolContextExtensions {
     dispatch?: PromiseIntentDispatcher;
     pivotId?: string;
+    situatedInDeck?: boolean;
   }
 }
 
@@ -36,17 +43,36 @@ export default () =>
       execute: async ({ id }, { extensions }) => {
         invariant(extensions?.pivotId, 'No pivot ID');
         invariant(extensions?.dispatch, 'No intent dispatcher');
-        const { data, error } = await extensions.dispatch(
-          createIntent(DeckAction.ChangeCompanion, {
-            primary: extensions.pivotId,
-            companion: id,
-          }),
-        );
-        if (error) {
-          return ToolResult.Error(error.message);
-        }
 
-        return ToolResult.Success(data);
+        if (extensions.situatedInDeck) {
+          const { data, error } = await extensions.dispatch(
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: extensions.pivotId,
+              companion: id,
+            }),
+          );
+          if (error) {
+            return ToolResult.Error(error.message);
+          }
+
+          return ToolResult.Success(data);
+        } else {
+          const { data, error } = await extensions.dispatch(
+            createIntent(LayoutAction.Open, {
+              subject: [id],
+              part: 'main',
+              options: {
+                pivotId: extensions.pivotId,
+                positioning: 'end',
+              },
+            }),
+          );
+          if (error) {
+            return ToolResult.Error(error.message);
+          }
+
+          return ToolResult.Success(data);
+        }
       },
     }),
   ]);
