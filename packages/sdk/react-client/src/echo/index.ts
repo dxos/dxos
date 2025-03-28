@@ -10,3 +10,4 @@ export * from './useSchema';
 export * from './useSpaces';
 export * from './useSpaceInvitations';
 export * from './useSubscription';
+export * from './useQueue';

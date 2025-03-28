@@ -5,8 +5,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type TraceEvent, type InvocationTraceEvent, type ScriptType } from '@dxos/functions/types';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { type InvocationTraceEvent, type ScriptType, type TraceEvent } from '@dxos/functions/types';
+import { useQueue } from '@dxos/react-client/echo';
 import { Icon, List, ListItem, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -21,8 +21,7 @@ export const LogsPanel = ({ script, classNames }: LogsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   // TODO(wittjosiah): Refactor these hooks.
   const { space, existingFunctionUrl } = useDeployDeps({ script });
-  const edgeClient = useEdgeClient();
-  const invocationTraceQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue?.dxn, {
+  const invocationTraceQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
     pollInterval: 500,
   });
   const [selected, setSelected] = useState<InvocationTraceEvent>();
@@ -61,11 +60,7 @@ const InvocationTraceItem = ({
   open?: boolean;
   setOpen?: (trace: InvocationTraceEvent, open: boolean) => void;
 }) => {
-  const edgeClient = useEdgeClient();
-  const eventQueue = useQueue<TraceEvent>(
-    edgeClient,
-    open ? decodeReference(trace.invocationTraceQueue).dxn : undefined,
-  );
+  const eventQueue = useQueue<TraceEvent>(open ? decodeReference(trace.invocationTraceQueue).dxn : undefined);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
