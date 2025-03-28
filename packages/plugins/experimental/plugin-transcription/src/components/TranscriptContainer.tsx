@@ -9,8 +9,8 @@ import { DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { type TranscriptBlock, type TranscriptType } from '../types';
 import { Transcript } from './Transcript';
+import { type TranscriptBlock, type TranscriptType } from '../types';
 
 export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: string }> = ({ transcript, role }) => {
   const attendableId = fullyQualifiedId(transcript);
