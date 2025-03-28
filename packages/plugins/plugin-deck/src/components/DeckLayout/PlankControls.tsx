@@ -5,6 +5,7 @@
 import React, { forwardRef, useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import {
   Button,
   ButtonGroup,
@@ -54,14 +55,15 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
 const plankControlSpacing = 'pli-2 plb-3';
 
 type PlankComplimentControlsProps = {
-  primary: string;
+  primary?: string;
 };
 
-export const PlankComplimentControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
+export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(DECK_PLUGIN);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const handleCloseCompanion = useCallback(() => {
+      invariant(primary);
       return dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
     }, []);
     return (
