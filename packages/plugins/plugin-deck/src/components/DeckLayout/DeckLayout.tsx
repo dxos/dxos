@@ -187,15 +187,15 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
   );
   const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
 
-  const order: Record<string, number> = useMemo(() => {
+  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
     return active.reduce(
-      (acc: { result: Record<string, number>; cursor: number }, entryId) => {
-        acc.result[entryId] = acc.cursor + 1;
-        acc.cursor += activeCompanions?.[entryId] ? 3 : 2;
+      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+        acc.order[entryId] = acc.itemsCount + 1;
+        acc.itemsCount += activeCompanions?.[entryId] ? 3 : 2;
         return acc;
       },
-      { result: {}, cursor: 0 },
-    ).result;
+      { order: {}, itemsCount: 0 },
+    );
   }, [active, activeCompanions]);
 
   return (
@@ -264,7 +264,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   onScroll={handleScroll}
-                  itemsCount={2 * (active.length ?? 0) - 1}
+                  itemsCount={itemsCount - 1}
                   style={padding}
                   ref={deckRef}
                 >

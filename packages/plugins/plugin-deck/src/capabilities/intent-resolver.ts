@@ -16,6 +16,7 @@ import {
   chain,
 } from '@dxos/app-framework';
 import { getTypename, S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -287,8 +288,16 @@ export default (context: PluginsContext) =>
         const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
+
+        const clearCompanionIntents = subject
+          .filter((id) => state.deck.activeCompanions && id in state.deck.activeCompanions)
+          .map((primary) => createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
+
         return {
-          intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
+          intents: [
+            ...clearCompanionIntents,
+            ...(toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : []),
+          ],
         };
       },
     }),
@@ -330,6 +339,7 @@ export default (context: PluginsContext) =>
           const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
           state.deck.activeCompanions = nextActiveCompanions;
         } else {
+          invariant(data.companion !== data.primary);
           state.deck.activeCompanions = {
             ...state.deck.activeCompanions,
             [data.primary]: data.companion,

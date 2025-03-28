@@ -49,10 +49,21 @@ type PlankImplProps = Omit<PlankProps, 'companionId' | 'part'> & {
   part: ResolvedPart;
   surfaceVariant?: string;
   companioned?: 'primary' | 'companion';
+  primaryId?: string;
 };
 
 const PlankImpl = memo(
-  ({ id = UNKNOWN_ID, part, path, order, active, layoutMode, surfaceVariant, companioned }: PlankImplProps) => {
+  ({
+    id = UNKNOWN_ID,
+    part,
+    path,
+    order,
+    active,
+    layoutMode,
+    surfaceVariant,
+    companioned,
+    primaryId,
+  }: PlankImplProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const { graph } = useAppGraph();
@@ -152,6 +163,7 @@ const PlankImpl = memo(
               canIncrementEnd={canIncrementEnd}
               popoverAnchorId={popoverAnchorId}
               companioned={companioned}
+              primaryId={primaryId}
               surfaceVariant={surfaceVariant}
             />
             <Surface
@@ -195,7 +207,7 @@ export const Plank = (props: PlankProps) => {
           {...props}
           {...(props.companionId.startsWith(surfaceVariantSeparator)
             ? { surfaceVariant: props.companionId.substring(2) }
-            : { id: props.companionId })}
+            : { id: props.companionId, primaryId: props.id })}
           {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: props.order! + 1 })}
           companioned='companion'
         />
