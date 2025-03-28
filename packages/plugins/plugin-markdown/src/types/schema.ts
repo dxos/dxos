@@ -12,6 +12,7 @@ export const DocumentSchema = S.Struct({
   content: Ref(TextType),
   threads: S.mutable(S.Array(Ref(ThreadType))),
 }).annotations({
+  // TODO(dmaretskyi): `S.Struct(...).pipe(defaultLabel(['name', 'fallbackName']))` for type-safe annotations.
   [LabelAnnotationId]: ['name', 'fallbackName'],
 });
 
