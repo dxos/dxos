@@ -349,14 +349,131 @@ class ItemStore {
   dump() {
     for (const item of this._items) {
       const status = item.replace === true ? (item.data ? 'EDIT' : 'DELETE') : 'ADD';
-      const dataToShow = item.latestData !== null ? item.latestData : item.data;
+
+      // Format the item ID as globalId:seq:peerId with peerId in gray and globalId in purple
+      const globalIdStr = item.globalId !== null ? `\x1b[35m${item.globalId}\x1b[0m` : '\x1b[35m_\x1b[0m';
+      const itemId = `${globalIdStr}:${item.seq ?? '_'}:\x1b[90m${item.actor ?? '_'}\x1b[0m`;
+
+      // Format successor info if present
       const succInfo =
         item.succSeq !== null && item.succActor !== null
-          ? `(succ: ${item.succGlobalId ?? ''}:${item.succSeq}:${item.succActor})`
+          ? `S: ${item.succGlobalId ?? '_'}:${item.succSeq}:\x1b[90m${item.succActor}\x1b[0m`
           : '';
+
+      // Format predecessor info if present
+      const predInfo = item.predSeq && item.predActor ? `P: ${item.predSeq}:\x1b[90m${item.predActor}\x1b[0m` : '';
+
+      // Only show latestData if it doesn't match data
+      const latestDataInfo =
+        item.latestData !== null && item.latestData !== item.data ? `\x1b[90mlatest\x1b[0m: \x1b[1m${item.latestData}\x1b[0m` : '';
+      // Color-code the status
+      let coloredStatus;
+      if (status === 'ADD') {
+        coloredStatus = `\x1b[32m${status}\x1b[0m`;
+      } else if (status === 'EDIT') {
+        coloredStatus = `\x1b[33m${status}\x1b[0m`;
+      } else {
+        coloredStatus = `\x1b[31m${status}\x1b[0m`;
+      }
+
       console.log(
-        `${(item.globalId ?? '').toString().padEnd(3)} [${(item.actor ?? '').padEnd(10)} ${(item.seq ?? '').toString().padEnd(3)}] ${status} ${dataToShow} ${item.predSeq && item.predActor ? `(pred: ${item.predSeq}:${item.predActor})` : ''} ${succInfo}`,
+        `${padEndVisible(itemId, 10)} | ${padEndVisible(coloredStatus, 4)} | ${padEndVisible(predInfo, 14)} | ${padEndVisible(succInfo, 14)} | \x1b[90mdata\x1b[0m: \x1b[1m${item.data}\x1b[0m ${latestDataInfo}`,
       );
+    }
+  }
+
+  /**
+   * Verify that all items in the store adhere to the required invariants.
+   * Throws an error if any inconsistencies are found.
+   */
+  verifyIntegrity() {
+    const errors: string[] = [];
+
+    // Check uniqueness of [seq; actor] tuples
+    const seqActorMap = new Map<string, ItemRecord>();
+    for (const item of this._items) {
+      if (item.seq !== null && item.actor !== null) {
+        const key = `${item.seq}:${item.actor}`;
+        if (seqActorMap.has(key)) {
+          errors.push(`Duplicate [seq; actor] tuple: ${key}`);
+        } else {
+          seqActorMap.set(key, item);
+        }
+      }
+    }
+
+    // Check that globalIds are unique and sequential
+    const globalIds = this._items.map((item) => item.globalId).filter((id) => id !== null) as number[];
+    globalIds.sort((a, b) => a - b);
+
+    for (let i = 1; i < globalIds.length; i++) {
+      if (globalIds[i] === globalIds[i - 1]) {
+        errors.push(`Duplicate globalId: ${globalIds[i]}`);
+      }
+      if (globalIds[i] !== globalIds[i - 1] + 1) {
+        errors.push(`Non-sequential globalIds: ${globalIds[i - 1]} followed by ${globalIds[i]}`);
+      }
+    }
+
+    // Check that items are correctly sorted by globalId
+    for (let i = 1; i < this._items.length; i++) {
+      const prev = this._items[i - 1];
+      const curr = this._items[i];
+
+      if (prev.globalId !== null && curr.globalId !== null && prev.globalId > curr.globalId) {
+        errors.push(`Items not sorted by globalId: ${prev.globalId} followed by ${curr.globalId}`);
+      }
+    }
+
+    // Check item references and compaction integrity
+    for (const item of this._items) {
+      // If an item is a replacement (edit/delete)
+      if (item.replace === true) {
+        // It must have a predecessor reference
+        if (item.predSeq === null || item.predActor === null) {
+          errors.push(`Replacement item (seq=${item.seq}, actor=${item.actor}) missing predecessor reference`);
+          continue;
+        }
+
+        // The predecessor must exist
+        const predKey = `${item.predSeq}:${item.predActor}`;
+        const predItem = seqActorMap.get(predKey);
+        if (!predItem) {
+          errors.push(`Predecessor item ${predKey} referenced by (seq=${item.seq}, actor=${item.actor}) not found`);
+          continue;
+        }
+
+        // Check that successor pointer is correct
+        if (predItem.succSeq !== null && predItem.succActor !== null) {
+          // If this item has higher priority than the current successor, it should be the successor
+          const currentSuccKey = `${predItem.succSeq}:${predItem.succActor}`;
+          const currentSucc = seqActorMap.get(currentSuccKey);
+
+          if (currentSucc) {
+            const shouldBeSuccessor =
+              this.compareItems(
+                { globalId: item.globalId, seq: item.seq, actor: item.actor },
+                { globalId: currentSucc.globalId, seq: currentSucc.seq, actor: currentSucc.actor },
+              ) > 0;
+
+            if (shouldBeSuccessor && `${predItem.succSeq}:${predItem.succActor}` !== `${item.seq}:${item.actor}`) {
+              errors.push(
+                `Successor pointer on predecessor ${predKey} points to ${currentSuccKey} but should point to ${item.seq}:${item.actor}`,
+              );
+            }
+          }
+        }
+
+        // Check compaction: If this is a deletion (data is null), predecessor's latestData should be null
+        if (item.data === null && predItem.latestData !== null) {
+          errors.push(`Deleted item's predecessor ${predKey} has non-null latestData`);
+        }
+      }
+    }
+
+    // If there are any errors, throw with all error messages
+    if (errors.length > 0) {
+      throw new Error(`Store integrity verification failed:\n${errors.join('\n')}`);
     }
   }
 }
@@ -549,11 +666,25 @@ class Bench {
   }
 
   dumpAllPeers() {
-    console.log('Server:');
+    console.log('# Server:');
     this.server._store.dump();
     for (const peer of this.peers) {
-      console.log(`${peer.id}:`);
+      console.log(`\n# ${peer.id}:`);
       peer._store.dump();
+    }
+  }
+
+  /**
+   * Verify the integrity of all stores (server and all peers).
+   * This is useful for tests to check integrity at critical points.
+   */
+  verifyIntegrity() {
+    // First check the server
+    this.server._store.verifyIntegrity();
+
+    // Then check all peers
+    for (const peer of this.peers) {
+      peer._store.verifyIntegrity();
     }
   }
 }
@@ -781,14 +912,23 @@ describe('queue sync prototype', () => {
     peer1.append('original message');
     bench.syncPeer(0);
 
+    // Verify integrity after initial sync
+    bench.verifyIntegrity();
+
     // Get the item that was just added to edit it
     const item = peer1.get()[0];
 
     // Peer 1 edits the message
     peer1.edit(item.seq!, item.actor!, 'edited message');
 
+    // Verify integrity after edit operation
+    peer1._store.verifyIntegrity(); // Just check the peer that made the edit
+
     // Sync to propagate the edit
     bench.syncAllPeers();
+
+    // Verify integrity after sync
+    bench.verifyIntegrity();
 
     // Check that both peers see the edited message
     const peer1Items = peer1.get();
@@ -817,6 +957,9 @@ describe('queue sync prototype', () => {
     peer1.append('message to delete');
     bench.syncPeer(0);
 
+    // Verify integrity after initial sync
+    bench.verifyIntegrity();
+
     // Get the items that were added
     const items = peer1.get();
     console.log(
@@ -827,6 +970,9 @@ describe('queue sync prototype', () => {
 
     // Peer 1 deletes the second message
     peer1.delete(itemToDelete.seq!, itemToDelete.actor!);
+
+    // Verify integrity after delete operation
+    peer1._store.verifyIntegrity();
 
     // Check item state right after deletion
     const afterDeleteItem = peer1._store.findItem(itemToDelete.seq!, itemToDelete.actor!);
@@ -846,6 +992,9 @@ describe('queue sync prototype', () => {
 
     // Sync to propagate the deletion
     bench.syncAllPeers();
+
+    // Verify integrity after sync
+    bench.verifyIntegrity();
 
     // Check data content rather than full state
     const peer1Data = peer1.get().map((item) => item.data);
@@ -875,7 +1024,7 @@ describe('queue sync prototype', () => {
     expect(originalItem?.succActor).not.toBeNull();
   });
 
-  test('concurrent edits last writer wins', () => {
+  test.only('concurrent edits last writer wins', () => {
     const bench = new Bench();
     bench.addPeers(2);
     const [peer1, peer2] = bench.peers;
@@ -884,6 +1033,9 @@ describe('queue sync prototype', () => {
     peer1.append('original message');
     bench.syncAllPeers();
 
+    // Verify integrity after initial sync
+    bench.verifyIntegrity();
+
     // Get the item that was just added
     const item = peer1.get()[0];
 
@@ -891,17 +1043,21 @@ describe('queue sync prototype', () => {
     peer1.edit(item.seq!, item.actor!, 'peer1 edit');
     peer2.edit(item.seq!, item.actor!, 'peer2 edit');
 
+    // Verify integrity after concurrent edits
+    bench.verifyIntegrity();
+    bench.verifyIntegrity();
+
     console.log('\nAfter local edits:');
-    console.log('peer1:');
-    peer1._store.dump();
-    console.log('peer2:');
-    peer2._store.dump();
+    bench.dumpAllPeers();
 
     // Sync to resolve the concurrent edits
     bench.syncAllPeers();
 
     // Force another sync to make sure any pending updates are applied
     bench.syncAllPeers();
+
+    // Verify integrity after sync
+    bench.verifyIntegrity();
 
     console.log('\nAfter sync:');
     console.log('Server:');
@@ -964,13 +1120,21 @@ describe('queue sync prototype', () => {
     // Peer writes a message
     peer.append('original message');
 
+    // Verify integrity after append
+    bench.verifyIntegrity();
+
     // Get the item
     const item = peer._store.items[0];
 
     // Edit the message multiple times
     peer.edit(item.seq!, item.actor!, 'first edit');
+    bench.verifyIntegrity();
+
     peer.edit(item.seq!, item.actor!, 'second edit');
+    bench.verifyIntegrity();
+
     peer.edit(item.seq!, item.actor!, 'third edit');
+    bench.verifyIntegrity();
 
     // Check the original item has a successor pointer
     const originalItem = peer._store.items.find((i) => i.seq === item.seq && i.actor === item.actor);
@@ -982,5 +1146,48 @@ describe('queue sync prototype', () => {
     // Check that get() returns the compacted data
     const queriedItem = peer.get()[0];
     expect(queriedItem.data).toBe('third edit');
+
+    // After all edits, verify final integrity
+    bench.verifyIntegrity();
   });
+});
+
+/**
+ * Pads a string to a specified length, accounting for ANSI control characters.
+ * This is useful for formatting console output with colored text.
+ *
+ * @param str The string to pad
+ * @param length The desired visible length after padding
+ * @param padChar The character to use for padding (default: space)
+ * @returns The padded string
+ */
+function padEndVisible(str: string, length: number, padChar: string = ' '): string {
+  // Calculate the visible length by removing ANSI control sequences
+  const visibleStr = str.replace(/\x1b\[\d+m/g, '');
+  const visibleLength = visibleStr.length;
+
+  // Calculate how many padding characters we need
+  const paddingLength = Math.max(0, length - visibleLength);
+
+  // Return the original string with padding
+  return str + padChar.repeat(paddingLength);
+}
+
+test.only('padEndVisible handles ANSI color codes correctly', () => {
+  // Test with no color codes
+  expect(padEndVisible('test', 8)).toBe('test    ');
+
+  // Test with color codes
+  const coloredText = '\x1b[32mtest\x1b[0m';
+  expect(padEndVisible(coloredText, 8)).toBe('\x1b[32mtest\x1b[0m    ');
+
+  // Test with multiple color codes
+  const multiColored = '\x1b[31mte\x1b[32mst\x1b[0m';
+  expect(padEndVisible(multiColored, 8)).toBe('\x1b[31mte\x1b[32mst\x1b[0m    ');
+
+  // Test with custom padding character
+  expect(padEndVisible('test', 8, '-')).toBe('test----');
+
+  // Test with length shorter than string
+  expect(padEndVisible('testing', 4)).toBe('testing');
 });
