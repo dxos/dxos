@@ -7,6 +7,7 @@ import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
@@ -18,6 +19,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
+import { TRANSCRIPTION_PLUGIN } from '../../meta';
 import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
@@ -90,6 +92,7 @@ const measureRows = async (
 };
 
 export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
+  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
@@ -111,16 +114,16 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   const abortControllerRef = useRef<AbortController>();
 
   const handleResize = useCallback(
-    ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
+    async ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
       if (entry?.target && Array.isArray(blocks) && blocks[0] && queueMap) {
         abortControllerRef.current?.abort();
         abortControllerRef.current = new AbortController();
-        measureRows(entry.target, blocks, queueMap, abortControllerRef.current.signal)
+        setColumns({ grid: { 0: { size: timestampColumnWidth }, 1: { size: entry.target.offsetWidth } } });
+        return measureRows(entry.target, blocks, queueMap, abortControllerRef.current.signal)
           .then(setRows)
           .catch(() => {
             /* Aborted mid-measurement by new size. */
           });
-        setColumns({ grid: { 0: { size: timestampColumnWidth }, 1: { size: entry.target.offsetWidth } } });
       }
     },
     [blocks, queueMap],
@@ -133,12 +136,13 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   useEffect(() => {
     if (queueMap.length !== Object.keys(rows?.grid ?? {}).length) {
-      handleResize({ entry: { target: measureRef.current } });
-      if (autoScroll) {
-        // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a
-        //  new `maxPosBlock`.
-        setTimeout(() => dxGrid?.scrollToEndRow(), 50);
-      }
+      void handleResize({ entry: { target: measureRef.current } }).then(() => {
+        if (autoScroll) {
+          // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a
+          //  new `maxPosBlock`.
+          setTimeout(() => dxGrid?.scrollToEndRow(), 50);
+        }
+      });
     }
   }, [blocks, queueMap, width, autoScroll]);
 
@@ -182,6 +186,11 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     }
   }, [dxGrid, blocks]);
 
+  const handleScrollToEnd = useCallback(() => {
+    setAutoScroll(true);
+    dxGrid?.scrollToEndRow();
+  }, [dxGrid, autoScroll]);
+
   return (
     <>
       <Grid.Root id={`${attendableId}--transcript`}>
@@ -197,6 +206,15 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
         />
       </Grid.Root>
       <div role='none' {...{ inert: '' }} aria-hidden className={measureClasses} ref={measureRef} />
+      <IconButton
+        icon='ph--arrow-line-down--regular'
+        iconOnly
+        label={t('scroll to end label')}
+        tooltipSide='left'
+        data-state={autoScroll ? 'invisible' : 'visible'}
+        classNames='absolute inline-end-2 block-end-2 opacity-0 data-[state="visible"]:opacity-100 transition-opacity'
+        onClick={handleScrollToEnd}
+      />
     </>
   );
 };
