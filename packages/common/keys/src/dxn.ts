@@ -193,8 +193,8 @@ export class DXN {
     return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
-  toString() {
-    return `dxn:${this.#kind}:${this.#parts.join(':')}`;
+  toString(): DXN.String {
+    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
   }
 
   /**
@@ -228,6 +228,11 @@ export declare namespace DXN {
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.
   };
+
+  /**
+   * DXN represented as a javascript string.
+   */
+  export type String = string & { __DXNString: never };
 }
 
 /**

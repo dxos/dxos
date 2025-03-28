@@ -8,8 +8,7 @@ import { type Queue } from '@dxos/echo-db';
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
 import { type TraceEvent, type InvocationTraceEvent } from '@dxos/functions/types';
-import { type Space } from '@dxos/react-client/echo';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { useQueue, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -21,10 +20,9 @@ import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
 
 export const InvocationTracePanel = (props: { space?: Space }) => {
-  const edgeClient = useEdgeClient();
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue.dxn);
+  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
 
   const traceQueueDxn = useMemo(() => {
@@ -33,7 +31,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
       : undefined;
   }, [selectedInvocation?.invocationTraceQueue]);
 
-  const eventQueue = useQueue<TraceEvent>(edgeClient, traceQueueDxn);
+  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
 
   const [selectedObject, setSelectedObject] = useState<any>();
   const invocationsByTarget = groupByInvocationTarget(invocationsQueue);
