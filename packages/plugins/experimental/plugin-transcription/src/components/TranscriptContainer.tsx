@@ -6,17 +6,16 @@ import React, { type FC, Fragment } from 'react';
 
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Transcript } from './Transcript';
 import { type TranscriptBlock, type TranscriptType } from '../types';
 
 export const TranscriptionContainer: FC<{ transcript: TranscriptType; role: string }> = ({ transcript, role }) => {
-  const edge = useEdgeClient();
   const attendableId = fullyQualifiedId(transcript);
 
-  const queue = useQueue<TranscriptBlock>(edge, transcript.queue ? DXN.parse(transcript.queue) : undefined, {
+  const queue = useQueue<TranscriptBlock>(transcript.queue ? DXN.parse(transcript.queue) : undefined, {
     pollInterval: 1_000,
   });
 

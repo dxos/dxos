@@ -4,7 +4,7 @@
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import type { SpecificCredential } from '@dxos/credentials';
-import { type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type CoreDatabase, type EchoDatabase, type QueuesAPI, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type CreateEpochRequest,
@@ -64,6 +64,11 @@ export interface Space {
    * Echo database.
    */
   get db(): EchoDatabase;
+
+  /**
+   * Access to queues.
+   */
+  get queues(): QueuesAPI;
 
   /**
    * Echo database CRUD API.

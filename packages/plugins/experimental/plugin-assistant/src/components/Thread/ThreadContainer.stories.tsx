@@ -21,7 +21,6 @@ import { Message, type Tool } from '@dxos/artifact';
 import { genericTools, localServiceEndpoints, type IsObject } from '@dxos/artifact-testing';
 import { AIServiceEdgeClient } from '@dxos/assistant';
 import { createStatic, ObjectId } from '@dxos/echo-schema';
-import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { DXN, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -31,9 +30,8 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { useSpace } from '@dxos/react-client/echo';
+import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useQueue } from '@dxos/react-edge-client';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
@@ -60,7 +58,6 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   );
 
   const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
-  const [edgeClient] = useState(() => new EdgeHttpClient(endpoints.edge));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.
@@ -82,8 +79,8 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   }, [aiClient, tools, space, dispatch, artifactDefinitions]);
 
   // Queue.
-  const [queueDxn, setQueueDxn] = useState(() => randomQueueDxn());
-  const queue = useQueue<Message>(edgeClient, DXN.tryParse(queueDxn));
+  const [queueDxn, setQueueDxn] = useState<string>(() => randomQueueDxn());
+  const queue = useQueue<Message>(DXN.tryParse(queueDxn));
 
   useEffect(() => {
     if (queue?.items.length === 0 && !queue.isLoading && prompts.length > 0) {
