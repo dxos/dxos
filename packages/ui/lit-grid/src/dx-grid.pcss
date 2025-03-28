@@ -1,6 +1,13 @@
 @import './dx-grid-axis-resize-handle.pcss';
 @import './dx-grid-multiselect-cell.pcss';
 
+@layer tokens {
+  :root{
+    --dx-grid-cell-padding-block: .25rem;
+    --dx-grid-cell-padding-inline: .5rem;
+  }
+}
+
 @layer dx-components {
   dx-grid {
     display: contents;
@@ -60,7 +67,7 @@
       position: relative;
       background: var(--dx-grid-base, var(--dx-baseSurface));
       /** This must match CellEditor styling in `CellEditor.tsx`. */
-      padding: 2px 4px;
+      padding: var(--dx-grid-cell-padding-block) var(--dx-grid-cell-padding-inline);
       box-sizing: border-box;
       border: 1px solid transparent;
       overflow: hidden;
