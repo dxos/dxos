@@ -16,6 +16,7 @@ import {
   chain,
 } from '@dxos/app-framework';
 import { getTypename, S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -27,7 +28,6 @@ import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode, defaultDeck } from '../types';
 import { setActive } from '../util';
-import { invariant } from '@dxos/invariant';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
