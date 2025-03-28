@@ -4,8 +4,23 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@dxos/conductor": [
+        "packages/core/conductor/src/index.ts"
+      ],
+      "@dxos/conductor/testing": [
+        "packages/core/conductor/src/testing/index.ts"
+      ],
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
+      ],
+      "@dxos/artifact-testing": [
+        "packages/experimental/artifact-testing/src/index.ts"
+      ],
+      "@dxos/assistant": [
+        "packages/experimental/assistant/src/index.ts"
+      ],
+      "@dxos/assistant/testing": [
+        "packages/experimental/assistant/src/testing/index.ts"
       ],
       "@dxos/plugin-assistant": [
         "packages/plugins/experimental/plugin-assistant/src/index.ts"
@@ -15,12 +30,6 @@
       ],
       "@dxos/plugin-automation": [
         "packages/plugins/experimental/plugin-automation/src/index.ts"
-      ],
-      "@dxos/plugin-calls": [
-        "packages/plugins/experimental/plugin-calls/src/index.ts"
-      ],
-      "@dxos/plugin-calls/types": [
-        "packages/plugins/experimental/plugin-calls/src/types/index.ts"
       ],
       "@dxos/plugin-conductor": [
         "packages/plugins/experimental/plugin-conductor/src/index.ts"
@@ -142,6 +151,12 @@
       "@dxos/plugin-markdown/types": [
         "packages/plugins/plugin-markdown/src/types/index.ts"
       ],
+      "@dxos/plugin-meeting": [
+        "packages/plugins/plugin-meeting/src/index.ts"
+      ],
+      "@dxos/plugin-meeting/types": [
+        "packages/plugins/plugin-meeting/src/types/index.ts"
+      ],
       "@dxos/plugin-mermaid": [
         "packages/plugins/plugin-mermaid/src/index.ts"
       ],
@@ -240,6 +255,108 @@
       ],
       "@dxos/shell/testing": [
         "packages/sdk/shell/src/testing/index.ts"
+      ],
+      "@dxos/react-ui": [
+        "packages/ui/react-ui/src/index.ts"
+      ],
+      "@dxos/react-ui-attention": [
+        "packages/ui/react-ui-attention/src/index.ts"
+      ],
+      "@dxos/react-ui-attention/testing": [
+        "packages/ui/react-ui-attention/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-canvas": [
+        "packages/ui/react-ui-canvas/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas-compute": [
+        "packages/ui/react-ui-canvas-compute/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas-editor": [
+        "packages/ui/react-ui-canvas-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas-editor/testing": [
+        "packages/ui/react-ui-canvas-editor/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-card": [
+        "packages/ui/react-ui-card/src/index.ts"
+      ],
+      "@dxos/react-ui-components": [
+        "packages/ui/react-ui-components/src/index.ts"
+      ],
+      "@dxos/react-ui-dnd": [
+        "packages/ui/react-ui-dnd/src/index.ts"
+      ],
+      "@dxos/react-ui-editor": [
+        "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-form": [
+        "packages/ui/react-ui-form/src/index.ts"
+      ],
+      "@dxos/react-ui-gameboard": [
+        "packages/ui/react-ui-gameboard/src/index.ts"
+      ],
+      "@dxos/react-ui-geo/data": [
+        "packages/ui/react-ui-geo/src/data.ts"
+      ],
+      "@dxos/react-ui-geo": [
+        "packages/ui/react-ui-geo/src/index.ts"
+      ],
+      "@dxos/react-ui-grid": [
+        "packages/ui/react-ui-grid/src/index.ts"
+      ],
+      "@dxos/react-ui-kanban/defs/kanban": [
+        "packages/ui/react-ui-kanban/src/defs/kanban.ts"
+      ],
+      "@dxos/react-ui-kanban": [
+        "packages/ui/react-ui-kanban/src/index.ts"
+      ],
+      "@dxos/react-ui-kanban/testing": [
+        "packages/ui/react-ui-kanban/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-list": [
+        "packages/ui/react-ui-list/src/index.ts"
+      ],
+      "@dxos/react-ui-menu": [
+        "packages/ui/react-ui-menu/src/index.ts"
+      ],
+      "@dxos/react-ui-pickers": [
+        "packages/ui/react-ui-pickers/src/index.ts"
+      ],
+      "@dxos/react-ui-searchlist": [
+        "packages/ui/react-ui-searchlist/src/index.ts"
+      ],
+      "@dxos/react-ui-sfx": [
+        "packages/ui/react-ui-sfx/src/index.ts"
+      ],
+      "@dxos/react-ui-stack": [
+        "packages/ui/react-ui-stack/src/index.ts"
+      ],
+      "@dxos/react-ui-stack/testing": [
+        "packages/ui/react-ui-stack/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-syntax-highlighter": [
+        "packages/ui/react-ui-syntax-highlighter/src/index.ts"
+      ],
+      "@dxos/react-ui-table/deprecated": [
+        "packages/ui/react-ui-table/src/deprecated/index.ts"
+      ],
+      "@dxos/react-ui-table": [
+        "packages/ui/react-ui-table/src/index.ts"
+      ],
+      "@dxos/react-ui-table/types": [
+        "packages/ui/react-ui-table/src/types/index.ts"
+      ],
+      "@dxos/react-ui-tabs": [
+        "packages/ui/react-ui-tabs/src/index.ts"
+      ],
+      "@dxos/react-ui-text-tooltip": [
+        "packages/ui/react-ui-text-tooltip/src/index.ts"
+      ],
+      "@dxos/react-ui-thread": [
+        "packages/ui/react-ui-thread/src/index.ts"
+      ],
+      "@dxos/react-ui-types": [
+        "packages/ui/react-ui-types/src/index.ts"
       ]
     }
   },

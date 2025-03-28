@@ -2,32 +2,42 @@
 // Copyright 2020 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useDevtoolsState, useCredentials } from '../../../hooks';
 
-const { helper, builder } = createColumnBuilder<Credential>();
-const columns: TableColumnDef<Credential, any>[] = [
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  helper.accessor('id', builder.key({ tooltip: true })),
-  helper.accessor('issuer', builder.key({ tooltip: true })),
-  helper.accessor((credential): string => credential.subject.assertion['@type'], {
-    id: 'type',
-    ...builder.string(),
-  }),
-  helper.accessor('issuanceDate', builder.date({ header: 'issued' })),
-];
-
 export const CredentialsPanel = () => {
   const { space, haloSpaceKey } = useDevtoolsState();
   const credentials = useCredentials({ spaceKey: haloSpaceKey || space?.key });
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'id', format: FormatEnum.DID, tooltip: true, size: 120 },
+      { name: 'issuer', format: FormatEnum.DID, tooltip: true, size: 120 },
+      { name: 'type', format: FormatEnum.String, size: 380 },
+      { name: 'issuanceDate', format: FormatEnum.DateTime, title: 'issued', size: 220 },
+    ],
+    [],
+  );
+
+  const data = useMemo(
+    () =>
+      credentials.map((credential: Credential) => ({
+        id: credential.id?.toString() ?? '',
+        issuer: credential.issuer.toString(),
+        type: credential.subject.assertion['@type'],
+        issuanceDate: credential.issuanceDate,
+        _original: credential,
+      })),
+    [credentials],
+  );
 
   return (
     <PanelContainer
@@ -37,7 +47,7 @@ export const CredentialsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<Credential> columns={columns} data={credentials} />
+      <MasterDetailTable properties={properties} data={data} detailsTransform={(d) => d._original} />
     </PanelContainer>
   );
 };
