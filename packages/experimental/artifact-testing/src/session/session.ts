@@ -1,13 +1,8 @@
-/**
- * Contains message history, tools, current context.
- * Current context means the state of the app, time of day, and other contextual information.
- * It makes requests to the model, its a state machine.
- * It keeps track of the current goal.
- * It manages the context window.
- * Tracks the success criteria of reaching the goal, exposing metrics (stretch)
- * Could be run locally in the app or remotely.
- * Could be personal or shared.
- */
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema as S } from 'effect';
 
 import { defineTool, Message, ToolResult, type ArtifactDefinition, type Tool } from '@dxos/artifact';
 import {
@@ -22,7 +17,17 @@ import { Event, synchronized } from '@dxos/async';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Schema as S } from 'effect';
+
+/**
+ * Contains message history, tools, current context.
+ * Current context means the state of the app, time of day, and other contextual information.
+ * It makes requests to the model, its a state machine.
+ * It keeps track of the current goal.
+ * It manages the context window.
+ * Tracks the success criteria of reaching the goal, exposing metrics (stretch)
+ * Could be run locally in the app or remotely.
+ * Could be personal or shared.
+ */
 
 export type SessionRunOptions = {
   client: AIServiceClient;
@@ -152,15 +157,15 @@ export class AISession {
                 return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
               }
 
-              let stepResults: any[] = [];
+              const stepResults: any[] = [];
               for (const step of steps) {
-                console.log(`\nExecuting step: ${step.action}`);
+                log.info('executing step', { action: step.action });
                 const session = new AISession({ operationModel: 'immediate' });
-                session.message.on((e) => this.message.emit(e));
-                session.block.on((e) => this.block.emit(e));
-                session.update.on((e) => this.update.emit(e));
-                session.streamEvent.on((e) => this.streamEvent.emit(e));
-                session.userMessage.on((e) => this.userMessage.emit(e));
+                session.message.on((ev) => this.message.emit(ev));
+                session.block.on((ev) => this.block.emit(ev));
+                session.update.on((ev) => this.update.emit(ev));
+                session.streamEvent.on((ev) => this.streamEvent.emit(ev));
+                session.userMessage.on((ev) => this.userMessage.emit(ev));
 
                 const messages = await session.run({
                   client: options.client,
@@ -171,27 +176,27 @@ export class AISession {
                   generationOptions: options.generationOptions,
                   requiredArtifactIds: step.requiredArtifactIds.slice(),
                   prompt: `
-                      You are an agent that executes the subtask in a plan.
-                      
-                      While you know the plan's goal only focus on your subtask
-                      Use the data from the previous step to complete your task.
-                      Return all of the data from "dataReturned" in your last message.
-                      
-                      Current step (that you need to complete):
-                      ${JSON.stringify(
-                        {
-                          goal,
-                          dataRequired: step.dataRequired,
-                          dataReturned: step.dataReturned,
-                          yourTask: step.action,
-                        },
-                        null,
-                        2,
-                      )}
-                      
-                      Previous step results:
-                      ${JSON.stringify(stepResults.at(-1))}.
-                    `,
+                    You are an agent that executes the subtask in a plan.
+                    
+                    While you know the plan's goal only focus on your subtask
+                    Use the data from the previous step to complete your task.
+                    Return all of the data from "dataReturned" in your last message.
+                    
+                    Current step (that you need to complete):
+                    ${JSON.stringify(
+                      {
+                        goal,
+                        dataRequired: step.dataRequired,
+                        dataReturned: step.dataReturned,
+                        yourTask: step.action,
+                      },
+                      null,
+                      2,
+                    )}
+                    
+                    Previous step results:
+                    ${JSON.stringify(stepResults.at(-1))}.
+                  `,
                 });
                 const result = messages.at(-1);
                 stepResults.push(result);
@@ -242,9 +247,9 @@ export class AISession {
     ];
     this.userMessage.emit(this._pending.at(-1)!);
     this._stream = undefined;
-    let error: Error | undefined = undefined;
+    let error: Error | undefined;
 
-    let requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
+    const requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
     try {
       let more = false;
       do {
@@ -289,7 +294,7 @@ export class AISession {
           log('tool request...');
           const response = await runTools({
             message: this._pending.at(-1)!,
-            tools: tools,
+            tools,
             extensions: options.extensions ?? {},
           });
 
@@ -331,31 +336,31 @@ const createBaseInstructions = ({
   availableArtifacts: string[];
   operationModel: OperationModel;
 }) => `
-You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
-Your task is to process user commands and questions and decide how best to respond.
-In some cases, you will need to create or reference data objects called artifacts.
+  You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
+  Your task is to process user commands and questions and decide how best to respond.
+  In some cases, you will need to create or reference data objects called artifacts.
 
-Follow these guidelines carefully:
+  Follow these guidelines carefully:
 
-Decision-making:
+  Decision-making:
 
- - Analyze the structure and type of the content in the user's message.
- - Can you complete the task using the available artifacts?
- - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
- - Identify which artifacts are relevant to the user's request.
- ${
-   operationModel === 'planning'
-     ? `
-      - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
+  - Analyze the structure and type of the content in the user's message.
+  - Can you complete the task using the available artifacts?
+  - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
+  - Identify which artifacts are relevant to the user's request.
+  ${
+    operationModel === 'planning'
+      ? `
+        - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
+      `
+      : `
+      - Are the required artifacts already available?
+      - If not, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
+      - The require'd artifact tools will be available for use after require.
     `
-     : `
-    - Are the required artifacts already available?
-    - If not, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
-    - The require'd artifact tools will be available for use after require.
-  `
- }
+  }
 
-Artifacts already required: ${availableArtifacts.join('\n')}
+  Artifacts already required: ${availableArtifacts.join('\n')}
 `;
 
 export class AIServiecOverloadedError extends S.TaggedError<AIServiecOverloadedError>()(
