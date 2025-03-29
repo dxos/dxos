@@ -52,10 +52,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const configurations = options.platforms.flatMap((platform) => {
     return platform === 'node'
-      ? [
-          { platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false },
-          { platform: 'node', format: 'cjs', slug: 'node', replaceRequire: false },
-        ]
+      ? [{ platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false }]
       : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
   });
 
