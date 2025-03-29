@@ -6151,6 +6151,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
