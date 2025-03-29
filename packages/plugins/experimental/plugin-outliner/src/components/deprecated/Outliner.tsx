@@ -10,7 +10,6 @@ import { createRoot } from 'react-dom/client';
 
 import { Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { RefArray } from '@dxos/live-object';
 import { createDocAccessor, makeRef } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -25,8 +24,8 @@ import {
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { getNext, getParent, getPrevious, getItems, getLastDescendent } from './util';
 import { OUTLINER_PLUGIN } from '../../meta';
+import { getNext, getParent, getPrevious, getChildNodes, getLastDescendent } from '../../types';
 import { type TreeNodeType } from '../../types';
 
 type CursorSelection = {
@@ -398,7 +397,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   // Create/split line.
   //
   const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, state) => {
-    const items = getItems(parent);
+    const items = getChildNodes(parent);
     const idx = items.findIndex((v) => current.id === v?.id);
 
     let item: TreeNodeType;
@@ -436,7 +435,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       return;
     }
 
-    const items = getItems(parent);
+    const items = getChildNodes(parent);
     const idx = items.findIndex((v) => v?.id === item.id);
 
     // Don't delete if not empty and first in list.
@@ -445,7 +444,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
 
     // Remove and add children.
-    const children = RefArray.allResolvedTargets(item.children ?? []);
+    const children = getChildNodes(item);
     items.splice(idx, 1);
     onDelete!(item);
 
@@ -462,7 +461,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         // }
 
         setActive({ itemId: active.id, anchor: from });
-        const items = getItems(active);
+        const items = getChildNodes(active);
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
@@ -476,7 +475,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   // Indent.
   //
   const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
-    const items = getItems(parent);
+    const items = getChildNodes(parent);
     const idx = items.findIndex((v) => v?.id === item.id) ?? -1;
     switch (direction) {
       case 'left': {
@@ -486,7 +485,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
           if (ancestor) {
             // Move all siblings.
             const move = items.splice(idx, items.length - idx);
-            const ancestorItems = getItems(ancestor);
+            const ancestorItems = getChildNodes(ancestor);
             const parentIdx = ancestorItems.findIndex((v) => v?.id === parent.id);
             ancestorItems.splice(parentIdx + 1, 0, ...move);
           }
@@ -497,7 +496,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'right': {
         // Can't indent first child.
         if (idx > 0) {
-          const siblingItems = getItems(items[idx - 1]!);
+          const siblingItems = getChildNodes(items[idx - 1]!);
           siblingItems.splice(siblingItems.length, 0, item);
           items.splice(idx, 1);
         }

@@ -5,16 +5,15 @@
 import React, { type FC, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { RefArray } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type NodeEditorProps, NodeEditor, type NodeEditorController } from './ItemEditor';
-import { type TreeNodeType } from '../../types';
+import { getChildNodes, getNext, getParent, getPrevious, type TreeNodeType } from '../../types';
 
 type OutlinerRootProps = ThemedClassName<{
-  node: TreeNodeType;
+  root: TreeNodeType;
   selected?: string;
   onSelect?: (id: string) => void; // TODO(burdon): Selection Model. Array of ids? Multiple?
   onCreate?: (parent: TreeNodeType, node: TreeNodeType, text?: string) => void;
@@ -22,7 +21,7 @@ type OutlinerRootProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Move selection here.
-const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected, onSelect, onCreate, onDelete }) => {
+const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, root, selected, onSelect, onCreate, onDelete }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [editor, setEditor] = useState<NodeEditorController | null>(null);
@@ -33,12 +32,11 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
 
   const handleEvent = useCallback<NonNullable<NodeEditorProps['onEvent']>>(
     (event) => {
-      log.info('handleEvent', { event });
+      log('handleEvent', { event });
       const { type, parent, node, direction, text } = event;
       invariant(parent);
-      const nodes = RefArray.allResolvedTargets(parent.children);
+      const nodes = getChildNodes(parent);
       const index = nodes.findIndex((n) => n.id === node.id);
-      console.log(parent.id, node.id);
       invariant(index !== -1);
 
       switch (type) {
@@ -52,13 +50,21 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
 
         //
         // Indent.
+        // TOOD(burdon): Undo with tests?
         //
         case 'indent': {
           switch (direction) {
             case 'previous': {
               if (parent.id !== root.id) {
-                // TODO(burdon): Insert after parent.
-                // const [ref] = parent.children.splice(index, 1);
+                const ancestor = getParent(root, parent);
+                if (ancestor) {
+                  // Transplant following siblings to current node.
+                  const [ref, ...rest] = parent.children.splice(index, parent.children.length - index);
+                  const i = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
+                  ancestor.children.splice(i + 1, 0, ref);
+                  ref.target!.children.push(...rest);
+                  onSelect?.(node.id);
+                }
               }
               break;
             }
@@ -68,6 +74,7 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
                 const [ref] = parent.children.splice(index, 1);
                 const previous = nodes[index - 1];
                 previous.children.push(ref);
+                onSelect?.(node.id);
               }
               break;
             }
@@ -76,24 +83,48 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
         }
 
         //
-        // Navigate.
-        // TODO(burdon): Navigate hierarchy.
+        // Move.
+        // TODO(burdon): Atomic?
+        //
+        case 'move': {
+          switch (direction) {
+            case 'previous': {
+              if (index > 0) {
+                const [ref] = parent.children.splice(index, 1);
+                parent.children.splice(index - 1, 0, ref);
+              }
+              break;
+            }
+
+            case 'next': {
+              if (index < parent.children.length - 1) {
+                const [ref] = parent.children.splice(index, 1);
+                parent.children.splice(index + 1, 0, ref);
+              }
+              break;
+            }
+          }
+          break;
+        }
+
+        //
+        // Navigate hierarchy.
         //
         case 'navigate': {
           switch (direction) {
             case 'previous': {
-              if (index > 0) {
-                const id = nodes[index - 1].id;
-                onSelect?.(id);
+              const previous = getPrevious(root, node);
+              if (previous) {
+                onSelect?.(previous.id);
                 setDirection('start');
               }
               break;
             }
 
             case 'next': {
-              if (index < nodes.length - 1) {
-                const id = nodes[index + 1].id;
-                onSelect?.(id);
+              const next = getNext(root, node, true);
+              if (next) {
+                onSelect?.(next.id);
                 setDirection('end');
               }
               break;
@@ -109,7 +140,7 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
   const handleDelete = useCallback<NonNullable<OutlinerRootProps['onDelete']>>(
     (parent, node) => {
       // Only navigate if deleting the current item.
-      // const nodes = RefArray.allResolvedTargets(parent.children ?? []);
+      // const nodes = getChildNodes(parent);
       // let index = nodes.findIndex((i) => i.id === node.id);
 
       // console.log('::::', index);
@@ -174,7 +205,7 @@ const ChildNodes = ({
   setEditor: (editor: NodeEditorController) => void;
 } & Pick<OutlinerRootProps, 'onDelete'> &
   Omit<NodeEditorProps, 'ref' | 'node' | 'classNames' | 'onDelete'>) => {
-  return RefArray.allResolvedTargets(parent.children).map((node) => (
+  return getChildNodes(parent).map((node) => (
     <Fragment key={node.id}>
       <NodeEditor
         ref={node.id === selected ? setEditor : null}

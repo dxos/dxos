@@ -9,6 +9,7 @@ import { IconButton, Input, useId, useThemeContext, useTranslation, type ThemedC
 import { createThemeExtensions, useTextEditor, createBasicExtensions, keymap, EditorView } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
+import { tagsExtension } from './tags';
 import { OUTLINER_PLUGIN } from '../../meta';
 import { type TreeNodeType } from '../../types';
 
@@ -17,7 +18,7 @@ export type NodeEditorController = {
 };
 
 export type NodeEditorEvent = {
-  type: 'focus' | 'navigate' | 'indent' | 'create';
+  type: 'focus' | 'navigate' | 'move' | 'indent' | 'create';
   parent?: TreeNodeType;
   node: TreeNodeType;
   direction?: 'previous' | 'next';
@@ -51,6 +52,9 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           // TODO(burdon): Show placeholder only if focused.
           createBasicExtensions({ placeholder: 'Enter text...' }),
           createThemeExtensions({ themeMode }),
+
+          // Tags.
+          tagsExtension(),
 
           // Monitor focus.
           EditorView.focusChangeEffect.of((_state, focusing) => {
@@ -158,6 +162,24 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                     onEvent?.({ type: 'navigate', node, direction: 'next' });
                     return true;
                   }
+                },
+              },
+
+              //
+              // Move.
+              //
+              {
+                key: 'cmd-ArrowUp',
+                run: (view) => {
+                  onEvent?.({ type: 'move', node, direction: 'previous' });
+                  return true;
+                },
+              },
+              {
+                key: 'cmd-ArrowDown',
+                run: (view) => {
+                  onEvent?.({ type: 'move', node, direction: 'next' });
+                  return true;
                 },
               },
             ]),

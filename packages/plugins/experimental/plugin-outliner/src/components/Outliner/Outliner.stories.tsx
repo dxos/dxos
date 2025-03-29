@@ -8,12 +8,12 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { create, makeRef, RefArray } from '@dxos/react-client/echo';
+import { create, makeRef } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner } from './Outliner';
 import translations from '../../translations';
-import { TreeNodeType } from '../../types';
+import { getChildNodes, TreeNodeType } from '../../types';
 
 // TODO(burdon): Indent (Task graph).
 // TODO(burdon): Create/delete.
@@ -27,25 +27,27 @@ import { TreeNodeType } from '../../types';
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
-  render: ({ node }) => {
+  render: ({ root: node }) => {
+    // TODO(burdon): Remove.
     const [selected, setSelected] = useState<string | undefined>();
 
     return (
       <div className='flex h-full'>
         <Outliner.Root
           classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
-          node={node}
+          root={node}
           selected={selected}
           onSelect={(id) => setSelected(id)}
           onCreate={(parent, previous, text) => {
-            const nodes = RefArray.allResolvedTargets(parent.children);
-            const idx = nodes.findIndex((n) => n.id === previous.id);
             const node: TreeNodeType = create(TreeNodeType, { children: [], text: text ?? '' });
+            const nodes = getChildNodes(parent);
+            const idx = nodes.findIndex((n) => n.id === previous.id);
             parent.children.splice(idx + 1, 0, makeRef(node));
             setSelected(node.id);
+            return node;
           }}
           onDelete={(parent, node) => {
-            const nodes = RefArray.allResolvedTargets(parent.children);
+            const nodes = getChildNodes(parent);
             const idx = nodes.findIndex((n) => n.id === node.id);
             if (idx !== -1) {
               parent.children.splice(idx, 1);
@@ -78,15 +80,19 @@ export default meta;
 
 type Story = StoryObj<typeof Outliner.Root>;
 
+const tags = ['idea', 'bug', 'task', 'question', 'design', 'review', 'test', 'research', 'urgent', 'blocked'];
+
 export const Default: Story = {
   args: {
-    node: create(TreeNodeType, {
+    root: create(TreeNodeType, {
       text: 'Root',
       children: faker.helpers.multiple(
         () =>
           makeRef(
             create(TreeNodeType, {
-              text: faker.lorem.sentences(1),
+              text:
+                (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
+                faker.lorem.sentences(1),
               children: [],
             }),
           ),
