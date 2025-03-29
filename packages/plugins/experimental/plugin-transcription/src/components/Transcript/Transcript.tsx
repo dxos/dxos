@@ -5,8 +5,9 @@
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
-import { useResizeDetector, type OnResizeCallback } from 'react-resize-detector';
+import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
@@ -18,13 +19,24 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
+import { TRANSCRIPTION_PLUGIN } from '../../meta';
 import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
 const lineHeight = 20;
-const initialColumnWidth = 600;
 const cellSpacing = 8 + 2;
+const timestampColumnWidth = 68;
+
+const authorClasses = 'font-medium text-base leading-[20px]';
+const timestampClasses = 'text-xs leading-[20px] text-description pie-0 tabular-nums';
+const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
+const measureClasses = mx(
+  // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
+  'absolute inline-start-[69px] inline-end-0 invisible z-[-1] border',
+  'pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
+  segmentTextClasses,
+);
 
 export type TranscriptProps = {
   blocks?: TranscriptBlock[];
@@ -32,21 +44,9 @@ export type TranscriptProps = {
   ignoreAttention?: boolean;
 };
 
-const transcriptInitialColumns = {
-  grid: { size: initialColumnWidth },
-};
-
-const transcriptInitialRows = {
+const rowDefault = {
   grid: { size: lineHeight + cellSpacing },
 };
-
-const authorClasses = 'font-medium text-base leading-[20px]';
-const timestampClasses = 'mie-1 text-xs text-description';
-const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
-const measureClasses = mx(
-  'absolute inset-inline-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
-  segmentTextClasses,
-);
 
 type QueueRows = [number, number][];
 
@@ -72,18 +72,12 @@ const formatTimestamp = (start: Date, end: Date) => {
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
 
-const renderCell = (transcriptStart: Date, segmentStart: Date, segmentText: string) => `
-  <span class="${timestampClasses}">${formatTimestamp(transcriptStart, segmentStart)}</span>
-  <span class="${segmentTextClasses}">${segmentText}</span>
-`;
-
 const measureRows = async (
   host: HTMLDivElement,
   blocks: TranscriptBlock[],
   queueMap: QueueRows,
   signal: AbortSignal,
 ) => {
-  const transcriptStart = blocks[0]!.segments[0]!.started;
   const result: DxGridAxisMeta = { grid: {} };
   for (let row = 0; row < queueMap.length; row++) {
     await yieldOrContinue('smooth', signal);
@@ -91,11 +85,7 @@ const measureRows = async (
     if (segmentIndex < 0) {
       result.grid[row] = { size: lineHeight + cellSpacing };
     } else {
-      host.innerHTML = renderCell(
-        transcriptStart,
-        blocks[blockIndex]!.segments[segmentIndex]!.started,
-        blocks[blockIndex]!.segments[segmentIndex]!.text,
-      );
+      host.textContent = blocks[blockIndex]!.segments[segmentIndex]!.text;
       result.grid[row] = { size: host.offsetHeight };
     }
   }
@@ -103,14 +93,18 @@ const measureRows = async (
 };
 
 export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
+  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const { hasAttention } = useAttention(attendableId);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
+  const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
+      setAutoScroll(false);
       if (!ignoreAttention && !hasAttention) {
         event.stopPropagation();
       }
@@ -120,15 +114,16 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
 
   const abortControllerRef = useRef<AbortController>();
 
-  const handleResize = useCallback<OnResizeCallback>(
-    ({ width }) => {
-      if (width && measureRef.current && Array.isArray(blocks) && blocks[0] && queueMap) {
+  const handleResize = useCallback(
+    async ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
+      if (entry?.target && Array.isArray(blocks) && blocks[0] && queueMap) {
         abortControllerRef.current?.abort();
         abortControllerRef.current = new AbortController();
-        measureRows(measureRef.current, blocks, queueMap, abortControllerRef.current.signal)
+        setColumns({ grid: { 0: { size: timestampColumnWidth }, 1: { size: entry.target.offsetWidth } } });
+        return measureRows(entry.target, blocks, queueMap, abortControllerRef.current.signal)
           .then(setRows)
           .catch(() => {
-            /* Aborted mid-measurement by new size. */
+            // Aborted mid-measurement by new size.
           });
       }
     },
@@ -136,16 +131,20 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   );
 
   const { width, ref: measureRef } = useResizeDetector({
-    onResize: handleResize,
+    onResize: handleResize as OnResizeCallback,
+    refreshOptions: { leading: true },
   });
 
-  const columns = useMemo(() => {
-    if (width) {
-      return { grid: { size: width } };
-    } else {
-      return transcriptInitialColumns;
+  useEffect(() => {
+    if (queueMap.length !== Object.keys(rows?.grid ?? {}).length) {
+      void handleResize({ entry: { target: measureRef.current } }).then(() => {
+        if (autoScroll) {
+          // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a new `maxPosBlock`.
+          setTimeout(() => dxGrid?.scrollToEndRow(), 50);
+        }
+      });
     }
-  }, [width]);
+  }, [blocks, queueMap, width, autoScroll]);
 
   useEffect(() => {
     if (dxGrid && Array.isArray(blocks) && blocks[0]) {
@@ -156,23 +155,27 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < queueMap.length; row++) {
               const [blockIndex, segmentIndex] = queueMap[row];
-              cells[toPlaneCellIndex({ col: 0, row })] = {};
+
+              cells[toPlaneCellIndex({ col: 0, row })] = {
+                readonly: true,
+                value:
+                  segmentIndex < 0
+                    ? formatTimestamp(transcriptStart, blocks[blockIndex]!.segments[Math.max(0, segmentIndex)]!.started)
+                    : '',
+                className: timestampClasses,
+              } satisfies DxGridCellValue;
 
               cells[toPlaneCellIndex({ col: 1, row })] = (
                 segmentIndex < 0
                   ? {
                       readonly: true,
-                      value: blocks[blockIndex]!.author,
+                      accessoryHtml: `<span data-hue="${blocks[blockIndex]!.authorHue}" class="dx-text-hue">${blocks[blockIndex]!.authorName}</span>`,
                       className: authorClasses,
                     }
                   : {
                       readonly: true,
-                      className: 'leading-[20px]',
-                      accessoryHtml: renderCell(
-                        transcriptStart,
-                        blocks[blockIndex]!.segments[segmentIndex]!.started,
-                        blocks[blockIndex]!.segments[segmentIndex]!.text,
-                      ),
+                      value: blocks[blockIndex]!.segments[segmentIndex]!.text,
+                      className: segmentTextClasses,
                     }
               ) satisfies DxGridCellValue;
             }
@@ -185,21 +188,38 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     }
   }, [dxGrid, blocks]);
 
+  const handleScrollToEnd = useCallback(() => {
+    setAutoScroll(true);
+    dxGrid?.scrollToEndRow();
+  }, [dxGrid, autoScroll]);
+
   return (
     <>
       <Grid.Root id={`${attendableId}--transcript`}>
         <Grid.Content
-          className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
-          columnDefault={columns}
-          rowDefault={transcriptInitialRows}
-          rows={rows}
           limitColumns={2}
           limitRows={queueMap.length}
+          columns={columns}
+          rows={rows}
+          rowDefault={rowDefault}
           onWheel={handleWheel}
+          className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
           ref={setDxGrid}
         />
       </Grid.Root>
       <div role='none' {...{ inert: '' }} aria-hidden className={measureClasses} ref={measureRef} />
+      <IconButton
+        icon='ph--arrow-line-down--regular'
+        iconOnly
+        label={t('scroll to end label')}
+        tooltipSide='left'
+        data-state={autoScroll ? 'invisible' : 'visible'}
+        classNames={[
+          'absolute inline-end-2 block-end-2 opacity-0 pointer-events-none',
+          'data-[state="visible"]:pointer-events-auto data-[state="visible"]:opacity-100 transition-opacity',
+        ]}
+        onClick={handleScrollToEnd}
+      />
     </>
   );
 };

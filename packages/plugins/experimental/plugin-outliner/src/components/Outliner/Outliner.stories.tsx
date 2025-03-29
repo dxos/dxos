@@ -5,15 +5,15 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
 import { create, makeRef } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Outliner } from './Outliner';
+import { Outliner, type OutlinerController } from './Outliner';
 import translations from '../../translations';
-import { getChildNodes, TreeNodeType } from '../../types';
+import { TreeNodeType } from '../../types';
 
 // TODO(burdon): Indent (Task graph).
 // TODO(burdon): Create/delete.
@@ -28,38 +28,24 @@ const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
   render: ({ root: node }) => {
-    // TODO(burdon): Remove.
-    const [selected, setSelected] = useState<string | undefined>();
+    const outliner = useRef<OutlinerController>(null);
 
     return (
       <div className='flex h-full'>
         <Outliner.Root
+          ref={outliner}
           classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
           root={node}
-          selected={selected}
-          onSelect={(id) => setSelected(id)}
-          onCreate={(parent, previous, text) => {
-            const node: TreeNodeType = create(TreeNodeType, { children: [], text: text ?? '' });
-            const nodes = getChildNodes(parent);
-            const idx = nodes.findIndex((n) => n.id === previous.id);
-            parent.children.splice(idx + 1, 0, makeRef(node));
-            setSelected(node.id);
-            return node;
-          }}
-          onDelete={(parent, node) => {
-            const nodes = getChildNodes(parent);
-            const idx = nodes.findIndex((n) => n.id === node.id);
-            if (idx !== -1) {
-              parent.children.splice(idx, 1);
-            }
+          onCreate={() => {
+            return create(TreeNodeType, { children: [], text: '' });
           }}
         />
         <div className='flex flex-col w-[20rem] ml-2'>
           <div className='flex flex-col mt-2 border border-divider rounded'>
             <h1 className='p-2'>{faker.lorem.words(3)}</h1>
-            <div className='p-2 text-sm'>{faker.lorem.paragraphs(3)}</div>
+            <div className='p-2 text-sm'>{faker.lorem.paragraphs(2)}</div>
           </div>
-          <div className='flex flex-col mt-24 border border-divider rounded'>
+          <div className='flex flex-col mt-16 border border-divider rounded'>
             <h1 className='p-2'>{faker.lorem.words(3)}</h1>
             <div className='p-2 text-sm'>{faker.lorem.paragraphs(1)}</div>
           </div>

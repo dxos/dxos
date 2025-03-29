@@ -17,13 +17,31 @@ export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;
 };
 
-export type NodeEditorEvent = {
-  type: 'focus' | 'navigate' | 'move' | 'indent' | 'create';
-  parent?: TreeNodeType;
-  node: TreeNodeType;
-  direction?: 'previous' | 'next';
-  text?: string;
-};
+export type NodeEditorEvent =
+  | {
+      type: 'focus';
+      node: TreeNodeType;
+      focusing: boolean;
+    }
+  | {
+      type: 'create';
+      node: TreeNodeType;
+    }
+  | {
+      type: 'move';
+      node: TreeNodeType;
+      direction?: 'previous' | 'next';
+    }
+  | {
+      type: 'navigate';
+      node: TreeNodeType;
+      direction?: 'previous' | 'next';
+    }
+  | {
+      type: 'indent';
+      node: TreeNodeType;
+      direction?: 'previous' | 'next';
+    };
 
 export type NodeEditorProps = ThemedClassName<{
   node: TreeNodeType;
@@ -60,9 +78,11 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           EditorView.focusChangeEffect.of((_state, focusing) => {
             setFocused(focusing);
             if (focusing) {
-              onEvent?.({ type: 'focus', node });
+              // Ensure focus events happen after unfocusing.
+              setTimeout(() => onEvent?.({ type: 'focus', node, focusing }));
+            } else {
+              onEvent?.({ type: 'focus', node, focusing });
             }
-
             return null;
           }),
 
@@ -80,6 +100,13 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                 key: 'Enter',
                 run: () => {
                   onEvent?.({ type: 'create', node });
+                  return true;
+                },
+              },
+              {
+                key: 'Escape',
+                run: (view) => {
+                  view.contentDOM.blur();
                   return true;
                 },
               },

@@ -22,12 +22,12 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
     <StackItem.Content toolbar={false}>
       <Outliner.Root
         classNames={mx(attentionSurface, 'p-4')}
-        // isTasklist={tree.checkbox}
         root={tree.root.target!}
-        onCreate={(_parent, _previous, text) => create(TreeNodeType, { text: text ?? '', children: [] })}
-        onDelete={({ id }) => {
-          const item = space.db.getObjectById(id);
-          item && space.db.remove(item);
+        onCreate={() => {
+          return space.db.add(create(TreeNodeType, { text: '', children: [] }));
+        }}
+        onDelete={(node) => {
+          space.db.remove(node);
         }}
       />
     </StackItem.Content>

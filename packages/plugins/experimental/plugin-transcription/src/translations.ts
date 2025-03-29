@@ -20,6 +20,7 @@ export default [
 
         'delete button': 'Delete',
         'bookmark button': 'Bookmark',
+        'scroll to end label': 'Scroll to latest',
       },
     },
   },
