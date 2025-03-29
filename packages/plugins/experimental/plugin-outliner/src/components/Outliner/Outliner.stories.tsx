@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { create, makeRef, RefArray } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -39,7 +38,6 @@ const meta: Meta<typeof Outliner.Root> = {
           selected={selected}
           onSelect={(id) => setSelected(id)}
           onCreate={(parent, previous, text) => {
-            log.info('onCreate', { parent, previous });
             const nodes = RefArray.allResolvedTargets(parent.children);
             const idx = nodes.findIndex((n) => n.id === previous.id);
             const node: TreeNodeType = create(TreeNodeType, { children: [], text: text ?? '' });
@@ -47,7 +45,6 @@ const meta: Meta<typeof Outliner.Root> = {
             setSelected(node.id);
           }}
           onDelete={(parent, node) => {
-            log.info('onDelete', { parent, node });
             const nodes = RefArray.allResolvedTargets(parent.children);
             const idx = nodes.findIndex((n) => n.id === node.id);
             if (idx !== -1) {

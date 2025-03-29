@@ -17,16 +17,17 @@ export type NodeEditorController = {
 };
 
 export type NodeEditorEvent = {
+  type: 'focus' | 'navigate' | 'indent' | 'create';
   parent?: TreeNodeType;
   node: TreeNodeType;
-  direction: 'previous' | 'next';
+  direction?: 'previous' | 'next';
+  text?: string;
 };
 
 export type NodeEditorProps = ThemedClassName<{
   node: TreeNodeType;
-  onFocus?: (node: TreeNodeType) => void;
-  onNavigate?: (event: NodeEditorEvent) => void;
-  onCreate?: (node: TreeNodeType, text?: string) => void;
+  indent: number;
+  onEvent?: (event: NodeEditorEvent) => void;
   onDelete?: (node: TreeNodeType) => void;
 }>;
 
@@ -35,7 +36,7 @@ export type NodeEditorProps = ThemedClassName<{
  * Subset of markdown editor.
  */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
-  ({ classNames, node, onFocus, onNavigate, onCreate, onDelete }, ref) => {
+  ({ classNames, node, indent, onEvent, onDelete }, ref) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     const [focused, setFocused] = useState<boolean>(false);
     const { themeMode } = useThemeContext();
@@ -55,7 +56,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           EditorView.focusChangeEffect.of((_state, focusing) => {
             setFocused(focusing);
             if (focusing) {
-              onFocus?.(node);
+              onEvent?.({ type: 'focus', node });
             }
 
             return null;
@@ -74,17 +75,17 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'Enter',
                 run: () => {
-                  onCreate?.(node);
+                  onEvent?.({ type: 'create', node });
                   return true;
                 },
               },
               {
                 key: 'Backspace',
                 run: (view) => {
-                  if (view.state.doc.length) {
+                  if (!onDelete || view.state.doc.length) {
                     return false;
                   } else {
-                    onDelete?.(node);
+                    onDelete(node);
                     return true;
                   }
                 },
@@ -94,14 +95,16 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               // Indent.
               //
               {
-                key: 'Tab',
+                key: 'Shift-Tab',
                 run: (view) => {
+                  onEvent?.({ type: 'indent', node, direction: 'previous' });
                   return true;
                 },
               },
               {
-                key: 'Shift-Tab',
+                key: 'Tab',
                 run: (view) => {
+                  onEvent?.({ type: 'indent', node, direction: 'next' });
                   return true;
                 },
               },
@@ -116,7 +119,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                   if (from > 0) {
                     return false;
                   } else {
-                    onNavigate?.({ node, direction: 'previous' });
+                    onEvent?.({ type: 'navigate', node, direction: 'previous' });
                     return true;
                   }
                 },
@@ -128,7 +131,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                   if (from < view.state.doc.length) {
                     return false;
                   } else {
-                    onNavigate?.({ node, direction: 'next' });
+                    onEvent?.({ type: 'navigate', node, direction: 'next' });
                     return true;
                   }
                 },
@@ -140,7 +143,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                   if (from > 0) {
                     return false;
                   } else {
-                    onNavigate?.({ node, direction: 'previous' });
+                    onEvent?.({ type: 'navigate', node, direction: 'previous' });
                     return true;
                   }
                 },
@@ -152,7 +155,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
                   if (from < view.state.doc.length) {
                     return false;
                   } else {
-                    onNavigate?.({ node, direction: 'next' });
+                    onEvent?.({ type: 'navigate', node, direction: 'next' });
                     return true;
                   }
                 },
@@ -188,13 +191,13 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
 
     return (
       <div id={id} className={mx('flex w-full gap-1', classNames)} ref={div}>
-        <div className='px-2 pt-[3px]'>
+        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
           <Input.Root>
             <Input.Checkbox size={4} title={node.id} />
           </Input.Root>
         </div>
 
-        <div ref={parentRef} className='w-full pbs-1' />
+        <div ref={parentRef} className='  w-full pbs-1' />
 
         {onDelete && (
           <div>

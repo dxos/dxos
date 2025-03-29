@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type FC, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { RefArray } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -15,7 +17,7 @@ type OutlinerRootProps = ThemedClassName<{
   node: TreeNodeType;
   selected?: string;
   onSelect?: (id: string) => void; // TODO(burdon): Selection Model. Array of ids? Multiple?
-  onCreate?: (parent: TreeNodeType, previous: TreeNodeType, text?: string) => void;
+  onCreate?: (parent: TreeNodeType, node: TreeNodeType, text?: string) => void;
   onDelete?: (parent: TreeNodeType, node: TreeNodeType) => void;
 }>;
 
@@ -29,24 +31,73 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
     editor?.focus(direction);
   }, [editor, selected, direction]);
 
-  const handleNavigate = useCallback<NonNullable<NodeEditorProps['onNavigate']>>(
-    ({ parent, node, direction }) => {
-      const nodes = RefArray.allResolvedTargets(parent?.children ?? []);
+  const handleEvent = useCallback<NonNullable<NodeEditorProps['onEvent']>>(
+    (event) => {
+      log.info('handleEvent', { event });
+      const { type, parent, node, direction, text } = event;
+      invariant(parent);
+      const nodes = RefArray.allResolvedTargets(parent.children);
       const index = nodes.findIndex((n) => n.id === node.id);
-      switch (direction) {
-        case 'previous': {
-          if (index > 0) {
-            const id = nodes[index - 1].id;
-            onSelect?.(id);
-            setDirection('start');
+      console.log(parent.id, node.id);
+      invariant(index !== -1);
+
+      switch (type) {
+        //
+        // Create.
+        //
+        case 'create': {
+          onCreate?.(parent, node, text);
+          break;
+        }
+
+        //
+        // Indent.
+        //
+        case 'indent': {
+          switch (direction) {
+            case 'previous': {
+              if (parent.id !== root.id) {
+                // TODO(burdon): Insert after parent.
+                // const [ref] = parent.children.splice(index, 1);
+              }
+              break;
+            }
+
+            case 'next': {
+              if (index > 0) {
+                const [ref] = parent.children.splice(index, 1);
+                const previous = nodes[index - 1];
+                previous.children.push(ref);
+              }
+              break;
+            }
           }
           break;
         }
-        case 'next': {
-          if (index < nodes.length - 1) {
-            const id = nodes[index + 1].id;
-            onSelect?.(id);
-            setDirection('end');
+
+        //
+        // Navigate.
+        // TODO(burdon): Navigate hierarchy.
+        //
+        case 'navigate': {
+          switch (direction) {
+            case 'previous': {
+              if (index > 0) {
+                const id = nodes[index - 1].id;
+                onSelect?.(id);
+                setDirection('start');
+              }
+              break;
+            }
+
+            case 'next': {
+              if (index < nodes.length - 1) {
+                const id = nodes[index + 1].id;
+                onSelect?.(id);
+                setDirection('end');
+              }
+              break;
+            }
           }
           break;
         }
@@ -81,10 +132,8 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
 
       onDelete?.(parent, node);
     },
-    [root, onDelete],
+    [root],
   );
-
-  const nodes = RefArray.allResolvedTargets(root.children ?? []);
 
   // TODO(burdon): Hierarchical layout.
   // TODO(burdon): Convert to grid.
@@ -92,18 +141,15 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
       <div className='flex flex-col grow overflow-hidden'>
         <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
-          {nodes.map((node) => (
-            <NodeEditor
-              key={node.id}
-              ref={node.id === selected ? setEditor : null}
-              classNames={mx(node.id === selected ? 'bg-hoverSurface' : 'text-subdued', 'hover:bg-hoverSurface')}
-              node={node}
-              onFocus={(node) => onSelect?.(node.id)}
-              onNavigate={(event) => handleNavigate({ ...event, parent: root })}
-              onCreate={(node, text) => onCreate?.(root, node, text)}
-              onDelete={(node) => handleDelete(root, node)}
-            />
-          ))}
+          <ChildNodes
+            key={root.id}
+            parent={root}
+            indent={0}
+            selected={selected}
+            setEditor={setEditor}
+            onEvent={handleEvent}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
 
@@ -111,6 +157,45 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
       <div className='flex shrink-0 h-[40px] p-1 justify-center items-center text-xs text-subdued'>{selected}</div>
     </div>
   );
+};
+
+const ChildNodes = ({
+  parent,
+  indent,
+  setEditor,
+  selected,
+  onEvent,
+  onDelete,
+  ...props
+}: {
+  parent: TreeNodeType;
+  indent: number;
+  selected?: string;
+  setEditor: (editor: NodeEditorController) => void;
+} & Pick<OutlinerRootProps, 'onDelete'> &
+  Omit<NodeEditorProps, 'ref' | 'node' | 'classNames' | 'onDelete'>) => {
+  return RefArray.allResolvedTargets(parent.children).map((node) => (
+    <Fragment key={node.id}>
+      <NodeEditor
+        ref={node.id === selected ? setEditor : null}
+        node={node}
+        classNames={mx(node.id === selected ? 'bg-hoverSurface' : 'text-subdued', 'hover:bg-hoverSurface')}
+        indent={indent}
+        onEvent={(event) => onEvent?.({ ...event, parent })}
+        onDelete={(node) => onDelete?.(parent, node)}
+        {...props}
+      />
+      <ChildNodes
+        parent={node}
+        indent={indent + 1}
+        selected={selected}
+        setEditor={setEditor}
+        onEvent={onEvent}
+        onDelete={onDelete}
+        {...props}
+      />
+    </Fragment>
+  ));
 };
 
 export const Outliner = {
