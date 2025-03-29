@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from './ItemEditor';
 import { getChildNodes, getNext, getParent, getPrevious, type TreeNodeType } from '../../types';
+import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from '../NodeEditor';
 
 type OutlinerController = {
   focus: (id: string | undefined) => void;
