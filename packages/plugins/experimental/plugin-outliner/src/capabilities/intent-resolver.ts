@@ -5,7 +5,7 @@
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
 import { create, makeRef } from '@dxos/live-object';
 
-import { TreeType, TreeItemType, OutlinerAction } from '../types';
+import { TreeType, TreeNodeType, OutlinerAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
@@ -16,9 +16,9 @@ export default () =>
           object: create(TreeType, {
             name,
             root: makeRef(
-              create(TreeItemType, {
+              create(TreeNodeType, {
                 text: '',
-                items: [makeRef(create(TreeItemType, { text: '', items: [] }))],
+                children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
               }),
             ),
           }),

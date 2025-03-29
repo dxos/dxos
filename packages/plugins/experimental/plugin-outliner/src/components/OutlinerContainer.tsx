@@ -10,7 +10,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
-import { TreeItemType, type TreeType } from '../types';
+import { TreeNodeType, type TreeType } from '../types';
 
 const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => {
   const space = getSpace(tree);
@@ -24,7 +24,7 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
         className={mx(attentionSurface, 'p-4')}
         isTasklist={tree.checkbox}
         root={tree.root.target!}
-        onCreate={(text?: string) => create(TreeItemType, { text: text ?? '', items: [] })}
+        onCreate={(text?: string) => create(TreeNodeType, { text: text ?? '', children: [] })}
         onDelete={({ id }) => {
           const item = space.db.getObjectById(id);
           item && space.db.remove(item);

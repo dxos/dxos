@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { create, makeRef } from '@dxos/live-object';
-import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
+import { TreeNodeType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
@@ -22,8 +22,8 @@ import { Tree, type TreeComponentProps } from './Tree';
 
 faker.seed(1);
 
-const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
-  return range(count, () => create(TreeItemType, { text: '', items: items.map((item) => makeRef(item)) }));
+const makeTreeItems = <T extends number>(count: T, items: TreeNodeType[] = []) => {
+  return range(count, () => create(TreeNodeType, { text: '', children: items.map((item) => makeRef(item)) }));
 };
 
 const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {
@@ -91,7 +91,7 @@ export const Edge = {
 const meta: Meta = {
   title: 'plugins/plugin-explorer/Tree',
   component: Tree,
-  render: () => <ClientRepeater component={Story} types={[TreeType, TreeItemType]} createSpace />,
+  render: () => <ClientRepeater component={Story} types={[TreeType, TreeNodeType]} createSpace />,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
