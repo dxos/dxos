@@ -19,6 +19,7 @@ type OutlinerRootProps = ThemedClassName<{
   onDelete?: (parent: TreeNodeType, node: TreeNodeType) => void;
 }>;
 
+// TODO(burdon): Move selection here.
 const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected, onSelect, onCreate, onDelete }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -29,8 +30,8 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
   }, [editor, selected, direction]);
 
   const handleNavigate = useCallback<NonNullable<NodeEditorProps['onNavigate']>>(
-    ({ node, direction }) => {
-      const nodes = RefArray.allResolvedTargets(root.children ?? []);
+    ({ parent, node, direction }) => {
+      const nodes = RefArray.allResolvedTargets(parent?.children ?? []);
       const index = nodes.findIndex((n) => n.id === node.id);
       switch (direction) {
         case 'previous': {
@@ -54,35 +55,38 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
     [root],
   );
 
-  const handleDelete = useCallback<NonNullable<NodeEditorProps['onDelete']>>(
-    (node) => {
+  const handleDelete = useCallback<NonNullable<OutlinerRootProps['onDelete']>>(
+    (parent, node) => {
       // Only navigate if deleting the current item.
-      const nodes = RefArray.allResolvedTargets(root.children ?? []);
-      let index = nodes.findIndex((i) => i.id === node.id);
-      if (selected === node.id) {
-        if (index === 0) {
-          index++;
-        } else {
-          index--;
-        }
-      } else {
-        // TODO(burdon): Curently fails to preserve selection.
-        index = nodes.findIndex((i) => i.id === selected);
-      }
+      // const nodes = RefArray.allResolvedTargets(parent.children ?? []);
+      // let index = nodes.findIndex((i) => i.id === node.id);
 
-      console.log(index, nodes.length);
-      if (nodes.length >= index) {
-        const next = nodes[index];
-        onSelect?.(next.id);
-      }
+      // console.log('::::', index);
+      // if (selected === node.id) {
+      //   if (index === 0) {
+      //     index++;
+      //   } else {
+      //     index--;
+      //   }
+      // } else {
+      //   // TODO(burdon): Curently fails to preserve selection.
+      //   index = nodes.findIndex((i) => i.id === selected);
+      // }
 
-      onDelete?.(root, node);
+      // console.log(index, nodes.length);
+      // if (nodes.length >= index) {
+      //   const next = nodes[index];
+      //   onSelect?.(next.id);
+      // }
+
+      onDelete?.(parent, node);
     },
-    [root, selected, onDelete],
+    [root, onDelete],
   );
 
   const nodes = RefArray.allResolvedTargets(root.children ?? []);
 
+  // TODO(burdon): Hierarchical layout.
   // TODO(burdon): Convert to grid.
   return (
     <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
@@ -95,9 +99,9 @@ const OutlinerRoot: FC<OutlinerRootProps> = ({ classNames, node: root, selected,
               classNames={mx(node.id === selected ? 'bg-hoverSurface' : 'text-subdued', 'hover:bg-hoverSurface')}
               node={node}
               onFocus={(node) => onSelect?.(node.id)}
-              onNavigate={handleNavigate}
-              onCreate={(previous, text) => onCreate?.(node, previous, text)}
-              onDelete={handleDelete}
+              onNavigate={(event) => handleNavigate({ ...event, parent: root })}
+              onCreate={(node, text) => onCreate?.(root, node, text)}
+              onDelete={(node) => handleDelete(root, node)}
             />
           ))}
         </div>

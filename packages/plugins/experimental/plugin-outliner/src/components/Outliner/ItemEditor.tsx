@@ -16,14 +16,24 @@ export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;
 };
 
+export type NodeEditorEvent = {
+  parent?: TreeNodeType;
+  node: TreeNodeType;
+  direction: 'previous' | 'next';
+};
+
 export type NodeEditorProps = ThemedClassName<{
   node: TreeNodeType;
   onFocus?: (node: TreeNodeType) => void;
-  onNavigate?: (event: { node: TreeNodeType; direction: 'previous' | 'next' }) => void;
-  onCreate?: (previous: TreeNodeType, text?: string) => void;
+  onNavigate?: (event: NodeEditorEvent) => void;
+  onCreate?: (node: TreeNodeType, text?: string) => void;
   onDelete?: (node: TreeNodeType) => void;
 }>;
 
+/**
+ * Individual node editor.
+ * Subset of markdown editor.
+ */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
   ({ classNames, node, onFocus, onNavigate, onCreate, onDelete }, ref) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
@@ -31,10 +41,12 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
     const { themeMode } = useThemeContext();
     const id = useId('node_enditor', node.id);
 
+    // NOTE: Must not change callbacks.
     const { parentRef, view } = useTextEditor(
       () => ({
         initialValue: node.text,
         extensions: [
+          // TODO(burdon): Markdown subset.
           // TODO(burdon): Show placeholder only if focused.
           createBasicExtensions({ placeholder: 'Enter text...' }),
           createThemeExtensions({ themeMode }),
@@ -160,15 +172,13 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
         return {
           focus: (at) => {
             if (view) {
+              div.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
               view.focus();
-              const anchor = at === 'start' ? 0 : view.state.doc.length;
               view.dispatch({
                 selection: {
-                  anchor,
+                  anchor: at === 'start' ? 0 : view.state.doc.length,
                 },
               });
-
-              div.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
             }
           },
         };
