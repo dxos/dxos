@@ -26,8 +26,30 @@ export const TemplateInputSchema = S.mutable(
 
 export type TemplateInput = S.Schema.Type<typeof TemplateInputSchema>;
 
+export const TemplateKinds = ['always', 'schema-matching', 'automatically', 'manual'] as const;
+export type TemplateKind = (typeof TemplateKinds)[number];
+
+export const TemplateKindSchema = S.Union(
+  S.Struct({
+    include: S.Literal('always'),
+  }),
+  S.Struct({
+    include: S.Literal('schema-matching'),
+    typename: S.String,
+  }),
+  S.Struct({
+    include: S.Literal('automatically'),
+    description: S.String,
+  }),
+  S.Struct({
+    include: S.Literal('manual'),
+  }),
+);
+
+export type TemplateKindType = S.Schema.Type<typeof TemplateKindSchema>;
 export class TemplateType extends TypedObject({ typename: 'dxos.org/type/Template', version: '0.1.0' })({
   name: S.optional(S.String),
+  kind: S.mutable(TemplateKindSchema),
   source: S.String,
   inputs: S.optional(S.mutable(S.Array(TemplateInputSchema))),
   command: S.optional(S.String),

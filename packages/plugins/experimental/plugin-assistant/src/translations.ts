@@ -16,6 +16,7 @@ export default [
       },
       [ASSISTANT_PLUGIN]: {
         'chat title placeholder': 'AI Chat',
+        'templates label': 'Templates',
         'template title placeholder': 'Template',
 
         'open ambient chat label': 'Open AI chat',
@@ -27,6 +28,8 @@ export default [
         'command placeholder': 'Enter slash command...',
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',
+        'typename placeholder': 'Enter typename of objects which this template is for',
+        'description placeholder': 'Enter description of when this template should be used',
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 

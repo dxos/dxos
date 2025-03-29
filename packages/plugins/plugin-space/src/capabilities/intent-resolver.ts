@@ -318,7 +318,7 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddObject,
-      resolve: async ({ target, object }) => {
+      resolve: async ({ target, object, hidden }) => {
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Space not found.');
 
@@ -356,6 +356,8 @@ export default ({ createInvitationUrl, context, observability }: IntentResolverO
 
         if (target instanceof CollectionType) {
           target.objects.push(makeRef(object as HasId));
+        } else if (isSpace(target) && hidden) {
+          space.db.add(object);
         } else if (isSpace(target)) {
           const collection = space.properties[CollectionType.typename]?.target;
           if (collection instanceof CollectionType) {
