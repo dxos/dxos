@@ -162,7 +162,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     isSocket && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
-    isLabs && OutlinerPlugin(),
+    OutlinerPlugin(),
     PresenterPlugin(),
     !isSocket && isPwa && PwaPlugin(),
     RegistryPlugin(),

@@ -11,7 +11,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta, OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
-import { TreeItemType, TreeType, OutlinerAction } from './types';
+import { TreeNodeType, TreeType, OutlinerAction } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -34,10 +34,10 @@ export const OutlinerPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: TreeItemType.typename,
+          id: TreeNodeType.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (item: TreeItemType) => await RefArray.loadAll(item.items ?? []),
+            loadReferences: async (item: TreeNodeType) => await RefArray.loadAll(item.children ?? []),
           },
         }),
       ],
@@ -57,7 +57,7 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TreeItemType]),
+      activate: () => contributes(ClientCapabilities.Schema, [TreeNodeType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
