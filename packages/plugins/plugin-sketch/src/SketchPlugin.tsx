@@ -33,7 +33,7 @@ export const SketchPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
           metadata: {
-            placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
+            placeholder: ['object placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),

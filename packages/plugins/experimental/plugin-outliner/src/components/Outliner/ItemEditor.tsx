@@ -5,8 +5,17 @@
 import { Prec } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { IconButton, Input, useId, useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createThemeExtensions, useTextEditor, createBasicExtensions, keymap, EditorView } from '@dxos/react-ui-editor';
+import {
+  EditorView,
+  automerge,
+  createBasicExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+  keymap,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
@@ -66,10 +75,14 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
       () => ({
         initialValue: node.text,
         extensions: [
-          // TODO(burdon): Markdown subset.
+          automerge(createDocAccessor(node, ['text'])),
+
           // TODO(burdon): Show placeholder only if focused.
           createBasicExtensions({ placeholder: 'Enter text...' }),
           createThemeExtensions({ themeMode }),
+
+          // TODO(burdon): Markdown subset.
+          decorateMarkdown(),
 
           // Tags.
           tagsExtension(),
@@ -127,6 +140,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               //
               {
                 key: 'Shift-Tab',
+                preventDefault: true,
                 run: (view) => {
                   onEvent?.({ type: 'indent', node, direction: 'previous' });
                   return true;
@@ -134,6 +148,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               },
               {
                 key: 'Tab',
+                preventDefault: true,
                 run: (view) => {
                   onEvent?.({ type: 'indent', node, direction: 'next' });
                   return true;

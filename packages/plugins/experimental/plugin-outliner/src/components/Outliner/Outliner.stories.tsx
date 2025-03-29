@@ -40,7 +40,7 @@ const meta: Meta<typeof Outliner.Root> = {
             return create(TreeNodeType, { children: [], text: '' });
           }}
         />
-        {/* 
+        {/*
         <div className='flex flex-col w-[20rem] ml-2'>
           <div className='flex flex-col mt-2 border border-divider rounded'>
             <h1 className='p-2'>{faker.lorem.words(3)}</h1>
@@ -50,7 +50,7 @@ const meta: Meta<typeof Outliner.Root> = {
             <h1 className='p-2'>{faker.lorem.words(3)}</h1>
             <div className='p-2 text-sm'>{faker.lorem.paragraphs(1)}</div>
           </div>
-        </div> 
+        </div>
         */}
       </div>
     );
