@@ -89,7 +89,7 @@ export const Thread = ({
   }, [contextProvider]);
 
   return (
-    <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
+    <div role='none' className={mx('flex flex-col grow mli-1 overflow-hidden', classNames)}>
       <ScrollContainer ref={scroller} fade>
         <div
           role='none'
