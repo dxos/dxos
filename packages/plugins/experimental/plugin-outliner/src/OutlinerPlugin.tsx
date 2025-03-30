@@ -36,15 +36,13 @@ export const OutlinerPlugin = () =>
           metadata: {
             placeholder: ['outline object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (tree: TreeType) => await RefArray.loadAll([tree.root]),
           },
         }),
         contributes(Capabilities.Metadata, {
           id: TreeNodeType.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (item: TreeNodeType) => await RefArray.loadAll(item.children ?? []),
+            loadReferences: async (node: TreeNodeType) => await RefArray.loadAll(node.children ?? []),
           },
         }),
       ],
