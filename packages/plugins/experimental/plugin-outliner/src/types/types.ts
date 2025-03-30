@@ -43,5 +43,7 @@ export class JournalEntryType extends TypedObject({ typename: 'dxos.org/type/Jou
 
 export class JournalType extends TypedObject({ typename: 'dxos.org/type/JournalType', version: '0.1.0' })({
   name: S.optional(S.String),
-  entries: S.mutable(S.Array(JournalEntryType)),
+
+  // TODO(burdon): Refs vs. objects?
+  entries: S.suspend((): S.mutable<S.Array$<Ref$<JournalEntryType>>> => S.mutable(S.Array(Ref(JournalEntryType)))),
 }) {}

@@ -4,10 +4,12 @@
 
 import React from 'react';
 
+import { RefArray } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type JournalType, type JournalEntryType } from '../../types';
+import { Outliner } from '../Outliner';
 
 type JournalRootProps = ThemedClassName<{
   journal: JournalType;
@@ -39,9 +41,11 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
   //   }
   // }, [journal]);
 
+  console.log(JSON.stringify(journal, null, 2));
+
   return (
     <div className={mx('flex flex-col overflow-y-auto', classNames)}>
-      {journal.entries.map((entry) => (
+      {RefArray.allResolvedTargets(journal.entries).map((entry) => (
         <JournalEntry key={entry.id} entry={entry} />
       ))}
     </div>
@@ -53,10 +57,15 @@ type JournalEntryProps = ThemedClassName<{
 }>;
 
 const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
+  console.log(entry);
+  if (!entry.root.target) {
+    return null;
+  }
+
   return (
     <div className={mx(classNames, 'flex flex-col')}>
       <div className='p-2 text-lg'>{entry.date.toDateString()}</div>
-      {/* <Outliner.Root root={entry.root} /> */}
+      <Outliner.Root root={entry.root.target} />
     </div>
   );
 };
