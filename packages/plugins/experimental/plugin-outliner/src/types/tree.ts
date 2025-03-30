@@ -17,5 +17,4 @@ export class TreeNodeType extends TypedObject({ typename: 'dxos.org/type/TreeNod
 export class TreeType extends TypedObject({ typename: 'dxos.org/type/Tree', version: '0.1.0' })({
   name: S.optional(S.String),
   root: Ref(TreeNodeType),
-  checkbox: S.optional(S.Boolean),
 }) {}

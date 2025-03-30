@@ -18,11 +18,4 @@ export namespace OutlinerAction {
       object: TreeType,
     }),
   }) {}
-
-  export class ToggleCheckbox extends S.TaggedClass<ToggleCheckbox>()(`${OUTLINER_ACTION}/toggle-checkbox`, {
-    input: S.Struct({
-      object: TreeType,
-    }),
-    output: S.Void,
-  }) {}
 }

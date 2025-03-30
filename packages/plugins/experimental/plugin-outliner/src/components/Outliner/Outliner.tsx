@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getChildNodes, getNext, getParent, getPrevious, type TreeNodeType } from '../../types';
+import { getChildNodes, getNext, getPrevious, indent, unindent, type TreeNodeType } from '../../types';
 import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from '../NodeEditor';
 
 type OutlinerController = {
@@ -83,25 +83,14 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           //
           // Indent.
           // TOOD(burdon): Copy/paste/undo.
-          // TODO(burdon): Tests.
+          // TODO(burdon): Atomic?
           //
           case 'indent': {
             switch (event.direction) {
               case 'previous': {
                 if (parent.id !== root.id) {
-                  const ancestor = getParent(root, parent);
-                  if (ancestor) {
-                    // Transplant following siblings to current node.
-                    // const [ref, ...rest] = nodes.splice(index, parent.children.length - index);
-                    // const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-                    // ancestor.children.splice(idx + 1, 0, makeRef(ref));
-                    // ref.children.push(...rest.map(makeRef));
-                    // Add to ancestor.
-                    const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-                    ancestor.children.splice(idx + 1, 0, makeRef(node));
-                    // Transplant following siblings to current node.
-                    const rest = nodes.splice(index + 1, parent.children.length - 1 - index);
-                    node.children.push(...rest.map(makeRef));
+                  const node = unindent(root, parent, index);
+                  if (node) {
                     setActive(node.id);
                   }
                 }
@@ -109,14 +98,8 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
               }
 
               case 'next': {
-                if (index > 0) {
-                  // TDOO(burdon): Throws error: Ref: Predicate refinement failure.
-                  // const [ref] = parent.children.splice(index, 1);
-                  // const previous = nodes[index - 1];
-                  // previous.children.push(ref);
-                  const previous = nodes[index - 1];
-                  previous.children.push(makeRef(node));
-                  parent.children.splice(index, 1);
+                const node = indent(parent, index);
+                if (node) {
                   setActive(node.id);
                 }
                 break;
@@ -127,22 +110,23 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 
           //
           // Move.
-          // TODO(burdon): Atomic?
           //
           case 'move': {
             switch (event.direction) {
               case 'previous': {
                 if (index > 0) {
-                  const [ref] = parent.children.splice(index, 1);
-                  parent.children.splice(index - 1, 0, ref);
+                  const [node] = nodes.splice(index, 1);
+                  parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
+                  parent.children.splice(index - 1, 0, makeRef(node));
                 }
                 break;
               }
 
               case 'next': {
                 if (index < parent.children.length - 1) {
-                  const [ref] = parent.children.splice(index, 1);
-                  parent.children.splice(index + 1, 0, ref);
+                  const [node] = nodes.splice(index, 1);
+                  parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
+                  parent.children.splice(index + 1, 0, makeRef(node));
                 }
                 break;
               }
@@ -201,22 +185,17 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
     // TODO(burdon): Convert to grid.
     return (
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-        <div className='flex flex-col grow overflow-hidden'>
-          <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
-            <ChildNodes
-              key={root.id}
-              parent={root}
-              indent={0}
-              active={active}
-              setEditor={setEditor}
-              onEvent={handleEvent}
-              onDelete={handleDelete}
-            />
-          </div>
+        <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
+          <ChildNodes
+            key={root.id}
+            parent={root}
+            indent={0}
+            active={active}
+            setEditor={setEditor}
+            onEvent={handleEvent}
+            onDelete={handleDelete}
+          />
         </div>
-
-        {/* Statusbar */}
-        <div className='flex shrink-0 h-[40px] p-1 justify-center items-center text-xs text-subdued'>{active}</div>
       </div>
     );
   },

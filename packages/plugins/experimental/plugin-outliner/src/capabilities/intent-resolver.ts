@@ -25,10 +25,4 @@ export default () =>
         },
       }),
     }),
-    createResolver({
-      intent: OutlinerAction.ToggleCheckbox,
-      resolve: ({ object }) => {
-        object.checkbox = !object.checkbox;
-      },
-    }),
   ]);

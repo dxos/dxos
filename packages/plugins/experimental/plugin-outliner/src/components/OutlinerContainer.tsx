@@ -21,7 +21,7 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
   return (
     <StackItem.Content toolbar={false}>
       <Outliner.Root
-        classNames={mx(attentionSurface, 'p-4')}
+        classNames={mx(attentionSurface, 'p-1.5')}
         root={tree.root.target!}
         onCreate={() => {
           return space.db.add(create(TreeNodeType, { text: '', children: [] }));

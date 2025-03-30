@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { RefArray } from '@dxos/live-object';
+import { makeRef, RefArray } from '@dxos/live-object';
 
 import { type TreeNodeType } from './tree';
 
@@ -76,3 +76,64 @@ export const getNext = (root: TreeNodeType, node: TreeNodeType, descend = true):
 };
 
 export const getChildNodes = (node: TreeNodeType): Array<TreeNodeType> => RefArray.allResolvedTargets(node.children);
+
+// TODO(burdon): Check cycles.
+export const tranverse = (node: TreeNodeType, callback: (node: TreeNodeType, depth: number) => void, depth = 0) => {
+  callback(node, depth);
+  for (const child of node.children) {
+    if (child.target) {
+      tranverse(child.target, callback, depth + 1);
+    }
+  }
+};
+
+/**
+ * Indent the node at the given index.
+ * @returns The node that was indented or null if the node was already at the maximum indent.
+ */
+export const indent = (parent: TreeNodeType, index: number): TreeNodeType | null => {
+  if (index < 1 || index >= parent.children.length) {
+    return null;
+  }
+
+  const previous = parent.children[index - 1];
+  invariant(previous.target);
+  const node = parent.children[index];
+  invariant(node.target);
+
+  parent.children.splice(index, 1);
+  previous.target.children.push(node);
+
+  return node.target;
+};
+
+export const unindent = (root: TreeNodeType, parent: TreeNodeType, index: number): TreeNodeType | null => {
+  const ancestor = getParent(root, parent);
+  if (!ancestor) {
+    return null;
+  }
+
+  // TODO(burdon): Splice doesn't return well-formed refs?
+  // const [node, ...rest] = parent.children.splice(index, parent.children.length - index);
+  // invariant(node.target); // FAIL.
+  // When splicing refs:
+  // index.tsx:86 Ref
+  // └─ Predicate refinement failure
+  //    └─ Expected Ref, actual {"/":"dxn:echo:@:01JQKKD5P59XCSQJMJ62CNY4HE"} ParseError: Ref
+  // └─ Predicate refinement failure
+  //    └─ Expected Ref, actual {"/":"dxn:echo:@:01JQKKD5P59XCSQJMJ62CNY4HE"}
+  //     at parseError (ParseResult.ts:266:62)
+
+  const nodes = getChildNodes(parent);
+  const [node, ...rest] = nodes.splice(index, parent.children.length - index);
+  parent.children.splice(index, parent.children.length - index);
+
+  // Add to ancestor.
+  const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
+  ancestor.children.splice(idx + 1, 0, makeRef(node));
+
+  // Transplant following siblings to current node.
+  node.children.push(...rest.map(makeRef));
+
+  return node;
+};
