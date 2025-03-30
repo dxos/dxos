@@ -92,10 +92,16 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                   const ancestor = getParent(root, parent);
                   if (ancestor) {
                     // Transplant following siblings to current node.
-                    const [ref, ...rest] = parent.children.splice(index, parent.children.length - index);
+                    // const [ref, ...rest] = nodes.splice(index, parent.children.length - index);
+                    // const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
+                    // ancestor.children.splice(idx + 1, 0, makeRef(ref));
+                    // ref.children.push(...rest.map(makeRef));
+                    // Add to ancestor.
                     const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-                    ancestor.children.splice(idx + 1, 0, ref);
-                    ref.target!.children.push(...rest);
+                    ancestor.children.splice(idx + 1, 0, makeRef(node));
+                    // Transplant following siblings to current node.
+                    const rest = nodes.splice(index + 1, parent.children.length - 1 - index);
+                    node.children.push(...rest.map(makeRef));
                     setActive(node.id);
                   }
                 }
@@ -104,9 +110,13 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 
               case 'next': {
                 if (index > 0) {
-                  const [ref] = parent.children.splice(index, 1);
+                  // TDOO(burdon): Throws error: Ref: Predicate refinement failure.
+                  // const [ref] = parent.children.splice(index, 1);
+                  // const previous = nodes[index - 1];
+                  // previous.children.push(ref);
                   const previous = nodes[index - 1];
-                  previous.children.push(ref);
+                  previous.children.push(makeRef(node));
+                  parent.children.splice(index, 1);
                   setActive(node.id);
                 }
                 break;
