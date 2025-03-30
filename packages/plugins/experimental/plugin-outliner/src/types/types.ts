@@ -29,6 +29,7 @@ export type TreeType = S.Schema.Type<typeof TreeType>;
 
 export const JournalEntryType = S.Struct({
   date: S.Date,
+  // TODO(dmaretskyi): Has to be a ref if its referencing ECHO objects.
   root: TreeNodeType,
 }).pipe(EchoObject('dxos.org/type/JournalEntry', '0.1.0'));
 
