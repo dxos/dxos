@@ -12,6 +12,7 @@ import { create, makeRef } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
+import { createTree } from '../../testing';
 import translations from '../../translations';
 import { TreeNodeType } from '../../types';
 
@@ -87,5 +88,11 @@ export const Default: Story = {
         { count: 10 },
       ),
     }),
+  },
+};
+
+export const Large: Story = {
+  args: {
+    root: createTree([100, 3, 1], () => faker.lorem.sentence()),
   },
 };

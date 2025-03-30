@@ -11,7 +11,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta, OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
-import { TreeNodeType, TreeType, OutlinerAction } from './types';
+import { JournalType, TreeNodeType, TreeType, OutlinerAction } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -25,9 +25,16 @@ export const OutlinerPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
+          id: JournalType.typename,
+          metadata: {
+            placeholder: ['journal object placeholder', { ns: OUTLINER_PLUGIN }],
+            icon: 'ph--calendar-check--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
           id: TreeType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
+            placeholder: ['outline object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (tree: TreeType) => await RefArray.loadAll([tree.root]),
@@ -45,19 +52,27 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/object-form`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
+      activate: () => [
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: JournalType,
+            getIntent: () => createIntent(OutlinerAction.CreateJournal),
+          }),
+        ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: TreeType,
-            getIntent: () => createIntent(OutlinerAction.Create),
+            getIntent: () => createIntent(OutlinerAction.CreateOutline),
           }),
         ),
+      ],
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TreeNodeType]),
+      activate: () => contributes(ClientCapabilities.Schema, [JournalType, TreeNodeType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

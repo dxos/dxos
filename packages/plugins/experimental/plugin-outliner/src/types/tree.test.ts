@@ -8,37 +8,12 @@ import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { create, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { range } from '@dxos/util';
 
-import { TreeNodeType, TreeType } from './tree';
-import { getChildNodes, getParent, indent, tranverse, unindent } from './util';
+import { getChildNodes, getParent, indent, tranverse, unindent } from './tree';
+import { TreeNodeType, TreeType } from './types';
+import { createTree } from '../testing';
 
 faker.seed(0);
-
-// TODO(burdon): Is this the right datastructure? Refs vs nodes? Extensibility? Ref counting? Common with graph?
-
-/**
- * Create hierarchical tree.
- */
-const createTree = (count: number[] = []) => {
-  const createNodes = (n: number = 0, label: string) =>
-    range(n, (i) => create(TreeNodeType, { text: `${label}.${i + 1}`, children: [] }));
-
-  const createChildNodes = (root: TreeNodeType, [count = 0, ...rest]: number[]) => {
-    const nodes = createNodes(count, root.text);
-    root.children.push(...nodes.map(makeRef));
-    if (rest.length) {
-      for (const node of nodes) {
-        createChildNodes(node, rest);
-      }
-    }
-
-    return root;
-  };
-
-  const root = create(TreeNodeType, { text: 'root', children: [] });
-  return createChildNodes(root, count);
-};
 
 const print = (root: TreeNodeType) => {
   let count = 0;
@@ -94,13 +69,13 @@ describe('tree', () => {
     expect(getParent(root, g1)).to.eq(c1);
   });
 
-  /*
-       root                       root                        root
-        └── 1                      └── 1                       └── 1
-            ├── 1.1                    ├── 1.1                     ├── 1.1
-            ├── 1.2 <- indent          │   ├── 1.2 <- unindent     ├── 1.2
-            ├── 1.3 <- indent          │   └── 1.3                 │   └── 1.3
-            └── 1.4                    └── 1.4                     └── 1.4
+  /**
+   *  root                       root                        root
+   *   └── 1                      └── 1                       └── 1
+   *       ├── 1.1                    ├── 1.1                     ├── 1.1
+   *       ├── 1.2 <- indent          │   ├── 1.2 <- unindent     ├── 1.2
+   *       ├── 1.3 <- indent          │   └── 1.3                 │   └── 1.3
+   *       └── 1.4                    └── 1.4                     └── 1.4
    */
   test('indent and unindent', async ({ expect }) => {
     const testBuilder = new TestBuilder();
