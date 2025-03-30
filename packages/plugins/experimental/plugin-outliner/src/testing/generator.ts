@@ -10,8 +10,8 @@ import { TreeNodeType } from '../types';
 /**
  * Create hierarchical tree.
  */
-export const createTree = (count: number[] = [], createText?: () => string) => {
-  const createNodes = (n: number = 0, label: string) =>
+export const createTree = (count: number[] = [], createText?: () => string): TreeNodeType => {
+  const createNodes = (n: number = 0, label: string): TreeNodeType[] =>
     range(n, (i) =>
       create(TreeNodeType, {
         children: [],
@@ -19,7 +19,7 @@ export const createTree = (count: number[] = [], createText?: () => string) => {
       }),
     );
 
-  const createChildNodes = (root: TreeNodeType, [count = 0, ...rest]: number[]) => {
+  const createChildNodes = (root: TreeNodeType, [count = 0, ...rest]: number[]): TreeNodeType => {
     const nodes = createNodes(count, root.text);
     root.children.push(...nodes.map(makeRef));
     if (rest.length) {

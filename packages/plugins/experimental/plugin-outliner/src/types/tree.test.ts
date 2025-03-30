@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { getChildNodes, getParent, indent, tranverse, unindent } from './tree';
@@ -87,10 +87,10 @@ describe('tree', () => {
     await client.initialize();
     await client.halo.createIdentity();
     await client.spaces.waitUntilReady();
+    const space = client.spaces.default;
 
     const root = createTree([1, 4]);
-    const space = client.spaces.default;
-    const tree = space.db.add(create(TreeType, { root }));
+    const tree = space.db.add(create(TreeType, { root: makeRef(root) }));
     expect(tree).to.exist;
 
     {

@@ -19,7 +19,7 @@ export class TreeNodeType extends TypedObject({ typename: 'dxos.org/type/TreeNod
 
 export class TreeType extends TypedObject({ typename: 'dxos.org/type/Tree', version: '0.1.0' })({
   name: S.optional(S.String),
-  root: TreeNodeType,
+  root: Ref(TreeNodeType),
 }) {}
 
 // export const JournalEntryType = S.Struct({
@@ -38,7 +38,7 @@ export class TreeType extends TypedObject({ typename: 'dxos.org/type/Tree', vers
 
 export class JournalEntryType extends TypedObject({ typename: 'dxos.org/type/JournalEntry', version: '0.1.0' })({
   date: S.Date,
-  root: TreeNodeType,
+  root: Ref(TreeNodeType),
 }) {}
 
 export class JournalType extends TypedObject({ typename: 'dxos.org/type/JournalType', version: '0.1.0' })({

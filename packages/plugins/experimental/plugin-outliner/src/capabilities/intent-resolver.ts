@@ -18,10 +18,12 @@ export default () =>
             entries: [
               create(JournalEntryType, {
                 date: new Date(),
-                root: create(TreeNodeType, {
-                  text: '',
-                  children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
-                }),
+                root: makeRef(
+                  create(TreeNodeType, {
+                    text: '',
+                    children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
+                  }),
+                ),
               }),
             ],
           }),
@@ -34,10 +36,12 @@ export default () =>
         data: {
           object: create(TreeType, {
             name,
-            root: create(TreeNodeType, {
-              text: '',
-              children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
-            }),
+            root: makeRef(
+              create(TreeNodeType, {
+                text: '',
+                children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
+              }),
+            ),
           }),
         },
       }),

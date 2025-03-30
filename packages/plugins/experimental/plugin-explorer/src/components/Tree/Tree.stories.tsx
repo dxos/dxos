@@ -32,31 +32,34 @@ const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>[
   const [object, setObject] = useState<TreeType>();
   useEffect(() => {
     setTimeout(() => {
-      const tree = create(TreeType, {
-        root: makeTreeItems(1, [
-          ...makeTreeItems(7),
+      const root = makeTreeItems(1, [
+        ...makeTreeItems(7),
+        ...makeTreeItems(1, [
+          ...makeTreeItems(1),
           ...makeTreeItems(1, [
-            ...makeTreeItems(1),
-            ...makeTreeItems(1, [
-              ...makeTreeItems(3),
-              ...makeTreeItems(1, makeTreeItems(2)),
-              ...makeTreeItems(2),
-              ...makeTreeItems(1, makeTreeItems(2)),
-              ...makeTreeItems(2),
-            ]),
-            ...makeTreeItems(1),
+            ...makeTreeItems(3),
+            ...makeTreeItems(1, makeTreeItems(2)),
+            ...makeTreeItems(2),
+            ...makeTreeItems(1, makeTreeItems(2)),
+            ...makeTreeItems(2),
           ]),
-          ...makeTreeItems(2),
-          ...makeTreeItems(1, [
-            ...makeTreeItems(1),
-            ...makeTreeItems(1, [...makeTreeItems(2), ...makeTreeItems(1, makeTreeItems(2))]),
-            ...makeTreeItems(1),
-          ]),
-          ...makeTreeItems(2),
-        ])[0],
-      });
+          ...makeTreeItems(1),
+        ]),
+        ...makeTreeItems(2),
+        ...makeTreeItems(1, [
+          ...makeTreeItems(1),
+          ...makeTreeItems(1, [...makeTreeItems(2), ...makeTreeItems(1, makeTreeItems(2))]),
+          ...makeTreeItems(1),
+        ]),
+        ...makeTreeItems(2),
+      ])[0];
 
-      space.db.add(tree);
+      const tree = space.db.add(
+        create(TreeType, {
+          root: makeRef(root),
+        }),
+      );
+
       setObject(tree);
     });
   }, []);
