@@ -16,17 +16,13 @@ export default () =>
           object: create(JournalType, {
             name,
             entries: [
-              makeRef(
-                create(JournalEntryType, {
-                  date: new Date(),
-                  root: makeRef(
-                    create(TreeNodeType, {
-                      text: '',
-                      children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
-                    }),
-                  ),
+              create(JournalEntryType, {
+                date: new Date(),
+                root: create(TreeNodeType, {
+                  text: '',
+                  children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
                 }),
-              ),
+              }),
             ],
           }),
         },

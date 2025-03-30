@@ -7,12 +7,12 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React from 'react';
 
-import { create } from '@dxos/react-client/echo';
+import { create, makeRef } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
 import translations from '../../translations';
-import { JournalType } from '../../types';
+import { JournalType, JournalEntryType, TreeNodeType } from '../../types';
 
 const meta: Meta<typeof Journal.Root> = {
   title: 'plugins/plugin-outliner/Journal',
@@ -41,7 +41,23 @@ export const Default: Story = {
   args: {
     journal: create(JournalType, {
       name: 'Journal',
-      entries: [],
+      entries: [
+        create(JournalEntryType, {
+          date: new Date(),
+          root: create(TreeNodeType, {
+            text: '',
+            children: [
+              makeRef(
+                // TODO(burdon): ERROR: object is not an EchoObject
+                create(TreeNodeType, {
+                  text: '',
+                  children: [],
+                }),
+              ),
+            ],
+          }),
+        }),
+      ],
     }),
   },
 };
