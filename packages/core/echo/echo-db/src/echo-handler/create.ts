@@ -18,7 +18,6 @@ import {
   RelationSourceId,
   RelationTargetId,
 } from '@dxos/echo-schema';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
 import {
@@ -30,13 +29,12 @@ import {
   getSchema,
   isReactiveObject,
 } from '@dxos/live-object';
-import { ComplexMap, deepMapValues } from '@dxos/util';
+import { deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, isRootDataObject, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
 import { ObjectInternals, type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { inspectCustom } from '@dxos/debug';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;

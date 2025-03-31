@@ -28,6 +28,7 @@ import {
   TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import {
   createProxy,
   getProxyHandler,
@@ -36,7 +37,6 @@ import {
   isProxy,
   isReactiveObject,
   type ReactiveHandler,
-  type ReactiveObject,
   RefImpl,
   setRefResolver,
   symbolIsProxy,
@@ -44,9 +44,6 @@ import {
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { DXN } from '@dxos/keys';
-import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
 import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
@@ -58,6 +55,8 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
+import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
 

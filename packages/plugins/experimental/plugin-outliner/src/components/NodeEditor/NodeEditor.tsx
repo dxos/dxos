@@ -22,8 +22,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { tagsExtension } from './tags';
 import { OUTLINER_PLUGIN } from '../../meta';
 import { type TreeNodeType } from '../../types';
-import { log } from '@dxos/log';
-import { getDebugName } from '@dxos/util';
 
 export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;

@@ -4,15 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { Client } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { createObject } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
 import { getChildNodes, getParent, indent, tranverse, unindent } from './tree';
-import { TreeNodeType, TreeType } from './types';
+import { type TreeNodeType } from './types';
 import { createTree } from '../testing';
-import { createObject } from '@dxos/client/echo';
 
 faker.seed(0);
 

@@ -17,7 +17,6 @@ import {
   Ref,
   ObjectId,
   type Ref$,
-  type HasId,
 } from '@dxos/echo-schema';
 import {
   Contact,
@@ -33,17 +32,7 @@ import {
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import {
-  getMeta,
-  getSchema,
-  create,
-  getType,
-  isDeleted,
-  makeRef,
-  refFromDXN,
-  getProxyHandler,
-  getProxyTarget,
-} from '@dxos/live-object';
+import { getMeta, getSchema, create, getType, isDeleted, makeRef, refFromDXN } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
@@ -52,7 +41,6 @@ import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 

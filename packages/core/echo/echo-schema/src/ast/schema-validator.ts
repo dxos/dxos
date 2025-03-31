@@ -6,7 +6,6 @@ import { SchemaAST as AST, Schema as S } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { getSchemaTypename } from './annotations';
 import { symbolSchema } from './schema';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().

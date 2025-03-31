@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type SchemaAST as AST, Schema as S } from 'effect';
+import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp } from '@dxos/effect';
-import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import {
@@ -337,6 +336,4 @@ describe('json-to-effect', () => {
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
-
-
 });

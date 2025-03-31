@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Brand } from 'effect';
+import { type Brand, type Schema as S } from 'effect';
 
 import type { UnsubscribeCallback } from '@dxos/async';
+import { inspectCustom } from '@dxos/debug';
+import type { symbolSchema } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { ComplexMap } from '@dxos/util';
 
@@ -13,9 +15,6 @@ import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { Schema as S } from 'effect';
-import type { symbolSchema } from '@dxos/echo-schema';
-import { CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -90,7 +89,7 @@ export class ObjectInternals {
     this.database = database;
   }
 
-  [inspectCustom] = () => `ObjectInternals(${this.core.id}${this.database ? ` bound` : ''})`;
+  [inspectCustom] = () => `ObjectInternals(${this.core.id}${this.database ? ' bound' : ''})`;
 }
 
 /**

@@ -5,6 +5,7 @@
 import { SchemaAST as AST, Schema as S } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
+import { inspectCustom } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import {
   defineHiddenProperty,
@@ -18,7 +19,6 @@ import {
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { inspectCustom } from '@dxos/debug';
 import { getObjectMeta } from './object';
 import {
   createProxy,
