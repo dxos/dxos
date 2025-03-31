@@ -77,7 +77,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
       return {
         initialValue: node.text,
         extensions: [
-          // NOTE: Relative to tree.
+          // NOTE: Path is relative to tree (ECHO object).
           automerge(createDocAccessor(tree, ['nodes', node.id, 'text'])),
 
           // TODO(burdon): Show placeholder only if focused.
