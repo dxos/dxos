@@ -38,8 +38,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     return spaces.map((space) => {
       const { open, ready } = space.internal.data.metrics ?? {};
       return {
-        id: space.key.toString(),
-        key: space.key.toString(),
+        id: space.id.toString(),
         name: space.isOpen ? space.properties.name : undefined,
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
@@ -153,7 +152,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const properties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'key', format: FormatEnum.DID },
+      { name: 'id', format: FormatEnum.DID },
       { name: 'name', format: FormatEnum.String },
       { name: 'objects', format: FormatEnum.Number, size: 120 },
       { name: 'members', format: FormatEnum.Number, size: 120 },
