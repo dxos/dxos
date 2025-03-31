@@ -4,32 +4,23 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useEffect, useRef, useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
-import { create, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { create, createObject } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
-import { JournalType, TreeNodeType, TreeType } from '../../types';
+import { TreeNodeType } from '../../types';
+import { Outliner, type OutlinerController } from './Outliner';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
-  render: ({ root: initialRoot }) => {
+  render: ({ root }) => {
     const outliner = useRef<OutlinerController>(null);
-    const [root, setRoot] = useState<TreeNodeType>();
-    const space = useSpace();
-    useEffect(() => {
-      console.log('space', space);
-      if (space && initialRoot) {
-        setRoot(space.db.add(initialRoot));
-      }
-    }, [space, initialRoot]);
 
     return (
       <Outliner.Root
@@ -43,7 +34,6 @@ const meta: Meta<typeof Outliner.Root> = {
     );
   },
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, TreeNodeType, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],
@@ -64,12 +54,12 @@ const createText = () =>
 
 export const Default: Story = {
   args: {
-    root: createTree([10], createText),
+    root: createObject(createTree([10], createText)),
   },
 };
 
 export const Large: Story = {
   args: {
-    root: createTree([10, [0, 3], [0, 2]], createText),
+    root: createObject(createTree([10, [0, 3], [0, 2]], createText)),
   },
 };

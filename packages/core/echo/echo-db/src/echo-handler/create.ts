@@ -18,7 +18,7 @@ import {
   RelationSourceId,
   RelationTargetId,
 } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
 import {
   createProxy,
@@ -81,7 +81,7 @@ export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => 
  */
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T> => {
-  invariant(!isEchoObject(obj));
+  assertArgument(!isEchoObject(obj), 'Object is already an ECHO object');
   const schema = getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
