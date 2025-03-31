@@ -66,9 +66,8 @@ export class SchemaValidator {
         const propertyType = getPropertyType(schema.ast, propertyName.toString(), (propertyName) =>
           getProperty([...propertyPath.slice(0, i), propertyName]),
         );
-        if (!propertyType) {
-          const type = getSchemaTypename(rootObjectSchema);
-          invariant(propertyType, `unknown property: ${String(propertyName)} on ${type}. Path: ${propertyPath}`);
+        if (propertyType == null) {
+          throw new TypeError(`unknown property: ${String(propertyName)} on object. Path: ${propertyPath}`);
         }
 
         schema = S.make(propertyType).annotations(propertyType.annotations);

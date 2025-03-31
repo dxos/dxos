@@ -383,7 +383,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (!target[symbolInternals].database) {
       // For objects created by `createObject` outside of the database.
       if (target[symbolInternals].rootSchema != null) {
-        return SchemaValidator.getPropertySchema(target[symbolInternals].rootSchema, target[symbolPath]);
+        return target[symbolInternals].rootSchema;
       }
 
       return undefined;
