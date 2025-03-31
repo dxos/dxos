@@ -4,9 +4,6 @@
   "compilerOptions": {},
   "references": [
     {
-      "path": "docs/tsconfig.json"
-    },
-    {
       "path": "packages/apps/composer-app/tsconfig.json"
     },
     {
