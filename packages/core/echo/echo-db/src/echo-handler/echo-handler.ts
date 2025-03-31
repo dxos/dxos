@@ -369,6 +369,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // TODO(y): Make reactive.
     // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
+      // For objects created by `createObject` outside of the database.
+      if (target[symbolSchema] != null) {
+        return target[symbolSchema];
+      }
+
       return undefined;
     }
 

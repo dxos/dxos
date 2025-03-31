@@ -8,7 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { create, createObject, makeRef } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
@@ -73,21 +73,25 @@ const tags = ['idea', 'bug', 'task', 'question', 'design', 'review', 'test', 're
 
 export const Default: Story = {
   args: {
-    root: create(TreeNodeType, {
-      text: 'Root',
-      children: faker.helpers.multiple(
-        () =>
-          makeRef(
-            create(TreeNodeType, {
-              text:
-                (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
-                faker.lorem.sentences(1),
-              children: [],
-            }),
-          ),
-        { count: 10 },
-      ),
-    }),
+    root: createObject(
+      create(TreeNodeType, {
+        text: 'Root',
+        children: faker.helpers.multiple(
+          () =>
+            makeRef(
+              createObject(
+                create(TreeNodeType, {
+                  text:
+                    (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
+                    faker.lorem.sentences(1),
+                  children: [],
+                }),
+              ),
+            ),
+          { count: 10 },
+        ),
+      }),
+    ),
   },
 };
 

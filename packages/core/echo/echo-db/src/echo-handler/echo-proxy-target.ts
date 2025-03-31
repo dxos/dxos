@@ -13,6 +13,8 @@ import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { Schema as S } from 'effect';
+import type { symbolSchema } from '@dxos/echo-schema';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -105,4 +107,9 @@ export type ProxyTarget = {
    */
   // TODO(dmaretskyi): Can be removed.
   [symbolHandler]?: EchoReactiveHandler;
+
+  /**
+   * Used for objects created by `createObject`.
+   */
+  [symbolSchema]?: S.Schema.AnyNoContext;
 } & ({ [key: keyof any]: any } | EchoArray<any>);
