@@ -11,10 +11,10 @@ import { faker } from '@dxos/random';
 import { create, createObject } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
 import { TreeNodeType } from '../../types';
-import { Outliner, type OutlinerController } from './Outliner';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
