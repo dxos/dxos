@@ -1,0 +1,39 @@
+---
+title: React API
+sidebar:
+  label: API
+  order: 0
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import createSpaces from './snippets/create-spaces.tsx?raw';
+import useSpaces from './snippets/use-spaces.tsx?raw';
+
+## Spaces
+
+A `space` is an instance of an ECHO database which can be replicated by a number of peers.
+
+This section describes how to create, join, and invite peers to [ECHO Spaces](/echo/introduction#spaces) in `react`.
+
+### Creating spaces
+
+To create a space, call the `client.spaces.create()` API:
+
+<Code code={createSpaces.slice(34)} lang="tsx" />
+
+## Obtaining a Space reactively
+
+These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
+
+<Code code={useSpaces.slice(34)} lang="tsx" />
+
+## Joining spaces
+
+See [the platform overview](/echo/introduction#spaces) describing the general process of joining peers to a space.
+
+<Aside type="tip">
+To implement invitation flows manually, see the TypeScript API about [joining spaces](/echo/typescript/api#creating-an-invitation).
+</Aside>
+
+See a more detailed example in the [Tasks application sample](/additional-resources/samples#tasks).

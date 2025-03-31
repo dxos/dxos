@@ -1,0 +1,39 @@
+{
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "docs",
+  "projectType": "application",
+  "targets": {
+    "build": {},
+    "bundle": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "build"
+      },
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
+    },
+    "lint": {
+      "options": {
+        "format": "unix",
+        "lintFilePatterns": [
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
+        ],
+        "quiet": true
+      }
+    },
+    "pack": {},
+    "serve": {
+      "dependsOn": [
+        "^build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "start"
+      }
+    }
+  }
+}
