@@ -10,7 +10,7 @@ export const REGISTRY_PLUGIN = 'dxos.org/plugin/registry';
 export const REGISTRY_ID = '!dxos:plugin-registry';
 export const REGISTRY_KEY = 'plugin-registry';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: REGISTRY_PLUGIN,
   name: 'Plugins',
-} satisfies PluginMeta;
+};
