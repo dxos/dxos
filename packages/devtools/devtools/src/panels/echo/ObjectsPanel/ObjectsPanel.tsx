@@ -155,6 +155,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     ],
     [],
   );
+
   const historyData = useMemo(() => {
     return history.map((item) => ({
       id: item.hash,
@@ -171,8 +172,8 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         return;
       }
 
-      const selectedHash = selectedHashes[0];
-      const versionItem = history.find((item) => item.hash.slice(0, 8) === selectedHash);
+      const selectedHash = selectedHashes[selectedHashes.length - 1];
+      const versionItem = history.find((item) => item.hash === selectedHash);
 
       if (versionItem) {
         onVersionClick(versionItem);
