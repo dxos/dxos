@@ -91,6 +91,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     () => [
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
+      { name: 'version', format: FormatEnum.String, size: 100 },
       {
         name: 'deleted',
         format: FormatEnum.SingleSelect,
@@ -99,7 +100,6 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
         },
       },
-      { name: 'version', format: FormatEnum.String, size: 100 },
       {
         name: 'schemaAvailable',
         format: FormatEnum.SingleSelect,
@@ -118,9 +118,9 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const tableData = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
-      deleted: isDeleted(item) ? 'DELETED' : ' ',
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
+      deleted: isDeleted(item) ? 'DELETED' : ' ',
       schemaAvailable: getSchema(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
