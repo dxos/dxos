@@ -4,8 +4,7 @@
 
 import '@dxos-theme';
 
-/* eslint no-restricted-imports: ["error", "fs"] */
-import '@xyflow/react/dist/style.css';
+import '../styles.css';
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { ReactFlow } from '@xyflow/react';

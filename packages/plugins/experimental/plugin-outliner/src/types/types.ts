@@ -4,7 +4,8 @@
 
 import { EchoObject, Ref, S, type Ref$ } from '@dxos/echo-schema';
 
-// TODO(burdon): Reconcile with Task. Convert from TypedObject to Schema.
+// TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
+// TODO(burdon): Convert from TypedObject to Schema.
 // TODO(burdon): Change -Type suffix to -Schema?
 
 export const TreeNodeType = S.Struct({
