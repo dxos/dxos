@@ -4,9 +4,12 @@
 
 import '@dxos-theme';
 
+/* eslint no-restricted-imports: ["error", "fs"] */
+import '@xyflow/react/dist/style.css';
+
 import type { Meta, StoryObj } from '@storybook/react';
 import { ReactFlow } from '@xyflow/react';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -18,11 +21,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 type GraphProps = {};
 
 const Graph = (props: GraphProps) => {
-  useEffect(() => {
-    // Import styles dynamically to avoid build-time restrictions.
-    void import('@xyflow/react/dist/style.css');
-  }, []);
-
   return (
     <div className='absolute inset-0'>
       <ReactFlow {...props} />
