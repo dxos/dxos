@@ -14,7 +14,7 @@ import { TreeNodeType, type TreeType } from '../types';
 
 const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => {
   const space = getSpace(tree);
-  if (!space || !tree.root.target) {
+  if (!space || !tree.root) {
     return null;
   }
 
@@ -22,7 +22,7 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
     <StackItem.Content toolbar={false}>
       <Outliner.Root
         classNames={mx(attentionSurface, 'p-1.5')}
-        root={tree.root.target}
+        root={tree.root}
         onCreate={() => {
           return space.db.add(create(TreeNodeType, { text: '', children: [] }));
         }}

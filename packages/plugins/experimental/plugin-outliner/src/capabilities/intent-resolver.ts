@@ -3,7 +3,7 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import { create } from '@dxos/live-object';
 
 import { TreeType, TreeNodeType, OutlinerAction, JournalType, JournalEntryType } from '../types';
 
@@ -20,7 +20,7 @@ export default () =>
                 date: new Date(),
                 root: create(TreeNodeType, {
                   text: '',
-                  children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
+                  children: [create(TreeNodeType, { text: '', children: [] })],
                 }),
               }),
             ],
@@ -34,12 +34,10 @@ export default () =>
         data: {
           object: create(TreeType, {
             name,
-            root: makeRef(
-              create(TreeNodeType, {
-                text: '',
-                children: [makeRef(create(TreeNodeType, { text: '', children: [] }))],
-              }),
-            ),
+            root: create(TreeNodeType, {
+              text: '',
+              children: [create(TreeNodeType, { text: '', children: [] })],
+            }),
           }),
         },
       }),

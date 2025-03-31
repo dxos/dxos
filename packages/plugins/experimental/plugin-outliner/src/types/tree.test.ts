@@ -100,7 +100,7 @@ describe('tree', () => {
 
     // Indent
     {
-      const parent = root.children[0].target!;
+      const parent = root.children[0];
       indent(parent, 1);
       indent(parent, 1);
       expect(parent.children).to.have.length(2);
@@ -113,12 +113,12 @@ describe('tree', () => {
 
     // Unindent
     {
-      const parent = root.children[0].target!.children[0].target!;
+      const parent = root.children[0].children[0];
       expect(parent.children).to.have.length(2);
       const child = unindent(root, parent, 0);
       expect(child).to.exist;
       expect(parent.children).to.have.length(0);
-      expect(root.children[0].target!.children).to.have.length(3);
+      expect(root.children[0].children).to.have.length(3);
     }
 
     {

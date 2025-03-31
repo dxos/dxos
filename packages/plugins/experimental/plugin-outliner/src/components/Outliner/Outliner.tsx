@@ -5,7 +5,6 @@
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -79,7 +78,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
             const created = onCreate?.();
             if (created) {
               const idx = nodes.findIndex((n) => n.id === node.id);
-              parent.children.splice(idx + 1, 0, makeRef(created));
+              parent.children.splice(idx + 1, 0, created);
               setActive(created.id);
             }
             break;
@@ -141,7 +140,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                 if (index > 0) {
                   const [node] = nodes.splice(index, 1);
                   parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
-                  parent.children.splice(index - 1, 0, makeRef(node));
+                  parent.children.splice(index - 1, 0, node);
                 }
                 break;
               }
@@ -150,7 +149,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
                 if (index < parent.children.length - 1) {
                   const [node] = nodes.splice(index, 1);
                   parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
-                  parent.children.splice(index + 1, 0, makeRef(node));
+                  parent.children.splice(index + 1, 0, node);
                 }
                 break;
               }

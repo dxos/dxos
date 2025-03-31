@@ -3,7 +3,6 @@
 //
 
 import { createIntent, definePlugin, contributes, Capabilities, Events, defineModule } from '@dxos/app-framework';
-import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -42,7 +41,7 @@ export const OutlinerPlugin = () =>
           id: TreeNodeType.typename,
           metadata: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (node: TreeNodeType) => await RefArray.loadAll(node.children ?? []),
+            // loadReferences: async (item: TreeNodeType) => await RefArray.loadAll(item.children ?? []),
           },
         }),
       ],
