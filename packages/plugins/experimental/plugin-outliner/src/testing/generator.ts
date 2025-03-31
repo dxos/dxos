@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { create } from '@dxos/live-object';
+import { ObjectId } from '@dxos/echo-schema';
 import { range } from '@dxos/util';
 
-import { TreeNodeType } from '../types';
+import { Tree, type TreeNodeType } from '../types';
 
 type NumberOrNumberArray = number | number[];
 
@@ -14,29 +14,31 @@ const random = (min: number, max: number) => Math.floor(Math.random() * (max - m
 /**
  * Create hierarchical tree.
  */
-export const createTree = (count: NumberOrNumberArray[] = [], createText?: () => string): TreeNodeType => {
-  const createNodes = (r: NumberOrNumberArray = 0, label: string): TreeNodeType[] => {
-    const n = Array.isArray(r) ? random(r[0], r[1]) : r;
-    return range(n, (i) =>
-      create(TreeNodeType, {
-        children: [],
-        text: createText?.() ?? `${label}.${i + 1}`,
-      }),
-    );
+export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => string): Tree => {
+  const tree = new Tree();
+  tree.root.text = 'root';
+
+  const createNodes = (parent: TreeNodeType, spec: NumberOrNumberArray = 0): TreeNodeType[] => {
+    const count = Array.isArray(spec) ? random(spec[0], spec[1]) : spec;
+    return range(count, (i) => ({
+      id: ObjectId.random(),
+      children: [],
+      text: createText?.() ?? [parent.text, i + 1].join('.'),
+    }));
   };
 
-  const createChildNodes = (root: TreeNodeType, [count = 0, ...rest]: NumberOrNumberArray[]): TreeNodeType => {
-    const nodes = createNodes(count, root.text);
-    root.children.push(...nodes);
+  const createChildNodes = (parent: TreeNodeType, [count = 0, ...rest]: NumberOrNumberArray[]): TreeNodeType => {
+    const nodes = createNodes(parent, count);
+    nodes.forEach((n) => tree.addNode(parent, n));
     if (rest.length) {
       for (const node of nodes) {
         createChildNodes(node, rest);
       }
     }
 
-    return root;
+    return parent;
   };
 
-  const root = create(TreeNodeType, { text: 'root', children: [] });
-  return createChildNodes(root, count);
+  createChildNodes(tree.root, spec);
+  return tree;
 };

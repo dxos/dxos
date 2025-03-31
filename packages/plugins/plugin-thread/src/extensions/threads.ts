@@ -37,7 +37,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
 
   // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
   const threads = computed(() =>
-    [...RefArray.allResolvedTargets(doc.threads), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
+    [...RefArray.targets(doc.threads), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
       (thread) => !(thread?.status === 'resolved'),
     ),
   );
@@ -45,7 +45,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Promi
   return [
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        RefArray.allResolvedTargets(doc.threads).forEach((thread) => {
+        RefArray.targets(doc.threads).forEach((thread) => {
           if (thread.anchor) {
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.

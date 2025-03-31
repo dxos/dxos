@@ -4,7 +4,7 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { JournalType, TreeType } from './types';
+import { JournalType, OutlineType } from './types';
 import { OUTLINER_PLUGIN } from '../meta';
 
 export namespace OutlinerAction {
@@ -24,7 +24,7 @@ export namespace OutlinerAction {
       name: S.optional(S.String),
     }),
     output: S.Struct({
-      object: TreeType,
+      object: OutlineType,
     }),
   }) {}
 }

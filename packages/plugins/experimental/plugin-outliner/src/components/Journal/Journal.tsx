@@ -4,12 +4,12 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type JournalType, JournalEntryType, TreeNodeType } from '../../types';
+import { type JournalType, JournalEntryType, Tree } from '../../types';
 import { Outliner } from '../Outliner';
 
 type JournalRootProps = ThemedClassName<{
@@ -23,22 +23,24 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
 
   const [today, setToday] = useState<JournalEntryType>();
   useEffect(() => {
-    const entry = journal?.entries.find((entry) => entry.date.toDateString() === date.toDateString());
+    const entry = journal?.entries.find((entry) => entry.target?.date.toDateString() === date.toDateString());
     if (entry) {
-      setToday(entry);
+      setToday(entry.target);
     }
   }, [journal, date]);
 
   // TODO(burdon): CRDT issue (merge entries with same date?)
   const handleCreateEntry = useCallback(() => {
-    const entry = create(JournalEntryType, { date, root: create(TreeNodeType, { children: [], text: '' }) });
-    journal?.entries.push(entry);
+    const entry = create(JournalEntryType, { date, tree: makeRef(Tree.create()) });
+    journal?.entries.push(makeRef(entry));
     setToday(entry);
   }, [journal, date]);
 
   return (
     <div className={mx('flex flex-col overflow-y-auto divide-y divide-separator', classNames)}>
-      {journal?.entries.map((entry) => <JournalEntry key={entry.id} entry={entry} />)}
+      {RefArray.targets(journal?.entries ?? []).map((entry) => (
+        <JournalEntry key={entry.id} entry={entry} />
+      ))}
       {!today && (
         <div>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
@@ -53,14 +55,14 @@ type JournalEntryProps = ThemedClassName<{
 }>;
 
 const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
-  if (!entry.root) {
+  if (!entry.tree.target) {
     return null;
   }
 
   return (
     <div className={mx(classNames, 'flex flex-col')}>
       <div className='p-2 text-lg'>{entry.date.toDateString()}</div>
-      <Outliner.Root root={entry.root} />
+      <Outliner.Root tree={entry.tree.target} />
     </div>
   );
 };

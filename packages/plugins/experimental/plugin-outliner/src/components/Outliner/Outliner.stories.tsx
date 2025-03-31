@@ -7,28 +7,27 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useRef } from 'react';
 
+import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { create, createObject } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
-import { TreeNodeType } from '../../types';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
-  render: ({ root }) => {
+  render: ({ tree }) => {
     const outliner = useRef<OutlinerController>(null);
 
     return (
       <Outliner.Root
         ref={outliner}
         classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
-        root={root}
+        tree={tree}
         onCreate={() => {
-          return create(TreeNodeType, { children: [], text: '' });
+          return { id: ObjectId.random(), children: [], text: '' };
         }}
       />
     );
@@ -54,12 +53,12 @@ const createText = () =>
 
 export const Default: Story = {
   args: {
-    root: createObject(createTree([10], createText)),
+    tree: createTree([10], createText).tree,
   },
 };
 
 export const Large: Story = {
   args: {
-    root: createObject(createTree([10, [0, 3], [0, 2]], createText)),
+    tree: createTree([10, [0, 3], [0, 2]], createText).tree,
   },
 };

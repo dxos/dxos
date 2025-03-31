@@ -42,7 +42,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
-  const threadObjects = RefArray.allResolvedTargets(subject.threads ?? []);
+  const threadObjects = RefArray.targets(subject.threads ?? []);
 
   const threads = useMemo(() => {
     return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];

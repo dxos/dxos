@@ -3,9 +3,9 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 
-import { TreeType, TreeNodeType, OutlinerAction, JournalType, JournalEntryType } from '../types';
+import { OutlinerAction, JournalType, JournalEntryType, Tree, OutlineType } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
@@ -16,13 +16,12 @@ export default () =>
           object: create(JournalType, {
             name,
             entries: [
-              create(JournalEntryType, {
-                date: new Date(),
-                root: create(TreeNodeType, {
-                  text: '',
-                  children: [create(TreeNodeType, { text: '', children: [] })],
+              makeRef(
+                create(JournalEntryType, {
+                  date: new Date(),
+                  tree: makeRef(Tree.create()),
                 }),
-              }),
+              ),
             ],
           }),
         },
@@ -32,12 +31,9 @@ export default () =>
       intent: OutlinerAction.CreateOutline,
       resolve: ({ name }) => ({
         data: {
-          object: create(TreeType, {
+          object: create(OutlineType, {
             name,
-            root: create(TreeNodeType, {
-              text: '',
-              children: [create(TreeNodeType, { text: '', children: [] })],
-            }),
+            tree: makeRef(Tree.create()),
           }),
         },
       }),

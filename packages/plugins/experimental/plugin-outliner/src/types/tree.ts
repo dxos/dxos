@@ -2,123 +2,281 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ObjectId, EchoObject, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
 
-import { type TreeNodeType } from './types';
+// TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
+// TODO(burdon): Want multiple ECHO objects in same automerge document (locality).
+// TODO(burdon): Use consistent -Schema + -Type pattern (throughout) and replace extends TypedObejct.
 
-// TODO(burdon): Re-use Tree lib? Integrate with ECHO (e.g., https://d3js.org/d3-hierarchy/hierarchy)
-// TODO(burdon): Is this the right datastructure? Refs vs nodes? Extensibility? Ref counting? Common with graph?
+export const TreeNodeType = S.Struct({
+  id: ObjectId,
+  children: S.mutable(S.Array(ObjectId)),
+
+  // TODO(burdon): Move data out of generic tree type.
+  text: S.String,
+  done: S.optional(S.Boolean),
+}).pipe(S.mutable);
+
+export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
+
+export const TreeType = S.Struct({
+  root: ObjectId,
+  nodes: S.mutable(S.Record({ key: ObjectId, value: TreeNodeType })),
+}).pipe(EchoObject('dxos.org/type/Tree', '0.1.0'));
+
+export interface TreeType extends S.Schema.Type<typeof TreeType> {}
 
 /**
- * Recursively traverse the tree from the root to the given node and return the parent.
+ * Wrapper object for tree.
  */
-// TODO(burdon): Expensive: consider 2-way binding; or pass getParent through render stack.
-export const getParent = (root: TreeNodeType, node: TreeNodeType): TreeNodeType | undefined => {
-  for (const child of root.children ?? []) {
-    if (child.id === node.id) {
-      return root;
+export class Tree {
+  static create = (): TreeType => {
+    const id = ObjectId.random();
+    return create(TreeType, {
+      root: id,
+      nodes: {
+        [id]: {
+          id,
+          children: [],
+          text: '',
+        },
+      },
+    });
+  };
+
+  private _tree: TreeType;
+
+  constructor(tree?: TreeType) {
+    this._tree = tree ?? Tree.create();
+  }
+
+  get tree() {
+    return this._tree;
+  }
+
+  get size() {
+    return Object.keys(this._tree.nodes).length;
+  }
+
+  get root() {
+    return this.getNode(this._tree.root);
+  }
+
+  //
+  // Traversal
+  //
+
+  /**
+   * Recursively traverse the tree until the callback returns a value.
+   */
+  tranverse<T>(
+    callback: (node: TreeNodeType, depth: number) => T | void,
+    root: ObjectId = this._tree.root,
+    depth = 0,
+  ): T | void {
+    const node = this._tree.nodes[root];
+    const result = callback(node, depth);
+    if (result !== undefined) {
+      return result;
     }
 
-    if (child.children) {
-      const parent = getParent(child, node);
+    for (const childId of node.children) {
+      const result = this.tranverse(callback, childId, depth + 1);
+      if (result !== undefined) {
+        return result;
+      }
+    }
+  }
+
+  getNode(id: ObjectId): TreeNodeType {
+    const node = this._tree.nodes[id];
+    invariant(node);
+    return node;
+  }
+
+  /**
+   * Get the children of a node.
+   */
+  getChildNodes(node: TreeNodeType): Array<TreeNodeType> {
+    return node.children.map((id) => this.getNode(id));
+  }
+
+  /**
+   * Get the parent of a node.
+   */
+  getParent(node: TreeNodeType): TreeNodeType | null {
+    const parent = this.tranverse((n) => {
+      if (n.children.includes(node.id)) {
+        return n;
+      }
+    });
+
+    return parent ?? null;
+  }
+
+  /**
+   * Get the next node in the tree.
+   */
+  getNext(node: TreeNodeType, hierarchical = true): TreeNodeType | undefined {
+    if (hierarchical && node.children.length) {
+      // First child.
+      return this.getChildNodes(node)[0];
+    } else {
+      const parent = this.getParent(node);
       if (parent) {
+        const idx = this.getChildNodes(parent).findIndex(({ id }) => id === node.id);
+        if (idx < parent.children.length - 1) {
+          // Next sibling.
+          return this.getNode(parent.children[idx + 1]);
+        } else {
+          // Get parent's next sibling.
+          return this.getNext(parent, false);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get the previous node in the tree.
+   */
+  getPrevious(node: TreeNodeType, hierarchical = true): TreeNodeType | undefined {
+    const parent = this.getParent(node)!;
+    const idx = this.getChildNodes(parent).findIndex(({ id }) => id === node.id);
+    if (idx === 0) {
+      if (hierarchical) {
         return parent;
       }
-    }
-  }
-};
-
-export const getLastDescendent = (node: TreeNodeType): TreeNodeType => {
-  const last = node.children?.length ? node.children[node.children.length - 1] : undefined;
-  if (last) {
-    return getLastDescendent(last);
-  }
-
-  return node;
-};
-
-export const getPrevious = (root: TreeNodeType, node: TreeNodeType): TreeNodeType | undefined => {
-  const parent = getParent(root, node)!;
-  const idx = getChildNodes(parent).findIndex(({ id }) => id === node.id);
-  if (idx > 0) {
-    invariant(parent.children);
-    const previous = parent.children[idx - 1];
-    if (previous?.children?.length) {
-      return getLastDescendent(previous);
-    }
-
-    return previous;
-  } else {
-    return parent;
-  }
-};
-
-export const getNext = (root: TreeNodeType, node: TreeNodeType, descend = true): TreeNodeType | undefined => {
-  if (node.children?.length && descend) {
-    // Go to first child.
-    return node.children[0];
-  } else {
-    const parent = getParent(root, node);
-    if (parent) {
-      const idx = getChildNodes(parent).findIndex(({ id }) => id === node.id);
-      if (idx < parent.children!.length - 1) {
-        return parent.children![idx + 1];
-      } else {
-        // Get parent's next sibling.
-        return getNext(root, parent, false);
+    } else {
+      const previous = this.getNode(parent.children[idx - 1]);
+      if (hierarchical && previous.children.length) {
+        return this.getLastDescendent(previous);
       }
+
+      return previous;
     }
   }
-};
 
-export const getChildNodes = (node: TreeNodeType): Array<TreeNodeType> => node.children;
-
-// TODO(burdon): Check cycles.
-export const tranverse = (node: TreeNodeType, callback: (node: TreeNodeType, depth: number) => void, depth = 0) => {
-  callback(node, depth);
-  for (const child of node.children) {
-    if (child) {
-      tranverse(child, callback, depth + 1);
+  /**
+   * Get the last descendent of a node.
+   */
+  getLastDescendent(node: TreeNodeType): TreeNodeType | undefined {
+    const children = this.getChildNodes(node);
+    const last = children.length ? children[children.length - 1] : undefined;
+    if (last) {
+      return this.getLastDescendent(last);
     }
-  }
-};
 
-/**
- * Indent the node at the given index.
- * @returns The node that was indented or null if the node was already at the maximum indent.
- */
-export const indent = (parent: TreeNodeType, index: number): TreeNodeType | null => {
-  if (index < 1 || index >= parent.children.length) {
-    return null;
+    return node;
   }
 
-  const previous = parent.children[index - 1];
-  invariant(previous);
-  const node = parent.children[index];
-  invariant(node);
+  //
+  // Mutations
+  //
 
-  parent.children.splice(index, 1);
-  previous.children.push(node);
-
-  return node;
-};
-
-export const unindent = (root: TreeNodeType, parent: TreeNodeType, index: number): TreeNodeType | null => {
-  const ancestor = getParent(root, parent);
-  if (!ancestor) {
-    return null;
+  /**
+   * Clear tree.
+   */
+  clear() {
+    const root = this._tree.nodes[this._tree.root];
+    root.children.length = 0;
+    this._tree.nodes = {
+      [root.id]: root,
+    };
   }
 
-  const nodes = getChildNodes(parent);
-  const [node, ...rest] = nodes.splice(index, parent.children.length - index);
-  parent.children.splice(index, parent.children.length - index);
+  /**
+   * Add node.
+   */
+  addNode(parent: TreeNodeType, node: TreeNodeType | undefined, index?: number): ObjectId {
+    if (!node) {
+      const id = ObjectId.random();
+      node = { id, children: [], text: '' };
+    }
 
-  // Add to ancestor.
-  const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-  ancestor.children.splice(idx + 1, 0, node);
+    this._tree.nodes[node.id] = node;
+    parent.children.splice(index ?? parent.children.length, 0, node.id);
+    return node.id;
+  }
 
-  // Transplant following siblings to current node.
-  node.children.push(...rest);
+  /**
+   * Delete node.
+   */
+  deleteNode(parent: TreeNodeType, id: ObjectId): TreeNodeType | undefined {
+    const node = this._tree.nodes[id];
+    if (!node) {
+      return undefined;
+    }
 
-  return node;
-};
+    delete this._tree.nodes[node.id];
+    const idx = parent.children.findIndex((child) => child === id);
+    if (idx !== -1) {
+      parent.children.splice(idx, 1);
+    }
+
+    return node;
+  }
+
+  /**
+   * Move child node.
+   */
+  moveNode(node: TreeNodeType, from: number, to: number): TreeNodeType | null {
+    invariant(from >= 0 && from < node.children.length);
+    invariant(to >= 0 && to < node.children.length);
+    if (from === to) {
+      return null;
+    }
+
+    const child = node.children[from];
+    node.children.splice(from, 1);
+    node.children.splice(to, 0, child);
+    return this.getNode(child);
+  }
+
+  /**
+   * Indent node.
+   */
+  indentNode(node: TreeNodeType) {
+    const parent = this.getParent(node);
+    if (!parent) {
+      return;
+    }
+
+    const idx = parent.children.findIndex((child) => child === node.id);
+    if (idx < 1 || idx >= parent.children.length) {
+      return;
+    }
+
+    const previous = this.getNode(parent.children[idx - 1]);
+    parent.children.splice(idx, 1);
+    previous.children.push(node.id);
+  }
+
+  /**
+   * Unindent node.
+   */
+  unindentNode(node: TreeNodeType) {
+    const parent = this.getParent(node);
+    if (!parent) {
+      return;
+    }
+
+    const ancestor = this.getParent(parent);
+    if (!ancestor) {
+      return;
+    }
+
+    // Remove node from parent.
+    const nodeIdx = parent.children.findIndex((id) => id === node.id);
+    const [_, ...rest] = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+    parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+
+    // Add to ancestor.
+    const parentIdx = this.getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
+    ancestor.children.splice(parentIdx + 1, 0, node.id);
+
+    // Transplant following siblings to current node.
+    node.children.push(...rest);
+  }
+}
