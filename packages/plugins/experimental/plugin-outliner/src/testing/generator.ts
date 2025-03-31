@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { create, makeRef } from '@dxos/live-object';
+import { create } from '@dxos/live-object';
 import { range } from '@dxos/util';
 
 import { TreeNodeType } from '../types';
@@ -27,7 +27,7 @@ export const createTree = (count: NumberOrNumberArray[] = [], createText?: () =>
 
   const createChildNodes = (root: TreeNodeType, [count = 0, ...rest]: NumberOrNumberArray[]): TreeNodeType => {
     const nodes = createNodes(count, root.text);
-    root.children.push(...nodes.map(makeRef));
+    root.children.push(...nodes);
     if (rest.length) {
       for (const node of nodes) {
         createChildNodes(node, rest);

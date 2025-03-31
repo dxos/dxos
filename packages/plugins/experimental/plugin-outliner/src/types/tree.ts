@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { makeRef, RefArray } from '@dxos/live-object';
 
 import { type TreeNodeType } from './types';
 
@@ -16,16 +15,12 @@ import { type TreeNodeType } from './types';
 // TODO(burdon): Expensive: consider 2-way binding; or pass getParent through render stack.
 export const getParent = (root: TreeNodeType, node: TreeNodeType): TreeNodeType | undefined => {
   for (const child of root.children ?? []) {
-    if (!child.target) {
-      continue;
-    }
-
-    if (child.target.id === node.id) {
+    if (child.id === node.id) {
       return root;
     }
 
-    if (child.target.children) {
-      const parent = getParent(child.target, node);
+    if (child.children) {
+      const parent = getParent(child, node);
       if (parent) {
         return parent;
       }
@@ -35,8 +30,8 @@ export const getParent = (root: TreeNodeType, node: TreeNodeType): TreeNodeType 
 
 export const getLastDescendent = (node: TreeNodeType): TreeNodeType => {
   const last = node.children?.length ? node.children[node.children.length - 1] : undefined;
-  if (last?.target) {
-    return getLastDescendent(last.target);
+  if (last) {
+    return getLastDescendent(last);
   }
 
   return node;
@@ -48,11 +43,11 @@ export const getPrevious = (root: TreeNodeType, node: TreeNodeType): TreeNodeTyp
   if (idx > 0) {
     invariant(parent.children);
     const previous = parent.children[idx - 1];
-    if (previous?.target?.children?.length) {
-      return getLastDescendent(previous.target);
+    if (previous?.children?.length) {
+      return getLastDescendent(previous);
     }
 
-    return previous.target;
+    return previous;
   } else {
     return parent;
   }
@@ -61,13 +56,13 @@ export const getPrevious = (root: TreeNodeType, node: TreeNodeType): TreeNodeTyp
 export const getNext = (root: TreeNodeType, node: TreeNodeType, descend = true): TreeNodeType | undefined => {
   if (node.children?.length && descend) {
     // Go to first child.
-    return node.children[0].target;
+    return node.children[0];
   } else {
     const parent = getParent(root, node);
     if (parent) {
       const idx = getChildNodes(parent).findIndex(({ id }) => id === node.id);
       if (idx < parent.children!.length - 1) {
-        return parent.children![idx + 1].target;
+        return parent.children![idx + 1];
       } else {
         // Get parent's next sibling.
         return getNext(root, parent, false);
@@ -76,14 +71,14 @@ export const getNext = (root: TreeNodeType, node: TreeNodeType, descend = true):
   }
 };
 
-export const getChildNodes = (node: TreeNodeType): Array<TreeNodeType> => RefArray.allResolvedTargets(node.children);
+export const getChildNodes = (node: TreeNodeType): Array<TreeNodeType> => node.children;
 
 // TODO(burdon): Check cycles.
 export const tranverse = (node: TreeNodeType, callback: (node: TreeNodeType, depth: number) => void, depth = 0) => {
   callback(node, depth);
   for (const child of node.children) {
-    if (child.target) {
-      tranverse(child.target, callback, depth + 1);
+    if (child) {
+      tranverse(child, callback, depth + 1);
     }
   }
 };
@@ -98,14 +93,14 @@ export const indent = (parent: TreeNodeType, index: number): TreeNodeType | null
   }
 
   const previous = parent.children[index - 1];
-  invariant(previous.target);
+  invariant(previous);
   const node = parent.children[index];
-  invariant(node.target);
+  invariant(node);
 
   parent.children.splice(index, 1);
-  previous.target.children.push(node);
+  previous.children.push(node);
 
-  return node.target;
+  return node;
 };
 
 export const unindent = (root: TreeNodeType, parent: TreeNodeType, index: number): TreeNodeType | null => {
@@ -114,27 +109,16 @@ export const unindent = (root: TreeNodeType, parent: TreeNodeType, index: number
     return null;
   }
 
-  // TODO(burdon): Splice doesn't return well-formed refs?
-  // const [node, ...rest] = parent.children.splice(index, parent.children.length - index);
-  // invariant(node.target); // FAIL.
-  // When splicing refs:
-  // index.tsx:86 Ref
-  // └─ Predicate refinement failure
-  //    └─ Expected Ref, actual {"/":"dxn:echo:@:01JQKKD5P59XCSQJMJ62CNY4HE"} ParseError: Ref
-  // └─ Predicate refinement failure
-  //    └─ Expected Ref, actual {"/":"dxn:echo:@:01JQKKD5P59XCSQJMJ62CNY4HE"}
-  //     at parseError (ParseResult.ts:266:62)
-
   const nodes = getChildNodes(parent);
   const [node, ...rest] = nodes.splice(index, parent.children.length - index);
   parent.children.splice(index, parent.children.length - index);
 
   // Add to ancestor.
   const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-  ancestor.children.splice(idx + 1, 0, makeRef(node));
+  ancestor.children.splice(idx + 1, 0, node);
 
   // Transplant following siblings to current node.
-  node.children.push(...rest.map(makeRef));
+  node.children.push(...rest);
 
   return node;
 };

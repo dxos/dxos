@@ -2,46 +2,48 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EchoObject, Ref, S, type Ref$ } from '@dxos/echo-schema';
+import { EchoObject, S } from '@dxos/echo-schema';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
-// TODO(burdon): Convert from TypedObject to Schema.
-// TODO(burdon): Change -Type suffix to -Schema? Consistent use of type vs interface.
+// TODO(burdon): Use consistent -Schema + -Type pattern (throughout) and replace extends TypedObejct.
+// TODO(burdon): Allow Nodes to reference other Trees.
 
-export const TreeNodeType = S.Struct({
-  // TODO(burdon): Refs vs. objects?
-  children: S.suspend((): S.mutable<S.Array$<Ref$<TreeNodeType>>> => S.mutable(S.Array(Ref(TreeNodeType)))),
+//
+// Tree
+//
 
+export const TreeNodeSchema = S.Struct({
+  children: S.mutable(S.Array(S.suspend(() => TreeNodeType))),
   text: S.String,
-
-  // TODO(burdon): Support mixin.
   done: S.optional(S.Boolean),
 }).pipe(EchoObject('dxos.org/type/TreeNode', '0.1.0'));
 
 // NOTE: Has to be an interface to avoid TS circular dependency error.
-export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
+export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeSchema> {}
+
+export const TreeNodeType: S.Schema<TreeNodeType> = TreeNodeSchema;
 
 export const TreeType = S.Struct({
   name: S.optional(S.String),
-  root: Ref(TreeNodeType), // TOOD(burdon): Remove Ref.
+  root: TreeNodeType,
 }).pipe(EchoObject('dxos.org/type/Tree', '0.1.0'));
 
-export type TreeType = S.Schema.Type<typeof TreeType>;
+export interface TreeType extends S.Schema.Type<typeof TreeType> {}
+
+//
+// Journal
+//
 
 export const JournalEntryType = S.Struct({
   date: S.Date,
-  // TODO(dmaretskyi): Has to be a ref if its referencing ECHO objects.
   root: TreeNodeType,
 }).pipe(EchoObject('dxos.org/type/JournalEntry', '0.1.0'));
 
-export type JournalEntryType = S.Schema.Type<typeof JournalEntryType>;
+export interface JournalEntryType extends S.Schema.Type<typeof JournalEntryType> {}
 
 export const JournalType = S.Struct({
   name: S.optional(S.String),
-
-  // TODO(burdon): Refs vs. objects?
-  // TODO(dmaretskyi): Has to be a ref if its referencing ECHO objects.
   entries: S.mutable(S.Array(JournalEntryType)),
 }).pipe(EchoObject('dxos.org/type/Journal', '0.1.0'));
 
-export type JournalType = S.Schema.Type<typeof JournalType>;
+export interface JournalType extends S.Schema.Type<typeof JournalType> {}

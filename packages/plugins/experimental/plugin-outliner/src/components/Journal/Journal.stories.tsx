@@ -5,26 +5,36 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { create, makeRef } from '@dxos/react-client/echo';
+import { create, useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
 import translations from '../../translations';
-import { JournalType, JournalEntryType, TreeNodeType } from '../../types';
+import { JournalType, TreeNodeType, TreeType } from '../../types';
 
 const meta: Meta<typeof Journal.Root> = {
   title: 'plugins/plugin-outliner/Journal',
   component: Journal.Root,
-  render: ({ journal }) => {
+  render: () => {
+    const space = useSpace();
+    const [journal, setJournal] = useState<JournalType>();
+    useEffect(() => {
+      if (space) {
+        setJournal(space.db.add(create(JournalType, { name: 'Journal', entries: [] })));
+      }
+    }, [space]);
+
     return (
       <div className='flex h-full'>
-        <Journal.Root classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface' journal={journal} />
+        <Journal.Root journal={journal} classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface' />
       </div>
     );
   },
   decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, TreeNodeType, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],
@@ -38,26 +48,5 @@ export default meta;
 type Story = StoryObj<typeof Journal.Root>;
 
 export const Default: Story = {
-  args: {
-    journal: create(JournalType, {
-      name: 'Journal',
-      entries: [
-        create(JournalEntryType, {
-          date: new Date(),
-          root: create(TreeNodeType, {
-            text: '',
-            children: [
-              makeRef(
-                // TODO(burdon): ERROR: object is not an EchoObject
-                create(TreeNodeType, {
-                  text: '',
-                  children: [],
-                }),
-              ),
-            ],
-          }),
-        }),
-      ],
-    }),
-  },
+  args: {},
 };

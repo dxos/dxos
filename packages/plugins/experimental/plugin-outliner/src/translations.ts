@@ -19,6 +19,7 @@ export default [
         'journal object placeholder': 'New journal',
         'outline object placeholder': 'New outline',
         'delete object label': 'Delete item',
+        'create entry label': 'Create entry',
       },
     },
   },
