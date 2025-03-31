@@ -79,6 +79,12 @@ export class ObjectInternals {
 
   subscriptions: UnsubscribeCallback[] = [];
 
+  /**
+   * Schema of the root object.
+   * Only used if this is not bound to a database.
+   */
+  rootSchema?: S.Schema.AnyNoContext = undefined;
+
   constructor(core: ObjectCore, database?: EchoDatabase) {
     this.core = core;
     this.database = database;

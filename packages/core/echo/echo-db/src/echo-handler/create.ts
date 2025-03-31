@@ -101,6 +101,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
 
     const target = slot.target as ProxyTarget;
     target[symbolInternals] = new ObjectInternals(core);
+    target[symbolInternals].rootSchema = schema;
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, obj);
@@ -128,6 +129,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
       [symbolNamespace]: DATA_NAMESPACE,
       ...(obj as any),
     };
+    target[symbolInternals].rootSchema = schema;
 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 

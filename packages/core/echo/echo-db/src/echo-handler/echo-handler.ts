@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { inspect, type InspectOptionsStylized } from 'node:util';
+import { type InspectOptionsStylized } from 'node:util';
 
 import type * as A from '@dxos/automerge/automerge';
-import { devtoolsFormatter, inspectCustom, type DevtoolsFormatter } from '@dxos/debug';
-import { encodeReference, Reference, type ObjectStructure } from '@dxos/echo-protocol';
+import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
 import {
   type BaseObject,
   defineHiddenProperty,
@@ -18,6 +18,8 @@ import {
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
+  RelationSourceId,
+  RelationTargetId,
   S,
   SchemaMetaSymbol,
   SchemaValidator,
@@ -25,24 +27,26 @@ import {
   symbolSchema,
   TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   createProxy,
   getProxyHandler,
   getProxyTarget,
   getRefSavedTarget,
+  isProxy,
   isReactiveObject,
   type ReactiveHandler,
+  type ReactiveObject,
   RefImpl,
-  symbolIsProxy,
   setRefResolver,
-  getProxySlot,
-  isProxy,
+  symbolIsProxy,
 } from '@dxos/live-object';
-import { log, logInfo } from '@dxos/log';
+import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
+import { DXN } from '@dxos/keys';
+import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
@@ -54,8 +58,6 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
-import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
 
@@ -86,9 +88,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     defineHiddenProperty(target, symbolHandler, this);
 
-    // TODO(dmaretskyi): Return in getter.
-    if (inspect.custom) {
-      defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+    if (inspectCustom) {
+      defineHiddenProperty(target, inspectCustom, this._inspect.bind(target));
     }
   }
 
@@ -133,8 +134,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return target[symbolInternals];
       case symbolSchema:
         return this.getSchema(target);
-      // case inspectCustom:
-      //   return this._inspect.bind(target);
     }
 
     // Non-reactive root properties.
@@ -381,11 +380,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // TODO(y): Make reactive.
     // TODO(burdon): May not be attached to database yet.
-    // log.info('getSchema', { target, db: !!target[symbolInternals].database, sc: target[symbolSchema] });
     if (!target[symbolInternals].database) {
       // For objects created by `createObject` outside of the database.
-      if (target[symbolSchema] != null) {
-        return target[symbolSchema];
+      if (target[symbolInternals].rootSchema != null) {
+        return SchemaValidator.getPropertySchema(target[symbolInternals].rootSchema, target[symbolPath]);
       }
 
       return undefined;
@@ -587,8 +585,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
-      // TODO(dmaretskyi): FIX ME! This should be a space ID not a space key.
-      return Reference.fromObjectIdAndSpaceKey(otherObjId, foreignDatabase.spaceKey);
+      return Reference.fromDXN(new DXN(DXN.kind.ECHO, [foreignDatabase.spaceId, otherObjId]));
     }
 
     return Reference.localObjectReference(otherObjId);

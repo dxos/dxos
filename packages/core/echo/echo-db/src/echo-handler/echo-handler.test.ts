@@ -42,6 +42,7 @@ import {
   makeRef,
   refFromDXN,
   getProxyHandler,
+  getProxyTarget,
 } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
@@ -136,12 +137,9 @@ describe('without database', () => {
     expect(prepareAstForCompare(schema!.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
   });
 
-  test.skip('get schema on nested object', () => {
+  test('get schema on nested object', () => {
     const obj = createObject(create(TestSchema, { nested: { name: 'foo', arr: [] } }));
     const NestedSchema = TestSchema.pipe(S.pluck('nested'), S.typeSchema);
-
-    log.info('handler', { h: getProxyHandler(obj.nested) });
-
     expect(prepareAstForCompare(getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
   });
 
