@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { formatISO } from 'date-fns/formatISO';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { create, makeRef, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
@@ -19,21 +20,27 @@ type JournalRootProps = ThemedClassName<{
 // TODO(burdon): Convert into single grid.
 const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
-  const date = new Date();
+  const date = useMemo(() => formatISO(new Date(), { representation: 'date' }), []);
 
-  const [today, setToday] = useState<JournalEntryType>();
+  const [entry, setEntry] = useState<JournalEntryType>();
   useEffect(() => {
-    const entry = journal?.entries.find((entry) => entry.target?.date.toDateString() === date.toDateString());
+    const entry = journal?.entries.find((entry) => entry.target?.date === date);
     if (entry) {
-      setToday(entry.target);
+      setEntry(entry.target);
     }
   }, [journal, date]);
 
   // TODO(burdon): CRDT issue (merge entries with same date?)
   const handleCreateEntry = useCallback(() => {
-    const entry = create(JournalEntryType, { date, tree: makeRef(Tree.create()) });
-    journal?.entries.push(makeRef(entry));
-    setToday(entry);
+    if (!journal) {
+      return;
+    }
+
+    const tree = new Tree();
+    tree.addNode(tree.root);
+    const entry = create(JournalEntryType, { date, tree: makeRef(tree.tree) });
+    journal.entries.push(makeRef(entry));
+    setEntry(entry);
   }, [journal, date]);
 
   return (
@@ -41,7 +48,7 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
       {RefArray.targets(journal?.entries ?? []).map((entry) => (
         <JournalEntry key={entry.id} entry={entry} />
       ))}
-      {!today && (
+      {!entry && (
         <div>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>
@@ -61,7 +68,7 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
 
   return (
     <div className={mx(classNames, 'flex flex-col')}>
-      <div className='p-2 text-lg'>{entry.date.toDateString()}</div>
+      <div className='p-2 text-lg'>{new Date(entry.date).toDateString()}</div>
       <Outliner.Root tree={entry.tree.target} />
     </div>
   );

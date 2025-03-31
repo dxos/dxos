@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
 import translations from '../../translations';
-import { JournalType, TreeNodeType, TreeType } from '../../types';
+import { JournalEntryType, JournalType, TreeType } from '../../types';
 
 const meta: Meta<typeof Journal.Root> = {
   title: 'plugins/plugin-outliner/Journal',
@@ -34,7 +34,7 @@ const meta: Meta<typeof Journal.Root> = {
     );
   },
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, TreeNodeType, TreeType] }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, JournalEntryType, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],

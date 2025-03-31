@@ -20,7 +20,7 @@ export const OutlineType = S.Struct({
 //
 
 export const JournalEntryType = S.Struct({
-  date: S.Date,
+  date: S.String, // TODO(burdon): Date.
   tree: Ref(TreeType),
 }).pipe(EchoObject('dxos.org/type/JournalEntry', '0.1.0'));
 

@@ -5,21 +5,31 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
+import { TreeType } from '../../types';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
-  render: ({ tree }) => {
+  render: ({ tree: initialTree }) => {
     const outliner = useRef<OutlinerController>(null);
+    const space = useSpace();
+    const [tree, setTree] = useState<TreeType>();
+    useEffect(() => {
+      if (space && initialTree) {
+        setTree(space.db.add(initialTree));
+      }
+    }, [space, initialTree]);
 
     return (
       <Outliner.Root
@@ -33,6 +43,7 @@ const meta: Meta<typeof Outliner.Root> = {
     );
   },
   decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],

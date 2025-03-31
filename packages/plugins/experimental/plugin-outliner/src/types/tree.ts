@@ -189,7 +189,7 @@ export class Tree {
   /**
    * Add node.
    */
-  addNode(parent: TreeNodeType, node: TreeNodeType | undefined, index?: number): ObjectId {
+  addNode(parent: TreeNodeType, node?: TreeNodeType, index?: number): ObjectId {
     if (!node) {
       const id = ObjectId.random();
       node = { id, children: [], text: '' };

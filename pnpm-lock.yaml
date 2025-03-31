@@ -6184,6 +6184,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
