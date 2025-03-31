@@ -5,58 +5,45 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { create, createObject, makeRef } from '@dxos/react-client/echo';
+import { create, useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
 import { createTree } from '../../testing';
 import translations from '../../translations';
-import { TreeNodeType } from '../../types';
-
-// TODO(burdon): Indent (Task graph).
-// TODO(burdon): Create/delete.
-
-// Data model:
-// - Tree of nodes (base type for task list).
-// - Journal.
-// - Hierarchical document of tasks.
-// - Master/detail (top-down vs. aligned vertically).
+import { JournalType, TreeNodeType, TreeType } from '../../types';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
-  render: ({ root: node }) => {
+  render: ({ root: initialRoot }) => {
     const outliner = useRef<OutlinerController>(null);
+    const [root, setRoot] = useState<TreeNodeType>();
+    const space = useSpace();
+    useEffect(() => {
+      console.log('space', space);
+      if (space && initialRoot) {
+        setRoot(space.db.add(initialRoot));
+      }
+    }, [space, initialRoot]);
 
     return (
-      <div className='flex h-full'>
-        <Outliner.Root
-          ref={outliner}
-          classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
-          root={node}
-          onCreate={() => {
-            return create(TreeNodeType, { children: [], text: '' });
-          }}
-        />
-        {/*
-        <div className='flex flex-col w-[20rem] ml-2'>
-          <div className='flex flex-col mt-2 border border-divider rounded'>
-            <h1 className='p-2'>{faker.lorem.words(3)}</h1>
-            <div className='p-2 text-sm'>{faker.lorem.paragraphs(2)}</div>
-          </div>
-          <div className='flex flex-col mt-16 border border-divider rounded'>
-            <h1 className='p-2'>{faker.lorem.words(3)}</h1>
-            <div className='p-2 text-sm'>{faker.lorem.paragraphs(1)}</div>
-          </div>
-        </div>
-        */}
-      </div>
+      <Outliner.Root
+        ref={outliner}
+        classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
+        root={root}
+        onCreate={() => {
+          return create(TreeNodeType, { children: [], text: '' });
+        }}
+      />
     );
   },
   decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [JournalType, TreeNodeType, TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],
@@ -71,32 +58,18 @@ type Story = StoryObj<typeof Outliner.Root>;
 
 const tags = ['idea', 'bug', 'task', 'question', 'design', 'review', 'test', 'research', 'urgent', 'blocked'];
 
+const createText = () =>
+  (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
+  faker.lorem.sentences(1);
+
 export const Default: Story = {
   args: {
-    root: createObject(
-      create(TreeNodeType, {
-        text: 'Root',
-        children: faker.helpers.multiple(
-          () =>
-            makeRef(
-              createObject(
-                create(TreeNodeType, {
-                  text:
-                    (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
-                    faker.lorem.sentences(1),
-                  children: [],
-                }),
-              ),
-            ),
-          { count: 10 },
-        ),
-      }),
-    ),
+    root: createTree([10], createText),
   },
 };
 
 export const Large: Story = {
   args: {
-    root: createTree([100, 3, 1], () => faker.lorem.sentence()),
+    root: createTree([10, [0, 3], [0, 2]], createText),
   },
 };

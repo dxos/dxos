@@ -3,7 +3,7 @@
 //
 
 import { Prec } from '@codemirror/state';
-import React, { forwardRef, StrictMode, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, StrictMode, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
@@ -223,14 +223,13 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
     }, [node, editable]);
 
     // Controller.
-    const div = useRef<HTMLDivElement>(null);
     useImperativeHandle(
       ref,
       () => {
         return {
           focus: (at) => {
             if (view) {
-              div.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+              parentRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
               view.focus();
               view.dispatch({
                 selection: {

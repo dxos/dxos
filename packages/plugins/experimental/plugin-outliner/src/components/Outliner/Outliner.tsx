@@ -19,7 +19,7 @@ type OutlinerController = {
 };
 
 type OutlinerRootProps = ThemedClassName<{
-  root: TreeNodeType;
+  root?: TreeNodeType;
   onCreate?: () => TreeNodeType;
   onDelete?: (node: TreeNodeType) => boolean | void;
 }>;
@@ -49,6 +49,10 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 
     const handleEvent = useCallback<NonNullable<NodeListProps['onEvent']>>(
       (event) => {
+        if (!root) {
+          return;
+        }
+
         log('handleEvent', { event });
         const { type, parent, node } = event;
         invariant(parent);
@@ -185,18 +189,20 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
     );
 
     // TODO(burdon): Convert to grid.
+    // TODO(burdon): Expand/collapse sub-lists.
     return (
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
-          <NodeList
-            key={root.id}
-            parent={root}
-            indent={0}
-            editable={true}
-            active={active}
-            setEditor={setEditor}
-            onEvent={handleEvent}
-          />
+          {root && (
+            <NodeList
+              parent={root}
+              indent={0}
+              editable={true}
+              active={active}
+              setEditor={setEditor}
+              onEvent={handleEvent}
+            />
+          )}
         </div>
       </div>
     );
@@ -235,7 +241,7 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
               icon='ph--x--regular'
               iconOnly
               variant='ghost'
-              label={t('delete button')}
+              label={t('delete object label')}
               onClick={() => onEvent?.({ type: 'delete', node })}
             />
           </div>
