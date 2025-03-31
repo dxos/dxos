@@ -7,9 +7,10 @@ import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandl
 import { invariant } from '@dxos/invariant';
 import { makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { OUTLINER_PLUGIN } from '../../meta';
 import { getChildNodes, getNext, getPrevious, indent, unindent, type TreeNodeType } from '../../types';
 import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from '../NodeEditor';
 
@@ -46,7 +47,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
       [],
     );
 
-    const handleEvent = useCallback<NonNullable<ChildNodesProps['onEvent']>>(
+    const handleEvent = useCallback<NonNullable<NodeListProps['onEvent']>>(
       (event) => {
         log('handleEvent', { event });
         const { type, parent, node } = event;
@@ -76,6 +77,25 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
               const idx = nodes.findIndex((n) => n.id === node.id);
               parent.children.splice(idx + 1, 0, makeRef(created));
               setActive(created.id);
+            }
+            break;
+          }
+
+          //
+          // Delete.
+          // TODO(burdon): Cascade delete or preserve children?
+          //
+          case 'delete': {
+            if (onDelete?.(node) !== false) {
+              const previous = getPrevious(root, node);
+              const nodes = getChildNodes(parent);
+              const idx = nodes.findIndex((n) => n.id === node.id);
+              if (idx !== -1) {
+                parent.children.splice(idx, 1);
+                if (previous) {
+                  setTimeout(() => setActive(previous.id));
+                }
+              }
             }
             break;
           }
@@ -164,36 +184,18 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
       [root],
     );
 
-    // TODO(burdon): Delete or preserve children?
-    const handleDelete = useCallback<NonNullable<ChildNodesProps['onDelete']>>(
-      (parent, node) => {
-        if (onDelete?.(node) !== false) {
-          const previous = getPrevious(root, node);
-          const nodes = getChildNodes(parent);
-          const idx = nodes.findIndex((n) => n.id === node.id);
-          if (idx !== -1) {
-            parent.children.splice(idx, 1);
-            if (previous) {
-              setTimeout(() => setActive(previous.id));
-            }
-          }
-        }
-      },
-      [root],
-    );
-
     // TODO(burdon): Convert to grid.
     return (
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
         <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
-          <ChildNodes
+          <NodeList
             key={root.id}
             parent={root}
             indent={0}
+            editable={true}
             active={active}
             setEditor={setEditor}
             onEvent={handleEvent}
-            onDelete={handleDelete}
           />
         </div>
       </div>
@@ -201,36 +203,79 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
   },
 );
 
-type ChildNodesProps = {
+//
+// Row
+//
+
+type OutlinerRowProps = ThemedClassName<
+  {
+    node: TreeNodeType;
+    indent: number;
+    active?: boolean;
+  } & Pick<NodeEditorProps, 'editable' | 'onEvent'>
+>;
+
+const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
+  ({ classNames, node, indent, active, editable, onEvent }, forwardedRef) => {
+    const { t } = useTranslation(OUTLINER_PLUGIN);
+    return (
+      <div className={mx('flex w-full gap-1', classNames)}>
+        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+          <Input.Root>
+            <Input.Checkbox size={4} />
+          </Input.Root>
+        </div>
+
+        <NodeEditor ref={forwardedRef} classNames='pbs-1 pbe-1' node={node} editable={editable} onEvent={onEvent} />
+
+        {editable && (
+          <div>
+            <IconButton
+              classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
+              icon='ph--x--regular'
+              iconOnly
+              variant='ghost'
+              label={t('delete button')}
+              onClick={() => onEvent?.({ type: 'delete', node })}
+            />
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
+//
+// ChildNodes
+//
+
+type NodeListProps = {
   parent: TreeNodeType;
   indent: number;
   active?: string;
   setEditor: (editor: NodeEditorController) => void;
-  onDelete: (parent: TreeNodeType, node: TreeNodeType) => void;
   onEvent: (event: NodeEditorEvent & { parent: TreeNodeType }) => void;
-} & Omit<NodeEditorProps, 'ref' | 'node' | 'classNames' | 'onEvent' | 'onDelete'>;
+} & Pick<NodeEditorProps, 'editable'>;
 
-const ChildNodes = ({ parent, indent, setEditor, active, onEvent, onDelete, ...props }: ChildNodesProps) => {
+const NodeList = ({ parent, indent, setEditor, active, onEvent, ...props }: NodeListProps) => {
+  const handleEvent = useCallback<NonNullable<OutlinerRowProps['onEvent']>>(
+    (event) => {
+      onEvent?.({ ...event, parent });
+    },
+    [onEvent],
+  );
+
   return getChildNodes(parent).map((node) => (
     <Fragment key={node.id}>
-      <NodeEditor
+      <OutlinerRow
         ref={node.id === active ? setEditor : null}
         node={node}
         classNames={mx('border-l-4', node.id === active ? 'border-primary-500' : 'border-transparent text-subdued')}
         indent={indent}
-        onEvent={(event) => onEvent?.({ ...event, parent })}
-        onDelete={(node) => onDelete?.(parent, node)}
+        onEvent={handleEvent}
         {...props}
       />
-      <ChildNodes
-        parent={node}
-        indent={indent + 1}
-        active={active}
-        setEditor={setEditor}
-        onEvent={onEvent}
-        onDelete={onDelete}
-        {...props}
-      />
+      <NodeList parent={node} indent={indent + 1} active={active} setEditor={setEditor} onEvent={onEvent} {...props} />
     </Fragment>
   ));
 };

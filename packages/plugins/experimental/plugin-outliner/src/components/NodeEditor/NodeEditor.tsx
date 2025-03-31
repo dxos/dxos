@@ -3,11 +3,11 @@
 //
 
 import { Prec } from '@codemirror/state';
-import React, { forwardRef, StrictMode, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, StrictMode, useImperativeHandle, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { Icon, IconButton, Input, useId, useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorView,
   automerge,
@@ -20,7 +20,6 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
-import { OUTLINER_PLUGIN } from '../../meta';
 import { type TreeNodeType } from '../../types';
 
 export type NodeEditorController = {
@@ -35,6 +34,10 @@ export type NodeEditorEvent =
     }
   | {
       type: 'create';
+      node: TreeNodeType;
+    }
+  | {
+      type: 'delete';
       node: TreeNodeType;
     }
   | {
@@ -55,9 +58,8 @@ export type NodeEditorEvent =
 
 export type NodeEditorProps = ThemedClassName<{
   node: TreeNodeType;
-  indent: number;
+  editable?: boolean;
   onEvent?: (event: NodeEditorEvent) => void;
-  onDelete?: (node: TreeNodeType) => void;
 }>;
 
 /**
@@ -65,21 +67,18 @@ export type NodeEditorProps = ThemedClassName<{
  * Subset of markdown editor.
  */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
-  ({ classNames, node, indent, onEvent, onDelete }, ref) => {
-    const { t } = useTranslation(OUTLINER_PLUGIN);
-    const [focused, setFocused] = useState<boolean>(false);
+  ({ classNames, node, editable, onEvent }, ref) => {
     const { themeMode } = useThemeContext();
-    const id = useId('node_enditor', node.id);
 
     // NOTE: Must not change callbacks.
-    const { parentRef, view } = useTextEditor(
-      () => ({
+    const { parentRef, view } = useTextEditor(() => {
+      return {
         initialValue: node.text,
         extensions: [
           automerge(createDocAccessor(node, ['text'])),
 
           // TODO(burdon): Show placeholder only if focused.
-          createBasicExtensions({ placeholder: 'Enter text...' }),
+          createBasicExtensions({ readonly: !editable, editable: false, placeholder: 'Enter text...' }),
           createThemeExtensions({ themeMode }),
 
           // TODO(burdon): Markdown subset.
@@ -90,7 +89,6 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
 
           // Monitor focus.
           EditorView.focusChangeEffect.of((_state, focusing) => {
-            setFocused(focusing);
             if (focusing) {
               // Ensure focus events happen after unfocusing.
               setTimeout(() => onEvent?.({ type: 'focus', node, focusing }));
@@ -124,10 +122,10 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'Backspace',
                 run: (view) => {
-                  if (!onDelete || view.state.doc.length) {
+                  if (!onEvent || view.state.doc.length) {
                     return false;
                   } else {
-                    onDelete(node);
+                    onEvent?.({ type: 'delete', node });
                     return true;
                   }
                 },
@@ -221,9 +219,8 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
             ]),
           ),
         ],
-      }),
-      [node],
-    );
+      };
+    }, [node, editable]);
 
     // Controller.
     const div = useRef<HTMLDivElement>(null);
@@ -247,30 +244,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
       [view],
     );
 
-    return (
-      <div id={id} className={mx('flex w-full gap-1', classNames)} ref={div}>
-        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
-          <Input.Root>
-            <Input.Checkbox size={4} title={node.id} />
-          </Input.Root>
-        </div>
-
-        <div ref={parentRef} className='  w-full pbs-1' />
-
-        {onDelete && (
-          <div>
-            <IconButton
-              classNames={mx('opacity-20 hover:opacity-100', focused && 'opacity-100')}
-              icon='ph--x--regular'
-              iconOnly
-              variant='ghost'
-              label={t('delete button')}
-              onClick={() => onDelete(node)}
-            />
-          </div>
-        )}
-      </div>
-    );
+    return <div ref={parentRef} className={mx('w-full', classNames)} />;
   },
 );
 
