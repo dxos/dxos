@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { formatISO } from 'date-fns/formatISO';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns/format';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { create, makeRef, RefArray } from '@dxos/live-object';
+import { makeRef, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type JournalType, JournalEntryType, Tree } from '../../types';
+import { type JournalType, createJournalEntry, type JournalEntryType, getJournalEntries } from '../../types';
 import { Outliner } from '../Outliner';
 
 type JournalRootProps = ThemedClassName<{
@@ -20,39 +20,43 @@ type JournalRootProps = ThemedClassName<{
 // TODO(burdon): Convert into single grid.
 const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
-  const date = useMemo(() => formatISO(new Date(), { representation: 'date' }), []);
+  const date = new Date();
 
   const [entry, setEntry] = useState<JournalEntryType>();
   useEffect(() => {
-    const entry = journal?.entries.find((entry) => entry.target?.date === date);
-    if (entry) {
-      setEntry(entry.target);
+    if (!journal) {
+      return;
     }
-  }, [journal, date]);
 
-  // TODO(burdon): CRDT issue (merge entries with same date?)
+    // TODO(burdon): CRDT issue (merge entries with same date?)
+    const entries = getJournalEntries(journal, date);
+    if (entries.length > 0) {
+      setEntry(entries[0]);
+    }
+  }, [journal, journal?.entries.length, date]);
+
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
       return;
     }
 
-    const tree = new Tree();
-    tree.addNode(tree.root);
-    const entry = create(JournalEntryType, { date, tree: makeRef(tree.tree) });
+    const entry = createJournalEntry();
     journal.entries.push(makeRef(entry));
     setEntry(entry);
   }, [journal, date]);
 
   return (
     <div className={mx('flex flex-col overflow-y-auto divide-y divide-separator', classNames)}>
-      {RefArray.targets(journal?.entries ?? []).map((entry) => (
-        <JournalEntry key={entry.id} entry={entry} />
-      ))}
       {!entry && (
-        <div>
+        <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>
       )}
+      {RefArray.targets(journal?.entries ?? [])
+        .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
+        .map((entry) => (
+          <JournalEntry key={entry.id} entry={entry} classNames='pbs-2 pbe-2' />
+        ))}
     </div>
   );
 };
@@ -66,10 +70,15 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
     return null;
   }
 
+  const date = new Date(entry.date);
+  const isToday = date.toDateString() === new Date().toDateString();
   return (
-    <div className={mx(classNames, 'flex flex-col')}>
-      <div className='p-2 text-lg'>{new Date(entry.date).toDateString()}</div>
-      <Outliner.Root tree={entry.tree.target} />
+    <div className={mx('flex flex-col', classNames)}>
+      <div className='px-2'>
+        <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</span>
+        <span className='text-sm text-subdued pis-2'>{format(date, 'EEEE')}</span>
+      </div>
+      <Outliner.Root tree={entry.tree.target} classNames='pbs-2 pbe-2' />
     </div>
   );
 };

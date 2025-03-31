@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta, OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
-import { JournalType, TreeType, OutlinerAction } from './types';
+import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TreeType } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -31,7 +31,7 @@ export const OutlinerPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: TreeType.typename,
+          id: OutlineType.typename,
           metadata: {
             placeholder: ['outline object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
@@ -62,7 +62,7 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TreeType, JournalType]),
+      activate: () => contributes(ClientCapabilities.Schema, [TreeType, JournalEntryType, JournalType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

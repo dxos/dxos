@@ -56,6 +56,7 @@ export class Tree {
     return this._tree;
   }
 
+  // TODO(burdon): Make reactive.
   get size() {
     return Object.keys(this._tree.nodes).length;
   }

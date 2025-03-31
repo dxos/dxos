@@ -44,6 +44,13 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
       editor?.focus(direction);
     }, [editor, direction]);
 
+    // Create first item if empty.
+    useEffect(() => {
+      if (model?.root.children.length === 0) {
+        model.addNode(model.root);
+      }
+    }, [model?.size]);
+
     // External controller.
     useImperativeHandle(
       forwardedRef,
@@ -66,7 +73,6 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
         const { type, parent, node } = event;
         invariant(parent);
         const nodes = model.getChildNodes(parent);
-        const index = nodes.findIndex((n) => n.id === node.id);
 
         switch (type) {
           //
@@ -101,13 +107,9 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           case 'delete': {
             if (onDelete?.(node) !== false) {
               const previous = model.getPrevious(node);
-              const nodes = model.getChildNodes(parent);
-              const idx = nodes.findIndex((n) => n.id === node.id);
-              if (idx !== -1) {
-                parent.children.splice(idx, 1);
-                if (previous) {
-                  setTimeout(() => setActive(previous.id));
-                }
+              const deleted = model.deleteNode(parent, node.id);
+              if (deleted && previous) {
+                setTimeout(() => setActive(previous.id));
               }
             }
             break;

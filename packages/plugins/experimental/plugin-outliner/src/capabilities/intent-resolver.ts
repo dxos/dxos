@@ -2,36 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { formatISO } from 'date-fns/formatISO';
-
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
 import { create, makeRef } from '@dxos/live-object';
 
-import { OutlinerAction, JournalType, JournalEntryType, Tree, OutlineType } from '../types';
+import { OutlinerAction, JournalType, OutlineType, createJournalEntry, createTree } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: OutlinerAction.CreateJournal,
-      resolve: ({ name }) => {
-        const tree = new Tree();
-        tree.addNode(tree.root);
-        return {
-          data: {
-            object: create(JournalType, {
-              name,
-              entries: [
-                makeRef(
-                  create(JournalEntryType, {
-                    date: formatISO(new Date(), { representation: 'date' }),
-                    tree: makeRef(tree.tree),
-                  }),
-                ),
-              ],
-            }),
-          },
-        };
-      },
+      resolve: ({ name }) => ({
+        data: {
+          object: create(JournalType, {
+            name,
+            entries: [makeRef(createJournalEntry())],
+          }),
+        },
+      }),
     }),
     createResolver({
       intent: OutlinerAction.CreateOutline,
@@ -39,7 +26,7 @@ export default () =>
         data: {
           object: create(OutlineType, {
             name,
-            tree: makeRef(Tree.create()),
+            tree: makeRef(createTree()),
           }),
         },
       }),

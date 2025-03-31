@@ -7,13 +7,13 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { create, useSpace } from '@dxos/react-client/echo';
+import { create, makeRef, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Journal } from './Journal';
 import translations from '../../translations';
-import { JournalEntryType, JournalType, TreeType } from '../../types';
+import { createJournalEntry, JournalEntryType, JournalType, TreeType } from '../../types';
 
 const meta: Meta<typeof Journal.Root> = {
   title: 'plugins/plugin-outliner/Journal',
@@ -23,7 +23,14 @@ const meta: Meta<typeof Journal.Root> = {
     const [journal, setJournal] = useState<JournalType>();
     useEffect(() => {
       if (space) {
-        setJournal(space.db.add(create(JournalType, { name: 'Journal', entries: [] })));
+        setJournal(
+          space.db.add(
+            create(JournalType, {
+              name: 'Journal',
+              entries: [makeRef(createJournalEntry(new Date(2025, 0, 1)))],
+            }),
+          ),
+        );
       }
     }, [space]);
 
