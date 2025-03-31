@@ -20,7 +20,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
-import { type TreeNodeType } from '../../types';
+import { type TreeType, type TreeNodeType } from '../../types';
 
 export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;
@@ -57,8 +57,10 @@ export type NodeEditorEvent =
     };
 
 export type NodeEditorProps = ThemedClassName<{
+  tree: TreeType;
   node: TreeNodeType;
   editable?: boolean;
+  placeholder?: string;
   onEvent?: (event: NodeEditorEvent) => void;
 }>;
 
@@ -67,7 +69,7 @@ export type NodeEditorProps = ThemedClassName<{
  * Subset of markdown editor.
  */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
-  ({ classNames, node, editable, onEvent }, ref) => {
+  ({ classNames, tree, node, editable, placeholder, onEvent }, ref) => {
     const { themeMode } = useThemeContext();
 
     // NOTE: Must not change callbacks.
@@ -75,10 +77,11 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
       return {
         initialValue: node.text,
         extensions: [
-          automerge(createDocAccessor(node, ['text'])),
+          // NOTE: Relative to tree.
+          automerge(createDocAccessor(tree, ['nodes', node.id, 'text'])),
 
           // TODO(burdon): Show placeholder only if focused.
-          createBasicExtensions({ readonly: !editable, editable: false, placeholder: 'Enter text...' }),
+          createBasicExtensions({ readonly: !editable, editable: false, placeholder }),
           createThemeExtensions({ themeMode }),
 
           // TODO(burdon): Markdown subset.

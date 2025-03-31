@@ -5,6 +5,7 @@
 import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { ObjectId } from '@dxos/echo-schema';
 import { makeRef, RefArray } from '@dxos/live-object';
 import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -55,7 +56,7 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
       {RefArray.targets(journal?.entries ?? [])
         .sort(({ date: a }, { date: b }) => (a < b ? 1 : a > b ? -1 : 0))
         .map((entry) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='pbs-2 pbe-2' />
+          <JournalEntry key={entry.id} entry={entry} classNames='pbs-4 pbe-4' />
         ))}
     </div>
   );
@@ -78,7 +79,13 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
         <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</span>
         <span className='text-sm text-subdued pis-2'>{format(date, 'EEEE')}</span>
       </div>
-      <Outliner.Root tree={entry.tree.target} classNames='pbs-2 pbe-2' />
+      <Outliner.Root
+        tree={entry.tree.target}
+        classNames='pbs-2 pbe-2'
+        onCreate={() => {
+          return { id: ObjectId.random(), children: [], text: '' };
+        }}
+      />
     </div>
   );
 };

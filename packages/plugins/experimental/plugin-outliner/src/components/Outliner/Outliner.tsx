@@ -216,48 +216,6 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 );
 
 //
-// Row
-//
-
-type OutlinerRowProps = ThemedClassName<
-  {
-    node: TreeNodeType;
-    indent: number;
-    active?: boolean;
-  } & Pick<NodeEditorProps, 'editable' | 'onEvent'>
->;
-
-const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
-  ({ classNames, node, indent, active, editable, onEvent }, forwardedRef) => {
-    const { t } = useTranslation(OUTLINER_PLUGIN);
-    return (
-      <div className={mx('flex w-full gap-1', classNames)}>
-        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
-          <Input.Root>
-            <Input.Checkbox size={4} />
-          </Input.Root>
-        </div>
-
-        <NodeEditor ref={forwardedRef} classNames='pbs-1 pbe-1' node={node} editable={editable} onEvent={onEvent} />
-
-        {editable && (
-          <div>
-            <IconButton
-              classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
-              icon='ph--x--regular'
-              iconOnly
-              variant='ghost'
-              label={t('delete object label')}
-              onClick={() => onEvent?.({ type: 'delete', node })}
-            />
-          </div>
-        )}
-      </div>
-    );
-  },
-);
-
-//
 // ChildNodes
 //
 
@@ -282,6 +240,7 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
     <Fragment key={node.id}>
       <OutlinerRow
         ref={node.id === active ? setEditor : null}
+        tree={model.tree}
         node={node}
         classNames={mx('border-l-4', node.id === active ? 'border-primary-500' : 'border-transparent text-subdued')}
         indent={indent}
@@ -300,6 +259,57 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
     </Fragment>
   ));
 };
+
+//
+// Row
+//
+
+type OutlinerRowProps = ThemedClassName<
+  {
+    tree: TreeType;
+    node: TreeNodeType;
+    indent: number;
+    active?: boolean;
+  } & Pick<NodeEditorProps, 'editable' | 'onEvent'>
+>;
+
+const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
+  ({ classNames, tree, node, indent, active, editable, onEvent }, forwardedRef) => {
+    const { t } = useTranslation(OUTLINER_PLUGIN);
+    return (
+      <div className={mx('flex w-full gap-1', classNames)}>
+        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+          <Input.Root>
+            <Input.Checkbox size={4} />
+          </Input.Root>
+        </div>
+
+        <NodeEditor
+          ref={forwardedRef}
+          classNames='pbs-1 pbe-1'
+          tree={tree}
+          node={node}
+          editable={editable}
+          placeholder={indent === 0 ? t('Enter text...') : undefined}
+          onEvent={onEvent}
+        />
+
+        {editable && (
+          <div>
+            <IconButton
+              classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
+              icon='ph--x--regular'
+              iconOnly
+              variant='ghost'
+              label={t('delete object label')}
+              onClick={() => onEvent?.({ type: 'delete', node })}
+            />
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 export const Outliner = {
   Root: OutlinerRoot,
