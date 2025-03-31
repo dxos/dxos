@@ -5,7 +5,7 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import type * as A from '@dxos/automerge/automerge';
-import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
+import { devtoolsFormatter, inspectCustom, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference, type ObjectStructure } from '@dxos/echo-protocol';
 import {
   type BaseObject,
@@ -37,8 +37,10 @@ import {
   RefImpl,
   symbolIsProxy,
   setRefResolver,
+  getProxySlot,
+  isProxy,
 } from '@dxos/live-object';
-import { log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
@@ -83,6 +85,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, symbolHandler, this);
+
+    // TODO(dmaretskyi): Return in getter.
     if (inspect.custom) {
       defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
     }
@@ -107,6 +111,19 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return typeof value === 'object' ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
   }
 
+  defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
+    return this.set(target, property, attributes.value, target);
+  }
+
+  has(target: ProxyTarget, p: string | symbol): boolean {
+    if (target instanceof EchoArray) {
+      return this._arrayHas(target, p);
+    }
+
+    const { value } = this._getDecodedValueAtPath(target);
+    return typeof value === 'object' ? Reflect.has(value, p) : false;
+  }
+
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
@@ -114,6 +131,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     switch (prop) {
       case symbolInternals:
         return target[symbolInternals];
+      case symbolSchema:
+        return this.getSchema(target);
+      // case inspectCustom:
+      //   return this._inspect.bind(target);
     }
 
     // Non-reactive root properties.
@@ -136,8 +157,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case TYPENAME_SYMBOL:
           return this._getTypename(target);
-        case symbolSchema:
-          return this.getSchema(target);
       }
     }
 
@@ -169,6 +188,27 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const decodedValueAtPath = this._getDecodedValueAtPath(target, prop);
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
+  }
+
+  // TODO(burdon): arg `receiver` not used.
+  set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
+    invariant(Array.isArray(target[symbolPath]));
+    invariant(typeof prop === 'string');
+    if (target instanceof EchoArray && prop === 'length') {
+      this._arraySetLength(target, target[symbolPath], value);
+      return true;
+    }
+
+    const fullPath = [getNamespace(target), ...target[symbolPath], prop];
+    const validatedValue = this._validateValue(target, [...target[symbolPath], prop], value);
+    if (validatedValue === undefined) {
+      target[symbolInternals].core.delete(fullPath);
+    } else {
+      const withLinks = this._handleLinksAssignment(target, validatedValue);
+      target[symbolInternals].core.setDecoded(fullPath, withLinks);
+    }
+
+    return true;
   }
 
   private _getTypename(target: ProxyTarget): string | undefined {
@@ -238,19 +278,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return object;
   }
 
-  has(target: ProxyTarget, p: string | symbol): boolean {
-    if (target instanceof EchoArray) {
-      return this._arrayHas(target, p);
-    }
-
-    const { value } = this._getDecodedValueAtPath(target);
-    return typeof value === 'object' ? Reflect.has(value, p) : false;
-  }
-
-  defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
-    return this.set(target, property, attributes.value, target);
-  }
-
   private _getDecodedValueAtPath(target: ProxyTarget, prop?: string): DecodedValueAtPath {
     const dataPath = [...target[symbolPath]];
     if (prop != null) {
@@ -292,28 +319,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return Reflect.has(target, prop);
   }
 
-  // TODO(burdon): arg `receiver` not used.
-  set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
-    invariant(Array.isArray(target[symbolPath]));
-    invariant(typeof prop === 'string');
-    if (target instanceof EchoArray && prop === 'length') {
-      this._arraySetLength(target, target[symbolPath], value);
-      return true;
-    }
-
-    const fullPath = [getNamespace(target), ...target[symbolPath], prop];
-    const validatedValue = this.validateValue(target, [...target[symbolPath], prop], value);
-    if (validatedValue === undefined) {
-      target[symbolInternals].core.delete(fullPath);
-    } else {
-      const withLinks = this._handleLinksAssignment(target, validatedValue);
-      target[symbolInternals].core.setDecoded(fullPath, withLinks);
-    }
-
-    return true;
-  }
-
-  private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
+  private _validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
     invariant(path.length > 0);
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
@@ -362,12 +368,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
+    invariant(!isProxy(target));
+
     if (target[symbolNamespace] === META_NAMESPACE) {
+      // TODO(dmaretskyi): Breaks tests.
+      // if (target[symbolPath].length !== 0) {
+      //   // TODO(dmaretskyi): pluck from ObjectMetaSchema.
+      //   return undefined;
+      // }
       return ObjectMetaSchema;
     }
 
     // TODO(y): Make reactive.
     // TODO(burdon): May not be attached to database yet.
+    // log.info('getSchema', { target, db: !!target[symbolInternals].database, sc: target[symbolSchema] });
     if (!target[symbolInternals].database) {
       // For objects created by `createObject` outside of the database.
       if (target[symbolSchema] != null) {
@@ -387,6 +401,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return staticSchema;
     }
 
+    // TODO(dmaretskyi): Check using dxn
     if (typeReference.protocol === 'protobuf') {
       return undefined;
     }
@@ -424,6 +439,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
+    invariant(!isProxy(target));
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -431,6 +447,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPop(target: ProxyTarget, path: KeyPath): any {
+    invariant(!isProxy(target));
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -444,6 +461,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayShift(target: ProxyTarget, path: KeyPath): any {
+    invariant(!isProxy(target));
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -632,7 +650,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
     return items.map((item, index) => {
-      return this.validateValue(target, [...path, String(start + index)], item);
+      return this._validateValue(target, [...path, String(start + index)], item);
     });
   }
 

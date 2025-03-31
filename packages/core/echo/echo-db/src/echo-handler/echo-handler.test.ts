@@ -7,9 +7,21 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { EchoObject, Expando, TypedObject, S, foreignKey, getTypeReference, Ref, ObjectId } from '@dxos/echo-schema';
+import {
+  EchoObject,
+  Expando,
+  TypedObject,
+  S,
+  foreignKey,
+  getTypeReference,
+  Ref,
+  ObjectId,
+  type Ref$,
+  type HasId,
+} from '@dxos/echo-schema';
 import {
   Contact,
+  prepareAstForCompare,
   Task,
   TestClass,
   TestNestedType,
@@ -21,7 +33,16 @@ import {
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { getMeta, getSchema, create, getType, isDeleted, makeRef, refFromDXN } from '@dxos/live-object';
+import {
+  getMeta,
+  getSchema,
+  create,
+  getType,
+  isDeleted,
+  makeRef,
+  refFromDXN,
+  getProxyHandler,
+} from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
@@ -30,6 +51,7 @@ import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
@@ -96,6 +118,40 @@ for (const schema of [undefined, TestType, TestSchemaType]) {
     });
   });
 }
+
+describe('without database', () => {
+  const TestSchema = S.Struct({
+    nested: S.Struct({
+      name: S.optional(S.String),
+      arr: S.optional(S.Array(S.String).pipe(S.mutable)),
+      ref: S.optional(S.suspend((): Ref$<TestSchema> => Ref(TestSchema))),
+    }).pipe(S.mutable),
+  }).pipe(EchoObject('example.com/type/Test', '0.1.0'));
+  interface TestSchema extends S.Schema.Type<typeof TestSchema> {}
+
+  test('get schema on object', () => {
+    const obj = createObject(create(TestSchema, { nested: { name: 'foo', arr: [] } }));
+    const schema = getSchema(obj);
+    expect(schema).to.exist;
+    expect(prepareAstForCompare(schema!.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
+  });
+
+  test.skip('get schema on nested object', () => {
+    const obj = createObject(create(TestSchema, { nested: { name: 'foo', arr: [] } }));
+    const NestedSchema = TestSchema.pipe(S.pluck('nested'), S.typeSchema);
+
+    log.info('handler', { h: getProxyHandler(obj.nested) });
+
+    expect(prepareAstForCompare(getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
+  });
+
+  test.skip('create', () => {
+    const obj = createObject(create(TestSchema, { nested: { name: 'foo', arr: [] } }));
+    obj.nested.name = 'bar';
+    obj.nested.arr = ['a', 'b', 'c'];
+    obj.nested.arr.push('d');
+  });
+});
 
 describe('Reactive Object with ECHO database', () => {
   let builder: EchoTestBuilder;

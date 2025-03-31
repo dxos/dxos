@@ -33,15 +33,10 @@ import {
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, isRootDataObject, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
-import {
-  type ObjectInternals,
-  type ProxyTarget,
-  symbolInternals,
-  symbolNamespace,
-  symbolPath,
-} from './echo-proxy-target';
+import { ObjectInternals, type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { inspectCustom } from '@dxos/debug';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
@@ -83,7 +78,7 @@ export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => 
 };
 
 /**
- * Creates a reactive ECHO object.
+ * Creates a reactive ECHO object backed by a CRDT.
  * @internal
  */
 // TODO(burdon): Document lifecycle.
@@ -105,7 +100,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     slot.setHandler(EchoReactiveHandler.instance);
 
     const target = slot.target as ProxyTarget;
-    target[symbolInternals] = initInternals(core);
+    target[symbolInternals] = new ObjectInternals(core);
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, obj);
@@ -128,7 +123,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     return obj as any;
   } else {
     const target: ProxyTarget = {
-      [symbolInternals]: initInternals(core),
+      [symbolInternals]: new ObjectInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
       ...(obj as any),
@@ -170,7 +165,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
  */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): ReactiveEchoObject<any> => {
   const target: ProxyTarget = {
-    [symbolInternals]: initInternals(core, database),
+    [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
   };
@@ -264,12 +259,3 @@ const refToEchoReference = (target: ProxyTarget, ref: Ref<any>): Reference => {
     return Reference.fromDXN(ref.dxn);
   }
 };
-
-const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInternals => ({
-  core,
-  targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-  signal: compositeRuntime.createSignal(),
-  linkCache: new Map<string, ReactiveEchoObject<any>>(),
-  database,
-  subscriptions: [],
-});

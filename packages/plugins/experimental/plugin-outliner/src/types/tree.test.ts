@@ -12,6 +12,7 @@ import { faker } from '@dxos/random';
 import { getChildNodes, getParent, indent, tranverse, unindent } from './tree';
 import { TreeNodeType, TreeType } from './types';
 import { createTree } from '../testing';
+import { createObject } from '@dxos/client/echo';
 
 faker.seed(0);
 
@@ -78,20 +79,7 @@ describe('tree', () => {
    *       └── 1.4                    └── 1.4                     └── 1.4
    */
   test('indent and unindent', async ({ expect }) => {
-    const testBuilder = new TestBuilder();
-    const client = new Client({
-      services: testBuilder.createLocalClientServices(),
-      types: [TreeType, TreeNodeType],
-    });
-
-    await client.initialize();
-    await client.halo.createIdentity();
-    await client.spaces.waitUntilReady();
-    const space = client.spaces.default;
-
-    const root = createTree([1, 4]);
-    const tree = space.db.add(create(TreeType, { root: makeRef(root) }));
-    expect(tree).to.exist;
+    const root = createObject(createTree([1, 4]));
 
     {
       const count = print(root);

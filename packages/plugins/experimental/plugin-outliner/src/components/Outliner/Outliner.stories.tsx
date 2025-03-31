@@ -79,14 +79,12 @@ export const Default: Story = {
         children: faker.helpers.multiple(
           () =>
             makeRef(
-              createObject(
-                create(TreeNodeType, {
-                  text:
-                    (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
-                    faker.lorem.sentences(1),
-                  children: [],
-                }),
-              ),
+              create(TreeNodeType, {
+                text:
+                  (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
+                  faker.lorem.sentences(1),
+                children: [],
+              }),
             ),
           { count: 10 },
         ),
@@ -97,6 +95,7 @@ export const Default: Story = {
 
 export const Large: Story = {
   args: {
-    root: createTree([100, 3, 1], () => faker.lorem.sentence()),
+    // TODO(dmaretskyi): Seems slow
+    root: createObject(createTree([100, 3, 1], () => faker.lorem.sentence())),
   },
 };
