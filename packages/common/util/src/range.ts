@@ -5,7 +5,7 @@
 export const range: {
   (n: number): number[];
   <T>(n: number, mapper: RangeMapper<T>): T[];
-} = <T>(n: number, mapper?: RangeMapper<T>) => {
+} = <T>(n: number = 0, mapper?: RangeMapper<T>) => {
   const range = Array.from(Array(n).keys());
   return mapper == null ? range : range.map(mapper);
 };

@@ -14,7 +14,7 @@ export default [
       },
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
-        'object title placeholder': 'New script',
+        'object placeholder': 'New script',
         'create object label': 'Create script',
         'create stack section label': 'Create script',
         'description label': 'Description',
@@ -51,6 +51,7 @@ export default [
         'view logs label': 'Logs',
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
+        'logs plank heading': 'Logs',
       },
     },
   },

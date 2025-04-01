@@ -86,6 +86,6 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const STORY_PLUGIN = 'dxos.org/app-framework/story';
 const StoryPlugin = () =>
-  definePlugin({ id: STORY_PLUGIN }, [
+  definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
     defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
   ]);

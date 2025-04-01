@@ -21,7 +21,7 @@ export const useCommentState = (state: Partial<CommentState>) => {
   // TODO(thure): Can this O(n) call be memoized?
   const overlapsCommentAnchor = useMemo(
     () =>
-      RefArray.allResolvedTargets(model.sheet.threads ?? [])
+      RefArray.targets(model.sheet.threads ?? [])
         .filter((thread) => thread.status !== 'resolved')
         .some((thread) => {
           if (!cursorFallbackRange) {

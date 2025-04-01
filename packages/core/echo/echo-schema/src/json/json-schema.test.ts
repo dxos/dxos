@@ -2,11 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type SchemaAST as AST, Schema as S } from 'effect';
+import { Schema as S } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp } from '@dxos/effect';
-import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import {
@@ -24,7 +23,7 @@ import {
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
 import { StoredSchema } from '../schema';
-import { Contact } from '../testing';
+import { Contact, prepareAstForCompare } from '../testing';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -337,23 +336,4 @@ describe('json-to-effect', () => {
     const jsonSchema2 = toJsonSchema(effectSchema);
     expect(jsonSchema2.properties!.name.description).to.eq('Name');
   });
-
-  const prepareAstForCompare = (obj: AST.AST): any =>
-    deepMapValues(obj, (value: any, recurse, key) => {
-      if (typeof value === 'function') {
-        return null;
-      }
-
-      // Convert symbols to strings.
-      if (typeof value === 'object') {
-        const clone = { ...value };
-        for (const sym of Object.getOwnPropertySymbols(clone as any)) {
-          clone[sym.toString()] = clone[sym];
-          delete clone[sym];
-        }
-        return recurse(clone);
-      }
-
-      return recurse(value);
-    });
 });

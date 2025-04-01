@@ -1,6 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema as S } from 'effect';
+import { inspect } from 'node:util';
 import { describe, test } from 'vitest';
-import { AISession } from './session';
-import { createEdgeServices, remoteServiceEndpoints } from '../services';
+
 import {
   ArtifactId,
   defineArtifact,
@@ -9,12 +14,13 @@ import {
   type Message,
   type MessageContentBlock,
 } from '@dxos/artifact';
-import { Schema as S } from 'effect';
+import { AIServiceEdgeClient } from '@dxos/assistant';
 import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
-import { AIServiceEdgeClient, OllamaClient, type GenerationStreamEvent } from '@dxos/assistant';
-import { log } from '@dxos/log';
-import { inspect } from 'node:util';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
+
+import { AISession } from './session';
+import { remoteServiceEndpoints } from '../services';
 
 // Define a calendar event artifact schema
 const CalendarEventSchema = S.Struct({
@@ -209,42 +215,42 @@ const printContentBlock = (content: MessageContentBlock) => {
   }
 };
 
-const printStreamEvent = (event: GenerationStreamEvent) => {
-  switch (event.type) {
-    case 'message_start': {
-      process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
-      for (const content of event.message.content) {
-        printContentBlock(content);
-      }
-      break;
-    }
-    case 'content_block_start': {
-      printContentBlock(event.content);
-      break;
-    }
-    case 'content_block_delta': {
-      switch (event.delta.type) {
-        case 'text_delta': {
-          process.stdout.write(event.delta.text);
-          break;
-        }
-        case 'input_json_delta': {
-          process.stdout.write(event.delta.partial_json);
-          break;
-        }
-      }
-      break;
-    }
-    case 'content_block_stop': {
-      process.stdout.write('\n');
-      break;
-    }
-    case 'message_delta': {
-      break;
-    }
-    case 'message_stop': {
-      process.stdout.write('\n\n');
-      break;
-    }
-  }
-};
+// const printStreamEvent = (event: GenerationStreamEvent) => {
+//   switch (event.type) {
+//     case 'message_start': {
+//       process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
+//       for (const content of event.message.content) {
+//         printContentBlock(content);
+//       }
+//       break;
+//     }
+//     case 'content_block_start': {
+//       printContentBlock(event.content);
+//       break;
+//     }
+//     case 'content_block_delta': {
+//       switch (event.delta.type) {
+//         case 'text_delta': {
+//           process.stdout.write(event.delta.text);
+//           break;
+//         }
+//         case 'input_json_delta': {
+//           process.stdout.write(event.delta.partial_json);
+//           break;
+//         }
+//       }
+//       break;
+//     }
+//     case 'content_block_stop': {
+//       process.stdout.write('\n');
+//       break;
+//     }
+//     case 'message_delta': {
+//       break;
+//     }
+//     case 'message_stop': {
+//       process.stdout.write('\n\n');
+//       break;
+//     }
+//   }
+// };

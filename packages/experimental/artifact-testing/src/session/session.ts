@@ -1,13 +1,8 @@
-/**
- * Contains message history, tools, current context.
- * Current context means the state of the app, time of day, and other contextual information.
- * It makes requests to the model, its a state machine.
- * It keeps track of the current goal.
- * It manages the context window.
- * Tracks the success criteria of reaching the goal, exposing metrics (stretch)
- * Could be run locally in the app or remotely.
- * Could be personal or shared.
- */
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema as S } from 'effect';
 
 import { defineTool, Message, ToolResult, type ArtifactDefinition, type Tool } from '@dxos/artifact';
 import {
@@ -22,7 +17,17 @@ import { Event, synchronized } from '@dxos/async';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Schema as S } from 'effect';
+
+/**
+ * Contains message history, tools, current context.
+ * Current context means the state of the app, time of day, and other contextual information.
+ * It makes requests to the model, its a state machine.
+ * It keeps track of the current goal.
+ * It manages the context window.
+ * Tracks the success criteria of reaching the goal, exposing metrics (stretch)
+ * Could be run locally in the app or remotely.
+ * Could be personal or shared.
+ */
 
 export type SessionRunOptions = {
   client: AIServiceClient;
@@ -154,15 +159,15 @@ export class AISession {
                 return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
               }
 
-              let stepResults: any[] = [];
+              const stepResults: any[] = [];
               for (const step of steps) {
-                console.log(`\nExecuting step: ${step.action}`);
+                log.info('executing step', { action: step.action });
                 const session = new AISession({ operationModel: 'immediate' });
-                session.message.on((e) => this.message.emit(e));
-                session.block.on((e) => this.block.emit(e));
-                session.update.on((e) => this.update.emit(e));
-                session.streamEvent.on((e) => this.streamEvent.emit(e));
-                session.userMessage.on((e) => this.userMessage.emit(e));
+                session.message.on((ev) => this.message.emit(ev));
+                session.block.on((ev) => this.block.emit(ev));
+                session.update.on((ev) => this.update.emit(ev));
+                session.streamEvent.on((ev) => this.streamEvent.emit(ev));
+                session.userMessage.on((ev) => this.userMessage.emit(ev));
 
                 const messages = await session.run({
                   client: options.client,
@@ -244,9 +249,9 @@ export class AISession {
     ];
     this.userMessage.emit(this._pending.at(-1)!);
     this._stream = undefined;
-    let error: Error | undefined = undefined;
+    let error: Error | undefined;
 
-    let requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
+    const requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
     try {
       let more = false;
       do {
@@ -291,7 +296,7 @@ export class AISession {
           log('tool request...');
           const response = await runTools({
             message: this._pending.at(-1)!,
-            tools: tools,
+            tools,
             extensions: options.extensions ?? {},
           });
 

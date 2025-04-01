@@ -3,9 +3,11 @@
 //
 
 import { intervalToDuration } from 'date-fns/intervalToDuration';
-import React, { type FC, useCallback, useEffect, useLayoutEffect, useRef, useState, type WheelEvent } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import { yieldOrContinue } from 'main-thread-scheduling';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
+import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellValue,
@@ -17,201 +19,207 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
+import { TRANSCRIPTION_PLUGIN } from '../../meta';
 import { type TranscriptBlock } from '../../types';
 
 // TODO(burdon): Actions (e.g., mark, summarize, translate, label, delete).
 
-const timeWidth = 70;
-const lineHeight = 24;
-const cellSpacing = 6;
+const lineHeight = 20;
+const cellSpacing = 8 + 2;
+const timestampColumnWidth = 68;
 
-const authorClasses = 'text-[16px] leading-[24px] dx-tag';
-const segmentTextClasses = 'text-[16px] leading-[24px] whitespace-pre-wrap break-words hyphens-none';
-
-/**
- * Projected row.
- */
-type TranscriptRow = { blockId: string; size: number; author?: string; ts?: Date; text?: string };
+const authorClasses = 'font-medium text-base leading-[20px]';
+const timestampClasses = 'text-xs leading-[20px] text-description pie-0 tabular-nums';
+const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
+const measureClasses = mx(
+  // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
+  'absolute inline-start-[69px] inline-end-0 invisible z-[-1] border',
+  'pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
+  segmentTextClasses,
+);
 
 export type TranscriptProps = {
+  blocks?: TranscriptBlock[];
   attendableId?: string;
   ignoreAttention?: boolean;
-  blocks?: TranscriptBlock[];
 };
 
-// TODO(burdon): Autoscroll.
-export const Transcript: FC<TranscriptProps> = ({ attendableId, ignoreAttention, blocks }) => {
+const rowDefault = {
+  grid: { size: lineHeight + cellSpacing },
+};
+
+type QueueRows = [number, number][];
+
+const mapTranscriptQueue = (blocks?: TranscriptBlock[]): QueueRows => {
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+    return [];
+  } else {
+    return blocks.flatMap((block, blockIndex) => {
+      return [
+        [blockIndex, -1],
+        ...block.segments.map((segment, segmentIndex) => {
+          return [blockIndex, segmentIndex] as [number, number];
+        }),
+      ];
+    });
+  }
+};
+
+const pad = (n = 0) => String(n).padStart(2, '0');
+
+const formatTimestamp = (start: Date, end: Date) => {
+  const { hours, minutes, seconds } = intervalToDuration({ start, end });
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+};
+
+const measureRows = async (
+  host: HTMLDivElement,
+  blocks: TranscriptBlock[],
+  queueMap: QueueRows,
+  signal: AbortSignal,
+) => {
+  const result: DxGridAxisMeta = { grid: {} };
+  for (let row = 0; row < queueMap.length; row++) {
+    await yieldOrContinue('smooth', signal);
+    const [blockIndex, segmentIndex] = queueMap[row];
+    if (segmentIndex < 0) {
+      result.grid[row] = { size: lineHeight + cellSpacing };
+    } else {
+      host.textContent = blocks[blockIndex]!.segments[segmentIndex]!.text;
+      result.grid[row] = { size: host.offsetHeight };
+    }
+  }
+  return result;
+};
+
+export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAttention }) => {
+  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const { hasAttention } = useAttention(attendableId);
-  const { ref, width } = useResizeDetector();
-
-  const textWidth = width ? width - timeWidth : 0;
-  const columnMeta = width
-    ? {
-        grid: {
-          0: { size: timeWidth },
-          1: { size: textWidth },
-        },
-      }
-    : undefined;
-
-  const rows = useRows(blocks);
-  const [rowMeta, setRowMeta] = useState<DxGridAxisMeta>({ grid: {} });
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-  useEffect(() => {
-    if (dxGrid && Array.isArray(blocks)) {
-      const start = blocks[0]?.segments[0]?.started ?? 0;
+  const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
+  const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);
+  const [autoScroll, setAutoScroll] = useState(true);
 
+  const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      setAutoScroll(false);
+      if (!ignoreAttention && !hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention, ignoreAttention],
+  );
+
+  const abortControllerRef = useRef<AbortController>();
+
+  const handleResize = useCallback(
+    async ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
+      if (entry?.target && Array.isArray(blocks) && blocks[0] && queueMap) {
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = new AbortController();
+        setColumns({ grid: { 0: { size: timestampColumnWidth }, 1: { size: entry.target.offsetWidth } } });
+        return measureRows(entry.target, blocks, queueMap, abortControllerRef.current.signal)
+          .then(setRows)
+          .catch(() => {
+            // Aborted mid-measurement by new size.
+          });
+      }
+    },
+    [blocks, queueMap],
+  );
+
+  const { width, ref: measureRef } = useResizeDetector({
+    onResize: handleResize as OnResizeCallback,
+    refreshOptions: { leading: true },
+  });
+
+  useEffect(() => {
+    if (queueMap.length !== Object.keys(rows?.grid ?? {}).length) {
+      void handleResize({ entry: { target: measureRef.current } }).then(() => {
+        if (autoScroll) {
+          // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a new `maxPosBlock`.
+          setTimeout(() => dxGrid?.scrollToEndRow(), 50);
+        }
+      });
+    }
+  }, [blocks, queueMap, width, autoScroll]);
+
+  useEffect(() => {
+    if (dxGrid && Array.isArray(blocks) && blocks[0]) {
+      const transcriptStart = blocks[0]!.segments[0]!.started;
       dxGrid.getCells = (range, plane) => {
         switch (plane) {
           case 'grid': {
             const cells: DxGridPlaneCells = {};
-            for (let row = range.start.row; row <= range.end.row && row < rows.length; row++) {
-              const { author, ts, text } = rows[row];
+            for (let row = range.start.row; row <= range.end.row && row < queueMap.length; row++) {
+              const [blockIndex, segmentIndex] = queueMap[row];
 
-              cells[toPlaneCellIndex({ col: 0, row })] = (
-                ts
-                  ? {
-                      readonly: true,
-                      accessoryHtml: `<span class="pbs-1 text-xs text-neutral-500">${formatTimestamp(start, ts)}</span>`,
-                    }
-                  : {}
-              ) satisfies DxGridCellValue;
+              cells[toPlaneCellIndex({ col: 0, row })] = {
+                readonly: true,
+                value:
+                  segmentIndex < 0
+                    ? formatTimestamp(transcriptStart, blocks[blockIndex]!.segments[Math.max(0, segmentIndex)]!.started)
+                    : '',
+                className: timestampClasses,
+              } satisfies DxGridCellValue;
 
               cells[toPlaneCellIndex({ col: 1, row })] = (
-                author
+                segmentIndex < 0
                   ? {
                       readonly: true,
-                      value: author,
-                      // TODO(burdon): Color based on username.
+                      accessoryHtml: `<span data-hue="${blocks[blockIndex]!.authorHue}" class="dx-text-hue">${blocks[blockIndex]!.authorName}</span>`,
                       className: authorClasses,
                     }
                   : {
                       readonly: true,
-                      accessoryHtml: `<div class="${segmentTextClasses}">${text}</div>`,
+                      value: blocks[blockIndex]!.segments[segmentIndex]!.text,
+                      className: segmentTextClasses,
                     }
               ) satisfies DxGridCellValue;
             }
-
             return cells;
           }
           default:
             return {};
         }
       };
-
-      return () => {
-        dxGrid.getCells = null;
-      };
     }
-  }, [dxGrid, rows, blocks]);
+  }, [dxGrid, blocks]);
 
-  const handleWheel = useCallback(
-    (ev: WheelEvent) => {
-      if (!ignoreAttention && !hasAttention) {
-        ev.stopPropagation();
-      }
-    },
-    [hasAttention, ignoreAttention],
-  );
+  const handleScrollToEnd = useCallback(() => {
+    setAutoScroll(true);
+    dxGrid?.scrollToEndRow();
+  }, [dxGrid, autoScroll]);
 
   return (
-    <div role='none' ref={ref} className='grow'>
-      {columnMeta && (
-        <>
-          <Measuring
-            rows={rows}
-            width={columnMeta.grid['1'].size}
-            onUpdate={(rows) => setRowMeta(createRowMeta(rows))}
-          />
-          <Grid.Root id={`${attendableId}--transcript`}>
-            <Grid.Content
-              ref={setDxGrid}
-              className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:select-auto'
-              columns={columnMeta}
-              rows={rowMeta}
-              limitColumns={2}
-              limitRows={rows.length}
-              onWheel={handleWheel}
-            />
-          </Grid.Root>
-        </>
-      )}
-    </div>
-  );
-};
-
-/**
- * Format elapsed time.
- */
-export const formatTimestamp = (start: Date, end: Date) => {
-  const { hours, minutes, seconds } = intervalToDuration({ start, end });
-  const pad = (n = 0) => String(n).padStart(2, '0');
-  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-};
-
-/**
- * Create row meta (with heights)from rows.
- */
-const createRowMeta = (rows: TranscriptRow[]): DxGridAxisMeta => ({
-  grid: rows.reduce<DxGridAxisMeta['grid']>((acc, item, rowIndex) => {
-    const size = item.size;
-    acc[rowIndex] = { size };
-    return acc;
-  }, {}),
-});
-
-/**
- * Compute flattened rows from blocks.
- */
-const useRows = (blocks?: TranscriptBlock[]): TranscriptRow[] => {
-  const [rows, setRows] = useState<TranscriptRow[]>([]);
-  useEffect(() => {
-    for (const block of blocks ?? []) {
-      const { author, segments } = block;
-      rows.push({ blockId: block.id, author, size: lineHeight });
-      for (const segment of segments) {
-        const { started, text } = segment;
-        rows.push({ blockId: block.id, ts: started, text: text.trim(), size: lineHeight });
-      }
-    }
-    setRows(rows);
-  }, [blocks]);
-
-  return rows;
-};
-
-/**
- * Render rows offscreen and measure heights.
- */
-const Measuring = ({
-  rows,
-  width,
-  onUpdate,
-}: {
-  rows: TranscriptRow[];
-  width: number;
-  onUpdate: (rows: TranscriptRow[]) => void;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const div = ref.current;
-    if (div) {
-      for (let i = 0; i < div.children.length; i++) {
-        const row: HTMLDivElement = div.children[i].children[0] as HTMLDivElement;
-        rows[i].size = row.offsetHeight + cellSpacing;
-      }
-
-      onUpdate(rows);
-    }
-  }, [rows]);
-
-  return (
-    <div ref={ref} className='absolute top-0 z-10 invisible'>
-      {rows.map(({ author, text }, i) => (
-        <div key={i} className='p-1 border' style={{ width }}>
-          <div className={mx(segmentTextClasses)}>{author ?? text}</div>
-        </div>
-      ))}
-    </div>
+    <>
+      <Grid.Root id={`${attendableId}--transcript`}>
+        <Grid.Content
+          limitColumns={2}
+          limitRows={queueMap.length}
+          columns={columns}
+          rows={rows}
+          rowDefault={rowDefault}
+          onWheel={handleWheel}
+          className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
+          ref={setDxGrid}
+        />
+      </Grid.Root>
+      <div role='none' {...{ inert: '' }} aria-hidden className={measureClasses} ref={measureRef} />
+      <IconButton
+        icon='ph--arrow-line-down--regular'
+        iconOnly
+        label={t('scroll to end label')}
+        tooltipSide='left'
+        data-state={autoScroll ? 'invisible' : 'visible'}
+        classNames={[
+          'absolute inline-end-2 block-end-2 opacity-0 pointer-events-none',
+          'data-[state="visible"]:pointer-events-auto data-[state="visible"]:opacity-100 transition-opacity',
+        ]}
+        onClick={handleScrollToEnd}
+      />
+    </>
   );
 };
