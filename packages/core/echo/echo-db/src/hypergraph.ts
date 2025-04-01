@@ -232,7 +232,7 @@ export class Hypergraph {
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
-        objectId: objectId,
+        objectId,
         spaceKey: spaceId!,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),

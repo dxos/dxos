@@ -34,7 +34,6 @@ import {
   getProxyHandler,
   getProxyTarget,
   getRefSavedTarget,
-  isProxy,
   isReactiveObject,
   type ReactiveHandler,
   type ReactiveObject,

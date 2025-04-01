@@ -3,7 +3,6 @@
 //
 
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { getProxyTarget } from '@dxos/live-object';
 
 import { type EchoReactiveHandler } from './echo-handler';
 import { type ObjectInternals, symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
