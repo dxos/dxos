@@ -17,6 +17,7 @@ import {
   Ref,
   ObjectId,
   type Ref$,
+  getValue,
 } from '@dxos/echo-schema';
 import {
   Contact,
@@ -41,6 +42,7 @@ import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
+import { createDocAccessor, DocAccessor } from '../core-db';
 
 registerSignalsRuntime();
 
@@ -110,6 +112,7 @@ for (const schema of [undefined, TestType, TestSchemaType]) {
 
 describe('without database', () => {
   const TestSchema = S.Struct({
+    text: S.optional(S.String),
     nested: S.Struct({
       name: S.optional(S.String),
       arr: S.optional(S.Array(S.String).pipe(S.mutable)),
@@ -137,6 +140,20 @@ describe('without database', () => {
     obj.nested.name = 'bar';
     obj.nested.arr = ['a', 'b', 'c'];
     obj.nested.arr.push('d');
+  });
+
+  test('doc accessor', () => {
+    const obj = createObject(create(TestSchema, { text: 'foo', nested: { name: 'bar' } }));
+
+    {
+      const accessor = createDocAccessor(obj, 'text');
+      expect(DocAccessor.getValue(accessor)).toEqual('foo');
+    }
+
+    {
+      const accessor = createDocAccessor(obj.nested, 'name');
+      expect(DocAccessor.getValue(accessor)).toEqual('bar');
+    }
   });
 });
 
