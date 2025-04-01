@@ -136,6 +136,17 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._sorting;
   }
 
+  /**
+   * Gets the row data at the specified display index.
+   */
+  public getRowAt(displayIndex: number): T | undefined {
+    if (displayIndex < 0 || displayIndex >= this._sorting.sortedRows.value.length) {
+      return undefined;
+    }
+
+    return this._sorting.sortedRows.value[displayIndex];
+  }
+
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
   }

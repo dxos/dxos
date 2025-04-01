@@ -82,15 +82,19 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
 
-  const onVersionClick = (version: HistoryRow) => {
-    setSelectedVersion(version);
-    setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
-  };
+  const onVersionClick = useCallback(
+    (version: HistoryRow) => {
+      setSelectedVersion(version);
+      setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
+    },
+    [selected],
+  );
 
   const objectProperties = useMemo(
     () => [
       { name: 'id', format: FormatEnum.DID },
       { name: 'type', format: FormatEnum.String },
+      { name: 'version', format: FormatEnum.String, size: 100 },
       {
         name: 'deleted',
         format: FormatEnum.SingleSelect,
@@ -99,7 +103,6 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           options: [{ id: 'DELETED', title: 'DELETED', color: 'red' }],
         },
       },
-      { name: 'version', format: FormatEnum.String, size: 100 },
       {
         name: 'schemaAvailable',
         format: FormatEnum.SingleSelect,
@@ -118,32 +121,24 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const tableData = useMemo(() => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
-      deleted: isDeleted(item) ? 'DELETED' : ' ',
       type: getTypename(item),
       version: getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined,
+      deleted: isDeleted(item) ? 'DELETED' : ' ',
       schemaAvailable: getSchema(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
   }, [items, filter]);
 
-  const handleObjectSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
-        setSelected(undefined);
-        setSelectedVersion(null);
-        setSelectedVersionObject(null);
-        return;
-      }
+  const handleObjectRowClicked = useCallback((row: any) => {
+    if (!row) {
+      setSelected(undefined);
+      setSelectedVersion(null);
+      setSelectedVersionObject(null);
+      return;
+    }
 
-      const selectedId = selectedIds[selectedIds.length - 1];
-      const selectedObject = items.find((item) => item.id === selectedId);
-
-      if (selectedObject) {
-        objectSelect(selectedObject);
-      }
-    },
-    [items],
-  );
+    objectSelect(row._original);
+  }, []);
 
   const historyProperties = useMemo(
     () => [
@@ -155,6 +150,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     ],
     [],
   );
+
   const historyData = useMemo(() => {
     return history.map((item) => ({
       id: item.hash,
@@ -163,16 +159,15 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }));
   }, [history, selectedVersion]);
 
-  const handleHistorySelectionChanged = useCallback(
-    (selectedHashes: string[]) => {
-      if (selectedHashes.length === 0 || !selected) {
+  const handleHistoryRowClicked = useCallback(
+    (row: any) => {
+      if (!row || !selected) {
         setSelectedVersion(null);
         setSelectedVersionObject(null);
         return;
       }
 
-      const selectedHash = selectedHashes[0];
-      const versionItem = history.find((item) => item.hash.slice(0, 8) === selectedHash);
+      const versionItem = history.find((item) => item.hash === row.id);
 
       if (versionItem) {
         onVersionClick(versionItem);
@@ -191,27 +186,19 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       }
     >
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
-        <DynamicTable
-          data={tableData}
-          properties={objectProperties}
-          onSelectionChanged={handleObjectSelectionChanged}
-        />
+        <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
 
-        <div className='grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
-          <div className={mx('p-1 overflow-auto ')}>
+        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
+          <div className={mx('p-1 min-bs-0 overflow-auto')}>
             {selected ? (
               <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
             ) : (
               'Select an object to inspect the contents'
             )}
           </div>
-          <div className={mx('overflow-auto', !selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
-              <DynamicTable
-                data={historyData}
-                properties={historyProperties}
-                onSelectionChanged={handleHistorySelectionChanged}
-              />
+              <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
             ) : (
               'Select an object to inspect the contents'
             )}
