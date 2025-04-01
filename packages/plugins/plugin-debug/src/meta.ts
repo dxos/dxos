@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: DEBUG_PLUGIN,
   name: 'Debug',
   description:
@@ -15,4 +15,4 @@ export const meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-debug',
   tags: ['experimental'],
   screenshots: ['https://dxos.network/plugin-details-debug-dark.png'],
-} satisfies PluginMeta;
+};

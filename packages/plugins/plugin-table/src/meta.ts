@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const TABLE_PLUGIN = 'dxos.org/plugin/table';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: TABLE_PLUGIN,
   name: 'Tables',
   description:
@@ -14,4 +14,4 @@ export const meta = {
   icon: 'ph--table--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-table',
   screenshots: ['https://dxos.network/plugin-details-tables-dark.png'],
-} satisfies PluginMeta;
+};
