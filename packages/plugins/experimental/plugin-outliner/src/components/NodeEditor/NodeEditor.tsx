@@ -9,19 +9,19 @@ import { createRoot } from 'react-dom/client';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { Icon, ThemeProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
-  EditorView,
   automerge,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  EditorView,
   keymap,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
-import { type TreeType, type TreeNodeType } from '../../types';
+import { type TreeNodeType } from '../../types';
 
 export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;
@@ -58,7 +58,6 @@ export type NodeEditorEvent =
     };
 
 export type NodeEditorProps = ThemedClassName<{
-  tree: TreeType;
   node: TreeNodeType;
   editable?: boolean;
   placeholder?: string;
@@ -70,7 +69,7 @@ export type NodeEditorProps = ThemedClassName<{
  * Subset of markdown editor.
  */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
-  ({ classNames, tree, node, editable, placeholder, onEvent }, ref) => {
+  ({ classNames, node, editable, placeholder, onEvent }, ref) => {
     const { themeMode } = useThemeContext();
 
     // NOTE: Must not change callbacks.
@@ -79,7 +78,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
         initialValue: node.data.text,
         extensions: [
           // NOTE: Path is relative to tree (ECHO object).
-          automerge(createDocAccessor(tree, ['nodes', node.id, 'data', 'text'])),
+          automerge(createDocAccessor(node, ['data', 'text'])),
 
           createBasicExtensions({ readonly: !editable, editable: false, placeholder }),
           createThemeExtensions({ themeMode }),
