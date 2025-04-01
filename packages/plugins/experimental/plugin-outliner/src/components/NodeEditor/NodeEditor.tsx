@@ -75,10 +75,10 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
     // NOTE: Must not change callbacks.
     const { parentRef, view } = useTextEditor(() => {
       return {
-        initialValue: node.text,
+        initialValue: node.data.text,
         extensions: [
           // NOTE: Path is relative to tree (ECHO object).
-          automerge(createDocAccessor(tree, ['nodes', node.id, 'text'])),
+          automerge(createDocAccessor(tree, ['nodes', node.id, 'data', 'text'])),
 
           // TODO(burdon): Show placeholder only if focused.
           createBasicExtensions({ readonly: !editable, editable: false, placeholder }),

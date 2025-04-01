@@ -16,14 +16,16 @@ const random = (min: number, max: number) => Math.floor(Math.random() * (max - m
  */
 export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => string): Tree => {
   const tree = new Tree();
-  tree.root.text = 'root';
+  tree.root.data = { text: 'root' };
 
   const createNodes = (parent: TreeNodeType, spec: NumberOrNumberArray = 0): TreeNodeType[] => {
     const count = Array.isArray(spec) ? random(spec[0], spec[1]) : spec;
     return range(count, (i) => ({
       id: ObjectId.random(),
       children: [],
-      text: createText?.() ?? [parent.text, i + 1].join('.'),
+      data: {
+        text: createText?.() ?? [parent.data.text, i + 1].join('.'),
+      },
     }));
   };
 

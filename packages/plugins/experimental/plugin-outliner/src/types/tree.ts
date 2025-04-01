@@ -13,10 +13,7 @@ import { create } from '@dxos/live-object';
 export const TreeNodeType = S.Struct({
   id: ObjectId,
   children: S.mutable(S.Array(ObjectId)),
-
-  // TODO(burdon): Move data out of generic tree type.
-  text: S.String,
-  done: S.optional(S.Boolean),
+  data: S.mutable(S.Record({ key: S.String, value: S.Any })),
 }).pipe(S.mutable);
 
 export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
@@ -40,7 +37,7 @@ export class Tree {
         [id]: {
           id,
           children: [],
-          text: '',
+          data: { text: '' }, // TODO(burdon): Generic.
         },
       },
     });
@@ -190,15 +187,15 @@ export class Tree {
   /**
    * Add node.
    */
-  addNode(parent: TreeNodeType, node?: TreeNodeType, index?: number): ObjectId {
+  addNode(parent: TreeNodeType, node?: TreeNodeType, index?: number): TreeNodeType {
     if (!node) {
       const id = ObjectId.random();
-      node = { id, children: [], text: '' };
+      node = { id, children: [], data: { text: '' } }; // TODO(burdon): Generic.
     }
 
     this._tree.nodes[node.id] = node;
     parent.children.splice(index ?? parent.children.length, 0, node.id);
-    return node.id;
+    return node;
   }
 
   /**

@@ -14,7 +14,7 @@ faker.seed(0);
 const print = (tree: Tree) => {
   let count = 0;
   tree.tranverse((node, i) => {
-    console.log(''.padStart(i * 2, ' '), node.text);
+    console.log(''.padStart(i * 2, ' '), node.data);
     count++;
   });
 

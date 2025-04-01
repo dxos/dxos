@@ -24,7 +24,7 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
         classNames={mx(attentionSurface, 'p-1.5')}
         tree={tree}
         onCreate={() => {
-          return space.db.add(create(TreeNodeType, { text: '', children: [] }));
+          return space.db.add(create(TreeNodeType, { data: { text: '' }, children: [] }));
         }}
         onDelete={(node) => {
           space.db.remove(node);
