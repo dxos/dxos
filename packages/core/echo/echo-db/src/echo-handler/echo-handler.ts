@@ -37,6 +37,7 @@ import {
   isProxy,
   isReactiveObject,
   type ReactiveHandler,
+  type ReactiveObject,
   RefImpl,
   setRefResolver,
   symbolIsProxy,
@@ -366,8 +367,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getSchema(target: ProxyTarget): S.Schema.AnyNoContext | undefined {
-    invariant(!isProxy(target));
-
     if (target[symbolNamespace] === META_NAMESPACE) {
       // TODO(dmaretskyi): Breaks tests.
       // if (target[symbolPath].length !== 0) {
@@ -435,16 +434,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return false;
   }
 
-  arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
-    invariant(!isProxy(target));
+  arrayPush(target: ReactiveObject<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
-  arrayPop(target: ProxyTarget, path: KeyPath): any {
-    invariant(!isProxy(target));
+  arrayPop(target: ReactiveObject<ProxyTarget>, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -457,8 +454,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(target: ProxyTarget, path: KeyPath): any {
-    invariant(!isProxy(target));
+  arrayShift(target: ReactiveObject<ProxyTarget>, path: KeyPath): any {
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -471,7 +467,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
+  arrayUnshift(target: ReactiveObject<ProxyTarget>, path: KeyPath, ...items: any[]): number {
     const validatedItems = this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -488,7 +484,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(target: ProxyTarget, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+  arraySplice(
+    target: ReactiveObject<ProxyTarget>,
+    path: KeyPath,
+    start: number,
+    deleteCount?: number,
+    ...items: any[]
+  ): any[] {
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -509,7 +511,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return deletedElements;
   }
 
-  arraySort(target: ProxyTarget, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: ReactiveObject<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -522,7 +524,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target as EchoArray<any>;
   }
 
-  arrayReverse(target: ProxyTarget, path: KeyPath): any[] {
+  arrayReverse(target: ReactiveObject<ProxyTarget>, path: KeyPath): any[] {
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {

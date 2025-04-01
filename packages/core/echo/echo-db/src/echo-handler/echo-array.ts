@@ -34,11 +34,7 @@ export class EchoArray<T> extends Array<T> {
         let result!: any;
         compositeRuntime.batch(() => {
           const handler = this[symbolHandler];
-          result = ((handler as any)[handlerMethodName] as Function).apply(handler, [
-            getProxyTarget(this),
-            this[symbolPath],
-            ...args,
-          ]);
+          result = ((handler as any)[handlerMethodName] as Function).apply(handler, [this, this[symbolPath], ...args]);
         });
         return result;
       };

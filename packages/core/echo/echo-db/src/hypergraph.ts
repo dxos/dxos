@@ -6,7 +6,7 @@ import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
 import { Reference } from '@dxos/echo-protocol';
-import { RuntimeSchemaRegistry, type BaseObject } from '@dxos/echo-schema';
+import { RuntimeSchemaRegistry, type BaseObject, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId, DXN } from '@dxos/keys';
@@ -196,40 +196,53 @@ export class Hypergraph {
     ref: Reference,
     onResolve: (obj: ReactiveEchoObject<any>) => void,
   ): ReactiveEchoObject<any> | undefined {
-    if (ref.host === undefined) {
-      const local = db.getObjectById(ref.objectId);
+    let spaceId: SpaceId | undefined, objectId: ObjectId | undefined;
+
+    if (ref.dxn && ref.dxn.asEchoDXN()) {
+      const dxnData = ref.dxn.asEchoDXN()!;
+      spaceId = dxnData.spaceId;
+      objectId = dxnData.echoId;
+    } else {
+      // TODO(dmaretskyi): Legacy resoltion -- remove.
+      objectId = ref.objectId;
+      const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
+      const mappedSpaceId = this._spaceKeyToId.get(spaceKey);
+      invariant(mappedSpaceId, 'No spaceId for spaceKey.');
+      spaceId = mappedSpaceId;
+    }
+
+    if (spaceId === undefined) {
+      const local = db.getObjectById(objectId);
       if (local) {
         return local;
       }
-    }
-
-    const spaceKey = ref.host ? PublicKey.from(ref.host) : db?.spaceKey;
-    const spaceId = this._spaceKeyToId.get(spaceKey);
-    invariant(spaceId, 'No spaceId for spaceKey.');
-    if (ref.host) {
+    } else {
       const remoteDb = this._databases.get(spaceId);
       if (remoteDb) {
         // Resolve remote reference.
-        const remote = remoteDb.getObjectById(ref.objectId);
+        const remote = remoteDb.getObjectById(objectId);
         if (remote) {
           return remote;
         }
       }
     }
 
-    if (!OBJECT_DIAGNOSTICS.has(ref.objectId)) {
-      OBJECT_DIAGNOSTICS.set(ref.objectId, {
-        objectId: ref.objectId,
-        spaceKey: spaceKey.toHex(),
+    // Assume local database.
+    spaceId ??= db.spaceId;
+
+    if (!OBJECT_DIAGNOSTICS.has(objectId)) {
+      OBJECT_DIAGNOSTICS.set(objectId, {
+        objectId: objectId,
+        spaceKey: spaceId!,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
     }
 
-    log('trap', { spaceKey, objectId: ref.objectId });
+    log('trap', { spaceId, objectId });
     entry(this._resolveEvents, spaceId)
       .orInsert(new Map())
-      .deep(ref.objectId)
+      .deep(objectId)
       .orInsert(new Event())
       .value.on(new Context(), onResolve);
   }
