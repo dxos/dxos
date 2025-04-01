@@ -41,8 +41,8 @@ export const QueuesPanel = () => {
     }));
   }, [queue?.items]);
 
-  const handleSelectionChanged = (selectedIds: string[]) => {
-    if (selectedIds.length === 0) {
+  const handleRowClicked = (row: any) => {
+    if (!row) {
       setSelected(undefined);
       return;
     }
@@ -65,7 +65,7 @@ export const QueuesPanel = () => {
       }
     >
       <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
-        <DynamicTable properties={properties} data={tableData} onSelectionChanged={handleSelectionChanged} />
+        <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClicked} />
 
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (

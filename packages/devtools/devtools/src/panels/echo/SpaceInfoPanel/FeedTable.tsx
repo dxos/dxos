@@ -53,15 +53,12 @@ export const FeedTable: FC<FeedTableProps> = ({ onSelect }) => {
     }));
   }, [feeds, maxLength]);
 
-  const handleSelect = (selectedItems: string[]) => {
-    const selectedId = selectedItems[0];
-    const selected = selectedId ? tableData.find((data) => data.id === selectedId)?._original : undefined;
-
-    if (selected !== undefined) {
-      setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
-      onSelect?.(selected);
+  const handleRowClick = (row: any) => {
+    if (row?._original !== undefined) {
+      setContext((ctx) => ({ ...ctx, feedKey: row._original?.feedKey }));
+      onSelect?.(row._original);
     }
   };
 
-  return <DynamicTable properties={properties} data={tableData} onSelectionChanged={handleSelect} />;
+  return <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClick} />;
 };

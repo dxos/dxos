@@ -6,7 +6,7 @@ import React, { useRef, useMemo, useCallback } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { Table, type TableController } from './Table';
+import { Table, type TableFeatures, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { TablePresentation, type TableRowAction } from '../../model';
 import { makeDynamicTable, type TablePropertyDefinition } from '../../util';
@@ -16,7 +16,7 @@ type DynamicTableProps = {
   properties: TablePropertyDefinition[];
   tableName?: string;
   classNames?: string;
-  onSelectionChanged?: (selectedItems: string[]) => void;
+  onRowClicked?: (row: any) => void;
   rowActions?: TableRowAction[];
   onRowAction?: (actionId: string, datum: any) => void;
 };
@@ -30,7 +30,7 @@ export const DynamicTable = ({
   properties,
   classNames,
   tableName = 'com.example/dynamic_table',
-  onSelectionChanged,
+  onRowClicked,
   rowActions,
   onRowAction,
 }: DynamicTableProps) => {
@@ -53,7 +53,6 @@ export const DynamicTable = ({
     table,
     objects: data,
     projection: viewProjection,
-    onSelectionChanged,
     onCellUpdate: handleCellUpdate,
     onRowOrderChanged: handleRowOrderChanged,
     rowActions,
@@ -66,11 +65,20 @@ export const DynamicTable = ({
     }
   }, [model]);
 
+  const features: TableFeatures = useMemo(() => ({ selection: false }), []);
+
   return (
     <div className={mx('is-full bs-full grow grid', classNames)}>
       <div className='grid min-bs-0 overflow-hidden'>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
+          <Table.Main
+            ref={tableRef}
+            model={model}
+            presentation={presentation}
+            features={features}
+            onRowClicked={onRowClicked}
+            ignoreAttention
+          />
         </Table.Root>
       </div>
     </div>

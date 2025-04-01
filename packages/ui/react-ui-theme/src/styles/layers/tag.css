@@ -1,6 +1,6 @@
 @layer dx-components {
   .dx-tag {
-    @apply text-xs font-semibold pli-2 plb-0.5 rounded cursor-default truncate;
+    @apply inline-block text-xs font-semibold pli-2 plb-0.5 rounded cursor-default truncate;
     user-select: none;
   }
 
