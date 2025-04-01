@@ -164,9 +164,5 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     [onSelect, setContext],
   );
 
-  return (
-    <div className='bs-24'>
-      <DynamicTable properties={properties} data={data} onRowClicked={handleRowClicked} />
-    </div>
-  );
+  return <DynamicTable properties={properties} data={data} onRowClicked={handleRowClicked} />;
 };
