@@ -1,113 +1,75 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { create, makeRef } from '@dxos/live-object';
+import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { attentionSurface } from '@dxos/react-ui-theme';
-import { type Meta, withTheme } from '@dxos/storybook-utils';
+import { useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Outliner, type OutlinerRootProps } from './Outliner';
-import { TreeItemType } from '../../types';
+import { Outliner, type OutlinerController } from './Outliner';
+import { createTree } from '../../testing';
+import translations from '../../translations';
+import { TreeType } from '../../types';
 
-faker.seed(100);
-
-const DefaultStory = ({
-  isTasklist,
-  count = 1,
-  data,
-}: Pick<OutlinerRootProps, 'isTasklist'> & { count?: number; data?: 'words' | 'sentences' }) => {
-  const [root] = useState<TreeItemType>(
-    create<TreeItemType>({
-      id: 'root',
-      text: '',
-      items: faker.helpers.multiple(
-        () => {
-          let text = '';
-          switch (data) {
-            case 'words': {
-              text = faker.lorem.words();
-              break;
-            }
-            case 'sentences': {
-              text = faker.lorem
-                .sentences({ min: 1, max: 3 })
-                .split(/\. \s*/)
-                .join('.\n');
-              break;
-            }
-          }
-
-          return makeRef(
-            create(TreeItemType, {
-              text,
-              items: [],
-            }),
-          );
-        },
-        { count },
-      ),
-    }),
-  );
-
-  const handleCreate = (text = '') =>
-    create(TreeItemType, {
-      text,
-      items: [],
-    });
-
-  const handleDelete = () => {};
-
-  return (
-    <Outliner.Root
-      className={attentionSurface}
-      root={root}
-      placeholder='Enter text...'
-      onCreate={handleCreate}
-      onDelete={handleDelete}
-      isTasklist={isTasklist}
-    />
-  );
-};
-
-const meta: Meta<typeof DefaultStory> = {
+const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
-  render: DefaultStory,
-  decorators: [withTheme],
+  component: Outliner.Root,
+  render: ({ tree: initialTree }) => {
+    const outliner = useRef<OutlinerController>(null);
+    const space = useSpace();
+    const [tree, setTree] = useState<TreeType>();
+    useEffect(() => {
+      if (space && initialTree) {
+        setTree(space.db.add(initialTree));
+      }
+    }, [space, initialTree]);
+
+    return (
+      <Outliner.Root
+        ref={outliner}
+        classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
+        tree={tree}
+        onCreate={() => {
+          return { id: ObjectId.random(), children: [], data: { text: '' } };
+        }}
+      />
+    );
+  },
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TreeType] }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
+  ],
   parameters: {
-    layout: 'fullscreen',
+    translations,
   },
 };
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof Outliner.Root>;
 
-export const Empty: Story = {};
+const tags = ['idea', 'bug', 'task', 'question', 'design', 'review', 'test', 'research', 'urgent', 'blocked'];
+
+const createText = () =>
+  (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
+  faker.lorem.sentences(1);
 
 export const Default: Story = {
   args: {
-    count: 3,
-    data: 'sentences',
+    tree: createTree([10], createText).tree,
   },
 };
 
-export const Short: Story = {
+export const Large: Story = {
   args: {
-    count: 5,
-    data: 'words',
-  },
-};
-
-export const Checkbox: Story = {
-  args: {
-    count: 5,
-    data: 'sentences',
-    isTasklist: true,
+    tree: createTree([10, [0, 3], [0, 2]], createText).tree,
   },
 };
