@@ -764,7 +764,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
-export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>): ObjectCore => {
+export const getObjectCore = <T extends BaseObject>(obj: ReactiveObject<T>): ObjectCore => {
   if (!(obj as any as ProxyTarget)[symbolInternals]) {
     throw new Error('object is not an EchoObject');
   }
