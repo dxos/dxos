@@ -7,8 +7,6 @@ import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
-// TODO(burdon): Want multiple ECHO objects in same automerge document (locality).
-// TODO(burdon): Use consistent -Schema + -Type pattern (throughout) and replace extends TypedObejct.
 
 export const TreeNodeType = S.Struct({
   id: ObjectId,
