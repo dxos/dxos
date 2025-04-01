@@ -82,10 +82,13 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
 
-  const onVersionClick = (version: HistoryRow) => {
-    setSelectedVersion(version);
-    setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
-  };
+  const onVersionClick = useCallback(
+    (version: HistoryRow) => {
+      setSelectedVersion(version);
+      setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
+    },
+    [selected],
+  );
 
   const objectProperties = useMemo(
     () => [
@@ -126,23 +129,16 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }));
   }, [items, filter]);
 
-  const handleObjectRowClicked = useCallback(
-    (row: any) => {
-      if (!row) {
-        setSelected(undefined);
-        setSelectedVersion(null);
-        setSelectedVersionObject(null);
-        return;
-      }
+  const handleObjectRowClicked = useCallback((row: any) => {
+    if (!row) {
+      setSelected(undefined);
+      setSelectedVersion(null);
+      setSelectedVersionObject(null);
+      return;
+    }
 
-      const selectedObject = items.find((item) => item.id === row.id);
-
-      if (selectedObject) {
-        objectSelect(selectedObject);
-      }
-    },
-    [items],
-  );
+    objectSelect(row._original);
+  }, []);
 
   const historyProperties = useMemo(
     () => [
