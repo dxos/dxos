@@ -28,7 +28,7 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'main',
       position: 'hoist',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => {
         const state = useCapability(PresenterCapabilities.MutableState);
 
