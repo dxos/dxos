@@ -17,7 +17,6 @@ import {
   Ref,
   ObjectId,
   type Ref$,
-  getValue,
 } from '@dxos/echo-schema';
 import {
   Contact,
@@ -40,9 +39,9 @@ import { defer } from '@dxos/util';
 import { type ReactiveEchoObject, createObject, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
+import { createDocAccessor, DocAccessor } from '../core-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { createDocAccessor, DocAccessor } from '../core-db';
 
 registerSignalsRuntime();
 

@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
-import { symbolInternals, symbolPath, type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import { symbolPath, type ProxyTarget } from '../echo-handler/echo-proxy-target';
 
 /**
  * @deprecated Use DecodedAutomergePrimaryValue instead.

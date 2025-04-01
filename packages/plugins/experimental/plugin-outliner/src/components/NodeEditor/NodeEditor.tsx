@@ -20,8 +20,8 @@ import {
 } from '@dxos/react-ui-editor';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
-import { type TreeNodeType } from '../../types';
 import { tagsExtension } from './tags';
+import { type TreeNodeType } from '../../types';
 
 export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;
