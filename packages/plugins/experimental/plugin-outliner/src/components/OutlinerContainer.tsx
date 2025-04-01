@@ -10,11 +10,11 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
-import { TreeNodeType, type TreeType } from '../types';
+import { type OutlineType, TreeNodeType } from '../types';
 
-const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => {
-  const space = getSpace(tree);
-  if (!space || !tree.root) {
+const OutlinerContainer = ({ outline, role }: { outline: OutlineType; role: string }) => {
+  const space = getSpace(outline);
+  if (!space || !outline.tree.target) {
     return null;
   }
 
@@ -22,7 +22,7 @@ const OutlinerContainer = ({ tree, role }: { tree: TreeType; role: string }) => 
     <StackItem.Content toolbar={false}>
       <Outliner.Root
         classNames={mx(attentionSurface, 'p-1.5')}
-        tree={tree}
+        tree={outline.tree.target}
         onCreate={() => {
           return space.db.add(create(TreeNodeType, { data: { text: '' }, children: [] }));
         }}
