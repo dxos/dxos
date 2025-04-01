@@ -17,7 +17,7 @@ export default () => [
     createSurface({
       id: `${OUTLINER_PLUGIN}/article/journal`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: JournalType } => isInstanceOf(JournalType, data.subject), // TODO(burdon): Use consistently.
+      filter: (data): data is { subject: JournalType } => isInstanceOf(JournalType, data.subject),
       component: ({ data, role }) => <JournalContainer journal={data.subject} role={role} />,
     }),
   ),
