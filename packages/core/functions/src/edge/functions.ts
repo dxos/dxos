@@ -5,7 +5,8 @@
 import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
-import { EdgeHttpClient, type EdgeIdentity } from '@dxos/edge-client';
+import { createEdgeIdentity } from '@dxos/client/edge';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -44,26 +45,6 @@ export const uploadWorkerFunction = async ({
   });
 
   return response;
-};
-
-const createEdgeIdentity = (client: Client): EdgeIdentity => {
-  const identity = client.halo.identity.get();
-  const device = client.halo.device;
-  if (!identity || !device) {
-    throw new Error('Identity not available');
-  }
-  return {
-    identityKey: identity.identityKey.toHex(),
-    peerKey: device.deviceKey.toHex(),
-    presentCredentials: async ({ challenge }) => {
-      const identityService = client.services.services.IdentityService!;
-      const authCredential = await identityService.createAuthCredential();
-      return identityService.signPresentation({
-        presentation: { credentials: [authCredential] },
-        nonce: challenge,
-      });
-    },
-  };
 };
 
 export const incrementSemverPatch = (version: string): string => {
