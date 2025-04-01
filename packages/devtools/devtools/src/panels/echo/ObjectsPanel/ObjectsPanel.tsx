@@ -188,15 +188,15 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
         <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
 
-        <div className='grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
-          <div className={mx('p-1 overflow-auto ')}>
+        <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
+          <div className={mx('p-1 min-bs-0 overflow-auto')}>
             {selected ? (
               <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
             ) : (
               'Select an object to inspect the contents'
             )}
           </div>
-          <div className={mx('overflow-auto', !selected && 'p-1 border-bs !border-separator')}>
+          <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
               <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
             ) : (
