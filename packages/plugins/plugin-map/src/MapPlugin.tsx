@@ -34,7 +34,7 @@ export const MapPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MapType.typename,
           metadata: {
-            placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
+            placeholder: ['object placeholder', { ns: MAP_PLUGIN }],
             icon: 'ph--compass--regular',
           },
         }),

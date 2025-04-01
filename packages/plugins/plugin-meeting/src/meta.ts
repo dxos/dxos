@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const MEETING_PLUGIN = 'dxos.org/plugin/meeting';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: MEETING_PLUGIN,
   name: 'Meeting',
   description:
@@ -15,4 +15,4 @@ export const meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-meeting',
   tags: [],
   screenshots: ['https://dxos.network/plugin-details-calls-dark.png'],
-} satisfies PluginMeta;
+};

@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const MAP_PLUGIN = 'dxos.org/plugin/map';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: MAP_PLUGIN,
   name: 'Maps',
   description:
@@ -15,4 +15,4 @@ export const meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-map',
   tags: ['experimental'],
   screenshots: ['https://dxos.network/plugin-details-map-dark.png'],
-} satisfies PluginMeta;
+};

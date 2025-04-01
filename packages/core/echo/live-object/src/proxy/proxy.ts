@@ -14,7 +14,15 @@ import type { ReactiveObject } from '../object';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
-export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
+/**
+ * Internal api.
+ */
+export const isProxy = (value: unknown) => !!(value as any)?.[symbolIsProxy];
+
+/**
+ * @returns true if the value is a reactive object.
+ */
+export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => isProxy(value);
 
 export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {

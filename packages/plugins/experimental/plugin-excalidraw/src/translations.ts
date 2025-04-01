@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [EXCALIDRAW_PLUGIN]: {
         'plugin name': 'Sketch',
-        'object title placeholder': 'New sketch',
+        'object placeholder': 'New sketch',
         'create object label': 'Create sketch (Excalidraw)',
         'create stack section label': 'Create sketch',
         'settings hover tools label': 'Auto hide controls',
