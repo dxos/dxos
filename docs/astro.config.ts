@@ -19,7 +19,8 @@ export default defineConfig({
       lastUpdated: true,
       favicon: '/favicon.ico',
       components: {
-        SiteTitle: './src/components/CustomSiteTitle.astro',
+        // TODO(wittjosiah): Uncomment to link logo to home page.
+        // SiteTitle: './src/components/CustomSiteTitle.astro',
       },
       logo: {
         light: './src/assets/logotype/dxos-horizontal.svg',
@@ -79,7 +80,7 @@ export default defineConfig({
           collapsed: false,
         },
       ],
-      plugins: [starlightLinksValidator()],
+      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**'] })],
       head: [
         {
           tag: 'script',

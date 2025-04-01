@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "bundle": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "prebuild": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.32.5",

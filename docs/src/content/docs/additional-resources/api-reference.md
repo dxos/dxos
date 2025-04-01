@@ -3,6 +3,6 @@ title: API Reference
 description: Typedoc generated api reference for DXOS packages
 ---
 
-- [`@dxos/client`](https://github.com/dxos/dxos)
-- [`@dxos/react-client`](https://github.com/dxos/dxos)
-- [`@dxos/app-framework`](https://github.com/dxos/dxos)
+- <a href='/typedoc/client/index.html' target='_blank'>`@dxos/client`</a>
+- <a href='/typedoc/react-client/index.html' target='_blank'>`@dxos/react-client`</a>
+- <a href='/typedoc/app-framework/index.html' target='_blank'>`@dxos/app-framework`</a>
