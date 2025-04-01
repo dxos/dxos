@@ -140,28 +140,25 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           //
           // Move.
           //
-          // case 'move': {
-          //   switch (event.direction) {
-          //     case 'previous': {
-          //       if (index > 0) {
-          //         const [node] = nodes.splice(index, 1);
-          //         parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
-          //         parent.children.splice(index - 1, 0, node);
-          //       }
-          //       break;
-          //     }
+          case 'move': {
+            const idx = parent.children.findIndex((id) => id === node.id);
+            switch (event.direction) {
+              case 'previous': {
+                if (idx > 0) {
+                  model.moveNode(parent, idx, idx - 1);
+                }
+                break;
+              }
 
-          //     case 'next': {
-          //       if (index < parent.children.length - 1) {
-          //         const [node] = nodes.splice(index, 1);
-          //         parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
-          //         parent.children.splice(index + 1, 0, node);
-          //       }
-          //       break;
-          //     }
-          // }
-          // break;
-          // }
+              case 'next': {
+                if (idx < parent.children.length - 1) {
+                  model.moveNode(parent, idx, idx + 1);
+                }
+                break;
+              }
+            }
+            break;
+          }
 
           //
           // Navigate hierarchy.
