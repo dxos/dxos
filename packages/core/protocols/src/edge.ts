@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
+import { Schema as S } from 'effect';
+
+import { SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Rename EdgerRouterEndpoint?
 export enum EdgeService {
@@ -142,3 +144,23 @@ export type EdgeAuthChallenge = {
   type: 'auth_challenge';
   challenge: string;
 };
+
+export enum OAuthProvider {
+  GOOGLE = 'google',
+}
+
+export const InitiateOAuthFlowRequestSchema = S.Struct({
+  provider: S.Enums(OAuthProvider),
+  spaceId: S.String.pipe(S.filter(SpaceId.isValid)),
+  accessTokenId: S.String,
+  scopes: S.mutable(S.Array(S.String)),
+});
+export type InitiateOAuthFlowRequest = S.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
+
+export type InitiateOAuthFlowResponse = {
+  authUrl: string;
+};
+
+export type OAuthFlowResult =
+  | { success: true; accessToken: string; accessTokenId: string }
+  | { success: false; reason: string };
