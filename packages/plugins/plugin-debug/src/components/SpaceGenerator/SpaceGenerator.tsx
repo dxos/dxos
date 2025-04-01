@@ -145,7 +145,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   }, []);
 
   return (
-    <div role='none' className='flex flex-col divide-y divide-separator'>
+    <div role='none' className='flex flex-col divide-y divide-separator overflow-y-auto'>
       <Toolbar.Root classNames='p-1'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
         <IconButton

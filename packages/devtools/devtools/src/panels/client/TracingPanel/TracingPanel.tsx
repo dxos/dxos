@@ -99,8 +99,8 @@ export const TracingPanel = () => {
   const resourceProperties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'name', format: FormatEnum.JSON, size: 200 },
-      { name: 'logs', format: FormatEnum.Number, size: 100 },
-      { name: 'spans', format: FormatEnum.Number, size: 100 },
+      { name: 'logs', format: FormatEnum.Number, size: 120 },
+      { name: 'spans', format: FormatEnum.Number, size: 120 },
       { name: 'info', format: FormatEnum.JSON },
     ],
     [],
@@ -116,12 +116,12 @@ export const TracingPanel = () => {
     }));
   }, [state.resources]);
 
-  const handleResourceSelectionChanged = useCallback((selectedIds: string[]) => {
-    if (selectedIds.length === 0) {
+  const handleRowClicked = useCallback((row: any) => {
+    if (!row) {
       setSelectedResourceId(undefined);
       return;
     }
-    setSelectedResourceId(Number(selectedIds[selectedIds.length - 1]));
+    setSelectedResourceId(Number(row.id));
   }, []);
 
   // TODO(ZaymonFC): Do we need these visual specializations from the old table?
@@ -131,11 +131,7 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <div className='h-1/3'>
-        <DynamicTable
-          data={resourceData}
-          properties={resourceProperties}
-          onSelectionChanged={handleResourceSelectionChanged}
-        />
+        <DynamicTable data={resourceData} properties={resourceProperties} onRowClicked={handleRowClicked} />
       </div>
 
       <div className='flex flex-col h-2/3 overflow-hidden border-t'>

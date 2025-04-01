@@ -16,11 +16,11 @@ import React, {
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isNotFalsy, safeParseInt } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -38,8 +38,6 @@ const inlineEndLine =
   '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
 const blockEndLine =
   '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
-
-const frozen = { frozenRowsStart: 1, frozenColsStart: 1, frozenColsEnd: 1 };
 
 //
 // Root
@@ -71,18 +69,31 @@ export type TableController = {
   update?: (cell?: DxGridPosition) => void;
 };
 
+export type TableFeatures = { selection?: boolean };
+
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
   ignoreAttention?: boolean;
+  features?: TableFeatures;
+  onRowClicked?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, onRowClicked, features }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
+
+    const { selection } = useDefaultValue(features, () => ({
+      selection: true,
+    }));
+
+    const frozen = useMemo(
+      () => ({ frozenRowsStart: 1, frozenColsStart: selection ? 1 : 0, frozenColsEnd: 1 }),
+      [selection],
+    );
 
     /**
      * Provides an external controller that can be called to repaint the table.
@@ -111,6 +122,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
+        if (onRowClicked) {
+          const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+          if (rowIndex != null) {
+            const row = model?.getRowAt(rowIndex);
+            row && onRowClicked(row);
+          }
+        }
+
         if (!modals) {
           return;
         }

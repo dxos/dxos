@@ -27,25 +27,16 @@ export const MasterDetailTable = ({
   detailsPosition = 'right',
   onSelectionChanged,
 }: MasterDetailTableProps) => {
-  const [selectedId, setSelectedId] = useState<string>();
+  const [selected, setSelected] = useState<any | undefined>(undefined);
   const [transformedData, setTransformedData] = useState<any>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const selected = useMemo(() => {
-    return selectedId ? data.find((item) => item.id === selectedId) : undefined;
-  }, [selectedId, data]);
-
-  const handleSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
-        setSelectedId(undefined);
-        onSelectionChanged?.(undefined);
-      } else {
-        setSelectedId(selectedIds[selectedIds.length - 1]);
-        onSelectionChanged?.(selectedIds[selectedIds.length - 1]);
-      }
+  const handleRowClicked = useCallback(
+    (row: any) => {
+      setSelected(row);
+      onSelectionChanged?.(row.id);
     },
-    [onSelectionChanged, setSelectedId],
+    [onSelectionChanged, setSelected],
   );
 
   useEffect(() => {
@@ -88,7 +79,7 @@ export const MasterDetailTable = ({
   return (
     <div className={mx('bs-full', gridLayout)}>
       <div>
-        <DynamicTable data={data} properties={properties} onSelectionChanged={handleSelectionChanged} />
+        <DynamicTable data={data} properties={properties} onRowClicked={handleRowClicked} />
       </div>
       <div
         className={mx('overflow-auto text-sm border-separator border-bs', detailsPosition === 'right' && 'border-is')}
