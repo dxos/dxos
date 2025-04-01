@@ -240,7 +240,6 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
     <Fragment key={node.id}>
       <OutlinerRow
         ref={node.id === active ? setEditor : null}
-        tree={model.tree}
         node={node}
         active={node.id === active}
         indent={indent}
@@ -266,7 +265,6 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
 
 type OutlinerRowProps = ThemedClassName<
   {
-    tree: TreeType;
     node: TreeNodeType;
     indent: number;
     active?: boolean;
@@ -274,7 +272,7 @@ type OutlinerRowProps = ThemedClassName<
 >;
 
 const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
-  ({ classNames, tree, node, indent, active, editable, onEvent }, forwardedRef) => {
+  ({ classNames, node, indent, active, editable, onEvent }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     return (
       <div className={mx('flex w-full', classNames)}>
@@ -295,7 +293,6 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
         <NodeEditor
           ref={forwardedRef}
           classNames='pis-1 pie-1 pbs-1 pbe-1'
-          tree={tree}
           node={node}
           editable={editable}
           placeholder={indent === 0 ? t('text placeholder') : undefined}
