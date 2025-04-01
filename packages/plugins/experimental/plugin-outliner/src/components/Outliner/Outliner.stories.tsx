@@ -8,6 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -38,6 +39,9 @@ const meta: Meta<typeof Outliner.Root> = {
         tree={tree}
         onCreate={() => {
           return { id: ObjectId.random(), children: [], data: { text: '' } };
+        }}
+        onAction={(action) => {
+          log.info('action', { action });
         }}
       />
     );
