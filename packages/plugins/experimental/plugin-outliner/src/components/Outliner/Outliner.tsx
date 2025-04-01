@@ -1,610 +1,327 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
-import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithoutRef, StrictMode, useEffect, useMemo, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, {
+  forwardRef,
+  Fragment,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { RefArray } from '@dxos/live-object';
-import { createDocAccessor, makeRef } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
-import {
-  type CursorInfo,
-  automerge,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  formattingKeymap,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { log } from '@dxos/log';
+import { IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { getNext, getParent, getPrevious, getItems, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
-import { type TreeItemType } from '../../types';
+import { Tree, type TreeType, type TreeNodeType } from '../../types';
+import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from '../NodeEditor';
 
-type CursorSelection = {
-  itemId: string;
-  anchor?: number;
+type OutlinerController = {
+  focus: (id: string | undefined) => void;
 };
 
-type OutlinerOptions = Pick<ComponentPropsWithoutRef<'input'>, 'placeholder' | 'spellCheck'> & {
-  isTasklist?: boolean;
-};
+type OutlinerRootProps = ThemedClassName<{
+  tree?: TreeType;
+  onCreate?: () => TreeNodeType;
+  onDelete?: (node: TreeNodeType) => boolean | void;
+}>;
 
-const useKeymap = ({ onEnter, onIndent, onDelete, onShift, onCursor }: OutlinerItemProps) =>
-  useMemo(() => {
-    const getCursor = (view: EditorView): CursorInfo => {
-      const { head, from, to } = view.state.selection.ranges[0];
-      const { number: line } = view.state.doc.lineAt(head);
-      return {
-        from,
-        to,
-        line,
-        lines: view.state.doc.lines,
-        length: view.state.doc.length,
-        after: view.state.sliceDoc(from),
-      };
-    };
+const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
+  ({ classNames, tree, onCreate, onDelete }, forwardedRef) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [active, setActive] = useState<string | undefined>();
+    const model = useMemo(() => (tree ? new Tree(tree) : undefined), [tree]);
 
-    return Prec.highest(
-      keymap.of([
-        {
-          key: 'Enter',
-          run: (view) => {
-            const cursor = getCursor(view);
-            onEnter?.(cursor);
-            return true;
-          },
+    const [editor, setEditor] = useState<NodeEditorController | null>(null);
+    const [direction, setDirection] = useState<'start' | 'end'>();
+    useEffect(() => {
+      editor?.focus(direction);
+    }, [editor, direction]);
+
+    // Create first item if empty.
+    useEffect(() => {
+      if (model?.root.children.length === 0) {
+        model.addNode(model.root);
+      }
+    }, [model?.size]);
+
+    // External controller.
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        focus: (id) => {
+          log.info('focus', { id });
+          setActive(id);
         },
-        {
-          key: 'Backspace',
-          run: (view) => {
-            const cursor = getCursor(view);
-            const { from, line } = cursor;
-            if (from === 0 && line === 1) {
-              onDelete?.(cursor);
-              return true;
-            }
-
-            return false;
-          },
-        },
-        {
-          key: 'Tab',
-          run: () => {
-            onIndent?.('right');
-            return true;
-          },
-          shift: () => {
-            onIndent?.('left');
-            return true;
-          },
-        },
-
-        //
-        // Nav
-        //
-        {
-          key: 'ArrowLeft',
-          run: (view) => {
-            const { from, line } = getCursor(view);
-            if (from === 0 && line === 1) {
-              onCursor?.('up', -1);
-              return true;
-            }
-
-            return false;
-          },
-        },
-        {
-          key: 'ArrowRight',
-          run: (view) => {
-            const { from, length } = getCursor(view);
-            if (from === length) {
-              onCursor?.('down');
-              return true;
-            }
-
-            return false;
-          },
-        },
-
-        //
-        // Left/right
-        //
-        {
-          key: 'ArrowLeft',
-          run: (view) => {
-            const { from, line } = getCursor(view);
-            if (from === 0 && line === 1) {
-              onCursor?.('up', -1);
-              return true;
-            }
-
-            return false;
-          },
-        },
-        {
-          key: 'ArrowRight',
-          run: (view) => {
-            const { from, length } = getCursor(view);
-            if (from === length) {
-              onCursor?.('down', 0);
-              return true;
-            }
-
-            return false;
-          },
-        },
-
-        //
-        // Up
-        //
-        {
-          key: 'ArrowUp',
-          run: (view) => {
-            const { from, line } = getCursor(view);
-            if (line === 1) {
-              if (from === 0) {
-                onCursor?.('up', from);
-              } else {
-                view.dispatch({ selection: { anchor: 0 } });
-              }
-              return true;
-            }
-
-            return false;
-          },
-        },
-        {
-          key: 'alt-ArrowUp',
-          run: () => {
-            onShift?.('up');
-            return true;
-          },
-        },
-        {
-          key: 'cmd-ArrowUp',
-          run: () => {
-            onCursor?.('home');
-            return true;
-          },
-        },
-
-        //
-        // Down
-        //
-        {
-          key: 'ArrowDown',
-          run: (view) => {
-            const { line, lines, length, from } = getCursor(view);
-            if (line === lines) {
-              if (from === length) {
-                onCursor?.('down', from);
-              } else {
-                view.dispatch({ selection: { anchor: length } });
-              }
-
-              return true;
-            }
-
-            return false;
-          },
-        },
-        {
-          key: 'alt-ArrowDown',
-          run: () => {
-            onShift?.('down');
-            return true;
-          },
-        },
-        {
-          key: 'cmd-ArrowDown',
-          run: () => {
-            onCursor?.('end');
-            return true;
-          },
-        },
-      ]),
+      }),
+      [],
     );
-  }, []);
 
-//
-// Item
-//
+    const handleEvent = useCallback<NonNullable<NodeListProps['onEvent']>>(
+      (event) => {
+        if (!model) {
+          return;
+        }
 
-type OutlinerItemProps = {
-  item: TreeItemType;
-  active?: CursorSelection; // Request focus.
-  onSelect?: () => void;
-  onEnter?: (state?: CursorInfo) => void;
-  onDelete?: (state?: CursorInfo) => void;
-  onIndent?: (direction?: 'left' | 'right') => void;
-  onShift?: (direction?: 'up' | 'down') => void;
-  onCursor?: (direction?: 'home' | 'end' | 'up' | 'down', anchor?: number) => void;
-} & OutlinerOptions;
+        log('handleEvent', { event });
+        const { type, parent, node } = event;
+        invariant(parent);
+        const nodes = model.getChildNodes(parent);
 
-const OutlinerItem = (props: OutlinerItemProps) => {
-  const { item, active, placeholder, isTasklist, onSelect, onDelete } = props;
-  const { t } = useTranslation(OUTLINER_PLUGIN);
-  const { themeMode } = useThemeContext();
-  const keymap = useKeymap(props);
+        switch (type) {
+          //
+          // Focus.
+          //
+          case 'focus': {
+            if (event.focusing) {
+              setActive(node.id);
+            } else {
+              setActive(undefined);
+            }
+            break;
+          }
 
-  const [focus, setFocus] = useState(false);
-  useEffect(() => {
-    if (focus) {
-      onSelect?.();
-    }
-  }, [focus]);
+          //
+          // Create.
+          //
+          case 'create': {
+            const created = onCreate?.();
+            if (created) {
+              const idx = nodes.findIndex((n) => n.id === node.id);
+              model.addNode(parent, created, idx + 1);
+              setActive(created.id);
+            }
+            break;
+          }
 
-  const { parentRef, view } = useTextEditor(
-    () => ({
-      initialValue: item.text,
-      extensions: [
-        EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
-        createBasicExtensions({ placeholder }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode }),
-        decorateMarkdown({ renderLinkButton: onRenderLink }),
-        formattingKeymap(),
-        automerge(createDocAccessor(item, ['text'])),
-        keymap,
-      ],
-    }),
-    [item, themeMode],
-  );
+          //
+          // Delete.
+          // TODO(burdon): Cascade delete or preserve children?
+          //
+          case 'delete': {
+            if (onDelete?.(node) !== false) {
+              const previous = model.getPrevious(node);
+              const deleted = model.deleteNode(parent, node.id);
+              if (deleted && previous) {
+                setTimeout(() => setActive(previous.id));
+              }
+            }
+            break;
+          }
 
-  useEffect(() => {
-    if (active) {
-      view?.focus();
-    }
-  }, [view, active]);
+          //
+          // Indent.
+          // TOOD(burdon): Copy/paste/undo.
+          // TODO(burdon): Atomic?
+          //
+          case 'indent': {
+            switch (event.direction) {
+              case 'previous': {
+                model.unindentNode(node);
+                setActive(node.id);
+                break;
+              }
 
-  return (
-    <div className='flex'>
-      <div className='flex flex-col shrink-0 h-[40px] justify-center cursor-pointer'>
-        {(isTasklist && (
-          <Input.Root>
-            <Input.Checkbox
-              classNames='mx-2'
-              checked={item.done}
-              onCheckedChange={(checked) => {
-                item.done = !!checked;
-              }}
-            />
-          </Input.Root>
-        )) || (
-          <Circle
-            weight={focus ? 'fill' : undefined}
-            className={mx('mx-2 cursor-pointer', getSize(4), active && 'text-primary-500')}
-            onClick={() => onSelect?.()}
-          />
-        )}
-      </div>
+              case 'next': {
+                model.indentNode(node);
+                setActive(node.id);
+                break;
+              }
+            }
+            break;
+          }
 
-      <div ref={parentRef} className='flex grow pt-1' />
+          //
+          // Move.
+          //
+          // case 'move': {
+          //   switch (event.direction) {
+          //     case 'previous': {
+          //       if (index > 0) {
+          //         const [node] = nodes.splice(index, 1);
+          //         parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
+          //         parent.children.splice(index - 1, 0, node);
+          //       }
+          //       break;
+          //     }
 
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <Button variant='ghost'>
-            <DotsThreeVertical />
-          </Button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              {onDelete && (
-                <DropdownMenu.Item onClick={() => onDelete()}>
-                  <X className={getSize(5)} />
-                  <p>{t('delete object label')}</p>
-                </DropdownMenu.Item>
-              )}
-            </DropdownMenu.Viewport>
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
-    </div>
-  );
-};
+          //     case 'next': {
+          //       if (index < parent.children.length - 1) {
+          //         const [node] = nodes.splice(index, 1);
+          //         parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
+          //         parent.children.splice(index + 1, 0, node);
+          //       }
+          //       break;
+          //     }
+          // }
+          // break;
+          // }
 
-//
-// Branch
-//
+          //
+          // Navigate hierarchy.
+          //
+          case 'navigate': {
+            switch (event.direction) {
+              case 'previous': {
+                const previous = model.getPrevious(node);
+                if (previous && previous.id !== model.root.id) {
+                  setActive(previous.id);
+                  setDirection('start');
+                }
+                break;
+              }
 
-type OutlinerBranchProps = OutlinerOptions & {
-  className?: string;
-  root: TreeItemType;
-  active?: CursorSelection;
-  onItemCursor?: (parent: TreeItemType, item: TreeItemType, direction?: string, anchor?: number) => void;
-  onItemSelect?: (parent: TreeItemType, item: TreeItemType) => void;
-  onItemCreate?: (parent: TreeItemType, item: TreeItemType, state?: CursorInfo, after?: boolean) => TreeItemType;
-  onItemDelete?: (parent: TreeItemType, item: TreeItemType, state?: CursorInfo) => void;
-  onItemIndent?: (parent: TreeItemType, item: TreeItemType, direction?: string) => void;
-  onItemShift?: (parent: TreeItemType, item: TreeItemType, direction?: string) => void;
-};
-
-const OutlinerBranch = ({
-  className,
-  root,
-  active,
-  onItemCursor,
-  onItemSelect,
-  onItemCreate,
-  onItemDelete,
-  onItemIndent,
-  onItemShift,
-  ...props
-}: OutlinerBranchProps) => {
-  return (
-    <div className={className}>
-      {root.items
-        ?.map((ref) => ref.target)
-        .filter((item): item is TreeItemType => item?.text != null)
-        .map((item) => (
-          <div key={item.id}>
-            <OutlinerItem
-              item={item}
-              active={active?.itemId === item.id ? active : undefined}
-              onCursor={(...args) => onItemCursor?.(root, item, ...args)}
-              onSelect={() => onItemSelect?.(root, item)}
-              onEnter={(...args) => onItemCreate?.(root, item, ...args)}
-              onDelete={(...args) => onItemDelete?.(root, item, ...args)}
-              onIndent={(...args) => onItemIndent?.(root, item, ...args)}
-              onShift={(...args) => onItemShift?.(root, item, ...args)}
-              {...props}
-            />
-            {(item.items?.length ?? 0) > 0 && (
-              <OutlinerBranch
-                className='pl-4'
-                root={item}
-                active={active}
-                onItemCursor={onItemCursor}
-                onItemSelect={onItemSelect}
-                onItemCreate={onItemCreate}
-                onItemDelete={onItemDelete}
-                onItemIndent={onItemIndent}
-                onItemShift={onItemShift}
-                {...props}
-              />
-            )}
-          </div>
-        ))}
-    </div>
-  );
-};
-
-//
-// Root
-//
-
-type OutlinerRootProps = {
-  className?: string;
-  root: TreeItemType;
-  onCreate?: (text?: string) => TreeItemType;
-  onDelete?: (item: TreeItemType) => void;
-} & OutlinerOptions;
-
-const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: OutlinerRootProps) => {
-  const [active, setActive] = useState<CursorSelection>();
-
-  //
-  // Create/split line.
-  //
-  const handleCreate: OutlinerBranchProps['onItemCreate'] = (parent, current, state) => {
-    const items = getItems(parent);
-    const idx = items.findIndex((v) => current.id === v?.id);
-
-    let item: TreeItemType;
-    if (state?.from === 0 && state?.after?.length) {
-      // Insert before.
-      item = onCreate!();
-      items.splice(idx, 0, item);
-    } else {
-      // Insert after.
-      item = onCreate!(state?.after?.trim());
-
-      // TODO(dmaretskyi): Line splitting.
-      // if (state?.after) {
-      //   // Split line.
-      //   const text = current.text!.text;
-      //   text.delete(state.from, text.length);
-      // }
-
-      if (current.items?.length) {
-        current.items.splice(0, 0, makeRef(item));
-      } else {
-        items.splice(idx + 1, 0, item);
-      }
-    }
-
-    setActive({ itemId: item.id });
-    return item;
-  };
-
-  //
-  // Delete/join line.
-  //
-  const handleDelete: OutlinerBranchProps['onItemDelete'] = (parent, item, state) => {
-    if (parent === root && parent.items?.length === 1) {
-      return;
-    }
-
-    const items = getItems(parent);
-    const idx = items.findIndex((v) => v?.id === item.id);
-
-    // Don't delete if not empty and first in list.
-    if (idx === 0 && state?.after?.length) {
-      return;
-    }
-
-    // Remove and add children.
-    const children = RefArray.allResolvedTargets(item.items ?? []);
-    items.splice(idx, 1);
-    onDelete!(item);
-
-    // Join to previous line.
-    if (idx - 1 >= 0) {
-      const active = getLastDescendent(items[idx - 1]!);
-      if (active.text) {
-        const text = active.text;
-        const from = text.length;
-
-        // TODO(dmaretskyi): Line joining.
-        // if (state?.after?.length) {
-        //   text.insert(from, state.after.trim());
-        // }
-
-        setActive({ itemId: active.id, anchor: from });
-        const items = getItems(active);
-        items.splice(items.length, 0, ...(children ?? []));
-      }
-    } else {
-      const text = parent.text;
-      const from = text.length;
-      setActive({ itemId: parent.id, anchor: from });
-    }
-  };
-
-  //
-  // Indent.
-  //
-  const handleIndent: OutlinerBranchProps['onItemIndent'] = (parent, item, direction) => {
-    const items = getItems(parent);
-    const idx = items.findIndex((v) => v?.id === item.id) ?? -1;
-    switch (direction) {
-      case 'left': {
-        if (parent) {
-          // Get parent's parent.
-          const ancestor = getParent(root, parent)!;
-          if (ancestor) {
-            // Move all siblings.
-            const move = items.splice(idx, items.length - idx);
-            const ancestorItems = getItems(ancestor);
-            const parentIdx = ancestorItems.findIndex((v) => v?.id === parent.id);
-            ancestorItems.splice(parentIdx + 1, 0, ...move);
+              case 'next': {
+                const next = model.getNext(node);
+                if (next) {
+                  setActive(next.id);
+                  setDirection('end');
+                }
+                break;
+              }
+            }
+            break;
           }
         }
-        break;
-      }
+      },
+      [model],
+    );
 
-      case 'right': {
-        // Can't indent first child.
-        if (idx > 0) {
-          const siblingItems = getItems(items[idx - 1]!);
-          siblingItems.splice(siblingItems.length, 0, item);
-          items.splice(idx, 1);
-        }
-        break;
-      }
-    }
-  };
+    // TODO(burdon): Convert to grid.
+    // TODO(burdon): Expand/collapse sub-lists.
+    return (
+      <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
+        <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
+          {model && (
+            <NodeList
+              model={model}
+              parent={model.root}
+              indent={0}
+              editable={true}
+              active={active}
+              setEditor={setEditor}
+              onEvent={handleEvent}
+            />
+          )}
+        </div>
+      </div>
+    );
+  },
+);
 
-  //
-  // Move lines.
-  //
-  const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
-    const idx = parent.items?.findIndex(Ref.hasObjectId(item.id));
-    if (idx === undefined) {
-      return;
-    }
+//
+// ChildNodes
+//
 
-    switch (direction) {
-      case 'up': {
-        if (idx > 0) {
-          const previous = parent.items![idx - 1];
-          parent.items!.splice(idx - 1, 2, makeRef(item), previous);
-        }
-        break;
-      }
+type NodeListProps = {
+  model: Tree;
+  parent: TreeNodeType;
+  indent: number;
+  active?: string;
+  setEditor: (editor: NodeEditorController) => void;
+  onEvent: (event: NodeEditorEvent & { parent: TreeNodeType }) => void;
+} & Pick<NodeEditorProps, 'editable'>;
 
-      case 'down':
-        if (idx < parent.items!.length - 1) {
-          const next = parent.items![idx + 1];
-          parent.items!.splice(idx, 2, next, makeRef(item));
-        }
-        break;
-    }
-  };
+const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props }: NodeListProps) => {
+  const handleEvent = useCallback<NonNullable<OutlinerRowProps['onEvent']>>(
+    (event) => {
+      onEvent?.({ ...event, parent });
+    },
+    [onEvent],
+  );
 
-  //
-  // Navigation.
-  //
-  const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, anchor) => {
-    switch (direction) {
-      case 'home': {
-        invariant(root.items);
-        setActive({ itemId: root.items[0]!.target!.id, anchor: 0 });
-        break;
-      }
-
-      case 'end': {
-        invariant(root.items);
-        const last = getLastDescendent(root.items[root.items.length - 1]!.target!);
-        if (last) {
-          setActive({ itemId: last.id, anchor: 0 });
-        }
-        break;
-      }
-
-      case 'up': {
-        const previous = getPrevious(root, item);
-        if (previous && previous !== root) {
-          setActive({ itemId: previous.id, anchor });
-        }
-        break;
-      }
-
-      case 'down': {
-        const next = getNext(root, item);
-        if (next) {
-          setActive({ itemId: next.id, anchor });
-        }
-        break;
-      }
-    }
-  };
-
-  return (
-    <div role='tree' className={className}>
-      <OutlinerBranch
-        root={root}
-        active={active}
-        onItemCursor={handleCursor}
-        onItemSelect={(root, item) => setActive({ itemId: item.id })}
-        onItemCreate={onCreate && handleCreate}
-        onItemDelete={onDelete && handleDelete}
-        onItemIndent={handleIndent}
-        onItemShift={handleShift}
+  return model.getChildNodes(parent).map((node) => (
+    <Fragment key={node.id}>
+      <OutlinerRow
+        ref={node.id === active ? setEditor : null}
+        tree={model.tree}
+        node={node}
+        active={node.id === active}
+        indent={indent}
+        onEvent={handleEvent}
         {...props}
       />
-    </div>
-  );
+      <NodeList
+        model={model}
+        parent={node}
+        indent={indent + 1}
+        active={active}
+        setEditor={setEditor}
+        onEvent={onEvent}
+        {...props}
+      />
+    </Fragment>
+  ));
 };
+
+//
+// Row
+//
+
+type OutlinerRowProps = ThemedClassName<
+  {
+    tree: TreeType;
+    node: TreeNodeType;
+    indent: number;
+    active?: boolean;
+  } & Pick<NodeEditorProps, 'editable' | 'onEvent'>
+>;
+
+const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
+  ({ classNames, tree, node, indent, active, editable, onEvent }, forwardedRef) => {
+    const { t } = useTranslation(OUTLINER_PLUGIN);
+    return (
+      <div className={mx('flex w-full', classNames)}>
+        <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
+          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+            <Input.Root>
+              <Input.Checkbox
+                size={4}
+                checked={node.data.checked}
+                onCheckedChange={(checked) => {
+                  node.data.checked = checked;
+                }}
+              />
+            </Input.Root>
+          </div>
+        </div>
+
+        <NodeEditor
+          ref={forwardedRef}
+          classNames='pis-1 pie-1 pbs-1 pbe-1'
+          tree={tree}
+          node={node}
+          editable={editable}
+          placeholder={indent === 0 ? t('text placeholder') : undefined}
+          onEvent={onEvent}
+        />
+
+        {editable && (
+          <div>
+            <IconButton
+              classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
+              icon='ph--x--regular'
+              iconOnly
+              variant='ghost'
+              label={t('delete object label')}
+              onClick={() => onEvent?.({ type: 'delete', node })}
+            />
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 export const Outliner = {
   Root: OutlinerRoot,
-  Branch: OutlinerBranch,
-  Item: OutlinerItem,
+  Editor: NodeEditor,
 };
 
-export type { OutlinerRootProps };
-
-// TODO(burdon): Factor out style.
-const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
-
-const onRenderLink = (el: Element, url: string) => {
-  createRoot(el).render(
-    <StrictMode>
-      <a href={url} rel='noreferrer' target='_blank' className={hover}>
-        <ArrowSquareOut weight='bold' className={mx(getSize(4), 'inline-block leading-none mis-1 cursor-pointer')} />
-      </a>
-    </StrictMode>,
-  );
-};
+export type { OutlinerRootProps, OutlinerController, NodeEditorProps };

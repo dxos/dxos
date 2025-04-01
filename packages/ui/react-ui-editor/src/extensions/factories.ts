@@ -61,6 +61,7 @@ export type BasicExtensionsOptions = {
   lineNumbers?: boolean;
   lineWrapping?: boolean;
   placeholder?: string;
+  /** If true user cannot edit the text, but they can still select and copy it. */
   readonly?: boolean;
   search?: boolean;
   scrollPastEnd?: boolean;

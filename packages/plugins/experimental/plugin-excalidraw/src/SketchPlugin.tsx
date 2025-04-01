@@ -32,7 +32,7 @@ export const ExcalidrawPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
           metadata: {
-            placeholder: ['object title placeholder', { ns: EXCALIDRAW_PLUGIN }],
+            placeholder: ['object placeholder', { ns: EXCALIDRAW_PLUGIN }],
             icon: 'ph--compass-tool--regular',
           },
         }),

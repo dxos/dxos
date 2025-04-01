@@ -24,7 +24,7 @@ const DefaultStory = () => {
 
   return (
     <MessageList
-      messages={RefArray.allResolvedTargets(inbox.messages)}
+      messages={RefArray.targets(inbox.messages)}
       selected={selected}
       onSelect={setSelected}
       onAction={handleAction}

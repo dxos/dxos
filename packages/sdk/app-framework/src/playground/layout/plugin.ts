@@ -8,7 +8,7 @@ import { definePlugin, lazy, defineModule } from '../../core';
 const Layout = lazy(() => import('./Layout'));
 
 export const LayoutPlugin = () =>
-  definePlugin({ id: 'dxos.org/test/layout' }, [
+  definePlugin({ id: 'dxos.org/test/layout', name: 'Layout' }, [
     defineModule({
       id: 'dxos.org/test/layout/root',
       activatesOn: Events.Startup,
