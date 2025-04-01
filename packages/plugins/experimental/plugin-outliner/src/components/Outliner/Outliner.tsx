@@ -295,7 +295,7 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
           classNames='pis-1 pie-1 pbs-1 pbe-1'
           node={node}
           editable={editable}
-          placeholder={indent === 0 ? t('Enter text...') : undefined}
+          placeholder={indent === 0 ? t('text placeholder') : undefined}
           onEvent={onEvent}
         />
 
