@@ -4,58 +4,46 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useRef } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useEffect, useRef, useState } from 'react';
 
+import { ObjectId } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { create, makeRef } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerController } from './Outliner';
+import { createTree } from '../../testing';
 import translations from '../../translations';
-import { TreeNodeType } from '../../types';
-
-// TODO(burdon): Indent (Task graph).
-// TODO(burdon): Create/delete.
-
-// Data model:
-// - Tree of nodes (base type for task list).
-// - Journal.
-// - Hierarchical document of tasks.
-// - Master/detail (top-down vs. aligned vertically).
+import { TreeType } from '../../types';
 
 const meta: Meta<typeof Outliner.Root> = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner.Root,
-  render: ({ root: node }) => {
+  render: ({ tree: initialTree }) => {
     const outliner = useRef<OutlinerController>(null);
+    const space = useSpace();
+    const [tree, setTree] = useState<TreeType>();
+    useEffect(() => {
+      if (space && initialTree) {
+        setTree(space.db.add(initialTree));
+      }
+    }, [space, initialTree]);
 
     return (
-      <div className='flex h-full'>
-        <Outliner.Root
-          ref={outliner}
-          classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
-          root={node}
-          onCreate={() => {
-            return create(TreeNodeType, { children: [], text: '' });
-          }}
-        />
-        {/*
-        <div className='flex flex-col w-[20rem] ml-2'>
-          <div className='flex flex-col mt-2 border border-divider rounded'>
-            <h1 className='p-2'>{faker.lorem.words(3)}</h1>
-            <div className='p-2 text-sm'>{faker.lorem.paragraphs(2)}</div>
-          </div>
-          <div className='flex flex-col mt-16 border border-divider rounded'>
-            <h1 className='p-2'>{faker.lorem.words(3)}</h1>
-            <div className='p-2 text-sm'>{faker.lorem.paragraphs(1)}</div>
-          </div>
-        </div>
-        */}
-      </div>
+      <Outliner.Root
+        ref={outliner}
+        classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
+        tree={tree}
+        onCreate={() => {
+          return { id: ObjectId.random(), children: [], data: { text: '' } };
+        }}
+      />
     );
   },
   decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [TreeType] }),
     withTheme,
     withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center bg-baseSurface' }),
   ],
@@ -70,22 +58,18 @@ type Story = StoryObj<typeof Outliner.Root>;
 
 const tags = ['idea', 'bug', 'task', 'question', 'design', 'review', 'test', 'research', 'urgent', 'blocked'];
 
+const createText = () =>
+  (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
+  faker.lorem.sentences(1);
+
 export const Default: Story = {
   args: {
-    root: create(TreeNodeType, {
-      text: 'Root',
-      children: faker.helpers.multiple(
-        () =>
-          makeRef(
-            create(TreeNodeType, {
-              text:
-                (faker.datatype.boolean({ probability: 0.3 }) ? `#${faker.helpers.arrayElement(tags)} ` : '') +
-                faker.lorem.sentences(1),
-              children: [],
-            }),
-          ),
-        { count: 10 },
-      ),
-    }),
+    tree: createTree([10], createText).tree,
+  },
+};
+
+export const Large: Story = {
+  args: {
+    tree: createTree([10, [0, 3], [0, 2]], createText).tree,
   },
 };

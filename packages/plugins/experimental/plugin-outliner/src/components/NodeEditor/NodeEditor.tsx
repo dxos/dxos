@@ -3,25 +3,25 @@
 //
 
 import { Prec } from '@codemirror/state';
-import React, { forwardRef, StrictMode, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, StrictMode, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { Icon, IconButton, Input, useId, useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, ThemeProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorView,
   automerge,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   keymap,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
-import { OUTLINER_PLUGIN } from '../../meta';
-import { type TreeNodeType } from '../../types';
+import { type TreeType, type TreeNodeType } from '../../types';
 
 export type NodeEditorController = {
   focus: (at?: 'start' | 'end') => void;
@@ -35,6 +35,10 @@ export type NodeEditorEvent =
     }
   | {
       type: 'create';
+      node: TreeNodeType;
+    }
+  | {
+      type: 'delete';
       node: TreeNodeType;
     }
   | {
@@ -54,10 +58,11 @@ export type NodeEditorEvent =
     };
 
 export type NodeEditorProps = ThemedClassName<{
+  tree: TreeType;
   node: TreeNodeType;
-  indent: number;
+  editable?: boolean;
+  placeholder?: string;
   onEvent?: (event: NodeEditorEvent) => void;
-  onDelete?: (node: TreeNodeType) => void;
 }>;
 
 /**
@@ -65,24 +70,22 @@ export type NodeEditorProps = ThemedClassName<{
  * Subset of markdown editor.
  */
 export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
-  ({ classNames, node, indent, onEvent, onDelete }, ref) => {
-    const { t } = useTranslation(OUTLINER_PLUGIN);
-    const [focused, setFocused] = useState<boolean>(false);
+  ({ classNames, tree, node, editable, placeholder, onEvent }, ref) => {
     const { themeMode } = useThemeContext();
-    const id = useId('node_enditor', node.id);
 
     // NOTE: Must not change callbacks.
-    const { parentRef, view } = useTextEditor(
-      () => ({
-        initialValue: node.text,
+    const { parentRef, view } = useTextEditor(() => {
+      return {
+        initialValue: node.data.text,
         extensions: [
-          automerge(createDocAccessor(node, ['text'])),
+          // NOTE: Path is relative to tree (ECHO object).
+          automerge(createDocAccessor(tree, ['nodes', node.id, 'data', 'text'])),
 
-          // TODO(burdon): Show placeholder only if focused.
-          createBasicExtensions({ placeholder: 'Enter text...' }),
+          createBasicExtensions({ readonly: !editable, editable: false, placeholder }),
           createThemeExtensions({ themeMode }),
 
-          // TODO(burdon): Markdown subset.
+          // Markdown subset.
+          createMarkdownExtensions({ themeMode }),
           decorateMarkdown({ renderLinkButton: onRenderLink }),
 
           // Tags.
@@ -90,7 +93,6 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
 
           // Monitor focus.
           EditorView.focusChangeEffect.of((_state, focusing) => {
-            setFocused(focusing);
             if (focusing) {
               // Ensure focus events happen after unfocusing.
               setTimeout(() => onEvent?.({ type: 'focus', node, focusing }));
@@ -124,10 +126,10 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
               {
                 key: 'Backspace',
                 run: (view) => {
-                  if (!onDelete || view.state.doc.length) {
+                  if (!onEvent || view.state.doc.length) {
                     return false;
                   } else {
-                    onDelete(node);
+                    onEvent?.({ type: 'delete', node });
                     return true;
                   }
                 },
@@ -221,19 +223,17 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
             ]),
           ),
         ],
-      }),
-      [node],
-    );
+      };
+    }, [node, editable]);
 
     // Controller.
-    const div = useRef<HTMLDivElement>(null);
     useImperativeHandle(
       ref,
       () => {
         return {
           focus: (at) => {
             if (view) {
-              div.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+              parentRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
               view.focus();
               view.dispatch({
                 selection: {
@@ -247,30 +247,7 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
       [view],
     );
 
-    return (
-      <div id={id} className={mx('flex w-full gap-1', classNames)} ref={div}>
-        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
-          <Input.Root>
-            <Input.Checkbox size={4} title={node.id} />
-          </Input.Root>
-        </div>
-
-        <div ref={parentRef} className='  w-full pbs-1' />
-
-        {onDelete && (
-          <div>
-            <IconButton
-              classNames={mx('opacity-20 hover:opacity-100', focused && 'opacity-100')}
-              icon='ph--x--regular'
-              iconOnly
-              variant='ghost'
-              label={t('delete button')}
-              onClick={() => onDelete(node)}
-            />
-          </div>
-        )}
-      </div>
-    );
+    return <div ref={parentRef} className={mx('w-full', classNames)} />;
   },
 );
 
@@ -280,13 +257,15 @@ const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-prim
 const onRenderLink = (el: Element, url: string) => {
   createRoot(el).render(
     <StrictMode>
-      <a href={url} rel='noreferrer' target='_blank' className={hover}>
-        <Icon
-          icon='ph--arrow-square-out--regular'
-          classNames='inline-block leading-none mis-1 cursor-pointer'
-          size={4}
-        />
-      </a>
+      <ThemeProvider tx={defaultTx}>
+        <a href={url} rel='noreferrer' target='_blank' className={hover}>
+          <Icon
+            icon='ph--arrow-square-out--regular'
+            classNames='inline-block leading-none mis-1 cursor-pointer'
+            size={4}
+          />
+        </a>
+      </ThemeProvider>
     </StrictMode>,
   );
 };

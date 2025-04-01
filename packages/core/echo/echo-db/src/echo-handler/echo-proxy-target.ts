@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Brand } from 'effect';
+import { type Brand, type Schema as S } from 'effect';
 
 import type { UnsubscribeCallback } from '@dxos/async';
-import { type GenericSignal } from '@dxos/echo-signals/runtime';
-import { type ComplexMap } from '@dxos/util';
+import { inspectCustom } from '@dxos/debug';
+import type { symbolSchema } from '@dxos/echo-schema';
+import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { ComplexMap } from '@dxos/util';
 
 import { type ReactiveEchoObject } from './create';
 import { type EchoArray } from './echo-array';
@@ -42,14 +44,13 @@ export const TargetKey = {
 };
 
 /**
- *
+ * Internal state for the proxy ECHO object.
+ * Shared for the entire ECHO object in the database (maybe be composed of multiple proxies for each subrecord).
  */
-// TODO(burdon): Document.
-export type ObjectInternals = {
+export class ObjectInternals {
   /**
-   *
+   * Backing ECHO object core.
    */
-  // TODO(burdon): Document.
   core: ObjectCore;
 
   /**
@@ -59,25 +60,37 @@ export type ObjectInternals = {
   database: EchoDatabase | undefined;
 
   /**
-   *
+   * Signal for reactive updates to the object.
    */
-  // TODO(burdon): Document.
-  signal: GenericSignal;
+  signal: GenericSignal = compositeRuntime.createSignal();
 
   /**
    * Caching targets based on key path.
    * Only used for records and arrays.
    */
-  targetsMap: ComplexMap<TargetKey, ProxyTarget>;
+  targetsMap = new ComplexMap<TargetKey, ProxyTarget>((key) => JSON.stringify(key));
 
   /**
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  linkCache: Map<string, ReactiveEchoObject<any>> | undefined;
+  linkCache: Map<string, ReactiveEchoObject<any>> | undefined = new Map<string, ReactiveEchoObject<any>>();
 
-  subscriptions: UnsubscribeCallback[];
-};
+  subscriptions: UnsubscribeCallback[] = [];
+
+  /**
+   * Schema of the root object.
+   * Only used if this is not bound to a database.
+   */
+  rootSchema?: S.Schema.AnyNoContext = undefined;
+
+  constructor(core: ObjectCore, database?: EchoDatabase) {
+    this.core = core;
+    this.database = database;
+  }
+
+  [inspectCustom] = () => `ObjectInternals(${this.core.id}${this.database ? ' bound' : ''})`;
+}
 
 /**
  * Generic proxy target type for ECHO proxy objects.
@@ -105,4 +118,9 @@ export type ProxyTarget = {
    */
   // TODO(dmaretskyi): Can be removed.
   [symbolHandler]?: EchoReactiveHandler;
+
+  /**
+   * Used for objects created by `createObject`.
+   */
+  [symbolSchema]?: S.Schema.AnyNoContext;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

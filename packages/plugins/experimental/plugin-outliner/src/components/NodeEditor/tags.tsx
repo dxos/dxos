@@ -35,7 +35,7 @@ class TagWidget extends WidgetType {
 }
 
 const tagMatcher = new MatchDecorator({
-  regexp: /#(\w+)/g,
+  regexp: /#(\w+)\W/g,
   decoration: (match) =>
     Decoration.replace({
       widget: new TagWidget(match[1]),
@@ -68,6 +68,7 @@ export const tagsExtension = (): Extension => [
     '.cm-tag': {
       border: 'red',
       borderRadius: '4px',
+      marginRight: '6px',
       padding: '2px 4px',
       color: 'var(--dx-baseSurface)',
       backgroundColor: 'var(--dx-tagColor)',

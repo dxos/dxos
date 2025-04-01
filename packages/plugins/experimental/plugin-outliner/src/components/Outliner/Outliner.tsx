@@ -2,15 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  Fragment,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getChildNodes, getNext, getParent, getPrevious, type TreeNodeType } from '../../types';
+import { OUTLINER_PLUGIN } from '../../meta';
+import { Tree, type TreeType, type TreeNodeType } from '../../types';
 import { type NodeEditorProps, NodeEditor, type NodeEditorController, type NodeEditorEvent } from '../NodeEditor';
 
 type OutlinerController = {
@@ -18,21 +27,29 @@ type OutlinerController = {
 };
 
 type OutlinerRootProps = ThemedClassName<{
-  root: TreeNodeType;
+  tree?: TreeType;
   onCreate?: () => TreeNodeType;
   onDelete?: (node: TreeNodeType) => boolean | void;
 }>;
 
 const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
-  ({ classNames, root, onCreate, onDelete }, forwardedRef) => {
+  ({ classNames, tree, onCreate, onDelete }, forwardedRef) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [active, setActive] = useState<string | undefined>();
+    const model = useMemo(() => (tree ? new Tree(tree) : undefined), [tree]);
 
     const [editor, setEditor] = useState<NodeEditorController | null>(null);
     const [direction, setDirection] = useState<'start' | 'end'>();
     useEffect(() => {
       editor?.focus(direction);
     }, [editor, direction]);
+
+    // Create first item if empty.
+    useEffect(() => {
+      if (model?.root.children.length === 0) {
+        model.addNode(model.root);
+      }
+    }, [model?.size]);
 
     // External controller.
     useImperativeHandle(
@@ -46,13 +63,16 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
       [],
     );
 
-    const handleEvent = useCallback<NonNullable<ChildNodesProps['onEvent']>>(
+    const handleEvent = useCallback<NonNullable<NodeListProps['onEvent']>>(
       (event) => {
+        if (!model) {
+          return;
+        }
+
         log('handleEvent', { event });
         const { type, parent, node } = event;
         invariant(parent);
-        const nodes = getChildNodes(parent);
-        const index = nodes.findIndex((n) => n.id === node.id);
+        const nodes = model.getChildNodes(parent);
 
         switch (type) {
           //
@@ -74,8 +94,23 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
             const created = onCreate?.();
             if (created) {
               const idx = nodes.findIndex((n) => n.id === node.id);
-              parent.children.splice(idx + 1, 0, makeRef(created));
+              model.addNode(parent, created, idx + 1);
               setActive(created.id);
+            }
+            break;
+          }
+
+          //
+          // Delete.
+          // TODO(burdon): Cascade delete or preserve children?
+          //
+          case 'delete': {
+            if (onDelete?.(node) !== false) {
+              const previous = model.getPrevious(node);
+              const deleted = model.deleteNode(parent, node.id);
+              if (deleted && previous) {
+                setTimeout(() => setActive(previous.id));
+              }
             }
             break;
           }
@@ -83,32 +118,19 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           //
           // Indent.
           // TOOD(burdon): Copy/paste/undo.
-          // TODO(burdon): Tests.
+          // TODO(burdon): Atomic?
           //
           case 'indent': {
             switch (event.direction) {
               case 'previous': {
-                if (parent.id !== root.id) {
-                  const ancestor = getParent(root, parent);
-                  if (ancestor) {
-                    // Transplant following siblings to current node.
-                    const [ref, ...rest] = parent.children.splice(index, parent.children.length - index);
-                    const idx = getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-                    ancestor.children.splice(idx + 1, 0, ref);
-                    ref.target!.children.push(...rest);
-                    setActive(node.id);
-                  }
-                }
+                model.unindentNode(node);
+                setActive(node.id);
                 break;
               }
 
               case 'next': {
-                if (index > 0) {
-                  const [ref] = parent.children.splice(index, 1);
-                  const previous = nodes[index - 1];
-                  previous.children.push(ref);
-                  setActive(node.id);
-                }
+                model.indentNode(node);
+                setActive(node.id);
                 break;
               }
             }
@@ -117,28 +139,29 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
 
           //
           // Move.
-          // TODO(burdon): Atomic?
           //
-          case 'move': {
-            switch (event.direction) {
-              case 'previous': {
-                if (index > 0) {
-                  const [ref] = parent.children.splice(index, 1);
-                  parent.children.splice(index - 1, 0, ref);
-                }
-                break;
-              }
+          // case 'move': {
+          //   switch (event.direction) {
+          //     case 'previous': {
+          //       if (index > 0) {
+          //         const [node] = nodes.splice(index, 1);
+          //         parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
+          //         parent.children.splice(index - 1, 0, node);
+          //       }
+          //       break;
+          //     }
 
-              case 'next': {
-                if (index < parent.children.length - 1) {
-                  const [ref] = parent.children.splice(index, 1);
-                  parent.children.splice(index + 1, 0, ref);
-                }
-                break;
-              }
-            }
-            break;
-          }
+          //     case 'next': {
+          //       if (index < parent.children.length - 1) {
+          //         const [node] = nodes.splice(index, 1);
+          //         parent.children.splice(index, 1); // TODO(burdon): Hack -- see util.tsx
+          //         parent.children.splice(index + 1, 0, node);
+          //       }
+          //       break;
+          //     }
+          // }
+          // break;
+          // }
 
           //
           // Navigate hierarchy.
@@ -146,8 +169,8 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           case 'navigate': {
             switch (event.direction) {
               case 'previous': {
-                const previous = getPrevious(root, node);
-                if (previous && previous !== root) {
+                const previous = model.getPrevious(node);
+                if (previous && previous.id !== model.root.id) {
                   setActive(previous.id);
                   setDirection('start');
                 }
@@ -155,7 +178,7 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
               }
 
               case 'next': {
-                const next = getNext(root, node, true);
+                const next = model.getNext(node);
                 if (next) {
                   setActive(next.id);
                   setDirection('end');
@@ -167,84 +190,134 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
           }
         }
       },
-      [root],
-    );
-
-    // TODO(burdon): Delete or preserve children?
-    const handleDelete = useCallback<NonNullable<ChildNodesProps['onDelete']>>(
-      (parent, node) => {
-        if (onDelete?.(node) !== false) {
-          const previous = getPrevious(root, node);
-          const nodes = getChildNodes(parent);
-          const idx = nodes.findIndex((n) => n.id === node.id);
-          if (idx !== -1) {
-            parent.children.splice(idx, 1);
-            if (previous) {
-              setTimeout(() => setActive(previous.id));
-            }
-          }
-        }
-      },
-      [root],
+      [model],
     );
 
     // TODO(burdon): Convert to grid.
+    // TODO(burdon): Expand/collapse sub-lists.
     return (
       <div className={mx('flex flex-col grow overflow-hidden', classNames)}>
-        <div className='flex flex-col grow overflow-hidden'>
-          <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
-            <ChildNodes
-              key={root.id}
-              parent={root}
+        <div ref={scrollRef} className='flex flex-col overflow-y-auto scrollbar-thin'>
+          {model && (
+            <NodeList
+              model={model}
+              parent={model.root}
               indent={0}
+              editable={true}
               active={active}
               setEditor={setEditor}
               onEvent={handleEvent}
-              onDelete={handleDelete}
             />
-          </div>
+          )}
         </div>
-
-        {/* Statusbar */}
-        <div className='flex shrink-0 h-[40px] p-1 justify-center items-center text-xs text-subdued'>{active}</div>
       </div>
     );
   },
 );
 
-type ChildNodesProps = {
+//
+// ChildNodes
+//
+
+type NodeListProps = {
+  model: Tree;
   parent: TreeNodeType;
   indent: number;
   active?: string;
   setEditor: (editor: NodeEditorController) => void;
-  onDelete: (parent: TreeNodeType, node: TreeNodeType) => void;
   onEvent: (event: NodeEditorEvent & { parent: TreeNodeType }) => void;
-} & Omit<NodeEditorProps, 'ref' | 'node' | 'classNames' | 'onEvent' | 'onDelete'>;
+} & Pick<NodeEditorProps, 'editable'>;
 
-const ChildNodes = ({ parent, indent, setEditor, active, onEvent, onDelete, ...props }: ChildNodesProps) => {
-  return getChildNodes(parent).map((node) => (
+const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props }: NodeListProps) => {
+  const handleEvent = useCallback<NonNullable<OutlinerRowProps['onEvent']>>(
+    (event) => {
+      onEvent?.({ ...event, parent });
+    },
+    [onEvent],
+  );
+
+  return model.getChildNodes(parent).map((node) => (
     <Fragment key={node.id}>
-      <NodeEditor
+      <OutlinerRow
         ref={node.id === active ? setEditor : null}
+        tree={model.tree}
         node={node}
-        classNames={mx('border-l-4', node.id === active ? 'border-primary-500' : 'border-transparent text-subdued')}
+        active={node.id === active}
         indent={indent}
-        onEvent={(event) => onEvent?.({ ...event, parent })}
-        onDelete={(node) => onDelete?.(parent, node)}
+        onEvent={handleEvent}
         {...props}
       />
-      <ChildNodes
+      <NodeList
+        model={model}
         parent={node}
         indent={indent + 1}
         active={active}
         setEditor={setEditor}
         onEvent={onEvent}
-        onDelete={onDelete}
         {...props}
       />
     </Fragment>
   ));
 };
+
+//
+// Row
+//
+
+type OutlinerRowProps = ThemedClassName<
+  {
+    tree: TreeType;
+    node: TreeNodeType;
+    indent: number;
+    active?: boolean;
+  } & Pick<NodeEditorProps, 'editable' | 'onEvent'>
+>;
+
+const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
+  ({ classNames, tree, node, indent, active, editable, onEvent }, forwardedRef) => {
+    const { t } = useTranslation(OUTLINER_PLUGIN);
+    return (
+      <div className={mx('flex w-full', classNames)}>
+        <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
+          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+            <Input.Root>
+              <Input.Checkbox
+                size={4}
+                checked={node.data.checked}
+                onCheckedChange={(checked) => {
+                  node.data.checked = checked;
+                }}
+              />
+            </Input.Root>
+          </div>
+        </div>
+
+        <NodeEditor
+          ref={forwardedRef}
+          classNames='pis-1 pie-1 pbs-1 pbe-1'
+          tree={tree}
+          node={node}
+          editable={editable}
+          placeholder={indent === 0 ? t('text placeholder') : undefined}
+          onEvent={onEvent}
+        />
+
+        {editable && (
+          <div>
+            <IconButton
+              classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
+              icon='ph--x--regular'
+              iconOnly
+              variant='ghost'
+              label={t('delete object label')}
+              onClick={() => onEvent?.({ type: 'delete', node })}
+            />
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 export const Outliner = {
   Root: OutlinerRoot,
