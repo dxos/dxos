@@ -23,7 +23,7 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
   const { t } = useTranslation(OUTLINER_PLUGIN);
   const date = new Date();
 
-  const [entry, setEntry] = useState<JournalEntryType>();
+  const [showAddEntry, setShowAddEntry] = useState(false);
   useEffect(() => {
     if (!journal) {
       return;
@@ -31,9 +31,7 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
 
     // TODO(burdon): CRDT issue (merge entries with same date?)
     const entries = getJournalEntries(journal, date);
-    if (entries.length > 0) {
-      setEntry(entries[0]);
-    }
+    setShowAddEntry(entries.length === 0);
   }, [journal, journal?.entries.length, date]);
 
   const handleCreateEntry = useCallback(() => {
@@ -43,12 +41,12 @@ const JournalRoot = ({ journal, classNames }: JournalRootProps) => {
 
     const entry = createJournalEntry();
     journal.entries.push(makeRef(entry));
-    setEntry(entry);
+    setShowAddEntry(false);
   }, [journal, date]);
 
   return (
     <div className={mx('flex flex-col overflow-y-auto divide-y divide-separator', classNames)}>
-      {!entry && (
+      {showAddEntry && (
         <div className='p-2'>
           <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
         </div>

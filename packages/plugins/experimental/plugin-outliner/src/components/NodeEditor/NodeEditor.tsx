@@ -7,17 +7,18 @@ import React, { forwardRef, StrictMode, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { Icon, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, ThemeProvider, useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorView,
   automerge,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   keymap,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 
 import { tagsExtension } from './tags';
 import { type TreeType, type TreeNodeType } from '../../types';
@@ -80,11 +81,11 @@ export const NodeEditor = forwardRef<NodeEditorController, NodeEditorProps>(
           // NOTE: Path is relative to tree (ECHO object).
           automerge(createDocAccessor(tree, ['nodes', node.id, 'data', 'text'])),
 
-          // TODO(burdon): Show placeholder only if focused.
           createBasicExtensions({ readonly: !editable, editable: false, placeholder }),
           createThemeExtensions({ themeMode }),
 
-          // TODO(burdon): Markdown subset.
+          // Markdown subset.
+          createMarkdownExtensions({ themeMode }),
           decorateMarkdown({ renderLinkButton: onRenderLink }),
 
           // Tags.
@@ -256,13 +257,15 @@ const hover = 'rounded-sm text-primary-600 hover:text-primary-500 dark:text-prim
 const onRenderLink = (el: Element, url: string) => {
   createRoot(el).render(
     <StrictMode>
-      <a href={url} rel='noreferrer' target='_blank' className={hover}>
-        <Icon
-          icon='ph--arrow-square-out--regular'
-          classNames='inline-block leading-none mis-1 cursor-pointer'
-          size={4}
-        />
-      </a>
+      <ThemeProvider tx={defaultTx}>
+        <a href={url} rel='noreferrer' target='_blank' className={hover}>
+          <Icon
+            icon='ph--arrow-square-out--regular'
+            classNames='inline-block leading-none mis-1 cursor-pointer'
+            size={4}
+          />
+        </a>
+      </ThemeProvider>
     </StrictMode>,
   );
 };

@@ -242,7 +242,7 @@ const NodeList = ({ model, parent, indent, setEditor, active, onEvent, ...props 
         ref={node.id === active ? setEditor : null}
         tree={model.tree}
         node={node}
-        classNames={mx('border-l-4', node.id === active ? 'border-primary-500' : 'border-transparent text-subdued')}
+        active={node.id === active}
         indent={indent}
         onEvent={handleEvent}
         {...props}
@@ -277,16 +277,24 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
   ({ classNames, tree, node, indent, active, editable, onEvent }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
     return (
-      <div className={mx('flex w-full gap-1', classNames)}>
-        <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
-          <Input.Root>
-            <Input.Checkbox size={4} />
-          </Input.Root>
+      <div className={mx('flex w-full', classNames)}>
+        <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
+          <div className='flex shrink-0 w-[24px] pt-[8px] justify-center' style={{ marginLeft: indent * 24 }}>
+            <Input.Root>
+              <Input.Checkbox
+                size={4}
+                checked={node.data.checked}
+                onCheckedChange={(checked) => {
+                  node.data.checked = checked;
+                }}
+              />
+            </Input.Root>
+          </div>
         </div>
 
         <NodeEditor
           ref={forwardedRef}
-          classNames='pbs-1 pbe-1'
+          classNames='pis-1 pie-1 pbs-1 pbe-1'
           tree={tree}
           node={node}
           editable={editable}
