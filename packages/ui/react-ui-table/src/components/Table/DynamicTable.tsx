@@ -17,6 +17,7 @@ type DynamicTableProps = {
   tableName?: string;
   classNames?: string;
   onSelectionChanged?: (selectedItems: string[]) => void;
+  onRowClicked?: (row: any) => void;
   rowActions?: TableRowAction[];
   onRowAction?: (actionId: string, datum: any) => void;
 };
@@ -31,6 +32,7 @@ export const DynamicTable = ({
   classNames,
   tableName = 'com.example/dynamic_table',
   onSelectionChanged,
+  onRowClicked,
   rowActions,
   onRowAction,
 }: DynamicTableProps) => {
@@ -70,7 +72,13 @@ export const DynamicTable = ({
     <div className={mx('is-full bs-full grow grid', classNames)}>
       <div className='grid min-bs-0 overflow-hidden'>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
+          <Table.Main
+            ref={tableRef}
+            model={model}
+            presentation={presentation}
+            onRowClicked={onRowClicked}
+            ignoreAttention
+          />
         </Table.Root>
       </div>
     </div>

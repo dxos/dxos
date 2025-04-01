@@ -20,7 +20,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isNotFalsy, safeParseInt } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -75,10 +75,11 @@ export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
   ignoreAttention?: boolean;
+  onRowClicked?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, onRowClicked }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const { t } = useTranslation(translationKey);
@@ -111,6 +112,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
+        if (onRowClicked) {
+          const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+          if (rowIndex != null) {
+            const row = model?.getRowAt(rowIndex);
+            row && onRowClicked(row);
+          }
+        }
+
         if (!modals) {
           return;
         }
