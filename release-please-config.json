@@ -159,11 +159,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/plate/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/process/package.json",
           "jsonpath": "$.version"
         },
@@ -900,11 +895,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
         {
