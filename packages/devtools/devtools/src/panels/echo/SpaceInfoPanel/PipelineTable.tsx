@@ -152,27 +152,21 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     return tableRows;
   }, [state, metadata]);
 
-  const handleSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
+  const handleRowClicked = useCallback(
+    (row: PipelineTableRow) => {
+      if (row) {
+        setContext((ctx) => ({ ...ctx, feedKey: row.feedKey }));
+        onSelect?.(row);
+      } else {
         setContext((ctx) => ({ ...ctx, feedKey: undefined }));
-        return;
-      }
-
-      const selectedId = selectedIds[selectedIds.length - 1];
-      const selected = data.find((row) => row.id === selectedId);
-
-      if (selected) {
-        setContext((ctx) => ({ ...ctx, feedKey: selected.feedKey }));
-        onSelect?.(selected);
       }
     },
-    [data, onSelect, setContext],
+    [onSelect, setContext],
   );
 
   return (
     <div className='bs-24'>
-      <DynamicTable properties={properties} data={data} onSelectionChanged={handleSelectionChanged} />
+      <DynamicTable properties={properties} data={data} onRowClicked={handleRowClicked} />
     </div>
   );
 };

@@ -32,7 +32,6 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const spaces = useSpaces({ all: true });
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
-  const initialSelectRef = React.useRef(true);
 
   const tableData = useMemo(() => {
     return spaces.map((space) => {
@@ -56,25 +55,18 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     });
   }, [spaces]);
 
-  const handleSelect = useCallback(
-    (selectedItems: string[]) => {
-      // Skip the first automatic selection on mount
-      if (initialSelectRef.current) {
-        initialSelectRef.current = false;
+  const handleRowClicked = useCallback(
+    (row: any) => {
+      if (!row) {
         return;
       }
 
-      if (selectedItems.length === 0) {
-        return;
-      }
-
-      const selectedId = selectedItems[0];
+      const selectedId = row.id;
       const space = spaces.find((space) => space.key.toString() === selectedId);
       setState((state) => ({ ...state, space }));
-      const spaceData = tableData.find((data) => data.id === selectedId);
-      onSelect?.(spaceData?._original);
+      onSelect?.(row._original);
     },
-    [onSelect, setState, spaces, tableData],
+    [onSelect, setState, spaces],
   );
 
   const handleToggleOpen = useCallback(
@@ -179,7 +171,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       <DynamicTable
         properties={properties}
         data={tableData}
-        onSelectionChanged={handleSelect}
+        onRowClicked={handleRowClicked}
         rowActions={[
           { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
           { id: 'backup', translationKey: 'download space backup label' },

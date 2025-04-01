@@ -16,7 +16,6 @@ type DynamicTableProps = {
   properties: TablePropertyDefinition[];
   tableName?: string;
   classNames?: string;
-  onSelectionChanged?: (selectedItems: string[]) => void;
   onRowClicked?: (row: any) => void;
   rowActions?: TableRowAction[];
   onRowAction?: (actionId: string, datum: any) => void;
@@ -31,7 +30,6 @@ export const DynamicTable = ({
   properties,
   classNames,
   tableName = 'com.example/dynamic_table',
-  onSelectionChanged,
   onRowClicked,
   rowActions,
   onRowAction,
@@ -55,7 +53,6 @@ export const DynamicTable = ({
     table,
     objects: data,
     projection: viewProjection,
-    onSelectionChanged,
     onCellUpdate: handleCellUpdate,
     onRowOrderChanged: handleRowOrderChanged,
     rowActions,

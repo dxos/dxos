@@ -126,17 +126,16 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }));
   }, [items, filter]);
 
-  const handleObjectSelectionChanged = useCallback(
-    (selectedIds: string[]) => {
-      if (selectedIds.length === 0) {
+  const handleObjectRowClicked = useCallback(
+    (row: any) => {
+      if (!row) {
         setSelected(undefined);
         setSelectedVersion(null);
         setSelectedVersionObject(null);
         return;
       }
 
-      const selectedId = selectedIds[selectedIds.length - 1];
-      const selectedObject = items.find((item) => item.id === selectedId);
+      const selectedObject = items.find((item) => item.id === row.id);
 
       if (selectedObject) {
         objectSelect(selectedObject);
@@ -164,16 +163,15 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     }));
   }, [history, selectedVersion]);
 
-  const handleHistorySelectionChanged = useCallback(
-    (selectedHashes: string[]) => {
-      if (selectedHashes.length === 0 || !selected) {
+  const handleHistoryRowClicked = useCallback(
+    (row: any) => {
+      if (!row || !selected) {
         setSelectedVersion(null);
         setSelectedVersionObject(null);
         return;
       }
 
-      const selectedHash = selectedHashes[selectedHashes.length - 1];
-      const versionItem = history.find((item) => item.hash === selectedHash);
+      const versionItem = history.find((item) => item.hash === row.id);
 
       if (versionItem) {
         onVersionClick(versionItem);
@@ -192,11 +190,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       }
     >
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
-        <DynamicTable
-          data={tableData}
-          properties={objectProperties}
-          onSelectionChanged={handleObjectSelectionChanged}
-        />
+        <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
 
         <div className='grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
           <div className={mx('p-1 overflow-auto ')}>
@@ -208,11 +202,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
           </div>
           <div className={mx('overflow-auto', !selected && 'p-1 border-bs !border-separator')}>
             {selected ? (
-              <DynamicTable
-                data={historyData}
-                properties={historyProperties}
-                onSelectionChanged={handleHistorySelectionChanged}
-              />
+              <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
             ) : (
               'Select an object to inspect the contents'
             )}
