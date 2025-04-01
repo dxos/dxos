@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, Surface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import {
   getSpace,
@@ -74,7 +75,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${SPACE_PLUGIN}/collection-fallback`,
       role: 'article',
       position: 'fallback',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
@@ -186,7 +187,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     createSurface({
       id: `${SPACE_PLUGIN}/collection-section`,
       role: 'section',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => <CollectionSection collection={data.subject} />,
     }),
     createSurface({
