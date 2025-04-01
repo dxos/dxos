@@ -67,7 +67,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const edgeClient = useEdgeClient();
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue.dxn);
+  const invocationsQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue?.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
   const eventQueue = useQueue<TraceEvent>(
     edgeClient,
