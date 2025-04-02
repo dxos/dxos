@@ -249,9 +249,9 @@ const meta: Meta<StoryProps> = {
       types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
+      onSpaceCreated: async ({ client, space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = await initializeTable({ space, table, initialRow: false });
+        const schema = await initializeTable({ client, space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(schema, {

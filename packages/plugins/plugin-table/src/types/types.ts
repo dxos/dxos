@@ -13,7 +13,7 @@ export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-table/annotati
 
 export const CreateTableSchema = S.Struct({
   name: S.optional(S.String),
-  initialSchema: S.optional(
+  typename: S.optional(
     S.String.annotations({
       [InitialSchemaAnnotationId]: true,
     }),

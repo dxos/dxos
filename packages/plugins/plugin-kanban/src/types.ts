@@ -26,7 +26,7 @@ export const InitialPivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/an
 
 export const CreateKanbanSchema = S.Struct({
   name: S.optional(S.String),
-  initialSchema: S.optional(
+  typename: S.optional(
     S.String.annotations({
       [InitialSchemaAnnotationId]: true,
       [TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
@@ -96,7 +96,7 @@ export type Location = {
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
 
-export const createKanban = async (props: { space: Space; initialSchema?: string; initialPivotColumn?: string }) => {
+export const createKanban = async (props: { space: Space; typename?: string; initialPivotColumn?: string }) => {
   const { kanban } = await initializeKanban(props);
   return kanban;
 };

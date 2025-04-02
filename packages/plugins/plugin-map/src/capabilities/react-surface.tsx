@@ -75,8 +75,8 @@ export default () =>
         if (!space) {
           return null;
         }
-        const schemata = space?.db.schemaRegistry.query().runSync();
 
+        const schemata = space?.db.schemaRegistry.query().runSync();
         return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),

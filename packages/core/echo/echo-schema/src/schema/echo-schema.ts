@@ -73,6 +73,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
+// TODO(burdon): Do not implement S.Schema?
 export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyNoContext, TypedObject {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;

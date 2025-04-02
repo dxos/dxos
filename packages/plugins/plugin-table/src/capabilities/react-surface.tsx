@@ -5,9 +5,10 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
+import { getTypenameOrThrow, isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { type CollectionType } from '@dxos/plugin-space/types';
+import { useClient } from '@dxos/react-client';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { TableType } from '@dxos/react-ui-table';
@@ -59,6 +60,7 @@ export default () =>
         return <ObjectDetailsPanel objectId={data.subject.id} view={viewTarget} />;
       },
     }),
+    // TODO(burdon): Factor out from Table, Kanban, and Map.
     createSurface({
       id: `${TABLE_PLUGIN}/create-initial-schema-form`,
       role: 'form-input',
@@ -71,6 +73,7 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
+        const client = useClient();
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
         if (!space) {
@@ -78,9 +81,14 @@ export default () =>
         }
 
         // TODO(ZaymonFC): Make this reactive.
-        // TODO(burdon): Also add static types?
-        const schemata = space?.db.schemaRegistry.query().runSync();
-        return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
+        const fixed = client.graph.schemaRegistry.schemas;
+        const dynamic = space?.db.schemaRegistry.query().runSync();
+        const typenames = new Set<string>([
+          ...fixed.map((schema) => getTypenameOrThrow(schema)),
+          ...dynamic.map((schema) => schema.typename),
+        ]);
+
+        return <SelectInput {...props} options={Array.from(typenames).map((typename) => ({ value: typename }))} />;
       },
     }),
   ]);

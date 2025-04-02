@@ -4,47 +4,58 @@
 
 import {
   AST,
+  type EchoSchema,
   Format,
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  type EchoSchema,
   S,
+  toJsonSchema,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/react-client';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { type Client, PublicKey } from '@dxos/react-client';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';
-import { createFieldId, createView, getSchemaProperties, ViewProjection } from '@dxos/schema';
+import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
 type InitialiseTableProps = {
+  client: Client;
   space: Space;
   table: TableType;
+  typename?: string;
   initialRow?: boolean;
-  initialSchema?: string;
 };
 
 // TODO(ZaymonFC): Clean up the branching in this file.
-
-// TODO(burdon): Pass in type.
-// TODO(burdon): User should determine typename.
 export const initializeTable = async ({
+  client,
   space,
   table,
+  typename,
   initialRow = true,
-  initialSchema,
-}: InitialiseTableProps): Promise<EchoSchema> => {
-  if (initialSchema) {
-    const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
-
-    if (!schema) {
-      throw new Error(`Schema not found: ${initialSchema}`);
+}: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
+  log.info('initializeTable', { typename });
+  if (typename) {
+    // TODO(burdon): Normalize the schema registries.
+    let jsonSchema;
+    const schema = client.graph.schemaRegistry.getSchema(typename);
+    if (schema) {
+      jsonSchema = toJsonSchema(schema);
+    } else {
+      const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+      if (!schema) {
+        throw new Error(`Schema not found: ${typename}`);
+      }
+      jsonSchema = schema?.jsonSchema;
     }
+    invariant(schema);
 
-    // We need to get the schema properties here. For now, only simple types and refs, not compound types
-    // are going to be supported.
+    // We need to get the schema properties here.
+    // For now, only simple types and refs, not compound types are going to be supported.
     const fields = getSchemaProperties(schema.ast)
       .filter((prop) => prop.format !== FormatEnum.Ref)
       .map((prop) => prop.name);
@@ -53,74 +64,79 @@ export const initializeTable = async ({
       createView({
         // TODO(ZaymonFC): Don't hardcode name?
         name: 'View',
-        typename: schema.typename,
-        jsonSchema: schema.jsonSchema,
+        typename,
+        jsonSchema,
         fields,
       }),
     );
 
     return schema;
   } else {
-    const ContactSchema = TypedObject({
-      typename: `example.com/type/${PublicKey.random().truncate()}`,
-      version: '0.1.0',
-    })({
-      name: S.optional(S.String).annotations({
-        [AST.TitleAnnotationId]: 'Name',
-      }),
-      active: S.optional(S.Boolean),
-      email: S.optional(Format.Email),
-      salary: S.optional(Format.Currency()).annotations({
-        [AST.TitleAnnotationId]: 'Salary',
-      }), // TODO(burdon): Should default to prop name?
-    });
-
-    const [contactSchema] = await space.db.schemaRegistry.register([ContactSchema]);
+    const [schema] = await space.db.schemaRegistry.register([ContactSchema]);
+    const fields = ContactFields;
 
     table.view = makeRef(
       createView({
         name: 'View',
-        typename: contactSchema.typename,
-        jsonSchema: contactSchema.jsonSchema,
-        fields: ['name', 'email', 'salary', 'active'],
+        typename: schema.typename,
+        jsonSchema: schema.jsonSchema,
+        fields,
       }),
     );
 
-    const projection = new ViewProjection(contactSchema, table.view.target!);
-    projection.setFieldProjection({
-      field: {
-        id: table.view.target!.fields.find((f) => f.path === 'salary')!.id,
-        path: 'salary' as JsonPath,
-        size: 150,
-      },
-    });
-    projection.setFieldProjection({
-      field: {
-        id: table.view.target!.fields.find((f) => f.path === 'active')!.id,
-        path: 'active' as JsonPath,
-        size: 100,
-      },
-    });
+    createProjection(schema, table.view.target!);
 
-    projection.setFieldProjection({
-      field: {
-        id: createFieldId(),
-        path: 'manager' as JsonPath,
-        referencePath: 'name' as JsonPath,
-      },
-      props: {
-        property: 'manager' as JsonProp,
-        type: TypeEnum.Ref,
-        format: FormatEnum.Ref,
-        referenceSchema: contactSchema.typename,
-        title: 'Manager',
-      },
-    });
     if (initialRow) {
       // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
-      space.db.add(create(contactSchema, {}));
+      space.db.add(create(schema, {}));
     }
 
-    return contactSchema;
+    return schema;
   }
+};
+
+const ContactSchema = TypedObject({
+  typename: `example.com/type/${PublicKey.random().truncate()}`,
+  version: '0.1.0',
+})({
+  name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
+  active: S.optional(S.Boolean),
+  email: S.optional(Format.Email),
+  salary: S.optional(Format.Currency()).annotations({ [AST.TitleAnnotationId]: 'Salary' }),
+});
+
+const ContactFields = ['name', 'email', 'salary', 'active'];
+
+const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection => {
+  const projection = new ViewProjection(schema, view);
+  projection.setFieldProjection({
+    field: {
+      id: view.fields.find((f) => f.path === 'salary')!.id,
+      path: 'salary' as JsonPath,
+      size: 150,
+    },
+  });
+  projection.setFieldProjection({
+    field: {
+      id: view.fields.find((f) => f.path === 'active')!.id,
+      path: 'active' as JsonPath,
+      size: 100,
+    },
+  });
+  projection.setFieldProjection({
+    field: {
+      id: createFieldId(),
+      path: 'manager' as JsonPath,
+      referencePath: 'name' as JsonPath,
+    },
+    props: {
+      property: 'manager' as JsonProp,
+      type: TypeEnum.Ref,
+      format: FormatEnum.Ref,
+      referenceSchema: schema.typename,
+      title: 'Manager',
+    },
+  });
+
+  return projection;
 };

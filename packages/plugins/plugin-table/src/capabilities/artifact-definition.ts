@@ -71,7 +71,7 @@ export default () => {
           const intent = pipe(
             createIntent(TableAction.Create, {
               space: extensions.space,
-              initialSchema: typename,
+              typename,
               name: name ?? schema.typename,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
