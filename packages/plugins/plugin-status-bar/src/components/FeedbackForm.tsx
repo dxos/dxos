@@ -5,6 +5,7 @@
 import { PaperPlaneTilt, X } from '@phosphor-icons/react';
 import React, { useRef } from 'react';
 
+import { getSnapshot } from '@dxos/echo-schema';
 import { UserFeedback } from '@dxos/plugin-observability/types';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { FormProvider, useFormContext, useInputProps } from '@dxos/react-ui-form';
@@ -12,7 +13,6 @@ import { getSize } from '@dxos/react-ui-theme';
 
 import { STATUS_BAR_PLUGIN } from '../meta';
 import { mkTranslation } from '../translations';
-import { getSnapshot } from '@dxos/echo-schema';
 
 const defaultValues: UserFeedback = { name: '', email: '', message: '' };
 
