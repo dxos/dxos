@@ -33,7 +33,8 @@ const timestampClasses = 'text-xs leading-[20px] text-description pie-0 tabular-
 const segmentTextClasses = 'text-sm whitespace-normal hyphens-auto';
 const measureClasses = mx(
   // NOTE(thure): The `inline-start` value must equal `timestampColumnWidth` plus grid’s gap (1px)
-  'absolute inline-start-[69px] inline-end-0 invisible z-[-1] border pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
+  'absolute inline-start-[69px] inline-end-0 invisible z-[-1] border',
+  'pli-[--dx-grid-cell-padding-inline] plb-[--dx-grid-cell-padding-block] leading-[20px]',
   segmentTextClasses,
 );
 
@@ -99,6 +100,8 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
   const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);
   const [autoScroll, setAutoScroll] = useState(true);
 
+  const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
+
   const handleWheel = useCallback(
     (event: WheelEvent) => {
       setAutoScroll(false);
@@ -108,8 +111,6 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     },
     [hasAttention, ignoreAttention],
   );
-
-  const queueMap = useMemo(() => mapTranscriptQueue(blocks), [blocks]);
 
   const abortControllerRef = useRef<AbortController>();
 
@@ -122,7 +123,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
         return measureRows(entry.target, blocks, queueMap, abortControllerRef.current.signal)
           .then(setRows)
           .catch(() => {
-            /* Aborted mid-measurement by new size. */
+            // Aborted mid-measurement by new size.
           });
       }
     },
@@ -138,8 +139,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
     if (queueMap.length !== Object.keys(rows?.grid ?? {}).length) {
       void handleResize({ entry: { target: measureRef.current } }).then(() => {
         if (autoScroll) {
-          // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a
-          //  new `maxPosBlock`.
+          // TODO(thure): Implement a deterministic way to do this when `rows` has fully settled and grid has a new `maxPosBlock`.
           setTimeout(() => dxGrid?.scrollToEndRow(), 50);
         }
       });
@@ -155,6 +155,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < queueMap.length; row++) {
               const [blockIndex, segmentIndex] = queueMap[row];
+
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
                 value:
@@ -163,6 +164,7 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
                     : '',
                 className: timestampClasses,
               } satisfies DxGridCellValue;
+
               cells[toPlaneCellIndex({ col: 1, row })] = (
                 segmentIndex < 0
                   ? {
@@ -196,10 +198,10 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
       <Grid.Root id={`${attendableId}--transcript`}>
         <Grid.Content
           limitColumns={2}
-          columns={columns}
           limitRows={queueMap.length}
-          rowDefault={rowDefault}
+          columns={columns}
           rows={rows}
+          rowDefault={rowDefault}
           onWheel={handleWheel}
           className='[--dx-grid-base:var(--dx-baseSurface)] [--dx-grid-lines:var(--dx-baseSurface)] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto'
           ref={setDxGrid}
@@ -212,7 +214,10 @@ export const Transcript: FC<TranscriptProps> = ({ blocks, attendableId, ignoreAt
         label={t('scroll to end label')}
         tooltipSide='left'
         data-state={autoScroll ? 'invisible' : 'visible'}
-        classNames='absolute inline-end-2 block-end-2 opacity-0 pointer-events-none data-[state="visible"]:pointer-events-auto data-[state="visible"]:opacity-100 transition-opacity'
+        classNames={[
+          'absolute inline-end-2 block-end-2 opacity-0 pointer-events-none',
+          'data-[state="visible"]:pointer-events-auto data-[state="visible"]:opacity-100 transition-opacity',
+        ]}
         onClick={handleScrollToEnd}
       />
     </>

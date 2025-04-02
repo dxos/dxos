@@ -52,10 +52,7 @@ type RenderProps = {
 const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
   const space = useSpace();
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  const tools = useMemo<Tool[]>(
-    () => [...genericTools, ...artifactDefinitions.flatMap((definition) => definition.tools)],
-    [genericTools, artifactDefinitions],
-  );
+  const tools = useMemo<Tool[]>(() => [...genericTools], []);
 
   const [aiClient] = useState(() => new AIServiceEdgeClient({ endpoint: endpoints.ai }));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -70,6 +67,7 @@ const Render = ({ items: _items, prompts = [], ...props }: RenderProps) => {
     return new ChatProcessor(
       aiClient,
       tools,
+      artifactDefinitions,
       {
         space,
         dispatch,
