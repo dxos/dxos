@@ -3,12 +3,18 @@
 //
 
 import { EchoObject, Expando, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
-import { FunctionTrigger } from './types';
+import { FunctionTrigger, type FunctionTriggerType } from './types';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
   FAILURE = 'failure',
+}
+
+export enum InvocationTraceEventType {
+  START = 'start',
+  END = 'end',
 }
 
 export const TraceEventException = S.Struct({
@@ -17,12 +23,14 @@ export const TraceEventException = S.Struct({
   name: S.String,
   stack: S.optional(S.String),
 });
+export type TraceEventException = S.Schema.Type<typeof TraceEventException>;
 
 export const InvocationTraceStartEvent = S.Struct({
   /**
    * Queue message id.
    */
   id: ObjectId,
+  type: S.Literal(InvocationTraceEventType.START),
   /**
    * Invocation id, the same for invocation start and end events.
    */
@@ -56,6 +64,7 @@ export const InvocationTraceEndEvent = S.Struct({
    * Trace event id.
    */
   id: ObjectId,
+  type: S.Literal(InvocationTraceEventType.END),
   /**
    * Invocation id, will be the same for invocation start and end.
    */
@@ -69,6 +78,8 @@ export const InvocationTraceEndEvent = S.Struct({
 }).pipe(EchoObject('dxos.org/type/InvocationTraceEnd', '0.1.0'));
 
 export type InvocationTraceEndEvent = S.Schema.Type<typeof InvocationTraceEndEvent>;
+
+export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
 export const TraceEventLog = S.Struct({
   timestampMs: S.Number,
@@ -90,3 +101,53 @@ export const TraceEvent = S.Struct({
 }).pipe(EchoObject('dxos.org/type/TraceEvent', '0.1.0'));
 
 export type TraceEvent = S.Schema.Type<typeof TraceEvent>;
+
+/**
+ * TODO: remove
+ * Deprecated InvocationTrace event format.
+ */
+export type InvocationSpan = {
+  id: string;
+  timestampMs: number;
+  outcome: InvocationOutcome;
+  input: object;
+  durationMs: number;
+  invocationTraceQueue: Ref<Expando>;
+  invocationTarget: Ref<Expando>;
+  trigger?: Ref<FunctionTriggerType>;
+  exception?: TraceEventException;
+};
+
+export const createInvocationSpans = (items?: InvocationTraceEvent[]): InvocationSpan[] => {
+  if (!items) {
+    return [];
+  }
+  const startEvents = new Map<ObjectId, InvocationTraceStartEvent>();
+  const result: InvocationSpan[] = [];
+  for (const item of items) {
+    if (item.type === InvocationTraceEventType.START) {
+      startEvents.set(item.invocationId, item);
+    } else if (item.type === InvocationTraceEventType.END) {
+      const matchingStart = startEvents.get(item.invocationId);
+      if (!matchingStart) {
+        log.warn('end event without matching start', { item });
+        continue;
+      }
+      result.push({
+        id: item.invocationId,
+        durationMs: item.timestampMs - matchingStart.timestampMs,
+        timestampMs: item.timestampMs,
+        outcome: item.outcome,
+        exception: item.exception,
+        trigger: matchingStart.trigger,
+        input: matchingStart.input,
+        invocationTraceQueue: matchingStart.invocationTraceQueue,
+        invocationTarget: matchingStart.invocationTarget,
+      });
+    } else {
+      // TODO: remove, the deprecated InvocationTrace format is no longer produced by functions backend
+      result.push(item as InvocationSpan);
+    }
+  }
+  return result;
+};

@@ -4,10 +4,9 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
-import { type Queue } from '@dxos/echo-db';
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type TraceEvent, type InvocationTraceEvent } from '@dxos/functions/types';
+import { type TraceEvent, type InvocationTraceEvent, type InvocationSpan } from '@dxos/functions/types';
 import { useQueue, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
@@ -23,7 +22,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
   const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn);
-  const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
+  const [selectedInvocation, setSelectedInvocation] = useState<InvocationSpan>();
 
   const traceQueueDxn = useMemo(() => {
     return selectedInvocation?.invocationTraceQueue
@@ -34,7 +33,11 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
 
   const [selectedObject, setSelectedObject] = useState<any>();
-  const invocationsByTarget = groupByInvocationTarget(invocationsQueue);
+  const invocationSpans = useMemo(
+    () => createInvocationSpans(invocationsQueue?.items),
+    [invocationsQueue?.items ?? []],
+  );
+  const invocationsByTarget = groupByInvocationTarget(invocationSpans);
   const [selectedTarget, setSelectedTarget] = useState<string>();
 
   useEffect(() => {
@@ -55,7 +58,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   );
 
   const invocationData = useMemo(() => {
-    return filterBySelected(invocationsQueue?.items ?? [], selectedTarget).map((item) => ({
+    return filterBySelected(invocationSpans, selectedTarget).map((item) => ({
       id: `${item.timestampMs}-${Math.random()}`,
       time: new Date(item.timestampMs).toISOString(),
       outcome: item.outcome,
@@ -177,19 +180,16 @@ const ObjectDataViewer = ({ object }: ObjectDataViewerProps) => {
   );
 };
 
-const filterBySelected = (items: InvocationTraceEvent[], target: string | undefined) => {
+const filterBySelected = (items: InvocationSpan[], target: string | undefined) => {
   if (!target) {
     return [];
   }
   return items.filter((item) => decodeReference(item.invocationTarget).dxn?.toString() === target);
 };
 
-const groupByInvocationTarget = (queue?: Queue<InvocationTraceEvent>): Map<string, InvocationTraceEvent[]> => {
-  if (!queue) {
-    return new Map();
-  }
-  const result = new Map<string, InvocationTraceEvent[]>();
-  for (const item of queue.items) {
+const groupByInvocationTarget = (items: InvocationSpan[]): Map<string, InvocationSpan[]> => {
+  const result = new Map<string, InvocationSpan[]>();
+  for (const item of items) {
     const key = decodeReference(item.invocationTarget).dxn?.toString();
     if (key) {
       const list = result.get(key) ?? [];
