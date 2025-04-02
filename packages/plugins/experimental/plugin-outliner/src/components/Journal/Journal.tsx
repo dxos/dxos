@@ -70,12 +70,13 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
   }
 
   const date = new Date(entry.date);
-  const isToday = date.toDateString() === new Date().toDateString();
+  const dateWithOffset = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  const isToday = dateWithOffset.toDateString() === new Date().toDateString();
   return (
     <div className={mx('flex flex-col', classNames)}>
       <div className='px-2'>
-        <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</span>
-        <span className='text-sm text-subdued pis-2'>{format(date, 'EEEE')}</span>
+        <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(dateWithOffset, 'MMM d, yyyy')}</span>
+        <span className='text-sm text-subdued pis-2'>{format(dateWithOffset, 'EEEE')}</span>
       </div>
       <Outliner.Root
         tree={entry.tree.target}
