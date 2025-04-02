@@ -70,10 +70,11 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
   }
 
   const date = new Date(entry.date);
-  const isToday = date.toDateString() === new Date().toDateString();
+  const today = new Date(entry.date);
+  const isToday = today.toDateString() === date.toDateString();
   return (
     <div className={mx('flex flex-col', classNames)}>
-      <div className='px-2'>
+      <div className='pis-2'>
         <span className={mx('text-lg', isToday && 'text-primary-500')}>{format(date, 'MMM d, yyyy')}</span>
         <span className='text-sm text-subdued pis-2'>{format(date, 'EEEE')}</span>
       </div>
