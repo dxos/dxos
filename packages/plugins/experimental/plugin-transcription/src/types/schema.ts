@@ -17,6 +17,7 @@ export const TranscriptSchema = S.Struct({
   /**
    * Queue containing TranscriptBlock objects.
    */
+  // TODO(wittjosiah): Should be a ref to a queue.
   queue: S.optional(S.String),
 });
 
@@ -53,7 +54,8 @@ export type TranscriptSegment = S.Schema.Type<typeof TranscriptSegment>;
  */
 export const TranscriptBlock = S.Struct({
   id: S.String,
-  author: S.optional(S.String), // TODO(burdon): DID?
+  authorName: S.optional(S.String), // TODO(burdon): IdentityDid.
+  authorHue: S.optional(S.String),
   segments: S.Array(TranscriptSegment),
 }).pipe(EchoObject('dxos.org/type/TranscriptBlock', '0.1.0'));
 

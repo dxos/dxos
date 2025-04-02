@@ -46,14 +46,21 @@
       "compilerOptions"
     ],
     "pathMapping": {
+      "roots": [
+        "@dxos/composer-app"
+      ],
       "include": [
-        "packages/devtools/devtools",
         "packages/plugins/*",
         "packages/plugins/experimental/*",
+        "packages/ui/react-ui*",
+        "packages/devtools/devtools",
         "packages/sdk/app-graph",
         "packages/sdk/app-framework",
         "packages/sdk/migrations",
-        "packages/sdk/shell"
+        "packages/sdk/shell",
+        "packages/experimental/artifact-testing",
+        "packages/experimental/assistant",
+        "packages/core/conductor"
       ]
     },
     "noProjectReferences": false

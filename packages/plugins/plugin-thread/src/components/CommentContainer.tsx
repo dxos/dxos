@@ -179,7 +179,7 @@ export const CommentContainer = ({
         </div>
       </div>
       {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {RefArray.allResolvedTargets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
+      {RefArray.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleMessageDelete} />
       ))}
       {/*

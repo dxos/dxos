@@ -8,7 +8,7 @@
 
 // test('extract objects from the DXOS explainer', async () => {
 //   const result = await runLLM({
-//     model: DEFAULT_LLM_MODEL,
+//     model: DEFAULT_EDGE_MODEL,
 //     messages: [
 //       createUserMessage(`
 // # README

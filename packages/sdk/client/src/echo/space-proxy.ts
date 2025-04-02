@@ -21,8 +21,11 @@ import {
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
+  type QueuesAPI,
+  type QueuesService,
   type ReactiveEchoObject,
   Filter,
+  QueuesAPIImpl,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -106,10 +109,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   private _error: Error | undefined = undefined;
   private _properties?: ReactiveEchoObject<any> = undefined;
 
+  private readonly _queues = new QueuesAPIImpl();
+
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
     echoClient: EchoClient,
+    queuesService: QueuesService,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -144,6 +150,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+    this._queues.setService(queuesService);
   }
 
   get id(): SpaceId {
@@ -157,6 +164,10 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get db(): EchoDatabase {
     return this._db;
+  }
+
+  get queues(): QueuesAPI {
+    return this._queues;
   }
 
   /**

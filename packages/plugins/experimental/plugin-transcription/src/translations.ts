@@ -20,8 +20,7 @@ export default [
 
         'delete button': 'Delete',
         'bookmark button': 'Bookmark',
-        'summarize label': 'Summarize',
-        'summarizing label': 'Summarizing...',
+        'scroll to end label': 'Scroll to latest',
       },
     },
   },

@@ -220,7 +220,7 @@ export default (context: PluginsContext) =>
             ],
           };
         } else {
-          if (!messageIndex || !message) {
+          if (messageIndex === undefined || !message) {
             return;
           }
 

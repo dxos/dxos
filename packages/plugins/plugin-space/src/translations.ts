@@ -39,7 +39,7 @@ export default [
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
         'upload file message': 'Drag file here or click to browse',
-        'object title placeholder': 'Type a title here…',
+        'object placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
         'spaces label': 'Spaces',
         'show hidden spaces label': 'Show closed spaces',

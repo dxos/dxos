@@ -26,7 +26,7 @@ export const ExplorerPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ViewType.typename,
           metadata: {
-            placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
+            placeholder: ['object placeholder', { ns: EXPLORER_PLUGIN }],
             icon: 'ph--graph--regular',
           },
         }),

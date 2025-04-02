@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const CONDUCTOR_PLUGIN = 'dxos.org/plugin/conductor';
 
-export const meta = {
+export const meta: PluginMeta = {
   id: CONDUCTOR_PLUGIN,
   name: 'Conductor',
   description:
@@ -15,4 +15,4 @@ export const meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-conductor',
   tags: ['experimental'],
   screenshots: ['https://dxos.network/plugin-details-canvas-dark.png'],
-} satisfies PluginMeta;
+};

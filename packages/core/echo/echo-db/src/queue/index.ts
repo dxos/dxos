@@ -5,3 +5,5 @@
 export * from './mock';
 export * from './queue';
 export * from './types';
+export * from './queues-api';
+export * from './queue-service';
