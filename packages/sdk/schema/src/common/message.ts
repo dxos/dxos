@@ -83,7 +83,7 @@ export const MessageContentBlock = S.Union(
  */
 export const MessageType = S.Struct({
   id: ObjectId,
-  timestamp: S.String.annotations({
+  created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),
   sender: ActorSchema.annotations({
@@ -92,7 +92,7 @@ export const MessageType = S.Struct({
   blocks: S.Array(MessageContentBlock).annotations({
     description: 'Inline content of the message.',
   }),
-  content: S.optional(
+  attachments: S.optional(
     S.mutable(
       Ref(Expando).annotations({
         description: 'Non-text content embedded in the message (e.g., files, polls, etc.)',
