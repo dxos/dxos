@@ -22,7 +22,7 @@ import { styles } from '../../../styles';
 export const InvocationTracePanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue.dxn);
+  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
 
   const traceQueueDxn = useMemo(() => {
