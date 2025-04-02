@@ -30,7 +30,7 @@ export default () => [
       intent: AssistantAction.CreateTemplate,
       resolve: ({ name }) => ({
         data: {
-          object: create(TemplateType, { name, source: '{{! Template }}' }),
+          object: create(TemplateType, { name, kind: { include: 'manual' }, source: '{{! Template }}' }),
         },
       }),
     }),
