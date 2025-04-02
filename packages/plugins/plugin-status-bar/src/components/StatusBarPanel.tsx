@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { ObservabilityAction, type UserFeedback } from '@dxos/plugin-observability/types';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
 import { FeedbackForm } from './FeedbackForm';
@@ -15,6 +16,16 @@ import { STATUS_BAR_PLUGIN } from '../meta';
 export const StatusBarActions = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const [open, setOpen] = useState(false);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+
+  const handleSave = useCallback(
+    (values: UserFeedback) => {
+      void dispatch(createIntent(ObservabilityAction.CaptureUserFeedback, values));
+      setOpen(false);
+    },
+    [dispatch],
+  );
+
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
@@ -33,7 +44,7 @@ export const StatusBarActions = () => {
       <VersionNumber />
       <Popover.Portal>
         <Popover.Content classNames='shadow-lg'>
-          <FeedbackForm onClose={() => setOpen(false)} />
+          <FeedbackForm onSave={handleSave} />
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
