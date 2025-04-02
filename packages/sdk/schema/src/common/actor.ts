@@ -16,6 +16,7 @@ export const ContactType = S.Struct({
     ),
   ),
 }).pipe(EchoObject('dxos.org/type/Contact', '0.1.0'));
+export type ContactType = S.Schema.Type<typeof ContactType>;
 
 export const ActorRoles = ['user', 'assistant'] as const;
 export const ActorRole = S.Literal(...ActorRoles);

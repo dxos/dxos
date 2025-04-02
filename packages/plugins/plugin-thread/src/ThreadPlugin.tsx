@@ -7,9 +7,10 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, ThreadEvents } from '@dxos/plugin-space';
-import { ChannelType, defineObjectForm, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ChannelType, defineObjectForm, ThreadType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
+import { MessageType, MessageTypeV1, MessageTypeV1ToV2 } from '@dxos/schema';
 
 import { IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
 import { ThreadEvents as LocalThreadEvents } from './events';
@@ -99,7 +100,12 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType]),
+      activate: () => contributes(ClientCapabilities.Schema, [ThreadType, MessageType, MessageTypeV1]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [MessageTypeV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panel`,

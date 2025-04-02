@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoObject, Expando, ObjectId, Ref, S } from '@dxos/echo-schema';
+import { defineObjectMigration } from '@dxos/echo-db';
+import { Expando, ObjectId, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 import { ActorSchema } from './actor';
 
@@ -81,7 +82,7 @@ export const MessageContentBlock = S.Union(
 /**
  * Message.
  */
-export const MessageType = S.Struct({
+export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.2.0' })({
   id: ObjectId,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
@@ -94,7 +95,7 @@ export const MessageType = S.Struct({
   }),
   attachments: S.optional(
     S.mutable(
-      Ref(Expando).annotations({
+      S.Array(Ref(Expando)).annotations({
         description: 'Non-text content embedded in the message (e.g., files, polls, etc.)',
       }),
     ),
@@ -106,5 +107,41 @@ export const MessageType = S.Struct({
       }),
     ),
   ),
-}).pipe(EchoObject('dxos.org/type/Message', '0.1.0'));
-export type MessageType = S.Schema.Type<typeof MessageType>;
+}) {}
+
+enum MessageV1State {
+  NONE = 0,
+  ARCHIVED = 1,
+  DELETED = 2,
+  SPAM = 3,
+}
+
+export class MessageTypeV1 extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
+  timestamp: S.String,
+  state: S.optional(S.Enums(MessageV1State)),
+  sender: ActorSchema,
+  text: S.String,
+  parts: S.optional(S.mutable(S.Array(Ref(Expando)))),
+  properties: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+  context: S.optional(Ref(Expando)),
+}) {}
+
+export const MessageTypeV1ToV2 = defineObjectMigration({
+  from: MessageTypeV1,
+  to: MessageType,
+  transform: async (from) => {
+    return {
+      id: from.id,
+      created: from.timestamp,
+      sender: from.sender,
+      blocks: [{ type: 'text' as const, text: from.text }],
+      attachments: from.parts,
+      properties: {
+        ...from.properties,
+        state: from.state,
+        context: from.context,
+      },
+    };
+  },
+  onMigration: async () => {},
+});

@@ -6,7 +6,6 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Ref } from '@dxos/echo-schema';
 import { create, makeRef, RefArray } from '@dxos/live-object';
-import { MessageType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -14,6 +13,7 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/re
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
+import { MessageType } from '@dxos/schema';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -80,9 +80,9 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       makeRef(
         create(MessageType, {
           sender: { identityKey: identity.identityKey.toHex() },
-          timestamp: new Date().toISOString(),
-          text: messageRef.current,
-          context: context ? makeRef(context) : undefined,
+          created: new Date().toISOString(),
+          blocks: [{ type: 'text', text: messageRef.current }],
+          properties: context ? { context: makeRef(context) } : undefined,
         }),
       ),
     );
