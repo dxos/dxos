@@ -9,7 +9,7 @@ import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { Main } from '@dxos/react-ui';
 import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
-import { RevealPlayer } from './Reveal';
+import { RevealPlayer } from './RevealPlayer';
 import { PresenterAction } from '../types';
 
 const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {

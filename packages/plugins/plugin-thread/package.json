@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-thread",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -55,6 +55,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",

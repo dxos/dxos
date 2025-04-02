@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EchoObject, ObjectId, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -17,6 +17,7 @@ export const TranscriptSchema = S.Struct({
   /**
    * Queue containing TranscriptBlock objects.
    */
+  // TODO(wittjosiah): Should be a ref to a queue.
   queue: S.optional(S.String),
 });
 
@@ -52,8 +53,9 @@ export type TranscriptSegment = S.Schema.Type<typeof TranscriptSegment>;
  * Transcription block (from single speaker).
  */
 export const TranscriptBlock = S.Struct({
-  id: ObjectId,
-  author: S.optional(S.String), // TODO(burdon): DID?
+  id: S.String,
+  authorName: S.optional(S.String), // TODO(burdon): IdentityDid.
+  authorHue: S.optional(S.String),
   segments: S.Array(TranscriptSegment),
 }).pipe(EchoObject('dxos.org/type/TranscriptBlock', '0.1.0'));
 

@@ -38,7 +38,7 @@ const Render = ({ text }: TemplateEditorProps & { text: string }) => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(create(TemplateType, { source: text }));
+    return space.db.add(create(TemplateType, { source: text, kind: { include: 'manual' } }));
   });
 
   return (

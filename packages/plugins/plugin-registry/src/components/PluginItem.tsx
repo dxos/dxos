@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { Icon, Input, Link, ListItem, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Link, ListItem, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { REGISTRY_PLUGIN } from '../meta';
@@ -29,7 +29,7 @@ export const PluginItem = ({
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
-  const { id, name, description, homePage, source, icon = 'ph--circle--regular' } = plugin.meta;
+  const { id, name, description, icon = 'ph--circle--regular' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -44,7 +44,7 @@ export const PluginItem = ({
     [id, isEnabled, onChange],
   );
 
-  const hasSettings = useCallback(() => _hasSettings?.(id) ?? false, [id, _hasSettings]);
+  const hasSettings = _hasSettings?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
 
   return (
@@ -53,76 +53,54 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr] p-1 rounded-md border border-separator'
+      // TODO(burdon): Use Rail vars.
+      classNames='w-full h-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
     >
-      <div className='flex grow justify-center items-center'>
+      {/* Header. */}
+      <div className='flex justify-center items-center'>
         <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
       </div>
-      <div className='flex grow items-center truncate cursor-pointer' onClick={handleClick}>
-        {name ?? id}
+      <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
+        <span className='truncate'>{name ?? id}</span>
       </div>
-      <div className='flex grow justify-center items-center'>
+      <div className='flex justify-center items-center'>
         <Input.Root id={inputId}>
           <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
         </Input.Root>
       </div>
 
+      {/* Body. */}
       <div />
-      {(description || homePage || source) && (
-        <div id={descriptionId} className='col-span-2 flex flex-col w-full gap-2 pb-3'>
-          <div className='grow'>
-            <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-4')}>{description}</p>
-          </div>
+      <div id={descriptionId} className='col-span-2 pb-3'>
+        <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-4')}>{description}</p>
+      </div>
 
-          <div className='flex gap-2 items-center'>
-            <Link
-              aria-describedby={descriptionId}
-              classNames='text-sm text-description cursor-pointer'
-              onClick={handleClick}
-            >
-              {t('details label')}
-            </Link>
+      {/* Footer. */}
+      <div />
+      <div className='flex gap-2 items-center pie-1'>
+        <Link
+          aria-describedby={descriptionId}
+          classNames='text-sm text-description cursor-pointer'
+          onClick={handleClick}
+        >
+          {t('details label')}
+        </Link>
 
-            {homePage && (
-              <Link
-                href={homePage}
-                target='_blank'
-                rel='noreferrer'
-                aria-describedby={descriptionId}
-                classNames='text-sm text-description'
-                onClick={(ev) => ev.stopPropagation()}
-              >
-                {t('home page label')}
-                <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-              </Link>
-            )}
-
-            {source && (
-              <Link
-                href={source}
-                target='_blank'
-                rel='noreferrer'
-                aria-describedby={descriptionId}
-                classNames='text-sm text-description'
-                onClick={(ev) => ev.stopPropagation()}
-              >
-                {t('source label')}
-                <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mli-1' />
-              </Link>
-            )}
-
-            {hasSettings?.() && (
-              <Link
-                aria-describedby={descriptionId}
-                classNames='text-sm text-description cursor-pointer'
-                onClick={handleSettings}
-              >
-                {t('settings label')}
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+        <div className='flex-1' />
+      </div>
+      <div className='flex justify-center items-center'>
+        {hasSettings && (
+          <IconButton
+            aria-describedby={descriptionId}
+            classNames='text-sm text-description cursor-pointer'
+            icon='ph--gear--regular'
+            label={t('settings label')}
+            iconOnly
+            size={4}
+            onClick={handleSettings}
+          />
+        )}
+      </div>
     </ListItem.Root>
   );
 };

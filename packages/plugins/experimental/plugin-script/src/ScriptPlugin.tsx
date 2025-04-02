@@ -5,7 +5,8 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/functions';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
@@ -43,7 +44,7 @@ export const ScriptPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
           metadata: {
-            placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+            placeholder: ['object placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
@@ -59,7 +60,7 @@ export const ScriptPlugin = () =>
           label: ['function panel label', { ns: SCRIPT_PLUGIN }],
           icon: 'ph--terminal--regular',
           fixed: true,
-          filter: (node) => node.data instanceof ScriptType && !!getSpace(node.data),
+          filter: (node) => isInstanceOf(ScriptType, node.data) && !!getSpace(node.data),
         }),
     }),
     defineModule({

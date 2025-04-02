@@ -94,8 +94,10 @@ export const SpaceForm = S.Struct({
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {
+  // TODO(dmaretskyi): Change to S.Schema.AnyNoContext
   objectSchema: TypedObject;
   formSchema?: S.Schema<T, any>;
+  hidden?: boolean;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
 };
 
@@ -206,6 +208,7 @@ export namespace SpaceAction {
     input: S.Struct({
       object: ReactiveObjectSchema,
       target: S.Union(SpaceSchema, CollectionType),
+      hidden: S.optional(S.Boolean),
     }),
     output: S.Struct({
       id: S.String,

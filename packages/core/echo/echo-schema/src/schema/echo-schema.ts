@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, S } from '@dxos/effect';
+import { SchemaAST as AST, Schema as S } from 'effect';
+
 import { invariant } from '@dxos/invariant';
 
 import {
@@ -73,7 +74,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
 export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyNoContext, TypedObject {
-  private _schema: S.Schema<any> | undefined;
+  private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
   constructor(private readonly _storedSchema: StoredSchema) {
@@ -130,7 +131,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
   /**
    * Returns an IMMUTABLE schema snapshot of the current state of the schema.
    */
-  public getSchemaSnapshot(): S.Schema<any> {
+  public getSchemaSnapshot(): S.Schema.AnyNoContext {
     return this._getSchema();
   }
 

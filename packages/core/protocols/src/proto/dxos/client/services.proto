@@ -132,7 +132,7 @@ message RequestRecoveryChallengeResponse {
 
 message RecoverIdentityRequest {
   message ExternalSignature {
-    string identity_did = 1;
+    dxos.keys.PublicKey lookup_key = 1;
     dxos.keys.PublicKey device_key = 2;
     dxos.keys.PublicKey control_feed_key = 3;
     bytes signature = 4;
@@ -147,12 +147,20 @@ message RecoverIdentityRequest {
   }
 }
 
-message CreateRecoveryCredentialRequest {
-  /// Optional recovery key. If not provided, a new key will be generated.
-  optional dxos.keys.PublicKey recovery_key = 1;
+message RecoveryCredentialData {
+  /// Recovery key used to validate recovery challenge signature.
+  dxos.keys.PublicKey recovery_key = 1;
+
+  /// Public key used to identify the recovery key.
+  dxos.keys.PublicKey lookup_key = 2;
 
   /// Algorithm used to generate the recovery key.
-  optional string algorithm = 2;
+  string algorithm = 3;
+}
+
+message CreateRecoveryCredentialRequest {
+  /// If not provided, a new key will be generated.
+  optional RecoveryCredentialData data = 1;
 }
 
 message CreateRecoveryCredentialResponse {
@@ -425,6 +433,28 @@ message JoinBySpaceKeyRequest {
   dxos.keys.PublicKey space_key = 1;
 }
 
+message SpaceArchive {
+  string filename = 1;
+  bytes contents = 2;
+}
+
+message ExportSpaceRequest {
+  string space_id = 1;
+}
+
+message ExportSpaceResponse {
+  SpaceArchive archive = 1;
+}
+
+message ImportSpaceRequest {
+  SpaceArchive archive = 1;
+}
+
+message ImportSpaceResponse {
+  /// the ID of the new space.
+  string new_space_id = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
@@ -446,6 +476,9 @@ service SpacesService {
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
   rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
+
+  rpc ExportSpace(ExportSpaceRequest) returns (ExportSpaceResponse);
+  rpc ImportSpace(ImportSpaceRequest) returns (ImportSpaceResponse);
 }
 
 //
@@ -547,6 +580,10 @@ service NetworkService {
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
   rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
+  /**
+   * Query the swarm state without joining it.
+   */ 
+  rpc QuerySwarm(dxos.edge.signal.QueryRequest) returns (dxos.edge.messenger.SwarmResponse);
   rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
   rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
   rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);

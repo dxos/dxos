@@ -16,6 +16,7 @@ export default [
       },
       [ASSISTANT_PLUGIN]: {
         'chat title placeholder': 'AI Chat',
+        'templates label': 'Templates',
         'template title placeholder': 'Template',
 
         'open ambient chat label': 'Open AI chat',
@@ -27,6 +28,8 @@ export default [
         'command placeholder': 'Enter slash command...',
         'template placeholder': 'Enter template...',
         'value placeholder': 'Enter value...',
+        'typename placeholder': 'Enter typename of objects which this template is for',
+        'description placeholder': 'Enter description of when this template should be used',
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 
@@ -40,9 +43,11 @@ export default [
         'microphone button': 'Click to speak',
         'cancel processing button': 'Stop processing',
 
-        'settings custom prompts label': 'Custom prompts',
-        'settings llm model label': 'LLM model',
-        'settings default llm model label': 'Default Model',
+        'settings default label': 'Default',
+        'settings custom prompts label': 'Use custom prompts',
+        'settings llm provider label': 'Enable Ollama integration',
+        'settings edge llm model label': 'Remote language model',
+        'settings ollama llm model label': 'Ollama language model',
       },
     },
   },

@@ -13,7 +13,7 @@ import { styles } from '../../../styles';
 
 export const SignalPanel = () => {
   return (
-    <PanelContainer classNames={mx('divide-y space-y-2', styles.border)}>
+    <PanelContainer classNames={mx('grid grid-rows-[2fr_5fr]', styles.border)}>
       <SignalStatusTable />
       <SignalMessageTable />
     </PanelContainer>

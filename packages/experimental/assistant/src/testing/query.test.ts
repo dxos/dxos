@@ -15,11 +15,11 @@ import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData, seedTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
-import { AIServiceClientImpl, DEFAULT_LLM_MODEL } from '../ai-service';
+import { AIServiceEdgeClient, DEFAULT_EDGE_MODEL } from '../ai-service';
 import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
 
-const client = new AIServiceClientImpl({
+const client = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
@@ -41,7 +41,7 @@ test.skip('cypher query', async () => {
   ]);
 
   const result = await runLLM({
-    model: DEFAULT_LLM_MODEL,
+    model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
     spaceId,
     threadId,
@@ -78,7 +78,7 @@ test.skip('query ECHO', async () => {
   ]);
 
   const result = await runLLM({
-    model: DEFAULT_LLM_MODEL,
+    model: DEFAULT_EDGE_MODEL,
     tools: [cypherTool],
     spaceId,
     threadId,

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
@@ -19,8 +20,9 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { EchoClient } from '@dxos/echo-db';
-import { getTypename, type TypedObject } from '@dxos/echo-schema';
+import { EchoClient, type QueuesService, QueueServiceImpl, QueueServiceStub } from '@dxos/echo-db';
+import { getTypename } from '@dxos/echo-schema';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,7 +48,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: TypedObject[];
+  types?: S.Schema.AnyNoContext[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -100,6 +102,9 @@ export class Client {
    */
   @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
+
+  private _edgeClient?: EdgeHttpClient = undefined;
+  private _queuesService?: QueuesService = undefined;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -228,7 +233,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: TypedObject<any>[]) {
+  addTypes(types: S.Schema.AnyNoContext[]) {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
@@ -382,6 +387,14 @@ export class Client {
     });
     await this._services.open();
 
+    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    if (edgeUrl) {
+      this._edgeClient = new EdgeHttpClient(edgeUrl);
+      this._queuesService = new QueueServiceImpl(this._edgeClient);
+    } else {
+      this._queuesService = new QueueServiceStub();
+    }
+
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
@@ -390,7 +403,14 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
+    const spaces = new SpaceList(
+      this._config,
+      this._services,
+      this._echoClient,
+      halo,
+      this._queuesService!,
+      this._instanceId,
+    );
 
     const shell = this._shellManager
       ? new Shell({
@@ -484,6 +504,7 @@ export class Client {
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
+    this._edgeClient = undefined;
     log('closed');
   }
 

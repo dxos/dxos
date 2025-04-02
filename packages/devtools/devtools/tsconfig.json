@@ -70,6 +70,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../ui/primitives/react-hooks"

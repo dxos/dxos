@@ -277,10 +277,7 @@
       "path": "packages/plugins/experimental/plugin-automation/tsconfig.json"
     },
     {
-      "path": "packages/plugins/experimental/plugin-calls/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-canvas/tsconfig.json"
+      "path": "packages/plugins/experimental/plugin-conductor/tsconfig.json"
     },
     {
       "path": "packages/plugins/experimental/plugin-excalidraw/tsconfig.json"
@@ -347,6 +344,9 @@
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-meeting/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"

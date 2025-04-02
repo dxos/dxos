@@ -210,7 +210,7 @@ export const PropertySchema = S.Union(
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
 
-export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
+export const getFormatSchema = (format?: FormatEnum): S.Schema.AnyNoContext => {
   if (format === undefined) {
     return formatToSchema[FormatEnum.None];
   }

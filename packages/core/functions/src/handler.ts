@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 import { type Effect } from 'effect';
 
 import { type Client, PublicKey } from '@dxos/client';
@@ -171,7 +171,7 @@ export type SubscriptionData = {
 // TODO(burdon): Evolve into plugin definition like Composer.
 export const subscriptionHandler = <TMeta>(
   handler: FunctionHandler<SubscriptionData, TMeta>,
-  types?: S.Schema<any>[],
+  types?: S.Schema.AnyNoContext[],
 ): FunctionHandler<RawSubscriptionData, TMeta> => {
   return async ({ event: { data }, context, response, ...rest }) => {
     const { client } = context;
@@ -199,7 +199,7 @@ export const subscriptionHandler = <TMeta>(
 };
 
 // TODO(burdon): Evolve types as part of function metadata.
-const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
+const registerTypes = (space: Space, types: S.Schema.AnyNoContext[] = []) => {
   const registry = space.db.graph.schemaRegistry;
   for (const type of types) {
     if (!registry.hasSchema(type)) {

@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
-import { pipe } from 'effect';
+import { SchemaAST as AST, Schema as S, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -30,7 +29,7 @@ describe('View', () => {
   test('create view from TypedObject', async ({ expect }) => {
     const schema = Testing.ContactType;
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
-    expect(view.query.type).to.eq(schema.typename);
+    expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
       'email',

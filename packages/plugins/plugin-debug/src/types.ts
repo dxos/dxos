@@ -56,6 +56,7 @@ export namespace Devtools {
     export const Feeds = `${Devtools.Echo.id}.feeds`;
     export const Objects = `${Devtools.Echo.id}.objects`;
     export const Automerge = `${Devtools.Echo.id}.automerge`;
+    export const Queues = `${Devtools.Echo.id}.queues`;
     export const Members = `${Devtools.Echo.id}.members`;
     export const Metadata = `${Devtools.Echo.id}.metadata`;
   }
@@ -77,5 +78,6 @@ export namespace Devtools {
     export const id = `${Devtools.id}.edge`;
     export const Dashboard = `${Devtools.Edge.id}.dashboard`;
     export const Workflows = `${Devtools.Edge.id}.workflows`;
+    export const Traces = `${Devtools.Edge.id}.traces`;
   }
 }

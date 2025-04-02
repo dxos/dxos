@@ -1,6 +1,6 @@
 {
   "name": "@dxos/effect",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Effect utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,16 +25,15 @@
   "dependencies": {
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "jsonpath-plus": "10.2.0"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@effect/schema": "^0.75.5",
-    "effect": "^3.12.3"
+    "effect": "3.13.3"
   },
   "peerDependencies": {
-    "@effect/schema": "^0.75.5",
-    "effect": "^3.12.3"
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

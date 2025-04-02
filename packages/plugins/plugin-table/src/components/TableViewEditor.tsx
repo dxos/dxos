@@ -18,17 +18,17 @@ type TableViewEditorProps = { table: TableType };
 const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
-  const schema = useSchema(space, table.view?.target?.query.type);
+  const schema = useSchema(space, table.view?.target?.query.typename);
 
   const views = useQuery(space, Filter.schema(ViewType));
-  const currentTypename = useMemo(() => table?.view?.target?.query?.type, [table?.view?.target?.query?.type]);
+  const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
 
-      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
-        view.query.type = newTypename;
+        view.query.typename = newTypename;
       }
       schema.updateTypename(newTypename);
     },

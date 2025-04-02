@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 
 import { SCRIPT_PLUGIN } from './meta';
 
@@ -14,7 +14,7 @@ export default [
       },
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
-        'object title placeholder': 'New script',
+        'object placeholder': 'New script',
         'create object label': 'Create script',
         'create stack section label': 'Create script',
         'description label': 'Description',
@@ -48,11 +48,10 @@ export default [
         'view group label': 'View',
         'view editor label': 'Editor',
         'view split label': 'Split',
-        'view debug label': 'Debug',
-        // TODO(wittjosiah): Replace debug with logs.
-        // 'view logs label': 'Logs',
+        'view logs label': 'Logs',
         'template select group label': 'Select template',
         'function panel label': 'Debug Function',
+        'logs plank heading': 'Logs',
       },
     },
   },

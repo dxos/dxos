@@ -1016,6 +1016,10 @@ export class DxGrid extends LitElement {
     this.updatePosBlock(this.blockOffset(row, 'grid'));
   }
 
+  scrollToEndRow() {
+    this.updatePosBlock(Infinity);
+  }
+
   //
   // Map scroll DOM methods to virtualized value.
   //

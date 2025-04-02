@@ -47,8 +47,6 @@ const Story = () => {
   return <Graph space={space} />;
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-explorer/Graph',
   component: Graph,
@@ -60,3 +58,5 @@ const meta: Meta = {
 };
 
 export default meta;
+
+export const Default = {};

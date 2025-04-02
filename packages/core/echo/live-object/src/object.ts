@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Schema as S } from 'effect';
+
 import {
   type BaseObject,
   createObjectId,
@@ -12,7 +14,6 @@ import {
   type ObjectMeta,
   ObjectMetaSchema,
 } from '@dxos/echo-schema';
-import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { createProxy, isValidProxyTarget } from './proxy';

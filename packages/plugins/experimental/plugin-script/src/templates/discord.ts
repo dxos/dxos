@@ -13,9 +13,8 @@
 */
 
 import { FetchHttpClient } from '@effect/platform';
-import { Schema as S } from '@effect/schema';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
-import { Effect, Config, Redacted, Ref } from 'effect';
+import { Effect, Config, Redacted, Ref, Schema as S } from 'effect';
 
 import { Filter } from '@dxos/client/echo';
 import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
@@ -60,10 +59,14 @@ export default defineFunction({
   }) =>
     Effect.gen(function* () {
       invariant(space, 'Space is required');
-      const { token } = yield* Effect.tryPromise(() =>
-        space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
-      );
-      const { objects } = yield* Effect.tryPromise(() => space.queues.queryQueue(DXN.parse(queueId)));
+      const { token } = yield* Effect.tryPromise({
+        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
+        catch: (e: any) => e,
+      });
+      const { objects } = yield* Effect.tryPromise({
+        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        catch: (e: any) => e,
+      });
       const backfill = objects.length === 0;
       const newMessages = yield* Ref.make(0);
       const lastMessage = yield* Ref.make(objects.at(-1) as S.Schema.Type<typeof MessageSchema>);
@@ -90,9 +93,12 @@ export default defineFunction({
             )
             .toReversed();
           if (queueMessages.length > 0) {
-            yield* Effect.tryPromise(() => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages));
+            yield* Effect.tryPromise({
+              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
+              catch: (e: any) => e,
+            });
             yield* Ref.update(newMessages, (n) => n + queueMessages.length);
-            yield* Ref.update(lastMessage, () => queueMessages.at(-1)!);
+            yield* Ref.update(lastMessage, (m) => queueMessages.at(-1)!);
           }
           if (messages.length < pageSize) {
             break;

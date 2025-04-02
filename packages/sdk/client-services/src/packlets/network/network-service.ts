@@ -12,7 +12,12 @@ import {
   type UpdateConfigRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type LeaveRequest, type JoinRequest, type Message } from '@dxos/protocols/proto/dxos/edge/signal';
+import {
+  type LeaveRequest,
+  type JoinRequest,
+  type Message,
+  type QueryRequest,
+} from '@dxos/protocols/proto/dxos/edge/signal';
 
 export class NetworkServiceImpl implements NetworkService {
   constructor(
@@ -51,6 +56,10 @@ export class NetworkServiceImpl implements NetworkService {
 
   async leaveSwarm(request: LeaveRequest): Promise<void> {
     return this.signalManager.leave(request);
+  }
+
+  async querySwarm(request: QueryRequest): Promise<SwarmResponse> {
+    return this.signalManager.query(request);
   }
 
   subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {

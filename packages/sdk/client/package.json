@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,11 @@
       "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
       "node": "./dist/lib/node-esm/halo/index.mjs"
+    },
+    "./edge": {
+      "types": "./dist/types/src/edge/index.d.ts",
+      "browser": "./dist/lib/browser/edge/index.mjs",
+      "node": "./dist/lib/node-esm/edge/index.mjs"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -63,6 +68,9 @@
       "halo": [
         "dist/types/src/halo/index.d.ts"
       ],
+      "edge": [
+        "dist/types/src/edge/index.d.ts"
+      ],
       "invitations": [
         "dist/types/src/invitations/index.d.ts"
       ],
@@ -96,6 +104,7 @@
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -113,7 +122,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "base-x": "~3.0.9",
     "jwt-decode": "^4.0.0",
     "lodash.get": "^4.4.2",
@@ -123,7 +131,6 @@
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",

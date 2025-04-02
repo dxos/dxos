@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-transformer",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Client transformer",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -47,7 +47,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
     "@huggingface/transformers": "^3.3.3",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",

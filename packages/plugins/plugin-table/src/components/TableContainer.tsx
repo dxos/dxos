@@ -29,7 +29,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   const tableRef = useRef<TableController>(null);
 
   const space = getSpace(table);
-  const schema = useSchema(space, table.view?.target?.query.type);
+  const schema = useSchema(space, table.view?.target?.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
@@ -96,7 +96,7 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
         }
       }
     },
-    [dispatch, space, schema, table, model, handleThreadCreate, handleInsertRow],
+    [handleThreadCreate, handleInsertRow, model],
   );
 
   return (

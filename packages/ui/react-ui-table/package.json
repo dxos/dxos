@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,9 +10,9 @@
   "type": "module",
   "exports": {
     "./deprecated": {
-      "types": "./dist/types/src/_deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/_deprecated/index.mjs",
-      "node": "./dist/lib/node-esm/_deprecated/index.mjs"
+      "types": "./dist/types/src/deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/deprecated/index.mjs",
+      "node": "./dist/lib/node-esm/deprecated/index.mjs"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -29,7 +29,7 @@
   "typesVersions": {
     "*": {
       "deprecated": [
-        "dist/types/src/_deprecated/index.d.ts"
+        "dist/types/src/deprecated/index.d.ts"
       ],
       "types": [
         "dist/types/src/types/index.d.ts"
@@ -65,7 +65,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "9.23.3",
+    "@fluentui/react-tabster": "^9.24.2",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "1.1.1",
     "@radix-ui/react-primitive": "2.0.2",

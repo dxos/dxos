@@ -13,7 +13,6 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
 
-import { schemaTools } from './schema-tool';
 import { meta } from '../meta';
 import { TableAction } from '../types';
 
@@ -44,7 +43,6 @@ export default () => {
     `,
     schema: TableType,
     tools: [
-      ...schemaTools,
       defineTool(meta.id, {
         name: 'create',
         description: `
@@ -107,7 +105,7 @@ export default () => {
               return {
                 id: fullyQualifiedId(table),
                 name: table.name ?? 'Unnamed Table',
-                typename: view?.query.type,
+                typename: view?.query.typename,
               };
             }),
           );
@@ -130,7 +128,7 @@ export default () => {
 
           const view = await table.view?.load();
           invariant(view);
-          const typename = view?.query.type;
+          const typename = view?.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
           return ToolResult.Success(schema);
@@ -157,7 +155,7 @@ export default () => {
           const view = await table.view?.load();
           invariant(view);
 
-          const typename = view.query.type;
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
@@ -189,7 +187,7 @@ export default () => {
           invariant(view);
 
           // Get schema for validation.
-          const typename = view.query.type;
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 

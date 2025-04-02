@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { isInstanceOf, S } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 import { FieldSchema } from '@dxos/schema';
@@ -64,4 +64,4 @@ export namespace TableAction {
   }) {}
 }
 
-export const isTable = (object: unknown): object is TableType => object != null && object instanceof TableType;
+export const isTable = (object: unknown): object is TableType => isInstanceOf(TableType, object);

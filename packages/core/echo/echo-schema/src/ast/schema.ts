@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema as S } from '@effect/schema';
+import { type Schema as S } from 'effect';
 
 /**
  * For attaching schema to objects.
@@ -13,7 +13,8 @@ export const symbolSchema = Symbol.for('@dxos/schema/Schema');
  * Returns the schema for the given object if one is defined.
  */
 // TODO(burdon): Reconcile with `getTypename`.
-export const getSchema = (obj: unknown | undefined): S.Schema<any> | undefined => {
+// TODO(dmaretskyi): For echo objects, this always returns the root schema.
+export const getSchema = (obj: unknown | undefined): S.Schema.AnyNoContext | undefined => {
   if (obj) {
     return (obj as any)[symbolSchema];
   }
@@ -24,7 +25,7 @@ export const getSchema = (obj: unknown | undefined): S.Schema<any> | undefined =
 /**
  * Internal use only.
  */
-export const setSchema = (obj: any, schema: S.Schema<any>) => {
+export const setSchema = (obj: any, schema: S.Schema.AnyNoContext) => {
   Object.defineProperty(obj, symbolSchema, {
     value: schema,
     writable: false,

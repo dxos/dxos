@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -20,14 +21,14 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'main',
       position: 'hoist',
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data }) => <RevealMain document={data.subject} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'main',
       position: 'hoist',
-      filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+      filter: (data): data is { subject: CollectionType } => isInstanceOf(CollectionType, data.subject),
       component: ({ data }) => {
         const state = useCapability(PresenterCapabilities.MutableState);
 
@@ -47,7 +48,7 @@ export default () =>
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
       role: 'slide',
-      filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+      filter: (data): data is { subject: DocumentType } => isInstanceOf(DocumentType, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({

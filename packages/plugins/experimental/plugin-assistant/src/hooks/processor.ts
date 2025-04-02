@@ -5,17 +5,8 @@
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type Tool, Message, type MessageContentBlock } from '@dxos/artifact';
-import {
-  isToolUse,
-  runTools,
-  type GenerateRequest,
-  type GenerationStream,
-  MixedStreamParser,
-  DEFAULT_LLM_MODEL,
-  type AIService,
-} from '@dxos/assistant';
-import { createStatic } from '@dxos/echo-schema';
+import { type ArtifactDefinition, type Message, type MessageContentBlock, type Tool } from '@dxos/artifact';
+import { type AIServiceClient, AISession, DEFAULT_EDGE_MODEL, type GenerateRequest } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -36,7 +27,7 @@ type RequestOptions = {
 export type ChatProcessorOptions = Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: ChatProcessorOptions = {
-  model: DEFAULT_LLM_MODEL,
+  model: DEFAULT_EDGE_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
 
@@ -47,20 +38,14 @@ const defaultOptions: ChatProcessorOptions = {
  * Supports cancellation of in-progress requests.
  */
 export class ChatProcessor {
-  /** SSE stream parser. */
-  private readonly _parser = new MixedStreamParser();
-
-  /** Current streaming response. */
-  private _stream: GenerationStream | undefined;
-
   /** Pending messages (incl. the current user request). */
   private readonly _pending: Signal<Message[]> = signal([]);
 
   /** Current streaming block (from the AI service). */
   private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
 
-  /** Prior history from queue. */
-  private _history: Message[] = [];
+  /** Current streaming response. */
+  private _session: AISession | undefined;
 
   /**
    * Streaming state.
@@ -92,26 +77,12 @@ export class ChatProcessor {
   });
 
   constructor(
-    private readonly _service: AIService,
+    private readonly _ai: AIServiceClient,
     private _tools?: Tool[],
+    private _artifacts?: ArtifactDefinition[],
     private readonly _extensions?: ToolContextExtensions,
     private readonly _options: ChatProcessorOptions = defaultOptions,
-  ) {
-    // Message complete.
-    this._parser.message.on((message) => {
-      batch(() => {
-        this._pending.value = [...this._pending.value, message];
-        this._block.value = undefined;
-      });
-    });
-
-    // Streaming update (happens before message complete).
-    this._parser.update.on((block) => {
-      batch(() => {
-        this._block.value = block;
-      });
-    });
-  }
+  ) {}
 
   get tools() {
     return this._tools;
@@ -128,19 +99,55 @@ export class ChatProcessor {
    * Make GPT request.
    */
   async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
-    batch(() => {
-      this._history = options.history ?? [];
-      this._pending.value = [
-        createStatic(Message, {
-          role: 'user',
-          content: [{ type: 'text', text: message }],
-        }),
-      ];
-      this._block.value = undefined;
+    this._session = new AISession({ operationModel: 'immediate' });
+
+    // Message complete.
+    this._session.message.on((message) => {
+      batch(() => {
+        this._pending.value = [...this._pending.value, message];
+        this._block.value = undefined;
+      });
     });
 
-    await this._request();
-    options.onComplete?.(this._pending.value);
+    // Streaming update (happens before message complete).
+    this._session.update.on((block) => {
+      batch(() => {
+        this._block.value = block;
+      });
+    });
+
+    this._session.userMessage.on((message) => {
+      this._pending.value = [...this._pending.value, message];
+    });
+
+    try {
+      const messages = await this._session.run({
+        client: this._ai,
+        history: options.history ?? [],
+        artifacts: this._artifacts ?? [],
+        tools: this._tools ?? [],
+        prompt: message,
+        extensions: this._extensions,
+        generationOptions: {
+          model: this._options.model,
+          systemPrompt: this._options.systemPrompt,
+        },
+      });
+
+      log.info('completed', { messages });
+
+      options.onComplete?.(this._pending.value);
+    } catch (err) {
+      log.catch(err);
+      if (err instanceof Error && err.message.includes('Overloaded')) {
+        this.error.value = new AIServiceOverloadedError('AI service overloaded', { cause: err });
+      } else {
+        this.error.value = new Error('AI service error', { cause: err });
+      }
+    } finally {
+      this._session = undefined;
+    }
+
     return this._reset();
   }
 
@@ -150,79 +157,22 @@ export class ChatProcessor {
    */
   async cancel(): Promise<Message[]> {
     log.info('cancelling...');
-    this._stream?.abort();
+    this._session?.abort();
     return this._reset();
   }
 
   private async _reset(): Promise<Message[]> {
     const messages = this._pending.value;
     batch(() => {
-      this._history = [];
       this._pending.value = [];
       this._block.value = undefined;
     });
 
     return messages;
   }
+}
 
-  /**
-   * Generate a response from the AI service.
-   * Iterates over tool requests.
-   */
-  private async _request() {
-    try {
-      let more = false;
-      do {
-        log('request', {
-          pending: this._pending.value.length,
-          history: this._history.length,
-          tools: this._tools?.map((tool) => tool.name),
-        });
-
-        // Open request stream.
-        this._stream = await this._service.exec({
-          ...this._options,
-          // TODO(burdon): Rename messages or separate history/message.
-          history: [...this._history, ...this._pending.value],
-          tools: this._tools,
-        });
-
-        // Wait until complete.
-        await this._parser.parse(this._stream);
-        await this._stream.complete();
-
-        // Add messages.
-        log('response', { pending: this._pending.value });
-
-        // Resolve tool use locally.
-        more = false;
-        const message = this._pending.value.at(-1);
-        invariant(message);
-        if (isToolUse(message)) {
-          log('tool request...');
-          const response = await runTools({
-            message: this._pending.value.at(-1)!,
-            tools: this._tools ?? [],
-            extensions: this._extensions,
-          });
-
-          log('tool response', { response });
-          switch (response.type) {
-            case 'continue': {
-              this._pending.value = [...this._pending.value, response.message];
-              more = true;
-              break;
-            }
-          }
-        }
-      } while (more);
-
-      this.error.value = undefined;
-    } catch (err) {
-      log.catch(err);
-      this.error.value = new Error('AI service error', { cause: err });
-    } finally {
-      this._stream = undefined;
-    }
-  }
+// TODO(wittjosiah): Move to ai-service-client.
+export class AIServiceOverloadedError extends Error {
+  code = 'AI_SERVICE_OVERLOADED';
 }

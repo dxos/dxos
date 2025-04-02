@@ -19,16 +19,19 @@ type KanbanViewEditorProps = { kanban: KanbanType };
 export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
-  const currentTypename = useMemo(() => kanban?.cardView?.target?.query?.type, [kanban?.cardView?.target?.query?.type]);
+  const currentTypename = useMemo(
+    () => kanban?.cardView?.target?.query?.typename,
+    [kanban?.cardView?.target?.query?.typename],
+  );
   const schema = useSchema(space, currentTypename);
   const views = useQuery(space, Filter.schema(ViewType));
 
   const updateViewTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
-      const matchingViews = views.filter((view) => view.query.type === currentTypename);
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
-        view.query.type = newTypename;
+        view.query.typename = newTypename;
       }
       schema.updateTypename(newTypename);
     },
@@ -46,16 +49,10 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     }
   }, [kanban?.cardView?.target, schema, JSON.stringify(schema)]);
 
-  const selectFields = useMemo(() => {
-    if (!projection) {
-      return [];
-    }
-
-    return projection
-      .getFieldProjections()
-      .filter((field) => field.props.format === FormatEnum.SingleSelect)
-      .map(({ field }) => ({ value: field.id, label: field.path }));
-  }, [projection]);
+  const fieldProjections = projection?.getFieldProjections() || [];
+  const selectFields = fieldProjections
+    .filter((field) => field.props.format === FormatEnum.SingleSelect)
+    .map(({ field }) => ({ value: field.id, label: field.path }));
 
   const onSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
@@ -64,7 +61,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [kanban],
   );
 
-  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban]);
+  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban.columnFieldId]);
   const custom: CustomInputMap = useMemo(
     () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
     [selectFields],

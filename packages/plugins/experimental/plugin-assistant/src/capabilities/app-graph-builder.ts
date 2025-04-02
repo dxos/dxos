@@ -11,14 +11,14 @@ import {
   type PluginsContext,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
+import { memoizeQuery } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, Filter, getSpace } from '@dxos/react-client/echo';
+import { type Space, Filter, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
-import { AIChatType, AssistantAction } from '../types';
+import { AIChatType, AssistantAction, TemplateType } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -51,7 +51,6 @@ export default (context: PluginsContext) =>
             }
 
             if (!chat) {
-              log.warn('no chat found');
               return;
             }
 
@@ -81,6 +80,51 @@ export default (context: PluginsContext) =>
           },
         },
       ],
+    }),
+
+    createExtension({
+      id: `${ASSISTANT_PLUGIN}/root`,
+      filter: (node): node is Node<Space> => isSpace(node.data),
+      connector: ({ node }) => {
+        const templates = memoizeQuery(node.data, Filter.schema(TemplateType));
+        return templates.length > 0
+          ? [
+              {
+                id: `${ASSISTANT_PLUGIN}/templates`,
+                type: `${ASSISTANT_PLUGIN}/templates`,
+                data: null,
+                properties: {
+                  label: ['templates label', { ns: ASSISTANT_PLUGIN }],
+                  icon: 'ph--file-code--regular',
+                  space: node.data,
+                },
+              },
+            ]
+          : [];
+      },
+    }),
+
+    createExtension({
+      id: `${ASSISTANT_PLUGIN}/templates`,
+      filter: (node): node is Node<null, { space: Space }> => node.id === `${ASSISTANT_PLUGIN}/templates`,
+      connector: ({ node }) => {
+        const templates = memoizeQuery(node.properties.space, Filter.schema(TemplateType));
+        return templates
+          .toSorted((a, b) => {
+            const nameA = a.name ?? '';
+            const nameB = b.name ?? '';
+            return nameA.localeCompare(nameB);
+          })
+          .map((template) => ({
+            id: fullyQualifiedId(template),
+            type: `${ASSISTANT_PLUGIN}/template`,
+            data: template,
+            properties: {
+              label: template.name ?? ['template title placeholder', { ns: ASSISTANT_PLUGIN }],
+              icon: 'ph--file-code--regular',
+            },
+          }));
+      },
     }),
   ]);
 

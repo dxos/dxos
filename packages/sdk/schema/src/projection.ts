@@ -1,6 +1,8 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
+
+import { computed, untracked } from '@preact/signals-core';
 
 import {
   formatToType,
@@ -15,6 +17,7 @@ import {
 import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
@@ -39,12 +42,16 @@ export class ViewProjection {
   private readonly _encode = S.encodeSync(PropertySchema);
   private readonly _decode = S.decodeSync(PropertySchema, {});
 
+  private _fieldProjections = computed(() => this._view.fields.map((field) => this.getFieldProjection(field.id)));
+  private _hiddenProperties = computed(() => this._view.hiddenFields?.map((field) => field.path as string) ?? []);
+
   constructor(
     // TODO(burdon): This could be StoredSchema?
     // TODO(burdon): How to use tables with static schema.
     private readonly _schema: EchoSchema,
     private readonly _view: ViewType,
   ) {
+    this.normalizeView();
     this.migrateSingleSelectStoredFormat();
   }
 
@@ -112,9 +119,84 @@ export class ViewProjection {
     return { field, props };
   }
 
-  /** Get all field projections */
+  /**
+   * Get projection of View fields and JSON schema property annotations, returning undefined if field doesn't exist.
+   * @param fieldId The ID of the field to get projection for
+   */
+  tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
+    invariant(this._schema.jsonSchema.properties);
+    const field = this._view.fields.find((field) => field.id === fieldId);
+    if (!field) {
+      return undefined;
+    }
+
+    return this.getFieldProjection(fieldId);
+  }
+
+  /**
+   * Get all field projections
+   * @reactive
+   */
   getFieldProjections(): FieldProjection[] {
-    return this._view.fields.map((field) => this.getFieldProjection(field.id));
+    return this._fieldProjections.value;
+  }
+
+  /**
+   * Identifies schema properties not visible in the current view projection.
+   * @returns Schema property names that aren't mapped to any view field path, returned as an alphabetically sorted string array.
+   * @reactive
+   */
+  getHiddenProperties(): string[] {
+    return this._hiddenProperties.value;
+  }
+
+  /**
+   * Hides a field from the view by moving it from visible fields to hiddenFields.
+   * This preserves the field's structure and ID for later unhiding.
+   */
+  hideFieldProjection(fieldId: string): void {
+    untracked(() => {
+      const index = this._view.fields.findIndex((field) => field.id === fieldId);
+      if (index !== -1) {
+        const fieldToHide = getSnapshot(this._view.fields[index]);
+        this._view.fields.splice(index, 1);
+        if (!this._view.hiddenFields) {
+          this._view.hiddenFields = [];
+        }
+
+        this._view.hiddenFields.push(fieldToHide);
+      }
+    });
+  }
+
+  showFieldProjection(property: JsonProp): void {
+    untracked(() => {
+      invariant(this._schema.jsonSchema.properties);
+      invariant(property in this._schema.jsonSchema.properties);
+
+      const existingField = this._view.fields.find((field) => field.path === property);
+      if (existingField) {
+        return;
+      }
+
+      if (this._view.hiddenFields) {
+        const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === property);
+
+        if (hiddenIndex !== -1) {
+          const fieldToUnhide = getSnapshot(this._view.hiddenFields[hiddenIndex]);
+          this._view.hiddenFields.splice(hiddenIndex, 1);
+          this._view.fields.push(fieldToUnhide);
+          return;
+        }
+      }
+
+      const field: FieldType = {
+        id: createFieldId(),
+        path: property,
+      };
+
+      this._view.fields.push(field);
+    });
   }
 
   /**
@@ -125,75 +207,148 @@ export class ViewProjection {
   setFieldProjection({ field, props }: Partial<FieldProjection>, index?: number) {
     log('setFieldProjection', { field, props, index });
 
-    const sourcePropertyName = field?.path;
-    const targetPropertyName = props?.property;
-    const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
+    untracked(() => {
+      const sourcePropertyName = field?.path;
+      const targetPropertyName = props?.property;
+      const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
 
-    // TODO(burdon): Set field if does not exist.
-    if (field) {
-      const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
-      const clonedField: FieldType = { ...field, ...propsValues };
-      const fieldIndex = this._view.fields.findIndex((field) => field.path === sourcePropertyName);
-      if (fieldIndex === -1) {
-        invariant(this._view.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
-        if (index !== undefined && index >= 0 && index <= this._view.fields.length) {
-          this._view.fields.splice(index, 0, clonedField);
-        } else {
-          this._view.fields.push(clonedField);
+      if (targetPropertyName && this._view.hiddenFields) {
+        const hiddenIndex = this._view.hiddenFields.findIndex((field) => field.path === targetPropertyName);
+        if (hiddenIndex !== -1) {
+          this._view.hiddenFields.splice(hiddenIndex, 1);
         }
-      } else {
-        Object.assign(this._view.fields[fieldIndex], clonedField, isRename ? { path: targetPropertyName } : undefined);
-      }
-    }
-
-    if (props) {
-      let { property, type, format, referenceSchema, options, ...rest }: Partial<PropertyType> = this._encode(
-        omit(props, ['referencePath']),
-      );
-      invariant(property);
-      invariant(format);
-
-      const jsonProperty: JsonSchemaType = {};
-
-      if (referenceSchema) {
-        Object.assign(jsonProperty, createSchemaReference(referenceSchema));
-        type = undefined;
-        format = undefined;
-      } else if (format) {
-        type = formatToType[format];
       }
 
-      if (format === FormatEnum.SingleSelect && options) {
-        makeSingleSelectAnnotations(jsonProperty, options);
+      // TODO(burdon): Set field if does not exist.
+      if (field) {
+        const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
+        const clonedField: FieldType = { ...field, ...propsValues };
+        const fieldIndex = this._view.fields.findIndex((field) => field.path === sourcePropertyName);
+        if (fieldIndex === -1) {
+          invariant(this._view.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+          if (index !== undefined && index >= 0 && index <= this._view.fields.length) {
+            this._view.fields.splice(index, 0, clonedField);
+          } else {
+            this._view.fields.push(clonedField);
+          }
+        } else {
+          Object.assign(
+            this._view.fields[fieldIndex],
+            clonedField,
+            isRename ? { path: targetPropertyName } : undefined,
+          );
+        }
       }
 
-      invariant(type !== TypeEnum.Ref);
-      this._schema.jsonSchema.properties ??= {};
-      this._schema.jsonSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
-      if (isRename) {
-        delete this._schema.jsonSchema.properties[sourcePropertyName!];
+      if (props) {
+        let { property, type, format, referenceSchema, options, ...rest }: Partial<PropertyType> = this._encode(
+          omit(props, ['referencePath']),
+        );
+        invariant(property);
+        invariant(format);
+
+        const jsonProperty: JsonSchemaType = {};
+
+        if (referenceSchema) {
+          Object.assign(jsonProperty, createSchemaReference(referenceSchema));
+          type = undefined;
+          format = undefined;
+        } else if (format) {
+          type = formatToType[format];
+        }
+
+        if (format === FormatEnum.SingleSelect && options) {
+          makeSingleSelectAnnotations(jsonProperty, options);
+        }
+
+        invariant(type !== TypeEnum.Ref);
+        this._schema.jsonSchema.properties ??= {};
+        this._schema.jsonSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
+        if (isRename) {
+          delete this._schema.jsonSchema.properties[sourcePropertyName!];
+        }
       }
-    }
+    });
   }
 
   /**
    * Delete a field from the view and return the deleted projection for potential undo.
    */
   deleteFieldProjection(fieldId: string): { deleted: FieldProjection; index: number } {
-    // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
-    const current = this.getFieldProjection(fieldId);
-    const fieldProjection = { field: { ...current.field }, props: { ...current.props } };
+    return untracked(() => {
+      // NOTE(ZaymonFC): We need to clone this because the underlying object is going to be modified.
+      const current = this.getFieldProjection(fieldId);
+      invariant(current, `Field projection not found for fieldId: ${fieldId}`);
 
-    // Delete field.
-    const fieldIndex = this._view.fields.findIndex((field) => field.id === fieldId);
-    if (fieldIndex !== -1) {
-      this._view.fields.splice(fieldIndex, 1);
-    }
+      const snapshot = getSnapshot(current);
 
-    // Delete property.
-    delete this._schema.jsonSchema.properties?.[current?.field.path];
+      // Delete field.
+      const fieldIndex = this._view.fields.findIndex((field) => field.id === fieldId);
+      if (fieldIndex !== -1) {
+        this._view.fields.splice(fieldIndex, 1);
+      }
 
-    return { deleted: fieldProjection, index: fieldIndex };
+      // Delete property.
+      invariant(this._schema.jsonSchema.properties, 'Schema properties must exist');
+      invariant(snapshot.field.path, 'Field path must exist');
+      delete this._schema.jsonSchema.properties[snapshot.field.path];
+
+      // check that it's actually gone
+      invariant(!this._schema.jsonSchema.properties[snapshot.field.path], 'Field path still exists');
+
+      return { deleted: snapshot, index: fieldIndex };
+    });
+  }
+
+  /**
+   * Normalizes the view by:
+   * 1. Moving schema properties not in view.fields to hiddenFields
+   * 2. Removing fields from view.fields and hiddenFields that no longer exist in the schema
+   */
+  private normalizeView(): void {
+    untracked(() => {
+      // Get all properties from the schema.
+      const schemaProperties = new Set(Object.keys(this._schema.jsonSchema.properties ?? {}));
+
+      // 1. Process view.fields - keep ID fields, remove other fields not in schema.
+      for (let i = this._view.fields.length - 1; i >= 0; i--) {
+        const field = this._view.fields[i];
+        if (!schemaProperties.has(field.path)) {
+          // Remove fields that don't exist in schema anymore.
+          this._view.fields.splice(i, 1);
+        }
+      }
+
+      // 2. Process hiddenFields - remove fields not in schema.
+      if (this._view.hiddenFields) {
+        for (let i = this._view.hiddenFields.length - 1; i >= 0; i--) {
+          const field = this._view.hiddenFields[i];
+          if (!schemaProperties.has(field.path)) {
+            this._view.hiddenFields.splice(i, 1);
+          }
+        }
+      }
+
+      // 3. Find schema properties not in view.fields.
+      const viewPaths = new Set(this._view.fields.map((field) => field.path));
+      const hiddenPaths = new Set(this._view.hiddenFields?.map((field) => field.path) || []);
+
+      // 4. Add missing schema properties to hiddenFields (excluding 'id').
+      for (const prop of schemaProperties) {
+        if (prop !== 'id' && !viewPaths.has(prop as JsonProp) && !hiddenPaths.has(prop as JsonProp)) {
+          // Initialize hiddenFields if needed.
+          if (!this._view.hiddenFields) {
+            this._view.hiddenFields = [];
+          }
+
+          // Add new hidden field.
+          this._view.hiddenFields.push({
+            id: createFieldId(),
+            path: prop as JsonProp,
+          });
+        }
+      }
+    });
   }
 
   /**

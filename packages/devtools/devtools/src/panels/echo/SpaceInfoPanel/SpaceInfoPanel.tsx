@@ -3,11 +3,12 @@
 //
 
 import { ArrowClockwise } from '@phosphor-icons/react';
-import React, { type FC, useState } from 'react';
+import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -21,13 +22,15 @@ import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 export type SpaceInfoPanelProps = {
+  space?: Space;
   onSelectFeed?: FeedTableProps['onSelect'];
   onSelectPipeline?: PipelineTableProps['onSelect'];
 };
 
 export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
   const [, forceUpdate] = useState({});
-  const { space } = useDevtoolsState();
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
 
   // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const spacesInfo = useSpacesInfo();
@@ -52,32 +55,41 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
     setTimeout(() => forceUpdate({}), 500); // Refresh the panel.
   };
 
+  const toolbar = useMemo(
+    () => (
+      <Toolbar.Root>
+        {!props.space && <DataSpaceSelector />}
+        <Toolbar.Button onClick={() => forceUpdate({})}>
+          <ArrowClockwise className={getSize(5)} />
+        </Toolbar.Button>
+        <div className='grow' />
+        <Toolbar.Button onClick={toggleActive}>
+          {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
+        </Toolbar.Button>
+        <Toolbar.Button onClick={toggleEdgeReplication}>
+          {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
+            ? 'Disable backup to EDGE'
+            : 'Enable backup to EDGE'}
+        </Toolbar.Button>
+      </Toolbar.Root>
+    ),
+    [props.space, space?.state, space?.internal.data.edgeReplication],
+  );
+
   return (
-    <PanelContainer
-      toolbar={
-        <Toolbar.Root>
-          <DataSpaceSelector />
-          <Toolbar.Button onClick={() => forceUpdate({})}>
-            <ArrowClockwise className={getSize(5)} />
-          </Toolbar.Button>
-          <div className='grow' />
-          <Toolbar.Button onClick={toggleActive}>
-            {space?.state.get() === SpaceState.SPACE_INACTIVE ? 'Open' : 'Close'}
-          </Toolbar.Button>
-          <Toolbar.Button onClick={toggleEdgeReplication}>
-            {space?.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED
-              ? 'Disable backup to EDGE'
-              : 'Enable backup to EDGE'}
-          </Toolbar.Button>
-        </Toolbar.Root>
-      }
-    >
+    <PanelContainer toolbar={toolbar}>
       {space && metadata && (
-        <div className='flex flex-col gap-4'>
+        <div>
           <SpaceProperties space={space} metadata={metadata} />
-          <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
-          <FeedTable onSelect={props.onSelectFeed} />
-          <SyncStateInfo />
+          <div className='bs-24'>
+            <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+          </div>
+          <div className='bs-48'>
+            <FeedTable onSelect={props.onSelectFeed} />
+          </div>
+          <div className='border-t border-separator'>
+            <SyncStateInfo />
+          </div>
         </div>
       )}
     </PanelContainer>
