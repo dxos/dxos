@@ -5,19 +5,12 @@
 import { Schema as S } from 'effect';
 
 import { defineTool, Message, ToolResult, type ArtifactDefinition, type Tool } from '@dxos/artifact';
-import {
-  isToolUse,
-  MixedStreamParser,
-  runTools,
-  type AIServiceClient,
-  type GenerateRequest,
-  type GenerationStream,
-} from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-
+import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
+import { isToolUse, runTools } from '../conversation';
 /**
  * Contains message history, tools, current context.
  * Current context means the state of the app, time of day, and other contextual information.

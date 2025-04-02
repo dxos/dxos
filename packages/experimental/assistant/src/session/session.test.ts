@@ -20,7 +20,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AISession } from './session';
-import { remoteServiceEndpoints } from '../services';
+import { AI_SERVICE_ENDPOINT } from '../testing';
 
 // Define a calendar event artifact schema
 const CalendarEventSchema = S.Struct({
@@ -33,8 +33,8 @@ const CalendarEventSchema = S.Struct({
 type CalendarEvent = S.Schema.Type<typeof CalendarEventSchema>;
 
 describe('AISession with Ollama', () => {
-  test('create calendar itinerary', { timeout: 60_000 }, async ({ expect }) => {
-    const aiClient = new AIServiceEdgeClient({ endpoint: remoteServiceEndpoints.ai });
+  test('create calendar itinerary', { timeout: 60_000 }, async () => {
+    const aiClient = new AIServiceEdgeClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
