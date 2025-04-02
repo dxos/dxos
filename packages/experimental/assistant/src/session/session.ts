@@ -9,6 +9,7 @@ import { Event, synchronized } from '@dxos/async';
 import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+
 import { MixedStreamParser, type AIServiceClient, type GenerateRequest, type GenerationStream } from '../ai-service';
 import { isToolUse, runTools } from '../conversation';
 /**
