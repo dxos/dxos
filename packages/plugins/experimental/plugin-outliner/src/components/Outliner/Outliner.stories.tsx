@@ -38,7 +38,11 @@ const meta: Meta<typeof Outliner.Root> = {
         classNames='flex flex-col w-[40rem] h-full overflow-hidden bg-modalSurface'
         tree={tree}
         onCreate={() => {
-          return { id: ObjectId.random(), children: [], data: { text: '' } };
+          return {
+            id: ObjectId.random(),
+            children: [],
+            data: { text: '' },
+          };
         }}
         onAction={(action) => {
           log.info('action', { action });

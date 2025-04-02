@@ -5,14 +5,15 @@
 import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import { ObjectId } from '@dxos/echo-schema';
+import { makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
-import { OutlinerAction, type OutlineType, TreeNodeType } from '../types';
+import { OutlinerAction, type OutlineType } from '../types';
 
 const OutlinerContainer = ({ outline, role }: { outline: OutlineType; role: string }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -28,7 +29,11 @@ const OutlinerContainer = ({ outline, role }: { outline: OutlineType; role: stri
         classNames={mx(attentionSurface, 'p-1.5')}
         tree={outline.tree.target}
         onCreate={() => {
-          return space.db.add(create(TreeNodeType, { data: { text: '' }, children: [] }));
+          return {
+            id: ObjectId.random(),
+            children: [],
+            data: { text: '' },
+          };
         }}
         onDelete={(node) => {
           space.db.remove(node);

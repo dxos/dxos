@@ -81,7 +81,11 @@ const JournalEntry = ({ entry, classNames }: JournalEntryProps) => {
         tree={entry.tree.target}
         classNames='pbs-2 pbe-2'
         onCreate={() => {
-          return { id: ObjectId.random(), children: [], data: { text: '' } };
+          return {
+            id: ObjectId.random(),
+            children: [],
+            data: { text: '' },
+          };
         }}
       />
     </div>
