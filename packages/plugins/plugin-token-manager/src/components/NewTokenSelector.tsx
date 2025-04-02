@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -10,14 +10,22 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { type OAuthFlowResult, OAuthProvider } from '@dxos/protocols';
 import { create, type Space } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
-import { Button, DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessTokenType } from '@dxos/schema';
 
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 
+type OAuthPreset = {
+  label: string;
+  note: string;
+  source: string;
+  provider: OAuthProvider;
+  scopes: string[];
+};
+
 const OAUTH_PRESETS: OAuthPreset[] = [
   {
-    label: 'GMail',
+    label: 'Gmail',
     note: 'Email read access.',
     source: 'https://gmail.com/',
     provider: OAuthProvider.GOOGLE,
@@ -25,7 +33,7 @@ const OAUTH_PRESETS: OAuthPreset[] = [
   },
 ];
 
-export const OAuthPresetSelector = ({ space }: { space: Space }) => {
+export const NewTokenSelector = ({ space, onCustomToken }: { space: Space; onCustomToken?: () => void }) => {
   const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
   const edgeClient = useEdgeClient();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -59,7 +67,12 @@ export const OAuthPresetSelector = ({ space }: { space: Space }) => {
     };
   }, [tokenMap, space]);
 
-  const createOauthPreset = async (preset: OAuthPreset) => {
+  const createOauthPreset = async (preset?: OAuthPreset) => {
+    if (!preset) {
+      onCustomToken?.();
+      return;
+    }
+
     const token = create(AccessTokenType, {
       source: preset.source,
       note: preset.note,
@@ -82,28 +95,31 @@ export const OAuthPresetSelector = ({ space }: { space: Space }) => {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button>{t('add oauth token')}</Button>
+        <IconButton icon='ph--plus--regular' label={t('add token')} />
       </DropdownMenu.Trigger>
 
-      <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
-        <DropdownMenu.Viewport>
-          {OAUTH_PRESETS.map((preset) => (
-            <DropdownMenu.Item key={preset.label} onClick={() => createOauthPreset(preset)}>
-              {preset.label}
-            </DropdownMenu.Item>
-          ))}
-        </DropdownMenu.Viewport>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
+          <DropdownMenu.Viewport>
+            {OAUTH_PRESETS.map((preset) => (
+              <TokenMenuItem key={preset.label} preset={preset} onSelect={createOauthPreset} />
+            ))}
+            <TokenMenuItem onSelect={createOauthPreset} />
+          </DropdownMenu.Viewport>
 
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };
 
-type OAuthPreset = {
-  label: string;
-  note: string;
-  source: string;
-  provider: OAuthProvider;
-  scopes: string[];
+const TokenMenuItem = ({ preset, onSelect }: { preset?: OAuthPreset; onSelect: (preset?: OAuthPreset) => void }) => {
+  const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
+  const handleSelect = useCallback(() => onSelect(preset), [preset, onSelect]);
+  return (
+    <DropdownMenu.Item key={preset?.label} onClick={handleSelect}>
+      {preset?.label ?? t('add custom token')}
+    </DropdownMenu.Item>
+  );
 };
