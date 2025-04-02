@@ -8,7 +8,6 @@ import { Capabilities, chain, contributes, createIntent, type PluginsContext } f
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { SKETCH_PLUGIN } from '../meta';
 import translations from '../translations';
 import { SketchAction, DiagramType } from '../types';
 
@@ -22,7 +21,7 @@ export default (context: PluginsContext) =>
         const diagram = node.data;
         const canvas = await diagram.canvas.load();
         return {
-          name: diagram.name || translations[0]['en-US'][SKETCH_PLUGIN]['object placeholder'],
+          name: diagram.name || translations[0]['en-US'][DiagramType.typename]['object name placeholder'],
           data: JSON.stringify({ schema: canvas.schema, content: canvas.content }),
           type: 'application/tldraw',
         };

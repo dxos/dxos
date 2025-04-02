@@ -9,7 +9,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { INBOX_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
 
@@ -27,21 +27,18 @@ export const InboxPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MailboxType.typename,
           metadata: {
-            placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--envelope--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
           id: ContactsType.typename,
           metadata: {
-            placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--address-book--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
           id: CalendarType.typename,
           metadata: {
-            placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--calendar--regular',
           },
         }),

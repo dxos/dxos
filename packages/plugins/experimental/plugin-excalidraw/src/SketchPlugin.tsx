@@ -9,7 +9,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ExcalidrawSettings, IntentResolvers, ReactSurface } from './capabilities';
-import { meta, EXCALIDRAW_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { SketchAction } from './types';
 
@@ -32,7 +32,6 @@ export const ExcalidrawPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: EXCALIDRAW_PLUGIN }],
             icon: 'ph--compass-tool--regular',
           },
         }),
