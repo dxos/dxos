@@ -442,6 +442,9 @@
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/lit-ui/tsconfig.json"
+    },
+    {
       "path": "packages/ui/primitives/react-hooks/tsconfig.json"
     },
     {

@@ -14,22 +14,10 @@
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
-    "./dx-grid.pcss": "./src/dx-grid.pcss",
-    "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/src/testing/index.js",
-      "node": "./dist/src/testing/index.js"
-    }
+    "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "src",
     "dist"

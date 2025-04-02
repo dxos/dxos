@@ -10745,6 +10745,16 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
+  packages/ui/lit-ui:
+    dependencies:
+      lit:
+        specifier: ^3.2.0
+        version: 3.2.0
+    devDependencies:
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
+
   packages/ui/primitives/react-hooks:
     dependencies:
       '@dxos/async':
