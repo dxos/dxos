@@ -18,6 +18,8 @@ export const OutlineType = S.Struct({
   tree: Ref(TreeType),
 }).pipe(EchoObject('dxos.org/type/Outline', '0.1.0'));
 
+export interface OutlineType extends S.Schema.Type<typeof OutlineType> {}
+
 //
 // Journal
 //

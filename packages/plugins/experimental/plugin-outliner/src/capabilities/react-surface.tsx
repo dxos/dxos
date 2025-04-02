@@ -9,7 +9,7 @@ import { isInstanceOf } from '@dxos/echo-schema';
 
 import { JournalContainer, OutlinerContainer } from '../components';
 import { OUTLINER_PLUGIN } from '../meta';
-import { JournalType, TreeType } from '../types';
+import { JournalType, OutlineType } from '../types';
 
 export default () => [
   contributes(
@@ -26,8 +26,8 @@ export default () => [
     createSurface({
       id: `${OUTLINER_PLUGIN}/article/outline`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: TreeType } => isInstanceOf(TreeType, data.subject),
-      component: ({ data, role }) => <OutlinerContainer tree={data.subject} role={role} />,
+      filter: (data): data is { subject: OutlineType } => isInstanceOf(OutlineType, data.subject),
+      component: ({ data, role }) => <OutlinerContainer outline={data.subject} role={role} />,
     }),
   ),
 ];

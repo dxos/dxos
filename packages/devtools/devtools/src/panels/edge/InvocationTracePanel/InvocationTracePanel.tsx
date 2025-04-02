@@ -22,7 +22,7 @@ import { styles } from '../../../styles';
 export const InvocationTracePanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue.dxn);
+  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
 
   const traceQueueDxn = useMemo(() => {
@@ -63,22 +63,14 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
       _original: item,
     }));
   }, [invocationsQueue?.items, selectedTarget]);
-
-  const handleInvocationSelection = useCallback(
-    (ids: string[]) => {
-      if (ids.length === 0) {
-        return;
-      }
-      const id = ids[ids.length - 1];
-      const selectedData = invocationData.find((item) => item.id === id);
-      if (selectedData) {
-        const invocation = selectedData._original;
-        setSelectedInvocation(invocation);
-        setSelectedObject(invocation);
-      }
-    },
-    [invocationData],
-  );
+  const handleInvocationRowClicked = useCallback((row: any) => {
+    if (!row) {
+      return;
+    }
+    const invocation = row._original;
+    setSelectedInvocation(invocation);
+    setSelectedObject(invocation);
+  }, []);
 
   const traceEventProperties: TablePropertyDefinition[] = useMemo(
     () => [
@@ -101,16 +93,11 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
     }));
   }, [eventQueue?.items]);
 
-  const handleEventSelection = (ids: string[]) => {
-    if (ids.length === 0) {
+  const handleEventRowClicked = (row: any) => {
+    if (!row) {
       return;
     }
-
-    const id = ids[ids.length - 1];
-    const selectedData = traceEventData.find((item) => item.id === id);
-    if (selectedData) {
-      setSelectedObject(selectedData._original);
-    }
+    setSelectedObject(row._original);
   };
 
   return (
@@ -132,7 +119,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
           <DynamicTable
             properties={invocationProperties}
             data={invocationData}
-            onSelectionChanged={handleInvocationSelection}
+            onRowClicked={handleInvocationRowClicked}
           />
         </div>
 
@@ -141,7 +128,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
             <DynamicTable
               properties={traceEventProperties}
               data={traceEventData}
-              onSelectionChanged={handleEventSelection}
+              onRowClicked={handleEventRowClicked}
             />
           ) : (
             'Select an invocation to see events.'

@@ -25,6 +25,8 @@ import {
   type ExecuteWorkflowResponseBody,
   type QueueQuery,
   type QueryResult,
+  type InitiateOAuthFlowRequest,
+  type InitiateOAuthFlowResponse,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -114,6 +116,13 @@ export class EdgeHttpClient {
   ): Promise<UploadFunctionResponseBody> {
     const path = ['functions', pathParts.spaceId, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
     return this._call(path, { ...args, body, method: 'PUT' });
+  }
+
+  public async initiateOAuthFlow(
+    body: InitiateOAuthFlowRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<InitiateOAuthFlowResponse> {
+    return this._call('/oauth/initiate', { ...args, body, method: 'POST' });
   }
 
   public async queryQueue(
