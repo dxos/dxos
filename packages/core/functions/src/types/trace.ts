@@ -18,12 +18,23 @@ export const TraceEventException = S.Struct({
   stack: S.optional(S.String),
 });
 
-export const InvocationTraceEvent = S.Struct({
+export const InvocationTraceStartEvent = S.Struct({
+  /**
+   * Queue message id.
+   */
   id: ObjectId,
+  /**
+   * Invocation id, the same for invocation start and end events.
+   */
+  invocationId: ObjectId,
+  /**
+   * Event generation time.
+   */
   timestampMs: S.Number,
-  outcome: S.Enums(InvocationOutcome),
+  /**
+   * Data passed to function / workflow as an argument.
+   */
   input: S.Object,
-  durationMs: S.Number,
   /**
    * Queue DXN for function/workflow invocation events.
    */
@@ -36,13 +47,28 @@ export const InvocationTraceEvent = S.Struct({
    * Present for automatic invocations.
    */
   trigger: S.optional(Ref(FunctionTrigger)),
-  /**
-   * Present for outcome FAILURE.
-   */
-  exception: S.optional(TraceEventException),
-}).pipe(EchoObject('dxos.org/type/InvocationTrace', '0.1.0'));
+}).pipe(EchoObject('dxos.org/type/InvocationTraceStart', '0.1.0'));
 
-export type InvocationTraceEvent = S.Schema.Type<typeof InvocationTraceEvent>;
+export type InvocationTraceStartEvent = S.Schema.Type<typeof InvocationTraceStartEvent>;
+
+export const InvocationTraceEndEvent = S.Struct({
+  /**
+   * Trace event id.
+   */
+  id: ObjectId,
+  /**
+   * Invocation id, will be the same for invocation start and end.
+   */
+  invocationId: ObjectId,
+  /**
+   * Event generation time.
+   */
+  timestampMs: S.Number,
+  outcome: S.Enums(InvocationOutcome),
+  exception: S.optional(TraceEventException),
+}).pipe(EchoObject('dxos.org/type/InvocationTraceEnd', '0.1.0'));
+
+export type InvocationTraceEndEvent = S.Schema.Type<typeof InvocationTraceEndEvent>;
 
 export const TraceEventLog = S.Struct({
   timestampMs: S.Number,
