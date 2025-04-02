@@ -41,7 +41,9 @@ export const OAuthPresetSelector = ({ space }: { space: Space }) => {
           const token = tokenMap.get(data.accessTokenId);
           if (token) {
             token.token = data.accessToken;
-            dispatch(createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true })).catch((e) => log.catch(e));
+            dispatch(createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true })).catch((e) =>
+              log.catch(e),
+            );
           } else {
             log.warn('token object not found', data);
           }
