@@ -29,7 +29,7 @@ export const TokenManagerPlugin = () =>
       activate: () =>
         contributes(SpaceCapabilities.SettingsPanel, {
           id: 'token-manager',
-          label: ['plugin name', { ns: TOKEN_MANAGER_PLUGIN }],
+          label: ['space panel name', { ns: TOKEN_MANAGER_PLUGIN }],
         }),
     }),
     defineModule({
