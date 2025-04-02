@@ -6,3 +6,4 @@ export * from './artifact';
 export * from './message';
 export * from './tools';
 export * from './util';
+export * from './artifact-id';

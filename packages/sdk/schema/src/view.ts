@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { defineObjectMigration } from '@dxos/echo-db';
 import {
   AST,
   FieldLookupAnnotationId,
@@ -9,6 +10,7 @@ import {
   JsonPath,
   JsonSchemaType,
   QueryType,
+  FieldSortType,
   S,
   toEffectSchema,
   TypedObject,
@@ -40,7 +42,7 @@ export type FieldType = S.Schema.Type<typeof FieldSchema>;
  */
 export class ViewType extends TypedObject({
   typename: 'dxos.org/type/View',
-  version: '0.1.0',
+  version: '0.2.0',
 })({
   /**
    * Human readable name.
@@ -68,6 +70,12 @@ export class ViewType extends TypedObject({
   fields: S.mutable(S.Array(FieldSchema)),
 
   /**
+   * Array of fields that are part of the view's schema but hidden from UI display.
+   * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
+   */
+  hiddenFields: S.optional(S.mutable(S.Array(FieldSchema))),
+
+  /**
    * Additional metadata for the view.
    */
   metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
@@ -75,6 +83,33 @@ export class ViewType extends TypedObject({
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
 }) {}
+
+// TODO(wittjosiah): Refactor to organize better previous versions + migrations.
+export class ViewTypeV1 extends TypedObject({
+  typename: 'dxos.org/type/View',
+  version: '0.1.0',
+})({
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Name',
+    [AST.ExamplesAnnotationId]: ['Contact'],
+  }),
+  query: S.Struct({
+    type: S.optional(S.String),
+    sort: S.optional(S.Array(FieldSortType)),
+  }).pipe(S.mutable),
+  schema: S.optional(JsonSchemaType),
+  fields: S.mutable(S.Array(FieldSchema)),
+  metadata: S.optional(S.Record({ key: S.String, value: S.Any }).pipe(S.mutable)),
+}) {}
+
+export const ViewTypeV1ToV2 = defineObjectMigration({
+  from: ViewTypeV1,
+  to: ViewType,
+  transform: async (from) => {
+    return { ...from, query: { typename: from.query.type } };
+  },
+  onMigration: async () => {},
+});
 
 type CreateViewProps = {
   name: string;
@@ -96,7 +131,9 @@ export const createView = ({
   if (jsonSchema) {
     // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
-    for (const property of getSchemaProperties(schema.ast)) {
+    const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
+    const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+    for (const property of properties) {
       if (include && !include.includes(property.name)) {
         continue;
       }
@@ -127,9 +164,7 @@ export const createView = ({
 
   return create(ViewType, {
     name,
-    query: {
-      type: typename,
-    },
+    query: { typename },
     fields,
   });
 };

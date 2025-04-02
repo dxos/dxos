@@ -95,7 +95,6 @@ export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema
  * Trigger schema (discriminated union).
  */
 export const TriggerSchema = S.Union(
-  //
   TimerTriggerSchema,
   WebhookTriggerSchema,
   SubscriptionTriggerSchema,
@@ -112,6 +111,7 @@ export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
  */
 export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): What type does this reference.
+  // TODO(wittjosiah): This should probably be a Ref?
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
 
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),

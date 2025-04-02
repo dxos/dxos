@@ -5,12 +5,12 @@
 import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
+import { AssistantPlugin, ASSISTANT_PLUGIN } from '@dxos/plugin-assistant';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
-import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
-import { CanvasPlugin } from '@dxos/plugin-canvas';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
+import { ConductorPlugin } from '@dxos/plugin-conductor';
 import { DebugPlugin, DEBUG_PLUGIN } from '@dxos/plugin-debug';
 import { DeckPlugin, DECK_PLUGIN } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
@@ -22,6 +22,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
+import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
 import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
@@ -67,6 +68,7 @@ export type PluginConfig = State & {
 export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
   [
     ATTENTION_PLUGIN,
+    AUTOMATION_PLUGIN,
     CLIENT_PLUGIN,
     DECK_PLUGIN,
     FILES_PLUGIN,
@@ -94,24 +96,25 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Default
     MARKDOWN_PLUGIN,
+    MEETING_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,
     THREAD_PLUGIN,
+    TRANSCRIPTION_PLUGIN,
     WNFS_PLUGIN,
 
     // Labs
-    isLabs && [AUTOMATION_PLUGIN, CALLS_PLUGIN, TRANSCRIPTION_PLUGIN],
+    isLabs && [ASSISTANT_PLUGIN],
   ]
     .filter(isNotFalsy)
     .flat();
 
-export const plugins = ({ appKey, config, services, observability, isDev, isPwa, isSocket }: PluginConfig) =>
+export const plugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
   [
+    AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
-    CallsPlugin(),
-    CanvasPlugin(),
     ChessPlugin(),
     ClientPlugin({
       config,
@@ -141,18 +144,20 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
         }
       },
     }),
+    ConductorPlugin(),
     DebugPlugin(),
     DeckPlugin(),
-    ExcalidrawPlugin(),
+    isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
-    InboxPlugin(),
+    isLabs && InboxPlugin(),
     IntentPlugin(),
     KanbanPlugin(),
     MapPlugin(),
     MarkdownPlugin(),
+    MeetingPlugin(),
     MermaidPlugin(),
     isSocket && NativePlugin(),
     NavTreePlugin(),
@@ -162,7 +167,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     !isSocket && isPwa && PwaPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),
-    SearchPlugin(),
+    isLabs && SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),

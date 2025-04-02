@@ -166,7 +166,7 @@ export default (context: PluginsContext) =>
                   type: DEVTOOLS_TYPE,
                   properties: {
                     label: ['feeds label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--queue--regular',
+                    icon: 'ph--list-bullets--regular',
                   },
                 },
                 {
@@ -185,6 +185,15 @@ export default (context: PluginsContext) =>
                   properties: {
                     label: ['automerge label', { ns: DEBUG_PLUGIN }],
                     icon: 'ph--gear-six--regular',
+                  },
+                },
+                {
+                  id: Devtools.Echo.Queues,
+                  data: Devtools.Echo.Queues,
+                  type: DEVTOOLS_TYPE,
+                  properties: {
+                    label: ['queues label', { ns: DEBUG_PLUGIN }],
+                    icon: 'ph--queue--regular',
                   },
                 },
                 {
@@ -263,15 +272,6 @@ export default (context: PluginsContext) =>
                     icon: 'ph--computer-tower--regular',
                   },
                 },
-                {
-                  id: Devtools.Agent.Search,
-                  data: Devtools.Agent.Search,
-                  type: DEVTOOLS_TYPE,
-                  properties: {
-                    label: ['search label', { ns: DEBUG_PLUGIN }],
-                    icon: 'ph--magnifying-glass--regular',
-                  },
-                },
               ],
             },
             {
@@ -299,6 +299,15 @@ export default (context: PluginsContext) =>
                   properties: {
                     label: ['workflows label', { ns: DEBUG_PLUGIN }],
                     icon: 'ph--function--regular',
+                  },
+                },
+                {
+                  id: Devtools.Edge.Traces,
+                  data: Devtools.Edge.Traces,
+                  type: DEVTOOLS_TYPE,
+                  properties: {
+                    label: ['traces label', { ns: DEBUG_PLUGIN }],
+                    icon: 'ph--line-segments--regular',
                   },
                 },
               ],
@@ -370,14 +379,52 @@ export default (context: PluginsContext) =>
 
         return [
           {
-            // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
-            id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
-            type: 'dxos.org/plugin/debug/space',
-            data: { space, type: 'dxos.org/plugin/debug/space' },
+            id: `${space.id}-${Devtools.id}`,
+            data: null,
+            type: DEVTOOLS_TYPE,
             properties: {
-              label: ['debug label', { ns: DEBUG_PLUGIN }],
-              icon: 'ph--bug--regular',
+              label: ['devtools label', { ns: DEBUG_PLUGIN }],
+              icon: 'ph--hammer--regular',
             },
+            nodes: [
+              {
+                // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
+                id: `${space.id}-debug`,
+                type: 'dxos.org/plugin/debug/space',
+                data: { space, type: 'dxos.org/plugin/debug/space' },
+                properties: {
+                  label: ['debug label', { ns: DEBUG_PLUGIN }],
+                  icon: 'ph--bug--regular',
+                },
+              },
+              {
+                id: `${space.id}-${Devtools.Echo.Space}`,
+                data: Devtools.Echo.Space,
+                type: DEVTOOLS_TYPE,
+                properties: {
+                  label: ['space label', { ns: DEBUG_PLUGIN }],
+                  icon: 'ph--planet--regular',
+                },
+              },
+              {
+                id: `${space.id}-${Devtools.Echo.Objects}`,
+                data: Devtools.Echo.Objects,
+                type: DEVTOOLS_TYPE,
+                properties: {
+                  label: ['objects label', { ns: DEBUG_PLUGIN }],
+                  icon: 'ph--database--regular',
+                },
+              },
+              {
+                id: `${space.id}-${Devtools.Edge.Traces}`,
+                data: Devtools.Edge.Traces,
+                type: DEVTOOLS_TYPE,
+                properties: {
+                  label: ['traces label', { ns: DEBUG_PLUGIN }],
+                  icon: 'ph--line-segments--regular',
+                },
+              },
+            ],
           },
         ];
       },

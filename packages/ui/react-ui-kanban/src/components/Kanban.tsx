@@ -4,7 +4,8 @@
 
 import React, { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { debounce } from '@dxos/async';
+import { getSnapshot, type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelectedItems, AttentionGlyph } from '@dxos/react-ui-attention';
@@ -27,33 +28,6 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const selectedItems = useSelectedItems(model.id);
   const [focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
-
-  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
-  //   omit fields from the form?
-  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
-    if (!model.columnFieldPath) {
-      return undefined;
-    }
-    return {
-      [model.columnFieldPath]: () => <></>,
-    };
-  }, [model.columnFieldPath]);
-
-  const handleSave = useCallback(
-    (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
-      const id = values.id;
-      invariant(typeof id === 'string');
-      const object = model.items.find((obj) => obj.id === id);
-      invariant(object);
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      for (const path of changedPaths) {
-        const value = values[path];
-        setValue(object, path, value);
-      }
-    },
-    [model.items],
-  );
 
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
@@ -83,7 +57,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
             key={columnValue}
             item={{ id: columnValue }}
             size={20}
-            classNames='flex flex-col pli-1 plb-2 drag-preview-p-0'
+            classNames='flex flex-col pli-2 plb-2 drag-preview-p-0'
             disableRearrange={uncategorized}
             focusIndicatorVariant='group'
           >
@@ -99,7 +73,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                 orientation='vertical'
                 size='contain'
                 rail={false}
-                classNames='pbe-1 drag-preview-p-0'
+                classNames='!plb-0 !pbe-0 drag-preview-p-0'
                 onRearrange={model.handleRearrange}
                 itemsCount={cards.length}
               >
@@ -107,17 +81,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   <StackItem.Root
                     key={card.id}
                     item={card}
-                    classNames={'contain-layout plb-1 pli-2 drag-preview-p-0'}
+                    classNames={'contain-layout pli-2 plb-2 drag-preview-p-0'}
                     focusIndicatorVariant='group'
                     onClick={() => select([card.id])}
                   >
-                    <div
-                      role='none'
-                      className={mx(
-                        'rounded bg-baseSurface dx-focus-ring-group-y-indicator',
-                        selectedItems.has(card.id) && 'dx-focus-ring',
-                      )}
-                    >
+                    <div role='none' className={mx('rounded bg-baseSurface dx-focus-ring-group-y-indicator')}>
                       <div role='none' className='flex items-center'>
                         <StackItem.DragHandle asChild>
                           <IconButton
@@ -141,14 +109,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                           </>
                         )}
                       </div>
-                      <Form
-                        values={card}
-                        schema={model.cardSchema}
-                        Custom={Custom}
-                        onSave={handleSave}
-                        autoFocus={card.id === focusedCardId}
-                        autoSave
-                      />
+                      <CardForm key={card.id} card={card} model={model} autoFocus={card.id === focusedCardId} />
                     </div>
                   </StackItem.Root>
                 ))}
@@ -231,5 +192,58 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         </StackItem.Root>
       )} */}
     </Stack>
+  );
+};
+
+type CardFormProps<T extends BaseKanbanItem> = {
+  card: T;
+  model: KanbanModel;
+  autoFocus: boolean;
+};
+
+const CardForm = <T extends BaseKanbanItem>({ card, model, autoFocus }: CardFormProps<T>) => {
+  const handleSave = useCallback(
+    debounce((values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
+      const id = values.id;
+      invariant(typeof id === 'string');
+      const object = model.items.find((obj) => obj.id === id);
+      invariant(object);
+
+      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+      for (const path of changedPaths) {
+        const value = values[path];
+        setValue(object, path, value);
+      }
+    }, 500),
+    [model.items],
+  );
+
+  const initialValue = useMemo(() => getSnapshot(card), [JSON.stringify(card)]);
+
+  // TODO(ZaymonFC): This is a bit of an abuse of Custom. Should we have a first class way to
+  //   omit fields from the form?
+  const Custom: ComponentProps<typeof Form>['Custom'] = useMemo(() => {
+    if (!model.columnFieldPath) {
+      return undefined;
+    }
+
+    const custom: ComponentProps<typeof Form>['Custom'] = {};
+    custom[model.columnFieldPath] = () => <></>;
+    for (const field of model.kanban.cardView?.target?.hiddenFields ?? []) {
+      custom[field.path] = () => <></>;
+    }
+
+    return custom;
+  }, [model.columnFieldPath, JSON.stringify(model.kanban.cardView?.target?.hiddenFields)]);
+
+  return (
+    <Form
+      values={initialValue}
+      schema={model.cardSchema}
+      Custom={Custom}
+      onSave={handleSave}
+      autoFocus={autoFocus}
+      autoSave
+    />
   );
 };

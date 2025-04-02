@@ -9,6 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
+import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
@@ -136,6 +138,10 @@ export class MemorySignalManager implements SignalManager {
     };
 
     this._context.swarmEvent.emit(swarmEvent);
+  }
+
+  async query(request: QueryRequest): Promise<SwarmResponse> {
+    throw new Error('Not implemented');
   }
 
   async sendMessage({ author, recipient, payload }: { author: PeerInfo; recipient: PeerInfo; payload: Any }) {

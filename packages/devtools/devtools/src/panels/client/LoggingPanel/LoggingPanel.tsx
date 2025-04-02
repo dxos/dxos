@@ -3,14 +3,15 @@
 //
 
 import { Trash } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../components';
@@ -20,37 +21,6 @@ const MAX_LOGS = 2_000;
 const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
 
 const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
-
-const colors: { [index: number]: string } = {
-  [LogLevel.TRACE]: 'text-neutral-700',
-  [LogLevel.DEBUG]: 'text-green-700',
-  [LogLevel.INFO]: 'text-blue-700',
-  [LogLevel.WARN]: 'text-orange-700',
-  [LogLevel.ERROR]: 'text-red-700',
-};
-
-const { helper, builder } = createColumnBuilder<LogEntry>();
-const columns: TableColumnDef<LogEntry, any>[] = [
-  helper.accessor('timestamp', builder.date()),
-  helper.accessor(
-    (entry) =>
-      Object.entries(levels)
-        .find(([, level]) => level === entry.level)?.[0]
-        .toUpperCase(),
-    {
-      id: 'level',
-      size: 60,
-      meta: { cell: { classNames: textPadding } },
-      cell: (cell) => <div className={colors[cell.row.original.level]}>{cell.getValue()}</div>,
-    },
-  ),
-  helper.accessor((entry) => `${shortFile(entry.meta?.file)}:${entry.meta?.line}`, {
-    id: 'file',
-    meta: { cell: { classNames: textPadding } },
-    size: 160,
-  }),
-  helper.accessor('message', { meta: { cell: { classNames: textPadding } } }),
-];
 
 // TODO(wittjosiah): Virtualization.
 export const LoggingPanel = () => {
@@ -85,13 +55,51 @@ export const LoggingPanel = () => {
     setLogs((logs) => [...logs.slice(-MAX_LOGS), logEntry]);
   }, [logEntry]);
 
-  const presets = [
-    { value: 'verbose', label: 'Verbose' },
-    { value: 'debug', label: 'Debug' },
-    { value: 'info', label: 'Info' },
-    { value: 'warn', label: 'Warn' },
-    { value: 'error', label: 'Error' },
-  ];
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'timestamp', format: FormatEnum.DateTime, sort: 'desc' as const },
+      {
+        name: 'level',
+        format: FormatEnum.SingleSelect,
+        size: 100,
+        config: {
+          options: [
+            { id: 'TRACE', title: 'TRACE', color: 'sky' },
+            { id: 'DEBUG', title: 'DEBUG', color: 'green' },
+            { id: 'INFO', title: 'INFO', color: 'blue' },
+            { id: 'WARN', title: 'WARN', color: 'orange' },
+            { id: 'ERROR', title: 'ERROR', color: 'red' },
+          ],
+        },
+      },
+      { name: 'file', format: FormatEnum.String, size: 160 },
+      { name: 'message', format: FormatEnum.String },
+    ],
+    [],
+  );
+
+  const tableData = useMemo(() => {
+    return logs.map((entry, index) => ({
+      id: `${entry.timestamp}-${index}`, // Stable ID based on position and timestamp
+      timestamp: entry.timestamp,
+      level: Object.entries(levels)
+        .find(([, level]) => level === entry.level)?.[0]
+        .toUpperCase(),
+      file: `${shortFile(entry.meta?.file)}:${entry.meta?.line}`,
+      message: entry.message,
+    }));
+  }, [logs]);
+
+  const presets = useMemo(
+    () => [
+      { value: 'verbose', label: 'Verbose' },
+      { value: 'debug', label: 'Debug' },
+      { value: 'info', label: 'Info' },
+      { value: 'warn', label: 'Warn' },
+      { value: 'error', label: 'Error' },
+    ],
+    [],
+  );
 
   return (
     <PanelContainer
@@ -105,7 +113,7 @@ export const LoggingPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<LogEntry> columns={columns} data={logs} pinToBottom />
+      <MasterDetailTable properties={properties} data={tableData} />
     </PanelContainer>
   );
 };

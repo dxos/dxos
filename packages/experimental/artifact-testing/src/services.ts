@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AIServiceClientImpl } from '@dxos/assistant';
+import { AIServiceEdgeClient } from '@dxos/assistant';
 import { EdgeGpt } from '@dxos/conductor';
 import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 
@@ -27,7 +27,7 @@ export const remoteServiceEndpoints = {
 
 export const createEdgeServices = (services: ServiceEndpoints = localServiceEndpoints) => {
   return {
-    gpt: new EdgeGpt(new AIServiceClientImpl({ endpoint: services.ai })),
+    gpt: new EdgeGpt(new AIServiceEdgeClient({ endpoint: services.ai })),
     edgeClient: new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: services.edge }),
     edgeHttpClient: new EdgeHttpClient(services.edge),
   };

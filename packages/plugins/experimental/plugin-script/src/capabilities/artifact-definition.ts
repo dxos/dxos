@@ -6,12 +6,13 @@ import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher }
 import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { ObjectId, S } from '@dxos/echo-schema';
-import { ScriptType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions/types';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { TextType } from '@dxos/schema';
 
+import { meta } from '../meta';
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
@@ -22,13 +23,15 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-script',
+    id: meta.id,
+    name: meta.name,
     // TODO(dmaretskyi): Since writing scripts requires a lot of domain knowledge,
-    //                   we should offload the work of synthesizing the code to a separate model.
-    //                   The main reasoning model will give it a concrete task and the script model will synthesize the code, knowing all the docs.
+    //  we should offload the work of synthesizing the code to a separate model.
+    //  The main reasoning model will give it a concrete task and the script model will synthesize the code, knowing all the docs.
     instructions: `
       If the user explicitly requests you to write a script, you can create one.
       If the user requests you to change one of the existing script, you can update it.
+      You must not create a script unless the user explicitly requests it.
       Scripts are short code pieces of executable code that can be used to perform computations, integrate with external systems, and perform automated tasks.
       Each script must follow as strict shape for the definition but the body can contain any valid executable code.
       Scripts are written in JavaScript or TypeScript.
@@ -136,9 +139,10 @@ export default () => {
   `,
     schema: ScriptType,
     tools: [
-      defineTool({
-        name: 'script_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: 'Create a new script. Returns the artifact definition for the script',
+        caption: 'Creating script...',
         schema: S.Struct({
           name: S.String.annotations({ description: 'The name of the script' }),
           code: S.String.annotations({
@@ -168,9 +172,10 @@ export default () => {
           return ToolResult.Success(createArtifactElement(script.id));
         },
       }),
-      defineTool({
-        name: 'script_inspect',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Inspect a script. Returns the artifact definition for the script',
+        caption: 'Inspecting script...',
         schema: S.Struct({
           id: ObjectId,
         }),
@@ -186,9 +191,10 @@ export default () => {
           });
         },
       }),
-      defineTool({
-        name: 'script_update',
+      defineTool(meta.id, {
+        name: 'update',
         description: 'Update a script. Returns the artifact definition for the script',
+        caption: 'Updating script...',
         schema: S.Struct({
           id: ObjectId,
           code: S.String.annotations({

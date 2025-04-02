@@ -33,7 +33,7 @@ const StorybookKanban = () => {
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [projection, setProjection] = useState<ViewProjection>();
-  const cardSchema = useSchema(space, kanban?.cardView?.target?.query.type);
+  const cardSchema = useSchema(space, kanban?.cardView?.target?.query.typename);
 
   useEffect(() => {
     if (kanbans.length && !kanban) {
@@ -82,7 +82,7 @@ const StorybookKanban = () => {
     (typename: string) => {
       if (kanban?.cardView?.target) {
         cardSchema?.updateTypename(typename);
-        kanban.cardView.target.query.type = typename;
+        kanban.cardView.target.query.typename = typename;
       }
     },
     [kanban?.cardView?.target, cardSchema],
@@ -108,7 +108,7 @@ const StorybookKanban = () => {
           />
         )}
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: kanban.cardView?.target, cardSchema }, null, 2)}
+          {JSON.stringify({ cardView: kanban.cardView?.target, cardSchema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -138,7 +138,7 @@ const meta: Meta<StoryProps> = {
         space.db.add(kanban);
 
         // TODO(burdon): Replace with sdk/schema/testing.
-        Array.from({ length: 8 }).map(() => {
+        Array.from({ length: 80 }).map(() => {
           return space.db.add(
             create(schema, {
               title: faker.commerce.productName(),

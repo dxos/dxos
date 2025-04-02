@@ -10,7 +10,7 @@ import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, ToolTypes, DEFAULT_LLM_MODEL } from '../ai-service';
+import { AIServiceEdgeClient, ToolTypes, DEFAULT_EDGE_MODEL } from '../ai-service';
 import { runLLM } from '../conversation';
 import {
   AI_SERVICE_ENDPOINT,
@@ -25,7 +25,7 @@ import {
 } from '../testing';
 
 // TOOD(burdon): Get from config.
-const client = new AIServiceClientImpl({
+const client = new AIServiceEdgeClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
 });
 
@@ -49,7 +49,7 @@ while (true) {
   await client.appendMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
   await runLLM({
-    model: DEFAULT_LLM_MODEL,
+    model: DEFAULT_EDGE_MODEL,
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),

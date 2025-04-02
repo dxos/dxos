@@ -13,7 +13,7 @@ export default [
       },
       [SKETCH_PLUGIN]: {
         'plugin name': 'Sketch',
-        'object title placeholder': 'New sketch',
+        'object placeholder': 'New sketch',
         'create object label': 'Create sketch',
         'create stack section label': 'Create sketch',
         'settings hover tools label': 'Auto hide controls',

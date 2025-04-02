@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react';
+import React, {
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type MouseEvent,
+  Fragment,
+} from 'react';
 
 import {
   createIntent,
@@ -13,9 +21,17 @@ import {
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Main, useTranslation, toLocalizedString, IconButton, ScrollArea } from '@dxos/react-ui';
+import {
+  Main,
+  useTranslation,
+  toLocalizedString,
+  IconButton,
+  ScrollArea as NaturalScrollArea,
+  type Label,
+} from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { byPosition } from '@dxos/util';
 
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
@@ -23,11 +39,14 @@ import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
 import { useNode } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
+import { type Panel } from '../../types';
 import { layoutAppliesTopbar, useBreakpoints, useHoistStatusbar } from '../../util';
 
 export type ComplementarySidebarProps = {
   current?: string;
 };
+
+const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
@@ -41,13 +60,15 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const hoistStatusbar = useHoistStatusbar(breakpoint);
 
   const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
-  const availablePanels = panels.filter((panel) => {
-    if (!node || !panel.filter) {
-      return true;
-    }
+  const availablePanels = panels
+    .filter((panel) => {
+      if (!node || !panel.filter) {
+        return true;
+      }
 
-    return panel.filter(node);
-  });
+      return panel.filter(node);
+    })
+    .toSorted(byPosition);
   const activePanelId = availablePanels.find((panel) => panel.id === current)?.id ?? availablePanels[0]?.id;
   const [internalValue, setInternalValue] = useState(activePanelId);
 
@@ -83,6 +104,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar
+      label={label}
       classNames={[
         topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
         hoistStatusbar && 'block-end-[--statusbar-size]',
@@ -137,37 +159,72 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
             {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
           >
-            {panel.id === activePanelId && data && (
-              <>
-                <h2 className='flex items-center pli-2 border-separator border-be'>
-                  {toLocalizedString(panel.label, t)}
-                </h2>
-                <ScrollArea.Root>
-                  <ScrollArea.Viewport>
-                    <Surface
-                      role={`complementary--${activePanelId}`}
-                      data={data}
-                      fallback={PlankContentError}
-                      placeholder={<PlankLoading />}
-                    />
-                  </ScrollArea.Viewport>
-                  <ScrollArea.Scrollbar orientation='vertical'>
-                    <ScrollArea.Thumb />
-                  </ScrollArea.Scrollbar>
-                </ScrollArea.Root>
-                {!hoistStatusbar && (
-                  <div
-                    role='contentinfo'
-                    className='flex flex-wrap justify-center items-center border-bs border-separator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
-                  >
-                    <Surface role='status-bar--r1-footer' limit={1} />
-                  </div>
-                )}
-              </>
-            )}
+            <ComplementarySidebarPanel
+              panel={panel}
+              activePanelId={activePanelId}
+              data={data}
+              hoistStatusbar={hoistStatusbar}
+            />
           </Tabs.Tabpanel>
         ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
+  );
+};
+
+type ComplementarySidebarPanelProps = {
+  panel: Panel;
+  activePanelId: string;
+  data?: {
+    id: string;
+    subject: any;
+    workspace: string;
+    popoverAnchorId?: string;
+  };
+  hoistStatusbar: boolean;
+};
+
+const ScrollArea = ({ children }: PropsWithChildren) => {
+  return (
+    <NaturalScrollArea.Root>
+      <NaturalScrollArea.Viewport>{children}</NaturalScrollArea.Viewport>
+      <NaturalScrollArea.Scrollbar orientation='vertical'>
+        <NaturalScrollArea.Thumb />
+      </NaturalScrollArea.Scrollbar>
+    </NaturalScrollArea.Root>
+  );
+};
+
+const ComplementarySidebarPanel = ({ panel, activePanelId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
+  const { t } = useTranslation(DECK_PLUGIN);
+
+  if (panel.id !== activePanelId || !data) {
+    return null;
+  }
+
+  const Wrapper = panel.fixed ? Fragment : ScrollArea;
+
+  return (
+    <>
+      <h2 className='flex items-center pli-2 border-separator border-be font-medium'>
+        {toLocalizedString(panel.label, t)}
+      </h2>
+      <Wrapper>
+        <Surface
+          role={`complementary--${activePanelId}`}
+          data={data}
+          fallback={PlankContentError}
+          placeholder={<PlankLoading />}
+        />
+      </Wrapper>
+      {!hoistStatusbar && (
+        <div
+          role='contentinfo'
+          className='flex flex-wrap justify-center items-center border-bs border-separator pbs-1 pbe-[max(env(safe-area-inset-bottom),0.25rem)]'
+        >
+          <Surface role='status-bar--r1-footer' limit={1} />
+        </div>
+      )}
+    </>
   );
 };

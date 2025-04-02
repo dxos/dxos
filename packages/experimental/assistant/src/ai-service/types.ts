@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { Tool, Message, type MessageContentBlock, SpaceIdSchema } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
 
-import { DEFAULT_LLM_MODELS } from './defs';
+import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
-export const LLMModel = S.Literal(...DEFAULT_LLM_MODELS);
+export const LLMModel = S.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
@@ -34,25 +34,25 @@ export const GenerateRequest = S.Struct({
   model: S.optional(LLMModel),
 
   /**
+   * Tools available for the LLM.
+   */
+  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
+
+  /**
    * System instructions to the LLM.
    */
   systemPrompt: S.optional(S.String),
 
   /**
-   * Current request.
-   */
-  // TODO(burdon): Remove from history.
-  // prompt: Message,
-
-  /**
    * History of messages to include in the context window.
    */
+  // TODO(burdon): Rename messages.
   history: S.optional(S.Array(Message)),
 
   /**
-   * Tools available for the LLM.
+   * Current request.
    */
-  tools: S.optional(S.Array(Tool).pipe(S.mutable)),
+  prompt: S.optional(Message),
 });
 
 export type GenerateRequest = S.Schema.Type<typeof GenerateRequest>;

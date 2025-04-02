@@ -16,6 +16,7 @@ import {
   chain,
 } from '@dxos/app-framework';
 import { getTypename, S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -25,7 +26,7 @@ import { isNonNullable } from '@dxos/util';
 import { DeckCapabilities } from './capabilities';
 import { closeEntry, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
-import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode } from '../types';
+import { DeckAction, type LayoutMode, type DeckSettingsProps, isLayoutMode, getMode, defaultDeck } from '../types';
 import { setActive } from '../util';
 
 export default (context: PluginsContext) =>
@@ -201,7 +202,7 @@ export default (context: PluginsContext) =>
           }
           state.activeDeck = subject;
           if (!state.decks[subject]) {
-            state.decks[subject] = { initialized: false, active: [], inactive: [], fullscreen: false, plankSizing: {} };
+            state.decks[subject] = { ...defaultDeck };
           }
         });
 
@@ -287,8 +288,16 @@ export default (context: PluginsContext) =>
         const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
         const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
         const toAttend = setActive({ next, state, attention });
+
+        const clearCompanionIntents = subject
+          .filter((id) => state.deck.activeCompanions && id in state.deck.activeCompanions)
+          .map((primary) => createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
+
         return {
-          intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
+          intents: [
+            ...clearCompanionIntents,
+            ...(toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : []),
+          ],
         };
       },
     }),
@@ -319,6 +328,23 @@ export default (context: PluginsContext) =>
       resolve: (data) => {
         const state = context.requestCapability(DeckCapabilities.MutableDeckState);
         state.deck.plankSizing[data.id] = data.size;
+      },
+    }),
+    createResolver({
+      intent: DeckAction.ChangeCompanion,
+      resolve: (data) => {
+        const state = context.requestCapability(DeckCapabilities.MutableDeckState);
+        // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
+        if (data.companion === null) {
+          const { [data.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
+          state.deck.activeCompanions = nextActiveCompanions;
+        } else {
+          invariant(data.companion !== data.primary);
+          state.deck.activeCompanions = {
+            ...state.deck.activeCompanions,
+            [data.primary]: data.companion,
+          };
+        }
       },
     }),
     createResolver({

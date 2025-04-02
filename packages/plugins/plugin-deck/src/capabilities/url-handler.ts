@@ -6,6 +6,7 @@ import { Capabilities, contributes, createIntent, LayoutAction, type PluginsCont
 import { scheduledEffect } from '@dxos/echo-signals/core';
 
 import { DeckCapabilities } from './capabilities';
+import { defaultDeck } from '../types';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
 export default async (context: PluginsContext) => {
@@ -17,14 +18,7 @@ export default async (context: PluginsContext) => {
     if (pathname === '/reset') {
       state.activeDeck = 'default';
       state.decks = {
-        default: {
-          initialized: false,
-          active: [],
-          inactive: [],
-          fullscreen: false,
-          solo: undefined,
-          plankSizing: {},
-        },
+        default: { ...defaultDeck },
       };
       window.location.pathname = '/';
       return;
@@ -51,8 +45,10 @@ export default async (context: PluginsContext) => {
     () => ({ solo: state.deck.solo, activeDeck: state.activeDeck }),
     ({ solo, activeDeck }) => {
       const path = solo ? `/${activeDeck}/${solo}` : `/${activeDeck}`;
-      // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
-      history.pushState(null, '', `${path}${window.location.search}`);
+      if (window.location.pathname !== path) {
+        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+        history.pushState(null, '', `${path}${window.location.search}`);
+      }
     },
   );
 

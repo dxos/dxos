@@ -43,7 +43,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   const generate = async () => {
     log('llm generate', { tools: params.tools });
     const beginTs = Date.now();
-    const stream = await params.client.generate({
+    const stream = await params.client.exec({
       model: params.model,
       spaceId: params.spaceId,
       threadId: params.threadId,
@@ -147,10 +147,10 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
   };
 };
 
-export const isToolUse = (message: Message) => {
+export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.content.at(-1);
   invariant(block);
-  return block.type === 'tool_use';
+  return block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
 export type RunToolsOptions = {
@@ -220,6 +220,7 @@ export const runTools = async ({ message, tools, extensions }: RunToolsOptions):
             content:
               typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },
+          ...(toolResult.extractContentBlocks ?? []),
         ],
       });
 

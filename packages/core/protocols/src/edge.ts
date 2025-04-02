@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
+import { Schema as S } from 'effect';
+
+import { SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Rename EdgerRouterEndpoint?
 export enum EdgeService {
@@ -69,25 +71,20 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+export type RecoverIdentitySignature =
+  | string
+  // This is the format of the signature from the WebAuthn authenticator.
+  | {
+      signature: string;
+      clientDataJson: string;
+      authenticatorData: string;
+    };
+
 export type RecoverIdentityRequest = {
-  /**
-   * Required if recoveryKey is not provided.
-   */
-  identityDid?: string;
-  /**
-   * Required if identityDid is not provided.
-   */
-  recoveryKey?: string;
   deviceKey: string;
   controlFeedKey: string;
-  signature?:
-    | string
-    // This is the format of the signature from the WebAuthn authenticator.
-    | {
-        signature: string;
-        clientDataJson: string;
-        authenticatorData: string;
-      };
+  lookupKey?: string;
+  signature?: RecoverIdentitySignature;
 };
 
 export type RecoverIdentityResponseBody = {
@@ -143,81 +140,27 @@ export enum EdgeAgentStatus {
   NOT_FOUND = 'not_found',
 }
 
-export class EdgeCallFailedError extends Error {
-  public static fromProcessingFailureCause(cause: Error) {
-    return new EdgeCallFailedError({
-      reason: 'Error processing request.',
-      isRetryable: true,
-      cause,
-    });
-  }
-
-  public static fromHttpFailure(response: Response) {
-    return new EdgeCallFailedError({
-      reason: `HTTP code ${response.status}: ${response.statusText}.`,
-      isRetryable: isRetryableCode(response.status),
-      retryAfterMs: getRetryAfterMillis(response),
-    });
-  }
-
-  public static fromUnsuccessfulResponse(response: Response, body: EdgeHttpFailure) {
-    return new EdgeCallFailedError({
-      reason: body.reason,
-      errorData: body.errorData,
-      isRetryable: body.errorData == null && response.headers.has('Retry-After'),
-      retryAfterMs: getRetryAfterMillis(response),
-    });
-  }
-
-  readonly reason: string;
-  readonly errorData?: EdgeErrorData;
-  readonly isRetryable?: boolean;
-  readonly retryAfterMs?: number;
-
-  constructor(args: {
-    reason: string;
-    isRetryable?: boolean;
-    errorData?: EdgeErrorData;
-    retryAfterMs?: number;
-    cause?: Error;
-  }) {
-    super(args.reason, { cause: args.cause });
-    this.reason = args.reason;
-    this.errorData = args.errorData;
-    this.retryAfterMs = args.retryAfterMs;
-    this.isRetryable = Boolean(args.isRetryable);
-  }
-}
-
-export class EdgeAuthChallengeError extends EdgeCallFailedError {
-  constructor(
-    public readonly challenge: string,
-    errorData: EdgeErrorData,
-  ) {
-    super({ reason: 'Auth challenge.', errorData, isRetryable: false });
-  }
-}
-
 export type EdgeAuthChallenge = {
   type: 'auth_challenge';
   challenge: string;
 };
 
-const getRetryAfterMillis = (response: Response) => {
-  const retryAfter = Number(response.headers.get('Retry-After'));
-  return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;
+export enum OAuthProvider {
+  GOOGLE = 'google',
+}
+
+export const InitiateOAuthFlowRequestSchema = S.Struct({
+  provider: S.Enums(OAuthProvider),
+  spaceId: S.String.pipe(S.filter(SpaceId.isValid)),
+  accessTokenId: S.String,
+  scopes: S.mutable(S.Array(S.String)),
+});
+export type InitiateOAuthFlowRequest = S.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
+
+export type InitiateOAuthFlowResponse = {
+  authUrl: string;
 };
 
-export const createRetryableHttpFailure = (args: { reason: any; retryAfterSeconds: number }) => {
-  return new Response(JSON.stringify({ success: false, reason: args.reason }), {
-    headers: { 'Retry-After': String(args.retryAfterSeconds) },
-  });
-};
-
-const isRetryableCode = (status: number) => {
-  if (status === 501) {
-    // Not Implemented
-    return false;
-  }
-  return !(status >= 400 && status < 500);
-};
+export type OAuthFlowResult =
+  | { success: true; accessToken: string; accessTokenId: string }
+  | { success: false; reason: string };

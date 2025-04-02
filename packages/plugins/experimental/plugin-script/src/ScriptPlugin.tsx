@@ -5,11 +5,14 @@
 // @ts-ignore
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { isInstanceOf } from '@dxos/echo-schema';
+import { ScriptType } from '@dxos/functions/types';
 import { RefArray } from '@dxos/live-object';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
+import { DeckCapabilities, DeckEvents } from '@dxos/plugin-deck';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { ArtifactDefinition, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
 import { ScriptEvents } from './events';
@@ -41,11 +44,23 @@ export const ScriptPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
           metadata: {
-            placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+            placeholder: ['object placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
           },
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/complementary-panels`,
+      activatesOn: DeckEvents.SetupComplementaryPanels,
+      activate: () =>
+        contributes(DeckCapabilities.ComplementaryPanel, {
+          id: 'function',
+          label: ['function panel label', { ns: SCRIPT_PLUGIN }],
+          icon: 'ph--terminal--regular',
+          fixed: true,
+          filter: (node) => isInstanceOf(ScriptType, node.data) && !!getSpace(node.data),
         }),
     }),
     defineModule({
@@ -60,11 +75,6 @@ export const ScriptPlugin = () =>
             getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [FunctionType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

@@ -23,7 +23,7 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
@@ -59,7 +59,7 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/settings`,
       role: 'complementary--settings',
-      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      filter: (data): data is { subject: MapType } => isInstanceOf(MapType, data.subject),
       component: ({ data }) => <MapViewEditor map={data.subject} />,
     }),
     createSurface({

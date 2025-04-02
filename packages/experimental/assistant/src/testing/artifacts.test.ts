@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { AIServiceClientImpl, Tool } from '../ai-service';
+import { AIServiceEdgeClient, Tool } from '../ai-service';
 import { defineTool, ToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.
@@ -41,16 +41,16 @@ const list: ArtifactDef = {
   description: 'Ordered set of text items.',
   schema: ListSchema,
   actions: [
-    defineTool({
-      name: 'list.query',
+    defineTool('list', {
+      name: 'query',
       description: 'Query all lists',
       schema: S.Struct({}),
       execute: async ({}, context) => {
         return ToolResult.Success(LISTS[id]);
       },
     }),
-    defineTool({
-      name: 'list.inspect',
+    defineTool('list', {
+      name: 'inspect',
       description: 'Get contents of the list',
       schema: S.Struct({
         id: ObjectId.annotations({ description: 'The list to inspect' }),
@@ -59,8 +59,8 @@ const list: ArtifactDef = {
         return ToolResult.Success(LISTS[id]);
       },
     }),
-    defineTool({
-      name: 'list.add',
+    defineTool('list', {
+      name: 'create',
       description: 'Add one or more items to an existing list',
       schema: S.Struct({
         id: ObjectId.annotations({ description: 'The list to add items to' }),
@@ -78,7 +78,7 @@ const LISTS: Record<ObjectId, ListSchema> = {};
 
 const artifacts = [list];
 
-const getArtifactDefinitions = defineTool({
+const getArtifactDefinitions = defineTool('system', {
   name: 'getArtifactDefinitions',
   description: 'Queries the definitions and metadata of artifacts defined in the system',
   schema: S.Any,
@@ -108,7 +108,7 @@ If there's
 
 describe('Artifacts', () => {
   test('shopping list', async () => {
-    const client = new AIServiceClientImpl({
+    const client = new AIServiceEdgeClient({
       endpoint: ENDPOINT,
     });
 
@@ -136,7 +136,7 @@ describe('Artifacts', () => {
     ]);
 
     const stream = await client.generate({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',
@@ -164,7 +164,7 @@ describe('Artifacts', () => {
     ]);
 
     const stream2 = await client.generate({
-      model: DEFAULT_LLM_MODEL,
+      model: DEFAULT_EDGE_MODEL,
       spaceId,
       threadId,
       systemPrompt: 'You are a helpful assistant.',

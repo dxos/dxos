@@ -9,7 +9,14 @@ import { raise } from '@dxos/debug';
 
 import { createApp, type CreateAppOptions } from '../App';
 import { Capabilities, Events } from '../common';
-import { type AnyCapability, contributes, defineModule, definePlugin, PluginManager } from '../core';
+import {
+  type ActivationEvent,
+  type AnyCapability,
+  contributes,
+  defineModule,
+  definePlugin,
+  PluginManager,
+} from '../core';
 
 /**
  * @internal
@@ -40,12 +47,21 @@ export const setupPluginManager = ({
   return pluginManager;
 };
 
+export type WithPluginManagerOptions = CreateAppOptions & {
+  capabilities?: AnyCapability[];
+  fireEvents?: (ActivationEvent | string)[];
+};
+
 /**
  * Wraps a story with a plugin manager.
  */
-export const withPluginManager = (options: CreateAppOptions & { capabilities?: AnyCapability[] } = {}): Decorator => {
+export const withPluginManager = (options: WithPluginManagerOptions = {}): Decorator => {
   const pluginManager = setupPluginManager(options);
   const App = createApp({ pluginManager });
+
+  options.fireEvents?.forEach((event) => {
+    void pluginManager.activate(event);
+  });
 
   return (Story, context) => {
     useEffect(() => {
@@ -70,6 +86,6 @@ export const withPluginManager = (options: CreateAppOptions & { capabilities?: A
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const STORY_PLUGIN = 'dxos.org/app-framework/story';
 const StoryPlugin = () =>
-  definePlugin({ id: STORY_PLUGIN }, [
+  definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
     defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
   ]);

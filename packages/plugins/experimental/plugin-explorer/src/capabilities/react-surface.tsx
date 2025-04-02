@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 
 import { ExplorerContainer } from '../components';
 import { EXPLORER_PLUGIN } from '../meta';
@@ -16,7 +17,7 @@ export default () =>
     createSurface({
       id: `${EXPLORER_PLUGIN}/article`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: ViewType } => data.subject instanceof ViewType,
+      filter: (data): data is { subject: ViewType } => isInstanceOf(ViewType, data.subject),
       component: ({ data, role }) => <ExplorerContainer view={data.subject} role={role} />,
     }),
   );

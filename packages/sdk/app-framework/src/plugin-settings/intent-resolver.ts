@@ -15,12 +15,18 @@ export default () =>
     createResolver({
       intent: SettingsAction.Open,
       resolve: ({ plugin }) => {
+        const openSettings = createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: SETTINGS_ID });
         return {
           intents: [
-            pipe(
-              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: SETTINGS_ID }),
-              chain(LayoutAction.Open, { part: 'main', subject: [`${SETTINGS_KEY}:${plugin.replaceAll('/', ':')}`] }),
-            ),
+            plugin
+              ? pipe(
+                  openSettings,
+                  chain(LayoutAction.Open, {
+                    part: 'main',
+                    subject: [`${SETTINGS_KEY}:${plugin.replaceAll('/', ':')}`],
+                  }),
+                )
+              : openSettings,
           ],
         };
       },

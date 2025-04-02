@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wnfs",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "WNFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,7 +53,7 @@
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
     "debounce": "^2.2.0",
-    "effect": "^3.12.3",
+    "effect": "3.13.3",
     "idb-keyval": "^6.2.1",
     "interface-blockstore": "^5.2.10",
     "it-all": "^3.0.6",

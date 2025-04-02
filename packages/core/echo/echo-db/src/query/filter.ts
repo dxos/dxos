@@ -153,7 +153,7 @@ export class Filter<T extends BaseObject = any> {
   ): Filter<S.Schema.Type<S>>;
 
   // TODO(burdon): Tighten to TypedObject.
-  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
+  static schema(schema: S.Schema.AnyNoContext, filter?: Record<string, any> | OperatorFilter): Filter {
     if (!schema) {
       throw new TypeError('`schema` parameter is required.');
     }
@@ -240,11 +240,14 @@ export class Filter<T extends BaseObject = any> {
       {
         type: proto.type?.map((type) => DXN.parse(type)),
         properties: proto.properties,
+        objectIds: proto.objectIds,
         text: proto.text,
         not: proto.not,
         and: proto.and?.map((filter) => Filter.fromProto(filter)),
         or: proto.or?.map((filter) => Filter.fromProto(filter)),
-      },
+        metaKeys: undefined,
+        predicate: undefined,
+      } satisfies Record<keyof FilterParams, any>,
       options,
     );
   }

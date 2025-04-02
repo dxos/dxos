@@ -10,6 +10,7 @@ import {
   createIntent,
   createSurface,
   LayoutAction,
+  useCapability,
   type PluginsContext,
 } from '@dxos/app-framework';
 import {
@@ -33,11 +34,13 @@ import {
   TracingPanel,
   DashboardPanel,
   EdgeDashboardPanel,
-  SearchPanel,
   AutomergePanel,
   WorkflowPanel,
+  QueuesPanel,
+  InvocationTracePanel,
 } from '@dxos/devtools';
 import { SettingsStore } from '@dxos/local-storage';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import {
@@ -47,17 +50,10 @@ import {
   type ReactiveEchoObject,
   type ReactiveObject,
   type Space,
+  parseId,
 } from '@dxos/react-client/echo';
 
-import {
-  DebugApp,
-  DebugObjectPanel,
-  DebugSettings,
-  DebugSpace,
-  DebugStatus,
-  SpaceGenerator,
-  Wireframe,
-} from '../components';
+import { DebugApp, DebugObjectPanel, DebugSettings, DebugStatus, SpaceGenerator, Wireframe } from '../components';
 import { DEBUG_PLUGIN } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
@@ -72,6 +68,15 @@ type GraphDebug = {
 
 const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph;
+
+// TODO(wittjosiah): Factor out?
+const useCurrentSpace = () => {
+  const layout = useCapability(Capabilities.Layout);
+  const client = useCapability(ClientCapabilities.Client);
+  const { spaceId } = parseId(layout.workspace);
+  const space = spaceId ? client.spaces.get(spaceId) : undefined;
+  return space;
+};
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.ReactSurface, [
@@ -108,12 +113,7 @@ export default (context: PluginsContext) =>
           [data.subject.space],
         );
 
-        const deprecated = false;
-        return deprecated ? (
-          <DebugSpace space={data.subject.space} onAddObjects={handleCreateObject} />
-        ) : (
-          <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
-        );
+        return <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />;
       },
     }),
     createSurface({
@@ -224,12 +224,13 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
       component: () => {
+        const space = useCurrentSpace();
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
         const handleSelect = useCallback(
           () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Devtools.Echo.Feeds] })),
           [dispatch],
         );
-        return <SpaceInfoPanel onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
+        return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
       },
     }),
     createSurface({
@@ -242,13 +243,22 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/echo/objects`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Objects,
-      component: () => <ObjectsPanel />,
+      component: () => {
+        const space = useCurrentSpace();
+        return <ObjectsPanel space={space} />;
+      },
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/automerge`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
       component: () => <AutomergePanel />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/echo/queues`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Echo.Queues,
+      component: () => <QueuesPanel />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/echo/members`,
@@ -287,12 +297,6 @@ export default (context: PluginsContext) =>
       component: () => <DashboardPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/agent/search`,
-      role: 'article',
-      filter: (data): data is any => data.subject === Devtools.Agent.Search,
-      component: () => <SearchPanel />,
-    }),
-    createSurface({
       id: `${DEBUG_PLUGIN}/edge/dashboard`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Dashboard,
@@ -303,5 +307,14 @@ export default (context: PluginsContext) =>
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
       component: () => <WorkflowPanel />,
+    }),
+    createSurface({
+      id: `${DEBUG_PLUGIN}/edge/traces`,
+      role: 'article',
+      filter: (data): data is any => data.subject === Devtools.Edge.Traces,
+      component: () => {
+        const space = useCurrentSpace();
+        return <InvocationTracePanel space={space} />;
+      },
     }),
   ]);

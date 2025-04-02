@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-help",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "Help plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,7 +42,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@fluentui/react-tabster": "9.23.3",
+    "@fluentui/react-tabster": "^9.24.2",
     "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },

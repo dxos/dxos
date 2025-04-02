@@ -49,6 +49,9 @@
       "path": "../../../core/compute"
     },
     {
+      "path": "../../../core/echo/echo-protocol"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
@@ -85,6 +88,9 @@
       "path": "../../../sdk/react-client"
     },
     {
+      "path": "../../../sdk/react-edge-client"
+    },
+    {
       "path": "../../../sdk/schema"
     },
     {
@@ -100,6 +106,9 @@
       "path": "../../../ui/react-ui-form"
     },
     {
+      "path": "../../../ui/react-ui-list"
+    },
+    {
       "path": "../../../ui/react-ui-menu"
     },
     {
@@ -113,6 +122,9 @@
     },
     {
       "path": "../../plugin-client"
+    },
+    {
+      "path": "../../plugin-deck"
     },
     {
       "path": "../../plugin-graph"

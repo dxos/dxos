@@ -12,6 +12,7 @@ import { type ReactiveEchoObject, RefArray } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import { IntentResolver, Markdown, ReactSurface, ThreadState } from './capabilities';
+import { ThreadEvents as LocalThreadEvents } from './events';
 import { meta, THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction } from './types';
@@ -108,6 +109,7 @@ export const ThreadPlugin = () =>
           id: 'comments',
           label: ['comments panel label', { ns: THREAD_PLUGIN }],
           icon: 'ph--chat-text--regular',
+          position: 'hoist',
           // TODO(wittjosiah): Support comments on any object.
           // filter: (node) => isEchoObject(node.data) && !!getSpace(node.data),
           filter: (node) =>
@@ -127,7 +129,7 @@ export const ThreadPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       // TODO(wittjosiah): Should occur before the comments thread is loaded when surfaces activation is more granular.
-      activatesBefore: [ThreadEvents.SetupThread],
+      activatesBefore: [ThreadEvents.SetupThread, LocalThreadEvents.SetupActivity],
       activate: ReactSurface,
     }),
     defineModule({

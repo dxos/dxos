@@ -100,7 +100,7 @@ export const MessageContainer = ({
         </ButtonGroup>
       </MessageHeading>
       <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
-      {RefArray.allResolvedTargets(message.parts ?? []).map((part, index) => (
+      {RefArray.targets(message.parts ?? []).map((part, index) => (
         <MessagePart key={index} part={part} />
       ))}
     </MessageRoot>

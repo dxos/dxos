@@ -9,19 +9,30 @@ import { ThreadCapabilities } from '@dxos/plugin-space';
 import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { isNonNullable } from '@dxos/util';
 
 import { ThreadCapabilities as LocalThreadCapabilities } from '../capabilities';
 import { CommentsContainer } from '../components';
+import { THREAD_PLUGIN } from '../meta';
 import { ThreadAction } from '../types';
 
 export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
+  const { t } = useTranslation(THREAD_PLUGIN);
 
   const { state, getViewState } = useCapability(LocalThreadCapabilities.MutableState);
-  const { showResolvedThreads } = getViewState(fullyQualifiedId(subject));
+  const viewState = getViewState(fullyQualifiedId(subject));
+  const { showResolvedThreads } = viewState;
+  const onChangeViewState = useCallback(
+    (nextValue: string) => {
+      viewState.showResolvedThreads = nextValue === 'all';
+    },
+    [viewState],
+  );
   const drafts = state.drafts[fullyQualifiedId(subject)];
 
   const threadsIntegrators = useCapabilities(ThreadCapabilities.Thread);
@@ -31,7 +42,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
-  const threadObjects = RefArray.allResolvedTargets(subject.threads ?? []);
+  const threadObjects = RefArray.targets(subject.threads ?? []);
 
   const threads = useMemo(() => {
     return threadObjects.concat(drafts ?? []).filter(isNonNullable) as ThreadType[];
@@ -112,7 +123,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     [dispatch, subject],
   );
 
-  return (
+  const comments = (
     <CommentsContainer
       threads={threads}
       detached={detachedIds}
@@ -124,5 +135,24 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       onMessageDelete={handleMessageDelete}
       onThreadDelete={handleThreadDelete}
     />
+  );
+
+  return (
+    <Tabs.Root
+      value={showResolvedThreads ? 'all' : 'unresolved'}
+      onValueChange={onChangeViewState}
+      orientation='horizontal'
+    >
+      <Tabs.Tablist classNames='p-1 gap-1 bs-[--rail-action] border-be border-separator'>
+        <Tabs.Tab value='unresolved' classNames='text-sm'>
+          {t('show unresolved label')}
+        </Tabs.Tab>
+        <Tabs.Tab value='all' classNames='text-sm'>
+          {t('show all label')}
+        </Tabs.Tab>
+      </Tabs.Tablist>
+      <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+      <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+    </Tabs.Root>
   );
 };

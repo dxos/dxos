@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { FunctionType, FunctionTrigger } from '@dxos/functions';
+import { FunctionType, FunctionTrigger } from '@dxos/functions/types';
 import { create, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -15,7 +15,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { AutomationPanel } from './AutomationPanel';
 import { functions } from '../../testing';
 import translations from '../../translations';
-import { TemplateType } from '../../types';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -36,7 +35,7 @@ const meta: Meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionType, FunctionTrigger, TemplateType],
+      types: [FunctionType, FunctionTrigger],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
           space.db.add(create(FunctionType, fn));

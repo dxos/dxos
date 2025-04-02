@@ -19,9 +19,9 @@ import {
   Dialog as NaturalDialog,
   Main,
   Popover,
-  useOnTransition,
   type MainProps,
   useMediaQuery,
+  useOnTransition,
 } from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
@@ -31,6 +31,7 @@ import { ComplementarySidebar } from './ComplementarySidebar';
 import { ContentEmpty } from './ContentEmpty';
 import { Fullscreen } from './Fullscreen';
 import { Plank } from './Plank';
+import { PlankContentError } from './PlankError';
 import { Sidebar } from './Sidebar';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from './SidebarButton';
 import { StatusBar } from './StatusBar';
@@ -47,8 +48,8 @@ export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;
 };
 
-const PlankSeparator = ({ index }: { index: number }) =>
-  index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
+const PlankSeparator = ({ order }: { order: number }) =>
+  order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -67,7 +68,7 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
     deck,
     toasts,
   } = context;
-  const { active, fullscreen, solo, plankSizing } = deck;
+  const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint);
   const hoistStatusbar = useHoistStatusbar(breakpoint);
@@ -186,6 +187,17 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
   );
   const handlePopoverClose = useCallback(() => handlePopoverOpenChange(false), [handlePopoverOpenChange]);
 
+  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
+    return active.reduce(
+      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+        acc.order[entryId] = acc.itemsCount + 1;
+        acc.itemsCount += activeCompanions?.[entryId] ? 3 : 2;
+        return acc;
+      },
+      { order: {}, itemsCount: 0 },
+    );
+  }, [active, activeCompanions]);
+
   return (
     <Popover.Root modal open={!!(popoverAnchorId && delayedPopoverVisibility)} onOpenChange={handlePopoverOpenChange}>
       <ActiveNode />
@@ -252,14 +264,21 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   onScroll={handleScroll}
-                  itemsCount={2 * (active.length ?? 0) - 1}
+                  itemsCount={itemsCount - 1}
                   style={padding}
                   ref={deckRef}
                 >
-                  {active.map((entryId, index) => (
+                  {active.map((entryId) => (
                     <Fragment key={entryId}>
-                      <PlankSeparator index={index} />
-                      <Plank id={entryId} part='deck' order={index * 2 + 1} active={active} layoutMode={layoutMode} />
+                      <PlankSeparator order={order[entryId] - 1} />
+                      <Plank
+                        id={entryId}
+                        companionId={activeCompanions?.[entryId]}
+                        part='deck'
+                        order={order[entryId]}
+                        active={active}
+                        layoutMode={layoutMode}
+                      />
                     </Fragment>
                   ))}
                 </Stack>
@@ -272,7 +291,12 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
                 {!topbar && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
                 {!topbar && <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />}
                 <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
-                  <Plank id={solo} part='solo' layoutMode={layoutMode} />
+                  <Plank
+                    id={solo}
+                    companionId={solo ? activeCompanions?.[solo] : undefined}
+                    part='solo'
+                    layoutMode={layoutMode}
+                  />
                 </StackContext.Provider>
               </div>
             </Main.Content>
@@ -303,10 +327,11 @@ export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayout
         onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}
       >
         {dialogBlockAlign === 'end' ? (
-          <Surface role='dialog' data={dialogContent} limit={1} />
+          // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
+          <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} placeholder={<div />} />
         ) : (
           <Dialog.Overlay blockAlign={dialogBlockAlign}>
-            <Surface role='dialog' data={dialogContent} limit={1} />
+            <Surface role='dialog' data={dialogContent} limit={1} fallback={PlankContentError} />
           </Dialog.Overlay>
         )}
       </Dialog.Root>

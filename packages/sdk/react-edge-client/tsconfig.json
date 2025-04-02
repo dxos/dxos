@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../client"
     },
     {
       "path": "../react-client"

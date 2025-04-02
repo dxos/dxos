@@ -18,6 +18,7 @@
   "exclude": [
     "demos/*",
     "src/functions/*",
+    "src/playwright/playwright.config.cts",
     "vite.config.ts"
   ],
   "include": [
@@ -63,6 +64,9 @@
       "path": "../../core/echo/echo-signals"
     },
     {
+      "path": "../../core/echo/live-object"
+    },
+    {
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
@@ -72,13 +76,13 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../plugins/experimental/plugin-assistant"
+    },
+    {
       "path": "../../plugins/experimental/plugin-automation"
     },
     {
-      "path": "../../plugins/experimental/plugin-calls"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-canvas"
+      "path": "../../plugins/experimental/plugin-conductor"
     },
     {
       "path": "../../plugins/experimental/plugin-excalidraw"
@@ -144,6 +148,9 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
+      "path": "../../plugins/plugin-meeting"
+    },
+    {
       "path": "../../plugins/plugin-mermaid"
     },
     {
@@ -196,6 +203,12 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/client-services"

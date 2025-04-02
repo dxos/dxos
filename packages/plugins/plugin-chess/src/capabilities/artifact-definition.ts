@@ -6,13 +6,14 @@ import { Chess } from 'chess.js';
 import { pipe } from 'effect';
 
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
+import { ArtifactId, defineArtifact, defineTool, ToolResult } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { isInstanceOf, ObjectId, S } from '@dxos/echo-schema';
+import { isInstanceOf, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 
+import { meta } from '../meta';
 import { ChessAction, ChessType } from '../types';
 
 // TODO(burdon): Factor out.
@@ -25,16 +26,19 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: 'plugin-chess',
+    id: meta.id,
+    name: meta.name,
+    description: 'Provides a simple chess engine.',
     instructions: `
-      Chess:
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
-    `,
+      - Always inspect the chess game at the start of every prompt realting to a chess game, as it might have changed since the interaction.
+   `,
     schema: ChessType,
     tools: [
-      defineTool({
-        name: 'chess_new',
+      defineTool(meta.id, {
+        name: 'create',
         description: 'Create a new chess game. Returns the artifact definition for the game.',
+        caption: 'Creating chess game...',
         schema: S.Struct({
           fen: S.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
         }),
@@ -53,9 +57,10 @@ export default () => {
           return ToolResult.Success(createArtifactElement(data.id));
         },
       }),
-      defineTool({
-        name: 'chess_query',
+      defineTool(meta.id, {
+        name: 'list',
         description: 'Query all active chess games.',
+        caption: 'Getting games...',
         schema: S.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
@@ -64,23 +69,25 @@ export default () => {
           return ToolResult.Success(games);
         },
       }),
-      defineTool({
-        name: 'chess_inspect',
+      defineTool(meta.id, {
+        name: 'inspect',
         description: 'Get the current state of the chess game.',
-        schema: S.Struct({ id: ObjectId }),
+        caption: 'Inspecting game...',
+        schema: S.Struct({ id: ArtifactId }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
-          const game = games.find((game) => game.id === id);
+          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
           invariant(isInstanceOf(ChessType, game));
+
           return ToolResult.Success(game.fen);
         },
       }),
-      defineTool({
-        name: 'chess_move',
+      defineTool(meta.id, {
+        name: 'move',
         description: 'Make a move in the chess game.',
+        caption: 'Making chess move...',
         schema: S.Struct({
-          id: ObjectId,
+          id: ArtifactId,
           move: S.String.annotations({
             description: 'The move to make in the chess game.',
             examples: ['e4', 'Bf3'],
@@ -88,9 +95,9 @@ export default () => {
         }),
         execute: async ({ id, move }, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects: games } = await extensions.space.db.query(Filter.schema(ChessType)).run();
-          const game = games.find((game) => game.id === id);
+          const game = await extensions.space.db.query({ id: ArtifactId.toDXN(id).toString() }).first();
           invariant(isInstanceOf(ChessType, game));
+
           const board = new Chess(game.fen);
           try {
             board.move(move);

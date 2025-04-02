@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Graph } from './Graph';
 import { Markers } from './Markers';
@@ -17,12 +17,14 @@ import { convertTreeToGraph, createGraph, createTree, seed, TestGraphModel, type
 
 import '../../styles/defaults.css';
 
-export default {
+seed(1);
+
+const meta: Meta = {
   title: 'experimental/gem-spore/Graph',
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
-seed(1);
+export default meta;
 
 export const Default = () => {
   const { themeMode } = useThemeContext();

@@ -18,8 +18,7 @@ import {
   RelationSourceId,
   RelationTargetId,
 } from '@dxos/echo-schema';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
 import {
   createProxy,
@@ -30,16 +29,10 @@ import {
   getSchema,
   isReactiveObject,
 } from '@dxos/live-object';
-import { ComplexMap, deepMapValues } from '@dxos/util';
+import { deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, isRootDataObject, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
-import {
-  type ObjectInternals,
-  type ProxyTarget,
-  symbolInternals,
-  symbolNamespace,
-  symbolPath,
-} from './echo-proxy-target';
+import { ObjectInternals, type ProxyTarget, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
@@ -83,12 +76,12 @@ export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => 
 };
 
 /**
- * Creates a reactive ECHO object.
+ * Creates a reactive ECHO object backed by a CRDT.
  * @internal
  */
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T> => {
-  invariant(!isEchoObject(obj));
+  assertArgument(!isEchoObject(obj), 'Object is already an ECHO object');
   const schema = getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
@@ -105,7 +98,8 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     slot.setHandler(EchoReactiveHandler.instance);
 
     const target = slot.target as ProxyTarget;
-    target[symbolInternals] = initInternals(core);
+    target[symbolInternals] = new ObjectInternals(core);
+    target[symbolInternals].rootSchema = schema;
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, obj);
@@ -128,11 +122,12 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     return obj as any;
   } else {
     const target: ProxyTarget = {
-      [symbolInternals]: initInternals(core),
+      [symbolInternals]: new ObjectInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
       ...(obj as any),
     };
+    target[symbolInternals].rootSchema = schema;
 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
@@ -170,7 +165,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
  */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): ReactiveEchoObject<any> => {
   const target: ProxyTarget = {
-    [symbolInternals]: initInternals(core, database),
+    [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
   };
@@ -181,14 +176,14 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   return createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
-const validateSchema = (schema: S.Schema<any>) => {
+const validateSchema = (schema: S.Schema.AnyNoContext) => {
   requireTypeReference(schema);
   const entityKind = getEntityKind(schema);
   invariant(entityKind === 'object' || entityKind === 'relation');
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema.AnyNoContext | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
 
@@ -264,12 +259,3 @@ const refToEchoReference = (target: ProxyTarget, ref: Ref<any>): Reference => {
     return Reference.fromDXN(ref.dxn);
   }
 };
-
-const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInternals => ({
-  core,
-  targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-  signal: compositeRuntime.createSignal(),
-  linkCache: new Map<string, ReactiveEchoObject<any>>(),
-  database,
-  subscriptions: [],
-});

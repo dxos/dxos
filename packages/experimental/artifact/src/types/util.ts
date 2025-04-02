@@ -2,27 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
+import { Schema as S } from 'effect';
 
 import { toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
 
 import { type Tool, type ToolExecutionContext, type ToolResult } from './tools';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
+  /**
+   * The name of the tool (may include hyphens but not underscores).
+   */
   name: string;
+  caption?: string;
   description: string;
   schema: Params;
   execute: (params: S.Schema.Type<Params>, context: ToolExecutionContext) => Promise<ToolResult>;
 };
 
-export const defineTool = <Params extends S.Schema.AnyNoContext>({
-  name,
-  description,
-  schema,
-  execute,
-}: DefineToolParams<Params>): Tool => {
+export const parseToolName = (name: string) => {
+  return name.split('_').pop();
+};
+
+export const defineTool = <Params extends S.Schema.AnyNoContext>(
+  namespace: string,
+  { name, caption, description, schema, execute }: DefineToolParams<Params>,
+): Tool => {
   return {
-    name,
+    name: [namespace, name].join('/').replace(/[^\w-]/g, '_'),
+    namespace,
+    function: name,
+    caption,
     description,
     parameters: toFunctionParameterSchema(toJsonSchema(schema)),
     execute: (params: any, context?: any) => {
