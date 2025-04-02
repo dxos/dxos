@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/lit-ui",
+  "version": "0.8.0",
+  "description": "Web Components for DXOS using Lit",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/src/index.js",
+      "node": "./dist/src/index.js"
+    },
+    "./dx-grid.pcss": "./src/dx-grid.pcss",
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/src/testing/index.js",
+      "node": "./dist/src/testing/index.js"
+    }
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "@dxos/test-utils": "workspace:*"
+  }
+}
