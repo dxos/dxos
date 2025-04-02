@@ -6,7 +6,12 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';
-import { type TraceEvent, type InvocationTraceEvent, type InvocationSpan } from '@dxos/functions/types';
+import {
+  type TraceEvent,
+  type InvocationTraceEvent,
+  type InvocationSpan,
+  createInvocationSpans,
+} from '@dxos/functions/types';
 import { useQueue, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
