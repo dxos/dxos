@@ -3,24 +3,28 @@
 //
 
 import { OUTLINER_PLUGIN } from './meta';
-import { JournalType, TreeType } from './types';
+import { JournalType, OutlineType } from './types';
 
 export default [
   {
     'en-US': {
       [JournalType.typename]: {
         'typename label': 'Journal',
+        'object name placeholder': 'New journal',
       },
-      [TreeType.typename]: {
+      [OutlineType.typename]: {
         'typename label': 'Outline',
+        'object name placeholder': 'New outline',
       },
       [OUTLINER_PLUGIN]: {
         'plugin name': 'Outliner',
-        'journal object placeholder': 'New journal',
-        'outline object placeholder': 'New outline',
         'delete object label': 'Delete item',
         'create entry label': 'Create entry',
         'text placeholder': 'Enter text...',
+        'menu label': 'Menu',
+
+        // TODO(burdon): Move to plugin-task.
+        'task action': 'Convert to task',
       },
     },
   },

@@ -8,9 +8,9 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { IntentResolver, ReactSurface } from './capabilities';
-import { meta, OUTLINER_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
-import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TreeType } from './types';
+import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TaskType, TreeType } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -26,14 +26,12 @@ export const OutlinerPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: JournalType.typename,
           metadata: {
-            placeholder: ['journal object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--calendar-check--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
           id: OutlineType.typename,
           metadata: {
-            placeholder: ['outline object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
           },
         }),
@@ -53,7 +51,7 @@ export const OutlinerPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TreeType,
+            objectSchema: OutlineType,
             getIntent: () => createIntent(OutlinerAction.CreateOutline),
           }),
         ),
@@ -62,7 +60,7 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TreeType, JournalEntryType, JournalType]),
+      activate: () => contributes(ClientCapabilities.Schema, [TaskType, TreeType, JournalEntryType, JournalType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

@@ -3,7 +3,7 @@
 //
 
 import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
-import { ActorSchema } from '@dxos/plugin-space/types';
+import { ActorSchema } from '@dxos/schema';
 
 export class EventType extends TypedObject({ typename: 'dxos.org/type/Event', version: '0.1.0' })({
   name: S.optional(S.String),

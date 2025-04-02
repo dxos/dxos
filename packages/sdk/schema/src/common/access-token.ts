@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Format, S, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, Format, ObjectId, S } from '@dxos/echo-schema';
 
 export const AccessTokenSchema = S.Struct({
+  id: ObjectId,
+
   /**
    * User-provided note about the token.
    */
@@ -32,6 +34,5 @@ export const AccessTokenSchema = S.Struct({
 });
 
 // TODO(wittjosiah): This is a temporary solution, long term these should be stored in HALO.
-export class AccessTokenType extends TypedObject({ typename: 'dxos.org/type/AccessToken', version: '0.1.0' })(
-  AccessTokenSchema.fields,
-) {}
+export const AccessTokenType = AccessTokenSchema.pipe(EchoObject('dxos.org/type/AccessToken', '0.1.0'));
+export type AccessTokenType = S.Schema.Type<typeof AccessTokenType>;

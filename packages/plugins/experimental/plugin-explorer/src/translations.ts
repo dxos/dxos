@@ -10,12 +10,11 @@ export default [
     'en-US': {
       [ViewType.typename]: {
         'typename label': 'Explorer',
+        'object name placeholder': 'New explorer',
       },
       [EXPLORER_PLUGIN]: {
         'plugin name': 'Explorer',
         'object title label': 'Title',
-        'object placeholder': 'New explorer',
-        'create object label': 'Create explorer',
       },
     },
   },
