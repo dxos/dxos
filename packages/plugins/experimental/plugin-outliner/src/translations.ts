@@ -21,6 +21,10 @@ export default [
         'delete object label': 'Delete item',
         'create entry label': 'Create entry',
         'text placeholder': 'Enter text...',
+        'menu label': 'Menu',
+
+        // TODO(burdon): Move to plugin-task.
+        'task action': 'Convert to task',
       },
     },
   },

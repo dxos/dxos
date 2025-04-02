@@ -15,7 +15,7 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
@@ -26,14 +26,20 @@ type OutlinerController = {
   focus: (id: string | undefined) => void;
 };
 
+type OutlinerAction = {
+  action: string;
+  node: TreeNodeType;
+};
+
 type OutlinerRootProps = ThemedClassName<{
   tree?: TreeType;
   onCreate?: () => TreeNodeType;
   onDelete?: (node: TreeNodeType) => boolean | void;
+  onAction?: (action: OutlinerAction) => void;
 }>;
 
 const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
-  ({ classNames, tree, onCreate, onDelete }, forwardedRef) => {
+  ({ classNames, tree, onCreate, onDelete, onAction }, forwardedRef) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [active, setActive] = useState<string | undefined>();
     const model = useMemo(() => (tree ? new Tree(tree) : undefined), [tree]);
@@ -75,6 +81,15 @@ const OutlinerRoot = forwardRef<OutlinerController, OutlinerRootProps>(
         const nodes = model.getChildNodes(parent);
 
         switch (type) {
+          //
+          // Action.
+          //
+          case 'action': {
+            const { action, node } = event;
+            onAction?.({ action, node });
+            break;
+          }
+
           //
           // Focus.
           //
@@ -271,6 +286,7 @@ type OutlinerRowProps = ThemedClassName<
 const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
   ({ classNames, node, indent, active, editable, onEvent }, forwardedRef) => {
     const { t } = useTranslation(OUTLINER_PLUGIN);
+
     return (
       <div className={mx('flex w-full', classNames)}>
         <div className={mx('pis-2', 'border-l-4', active ? 'border-primary-500' : 'border-transparent text-subdued')}>
@@ -298,14 +314,31 @@ const OutlinerRow = forwardRef<NodeEditorController, OutlinerRowProps>(
 
         {editable && (
           <div>
-            <IconButton
-              classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
-              icon='ph--x--regular'
-              iconOnly
-              variant='ghost'
-              label={t('delete object label')}
-              onClick={() => onEvent?.({ type: 'delete', node })}
-            />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <IconButton
+                  classNames={mx('opacity-20 hover:opacity-100', active && 'opacity-100')}
+                  icon='ph--dots-three-vertical--regular'
+                  iconOnly
+                  variant='ghost'
+                  label={t('menu label')}
+                />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content side='top'>
+                  <DropdownMenu.Viewport>
+                    {/* TODO(burdon): Move to plugin-task. */}
+                    <DropdownMenu.Item onClick={() => onEvent?.({ type: 'action', node, action: 'task' })}>
+                      {t('task action')}
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item onClick={() => onEvent?.({ type: 'delete', node })}>
+                      {t('delete object label')}
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </div>
         )}
       </div>
