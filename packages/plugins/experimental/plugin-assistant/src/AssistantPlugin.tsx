@@ -68,6 +68,7 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: TemplateType,
+            hidden: true,
             getIntent: () => createIntent(AssistantAction.CreateTemplate),
           }),
         ),

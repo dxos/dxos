@@ -96,7 +96,7 @@ importers:
         specifier: workspace:*
         version: link:packages/core/mesh/signal
       '@dxos/swc-log-plugin':
-        specifier: workspace:*
+        specifier: workspace:*  
         version: link:tools/swc-log-plugin
       '@dxos/toolbox':
         specifier: workspace:*
@@ -4715,6 +4715,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -5589,6 +5592,9 @@ importers:
       '@xiechao/codemirror-lang-handlebars':
         specifier: 1.0.4
         version: 1.0.4
+      effect:
+        specifier: 3.13.3
+        version: 3.13.3
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
@@ -9468,15 +9474,24 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-edge-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-edge-client
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -10444,6 +10459,9 @@ importers:
 
   packages/sdk/react-edge-client:
     dependencies:
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../client
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -11344,7 +11362,7 @@ importers:
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       '@xyflow/react':
         specifier: ^12.5.1
-        version: 12.5.1(@types/react@18.2.79)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        version: 12.5.3(@types/react@18.2.79)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       bind-event-listener:
         specifier: ^3.0.0
         version: 3.0.0
@@ -22271,8 +22289,8 @@ packages:
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  '@xyflow/react@12.5.1':
-    resolution: {integrity: sha512-jMKQVqGwCz0x6pUyvxTIuCMbyehfua7CfEEWDj29zQSHigQpCy0/5d8aOmZrqK4cwur/pVHLQomT6Rm10gXfHg==}
+  '@xyflow/react@12.5.3':
+    resolution: {integrity: sha512-saovy/aQRoW8qQoIqMFUtmC3F6oEV7n6+J1pVbhSG45NI/hOFvK0qozsIPKqX5Va6lGQnkl/o53NHLja3NiweQ==}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
@@ -46302,7 +46320,7 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@xyflow/react@12.5.1(@types/react@18.2.79)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+  '@xyflow/react@12.5.3(@types/react@18.2.79)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       '@xyflow/system': 0.0.53
       classcat: 5.0.5

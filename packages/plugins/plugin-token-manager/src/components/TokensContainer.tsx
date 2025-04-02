@@ -12,6 +12,7 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { AccessTokenSchema, AccessTokenType } from '@dxos/schema';
 
+import { OAuthPresetSelector } from './OAuthPresetSelector';
 import { TokenManager } from './TokenManager';
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 
@@ -45,6 +46,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
       <div className='flex mbe-4'>
         <div className='grow' />
         {!adding && <IconButton icon='ph--plus--regular' label={t('add token')} onClick={handleNew} />}
+        {!adding && <OAuthPresetSelector space={space} />}
       </div>
       {adding ? (
         <Form schema={AccessTokenSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd} />
