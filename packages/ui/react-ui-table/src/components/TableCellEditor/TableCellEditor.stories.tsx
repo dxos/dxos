@@ -48,7 +48,9 @@ const DefaultStory = ({ editing }: StoryProps) => {
     }
   }, [schema, table?.view]);
 
-  const model = useTableModel({ table, projection });
+  const features = useMemo(() => ({ selection: true, editable: true }), []);
+
+  const model = useTableModel({ table, projection, features });
 
   const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
     const { objects } = await space.db.query(schema).run();

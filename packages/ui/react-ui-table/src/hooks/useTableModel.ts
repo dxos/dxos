@@ -20,12 +20,16 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   onSelectionChanged?: (selection: string[]) => void;
   rowActions?: TableRowAction[];
   onRowAction?: (actionId: string, data: T) => void;
-} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
+} & Pick<
+  TableModelProps<T>,
+  'features' | 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'
+>;
 
 export const useTableModel = <T extends BaseTableRow = { id: string }>({
   objects,
   table,
   projection,
+  features,
   onSelectionChanged,
   rowActions,
   onRowAction,
@@ -44,6 +48,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
         space: getSpace(table),
         view: table.view?.target,
         projection,
+        features,
         rowActions,
         onRowAction,
         ...props,
@@ -56,7 +61,7 @@ export const useTableModel = <T extends BaseTableRow = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, table?.view?.target, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [table, projection, table?.view?.target, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
