@@ -4,12 +4,7 @@
 
 import { S, TypedObject } from '@dxos/echo-schema';
 
+// TODO(wittjosiah): Using `EchoObject` here causes type errors.
 export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({
   content: S.String,
 }) {}
-
-// export const TextType = S.Struct({
-//   id: ObjectId,
-//   content: S.String,
-// }).pipe(EchoObject('dxos.org/type/Text', '0.1.0'));
-// export type TextType = S.Schema.Type<typeof TextType>;

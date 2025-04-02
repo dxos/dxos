@@ -82,6 +82,7 @@ export const MessageContentBlock = S.Union(
 /**
  * Message.
  */
+// TODO(wittjosiah): Using `EchoObject` here causes type errors.
 export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.2.0' })({
   id: ObjectId,
   created: S.String.annotations({
