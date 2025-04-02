@@ -11,11 +11,11 @@ export default [
     'en-US': {
       [KanbanType.typename]: {
         'typename label': 'Kanban',
+        'object name placeholder': 'New kanban',
       },
       [KANBAN_PLUGIN]: {
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
-        'kanban title placeholder': 'New kanban',
         'column title label': 'Column title',
         'column title placeholder': 'New column',
         'item title label': 'Item title',
@@ -24,7 +24,6 @@ export default [
         'add item label': 'Add card',
         'delete column label': 'Delete column',
         'delete item label': 'Delete card',
-        'create kanban label': 'Create kanban',
         'card field deleted label': 'Card field deleted',
         'card deleted label': 'Card deleted',
       },

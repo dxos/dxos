@@ -5,7 +5,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { decodeReference } from '@dxos/echo-protocol';
-import { type InvocationTraceEvent, type ScriptType, type TraceEvent } from '@dxos/functions/types';
+import {
+  type InvocationTraceEvent,
+  type ScriptType,
+  type TraceEvent,
+  type InvocationSpan,
+  createInvocationSpans,
+} from '@dxos/functions/types';
 import { useQueue } from '@dxos/react-client/echo';
 import { Icon, List, ListItem, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -24,20 +30,24 @@ export const LogsPanel = ({ script, classNames }: LogsPanelProps) => {
   const invocationTraceQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn, {
     pollInterval: 500,
   });
-  const [selected, setSelected] = useState<InvocationTraceEvent>();
+  const invocationSpans = useMemo(
+    () => createInvocationSpans(invocationTraceQueue?.items),
+    [invocationTraceQueue?.items ?? []],
+  );
+  const [selected, setSelected] = useState<InvocationSpan>();
   const workerDxn = `dxn:worker:${existingFunctionUrl?.split('/').at(-1)}`;
 
   if (!invocationTraceQueue) {
     return <div>{t('no invocations message')}</div>;
   }
 
-  const handleOpenChange = useCallback((trace: InvocationTraceEvent, open: boolean) => {
+  const handleOpenChange = useCallback((trace: InvocationSpan, open: boolean) => {
     setSelected(open ? trace : undefined);
   }, []);
 
   return (
     <List classNames={mx('overflow-y-auto', classNames)}>
-      {invocationTraceQueue.items
+      {invocationSpans
         .filter((trace) => decodeReference(trace.invocationTarget).dxn?.toString() === workerDxn)
         .map((trace) => (
           <InvocationTraceItem
@@ -56,9 +66,9 @@ const InvocationTraceItem = ({
   open,
   setOpen,
 }: {
-  trace: InvocationTraceEvent;
+  trace: InvocationSpan;
   open?: boolean;
-  setOpen?: (trace: InvocationTraceEvent, open: boolean) => void;
+  setOpen?: (trace: InvocationSpan, open: boolean) => void;
 }) => {
   const eventQueue = useQueue<TraceEvent>(open ? decodeReference(trace.invocationTraceQueue).dxn : undefined);
 

@@ -8,7 +8,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { IntentResolver, ReactSurface } from './capabilities';
-import { EXPLORER_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { ViewType, ExplorerAction } from './types';
 
@@ -26,7 +26,6 @@ export const ExplorerPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ViewType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: EXPLORER_PLUGIN }],
             icon: 'ph--graph--regular',
           },
         }),

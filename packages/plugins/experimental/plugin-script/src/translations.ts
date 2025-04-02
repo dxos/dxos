@@ -11,12 +11,10 @@ export default [
     'en-US': {
       [ScriptType.typename]: {
         'typename label': 'Script',
+        'object name placeholder': 'New script',
       },
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
-        'object placeholder': 'New script',
-        'create object label': 'Create script',
-        'create stack section label': 'Create script',
         'description label': 'Description',
         'description placeholder': 'Describe what the script does.',
         'binding placeholder': 'Function name',

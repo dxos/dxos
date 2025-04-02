@@ -8,7 +8,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { CHESS_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { ChessAction, ChessType } from './types';
 
@@ -26,7 +26,6 @@ export const ChessPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ChessType.typename,
           metadata: {
-            placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: 'ph--shield-chevron--regular',
           },
         }),

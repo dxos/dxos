@@ -36,7 +36,6 @@ export const TablePlugin = () =>
           metadata: {
             // TODO(dmaretskyi): Use `getLabel` from `echo-schema`.
             label: (object: any) => (isInstanceOf(TableType, object) ? object.name : undefined),
-            placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),

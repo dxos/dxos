@@ -4273,6 +4273,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4439,9 +4442,6 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.23.9
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
