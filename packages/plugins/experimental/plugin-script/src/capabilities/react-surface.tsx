@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
 import { isInstanceOf } from '@dxos/echo-schema';
 import { ScriptType } from '@dxos/functions/types';
 import { SettingsStore } from '@dxos/local-storage';
 import { Clipboard } from '@dxos/react-ui';
 
 import { ScriptCapabilities } from './capabilities';
+import { type Compiler } from '../compiler';
 import { DebugPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
 import { useDeployState, useToolbarState } from '../hooks';
 import { SCRIPT_PLUGIN } from '../meta';
@@ -31,16 +32,20 @@ export default () =>
       filter: (data): data is { subject: ScriptType; variant: 'logs' | undefined } =>
         isInstanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
-        const compiler = useCapability(ScriptCapabilities.Compiler);
-        // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
+        const layout = useLayout();
+        const [compiler, setCompiler] = useState<Compiler>();
+        const getCompiler = useCapability(ScriptCapabilities.Compiler);
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(SCRIPT_PLUGIN)?.value;
+        useEffect(() => {
+          void getCompiler(layout.workspace).then(setCompiler);
+        }, [layout.workspace]);
         return (
           <ScriptContainer
             role={role}
             script={data.subject}
             variant={data.variant}
             settings={settings}
-            env={compiler.environment}
+            compiler={compiler}
           />
         );
       },

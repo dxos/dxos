@@ -7,12 +7,13 @@ import { defaultHighlightStyle } from '@codemirror/language';
 import { Prec } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
+import { type ViewUpdate, ViewPlugin } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
-import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
-import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
+import { tsSync, tsFacet, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
 import React from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemeMode, useThemeContext } from '@dxos/react-ui';
 import {
   autocomplete,
@@ -29,23 +30,25 @@ import {
 } from '@dxos/react-ui-editor';
 import { isNonNullable } from '@dxos/util';
 
+import { type Compiler } from '../../compiler';
+
 export type TypescriptEditorProps = {
   id: string;
   inputMode?: EditorInputMode;
-  env?: VirtualTypeScriptEnvironment;
+  compiler?: Compiler;
   toolbar?: boolean;
 } & Pick<UseTextEditorProps, 'className' | 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>;
 
 export const TypescriptEditor = ({
   id,
-  env,
+  inputMode = 'vscode',
+  compiler,
   className,
   initialValue,
   extensions,
   scrollTo,
   selection,
   toolbar,
-  inputMode = 'vscode',
 }: TypescriptEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
@@ -85,13 +88,16 @@ export const TypescriptEditor = ({
           editorMonospace,
           javascript({ typescript: true }),
           // https://github.com/val-town/codemirror-ts
-          autocomplete({ override: env ? [tsAutocomplete()] : [] }),
-          env
+          autocomplete({ override: compiler ? [tsAutocomplete()] : [] }),
+          compiler
             ? [
-                tsFacet.of({ env, path: `/src/${id}.ts` }),
+                tsFacet.of({ env: compiler.environment, path: `./src/${id}.ts` }),
                 tsSync(),
-                tsLinter(),
+                // TODO(wittjosiah): Transitive deps are not working.
+                //   https://github.com/esm-dev/esm.sh/issues/1106
+                // tsLinter(),
                 tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
+                tsHttpTypeLoader({ compiler, path: `./src/${id}.ts` }),
               ]
             : [],
         ],
@@ -99,7 +105,7 @@ export const TypescriptEditor = ({
       selection,
       scrollTo,
     }),
-    [id, extensions, themeMode, inputMode, selection, scrollTo],
+    [id, extensions, themeMode, inputMode, selection, scrollTo, compiler],
   );
 
   return (
@@ -107,6 +113,7 @@ export const TypescriptEditor = ({
   );
 };
 
+// TODO(wittjosiah): Factor out.
 const createTooltipRenderer = (themeMode: ThemeMode) => {
   const theme = themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle;
 
@@ -141,5 +148,40 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
     return { dom: div };
   };
 };
+
+// TODO(wittjosiah): Factor out.
+function tsHttpTypeLoader({ compiler, path }: { compiler: Compiler; path: string }) {
+  return ViewPlugin.fromClass(
+    class {
+      private debounceTimeout: NodeJS.Timeout | null = null;
+
+      constructor(view: EditorView) {
+        // Process imports immediately when the plugin is initialized.
+        const initialContent = view.state.doc.toString();
+        void compiler.processImports(path, initialContent).catch(log.catch);
+      }
+
+      update(update: ViewUpdate) {
+        if (update.docChanged) {
+          // Debounce the import processing.
+          if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
+          }
+
+          this.debounceTimeout = setTimeout(() => {
+            const content = update.state.doc.toString();
+            void compiler.processImports(path, content).catch(log.catch);
+          }, 300);
+        }
+      }
+
+      destroy() {
+        if (this.debounceTimeout) {
+          clearTimeout(this.debounceTimeout);
+        }
+      }
+    },
+  );
+}
 
 export default TypescriptEditor;

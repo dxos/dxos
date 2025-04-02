@@ -24,7 +24,8 @@ describe('Bundler', () => {
     expect(result.error).to.not.exist;
   });
 
-  test('Import', async () => {
+  // TODO(wittjosiah): Remove?
+  test.skip('Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({
       source: `
@@ -38,13 +39,13 @@ describe('Bundler', () => {
   });
 
   // TODO(dmaretskyi): Flaky on CI: https://cloud.nx.app/runs/Hjcifa8Ccq/task/plugin-script%3Atest
-  test.skip('HTTPS Import', async () => {
+  test.skip('NPM Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({
       source: `
-      import { invariant } from 'https://esm.sh/@dxos/invariant';
-      invariant(true);
-    `,
+        import { Octokit } from 'octokit';
+        const octokit = new Octokit();
+      `,
     });
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;

@@ -2,16 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
-import { createStatic, EchoObject, defineFunction, DXN, Filter, ObjectId, S } from 'dxos:functions';
-import {
-  FetchHttpClient,
-  // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.13.3';
-// @ts-ignore
-import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.13.3';
-// @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.13.3';
+/* @version
+{
+  "@dxos/client": "0.7.5-main.b19bfc8",
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8",
+  "@dxos/invariant": "0.7.5-main.b19bfc8",
+  "@dxos/keys": "0.7.5-main.b19bfc8"
+}
+*/
+
+import { FetchHttpClient } from '@effect/platform';
+import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
+import { Effect, Config, Redacted, Ref, Schema as S } from 'effect';
+
+import { Filter } from '@dxos/client/echo';
+import { createStatic, EchoObject, ObjectId } from '@dxos/echo-schema';
+import { defineFunction } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 const MessageSchema = S.Struct({
   id: S.String,
@@ -47,8 +56,9 @@ export default defineFunction({
       data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 },
     },
     context: { space },
-  }: any) =>
+  }) =>
     Effect.gen(function* () {
+      invariant(space, 'Space is required');
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'discord.com' })).first(),
         catch: (e: any) => e,
@@ -59,7 +69,7 @@ export default defineFunction({
       });
       const backfill = objects.length === 0;
       const newMessages = yield* Ref.make(0);
-      const lastMessage = yield* Ref.make(objects.at(-1));
+      const lastMessage = yield* Ref.make(objects.at(-1) as S.Schema.Type<typeof MessageSchema>);
 
       const enqueueMessages = Effect.gen(function* () {
         const rest = yield* DiscordREST;
@@ -70,9 +80,9 @@ export default defineFunction({
             after: backfill && !last ? `${generateSnowflake(after)}` : last?.foreignId,
             limit: pageSize,
           };
-          const messages = yield* rest.getChannelMessages(channelId, options).pipe((res: any) => res.json);
+          const messages = yield* rest.getChannelMessages(channelId, options).pipe((res) => res.json);
           const queueMessages = messages
-            .map((message: any) =>
+            .map((message) =>
               createStatic(MessageSchema, {
                 id: ObjectId.random(),
                 foreignId: message.id,
@@ -87,8 +97,8 @@ export default defineFunction({
               try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
               catch: (e: any) => e,
             });
-            yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);
-            yield* Ref.update(lastMessage, (m: any) => queueMessages.at(-1));
+            yield* Ref.update(newMessages, (n) => n + queueMessages.length);
+            yield* Ref.update(lastMessage, (m) => queueMessages.at(-1)!);
           }
           if (messages.length < pageSize) {
             break;

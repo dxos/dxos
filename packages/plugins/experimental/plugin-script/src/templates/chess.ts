@@ -1,7 +1,21 @@
-// @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
-// @ts-ignore
-import { Chess } from 'https://esm.sh/chess.js@0.13.1';
+//
+// Copyright 2025 DXOS.org
+//
+
+/* @version
+{
+  "chess.js": "0.13.1",
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8",
+  "@dxos/invariant": "0.7.5-main.b19bfc8"
+}
+*/
+
+import { Chess } from 'chess.js';
+
+import { S } from '@dxos/echo-schema';
+import { defineFunction } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 
 export default defineFunction({
   description: 'Plays a random move in a chess game.',
@@ -26,7 +40,8 @@ export default defineFunction({
       data: { changedObjectId, player = 'b' },
     },
     context: { space },
-  }: any) => {
+  }) => {
+    invariant(space, 'Space is required');
     const { pgn } = await space.db.query({ id: changedObjectId }).first();
     const game = new Chess();
     game.load_pgn(pgn);

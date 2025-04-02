@@ -2,8 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+/* @version
+{
+  "@dxos/echo-schema": "0.7.5-main.b19bfc8",
+  "@dxos/functions": "0.7.5-main.b19bfc8"
+}
+*/
+
+import { S } from '@dxos/echo-schema';
+import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
   description: 'Returns the exchange rate between two currencies.',
@@ -13,11 +20,13 @@ export default defineFunction({
     to: S.String.annotations({ description: 'The target currency' }),
   }),
 
+  outputSchema: S.String.annotations({ description: 'The exchange rate between the two currencies' }),
+
   handler: async ({
     event: {
       data: { from, to },
     },
-  }: any) => {
+  }) => {
     const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
     const {
       data: { rates },
