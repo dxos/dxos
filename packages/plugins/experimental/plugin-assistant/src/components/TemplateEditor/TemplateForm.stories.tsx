@@ -30,7 +30,7 @@ const Render = () => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(create(TemplateType, { source: TEMPLATE }));
+    return space.db.add(create(TemplateType, { source: TEMPLATE, kind: { include: 'manual' } }));
   });
 
   return (
