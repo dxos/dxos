@@ -96,7 +96,7 @@ importers:
         specifier: workspace:*
         version: link:packages/core/mesh/signal
       '@dxos/swc-log-plugin':
-        specifier: workspace:*
+        specifier: workspace:*  
         version: link:tools/swc-log-plugin
       '@dxos/toolbox':
         specifier: workspace:*
