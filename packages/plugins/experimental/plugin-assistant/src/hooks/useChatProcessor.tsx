@@ -14,7 +14,7 @@ import { Filter, fullyQualifiedId, type Space, useQuery } from '@dxos/react-clie
 import { isNonNullable } from '@dxos/util';
 
 import { AssistantCapabilities } from '../capabilities';
-import { ChatProcessor } from '../hooks';
+import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { covertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
 
@@ -53,7 +53,6 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
     log('creating tools...');
     const tools = [
       ...globalTools.flat(),
-      ...artifactDefinitions.flatMap((definition) => definition.tools),
       ...serviceTools,
       ...functions
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
@@ -61,7 +60,7 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
     ];
     const extensions = { space, dispatch, pivotId: chatId, part };
     return [tools, extensions];
-  }, [dispatch, globalTools, artifactDefinitions, space, chatId, serviceTools, functions]);
+  }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
   // Prompt.
   const systemPrompt = useMemo(
@@ -73,16 +72,16 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).
-  const model =
+  const model: ChatProcessorOptions['model'] =
     settings?.llmProvider === 'ollama'
-      ? settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL
-      : settings?.edgeModel ?? DEFAULT_EDGE_MODEL;
+      ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
+      : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
     log('creating processor...', { settings });
-    return new ChatProcessor(aiClient.value, tools, extensions, { model, systemPrompt });
+    return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
   }, [aiClient.value, tools, extensions, model, systemPrompt]);
 
   return processor;

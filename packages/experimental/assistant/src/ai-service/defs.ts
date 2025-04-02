@@ -21,7 +21,7 @@ export const DEFAULT_EDGE_MODELS = [
   '@ollama/llama-3-1-nemotron-70b-instruct',
   '@ollama/llama-3-1-nemotron-mini-4b-instruct',
   '@ollama/llama-3-2-3b',
-];
+] as const;
 
 // TODO(burdon): Config.
 export const DEFAULT_OLLAMA_ENDPOINT = 'http://localhost:11434';
@@ -36,4 +36,4 @@ export const DEFAULT_OLLAMA_MODELS = [
   'llama3.2:1b',
   'llama3:70b',
   'deepseek-r1:latest',
-];
+] as const;
