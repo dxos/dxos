@@ -69,11 +69,26 @@ export const ImageContentBlock = S.extend(
 ).pipe(S.mutable);
 export type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
 
+/**
+ * Reference
+ *
+ * Non-text content embedded in the message (e.g., files, polls, etc.).
+ */
+export const ReferenceContentBlock = S.extend(
+  AbstractContentBlock,
+  S.Struct({
+    type: S.Literal('reference'),
+    reference: Ref(Expando),
+  }),
+).pipe(S.mutable);
+export type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
+
 export const MessageContentBlock = S.Union(
   // prettier-ignore
   TextContentBlock,
   JsonContentBlock,
   ImageContentBlock,
+  ReferenceContentBlock,
 );
 
 // TODO(wittjosiah): Add read status:
@@ -92,15 +107,8 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
     description: 'Identity of the message sender.',
   }),
   blocks: S.Array(MessageContentBlock).annotations({
-    description: 'Inline content of the message.',
+    description: 'Contents of the message.',
   }),
-  attachments: S.optional(
-    S.mutable(
-      S.Array(Ref(Expando)).annotations({
-        description: 'Non-text content embedded in the message (e.g., files, polls, etc.)',
-      }),
-    ),
-  ),
   properties: S.optional(
     S.mutable(
       S.Record({ key: S.String, value: S.Any }).annotations({
@@ -135,8 +143,10 @@ export const MessageTypeV1ToV2 = defineObjectMigration({
       id: from.id,
       created: from.timestamp,
       sender: from.sender,
-      blocks: [{ type: 'text' as const, text: from.text }],
-      attachments: from.parts,
+      blocks: [
+        { type: 'text' as const, text: from.text },
+        ...(from.parts ?? []).map((part) => ({ type: 'reference' as const, reference: part })),
+      ],
       properties: {
         ...from.properties,
         state: from.state,

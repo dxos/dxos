@@ -9,7 +9,6 @@ import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
 import { MessageType } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
 
 export const createChatThread = (identity: Identity) => {
   return create(ThreadType, {
@@ -20,16 +19,16 @@ export const createChatThread = (identity: Identity) => {
             identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
           },
           created: faker.date.recent().toISOString(),
-          blocks: [{ type: 'text', text: faker.lorem.sentences(3) }],
-          attachments: faker.helpers
-            .multiple(
-              () =>
-                faker.datatype.boolean({ probability: 0.8 })
-                  ? undefined
-                  : (makeRef(create(Expando, { name: faker.lorem.sentence() })) as any), // TODO(dmaretskyi): Fix types in schema.
-              { count: { min: 1, max: 3 } },
-            )
-            .filter(isNonNullable),
+          blocks: [
+            { type: 'text' as const, text: faker.lorem.sentences(3) },
+            ...faker.helpers.multiple(
+              () => {
+                const reference = makeRef(create(Expando, { name: faker.lorem.sentence() })) as any; // TODO(dmaretskyi): Fix types in schema.
+                return { type: 'reference' as const, reference };
+              },
+              { count: { min: 0, max: 3 } },
+            ),
+          ],
         }),
       ),
     ),

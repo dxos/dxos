@@ -51,6 +51,7 @@ export const MessageContainer = ({
   const editLabel = t(editing ? 'save message label' : 'edit message label');
   const deleteLabel = t('delete message label');
   const textBlock = message.blocks.find((block) => block.type === 'text');
+  const references = message.blocks.filter((block) => block.type === 'reference').map((block) => block.reference);
 
   useOnEditAnalytics(message, textBlock, !!editing);
 
@@ -103,8 +104,8 @@ export const MessageContainer = ({
         </ButtonGroup>
       </MessageHeading>
       {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
-      {RefArray.targets(message.attachments ?? []).map((part, index) => (
-        <MessagePart key={index} part={part} />
+      {RefArray.targets(references).map((reference, index) => (
+        <MessagePart key={index} part={reference} />
       ))}
     </MessageRoot>
   );
