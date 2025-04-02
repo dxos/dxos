@@ -6,8 +6,8 @@ import { findObjectWithForeignKey } from '@dxos/echo-db';
 import { foreignKey } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { MailboxType } from '@dxos/plugin-inbox/types';
-import { MessageType } from '@dxos/plugin-space/types';
 import { type Space, Filter, create, makeRef } from '@dxos/react-client/echo';
+import { MessageType } from '@dxos/schema';
 
 export const SOURCE_ID = 'hub.dxos.network/api/mailbox';
 
@@ -29,8 +29,8 @@ export const handleEmail = async (space: Space, data: any) => {
           MessageType,
           {
             sender: { email: message.from },
-            timestamp: new Date(message.created).toISOString(),
-            text: message.body,
+            created: new Date(message.created).toISOString(),
+            blocks: [{ type: 'text', text: message.body }],
             properties: {
               subject: message.subject,
               to: [{ email: message.to }],

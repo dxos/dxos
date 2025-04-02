@@ -11,9 +11,9 @@ import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dx
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
-import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
+import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { TableType } from '@dxos/react-ui-table/types';
-import { TextType } from '@dxos/schema';
+import { TextType, MessageType } from '@dxos/schema';
 import { getDeep, isNode, isNonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
@@ -119,8 +119,8 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
               schema: MessageType,
               props: {
                 sender: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
-                timestamp: data.blocks[0].timestamp,
-                text: content,
+                created: data.blocks[0].timestamp,
+                blocks: [{ type: 'text', text: content }],
               },
             }));
           }
@@ -222,8 +222,8 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             schema: MessageType,
             props: {
               sender: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
-              timestamp: data.blocks[0].timestamp,
-              text: content,
+              created: data.blocks[0].timestamp,
+              blocks: [{ type: 'text', text: content }],
             },
           }));
         }
