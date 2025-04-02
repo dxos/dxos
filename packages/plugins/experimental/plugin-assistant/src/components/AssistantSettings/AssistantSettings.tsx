@@ -28,7 +28,7 @@ export const AssistantSettings = ({ settings }: { settings: AssistantSettingsPro
 
       <DeprecatedFormInput label={t('settings llm provider label')}>
         <Input.Switch
-          checked={!!settings.llmProvider}
+          checked={settings.llmProvider === 'ollama'}
           onCheckedChange={(checked) => (settings.llmProvider = checked ? 'ollama' : 'edge')}
         />
       </DeprecatedFormInput>
