@@ -2,19 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, useMemo, useCallback } from 'react';
 
+import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { AnchoredOverflow } from '@dxos/react-ui';
-import { Table, createColumnBuilder, textPadding, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
 import { useDevtoolsDispatch } from '../../../hooks';
 
 export type PipelineTableRow = {
+  id: string;
   feedKey: PublicKey;
   type: string;
   genesis?: boolean;
@@ -23,34 +24,8 @@ export type PipelineTableRow = {
   processed?: number;
   target?: number;
   total?: number;
+  progress?: string;
 };
-
-const { helper, builder } = createColumnBuilder<PipelineTableRow>();
-const columns: TableColumnDef<PipelineTableRow, any>[] = [
-  helper.accessor('feedKey', builder.key({ tooltip: true })),
-  helper.accessor('type', {
-    meta: { cell: { classNames: textPadding } },
-    size: 60,
-  }),
-  helper.accessor('own', builder.icon()),
-  helper.accessor('genesis', builder.icon({ header: 'gen' })),
-  helper.accessor('start', builder.number()),
-  helper.accessor('target', builder.number()),
-  helper.accessor('processed', builder.number()),
-  helper.accessor('total', builder.number()),
-  helper.accessor(
-    (row) => {
-      const percent = (((row.processed ?? 0) - (row.start ?? 0)) / ((row.target ?? 0) - (row.start ?? 0))) * 100;
-      if (!isNaN(percent)) {
-        return `${Math.min(percent, 100).toFixed(0)}%`;
-      }
-    },
-    {
-      id: 'progress',
-      meta: { cell: { classNames: [textPadding, 'text-end'] } },
-    },
-  ),
-];
 
 export type PipelineTableProps = {
   state: SpaceProto.PipelineState;
@@ -59,6 +34,33 @@ export type PipelineTableProps = {
 };
 
 export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelect }) => {
+  const setContext = useDevtoolsDispatch();
+
+  const properties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'feedKey', format: FormatEnum.DID },
+      {
+        name: 'type',
+        format: FormatEnum.SingleSelect,
+        size: 80,
+        config: {
+          options: [
+            { id: 'control', title: 'control', color: 'blue' },
+            { id: 'data', title: 'data', color: 'sky' },
+          ],
+        },
+      },
+      { name: 'own', format: FormatEnum.Boolean, size: 90 },
+      { name: 'genesis', format: FormatEnum.Boolean, size: 100 },
+      { name: 'start', format: FormatEnum.Number, size: 100 },
+      { name: 'target', format: FormatEnum.Number, size: 100 },
+      { name: 'processed', format: FormatEnum.Number, size: 100 },
+      { name: 'total', format: FormatEnum.Number, size: 100 },
+      { name: 'progress', format: FormatEnum.String, size: 100 },
+    ],
+    [],
+  );
+
   const getType = (feedKey: PublicKey) => {
     if (metadata) {
       return {
@@ -66,73 +68,101 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
         own: feedKey.equals(metadata?.controlFeed) || feedKey.equals(metadata?.dataFeed),
       };
     }
+
+    return {
+      genesis: false,
+      own: false,
+    };
   };
 
-  const controlKeys = Array.from(
-    new ComplexSet(PublicKey.hash, [
-      ...(state.controlFeeds ?? []),
-      ...Timeframe.merge(
-        state.currentControlTimeframe ?? new Timeframe(),
-        state.targetControlTimeframe ?? new Timeframe(),
-        state.totalControlTimeframe ?? new Timeframe(),
-        state.knownControlTimeframe ?? new Timeframe(),
-      )
-        .frames()
-        .map(([key]) => key),
-    ]),
-  );
+  const data = useMemo(() => {
+    const controlKeys = Array.from(
+      new ComplexSet(PublicKey.hash, [
+        ...(state.controlFeeds ?? []),
+        ...Timeframe.merge(
+          state.currentControlTimeframe ?? new Timeframe(),
+          state.targetControlTimeframe ?? new Timeframe(),
+          state.totalControlTimeframe ?? new Timeframe(),
+          state.knownControlTimeframe ?? new Timeframe(),
+        )
+          .frames()
+          .map(([key]) => key),
+      ]),
+    );
 
-  const dataKeys = Array.from(
-    new ComplexSet(PublicKey.hash, [
-      ...(state.dataFeeds ?? []),
-      ...Timeframe.merge(
-        state.currentDataTimeframe ?? new Timeframe(),
-        state.targetDataTimeframe ?? new Timeframe(),
-        state.totalDataTimeframe ?? new Timeframe(),
-        state.knownDataTimeframe ?? new Timeframe(),
-      )
-        .frames()
-        .map(([key]) => key),
-    ]),
-  );
+    const dataKeys = Array.from(
+      new ComplexSet(PublicKey.hash, [
+        ...(state.dataFeeds ?? []),
+        ...Timeframe.merge(
+          state.currentDataTimeframe ?? new Timeframe(),
+          state.targetDataTimeframe ?? new Timeframe(),
+          state.totalDataTimeframe ?? new Timeframe(),
+          state.knownDataTimeframe ?? new Timeframe(),
+        )
+          .frames()
+          .map(([key]) => key),
+      ]),
+    );
 
-  const data: PipelineTableRow[] = [
-    ...controlKeys.map(
-      (feedKey): PipelineTableRow => ({
-        feedKey,
-        type: 'control',
-        ...getType(feedKey),
-        start: 0,
-        processed: state.currentControlTimeframe?.get(feedKey),
-        target: state.targetControlTimeframe?.get(feedKey),
-        total: state.totalControlTimeframe?.get(feedKey),
+    const tableRows: PipelineTableRow[] = [
+      ...controlKeys.map((feedKey): PipelineTableRow => {
+        const start = 0;
+        const processed = state.currentControlTimeframe?.get(feedKey);
+        const target = state.targetControlTimeframe?.get(feedKey);
+        const total = state.totalControlTimeframe?.get(feedKey);
+
+        const percent = (((processed ?? 0) - start) / ((target ?? 0) - start)) * 100;
+        const progress = !isNaN(percent) ? `${Math.min(percent, 100).toFixed(0)}%` : undefined;
+
+        return {
+          id: feedKey.toString(),
+          feedKey,
+          type: 'control',
+          ...getType(feedKey),
+          start,
+          processed,
+          target,
+          total,
+          progress,
+        };
       }),
-    ),
-    ...dataKeys.map(
-      (feedKey): PipelineTableRow => ({
-        feedKey,
-        type: 'data',
-        ...getType(feedKey),
-        start: state.startDataTimeframe?.get(feedKey) ?? 0,
-        processed: state.currentDataTimeframe?.get(feedKey),
-        target: state.targetDataTimeframe?.get(feedKey),
-        total: state.totalDataTimeframe?.get(feedKey),
+      ...dataKeys.map((feedKey): PipelineTableRow => {
+        const start = state.startDataTimeframe?.get(feedKey) ?? 0;
+        const processed = state.currentDataTimeframe?.get(feedKey);
+        const target = state.targetDataTimeframe?.get(feedKey);
+        const total = state.totalDataTimeframe?.get(feedKey);
+
+        const percent = (((processed ?? 0) - start) / ((target ?? 0) - start)) * 100;
+        const progress = !isNaN(percent) ? `${Math.min(percent, 100).toFixed(0)}%` : undefined;
+
+        return {
+          id: feedKey.toString(),
+          feedKey,
+          type: 'data',
+          ...getType(feedKey),
+          start,
+          processed,
+          target,
+          total,
+          progress,
+        };
       }),
-    ),
-  ];
+    ];
 
-  const setContext = useDevtoolsDispatch();
-  const handleSelect = (selected: PipelineTableRow | undefined) => {
-    setContext((ctx) => ({ ...ctx, feedKey: selected?.feedKey }));
-    onSelect?.(selected);
-  };
+    return tableRows;
+  }, [state, metadata]);
 
-  return (
-    <Table.Root>
-      <Table.Viewport classNames='overflow-anchored'>
-        <Table.Main<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
-        <AnchoredOverflow.Anchor />
-      </Table.Viewport>
-    </Table.Root>
+  const handleRowClicked = useCallback(
+    (row: PipelineTableRow) => {
+      if (row) {
+        setContext((ctx) => ({ ...ctx, feedKey: row.feedKey }));
+        onSelect?.(row);
+      } else {
+        setContext((ctx) => ({ ...ctx, feedKey: undefined }));
+      }
+    },
+    [onSelect, setContext],
   );
+
+  return <DynamicTable properties={properties} data={data} onRowClicked={handleRowClicked} />;
 };

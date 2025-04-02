@@ -8,7 +8,6 @@ import { type Observability } from '@dxos/observability';
 import { AssistantPlugin, ASSISTANT_PLUGIN } from '@dxos/plugin-assistant';
 import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
 import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
-import { CallsPlugin, CALLS_PLUGIN } from '@dxos/plugin-calls';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
@@ -23,6 +22,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
+import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
 import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
@@ -96,14 +96,16 @@ export const defaults = ({ isDev, isLabs }: PluginConfig): string[] =>
 
     // Default
     MARKDOWN_PLUGIN,
+    MEETING_PLUGIN,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,
     THREAD_PLUGIN,
+    TRANSCRIPTION_PLUGIN,
     WNFS_PLUGIN,
 
     // Labs
-    isLabs && [ASSISTANT_PLUGIN, CALLS_PLUGIN, TRANSCRIPTION_PLUGIN],
+    isLabs && [ASSISTANT_PLUGIN],
   ]
     .filter(isNotFalsy)
     .flat();
@@ -113,7 +115,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
-    CallsPlugin(),
     ChessPlugin(),
     ClientPlugin({
       config,
@@ -156,11 +157,12 @@ export const plugins = ({ appKey, config, services, observability, isDev, isLabs
     KanbanPlugin(),
     MapPlugin(),
     MarkdownPlugin(),
+    MeetingPlugin(),
     MermaidPlugin(),
     isSocket && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
-    isLabs && OutlinerPlugin(),
+    OutlinerPlugin(),
     PresenterPlugin(),
     !isSocket && isPwa && PwaPlugin(),
     RegistryPlugin(),

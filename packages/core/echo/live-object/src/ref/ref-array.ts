@@ -12,10 +12,13 @@ export const RefArray = Object.freeze({
   /**
    * @returns all resolved targets.
    */
-  allResolvedTargets: <T extends BaseObject>(refs: Ref<T>[]): T[] => {
+  targets: <T extends BaseObject>(refs: Ref<T>[]): T[] => {
     return refs.map((ref) => ref.target).filter(isNonNullable);
   },
 
+  /**
+   * Load all referenced objects.
+   */
   loadAll: <T extends BaseObject>(refs: Ref<T>[]): Promise<T[]> => {
     return Promise.all(refs.map((ref) => ref.load()));
   },

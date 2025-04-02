@@ -22,7 +22,8 @@
       }
     },
     "lint": {},
-    "pack": {}
+    "pack": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",

@@ -44,6 +44,7 @@ export {
   type Selection,
   type Subscription,
   type SubscriptionHandle,
+  type Queue,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

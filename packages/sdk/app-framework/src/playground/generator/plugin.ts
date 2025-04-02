@@ -9,7 +9,7 @@ const Main = lazy(() => import('./Main'));
 const Toolbar = lazy(() => import('./Toolbar'));
 
 export const GeneratorPlugin = () =>
-  definePlugin({ id: 'dxos.org/test/generator' }, [
+  definePlugin({ id: 'dxos.org/test/generator', name: 'Generator' }, [
     defineModule({
       id: 'dxos.org/test/generator/main',
       activatesOn: Events.Startup,

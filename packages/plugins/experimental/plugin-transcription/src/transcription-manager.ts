@@ -9,6 +9,7 @@ import { createStatic } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
+import { type HuePalette } from '@dxos/react-ui-theme';
 
 import { MediaStreamRecorder, Transcriber } from './transcriber';
 import { TranscriptBlock, type TranscriptSegment } from './types';
@@ -37,6 +38,7 @@ export class TranscriptionManager extends Resource {
   private readonly _edgeClient: EdgeHttpClient;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
   private _name?: string = undefined;
+  private _hue?: HuePalette = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _enabled = false;
@@ -124,6 +126,14 @@ export class TranscriptionManager extends Resource {
     this._name = name;
   }
 
+  @synchronized
+  setHue(hue: HuePalette) {
+    if (this._hue === hue) {
+      return;
+    }
+    this._hue = hue;
+  }
+
   private async _toggleTranscriber() {
     await this._maybeReinitTranscriber();
 
@@ -167,7 +177,7 @@ export class TranscriptionManager extends Resource {
       return;
     }
 
-    const block = createStatic(TranscriptBlock, { author: this._name, segments });
+    const block = createStatic(TranscriptBlock, { authorName: this._name, authorHue: this._hue, segments });
     this._queue.append([block]);
   }
 }

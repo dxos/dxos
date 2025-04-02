@@ -137,6 +137,7 @@ export const defaultTheme: ThemeStyles = {
   '.cm-link': {
     textDecorationLine: 'underline',
     textDecorationThickness: '1px',
+    textDecorationColor: 'var(--dx-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
   },

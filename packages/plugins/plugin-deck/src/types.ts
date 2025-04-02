@@ -17,6 +17,9 @@ export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 export const OverscrollOptions = ['none', 'centering'] as const;
 export type Overscroll = (typeof OverscrollOptions)[number];
 
+export type Part = 'solo' | 'deck' | 'complementary';
+export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
+
 export type Panel = {
   id: string;
   label: Label;
@@ -53,12 +56,30 @@ export const Deck = S.Struct({
     description: "If false, the deck has not yet left solo mode and new planks should be solo'd.",
   }),
   active: S.mutable(S.Array(S.String)),
+  // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
+  activeCompanions: S.optional(S.mutable(S.Record({ key: S.String, value: S.String }))),
   inactive: S.mutable(S.Array(S.String)),
   solo: S.optional(S.String),
   fullscreen: S.Boolean,
   plankSizing: S.mutable(PlankSizing),
+  companionFrameSizing: S.mutable(PlankSizing),
 });
 export type Deck = S.Schema.Type<typeof Deck>;
+
+export const defaultDeck = {
+  initialized: false,
+  active: [],
+  activeCompanions: {},
+  inactive: [],
+  fullscreen: false,
+  solo: undefined,
+  plankSizing: {},
+  companionFrameSizing: {},
+} satisfies Deck;
+
+export const surfaceVariantSeparator = '--';
+
+export const surfaceVariant = (id: string) => `${surfaceVariantSeparator}${id}`;
 
 export const DeckState = S.mutable(
   S.Struct({
@@ -136,6 +157,14 @@ export namespace DeckAction {
     input: S.Struct({
       id: S.String,
       size: S.Number,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class ChangeCompanion extends S.TaggedClass<ChangeCompanion>()(`${DECK_ACTION}/change-companion`, {
+    input: S.Struct({
+      primary: S.String,
+      companion: S.Union(S.String, S.Null),
     }),
     output: S.Void,
   }) {}

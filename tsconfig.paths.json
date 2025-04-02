@@ -31,12 +31,6 @@
       "@dxos/plugin-automation": [
         "packages/plugins/experimental/plugin-automation/src/index.ts"
       ],
-      "@dxos/plugin-calls": [
-        "packages/plugins/experimental/plugin-calls/src/index.ts"
-      ],
-      "@dxos/plugin-calls/types": [
-        "packages/plugins/experimental/plugin-calls/src/types/index.ts"
-      ],
       "@dxos/plugin-conductor": [
         "packages/plugins/experimental/plugin-conductor/src/index.ts"
       ],
@@ -157,6 +151,12 @@
       "@dxos/plugin-markdown/types": [
         "packages/plugins/plugin-markdown/src/types/index.ts"
       ],
+      "@dxos/plugin-meeting": [
+        "packages/plugins/plugin-meeting/src/index.ts"
+      ],
+      "@dxos/plugin-meeting/types": [
+        "packages/plugins/plugin-meeting/src/types/index.ts"
+      ],
       "@dxos/plugin-mermaid": [
         "packages/plugins/plugin-mermaid/src/index.ts"
       ],
@@ -255,15 +255,6 @@
       ],
       "@dxos/shell/testing": [
         "packages/sdk/shell/src/testing/index.ts"
-      ],
-      "@dxos/brand": [
-        "packages/ui/brand/src/index.ts"
-      ],
-      "@dxos/lit-grid": [
-        "packages/ui/lit-grid/src/index.ts"
-      ],
-      "@dxos/lit-grid/testing": [
-        "packages/ui/lit-grid/src/testing/index.ts"
       ],
       "@dxos/react-ui": [
         "packages/ui/react-ui/src/index.ts"

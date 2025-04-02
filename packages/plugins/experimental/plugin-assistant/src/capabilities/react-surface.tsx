@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { isInstanceOf } from '@dxos/echo-schema';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace, isSpace } from '@dxos/react-client/echo';
 
@@ -30,13 +31,13 @@ export default () =>
     createSurface({
       id: `${ASSISTANT_PLUGIN}/chat`,
       role: 'article',
-      filter: (data): data is { subject: AIChatType } => data.subject instanceof AIChatType,
+      filter: (data): data is { subject: AIChatType } => isInstanceOf(AIChatType, data.subject),
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/template`,
       role: 'article',
-      filter: (data): data is { subject: TemplateType } => data.subject instanceof TemplateType,
+      filter: (data): data is { subject: TemplateType } => isInstanceOf(TemplateType, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
     }),
     createSurface({

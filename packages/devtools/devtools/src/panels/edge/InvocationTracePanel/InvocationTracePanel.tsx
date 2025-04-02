@@ -2,16 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
 import { type Queue } from '@dxos/echo-db';
 import { decodeReference } from '@dxos/echo-protocol';
+import { FormatEnum } from '@dxos/echo-schema';
 import { type TraceEvent, type InvocationTraceEvent } from '@dxos/functions/types';
-import { type Space } from '@dxos/react-client/echo';
-import { useEdgeClient, useQueue } from '@dxos/react-edge-client';
+import { useQueue, type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ControlledSelector, PanelContainer } from '../../../components';
@@ -19,60 +19,20 @@ import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
 
-const invocationBuilder = createColumnBuilder<InvocationTraceEvent>();
-const invocationsColumns: TableColumnDef<InvocationTraceEvent, any>[] = [
-  invocationBuilder.helper.accessor((item) => new Date(item.timestampMs).toISOString(), {
-    id: 'time',
-    ...invocationBuilder.builder.string(),
-    size: 120,
-  }),
-  invocationBuilder.helper.accessor((item) => item.outcome, {
-    id: 'outcome',
-    ...invocationBuilder.builder.string(),
-    minSize: 40,
-    size: 40,
-  }),
-  invocationBuilder.helper.accessor((item) => decodeReference(item.invocationTraceQueue).dxn?.toString() ?? 'unknown', {
-    id: 'queue',
-    ...invocationBuilder.builder.string(),
-  }),
-];
-
-const traceEventBuilder = createColumnBuilder<TraceEvent>();
-const traceEventColumns: TableColumnDef<TraceEvent, any>[] = [
-  traceEventBuilder.helper.accessor((item) => new Date(item.ingestionTimestampMs).toISOString(), {
-    id: 'time',
-    ...traceEventBuilder.builder.string(),
-    size: 120,
-  }),
-  traceEventBuilder.helper.accessor((item) => item.outcome, {
-    id: 'outcome',
-    ...traceEventBuilder.builder.string(),
-    minSize: 40,
-    size: 40,
-  }),
-  traceEventBuilder.helper.accessor((item) => item.exceptions.length, {
-    id: 'unhandled',
-    ...traceEventBuilder.builder.number(),
-    size: 40,
-  }),
-  traceEventBuilder.helper.accessor((item) => item.logs.length, {
-    id: 'logs',
-    ...traceEventBuilder.builder.number(),
-    size: 40,
-  }),
-];
-
 export const InvocationTracePanel = (props: { space?: Space }) => {
-  const edgeClient = useEdgeClient();
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
-  const invocationsQueue = useQueue<InvocationTraceEvent>(edgeClient, space?.properties.invocationTraceQueue?.dxn);
+  const invocationsQueue = useQueue<InvocationTraceEvent>(space?.properties.invocationTraceQueue?.dxn);
   const [selectedInvocation, setSelectedInvocation] = useState<InvocationTraceEvent>();
-  const eventQueue = useQueue<TraceEvent>(
-    edgeClient,
-    selectedInvocation?.invocationTraceQueue && decodeReference(selectedInvocation?.invocationTraceQueue).dxn,
-  );
+
+  const traceQueueDxn = useMemo(() => {
+    return selectedInvocation?.invocationTraceQueue
+      ? decodeReference(selectedInvocation.invocationTraceQueue).dxn
+      : undefined;
+  }, [selectedInvocation?.invocationTraceQueue]);
+
+  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
+
   const [selectedObject, setSelectedObject] = useState<any>();
   const invocationsByTarget = groupByInvocationTarget(invocationsQueue);
   const [selectedTarget, setSelectedTarget] = useState<string>();
@@ -85,9 +45,59 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
     }
   }, [invocationsByTarget ?? null]);
 
-  const selectTraceEvent = (invocation: InvocationTraceEvent) => {
+  const invocationProperties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'time', format: FormatEnum.String, size: 120 },
+      { name: 'outcome', format: FormatEnum.String, size: 40 },
+      { name: 'queue', format: FormatEnum.String },
+    ],
+    [],
+  );
+
+  const invocationData = useMemo(() => {
+    return filterBySelected(invocationsQueue?.items ?? [], selectedTarget).map((item) => ({
+      id: `${item.timestampMs}-${Math.random()}`,
+      time: new Date(item.timestampMs).toISOString(),
+      outcome: item.outcome,
+      queue: decodeReference(item.invocationTraceQueue).dxn?.toString() ?? 'unknown',
+      _original: item,
+    }));
+  }, [invocationsQueue?.items, selectedTarget]);
+  const handleInvocationRowClicked = useCallback((row: any) => {
+    if (!row) {
+      return;
+    }
+    const invocation = row._original;
     setSelectedInvocation(invocation);
     setSelectedObject(invocation);
+  }, []);
+
+  const traceEventProperties: TablePropertyDefinition[] = useMemo(
+    () => [
+      { name: 'time', format: FormatEnum.String, size: 120 },
+      { name: 'outcome', format: FormatEnum.String, size: 40 },
+      { name: 'unhandled', format: FormatEnum.Number, size: 40 },
+      { name: 'logs', format: FormatEnum.Number, size: 40 },
+    ],
+    [],
+  );
+
+  const traceEventData = useMemo(() => {
+    return (eventQueue?.items ?? []).map((item) => ({
+      id: `${item.ingestionTimestampMs}-${Math.random()}`,
+      time: new Date(item.ingestionTimestampMs).toISOString(),
+      outcome: item.outcome,
+      unhandled: item.exceptions.length,
+      logs: item.logs.length,
+      _original: item,
+    }));
+  }, [eventQueue?.items]);
+
+  const handleEventRowClicked = (row: any) => {
+    if (!row) {
+      return;
+    }
+    setSelectedObject(row._original);
   };
 
   return (
@@ -106,40 +116,20 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
     >
       <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
         <div className={mx('flex overflow-auto', 'h-1/4')}>
-          <Table.Root>
-            <Table.Viewport asChild>
-              <div className='flex-col divide-y'>
-                <Table.Main<InvocationTraceEvent>
-                  columns={invocationsColumns}
-                  data={filterBySelected(invocationsQueue?.items ?? [], selectedTarget)}
-                  rowsSelectable
-                  currentDatum={selectedInvocation}
-                  onDatumClick={selectTraceEvent}
-                  fullWidth
-                />
-              </div>
-            </Table.Viewport>
-          </Table.Root>
+          <DynamicTable
+            properties={invocationProperties}
+            data={invocationData}
+            onRowClicked={handleInvocationRowClicked}
+          />
         </div>
 
         <div className={mx('flex overflow-auto', 'h-1/4')}>
           {eventQueue ? (
-            <>
-              <Table.Root>
-                <Table.Viewport asChild>
-                  <div className='flex-col divide-y'>
-                    <Table.Main<TraceEvent>
-                      columns={traceEventColumns}
-                      data={eventQueue.items}
-                      rowsSelectable
-                      currentDatum={selectedObject}
-                      onDatumClick={setSelectedObject}
-                      fullWidth
-                    />
-                  </div>
-                </Table.Viewport>
-              </Table.Root>
-            </>
+            <DynamicTable
+              properties={traceEventProperties}
+              data={traceEventData}
+              onRowClicked={handleEventRowClicked}
+            />
           ) : (
             'Select an invocation to see events.'
           )}
