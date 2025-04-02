@@ -10,6 +10,7 @@ export default [
     'en-US': {
       [CollectionType.typename]: {
         'typename label': 'Collection',
+        'object name placeholder': 'New collection',
       },
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',
@@ -64,9 +65,6 @@ export default [
         'missing object message': 'Object not available.',
         'missing object description':
           'The requested object has not been found yet. Ensure there are enough peers online in the space with an updated copy.',
-        'create collection label': 'Create collection',
-        'unnamed object label': 'New object',
-        'unnamed collection label': 'New collection',
         'create object in space label': 'Add to space',
         'create object in collection label': 'Add to collection',
         'share space label': 'Share',
