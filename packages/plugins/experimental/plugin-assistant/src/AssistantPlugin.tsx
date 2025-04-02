@@ -40,14 +40,12 @@ export const AssistantPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TemplateType.typename,
           metadata: {
-            placeholder: ['template title placeholder', { ns: ASSISTANT_PLUGIN }],
             icon: 'ph--code-block--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
           id: AIChatType.typename,
           metadata: {
-            placeholder: ['chat title placeholder', { ns: ASSISTANT_PLUGIN }],
             icon: 'ph--atom--regular',
           },
         }),

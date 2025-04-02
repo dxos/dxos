@@ -44,7 +44,6 @@ export const ScriptPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),

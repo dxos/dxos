@@ -94,7 +94,6 @@ export const SpacePlugin = ({
         contributes(Capabilities.Metadata, {
           id: CollectionType.typename,
           metadata: {
-            placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (collection: CollectionType) =>

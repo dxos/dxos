@@ -21,7 +21,7 @@ import {
   ArtifactDefinition,
 } from './capabilities';
 import { MarkdownEvents } from './events';
-import { MARKDOWN_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { DocumentType, MarkdownAction } from './types';
 import { serializer } from './util';
@@ -55,7 +55,6 @@ export const MarkdownPlugin = () =>
           metadata: {
             label: (object: any) =>
               isInstanceOf(DocumentType, object) ? object.name || object.fallbackName : undefined,
-            placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,

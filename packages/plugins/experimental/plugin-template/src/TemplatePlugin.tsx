@@ -8,7 +8,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ReactSurface, IntentResolver } from './capabilities';
-import { meta, TEMPLATE_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { TemplateAction, TemplateType } from './types';
 
@@ -26,7 +26,6 @@ export const TemplatePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TemplateType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: 'ph--asterisk--regular',
           },
         }),

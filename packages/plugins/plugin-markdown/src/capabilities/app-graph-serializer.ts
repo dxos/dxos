@@ -9,7 +9,6 @@ import { getSchemaTypename } from '@dxos/echo-schema';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { MARKDOWN_PLUGIN } from '../meta';
 import translations from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
 
@@ -23,7 +22,8 @@ export default (context: PluginsContext) =>
         const doc = node.data;
         const content = await doc.content.load();
         return {
-          name: doc.name || doc.fallbackName || translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
+          name:
+            doc.name || doc.fallbackName || translations[0]['en-US'][DocumentType.typename]['object name placeholder'],
           data: content.content,
           type: 'text/markdown',
         };
