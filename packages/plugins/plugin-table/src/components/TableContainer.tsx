@@ -66,9 +66,12 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
     return new ViewProjection(schema, table.view.target!);
   }, [schema, table.view?.target]);
 
+  const features = useMemo(() => ({ selection: true, editable: true }), []);
+
   const model = useTableModel({
     table,
     projection,
+    features,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
