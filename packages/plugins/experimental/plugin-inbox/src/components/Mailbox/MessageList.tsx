@@ -5,10 +5,10 @@
 import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
 import React, { type MouseEvent, useState } from 'react';
 
-import { type MessageType } from '@dxos/plugin-space/types';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph } from '@dxos/react-ui-attention';
 import { baseSurface, fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
+import { type MessageType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -64,9 +64,10 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
     onAction?.(action);
   };
 
-  const date = message.timestamp ? new Date(message.timestamp) : new Date();
+  const text = message.blocks.find((block) => block.type === 'text')?.text;
+  const date = message.created ? new Date(message.created) : new Date();
   const from = message.sender?.name ?? message.sender?.email;
-  const subject = message.properties?.subject ?? message.text;
+  const subject = message.properties?.subject ?? text;
   const now = new Date();
 
   return (
@@ -126,8 +127,8 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
         {expanded && (
           <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2'>
             <div className='grid grid-cols-[1fr,9rem] gap-2 text-description'>
-              <div className='whitespace-pre-line'>{message.text}</div>
-              <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.timestamp))}</div>
+              <div className='whitespace-pre-line'>{text}</div>
+              <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.created))}</div>
             </div>
           </div>
         )}

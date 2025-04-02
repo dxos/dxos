@@ -9,11 +9,12 @@ import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
+import { MessageType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';

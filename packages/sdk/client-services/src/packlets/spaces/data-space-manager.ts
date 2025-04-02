@@ -259,7 +259,7 @@ export class DataSpaceManager extends Resource {
       state: SpaceState.SPACE_ACTIVE,
     };
 
-    log.info('creating space...', { spaceId, spaceKey });
+    log('creating space...', { spaceId, spaceKey });
 
     // New document IDs for the space.
     const documentIdMapping: Record<DocumentId, DocumentId> = {};
