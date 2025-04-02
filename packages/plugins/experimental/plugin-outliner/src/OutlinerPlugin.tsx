@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta, OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
-import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TreeType } from './types';
+import { JournalEntryType, JournalType, OutlinerAction, OutlineType, TaskType, TreeType } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [
@@ -37,6 +37,13 @@ export const OutlinerPlugin = () =>
             icon: 'ph--tree-structure--regular',
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: TaskType.typename,
+          metadata: {
+            placeholder: ['task object placeholder', { ns: OUTLINER_PLUGIN }],
+            icon: 'ph--check-square-offset--regular',
+          },
+        }),
       ],
     }),
     defineModule({
@@ -53,7 +60,7 @@ export const OutlinerPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TreeType,
+            objectSchema: OutlineType,
             getIntent: () => createIntent(OutlinerAction.CreateOutline),
           }),
         ),
@@ -62,7 +69,7 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TreeType, JournalEntryType, JournalType]),
+      activate: () => contributes(ClientCapabilities.Schema, [TaskType, TreeType, JournalEntryType, JournalType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
