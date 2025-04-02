@@ -16,7 +16,9 @@ export type BaseObjectSettingsProps = {
 export const BaseObjectSettings = ({ object }: BaseObjectSettingsProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  // TODO(burdon): Standardize forms.
+  // TODO(wittjosiah): This should be a form based on the schema of the object.
+  //  The form should only include fields with a specific settings annotation.
+  //  Perhaps also including the field of the title annotation as well.
   return (
     <div role='form' className='flex flex-col w-full p-2 gap-1'>
       <Input.Root>
