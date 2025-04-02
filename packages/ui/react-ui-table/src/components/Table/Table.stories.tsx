@@ -58,6 +58,8 @@ const DefaultStory = () => {
     }
   }, [schema, table?.view?.target]);
 
+  const features = useMemo(() => ({ selection: true, editable: true }), []);
+
   const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
@@ -97,6 +99,7 @@ const DefaultStory = () => {
   const model = useTableModel({
     table,
     projection,
+    features,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
