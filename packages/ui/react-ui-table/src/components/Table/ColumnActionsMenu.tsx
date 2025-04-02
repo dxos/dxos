@@ -48,14 +48,16 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
                 {t('column action clear sorting')}
               </DropdownMenu.Item>
             )}
-            {model.getColumnCount() > 1 && (
+            {model.getColumnCount() > 1 && model.features.editable && (
               <DropdownMenu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
                 {t('column action delete')}
               </DropdownMenu.Item>
             )}
-            <DropdownMenu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
-              {t('column action settings')}
-            </DropdownMenu.Item>
+            {model.features.editable && (
+              <DropdownMenu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
+                {t('column action settings')}
+              </DropdownMenu.Item>
+            )}
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
