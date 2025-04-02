@@ -16,7 +16,7 @@ export enum TaskStatus {
 export const TaskType = S.Struct({
   text: S.String,
   closed: S.optional(S.Boolean),
-  status: S.Enums(TaskStatus),
+  status: S.optional(S.Enums(TaskStatus)),
   priority: S.optional(S.Number),
   estimate: S.optional(S.Number),
   assigned: S.optional(S.String.annotations({ [FormatAnnotationId]: FormatEnum.DID })),
