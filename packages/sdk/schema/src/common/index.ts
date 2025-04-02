@@ -3,6 +3,8 @@
 //
 
 export * from './access-token';
+export * from './actor';
+export * from './message';
 export * from './text';
 
 // TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
