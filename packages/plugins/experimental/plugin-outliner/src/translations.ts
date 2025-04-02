@@ -3,7 +3,7 @@
 //
 
 import { OUTLINER_PLUGIN } from './meta';
-import { JournalType, TreeType } from './types';
+import { JournalType, OutlineType } from './types';
 
 export default [
   {
@@ -11,7 +11,7 @@ export default [
       [JournalType.typename]: {
         'typename label': 'Journal',
       },
-      [TreeType.typename]: {
+      [OutlineType.typename]: {
         'typename label': 'Outline',
       },
       [OUTLINER_PLUGIN]: {
