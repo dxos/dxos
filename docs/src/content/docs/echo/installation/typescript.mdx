@@ -1,0 +1,57 @@
+---
+title: Installation
+sidebar:
+  label: Typescript
+  order: 0
+---
+
+import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+
+import createClient from './snippets/create-client.ts?raw';
+
+Install using package manager of choice:
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install --save @dxos/client
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @dxos/client
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @dxos/client
+    ```
+  </TabItem>
+</Tabs>
+
+## Configuration
+
+If using DXOS in a browser environment, set up your Vite config:
+
+```ts
+import { defineConfig } from 'vite';
+import topLevelAwait from 'vite-plugin-top-level-await';
+import wasm from 'vite-plugin-wasm';
+
+export default defineConfig({
+  plugins: [topLevelAwait(), wasm()],
+
+  worker: {
+    format: 'es',
+    plugins: [topLevelAwait(), wasm()],
+  },
+});
+```
+
+Create and initialize a `Client`:
+
+<Code code={createClient.slice(34)} lang="ts" />
+
+An options object can be passed to `Client()`. See [configuration examples](/echo/typescript/config).
+
+To begin manipulating data, we must [create an identity](/halo/typescript), and [join or create a space](/echo/typescript/api).

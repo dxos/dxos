@@ -3,71 +3,51 @@
   "name": "docs",
   "projectType": "application",
   "targets": {
-    "apidoc": {
+    "prebuild": {
       "dependsOn": [
-        "^build"
+        "^typedoc"
       ],
       "executor": "nx:run-script",
       "options": {
-        "script": "apidoc"
+        "script": "prebuild"
       },
       "outputs": [
-        "{projectRoot}/docs/api"
+        "{projectRoot}/public/typedoc"
       ]
     },
-    "build": {
-      "options": {
-        "main": "docs/src/index.ts",
-        "outputPath": "docs/dist",
-        "tsConfig": "docs/tsconfig.json"
-      }
-    },
+    "build": {},
     "bundle": {
       "dependsOn": [
-        "^build",
-        "^bundle",
         "build",
-        "prebuild"
+        "^build"
       ],
       "executor": "nx:run-script",
       "options": {
         "script": "bundle"
       },
       "outputs": [
-        "{projectRoot}/docs/.vuepress/dist"
+        "{projectRoot}/dist"
       ]
     },
     "lint": {
       "options": {
         "format": "unix",
         "lintFilePatterns": [
-          "docs/src/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ],
         "quiet": true
       }
     },
     "pack": {},
-    "prerelease": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prerelease"
-      },
-      "outputs": [
-        "{projectRoot}/apidoc.json",
-        "{projectRoot}/docs/api"
-      ]
-    },
     "serve": {
       "dependsOn": [
-        "^build"
+        "^build",
+        "prebuild"
       ],
       "executor": "nx:run-script",
       "options": {
-        "script": "serve"
+        "script": "start"
       }
-    },
-    "toolbox": {
-      "executor": "@dxos/toolbox:exec"
     }
   }
 }

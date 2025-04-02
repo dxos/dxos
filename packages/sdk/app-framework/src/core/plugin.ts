@@ -42,7 +42,7 @@ interface PluginModuleInterface {
 
 /**
  * A unit of containment of modular functionality that can be provided to an application.
- * Plugins provide things like components, state, actions, etc. to the application.
+ * Activation of a module is async allowing for code to split and loaded lazily.
  */
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 export class PluginModule implements PluginModuleInterface {
@@ -114,6 +114,7 @@ export type PluginMeta = {
 
 /**
  * A collection of modules that are be enabled/disabled as a unit.
+ * Plugins provide things such as components, state, actions, etc. to the application.
  */
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 export class Plugin {

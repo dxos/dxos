@@ -34,7 +34,8 @@ export const defineCapability = <T>(identifier: string) => {
 };
 
 /**
- * Functionality contributed to the application by a plugin module.
+ * A unique string identifier with a Typescript type associated with it.
+ * When a capability is contributed to the application an implementation of the interface is provided.
  */
 export type Capability<T> = {
   /**
@@ -95,7 +96,9 @@ export const lazy =
   };
 
 /**
- * Context which is passed to plugins, allowing them to interact with each other.
+ * Facilitates the dependency injection between [plugin modules](#pluginmodule) by allowing them contribute and request capabilities from each other.
+ * It tracks the capabilities that are contributed in an in-memory live object.
+ * This allows the application to subscribe to this state and incorporate plugins which are added dynamically.
  */
 export class PluginsContext {
   private readonly _definedCapabilities = new Map<string, CapabilityImpl<unknown>[]>();

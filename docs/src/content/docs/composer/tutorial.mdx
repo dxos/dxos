@@ -1,0 +1,358 @@
+---
+title: Plugin Tutorial
+description: Walkthrough of how to build a Composer plugin
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This tutorial will walk through the creation of a plugin which introduces a new data type and integrates it with other core plugins.
+The plugin used as an example here is Composer's [map plugin](https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map).
+Each section below will explain a different [`PluginModule`](/composer/introduction#pluginmodule), its [`ActivationEvent`](/composer/introduction#activationevent), the [`Capability`](/composer/introduction#capability) it contributes and how that fits within the greater context of the application.
+
+## Translations
+
+Most of the core functionality of Composer comes ready of internationalization.
+Today, most plugins only provide English translations, however the pattern of translation strings also makes it easier to adjust the language of a plugin as it evolves.
+While not strictly required, it is recommended to implement user-facing strings in your application using translation resources.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/translations`,
+  // This activation event is fired by the theme plugin when it is initalizing the translations provider.
+  activatesOn: Events.SetupTranslations,
+  activate: () => contributes(Capabilities.Translations, translations),
+}),
+// ...
+```
+
+These translations are collected by the core [theme plugin](https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-theme) which uses [i18next](https://www.i18next.com/) under the hood, so here `translations` is an array of i18next resources:
+
+```ts
+// translations.ts
+export default [
+  {
+    'en-US': {
+      // Most translations provided by plugins use the plugin id as the namespace.
+      [MAP_PLUGIN]: {
+        'plugin name': 'Maps',
+        'toggle type label': 'Toggle view',
+      },
+      // Translations that are provided for other plugins to lookup are often keyed by the schema typename.
+      [MapType.typename]: {
+        'typename label': 'Map',
+        'object title placeholder': 'New map',
+      },
+    },
+  },
+];
+```
+
+## Metadata
+
+The metadata capability allows an arbitrary record of metadata to be stored for any key.
+The most common use case for this in Composer today is storing render information (e.g. icons) for different types of ECHO objects.
+In such cases the key for the metadata is the schema typename.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/metadata`,
+  // This activation event is fired by the metadata plugin when it is collecting metadata.
+  activatesOn: Events.SetupMetadata,
+  activate: () =>
+    contributes(Capabilities.Metadata, {
+      id: MapType.typename,
+      metadata: {
+        icon: 'ph--compass--regular',
+      },
+    }),
+}),
+// ...
+```
+
+## Intents
+
+Intents are a way for plugins to communicate with each other.
+They represent an abstract description of an operation to be performed, and allow those operations to be initiated by any plugin.
+Intents have typed inputs and outputs as well as a string identifier and are constructed as an [Effect Schema]() `TaggedClass`:
+
+```ts
+// types/types.ts
+// ...
+export namespace MapAction {
+  const MAP_ACTION = `${MAP_PLUGIN}/action`;
+
+  export class Create extends S.TaggedClass<Create>()(`${MAP_ACTION}/create`, {
+    input: S.extend(S.Struct({ space: SpaceSchema, coordinates: S.optional(GeoPoint) }), CreateMapSchema),
+    output: S.Struct({ object: MapType }),
+  }) {}
+
+  export class Toggle extends S.TaggedClass<Toggle>()(`${MAP_ACTION}/toggle`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+}
+// ...
+```
+
+Alongside the intent definitions the capability that a plugin will contribute is an [`IntentResolver`](/typedoc/app-framework/types/IntentResolver.html).
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/intent-resolver`,
+  // This activation event is fired by the intent plugin when it is initalizing the global intent resolver.
+  activatesOn: Events.SetupIntentResolver,
+  activate: IntentResolver,
+}),
+// ...
+```
+
+```ts
+// intent-resolver.ts
+export default (context: PluginsContext) =>
+  contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: MapAction.Create,
+      resolve: async ({ space, name, coordinates, initialSchema, locationProperty }) => {
+        const { map } = await initializeMap({
+          space,
+          name,
+          coordinates,
+          initialSchema,
+          locationProperty,
+        });
+        return {
+          data: { object: map },
+        };
+      },
+    }),
+    createResolver({
+      intent: MapAction.Toggle,
+      resolve: () => {
+        const state = context.requestCapability(MapCapabilities.MutableState);
+        state.type = state.type === 'globe' ? 'map' : 'globe';
+      },
+    }),
+  ]);
+```
+
+## Schema
+
+In order to be able to create objects of a given type, the plugin must contribute the schema to the application.
+For user-facing schemas this is done through the `SpaceCapabilities.ObjectForm` capability.
+This capability registers the schema with the DXOS client and also provides a list of options for the object creation form.
+An optional `formSchema` can be provided if the object has properties which may need to be configured on creation.
+The `getIntent` function returns the intent to be used when the form is submitted.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/object-form`,
+  // This activation event is fired by the client plugin after the client has been initialized when schemas are being registered.
+  activatesOn: ClientEvents.SetupSchema,
+  activate: () =>
+    contributes(
+      SpaceCapabilities.ObjectForm,
+      defineObjectForm({
+        objectSchema: MapType,
+        formSchema: CreateMapSchema,
+        getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
+      }),
+    ),
+}),
+// ...
+```
+
+<Aside type="note">
+Sometimes plugins will depend on other schemas which are not user-facing. To register these schemas without them showing up in the object creation dialog use the `ClientCapabilities.Schema` capability instead:
+
+```ts
+defineModule({
+  id: `${meta.id}/module/schema`,
+  activatesOn: ClientEvents.SetupSchema,
+  activate: () => contributes(ClientCapabilities.Schema, [CustomSchema]),
+})
+```
+</Aside>
+
+## Surfaces
+
+A Surface is a component which allows one plugin to delegate rendering of a subtree to another plugin.
+This mechanism is analogous to an `Outlet` in React Router except there the tree of routes is generally combined statically by the app developer.
+With a Surface there's a layer of indirection which allows for different plugins to be swapped in and out or even be combined.
+
+When defining a Surface it must be given a role and is generally passed some sort of data.
+The role can be thought of as analogous to ARIA roles, but broader and without a strictly defined set.
+They indicate to other plugins what is expected to be rendered in a Surface.
+The data is a javascript object where the values are information that is expected to be used in the rendering of the Surface.
+At runtime this role and data are passed into the Surface and what happens next is that the Surface is resolved to a component from another plugin.
+This resolution mechanism is controlled by the SurfacePlugin.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/react-surface`,
+  // This activation event is currently fired by app framework on startup.
+  activatesOn: Events.SetupReactSurface,
+  activate: ReactSurface,
+}),
+// ...
+```
+
+```ts
+// react-surface.ts
+export default () =>
+  contributes(Capabilities.ReactSurface, [
+    createSurface({
+      id: `${MAP_PLUGIN}/map`,
+      // The article role is used by planks in the deck.
+      // The section role is used by items in a stack.
+      role: ['article', 'section'],
+      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      component: ({ data, role }) => {
+        const state = useCapability(MapCapabilities.MutableState);
+        const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
+        const [center, setCenter] = useState<LatLngLiteral>({ lat, lng });
+        const [zoom, setZoom] = useState(14);
+
+        const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
+          setCenter(center);
+          setZoom(zoom);
+        }, []);
+
+        return (
+          <MapContainer
+            role={role}
+            type={state.type}
+            map={data.subject}
+            center={center}
+            zoom={zoom}
+            onChange={handleChange}
+          />
+        );
+      },
+    }),
+    createSurface({
+      id: `${MAP_PLUGIN}/settings`,
+      // The complementary--settings role is used by the surface in the deck's complementary sidebar.
+      // The second part of the role denotes the panel of the sidebar that the surface is in.
+      role: 'complementary--settings',
+      filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
+      component: ({ data }) => <MapViewEditor map={data.subject} />,
+    }),
+    // ...
+  ]);
+```
+
+## App Graph
+
+The app graph is a contract for UIs which present, organize and navigate over a graph of the user's knowledge.
+It enables any kind of navigation UI such as trees, lists, accordions, force-directed layouts, etc. and allow them to source their content & structure from plugins.
+The app graph allows plugins to collaborate on building out the navigational structure of an application without a priori knowledge of each other.
+
+The way the graph is constructed is via reactively executing builder extensions of which there are currently two types: connectors and resolvers.
+Connectors take an existing node as an input and return nodes which should be connected to that node while resolvers take a string identifier as an input and return a node based on that unique id.
+Connectors are useful for lazily expanding the graph based on navigation throughout the app. Early app graph implementations eagerly expanded the whole graph on app load which was very heavy.
+
+Resolvers have a couple different uses right now. The first is that if a node can be resolved directly then it can also be cached, allowing key parts of the graph to be cached and quickly hydrated on initial app load.
+Resolvers are also used to directly resolve a known node which may or may not be connected into the rest of the graph later. This can also help improve perceived performance where you can directly resolve a node rather than building out the graph to it when opening a document on load.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/app-graph-builder`,
+  // This activation event is fired by the graph plugin when it is initalizing the app graph builder.
+  activatesOn: Events.SetupAppGraph,
+  activate: AppGraphBuilder,
+}),
+// ...
+```
+
+The map plugin's graph builder adds a toggle action to any graph node which represents a `MapType` object.
+
+```ts
+// app-graph-builder.ts
+export default (context: PluginsContext) =>
+  contributes(
+    Capabilities.AppGraphBuilder,
+    createExtension({
+      id: MapAction.Toggle._tag,
+      filter: (node): node is Node<MapType> => node.data instanceof MapType,
+      actions: () => {
+        return [
+          {
+            id: `${MAP_PLUGIN}/toggle`,
+            data: async () => {
+              const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+              await dispatch(createIntent(MapAction.Toggle));
+            },
+            properties: {
+              label: ['toggle type label', { ns: MAP_PLUGIN }],
+              icon: 'ph--compass--regular',
+            },
+          },
+        ];
+      },
+    }),
+  );
+```
+
+## Artifact
+
+An `ArtifactDefinition` is an abstraction for describing how to programatically interact with a data type.
+This includes a description of artifact, its schema, instructions for how to use the artifact and a list of tools which can be used to act on the artifact.
+
+```ts
+// MapPlugin.ts
+// ...
+defineModule({
+  id: `${meta.id}/module/artifact-definition`,
+  // This activation event is fired by the assistant plugin when it is initalizing an ai chat.
+  activatesOn: Events.SetupArtifactDefinition,
+  activate: ArtifactDefinition,
+}),
+// ...
+```
+
+The map plugin's artifact definition adds a tool to the ai chat which allows the user to list all maps in the current space.
+
+```ts
+// artifact-definition.ts
+export default () => {
+  const definition = defineArtifact({
+    id: meta.id,
+    name: meta.name,
+    instructions: `
+      - If the request relates to a map, you must return the map as a valid GeoJSON Point (longitude, latitude) with valid coordinates.
+      - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
+      - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
+    `,
+    schema: MapType,
+    tools: [
+      defineTool(meta.id, {
+        name: 'list',
+        description: 'Query maps.',
+        caption: 'Listing maps...',
+        schema: S.Struct({}),
+        execute: async (_, { extensions }) => {
+          invariant(extensions?.space, 'No space');
+          const { objects } = await extensions.space.db.query(Filter.schema(MapType)).run();
+          invariant(objects.length > 0, 'No maps found');
+          return ToolResult.Success(objects);
+        },
+      }),
+      // ...
+    ],
+  });
+
+  return contributes(Capabilities.ArtifactDefinition, definition);
+};
+```

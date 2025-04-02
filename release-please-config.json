@@ -14,11 +14,6 @@
         "packages/sdk/client-services/src/version.ts",
         {
           "type": "json",
-          "path": "docs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/composer-app/package.json",
           "jsonpath": "$.version"
         },
@@ -160,11 +155,6 @@
         {
           "type": "json",
           "path": "packages/common/phoenix/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/plate/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -905,11 +895,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-types/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/apidoc/package.json",
           "jsonpath": "$.version"
         },
         {

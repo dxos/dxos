@@ -1,0 +1,26 @@
+---
+title: Subscriptions
+sidebar:
+  order: 3
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import subscription from './snippets/subscription.ts?raw';
+import onObjectChange from './snippets/on-object-change.ts?raw';
+
+Use subscriptions to listen for changes to objects in a [space](/additional-resources/glossary#space).
+
+## Subscribe to a query
+
+Use the `subscribe` method on a query to listen for changes to objects in a space. The callback will be called with an object containing the new objects that match the query. The return value of `subscribe` is a function that can be called to stop the subscription.
+
+<Code code={subscription.slice(34)} lang="ts" />
+
+## Subscribe to an object
+
+Objects returned from ECHO queries are based on `ReactiveObject`, which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
+
+You can use the `effect` closure from `@preact/signals-core` to re-run code whenever the object changes. Any properties of ECHO objects accessed inside `effect` closures will be tracked and re-run the closure when they change.
+
+<Code code={onObjectChange.slice(34)} lang="ts" />

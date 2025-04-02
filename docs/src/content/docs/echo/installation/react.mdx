@@ -1,0 +1,63 @@
+---
+title: Installation for a React app
+sidebar:
+  label: React
+  order: 1
+---
+
+import { Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+
+import createClientReact from './snippets/create-client-react.tsx?raw';
+import createClientReactWithFallback from './snippets/create-client-react-with-fallback.tsx?raw';
+import createClientReactWithClient from './snippets/create-client-react-with-client.tsx?raw';
+import createClientReactWithConfig from './snippets/create-client-react-with-config.tsx?raw';
+
+Install using package manager of choice:
+
+<Tabs>
+  <TabItem label="npm">
+    ```bash
+    npm install --save @dxos/react-client
+    ```
+  </TabItem>
+  <TabItem label="pnpm">
+    ```bash
+    pnpm add @dxos/react-client
+    ```
+  </TabItem>
+  <TabItem label="yarn">
+    ```bash
+    yarn add @dxos/react-client
+    ```
+  </TabItem>
+</Tabs>
+
+## Configuration
+
+When using `react`, create a `ClientProvider` to wrap your application. This allows nested components to `useClient` and the other hooks in `@dxos/react-client`.
+
+<Code code={createClientReact.slice(34)} lang="tsx" />
+
+## Manipulating data
+
+Before manipulating data, a [user identity](/halo/react) and a [space](/echo/react/api) are required.
+
+## Further configuration
+
+### Using a fallback element during initial load
+
+A fallback element is displayed while the Client is initializing. Any component can be used, and it will be given an instance of the `client` as a prop directly.
+
+<Code code={createClientReactWithFallback.slice(34)} lang="tsx" />
+
+### Passing a custom Client object to ClientProvider
+
+<Code code={createClientReactWithClient.slice(34)} lang="tsx" />
+
+### Supplying configuration without a Client
+
+Alternatively, a config function may be supplied instead of a client, and a client will be generated internally.
+
+<Code code={createClientReactWithConfig.slice(34)} lang="tsx" />
+
+See [configuration](/echo/typescript/config) in the TypeScript guide for more configuration recipes.

@@ -1,0 +1,45 @@
+---
+title: Mutations
+sidebar:
+  order: 1
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import writeItems from './snippets/write-items.ts?raw';
+import createObjects from './snippets/create-objects.ts?raw';
+import createObjectsTyped from './snippets/create-objects-typed.ts?raw';
+
+Objects returned from `query` are automatically tracked by the `Client` and direct manipulation of them will result in writes being dispatched over the network to listening peers in the space.
+
+<Code code={writeItems.slice(34)} lang="ts" />
+
+The mutation will queue up inside the `Client` and begin propagating to listening peers on the next tick.
+
+## Creating objects
+
+To insert an object into an ECHO space, simply construct it and call the `add` method to begin tracking it.
+
+### Untyped
+
+Without strong types, the generic `Expando` class can be used:
+
+<Code code={createObjects.slice(34)} lang="ts" />
+
+### Typed
+
+If strong types are desired, an instance of a specific `TypedObject` descendant should be used:
+
+<Code code={createObjectsTyped.slice(34)} lang="ts" />
+
+## Removing objects
+
+To remove an object (typed or untyped) call the `remove` API on a space.
+
+```ts
+space.db.remove(object);
+```
+
+<Aside type="note">
+Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](/additional-resources/glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
+</Aside>

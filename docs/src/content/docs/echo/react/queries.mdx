@@ -1,0 +1,44 @@
+---
+title: Queries in React
+sidebar:
+  label: Queries
+  order: 2
+---
+
+import { Aside, Code } from '@astrojs/starlight/components';
+
+import useQuery from './snippets/use-query.tsx?raw';
+import useQueryTyped from './snippets/use-query-typed.tsx?raw';
+import schema from './snippets/schema.ts?raw';
+
+The simplest way to access data in [`ECHO`](/echo/introduction) from `react` is by using a `useQuery` hook on a [`space`](/additional-resources/glossary#space). This will return generic objects which can be [mutated](/echo/react/mutations) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#typed-queries).
+
+## Untyped queries
+
+The first argument to `useQuery` from package `@dxos/react-client` is the [`space`](/additional-resources/glossary#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
+
+<Code code={useQuery.slice(34)} lang="tsx" />
+
+`useQuery` returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
+
+## Typed Queries
+
+It's possible to obtain strongly typed objects from `useQuery`.
+
+Because `useQuery` returns tracked ECHO objects, their type must descend from `TypedObject`.
+
+DXOS provides apis to define these types using [Effect Schema](https://effect.website).
+
+<Aside type='tip' title='Benefits of schema declarations'>
+Ability to generate type-safe data access code, which makes development faster and safer.
+</Aside>
+
+Consider this expression of schema declared with Effect Schema:
+
+<Code code={schema.slice(34)} lang="ts" />
+
+Types can be used to make queries as well:
+
+<Code code={useQueryTyped.slice(34)} lang="tsx" />
+
+Note the `client.addTypes` call which registers the types with the client.

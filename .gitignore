@@ -163,8 +163,8 @@ tools/intellij-plugin/build/
 # blade-runner
 dump.rdb
 
-# lychee link checker
-/.lychee.report.md
+# typedoc
+typedoc
 
 # aider assistant temp files
 .aider*
