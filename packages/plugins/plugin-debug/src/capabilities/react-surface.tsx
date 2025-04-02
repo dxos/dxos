@@ -156,7 +156,7 @@ export default (context: PluginsContext) =>
       id: `${DEBUG_PLUGIN}/client/config`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Config,
-      component: () => <ConfigPanel />,
+      component: () => <ConfigPanel vaultSelector={false} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/client/storage`,
