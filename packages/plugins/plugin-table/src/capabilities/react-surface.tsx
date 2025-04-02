@@ -47,7 +47,6 @@ export default () =>
         // TODO(ZaymonFC): Unify the path of view between table and kanban.
         const hasValidView = subject.view?.target instanceof ViewType;
         const hasValidCardView = subject.cardView?.target instanceof ViewType;
-
         return hasValidView || hasValidCardView;
       },
       component: ({ data }) => {
@@ -56,6 +55,7 @@ export default () =>
         if (!viewTarget) {
           return null;
         }
+
         return <ObjectDetailsPanel objectId={data.subject.id} view={viewTarget} />;
       },
     }),
@@ -76,9 +76,10 @@ export default () =>
         if (!space) {
           return null;
         }
-        // TODO(ZaymonFC): Make this reactive.
-        const schemata = space?.db.schemaRegistry.query().runSync();
 
+        // TODO(ZaymonFC): Make this reactive.
+        // TODO(burdon): Also add static types?
+        const schemata = space?.db.schemaRegistry.query().runSync();
         return <SelectInput {...props} options={schemata.map((schema) => ({ value: schema.typename }))} />;
       },
     }),
