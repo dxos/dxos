@@ -18,10 +18,10 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
-import { CollectionType, ThreadType, MessageType } from '@dxos/plugin-space/types';
+import { CollectionType, ThreadType } from '@dxos/plugin-space/types';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { TableType } from '@dxos/react-ui-table/types';
-import { TextType } from '@dxos/schema';
+import { TextType, MessageType } from '@dxos/schema';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
