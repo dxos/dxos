@@ -8,7 +8,6 @@ import { Capabilities, chain, contributes, createIntent, type PluginsContext } f
 import { CollectionType, SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { SKETCH_PLUGIN } from '../meta';
 import translations from '../translations';
 import { SketchAction, DiagramType } from '../types';
 
