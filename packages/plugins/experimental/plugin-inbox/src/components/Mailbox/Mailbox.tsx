@@ -4,17 +4,17 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { MessageState, type MessageType } from '@dxos/plugin-space/types';
+import { type MessageType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
-import { type MailboxType } from '../../types';
+import { type MailboxType, MessageState } from '../../types';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
 
 const byDate =
   (direction = -1) =>
-  ({ timestamp: a = '' }: MessageType, { timestamp: b = '' }: MessageType) =>
+  ({ created: a = '' }: MessageType, { created: b = '' }: MessageType) =>
     a < b ? -direction : a > b ? direction : 0;
 
 const setMessageProperty = (message: MessageType, property: string, value: any) => {

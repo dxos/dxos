@@ -10,6 +10,7 @@ export default [
     'en-US': {
       [TranscriptType.typename]: {
         'typename label': 'Transcript',
+        'object name placeholder': 'New transcript',
       },
       [TRANSCRIPTION_PLUGIN]: {
         'plugin name': 'Transcription',

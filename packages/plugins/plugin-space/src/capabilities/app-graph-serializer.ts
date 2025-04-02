@@ -46,8 +46,8 @@ export default (context: PluginsContext) =>
       inputType: CollectionType.typename,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
-        data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed collection label'],
+        name: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][CollectionType.typename]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {

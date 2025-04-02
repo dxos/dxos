@@ -9,6 +9,7 @@ import { type ReactiveObject } from '@dxos/live-object';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
+import { type TextContentBlock } from '@dxos/schema';
 
 export const useAnalyticsCallback = (spaceId: string | undefined, name: string, meta?: any) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -23,12 +24,16 @@ export const useAnalyticsCallback = (spaceId: string | undefined, name: string, 
   );
 };
 
-export const useOnEditAnalytics = (message: ReactiveObject<any>, editing: boolean) => {
+export const useOnEditAnalytics = (
+  message: ReactiveObject<any>,
+  textBlock: TextContentBlock | undefined,
+  editing: boolean,
+) => {
   const space = getSpace(message);
 
   const onEditAnalytics = useAnalyticsCallback(space?.id, 'threads.comment-edited', {
     messageId: message.id,
-    messageLength: message.text.length,
+    messageLength: textBlock?.text.length,
   });
 
   useOnTransition(editing, true, false, onEditAnalytics);

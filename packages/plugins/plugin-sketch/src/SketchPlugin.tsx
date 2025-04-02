@@ -9,7 +9,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
-import { meta, SKETCH_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { CanvasType, DiagramType, SketchAction } from './types';
 import { serializer } from './util';
@@ -33,7 +33,6 @@ export const SketchPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DiagramType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
