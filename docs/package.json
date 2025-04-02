@@ -17,6 +17,7 @@
     "starlight-links-validator": "^0.14.3"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",

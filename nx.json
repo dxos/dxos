@@ -108,6 +108,20 @@
         "command": "bash -c 'pnpm pack --pack-destination \"$(git rev-parse --show-toplevel)/dist/tarballs/{projectName}\"'",
         "cwd": "{projectRoot}"
       }
+    },
+    "typedoc": {
+      "cache": true,
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-script",
+      "inputs": ["production"],
+      "options": {
+        "script": "typedoc"
+      },
+      "outputs": [
+        "{projectRoot}/typedoc"
+      ]
     }
   },
   "nxCloudId": "62ed1bb8236992263d3c673b"

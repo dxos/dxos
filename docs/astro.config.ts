@@ -13,7 +13,6 @@ const TELEMETRY_API_KEY = process.env.DX_TELEMETRY_API_KEY;
 // https://astro.build/config
 export default defineConfig({
   integrations: [
-    // telemetryIntegration(),
     starlight({
       title: 'DXOS Documentation',
       lastUpdated: true,

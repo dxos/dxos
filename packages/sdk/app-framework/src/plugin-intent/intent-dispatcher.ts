@@ -89,9 +89,25 @@ export type IntentEffectDefinition<Input, Output> = (
  * Intent resolver to match intents to their effects.
  */
 export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+  /**
+   * The schema of the intent to be resolved.
+   */
   intent: IntentSchema<Tag, Fields>;
+
+  /**
+   * Hint to determine the order the resolvers are processed if multiple resolvers are defined for the same intent.
+   * Only one resolver will be used.
+   */
   position?: Position;
+
+  /**
+   * Optional filter to determine if the resolver should be used.
+   */
   filter?: (data: IntentData<Fields>) => data is Data;
+
+  /**
+   * The effect to be performed when the intent is resolved.
+   */
   resolve: IntentEffectDefinition<GuardedType<IntentResolver<Tag, Fields, Data>['filter']>, IntentResultData<Fields>>;
 }>;
 
