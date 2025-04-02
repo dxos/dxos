@@ -55,9 +55,9 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
 
   const invocationProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', format: FormatEnum.String, size: 120 },
-      { name: 'outcome', format: FormatEnum.String, size: 40 },
-      { name: 'queue', format: FormatEnum.String },
+      { name: 'time', title: 'Time', format: FormatEnum.String },
+      { name: 'outcome', title: 'Outcome', format: FormatEnum.String, size: 120 },
+      { name: 'queue', title: 'Queue', format: FormatEnum.String },
     ],
     [],
   );
@@ -82,10 +82,10 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
 
   const traceEventProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', format: FormatEnum.String, size: 120 },
-      { name: 'outcome', format: FormatEnum.String, size: 40 },
-      { name: 'unhandled', format: FormatEnum.Number, size: 40 },
-      { name: 'logs', format: FormatEnum.Number, size: 40 },
+      { name: 'time', title: 'Time', format: FormatEnum.String },
+      { name: 'outcome', title: 'Outcome', format: FormatEnum.String, size: 140 },
+      { name: 'unhandled', title: 'Unhandled', format: FormatEnum.Number, size: 140 },
+      { name: 'logs', title: 'Logs', format: FormatEnum.Number, size: 140 },
     ],
     [],
   );
