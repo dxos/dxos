@@ -55,6 +55,12 @@ export type NodeEditorEvent =
       type: 'indent';
       node: TreeNodeType;
       direction?: 'previous' | 'next';
+    }
+  // TODO(burdon): Allows plugins to extend actions.
+  | {
+      type: 'action';
+      node: TreeNodeType;
+      action: string;
     };
 
 export type NodeEditorProps = ThemedClassName<{

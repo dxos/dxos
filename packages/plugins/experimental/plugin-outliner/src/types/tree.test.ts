@@ -4,8 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { create, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
+import { TaskType } from './task';
 import { type Tree } from './tree';
 import { createTree } from '../testing';
 
@@ -118,5 +120,14 @@ describe('tree', () => {
       const count = print(tree);
       expect(count).to.eq(1 + 1 * (1 + 5));
     }
+  });
+
+  test('task', ({ expect }) => {
+    const task = create(TaskType, { text: 'Test task.' });
+    expect(task.text).to.eq('Test task.');
+
+    const tree = createTree();
+    const node = tree.addNode(tree.root);
+    node.ref = makeRef(task);
   });
 });

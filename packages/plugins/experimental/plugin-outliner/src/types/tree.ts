@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ObjectId, EchoObject, S } from '@dxos/echo-schema';
+import { ObjectId, EchoObject, S, Ref, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
@@ -12,6 +12,7 @@ export const TreeNodeType = S.Struct({
   id: ObjectId,
   children: S.mutable(S.Array(ObjectId)),
   data: S.mutable(S.Record({ key: S.String, value: S.Any })),
+  ref: S.optional(Ref(Expando)), // TODO(burdon): Generic type?
 }).pipe(S.mutable);
 
 export interface TreeNodeType extends S.Schema.Type<typeof TreeNodeType> {}
