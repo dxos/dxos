@@ -321,6 +321,10 @@ export class AISession {
 
     return this._pending;
   }
+
+  abort() {
+    this._stream?.abort();
+  }
 }
 
 // TODO(burdon): Use handlebars template with effect-schema input.

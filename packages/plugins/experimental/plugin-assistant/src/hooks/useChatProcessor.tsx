@@ -53,7 +53,6 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
     log('creating tools...');
     const tools = [
       ...globalTools.flat(),
-      ...artifactDefinitions.flatMap((definition) => definition.tools),
       ...serviceTools,
       ...functions
         .map((fn) => covertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
@@ -61,7 +60,7 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
     ];
     const extensions = { space, dispatch, pivotId: chatId, part };
     return [tools, extensions];
-  }, [dispatch, globalTools, artifactDefinitions, space, chatId, serviceTools, functions]);
+  }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
   // Prompt.
   const systemPrompt = useMemo(
@@ -82,7 +81,7 @@ export const useChatProcessor = ({ chat, space, settings, part = 'deck' }: UseCh
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
     log('creating processor...', { settings });
-    return new ChatProcessor(aiClient.value, tools, extensions, { model, systemPrompt });
+    return new ChatProcessor(aiClient.value, tools, artifactDefinitions, extensions, { model, systemPrompt });
   }, [aiClient.value, tools, extensions, model, systemPrompt]);
 
   return processor;
