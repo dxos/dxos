@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { ContactType } from '@dxos/plugin-space/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { ContactType } from '@dxos/schema';
 
 import { ContactList } from './ContactList';
 import { type ContactsType } from '../../types';

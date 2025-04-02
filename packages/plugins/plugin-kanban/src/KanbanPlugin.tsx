@@ -9,7 +9,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
-import { KANBAN_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { CreateKanbanSchema, KanbanAction } from './types';
 
@@ -27,7 +27,6 @@ export const KanbanPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: KanbanType.typename,
           metadata: {
-            placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
           },
         }),

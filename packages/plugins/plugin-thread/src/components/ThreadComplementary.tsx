@@ -6,12 +6,13 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { createIntent, LayoutAction, useCapability, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadCapabilities } from '@dxos/plugin-space';
-import { MessageType, type ThreadType } from '@dxos/plugin-space/types';
+import { type ThreadType } from '@dxos/plugin-space/types';
 import { create, fullyQualifiedId, makeRef, RefArray } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { MessageType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { ThreadCapabilities as LocalThreadCapabilities } from '../capabilities';
@@ -92,8 +93,8 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         makeRef(
           create(MessageType, {
             sender: { identityKey: identity?.identityKey.toHex() },
-            timestamp: new Date().toISOString(),
-            text: message,
+            created: new Date().toISOString(),
+            blocks: [{ type: 'text', text: message }],
             // TODO(wittjosiah): Context based on attention.
             // context: context ? makeRef(context) : undefined,
           }),

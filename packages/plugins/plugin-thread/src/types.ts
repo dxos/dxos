@@ -3,8 +3,9 @@
 //
 
 import { S } from '@dxos/echo-schema';
-import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { ChannelType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
+import { MessageType } from '@dxos/schema';
 
 import { THREAD_PLUGIN } from './meta';
 

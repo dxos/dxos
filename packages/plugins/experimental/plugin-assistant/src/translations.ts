@@ -10,14 +10,14 @@ export default [
     'en-US': {
       [AIChatType.typename]: {
         'typename label': 'AI Chat',
+        'object name placeholder': 'AI Chat',
       },
       [TemplateType.typename]: {
         'typename label': 'Template',
+        'object name placeholder': 'New template',
       },
       [ASSISTANT_PLUGIN]: {
-        'chat title placeholder': 'AI Chat',
         'templates label': 'Templates',
-        'template title placeholder': 'Template',
 
         'open ambient chat label': 'Open AI chat',
         'plugin name': 'Assistant',
