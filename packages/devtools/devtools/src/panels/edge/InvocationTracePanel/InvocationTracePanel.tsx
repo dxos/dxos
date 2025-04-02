@@ -18,7 +18,7 @@ import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highligh
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ControlledSelector, PanelContainer } from '../../../components';
+import { ControlledSelector, PanelContainer, Placeholder } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
@@ -139,12 +139,12 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
               onRowClicked={handleEventRowClicked}
             />
           ) : (
-            'Select an invocation to see events.'
+            <Placeholder label='Events' />
           )}
         </div>
 
         <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selectedObject ? <ObjectDataViewer object={selectedObject} /> : 'Select an event to see contents'}
+          {selectedObject ? <ObjectDataViewer object={selectedObject} /> : <Placeholder label='Contents' />}
         </div>
       </div>
     </PanelContainer>

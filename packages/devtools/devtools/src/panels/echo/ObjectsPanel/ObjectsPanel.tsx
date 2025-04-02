@@ -15,7 +15,7 @@ import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highligh
 import { DynamicTable } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { PanelContainer, Searchbar } from '../../../components';
+import { PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
@@ -181,7 +181,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       toolbar={
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
-          <Searchbar onChange={setFilter} />
+          <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
       }
     >
@@ -201,11 +201,17 @@ export const ObjectsPanel = (props: { space?: Space }) => {
 
         <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
           <div className={mx('p-1 min-bs-0 overflow-auto')}>
-            {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />}
+            {selected ? (
+              <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
+            ) : (
+              <Placeholder label='Data' />
+            )}
           </div>
           <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
-            {selected && (
+            {selected ? (
               <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
+            ) : (
+              <Placeholder label='History' />
             )}
           </div>
         </div>

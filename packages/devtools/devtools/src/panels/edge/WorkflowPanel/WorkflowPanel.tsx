@@ -91,11 +91,7 @@ export const WorkflowPanel = () => {
         />
 
         <div className={mx('bs-full')}>
-          {selected ? (
-            <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />
-          ) : (
-            'Select an object to enable executor'
-          )}
+          {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
         </div>
       </div>
     </PanelContainer>

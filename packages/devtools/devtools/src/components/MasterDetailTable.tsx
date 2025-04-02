@@ -9,6 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import { JsonView } from './JsonView';
+import { Placeholder } from './Placeholder';
 
 export type MasterDetailTableProps = {
   properties: TablePropertyDefinition[];
@@ -91,7 +92,7 @@ export const MasterDetailTable = ({
             <JsonView data={transformedData} />
           )
         ) : (
-          <p className={mx('font-mono text-xs text-center p-1')}>Make selection for details.</p>
+          <Placeholder label='Details' />
         )}
       </div>
     </div>
