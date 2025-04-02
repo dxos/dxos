@@ -176,12 +176,21 @@ export const useForm = <T extends BaseObject>({
           errorPath === jsonPath || errorPath.startsWith(`${jsonPath}.`) || errorPath.startsWith(`${jsonPath}[`),
       );
 
+      // Only show errors for touched fields.
+      const isTouched = touched[jsonPath as JsonPath];
+      if (!isTouched) {
+        return {
+          status: undefined,
+          error: undefined,
+        };
+      }
+
       return {
         status: matchingError ? 'error' : undefined,
         error: matchingError ? matchingError[1] : undefined,
       };
     },
-    [errors],
+    [errors, touched],
   );
 
   const getFormValue = useCallback<FormHandler<T>['getValue']>(
