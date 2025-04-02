@@ -6,17 +6,20 @@ import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Config } from '@dxos/react-client';
+import { type Observability } from '@dxos/observability';
+import { type UserFeedback } from '@dxos/plugin-observability/types';
+import { FeedbackForm, STATUS_BAR_PLUGIN } from '@dxos/plugin-status-bar';
 import {
   AlertDialog,
   type AlertDialogRootProps,
   Button,
   DropdownMenu,
+  IconButton,
   Message,
+  Popover,
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { type Provider } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -42,13 +45,13 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  config?: Config | Provider<Promise<Config>>;
+  observability?: Promise<Observability>;
   isDev?: boolean;
 };
 
 export const ResetDialog = ({
   error: propsError,
-  config: configProvider,
+  observability: observabilityPromise,
   defaultOpen,
   open,
   onOpenChange,
@@ -60,6 +63,7 @@ export const ResetDialog = ({
     updateServiceWorker,
   } = useRegisterSW();
   const [showStack, setShowStack] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
@@ -69,6 +73,27 @@ export const ResetDialog = ({
     localStorage.clear();
     window.location.href = window.location.origin;
   };
+
+  const handleSaveFeedback = useCallback(
+    async (values: UserFeedback) => {
+      if (!observabilityPromise) {
+        return;
+      }
+
+      const observability = await observabilityPromise;
+      observability.captureUserFeedback(values.email, values.name, values.message);
+      setFeedbackOpen(false);
+    },
+    [observabilityPromise],
+  );
+
+  const handleReload = useCallback(() => {
+    if (needRefresh) {
+      void updateServiceWorker(true);
+    } else {
+      location.reload();
+    }
+  }, [needRefresh, updateServiceWorker]);
 
   const Caret = showStack ? CaretDown : CaretRight;
 
@@ -96,26 +121,23 @@ export const ResetDialog = ({
                 <Message.Root
                   key={error.message}
                   valence='error'
-                  className='mlb-4 overflow-auto max-bs-72'
+                  className='mlb-4 overflow-auto max-bs-72 relative'
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Button onClick={handleCopyError} classNames='absolute top-2 right-2'>
+                        <Clipboard weight='duotone' size='1em' />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>{t('copy error label')}</Tooltip.Content>
+                  </Tooltip.Root>
                 </Message.Root>
               )}
             </>
           )}
           <div role='none' className='flex gap-2 mbs-4'>
-            {showStack && (
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Button onClick={handleCopyError}>
-                    <Clipboard weight='duotone' size='1em' />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>{t('copy error label')}</Tooltip.Content>
-              </Tooltip.Root>
-            )}
-            <div role='none' className='flex-grow' />
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <Button data-testid='resetDialog.reset' variant='ghost'>
@@ -133,15 +155,28 @@ export const ResetDialog = ({
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
-            {needRefresh ? (
-              <Button variant='primary' onClick={() => updateServiceWorker(true)}>
-                {t('update and reload page label')}
-              </Button>
-            ) : (
-              <Button variant='primary' onClick={() => location.reload()}>
-                {t('reload page label')}
-              </Button>
+            <div role='none' className='flex-grow' />
+
+            {observabilityPromise && (
+              <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                <Popover.Trigger asChild>
+                  <IconButton
+                    icon='ph--paper-plane-tilt--regular'
+                    label={t('feedback label', { ns: STATUS_BAR_PLUGIN })}
+                  />
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Content>
+                    <FeedbackForm onSave={handleSaveFeedback} />
+                  </Popover.Content>
+                </Popover.Portal>
+              </Popover.Root>
             )}
+            <IconButton
+              icon='ph--arrow-clockwise--regular'
+              label={t(needRefresh ? 'update and reload page label' : 'reload page label')}
+              onClick={handleReload}
+            />
           </div>
         </AlertDialog.Content>
       </AlertDialog.Overlay>

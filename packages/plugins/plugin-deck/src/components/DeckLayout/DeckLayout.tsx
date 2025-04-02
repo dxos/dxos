@@ -52,6 +52,7 @@ const PlankSeparator = ({ order }: { order: number }) =>
   order > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ overscroll, showHints, onDismissToast }: DeckLayoutProps) => {
+  throw new Error('test');
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const {

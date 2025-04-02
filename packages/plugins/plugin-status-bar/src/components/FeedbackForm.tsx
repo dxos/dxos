@@ -3,10 +3,9 @@
 //
 
 import { PaperPlaneTilt, X } from '@phosphor-icons/react';
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { ObservabilityAction, UserFeedback } from '@dxos/plugin-observability/types';
+import { UserFeedback } from '@dxos/plugin-observability/types';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { useForm } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
@@ -16,18 +15,9 @@ import { mkTranslation } from '../translations';
 
 const initialValues: UserFeedback = { name: '', email: '', message: '' };
 
-export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
+export const FeedbackForm = ({ onSave }: { onSave: (values: UserFeedback) => void }) => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const translation = mkTranslation(t);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-
-  const onSave = useCallback(
-    (values: UserFeedback) => {
-      void dispatch(createIntent(ObservabilityAction.CaptureUserFeedback, values));
-      onClose();
-    },
-    [dispatch, onClose],
-  );
 
   const { handleSave, canSave, getStatus, ...inputProps } = useForm<UserFeedback>({
     initialValues,
