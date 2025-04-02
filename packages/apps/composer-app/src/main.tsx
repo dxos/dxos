@@ -88,7 +88,7 @@ const main = async () => {
     fallback: ({ error }) => (
       <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
         <Tooltip.Provider>
-          <ResetDialog error={error} config={config} />
+          <ResetDialog error={error} observability={observability} />
         </Tooltip.Provider>
       </ThemeProvider>
     ),
