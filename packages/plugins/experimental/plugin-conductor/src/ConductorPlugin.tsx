@@ -11,7 +11,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { IntentResolver, ReactSurface } from './capabilities';
-import { CONDUCTOR_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { ConductorAction } from './types';
 
@@ -29,7 +29,6 @@ export const ConductorPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: CanvasBoardType.typename,
           metadata: {
-            placeholder: ['canvas title placeholder', { ns: CONDUCTOR_PLUGIN }],
             icon: 'ph--infinity--regular',
           },
         }),

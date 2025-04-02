@@ -11,11 +11,10 @@ export default [
     'en-US': {
       [CanvasBoardType.typename]: {
         'typename label': 'Circuit',
+        'object name placeholder': 'New circuit',
       },
       [CONDUCTOR_PLUGIN]: {
         'plugin name': 'Conductor',
-        'canvas title placeholder': 'New circuit',
-        'create canvas label': 'Create circuit',
         'content placeholder': 'Enter text...',
       },
     },

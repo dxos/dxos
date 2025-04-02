@@ -8,7 +8,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
-import { MAP_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { MapType, MapAction, CreateMapSchema } from './types';
 
@@ -34,7 +34,6 @@ export const MapPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: MapType.typename,
           metadata: {
-            placeholder: ['object placeholder', { ns: MAP_PLUGIN }],
             icon: 'ph--compass--regular',
           },
         }),

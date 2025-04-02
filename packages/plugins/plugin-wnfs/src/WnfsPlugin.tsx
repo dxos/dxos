@@ -51,7 +51,6 @@ export const WnfsPlugin = () =>
           id: FileType.typename,
           metadata: {
             label: (object: any) => (object instanceof FileType ? object.name : undefined),
-            placeholder: ['file title placeholder', { ns: WNFS_PLUGIN }],
             // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
             icon: 'ph--file--regular',
           },

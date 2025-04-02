@@ -10,13 +10,11 @@ export default [
     'en-US': {
       [MapType.typename]: {
         'typename label': 'Map',
+        'object name placeholder': 'New map',
       },
       [MAP_PLUGIN]: {
         'plugin name': 'Maps',
-        'object placeholder': 'New map',
-        'create object label': 'Create map',
         'delete object label': 'Delete',
-        'create stack section label': 'Create map',
         'toggle type label': 'Toggle view',
       },
     },

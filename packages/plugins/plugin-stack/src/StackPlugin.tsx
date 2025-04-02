@@ -27,13 +27,6 @@ export const StackPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: StackViewType.typename,
-          metadata: {
-            placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
-            icon: 'ph--stack-simple--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
           id: SECTION_IDENTIFIER,
           metadata: {
             parse: (section: { object: ReactiveEchoObject<any> }, type: string) => {

@@ -3,14 +3,17 @@
 //
 
 import { TEMPLATE_PLUGIN } from './meta';
+import { TemplateType } from './types';
 
 export default [
   {
     'en-US': {
+      [TemplateType.typename]: {
+        'typename label': 'Template',
+        'object name placeholder': 'New template',
+      },
       [TEMPLATE_PLUGIN]: {
         'plugin name': 'Template',
-        'object placeholder': 'New object',
-        'create object label': 'Create object',
         'delete object label': 'Delete', // TODO(burdon): Standard for actions menu.
       },
     },

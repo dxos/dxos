@@ -6,7 +6,7 @@ import { Capabilities, Events, contributes, defineModule, definePlugin } from '@
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface, TranscriptionCapabilities } from './capabilities';
-import { meta, TRANSCRIPTION_PLUGIN } from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { TranscriptType } from './types';
 
@@ -29,7 +29,6 @@ export const TranscriptionPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TranscriptType.typename,
           metadata: {
-            placeholder: ['transcript title placeholder', { ns: TRANSCRIPTION_PLUGIN }],
             icon: 'ph--subtitles--regular',
           },
         }),

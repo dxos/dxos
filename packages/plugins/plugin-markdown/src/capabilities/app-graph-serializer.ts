@@ -23,7 +23,7 @@ export default (context: PluginsContext) =>
         const doc = node.data;
         const content = await doc.content.load();
         return {
-          name: doc.name || doc.fallbackName || translations[0]['en-US'][MARKDOWN_PLUGIN]['document title placeholder'],
+          name: doc.name || doc.fallbackName || translations[0]['en-US'][DocumentType.typename]['object name placeholder'],
           data: content.content,
           type: 'text/markdown',
         };
