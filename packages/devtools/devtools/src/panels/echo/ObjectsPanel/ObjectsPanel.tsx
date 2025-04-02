@@ -186,35 +186,29 @@ export const ObjectsPanel = (props: { space?: Space }) => {
       }
     >
       <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
-        <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
+        <div className='flex flex-col w-full overflow-hidden'>
+          <DynamicTable data={tableData} properties={objectProperties} onRowClicked={handleObjectRowClicked} />
+          <div
+            className={mx(
+              'bs-[--statusbar-size]',
+              'flex shrink-0 justify-end items-center gap-2',
+              'bg-baseSurface text-description',
+            )}
+          >
+            <div className='text-sm pie-2'>Objects: {items.length}</div>
+          </div>
+        </div>
 
         <div className='min-bs-0 bs-full grid grid-rows-[1fr_16rem] !border-separator border-is border-bs'>
           <div className={mx('p-1 min-bs-0 overflow-auto')}>
-            {selected ? (
-              <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
-            ) : (
-              'Select an object to inspect the contents'
-            )}
+            {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />}
           </div>
           <div className={mx(!selected && 'p-1 border-bs !border-separator')}>
-            {selected ? (
+            {selected && (
               <DynamicTable data={historyData} properties={historyProperties} onRowClicked={handleHistoryRowClicked} />
-            ) : (
-              'Select an object to inspect the contents'
             )}
           </div>
         </div>
-      </div>
-      <div
-        className={mx(
-          'bs-[--statusbar-size]',
-          'flex justify-end items-center gap-2',
-          'bg-baseSurface text-description',
-          'border-bs border-separator',
-          'text-lg pointer-fine:text-xs',
-        )}
-      >
-        <div>Objects: {items.length}</div>
       </div>
     </PanelContainer>
   );
