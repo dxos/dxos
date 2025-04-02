@@ -16,7 +16,7 @@ import { ViewType } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { TABLE_PLUGIN } from '../meta';
-import { InitialSchemaAnnotationId } from '../types';
+import { TypenameAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -65,11 +65,11 @@ export default () =>
       id: `${TABLE_PLUGIN}/create-initial-schema-form`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: S.Schema<any>; target: Space | CollectionType | undefined } => {
-        if (data.prop !== 'initialSchema') {
+        if (data.prop !== 'typename') {
           return false;
         }
 
-        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, InitialSchemaAnnotationId);
+        const annotation = findAnnotation<boolean>((data.schema as S.Schema.All).ast, TypenameAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
@@ -83,12 +83,14 @@ export default () =>
         // TODO(ZaymonFC): Make this reactive.
         const fixed = client.graph.schemaRegistry.schemas;
         const dynamic = space?.db.schemaRegistry.query().runSync();
-        const typenames = new Set<string>([
-          ...fixed.map((schema) => getTypenameOrThrow(schema)),
-          ...dynamic.map((schema) => schema.typename),
-        ]);
+        const typenames = Array.from(
+          new Set<string>([
+            ...fixed.map((schema) => getTypenameOrThrow(schema)),
+            ...dynamic.map((schema) => schema.typename),
+          ]),
+        ).sort();
 
-        return <SelectInput {...props} options={Array.from(typenames).map((typename) => ({ value: typename }))} />;
+        return <SelectInput {...props} options={typenames.map((typename) => ({ value: typename }))} />;
       },
     }),
   ]);

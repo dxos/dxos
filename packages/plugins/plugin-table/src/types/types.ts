@@ -9,13 +9,14 @@ import { FieldSchema } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
-export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-table/annotation/InitialSchema');
+// TODO(burdon): Factor out (should be in common for Table, Kanban, and Map). Move to FormatEnum or SDK.
+export const TypenameAnnotationId = Symbol.for('@dxos/plugin-table/annotation/Typename');
 
 export const CreateTableSchema = S.Struct({
   name: S.optional(S.String),
   typename: S.optional(
     S.String.annotations({
-      [InitialSchemaAnnotationId]: true,
+      [TypenameAnnotationId]: true,
     }),
   ),
 });

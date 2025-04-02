@@ -21,20 +21,21 @@ import { KANBAN_PLUGIN } from './meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialSchema');
-export const InitialPivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialPivotColumn');
+// TODO(burdon): Move to FormatEnum or SDK.
+export const TypenameAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/Typename');
+export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
 
 export const CreateKanbanSchema = S.Struct({
   name: S.optional(S.String),
   typename: S.optional(
     S.String.annotations({
-      [InitialSchemaAnnotationId]: true,
+      [TypenameAnnotationId]: true,
       [TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
     }),
   ),
   initialPivotColumn: S.optional(
     S.String.annotations({
-      [InitialPivotColumnAnnotationId]: true,
+      [PivotColumnAnnotationId]: true,
       [TitleAnnotationId]: 'Pivot column',
     }),
   ),
