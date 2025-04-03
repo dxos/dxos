@@ -515,7 +515,6 @@ export class Observability {
       const { SentryLogProcessor } = await import('./sentry/sentry-log-processor');
       this._captureException = captureException;
       this._captureUserFeedback = captureUserFeedback;
-
       this._setTag = setTag;
 
       // TODO(nf): refactor package into this one?

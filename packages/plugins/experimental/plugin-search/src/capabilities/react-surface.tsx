@@ -29,11 +29,15 @@ export default () =>
         const layout = useLayout();
         const { graph } = useAppGraph();
         const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
-        return space ? (
+        if (!space) {
+          return null;
+        }
+
+        return (
           <SearchContextProvider>
             <SearchMain space={space} />
           </SearchContextProvider>
-        ) : null;
+        );
       },
     }),
   ]);
