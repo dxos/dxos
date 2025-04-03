@@ -6,7 +6,7 @@ import React, { type FC, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { SearchResults } from './SearchResults';
@@ -14,7 +14,7 @@ import { Searchbar } from './Searchbar';
 import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
 import { SEARCH_PLUGIN } from '../meta';
 
-export const SearchMain: FC<{ space: Space }> = ({ space }) => {
+export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, space }) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
   const client = useClient();
   const { setMatch } = useGlobalSearch();
@@ -33,14 +33,11 @@ export const SearchMain: FC<{ space: Space }> = ({ space }) => {
   };
 
   return (
-    <div className='flex flex-col grow h-full'>
+    <div className={mx('flex flex-col grow h-full overflow-hidden', classNames)}>
       <Searchbar placeholder={t('search placeholder')} onChange={setMatch} />
       {results.length > 0 && (
-        <div className='absolute top-[--topbar-size] bottom-0 z-[1]'>
-          {/* TODO(burdon): Change to Portal? */}
-          <div className={mx('flex flex-col h-full overflow-hidden', groupSurface)}>
-            <SearchResults items={results} selected={selected} onSelect={handleSelect} />
-          </div>
+        <div className={mx('flex flex-col grow overflow-hidden', groupSurface)}>
+          <SearchResults items={results} selected={selected} onSelect={handleSelect} />
         </div>
       )}
     </div>

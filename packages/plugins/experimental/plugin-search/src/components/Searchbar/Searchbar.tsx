@@ -35,7 +35,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange }: Se
   };
 
   return (
-    <div className='flex w-full items-center pli-1 pbs-1'>
+    <div className='flex shrink-0w-full items-center pli-1 pbs-1'>
       <Input.Root>
         <Input.TextInput
           ref={inputRef}

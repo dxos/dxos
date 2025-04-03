@@ -5,17 +5,11 @@
 import { type Icon, Buildings, Folders, User } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
 import { type SearchResult } from '../../types';
-
-// TODO(burdon): Factor out.
-const styles = {
-  selected: '!bg-primary-100 !dark:bg-primary-900',
-};
 
 // TODO(burdon): Registry defined by plugins?
 const getIcon = (type: string): Icon | undefined => {
@@ -64,7 +58,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
   return (
     <Card.Root
       ref={forwardRef}
-      classNames={mx('mx-2 mt-2 cursor-pointer', ghostHover, selected && styles.selected)}
+      classNames={mx('mx-2 mt-2 cursor-pointer', selected && '!bg-groupSurface', ghostHover)}
       onClick={() => onSelect?.(id)}
     >
       <Card.Header>
@@ -90,8 +84,8 @@ export type SearchResultsProps = {
 // TODO(burdon): Key cursor up/down.
 export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps) => {
   return (
-    <ScrollArea.Root classNames='grow'>
-      <ScrollArea.Viewport>
+    <div className='flex flex-col grow overflow-y-auto'>
+      <div className='flex flex-col'>
         {items.map((item) => (
           <SearchItem
             key={item.id}
@@ -101,11 +95,7 @@ export const SearchResults = ({ items, selected, onSelect }: SearchResultsProps)
             selected={selected === item.id}
           />
         ))}
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Corner />
-    </ScrollArea.Root>
+      </div>
+    </div>
   );
 };

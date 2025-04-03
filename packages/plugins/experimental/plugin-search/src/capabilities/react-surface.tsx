@@ -44,6 +44,19 @@ export default () =>
     createSurface({
       id: `${SEARCH_DIALOG}/search`,
       role: 'complementary--search',
-      component: ({ data }) => <div className='p-2'>Search</div>,
+      component: ({ data }) => {
+        const layout = useLayout();
+        const { graph } = useAppGraph();
+        const space = graph ? getActiveSpace(graph, layout.active[0]) : undefined;
+        if (!space) {
+          return null;
+        }
+
+        return (
+          <SearchContextProvider>
+            <SearchMain space={space} />
+          </SearchContextProvider>
+        );
+      },
     }),
   ]);
