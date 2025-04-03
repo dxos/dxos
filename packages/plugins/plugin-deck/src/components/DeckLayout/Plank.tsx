@@ -107,7 +107,8 @@ const PlankImpl = memo(
     }, [id, scrollIntoView, layoutMode]);
 
     const isSolo = layoutMode === 'solo' && part === 'solo';
-    const isAttendable = isSolo || (layoutMode === 'deck' && part === 'deck');
+    const isAttendable =
+      (layoutMode === 'solo' && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
 
     const sizeAttrs = useMainSize();
 
@@ -129,7 +130,8 @@ const PlankImpl = memo(
       'attention-surface relative',
       isSolo && mainIntrinsicSize,
       isSolo && railGridHorizontal,
-      isSolo && 'grid absolute inset-0',
+      isSolo && 'absolute inset-0',
+      part.startsWith('solo') && 'grid',
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 min-is-0',
       part === 'solo-companion' && '!border-separator border-is',
@@ -189,7 +191,7 @@ const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
+      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0 min-bs-0', railGridHorizontal, mainIntrinsicSize)}
       {...sizeAttrs}
     >
       {children}
