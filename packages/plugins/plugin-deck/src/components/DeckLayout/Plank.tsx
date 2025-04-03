@@ -191,7 +191,7 @@ const SplitFrame = ({ children }: PropsWithChildren<{}>) => {
   return (
     <div
       role='none'
-      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0 min-bs-0', railGridHorizontal, mainIntrinsicSize)}
+      className={mx('grid grid-cols-[1fr_1fr] absolute inset-0', railGridHorizontal, mainIntrinsicSize)}
       {...sizeAttrs}
     >
       {children}
