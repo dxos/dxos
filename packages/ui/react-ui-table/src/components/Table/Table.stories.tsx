@@ -18,6 +18,7 @@ import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type SchemaPropertyDefinition, ViewProjection, ViewType } from '@dxos/schema';
+import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DynamicTable as DynamicTableComponent } from './DynamicTable';
@@ -40,19 +41,11 @@ faker.seed(0);
 const DefaultStory = () => {
   const client = useClient();
   const { space } = useClientProvider();
-  invariant(space);
 
-  const tables = useQuery(space, Filter.schema(TableType));
-  const [table, setTable] = useState<TableType>();
+  const filter = useMemo(() => Filter.schema(TableType), []);
+  const tables = useQuery(space, filter);
+  const table = useMemo(() => tables.at(0), [tables]);
   const schema = useSchema(client, space, table?.view?.target?.query.typename);
-
-  useEffect(() => {
-    if (space && tables.length && !table) {
-      const table = tables[0];
-      invariant(table.view);
-      setTable(table);
-    }
-  }, [space, tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
@@ -275,6 +268,30 @@ const meta: Meta<StoryProps> = {
 export default meta;
 
 export const Default = {};
+
+export const StaticSchema: StoryObj = {
+  render: DefaultStory,
+  parameters: { translations },
+  decorators: [
+    withClientProvider({
+      types: [TableType, ViewType, Testing.ContactType, Testing.OrgType],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ client, space }) => {
+        const table = space.db.add(create(TableType, {}));
+        await initializeTable({ client, space, table, typename: Testing.ContactType.typename });
+
+        const factory = createObjectFactory(space.db, faker as any);
+        await factory([
+          { type: Testing.ContactType, count: 10 },
+          { type: Testing.OrgType, count: 1 },
+        ]);
+      },
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+  ],
+};
 
 export const DynamicTable: StoryObj = {
   render: DynamicTableStory,

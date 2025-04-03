@@ -27,7 +27,6 @@ type InitialiseTableProps = {
   initialRow?: boolean;
 };
 
-// TODO(ZaymonFC): Clean up the branching in this file.
 export const initializeTable = async ({
   client,
   space,
@@ -36,7 +35,6 @@ export const initializeTable = async ({
   initialRow = true,
 }: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
   if (typename) {
-    space.db.schemaRegistry;
     const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
     if (!schema) {
       throw new Error(`Schema not found: ${typename}`);
