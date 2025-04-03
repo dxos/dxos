@@ -23,6 +23,7 @@ import {
 import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
+import { ImmutableSchema } from '@dxos/echo-schema';
 
 // TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
