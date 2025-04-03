@@ -8,6 +8,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
+import { useClient } from '@dxos/react-client';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
@@ -28,8 +29,9 @@ const TableContainer = ({ role, table }: { role?: string; table: TableType }) =>
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
+  const client = useClient();
   const space = getSpace(table);
-  const schema = useSchema(space, table.view?.target?.query.typename);
+  const schema = useSchema(client, space, table.view?.target?.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 

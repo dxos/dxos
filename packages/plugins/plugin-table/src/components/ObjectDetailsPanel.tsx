@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { useClient } from '@dxos/react-client';
 import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useSelectedItems } from '@dxos/react-ui-attention';
@@ -18,8 +19,9 @@ type RowDetailsPanelProps = { objectId: string; view: ViewType };
 
 const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
+  const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(space, view.query?.typename);
+  const schema = useSchema(client, space, view.query?.typename);
 
   // TODO(burdon): Why is this needed?
   const effectSchema = useMemo(() => schema?.snapshot, [JSON.stringify(schema?.jsonSchema)]);

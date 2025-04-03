@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
@@ -18,12 +19,13 @@ type KanbanViewEditorProps = { kanban: KanbanType };
 
 export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const client = useClient();
   const space = getSpace(kanban);
   const currentTypename = useMemo(
     () => kanban?.cardView?.target?.query?.typename,
     [kanban?.cardView?.target?.query?.typename],
   );
-  const schema = useSchema(space, currentTypename);
+  const schema = useSchema(client, space, currentTypename);
   const views = useQuery(space, Filter.schema(ViewType));
 
   const handleUpdateTypename = useCallback(

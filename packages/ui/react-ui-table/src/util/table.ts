@@ -7,20 +7,31 @@ import {
   type EchoSchema,
   Format,
   FormatEnum,
+  type ImmutableSchema,
   type JsonPath,
   type JsonProp,
+  ReadonlySchema,
   S,
-  toJsonSchema,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
+
+// TODO(burdon): Factor out with better type checking.
+// TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
+const getSchema = async (client: Client, space: Space, typename: string): Promise<ImmutableSchema | undefined> => {
+  const schema = client.graph.schemaRegistry.getSchema(typename);
+  if (schema) {
+    return new ReadonlySchema(schema);
+  }
+
+  return await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+};
 
 type InitialiseTableProps = {
   client: Client;
@@ -40,19 +51,10 @@ export const initializeTable = async ({
 }: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
   log.info('initializeTable', { typename });
   if (typename) {
-    // TODO(burdon): Normalize the schema registries.
-    let jsonSchema;
-    const schema = client.graph.schemaRegistry.getSchema(typename);
-    if (schema) {
-      jsonSchema = toJsonSchema(schema);
-    } else {
-      const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-      if (!schema) {
-        throw new Error(`Schema not found: ${typename}`);
-      }
-      jsonSchema = schema?.jsonSchema;
+    const schema = await getSchema(client, space, typename);
+    if (!schema) {
+      throw new Error(`Schema not found: ${typename}`);
     }
-    invariant(schema);
 
     // We need to get the schema properties here.
     // For now, only simple types and refs, not compound types are going to be supported.
@@ -64,8 +66,8 @@ export const initializeTable = async ({
       createView({
         // TODO(ZaymonFC): Don't hardcode name?
         name: 'View',
-        typename,
-        jsonSchema,
+        typename: schema.typename,
+        jsonSchema: schema.jsonSchema,
         fields,
       }),
     );

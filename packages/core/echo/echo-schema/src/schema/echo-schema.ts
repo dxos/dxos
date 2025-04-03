@@ -15,21 +15,99 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { SchemaMetaSymbol, schemaVariance, type JsonSchemaType, type SchemaMeta } from '../ast';
+import {
+  getObjectAnnotation,
+  type ObjectAnnotation,
+  SchemaMetaSymbol,
+  schemaVariance,
+  type JsonSchemaType,
+  type SchemaMeta,
+} from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
 
 /**
- * Immutable schema.
+ * Base type.
  */
 export interface ImmutableSchema extends S.Schema.AnyNoContext {
   get typename(): string;
   get version(): string;
-  get ast(): AST.AST;
   get jsonSchema(): JsonSchemaType;
   get readonly(): boolean;
   get mutable(): EchoSchema;
   get snapshot(): S.Schema.AnyNoContext;
+}
+
+/**
+ * Immutable type.
+ */
+// TODO(burdon): Common abstract base class?
+export class ReadonlySchema implements ImmutableSchema {
+  private readonly _objectAnnotation: ObjectAnnotation;
+  constructor(private readonly _schema: S.Schema.AnyNoContext) {
+    this._objectAnnotation = getObjectAnnotation(this._schema)!;
+    invariant(this._objectAnnotation);
+  }
+
+  //
+  // Effect Schema
+  //
+
+  public get [S.TypeId]() {
+    return schemaVariance;
+  }
+
+  public get ast(): AST.AST {
+    return this._schema.ast;
+  }
+
+  public get annotations() {
+    return this._schema.annotations;
+  }
+
+  public get pipe() {
+    return this._schema.pipe;
+  }
+
+  public get Type() {
+    return this._schema;
+  }
+
+  public get Encoded() {
+    return this._schema;
+  }
+
+  public get Context() {
+    return this._schema.Context;
+  }
+
+  //
+  // ImmutableSchema
+  //
+
+  get typename(): string {
+    return this._objectAnnotation.typename;
+  }
+
+  get version(): string {
+    return this._objectAnnotation.version;
+  }
+
+  get jsonSchema(): JsonSchemaType {
+    return toJsonSchema(this._schema);
+  }
+
+  get readonly(): boolean {
+    return true;
+  }
+
+  get mutable(): EchoSchema {
+    throw new Error('Schema is readonly.');
+  }
+
+  get snapshot(): S.Schema.AnyNoContext {
+    return this._schema;
+  }
 }
 
 /**
@@ -76,7 +154,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  * The class constructor is a schema instance itself, and can be used in the echo object definitions:
  *
  * @example
- * ```typescript
+ * ```ts
  * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0' })({
  *   title: S.String,
  *   schema: S.optional(ref(EchoSchema)),
@@ -104,7 +182,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
   }
 
   //
-  // Effect-Specific
+  // Effect Schema
   //
 
   public get [S.TypeId]() {

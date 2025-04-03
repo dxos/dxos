@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
 import { Filter, useSpaces, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -28,12 +29,13 @@ faker.seed(0);
 //
 
 const StorybookKanban = () => {
+  const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
   const [projection, setProjection] = useState<ViewProjection>();
-  const cardSchema = useSchema(space, kanban?.cardView?.target?.query.typename);
+  const schema = useSchema(client, space, kanban?.cardView?.target?.query.typename);
 
   useEffect(() => {
     if (kanbans.length && !kanban) {
@@ -43,18 +45,18 @@ const StorybookKanban = () => {
   }, [kanbans]);
 
   useEffect(() => {
-    if (kanban?.cardView?.target && cardSchema) {
-      setProjection(new ViewProjection(cardSchema, kanban.cardView.target));
+    if (kanban?.cardView?.target && schema) {
+      setProjection(new ViewProjection(schema, kanban.cardView.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [kanban?.cardView?.target, cardSchema, JSON.stringify(cardSchema?.jsonSchema)]);
+  }, [kanban?.cardView?.target, schema, JSON.stringify(schema?.jsonSchema)]);
 
-  const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
+  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
     kanban,
-    schema: cardSchema,
+    schema,
     projection,
     items: filteredObjects,
   });
@@ -62,8 +64,8 @@ const StorybookKanban = () => {
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
-      if (space && cardSchema && path) {
-        const card = create(cardSchema, {
+      if (space && schema && path) {
+        const card = create(schema, {
           title: faker.commerce.productName(),
           description: faker.lorem.paragraph(),
           [path]: columnValue,
@@ -73,7 +75,7 @@ const StorybookKanban = () => {
         return card.id;
       }
     },
-    [space, cardSchema, model],
+    [space, schema, model],
   );
 
   const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
@@ -81,14 +83,14 @@ const StorybookKanban = () => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (kanban?.cardView?.target) {
-        cardSchema?.mutable.updateTypename(typename);
+        schema?.mutable.updateTypename(typename);
         kanban.cardView.target.query.typename = typename;
       }
     },
-    [kanban?.cardView?.target, cardSchema],
+    [kanban?.cardView?.target, schema],
   );
 
-  if (!cardSchema || !kanban) {
+  if (!schema || !kanban) {
     return null;
   }
 
@@ -99,7 +101,7 @@ const StorybookKanban = () => {
         {kanban.cardView && (
           <ViewEditor
             registry={space?.db.schemaRegistry}
-            schema={cardSchema}
+            schema={schema}
             view={kanban.cardView.target!}
             onTypenameChanged={handleTypenameChanged}
             onDelete={(fieldId: string) => {
@@ -108,7 +110,7 @@ const StorybookKanban = () => {
           />
         )}
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ cardView: kanban.cardView?.target, cardSchema }, null, 2)}
+          {JSON.stringify({ cardView: kanban.cardView?.target, cardSchema: schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>

@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
@@ -17,8 +18,9 @@ type TableViewEditorProps = { table: TableType };
 
 const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const client = useClient();
   const space = getSpace(table);
-  const schema = useSchema(space, table.view?.target?.query.typename);
+  const schema = useSchema(client, space, table.view?.target?.query.typename);
 
   const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);

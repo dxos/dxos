@@ -42,6 +42,7 @@ export type ObjectAnnotation = {
  * ECHO identifier for a schema.
  * Must be a `dxn:echo:` URI.
  */
+// TODO(burdon): Rename?
 export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
 
 /**
@@ -72,6 +73,7 @@ export const getSchemaTypename = (schema: S.Schema.All): string | undefined => g
  */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
 
+// TODO(burdon): Remove ECHO prefix OR use consistently (e.g., re getObjectAnnotation above).
 export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
     AST.getAnnotation<string>(EchoIdentifierAnnotationId),

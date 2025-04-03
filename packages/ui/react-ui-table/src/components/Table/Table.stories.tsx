@@ -11,6 +11,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, create } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
@@ -37,12 +38,13 @@ faker.seed(0);
 //
 
 const DefaultStory = () => {
+  const client = useClient();
   const { space } = useClientProvider();
   invariant(space);
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
-  const schema = useSchema(space, table?.view?.target?.query.typename);
+  const schema = useSchema(client, space, table?.view?.target?.query.typename);
 
   useEffect(() => {
     if (space && tables.length && !table) {
