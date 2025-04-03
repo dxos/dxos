@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ImmutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadAction } from '@dxos/plugin-thread/types';
@@ -23,7 +24,6 @@ import {
 import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
-import { ImmutableSchema } from '@dxos/echo-schema';
 
 // TODO(ZaymonFC): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
