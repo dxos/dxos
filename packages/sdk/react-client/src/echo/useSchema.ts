@@ -26,9 +26,11 @@ export const useSchema = (
 
     const staticSchema = client.graph.schemaRegistry.getSchema(typename);
     if (staticSchema) {
+      // Don't inline into getSchema, need a stable reference.
+      const immutableSchema = new ImmutableSchema(staticSchema);
       return {
         subscribe: () => () => {},
-        getSchema: () => new ImmutableSchema(staticSchema),
+        getSchema: () => immutableSchema,
       };
     }
 
