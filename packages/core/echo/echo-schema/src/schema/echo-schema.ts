@@ -78,6 +78,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
+  // TODO(burdon): Support dynamic schema.
   constructor(private readonly _storedSchema: StoredSchema) {
     super();
   }
@@ -183,10 +184,10 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
-  // TODO(burdon): Deprecate direct manipulation? Use JSONSchema directly.
-
   //
   // Mutation methods.
+  // TODO(burdon): Create separate interface for dynamic schema.
+  // TODO(burdon): Deprecate direct manipulation? Use JSONSchema directly.
   //
 
   /**
