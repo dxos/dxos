@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface, useLayout, useAppGraph } from
 import { getActiveSpace } from '@dxos/plugin-space';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
-import { SearchContextProvider } from '../context';
+import { SearchContextProvider } from '../hooks';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

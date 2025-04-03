@@ -10,7 +10,7 @@ import { Card } from '@dxos/react-ui-card';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
-import type { SearchResult } from '../../search-sync';
+import { type SearchResult } from '../../types';
 
 // TODO(burdon): Factor out.
 const styles = {

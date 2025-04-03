@@ -11,7 +11,7 @@ import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
-import { useGlobalSearch, useGlobalSearchResults } from '../context';
+import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
 import { SEARCH_PLUGIN } from '../meta';
 
 export const SearchMain: FC<{ space: Space }> = ({ space }) => {
