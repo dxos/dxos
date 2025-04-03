@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
+import { ImmutableSchema, type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, create } from '@dxos/react-client/echo';

@@ -69,12 +69,12 @@ export const getSchemaVersion = (schema: S.Schema.All): string | undefined => ge
  * Must be a `dxn:echo:` URI.
  */
 // TODO(burdon): Rename/remove ECHO prefix. Create namespace.
-export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
+export const ObjectIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/ObjectIdentifier');
 
 // TODO(burdon): Remove ECHO prefix OR use consistently (e.g., re getObjectAnnotation above).
-export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
+export const getObjectIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
-    AST.getAnnotation<string>(EchoIdentifierAnnotationId),
+    AST.getAnnotation<string>(ObjectIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
