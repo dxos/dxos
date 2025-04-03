@@ -7,31 +7,17 @@ import {
   type EchoSchema,
   Format,
   FormatEnum,
-  type ImmutableSchema,
   type JsonPath,
   type JsonProp,
-  ReadonlySchema,
   S,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { create, makeRef, type Space } from '@dxos/react-client/echo';
+import { create, getSchemaByTypename, makeRef, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
-
-// TODO(burdon): Factor out with better type checking.
-// TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
-const getSchema = async (client: Client, space: Space, typename: string): Promise<ImmutableSchema | undefined> => {
-  const schema = client.graph.schemaRegistry.getSchema(typename);
-  if (schema) {
-    return new ReadonlySchema(schema);
-  }
-
-  return await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-};
 
 type InitialiseTableProps = {
   client: Client;
@@ -49,9 +35,8 @@ export const initializeTable = async ({
   typename,
   initialRow = true,
 }: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
-  log.info('initializeTable', { typename });
   if (typename) {
-    const schema = await getSchema(client, space, typename);
+    const schema = await getSchemaByTypename(client, space, typename);
     if (!schema) {
       throw new Error(`Schema not found: ${typename}`);
     }
