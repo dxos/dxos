@@ -39,13 +39,6 @@ export type ObjectAnnotation = {
 };
 
 /**
- * ECHO identifier for a schema.
- * Must be a `dxn:echo:` URI.
- */
-// TODO(burdon): Rename?
-export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
-
-/**
  * @returns {@link ObjectAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
@@ -72,6 +65,13 @@ export const getSchemaTypename = (schema: S.Schema.All): string | undefined => g
  * @returns Schema version in semver format.
  */
 export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
+
+/**
+ * ECHO identifier for a schema.
+ * Must be a `dxn:echo:` URI.
+ */
+// TODO(burdon): Rename/remove ECHO prefix. Create namespace.
+export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
 
 // TODO(burdon): Remove ECHO prefix OR use consistently (e.g., re getObjectAnnotation above).
 export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
