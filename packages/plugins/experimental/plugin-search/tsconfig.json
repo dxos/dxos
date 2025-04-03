@@ -54,6 +54,9 @@
       "path": "../../../ui/react-ui-theme"
     },
     {
+      "path": "../../plugin-deck"
+    },
+    {
       "path": "../../plugin-graph"
     },
     {

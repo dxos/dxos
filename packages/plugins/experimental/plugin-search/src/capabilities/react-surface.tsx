@@ -23,6 +23,7 @@ export default () =>
       ),
     }),
     createSurface({
+      // id: `${SEARCH_DIALOG}/search-input`,
       id: 'search-input',
       role: 'search-input',
       component: () => {
@@ -39,5 +40,10 @@ export default () =>
           </SearchContextProvider>
         );
       },
+    }),
+    createSurface({
+      id: `${SEARCH_DIALOG}/search`,
+      role: 'complementary--search',
+      component: ({ data }) => <div className='p-2'>Search</div>,
     }),
   ]);
