@@ -12,14 +12,25 @@ import { THREAD_PLUGIN } from './meta';
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
 
+  export class CreateChannel extends S.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
+    input: S.Struct({
+      // TODO(wittjosiah): Should be SpaceId.
+      spaceId: S.String,
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: ChannelType,
+    }),
+  }) {}
+
   export class Create extends S.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
     input: S.Struct({
       name: S.optional(S.String),
-      cursor: S.optional(S.String),
-      subject: S.optional(EchoObjectSchema),
+      cursor: S.String,
+      subject: EchoObjectSchema,
     }),
     output: S.Struct({
-      object: S.Union(ChannelType, ThreadType),
+      object: ThreadType,
     }),
   }) {}
 

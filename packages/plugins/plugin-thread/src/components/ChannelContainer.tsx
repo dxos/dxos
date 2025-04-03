@@ -7,7 +7,7 @@ import React, { useCallback, type ComponentProps } from 'react';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework';
 import { type NodeArg } from '@dxos/plugin-graph';
 import { type ChannelType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { createEditorActionGroup } from '@dxos/react-ui-editor';
 import {
   createMenuAction,
@@ -57,11 +57,7 @@ const ChannelContainer = ({
     (action: MenuAction) => (state.activities[channel.id] = currentActivity === action.id ? undefined : action.id),
     [currentActivity],
   );
-
-  const thread = channel.threads[0].target;
-  if (!thread) {
-    return null;
-  }
+  const space = getSpace(channel);
 
   return (
     <StackItem.Content toolbar>
@@ -71,7 +67,7 @@ const ChannelContainer = ({
       {currentActivity ? (
         <Surface role={`channel-activity--${currentActivity}`} data={{ subject: channel }} />
       ) : (
-        <ChatContainer thread={thread} context={context} />
+        <ChatContainer space={space} dxn={channel.queue.dxn} context={context} />
       )}
     </StackItem.Content>
   );
