@@ -5,7 +5,6 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
-import { type Space } from '@dxos/echo-pipeline';
 import { Reference } from '@dxos/echo-protocol';
 import {
   type BaseSchema,
@@ -60,20 +59,19 @@ export class Hypergraph {
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
+  get schemaRegistry(): RuntimeSchemaRegistry {
+    return this._schemaRegistry;
+  }
+
   // TODO(burdon): Use DXN.
-  // TODO(burdon): Factor out with better type checking.
   // TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
-  async getSchemaByTypename(typename: string, space: Space): Promise<BaseSchema | undefined> {
+  async getSchemaByTypename(typename: string, db: EchoDatabase): Promise<BaseSchema | undefined> {
     const schema = this.schemaRegistry.getSchema(typename);
     if (schema) {
       return new ImmutableSchema(schema);
     }
 
-    return await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-  }
-
-  get schemaRegistry(): RuntimeSchemaRegistry {
-    return this._schemaRegistry;
+    return await db.schemaRegistry.query({ typename }).firstOrUndefined();
   }
 
   /**

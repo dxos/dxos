@@ -14,7 +14,7 @@ import {
   TypeEnum,
 } from '@dxos/echo-schema';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { create, getSchemaByTypename, makeRef, type Space } from '@dxos/react-client/echo';
+import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
 
 import { type TableType } from '../types';
@@ -37,7 +37,7 @@ export const initializeTable = async ({
 }: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
   if (typename) {
     space.db.schemaRegistry;
-    const schema = await getSchemaByTypename(client, space, typename);
+    const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
     if (!schema) {
       throw new Error(`Schema not found: ${typename}`);
     }
