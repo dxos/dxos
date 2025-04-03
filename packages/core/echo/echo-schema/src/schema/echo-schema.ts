@@ -32,10 +32,10 @@ import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../o
 export interface ImmutableSchema extends S.Schema.AnyNoContext {
   get typename(): string;
   get version(): string;
-  get jsonSchema(): JsonSchemaType;
   get readonly(): boolean;
-  get mutable(): EchoSchema;
   get snapshot(): S.Schema.AnyNoContext;
+  get jsonSchema(): JsonSchemaType;
+  get mutable(): EchoSchema;
 }
 
 /**
@@ -50,23 +50,11 @@ export class ReadonlySchema implements ImmutableSchema {
   }
 
   //
-  // Effect Schema
+  // Effect Schema (push to abstract base class).
   //
 
   public get [S.TypeId]() {
     return schemaVariance;
-  }
-
-  public get ast(): AST.AST {
-    return this._schema.ast;
-  }
-
-  public get annotations() {
-    return this._schema.annotations;
-  }
-
-  public get pipe() {
-    return this._schema.pipe;
   }
 
   public get Type() {
@@ -81,6 +69,18 @@ export class ReadonlySchema implements ImmutableSchema {
     return this._schema.Context;
   }
 
+  public get ast(): AST.AST {
+    return this._schema.ast;
+  }
+
+  public get annotations() {
+    return this._schema.annotations;
+  }
+
+  public get pipe() {
+    return this._schema.pipe;
+  }
+
   //
   // ImmutableSchema
   //
@@ -93,20 +93,20 @@ export class ReadonlySchema implements ImmutableSchema {
     return this._objectAnnotation.version;
   }
 
-  get jsonSchema(): JsonSchemaType {
-    return toJsonSchema(this._schema);
-  }
-
   get readonly(): boolean {
     return true;
   }
 
-  get mutable(): EchoSchema {
-    throw new Error('Schema is readonly.');
-  }
-
   get snapshot(): S.Schema.AnyNoContext {
     return this._schema;
+  }
+
+  get jsonSchema(): JsonSchemaType {
+    return toJsonSchema(this._schema);
+  }
+
+  get mutable(): EchoSchema {
+    throw new Error('Schema is readonly.');
   }
 }
 
@@ -164,7 +164,8 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-// TODO(burdon): Do not implement S.Schema? Why extend TypedObject?
+// TODO(burdon): Rename MutableSchema.
+// TODO(burdon): Why implement TypedObject?
 export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSchema, TypedObject {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
@@ -174,15 +175,8 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
     super();
   }
 
-  /**
-   * Id of the ECHO object containing the schema.
-   */
-  public get id(): ObjectId {
-    return this._storedSchema.id;
-  }
-
   //
-  // Effect Schema
+  // Effect Schema (push to abstract base class).
   //
 
   public get [S.TypeId]() {
@@ -198,11 +192,23 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
   }
 
   public get Context() {
-    return this._getSchema().Context;
+    const schema = this._getSchema();
+    return schema.Context;
   }
 
-  public get [SchemaMetaSymbol](): SchemaMeta {
-    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
+  public get ast() {
+    const schema = this._getSchema();
+    return schema.ast;
+  }
+
+  public get annotations() {
+    const schema = this._getSchema();
+    return schema.annotations.bind(schema);
+  }
+
+  public get pipe(): S.Schema.AnyNoContext['pipe'] {
+    const schema = this._getSchema();
+    return schema.pipe.bind(schema);
   }
 
   //
@@ -235,11 +241,10 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
   }
 
   /**
-   * Returns a mutable schema.
+   * Returns an immutable schema snapshot of the current state of the schema.
    */
-  public get mutable(): EchoSchema {
-    invariant(!this.readonly, 'Schema is not mutable');
-    return this;
+  public get snapshot(): S.Schema.AnyNoContext {
+    return this._getSchema();
   }
 
   /**
@@ -250,10 +255,26 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
   }
 
   /**
-   * Returns an IMMUTABLE schema snapshot of the current state of the schema.
+   * Returns a mutable schema.
    */
-  public get snapshot(): S.Schema.AnyNoContext {
-    return this._getSchema();
+  public get mutable(): EchoSchema {
+    invariant(!this.readonly, 'Schema is not mutable');
+    return this;
+  }
+
+  //
+  // Mutable Schema
+  //
+
+  /**
+   * Id of the ECHO object containing the schema.
+   */
+  public get id(): ObjectId {
+    return this._storedSchema.id;
+  }
+
+  public get [SchemaMetaSymbol](): SchemaMeta {
+    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
   }
 
   /**
@@ -261,23 +282,6 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
    */
   public get storedSchema(): StoredSchema {
     return this._storedSchema;
-  }
-
-  /**
-   * Effect schema AST.
-   */
-  public get ast() {
-    return this._getSchema().ast;
-  }
-
-  public get annotations() {
-    const schema = this._getSchema();
-    return schema.annotations.bind(schema);
-  }
-
-  public get pipe(): S.Schema.AnyNoContext['pipe'] {
-    const schema = this._getSchema();
-    return schema.pipe.bind(schema);
   }
 
   public getProperties(): AST.PropertySignature[] {
