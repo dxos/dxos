@@ -8,21 +8,6 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { ImmutableSchema, type BaseSchema } from '@dxos/echo-schema';
 
-// TODO(burdon): Factor out with better type checking.
-// TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
-export const getSchemaByTypename = async (
-  client: Client,
-  space: Space,
-  typename: string,
-): Promise<BaseSchema | undefined> => {
-  const schema = client.graph.schemaRegistry.getSchema(typename);
-  if (schema) {
-    return new ImmutableSchema(schema);
-  }
-
-  return await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-};
-
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */

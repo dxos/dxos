@@ -36,6 +36,7 @@ export const initializeTable = async ({
   initialRow = true,
 }: InitialiseTableProps): Promise<S.Schema.AnyNoContext> => {
   if (typename) {
+    space.db.schemaRegistry;
     const schema = await getSchemaByTypename(client, space, typename);
     if (!schema) {
       throw new Error(`Schema not found: ${typename}`);

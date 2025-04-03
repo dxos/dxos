@@ -27,7 +27,7 @@ export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
   /**
    * Schema global typename.
    *
-   * @example example.com/type/MyType
+   * @example example.com/type/Test
    */
   readonly typename: string;
 
