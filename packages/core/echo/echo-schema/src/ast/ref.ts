@@ -53,6 +53,8 @@ interface RefFn {
 
   isRef: (obj: any) => obj is Ref<any>;
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
+
+  schemaIdentifier: string;
 }
 
 /**
@@ -116,6 +118,8 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
+Ref.schemaIdentifier = 'Ref';
+
 /**
  * `reference` field on the schema object.
  */
@@ -171,6 +175,7 @@ export const createEchoReferenceSchema = (
           typename: typename ?? '',
           version,
         },
+        identifier: Ref.schemaIdentifier,
       },
     ),
   );
