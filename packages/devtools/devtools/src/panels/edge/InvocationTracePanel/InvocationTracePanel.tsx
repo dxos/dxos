@@ -56,7 +56,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const invocationProperties: TablePropertyDefinition[] = useMemo(
     () => [
       { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const },
-      { name: 'outcome', title: 'Outcome', format: FormatEnum.String, size: 120 },
+      { name: 'outcome', title: 'Outcome', format: FormatEnum.String, size: 140 },
       { name: 'queue', title: 'Queue', format: FormatEnum.String },
     ],
     [],
@@ -65,7 +65,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const invocationData = useMemo(() => {
     return filterBySelected(invocationSpans, selectedTarget).map((item) => ({
       id: `${item.timestampMs}-${Math.random()}`,
-      time: new Date(item.timestampMs).toISOString(),
+      time: new Date(item.timestampMs).toLocaleString(),
       outcome: item.outcome,
       queue: decodeReference(item.invocationTraceQueue).dxn?.toString() ?? 'unknown',
       _original: item,
@@ -85,7 +85,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
       { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const },
       { name: 'outcome', title: 'Outcome', format: FormatEnum.String, size: 140 },
       { name: 'unhandled', title: 'Unhandled', format: FormatEnum.Number, size: 140 },
-      { name: 'logs', title: 'Logs', format: FormatEnum.Number, size: 140 },
+      { name: 'logs', title: 'Logs', format: FormatEnum.Number, size: 115 },
     ],
     [],
   );
@@ -93,7 +93,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
   const traceEventData = useMemo(() => {
     return (eventQueue?.items ?? []).map((item) => ({
       id: `${item.ingestionTimestampMs}-${Math.random()}`,
-      time: new Date(item.ingestionTimestampMs).toISOString(),
+      time: new Date(item.ingestionTimestampMs).toLocaleString(),
       outcome: item.outcome,
       unhandled: item.exceptions.length,
       logs: item.logs.length,
@@ -122,7 +122,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
+      <div className={mx('flex grow flex-col divide-y', 'overflow-hidden', styles.border)}>
         <div className={mx('flex overflow-auto', 'h-1/4')}>
           <DynamicTable
             properties={invocationProperties}
