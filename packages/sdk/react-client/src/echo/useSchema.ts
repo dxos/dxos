@@ -35,8 +35,8 @@ export const useSchema = (
     }
 
     const query = space.db.schemaRegistry.query({ typename });
-    const initialResult = query.runSync()[0];
-    let currentSchema = initialResult as BaseSchema;
+    const initialResult: BaseSchema = query.runSync()[0];
+    let currentSchema = initialResult;
 
     return {
       subscribe: (onStoreChange: () => void) => {
