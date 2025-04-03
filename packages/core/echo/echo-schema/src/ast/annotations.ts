@@ -51,9 +51,7 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => {
-  return getObjectAnnotation(schema)?.kind;
-};
+export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => getObjectAnnotation(schema)?.kind;
 
 /**
  * @returns Schema typename (without dxn: prefix or version number).
