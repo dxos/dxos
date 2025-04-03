@@ -22,7 +22,8 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
 
   const views = useQuery(space, Filter.schema(ViewType));
   const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
-  const updateViewTypename = useCallback(
+
+  const handleUpdateTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
 
@@ -30,7 +31,8 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       for (const view of matchingViews) {
         view.query.typename = newTypename;
       }
-      schema.updateTypename(newTypename);
+
+      schema.mutable.updateTypename(newTypename);
     },
     [views, schema],
   );
@@ -51,8 +53,8 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       registry={space.db.schemaRegistry}
       schema={schema}
       view={table.view.target!}
-      onTypenameChanged={updateViewTypename}
-      onDelete={handleDelete}
+      onTypenameChanged={schema.readonly ? undefined : handleUpdateTypename}
+      onDelete={schema.readonly ? undefined : handleDelete}
     />
   );
 };

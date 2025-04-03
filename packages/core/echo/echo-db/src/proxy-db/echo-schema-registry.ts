@@ -278,7 +278,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
   private _addSchema(schema: S.Schema.AnyNoContext): EchoSchema {
     if (schema instanceof EchoSchema) {
-      schema = schema.getSchemaSnapshot().annotations({
+      schema = schema.snapshot.annotations({
         [EchoIdentifierAnnotationId]: undefined,
       });
     }

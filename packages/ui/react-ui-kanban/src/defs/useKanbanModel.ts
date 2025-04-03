@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type EchoSchema } from '@dxos/echo-schema';
+import { type ImmutableSchema } from '@dxos/echo-schema';
 import { type ReactiveObject } from '@dxos/react-client/echo';
 import { type ViewProjection } from '@dxos/schema';
 
@@ -13,27 +13,27 @@ import { type BaseKanbanItem, KanbanModel } from './kanban-model';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
   kanban?: KanbanType;
-  cardSchema?: EchoSchema;
+  schema?: ImmutableSchema;
   projection?: ViewProjection;
   items?: ReactiveObject<T>[];
 };
 
 export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
   kanban,
-  cardSchema,
+  schema,
   projection,
   items,
   ...props
 }: UseKanbanModelProps<T>): KanbanModel<T> | undefined => {
   const [model, setModel] = useState<KanbanModel<T>>();
   useEffect(() => {
-    if (!kanban || !cardSchema || !projection) {
+    if (!kanban || !schema || !projection) {
       return;
     }
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ kanban, cardSchema, projection, ...props });
+      model = new KanbanModel<T>({ kanban, schema, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -42,7 +42,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [kanban, cardSchema, projection]);
+  }, [kanban, schema, projection]);
 
   // Update data.
   useEffect(() => {

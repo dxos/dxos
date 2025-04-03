@@ -20,7 +20,9 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
   const space = getSpace(view);
   const schema = useSchema(space, view.query?.typename);
-  const effectSchema = useMemo(() => schema?.getSchemaSnapshot(), [JSON.stringify(schema?.jsonSchema)]);
+
+  // TODO(burdon): Why is this needed?
+  const effectSchema = useMemo(() => schema?.snapshot, [JSON.stringify(schema?.jsonSchema)]);
 
   // NOTE(ZaymonFC): Since selection is currently a set, the order these objects show
   //   up in will not necessarily match the order in the selected context.

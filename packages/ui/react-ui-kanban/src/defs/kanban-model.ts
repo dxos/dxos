@@ -1,10 +1,11 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { batch, effect, signal, untracked } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
+import { type JsonProp, type ImmutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type ViewProjection } from '@dxos/schema';
@@ -22,26 +23,25 @@ export const UNCATEGORIZED_ATTRIBUTES = {
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
+export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
+
 export type KanbanModelProps = {
   kanban: KanbanType;
-  cardSchema: EchoSchema;
+  schema: ImmutableSchema;
   projection: ViewProjection;
 };
 
-export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
-
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
-  // Properties
   private readonly _kanban: KanbanType;
-  private readonly _cardSchema: EchoSchema;
+  private readonly _schema: ImmutableSchema;
   private readonly _projection: ViewProjection;
   private _items = signal<T[]>([]);
   private _cards = signal<ArrangedCards<T>>([]);
 
-  constructor({ kanban, cardSchema, projection }: KanbanModelProps) {
+  constructor({ kanban, schema, projection }: KanbanModelProps) {
     super();
     this._kanban = kanban;
-    this._cardSchema = cardSchema;
+    this._schema = schema;
     this._projection = projection;
     this._computeArrangement();
   }
@@ -78,8 +78,8 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     });
   }
 
-  get cardSchema() {
-    return this._cardSchema;
+  get schema() {
+    return this._schema;
   }
 
   /**

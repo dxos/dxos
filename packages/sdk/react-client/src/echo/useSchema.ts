@@ -5,13 +5,13 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Space } from '@dxos/client/echo';
-import { type EchoSchema } from '@dxos/echo-schema';
+import { type ImmutableSchema } from '@dxos/echo-schema';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */
 // TODO(burdon): Normalize for static/dynamic schema.
-export const useSchema = (space: Space | undefined, typename: string | undefined): EchoSchema | undefined => {
+export const useSchema = (space: Space | undefined, typename: string | undefined): ImmutableSchema | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !space) {
       return {

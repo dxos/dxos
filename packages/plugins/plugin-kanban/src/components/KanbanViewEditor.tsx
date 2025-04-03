@@ -26,20 +26,23 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const schema = useSchema(space, currentTypename);
   const views = useQuery(space, Filter.schema(ViewType));
 
-  const updateViewTypename = useCallback(
+  const handleUpdateTypename = useCallback(
     (newTypename: string) => {
       invariant(schema);
       const matchingViews = views.filter((view) => view.query.typename === currentTypename);
       for (const view of matchingViews) {
         view.query.typename = newTypename;
       }
-      schema.updateTypename(newTypename);
+
+      schema.mutable.updateTypename(newTypename);
     },
     [views, schema],
   );
 
   const handleDelete = useCallback(
-    (fieldId: string) => dispatch?.(createIntent(KanbanAction.DeleteCardField, { kanban, fieldId })),
+    (fieldId: string) => {
+      void dispatch?.(createIntent(KanbanAction.DeleteCardField, { kanban, fieldId }));
+    },
     [dispatch, kanban],
   );
 
@@ -78,8 +81,8 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
         registry={space.db.schemaRegistry}
         schema={schema}
         view={kanban.cardView.target}
-        onTypenameChanged={updateViewTypename}
-        onDelete={handleDelete}
+        onTypenameChanged={schema.readonly ? undefined : handleUpdateTypename}
+        onDelete={schema.readonly ? undefined : handleDelete}
       />
     </>
   );

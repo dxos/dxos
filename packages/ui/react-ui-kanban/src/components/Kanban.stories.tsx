@@ -54,7 +54,7 @@ const StorybookKanban = () => {
 
   const model = useKanbanModel({
     kanban,
-    cardSchema,
+    schema: cardSchema,
     projection,
     items: filteredObjects,
   });
@@ -78,10 +78,10 @@ const StorybookKanban = () => {
 
   const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
 
-  const onTypenameChanged = useCallback(
+  const handleTypenameChanged = useCallback(
     (typename: string) => {
       if (kanban?.cardView?.target) {
-        cardSchema?.updateTypename(typename);
+        cardSchema?.mutable.updateTypename(typename);
         kanban.cardView.target.query.typename = typename;
       }
     },
@@ -101,7 +101,7 @@ const StorybookKanban = () => {
             registry={space?.db.schemaRegistry}
             schema={cardSchema}
             view={kanban.cardView.target!}
-            onTypenameChanged={onTypenameChanged}
+            onTypenameChanged={handleTypenameChanged}
             onDelete={(fieldId: string) => {
               console.log('[ViewEditor]', 'onDelete', fieldId);
             }}

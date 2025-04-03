@@ -20,6 +20,19 @@ import { toEffectSchema, toJsonSchema } from '../json';
 import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
 
 /**
+ * Immutable schema.
+ */
+export interface ImmutableSchema extends S.Schema.AnyNoContext {
+  get typename(): string;
+  get version(): string;
+  get ast(): AST.AST;
+  get jsonSchema(): JsonSchemaType;
+  get readonly(): boolean;
+  get mutable(): EchoSchema;
+  get snapshot(): S.Schema.AnyNoContext;
+}
+
+/**
  * Defines an effect-schema for the `EchoSchema` type.
  *
  * This is here so that `EchoSchema` class can be used as a part of another schema definition (e.g., `ref(EchoSchema)`).
@@ -73,8 +86,8 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-// TODO(burdon): Do not implement S.Schema?
-export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyNoContext, TypedObject {
+// TODO(burdon): Do not implement S.Schema? Why extend TypedObject?
+export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSchema, TypedObject {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
@@ -88,53 +101,6 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
    */
   public get id(): ObjectId {
     return this._storedSchema.id;
-  }
-
-  /**
-   * Schema typename.
-   *
-   * @example example.com/type/MyType
-   */
-  public get typename(): string {
-    return this._storedSchema.typename;
-  }
-
-  /**
-   * Schema version in semver format.
-   *
-   * @example 0.1.0
-   */
-  public get version(): string {
-    return this._storedSchema.version;
-  }
-
-  /**
-   * @returns `true` if the schema cannot be mutated.
-   */
-  public get readonly(): boolean {
-    // TODO(dmaretskyi): Implement readonly schema.
-    return false;
-  }
-
-  /**
-   * @reactive
-   */
-  public get jsonSchema(): JsonSchemaType {
-    return this._storedSchema.jsonSchema;
-  }
-
-  /**
-   * Reference to the underlying stored schema object.
-   */
-  public get storedSchema(): StoredSchema {
-    return this._storedSchema;
-  }
-
-  /**
-   * Returns an IMMUTABLE schema snapshot of the current state of the schema.
-   */
-  public getSchemaSnapshot(): S.Schema.AnyNoContext {
-    return this._getSchema();
   }
 
   //
@@ -159,6 +125,64 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
 
   public get [SchemaMetaSymbol](): SchemaMeta {
     return { id: this.id, typename: this.typename, version: this._storedSchema.version };
+  }
+
+  //
+  // ImmutableSchema
+  //
+
+  /**
+   * Schema typename.
+   *
+   * @example example.com/type/MyType
+   */
+  public get typename(): string {
+    return this._storedSchema.typename;
+  }
+
+  /**
+   * Schema version in semver format.
+   *
+   * @example 0.1.0
+   */
+  public get version(): string {
+    return this._storedSchema.version;
+  }
+
+  /**
+   * @returns `true` if the schema cannot be mutated.
+   */
+  public get readonly(): boolean {
+    return false;
+  }
+
+  /**
+   * Returns a mutable schema.
+   */
+  public get mutable(): EchoSchema {
+    invariant(!this.readonly, 'Schema is not mutable');
+    return this;
+  }
+
+  /**
+   * @reactive
+   */
+  public get jsonSchema(): JsonSchemaType {
+    return this._storedSchema.jsonSchema;
+  }
+
+  /**
+   * Returns an IMMUTABLE schema snapshot of the current state of the schema.
+   */
+  public get snapshot(): S.Schema.AnyNoContext {
+    return this._getSchema();
+  }
+
+  /**
+   * Reference to the underlying stored schema object.
+   */
+  public get storedSchema(): StoredSchema {
+    return this._storedSchema;
   }
 
   /**

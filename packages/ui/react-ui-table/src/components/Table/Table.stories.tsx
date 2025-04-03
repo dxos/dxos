@@ -137,11 +137,12 @@ const DefaultStory = () => {
   const onTypenameChanged = useCallback(
     (typename: string) => {
       if (table?.view?.target) {
-        schema?.updateTypename(typename);
+        invariant(schema);
+        schema.mutable.updateTypename(typename);
         table.view.target.query.typename = typename;
       }
     },
-    [table?.view?.target, schema],
+    [schema, table?.view?.target],
   );
 
   if (!schema || !table) {
