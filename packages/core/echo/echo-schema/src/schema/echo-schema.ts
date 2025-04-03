@@ -27,9 +27,9 @@ import { toEffectSchema, toJsonSchema } from '../json';
 import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
 
 /**
- * Base type.
+ * Base schema type.
  */
-export interface ImmutableSchema extends S.Schema.AnyNoContext, TypedObject {
+export interface BaseSchema extends S.Schema.AnyNoContext, TypedObject {
   get readonly(): boolean;
   get snapshot(): S.Schema.AnyNoContext;
   get jsonSchema(): JsonSchemaType;
@@ -37,10 +37,10 @@ export interface ImmutableSchema extends S.Schema.AnyNoContext, TypedObject {
 }
 
 /**
- * Immutable type.
+ * Immutable schema type.
  */
 // TODO(burdon): Common abstract base class?
-export class ReadonlySchema implements ImmutableSchema {
+export class ImmutableSchema implements BaseSchema {
   private readonly _objectAnnotation: ObjectAnnotation;
   constructor(private readonly _schema: S.Schema.AnyNoContext) {
     this._objectAnnotation = getObjectAnnotation(this._schema)!;
@@ -92,7 +92,7 @@ export class ReadonlySchema implements ImmutableSchema {
   }
 
   //
-  // ImmutableSchema
+  // BaseSchema
   //
 
   get readonly(): boolean {
@@ -167,7 +167,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
 // TODO(burdon): Rename MutableSchema.
-export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSchema {
+export class EchoSchema extends EchoSchemaConstructor() implements BaseSchema {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 
@@ -213,7 +213,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSche
   }
 
   //
-  // ImmutableSchema
+  // BaseSchema
   //
 
   /**

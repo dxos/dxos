@@ -6,7 +6,7 @@ import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { ReadonlySchema, type ImmutableSchema } from '@dxos/echo-schema';
+import { ImmutableSchema, type BaseSchema } from '@dxos/echo-schema';
 
 // TODO(burdon): Factor out with better type checking.
 // TODO(burdon): Ensure static and dynamic schema do not have overlapping type names.
@@ -14,10 +14,10 @@ export const getSchemaByTypename = async (
   client: Client,
   space: Space,
   typename: string,
-): Promise<ImmutableSchema | undefined> => {
+): Promise<BaseSchema | undefined> => {
   const schema = client.graph.schemaRegistry.getSchema(typename);
   if (schema) {
-    return new ReadonlySchema(schema);
+    return new ImmutableSchema(schema);
   }
 
   return await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
@@ -30,7 +30,7 @@ export const useSchema = (
   client: Client,
   space: Space | undefined,
   typename: string | undefined,
-): ImmutableSchema | undefined => {
+): BaseSchema | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !space) {
       return {
@@ -43,13 +43,13 @@ export const useSchema = (
     if (staticSchema) {
       return {
         subscribe: () => () => {},
-        getSchema: () => new ReadonlySchema(staticSchema),
+        getSchema: () => new ImmutableSchema(staticSchema),
       };
     }
 
     const query = space.db.schemaRegistry.query({ typename });
     const initialResult = query.runSync()[0];
-    let currentSchema = initialResult as ImmutableSchema;
+    let currentSchema = initialResult as BaseSchema;
 
     return {
       subscribe: (onStoreChange: () => void) => {

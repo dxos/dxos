@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { AST, Format, type ImmutableSchema, S, type JsonProp } from '@dxos/echo-schema';
+import { AST, Format, type BaseSchema, S, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -30,7 +30,7 @@ const ViewMetaSchema = S.Struct({
 type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
-  schema: ImmutableSchema;
+  schema: BaseSchema;
   view: ViewType;
   registry?: SchemaRegistry;
   readonly?: boolean;
