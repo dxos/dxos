@@ -130,7 +130,8 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
     static readonly [S.TypeId] = schemaVariance;
 
     static get ast() {
-      return this._schema.ast;
+      const schema = this._schema;
+      return schema.ast;
     }
 
     static get annotations() {
@@ -216,27 +217,14 @@ export class EchoSchema extends EchoSchemaConstructor() implements BaseSchema {
   // BaseSchema
   //
 
-  /**
-   * Schema typename.
-   *
-   * @example example.com/type/MyType
-   */
   public get typename(): string {
     return this._storedSchema.typename;
   }
 
-  /**
-   * Schema version in semver format.
-   *
-   * @example 0.1.0
-   */
   public get version(): string {
     return this._storedSchema.version;
   }
 
-  /**
-   * @returns `true` if the schema cannot be mutated.
-   */
   public get readonly(): boolean {
     return false;
   }
@@ -365,6 +353,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements BaseSchema {
   }
 }
 
+// TODO(burdon): Move to effect.
 const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignature => {
   if (!AST.isUnion(property.type)) {
     return property;
