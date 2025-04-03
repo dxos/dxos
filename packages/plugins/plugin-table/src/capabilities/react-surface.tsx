@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
 import { getTypenameOrThrow, isInstanceOf, type Ref, type S } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isEchoObject, isSpace, type ReactiveEchoObject, type Space } from '@dxos/react-client/echo';
@@ -80,8 +81,15 @@ export default () =>
           return null;
         }
 
-        // TODO(ZaymonFC): Make this reactive.
-        const fixed = client.graph.schemaRegistry.schemas;
+        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
+        const whitelistedTypenames = useMemo(
+          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => type.typename))),
+          [schemaWhitelists],
+        );
+
+        const fixed = client.graph.schemaRegistry.schemas.filter((schema) =>
+          whitelistedTypenames.has(getTypenameOrThrow(schema)),
+        );
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
