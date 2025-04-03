@@ -29,9 +29,7 @@ import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../o
 /**
  * Base type.
  */
-export interface ImmutableSchema extends S.Schema.AnyNoContext {
-  get typename(): string;
-  get version(): string;
+export interface ImmutableSchema extends S.Schema.AnyNoContext, TypedObject {
   get readonly(): boolean;
   get snapshot(): S.Schema.AnyNoContext;
   get jsonSchema(): JsonSchemaType;
@@ -82,7 +80,7 @@ export class ReadonlySchema implements ImmutableSchema {
   }
 
   //
-  // ImmutableSchema
+  // TypedObject
   //
 
   get typename(): string {
@@ -92,6 +90,10 @@ export class ReadonlySchema implements ImmutableSchema {
   get version(): string {
     return this._objectAnnotation.version;
   }
+
+  //
+  // ImmutableSchema
+  //
 
   get readonly(): boolean {
     return true;
@@ -165,8 +167,7 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
 // TODO(burdon): Rename MutableSchema.
-// TODO(burdon): Why implement TypedObject?
-export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSchema, TypedObject {
+export class EchoSchema extends EchoSchemaConstructor() implements ImmutableSchema {
   private _schema: S.Schema.AnyNoContext | undefined;
   private _isDirty = true;
 

@@ -24,7 +24,9 @@ import {
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
 export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
-  /** Fully qualified type name. */
+  /**
+   * Fully qualified type name.
+   */
   readonly typename: string;
 
   /**
