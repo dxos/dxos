@@ -55,7 +55,7 @@ export const InvocationTracePanel = (props: { space?: Space }) => {
 
   const invocationProperties: TablePropertyDefinition[] = useMemo(
     () => [
-      { name: 'time', title: 'Time', format: FormatEnum.String },
+      { name: 'time', title: 'Time', format: FormatEnum.String, sort: 'desc' as const },
       { name: 'outcome', title: 'Outcome', format: FormatEnum.String, size: 120 },
       { name: 'queue', title: 'Queue', format: FormatEnum.String },
     ],
