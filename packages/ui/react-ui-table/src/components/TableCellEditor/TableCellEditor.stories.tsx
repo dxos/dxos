@@ -48,7 +48,10 @@ const DefaultStory = ({ editing }: StoryProps) => {
     }
   }, [schema, table?.view]);
 
-  const features = useMemo(() => ({ selection: true, editable: true }), []);
+  const features = useMemo(
+    () => ({ selection: true, dataEditable: true, schemaEditable: !(schema instanceof ImmutableSchema) }),
+    [],
+  );
 
   const model = useTableModel({ table, projection, features });
 
