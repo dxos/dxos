@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -67,7 +67,7 @@ const DefaultStory = () => {
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
       for (const object of objects) {
-        space.db.remove(object);
+        space?.db.remove(object);
       }
     },
     [space],
