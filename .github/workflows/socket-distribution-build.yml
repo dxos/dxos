@@ -91,11 +91,12 @@ jobs:
           appkey: ${{ secrets.SOCKET_RUNTIME_BUILD_APPKEY }}
           target: ./packages/apps/composer-app
           # platforms: macos linux ios
-          platforms: macos
+          platforms: ios macos
           apple-team-id: ${{ secrets.APPLE_TEAM_ID }}
           apple-codesign-certificate-p12: ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_CERTIFICATE_P12 }}
           apple-codesign-certificate-password: ${{ secrets.APPLE_CODESIGN_CERTIFICATE_PASSWORD }}
-          apple-ios-provisioning-profile: ${{ secrets.APPLE_IOS_PROVISIONING_PROFILE }}
+          apple-ios-provisioning-profile: ${{ secrets.APPLE_IOS_DISTRIBUTION_PROVISIONING_PROFILE }}
+          apple-mac-provisioning-profile: ${{ secrets.APPLE_MAC_DISTRIBUTION_PROVISIONING_PROFILE }}
           config: |
             [ios.codesign]
             identity = ${{ secrets.APPLE_IOS_CODESIGN_IDENTITY }}
