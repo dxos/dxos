@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.8.1](https://github.com/dxos/dxos/compare/v0.8.0...v0.8.1) (2025-04-04)
+
+
+### Features
+
+* Add ability to query swarm; Bump effect versions ([#8830](https://github.com/dxos/dxos/issues/8830)) ([303c73a](https://github.com/dxos/dxos/commit/303c73add621d5d9cb5c09734ce99b14a69bc41a))
+* add feedback form to error boundary ([#8884](https://github.com/dxos/dxos/issues/8884)) ([11ba449](https://github.com/dxos/dxos/commit/11ba44913970a74c43de2b93162188c5fca71f0a))
+* add selector for edge environment ([#8882](https://github.com/dxos/dxos/issues/8882)) ([f0516c9](https://github.com/dxos/dxos/commit/f0516c95634bc2b5b0ce2469f303ad8e7b1d4edc))
+* Agent session ([#8850](https://github.com/dxos/dxos/issues/8850)) ([ba3bb41](https://github.com/dxos/dxos/commit/ba3bb410bc35414352324582aab6720d7b01d2ce))
+* Allow passing nested objects into doc accessor ([#8872](https://github.com/dxos/dxos/issues/8872)) ([48670a2](https://github.com/dxos/dxos/commit/48670a24cce74dedd3bfd724368b93a1e828c77f))
+* Assistant companion planks ([#8862](https://github.com/dxos/dxos/issues/8862)) ([a16a1fc](https://github.com/dxos/dxos/commit/a16a1fcde70c6f13ce8a48e5cb8dcf3e65c4659e))
+* Binary space import/export ([#8838](https://github.com/dxos/dxos/issues/8838)) ([cc029fb](https://github.com/dxos/dxos/commit/cc029fb57115e32201461c2c7119517d0e954a25))
+* Browser extension ([#8818](https://github.com/dxos/dxos/issues/8818)) ([ff709d5](https://github.com/dxos/dxos/commit/ff709d5da4dd176a12e0c15fd43ca5b3a0f00ae3))
+* change schema to detect active invocations ([#8888](https://github.com/dxos/dxos/issues/8888)) ([f363f1f](https://github.com/dxos/dxos/commit/f363f1f68f73090fdd9657bbdbf78a1180b6715c))
+* Context includes in chat ([#8844](https://github.com/dxos/dxos/issues/8844)) ([4374fa4](https://github.com/dxos/dxos/commit/4374fa44364c0b3f2d9fd14ca0e87701a90b33cc))
+* edge oauth integration ([#8880](https://github.com/dxos/dxos/issues/8880)) ([81238a8](https://github.com/dxos/dxos/commit/81238a821b9a3e4666c01c34a5c51527bad2fc50))
+* expose some devtools panels in spaces ([#8833](https://github.com/dxos/dxos/issues/8833)) ([08c4fbf](https://github.com/dxos/dxos/commit/08c4fbf3b42a68a1e33dd7e37c431b62e5116d13))
+* function invocation logs ([#8819](https://github.com/dxos/dxos/issues/8819)) ([1b7687a](https://github.com/dxos/dxos/commit/1b7687a447bb4c1795f69b1ff530063fb6e3b427))
+* Normalize AI service client types and name ([#8816](https://github.com/dxos/dxos/issues/8816)) ([ae460ac](https://github.com/dxos/dxos/commit/ae460ac081e68cce5ef1f09c395ba5a248df5762))
+* outliner plugin redux ([#8869](https://github.com/dxos/dxos/issues/8869)) ([1b3399f](https://github.com/dxos/dxos/commit/1b3399f640fd454a2aef6c193d207ad74e146341))
+* Outliner tasks ([#8879](https://github.com/dxos/dxos/issues/8879)) ([54dba18](https://github.com/dxos/dxos/commit/54dba18969e99e43fbf68d7d54c8ef29e91da165))
+* persist folded sections locally ([#8837](https://github.com/dxos/dxos/issues/8837)) ([391c573](https://github.com/dxos/dxos/commit/391c5736b24218bab55ba5842c1cee5ed19b99dc))
+* **plugin-deck:** Companion planks ([#8843](https://github.com/dxos/dxos/issues/8843)) ([7695669](https://github.com/dxos/dxos/commit/7695669c3d18cc96f5eaf2bed14e51ce9624a51f))
+* prompt template editor ([#8851](https://github.com/dxos/dxos/issues/8851)) ([f925b91](https://github.com/dxos/dxos/commit/f925b916a59865ca6170337469d8ce42f1039bc5))
+* Queues api update ([#8848](https://github.com/dxos/dxos/issues/8848)) ([afee69a](https://github.com/dxos/dxos/commit/afee69aced7acf8dcf92201e093071a36f9d9feb))
+* select static schema for table ([#8889](https://github.com/dxos/dxos/issues/8889)) ([5166fc0](https://github.com/dxos/dxos/commit/5166fc0362eba0f0a3c14ae37d3a9b2f445bf6ec))
+* Support read-only tables ([#8892](https://github.com/dxos/dxos/issues/8892)) ([30cbcbd](https://github.com/dxos/dxos/commit/30cbcbda3de63b91cc4cd93a2cf23b0983564952))
+* Transcript improvements ([#8867](https://github.com/dxos/dxos/issues/8867)) ([bddfa1b](https://github.com/dxos/dxos/commit/bddfa1b1c988b314ac35f2a2ff61c832cd112479))
+* Transcript summary ([#8836](https://github.com/dxos/dxos/issues/8836)) ([bf43955](https://github.com/dxos/dxos/commit/bf439555efa9ef3f9e764b75945b173cbe85fe1d))
+* variable height transcript grid ([#8842](https://github.com/dxos/dxos/issues/8842)) ([dd80192](https://github.com/dxos/dxos/commit/dd80192f3abe169546817ef78814438a1fca1946))
+* **views:** Hidden fields ([#8795](https://github.com/dxos/dxos/issues/8795)) ([188147e](https://github.com/dxos/dxos/commit/188147e06e68fc53b2b25aa31b9ec17cab89bd07))
+
+
+### Bug Fixes
+
+* assistant settings ([#8886](https://github.com/dxos/dxos/issues/8886)) ([958e57a](https://github.com/dxos/dxos/commit/958e57aaa1cc6eefe834460d7b56b83c2b8e535d))
+* Assistant UI Issues ([#8866](https://github.com/dxos/dxos/issues/8866)) ([9d7ce2a](https://github.com/dxos/dxos/commit/9d7ce2aa19675c9002827613bd7d2521f2ce4a6d))
+* compute graph reactivity ([#8829](https://github.com/dxos/dxos/issues/8829)) ([1b02958](https://github.com/dxos/dxos/commit/1b02958c0c95feb11bb4c77653a610a6d76f403c))
+* deck crash ([#8858](https://github.com/dxos/dxos/issues/8858)) ([6bd76ed](https://github.com/dxos/dxos/commit/6bd76ed98e6366e34617246350ec1eb262993723))
+* journal date rendering ([#8891](https://github.com/dxos/dxos/issues/8891)) ([6a43cc4](https://github.com/dxos/dxos/commit/6a43cc4e4a76bf608ccad6a29a211ac60b424e1b))
+* Outline container has incorrect type ([#8876](https://github.com/dxos/dxos/issues/8876)) ([8cf9eb0](https://github.com/dxos/dxos/commit/8cf9eb057cfdc6f8b4edee226228e773d5f6524f))
+* outliner move items ([#8877](https://github.com/dxos/dxos/issues/8877)) ([ede748d](https://github.com/dxos/dxos/commit/ede748dd16bf7cddcc9d296c3312285c5fa6d637))
+* **plugin-deck:** Add an ErrorBoundary to DeckLayout’s Dialogs ([#8826](https://github.com/dxos/dxos/issues/8826)) ([804758d](https://github.com/dxos/dxos/commit/804758d2e2614caa4761c237c3cd43e7835b6045))
+* **plugin-registry:** Overflow issues ([#8813](https://github.com/dxos/dxos/issues/8813)) ([4ec0a24](https://github.com/dxos/dxos/commit/4ec0a2471510506cb30993c32d3330ad37fd079f))
+* prompt bar error message & chess instructions ([#8828](https://github.com/dxos/dxos/issues/8828)) ([b018277](https://github.com/dxos/dxos/commit/b018277bc7c09a5942caaf382a72cc0bc48e5446))
+* Remove `lit-grid` from `tsconfig.paths.json` ([#8857](https://github.com/dxos/dxos/issues/8857)) ([3b366e8](https://github.com/dxos/dxos/commit/3b366e852c471b62b64332d33f97e6d7544f6406))
+* thread message deletion ([#8865](https://github.com/dxos/dxos/issues/8865)) ([2529f92](https://github.com/dxos/dxos/commit/2529f9206dbc21bbc70c9eb8c6ec65313a1a8b06))
+* workflow error handling, functions preloading, filter codec ([#8834](https://github.com/dxos/dxos/issues/8834)) ([ba2dec9](https://github.com/dxos/dxos/commit/ba2dec9c6b8f7c38f4571bd3fbf5ca4842e0859d))
+
 ## [0.8.0](https://github.com/dxos/dxos/compare/v0.7.4...v0.8.0) (2025-03-14)
 
 
