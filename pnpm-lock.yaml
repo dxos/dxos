@@ -10747,6 +10747,12 @@ importers:
 
   packages/ui/lit-ui:
     dependencies:
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../primitives/react-hooks
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../react-ui-types
       lit:
         specifier: ^3.2.0
         version: 3.2.0
