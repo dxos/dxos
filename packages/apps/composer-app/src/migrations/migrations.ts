@@ -11,7 +11,7 @@ import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dx
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
-import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space/types';
+import { CollectionType, ThreadType } from '@dxos/plugin-space/types';
 import { TableType } from '@dxos/react-ui-table/types';
 import { TextType, MessageType } from '@dxos/schema';
 import { getDeep, isNode, isNonNullable } from '@dxos/util';
@@ -199,46 +199,6 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             props: data.props,
           },
         }));
-      }
-
-      //
-      // Threads
-      //
-
-      const { objects: threads } = await space.db.query(Filter.schema(LegacyTypes.ThreadType)).run();
-      const documentThreads = docs
-        .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.target))
-        .filter(isNonNullable);
-      const standaloneThreads = threads.filter((thread) => !documentThreads.includes(thread));
-
-      for (const thread of standaloneThreads) {
-        const messages = await RefArray.loadAll(thread.messages);
-        for (const message of messages) {
-          // NOTE: Catching errors because some messages may not have block content.
-          const { content } = (await message.blocks[0].content?.load().catch(() => ({ content: '' }))) ?? {
-            content: '',
-          };
-          await builder.migrateObject(message.id, ({ data }) => ({
-            schema: MessageType,
-            props: {
-              sender: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
-              created: data.blocks[0].timestamp,
-              blocks: [{ type: 'text', text: content }],
-            },
-          }));
-        }
-
-        await builder.migrateObject(thread.id, ({ data }) => ({
-          schema: ThreadType,
-          props: {
-            name: data.title,
-            anchor: undefined,
-            messages: data.messages,
-          },
-        }));
-
-        const threadRef = builder.createReference(thread.id);
-        await builder.addObject(ChannelType, { name: thread.title, threads: [threadRef] });
       }
     },
   },
