@@ -172,24 +172,6 @@ describe('Composer migrations', () => {
         ],
       }),
     );
-    const thread2 = space.db.add(
-      create(LegacyTypes.ThreadType, {
-        title: 'My Thread',
-        messages: [
-          makeRef(
-            create(LegacyTypes.MessageType, {
-              from: { identityKey: PublicKey.random().toHex() },
-              blocks: [
-                {
-                  timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'hello world' })),
-                },
-              ],
-            }),
-          ),
-        ],
-      }),
-    );
     const cursor = toCursorRange(createDocAccessor(doc1.content!.target!, ['content']), 0, 3);
     doc1.comments?.push({ cursor, thread: makeRef(thread1) });
     expect(doc1.comments![0].thread?.target instanceof LegacyTypes.ThreadType).to.be.true;
