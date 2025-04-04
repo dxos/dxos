@@ -105,3 +105,5 @@ jobs:
             method = app-store
             [mac.codesign]
             identity = ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_IDENTITY }}
+            [mac.distribution]
+            method = app-store
