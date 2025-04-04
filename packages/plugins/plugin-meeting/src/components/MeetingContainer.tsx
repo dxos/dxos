@@ -16,7 +16,7 @@ import { type MeetingType } from '../types';
 export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
   const { t } = useTranslation(MEETING_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const [activeTab, setActiveTab] = useState<string>('transcript');
+  const [activeTab, setActiveTab] = useState<string>('notes');
   const transcript = meeting.transcript?.target;
   const notes = meeting.notes?.target;
   const summary = meeting.summary?.target;
@@ -30,8 +30,9 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
 
     setIsSummarizing(true);
     try {
+      // TODO(wittjosiah): Provide flattened notes as context.
       const { data: summaryText, error } = await dispatch(
-        createIntent(TranscriptionAction.Summarize, { transcript, context: notes?.content }),
+        createIntent(TranscriptionAction.Summarize, { transcript, context: undefined }),
       );
       summary.content = summaryText ?? error?.message ?? t('summarizing transcript error');
       setActiveTab('summary');
@@ -40,6 +41,8 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
     }
   }, [transcript, summary, notes, dispatch, t]);
 
+  // TODO(wittjosiah): The tabpanels can be blank if plugins are disabled.
+  //  Add placeholder with one click to enable required plugins.
   return (
     <StackItem.Content toolbar={false} classNames='relative'>
       <Tabs.Root
@@ -49,8 +52,8 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
         classNames='grid grid-rows-[min-content_1fr] [&>[role="tabpanel"]]:min-bs-0 [&>[role="tabpanel"][data-state="active"]]:grid'
       >
         <Tabs.Tablist classNames='border-be border-separator'>
-          <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
           <Tabs.Tab value='notes'>{t('notes tab label')}</Tabs.Tab>
+          <Tabs.Tab value='transcript'>{t('transcript tab label')}</Tabs.Tab>
           <ButtonGroup>
             <Tabs.Tab value='summary'>{t('summary tab label')}</Tabs.Tab>
             <IconButton
@@ -64,11 +67,9 @@ export const MeetingContainer = ({ meeting }: { meeting: MeetingType }) => {
             />
           </ButtonGroup>
         </Tabs.Tablist>
+        <Tabs.Tabpanel value='notes'>{notes && <Surface role='tabpanel' data={{ subject: notes }} />}</Tabs.Tabpanel>
         <Tabs.Tabpanel value='transcript'>
           {transcript && <Surface role='tabpanel' data={{ subject: transcript }} />}
-        </Tabs.Tabpanel>
-        <Tabs.Tabpanel value='notes'>
-          {notes && <Surface role='tabpanel' data={{ id: meeting.id, subject: notes }} />}
         </Tabs.Tabpanel>
         <Tabs.Tabpanel value='summary'>
           {(summary?.content.length ?? 0) > 0 ? (
