@@ -92,6 +92,7 @@ jobs:
           target: ./packages/apps/composer-app
           # platforms: macos linux ios
           platforms: ios macos
+          production: true
           apple-team-id: ${{ secrets.APPLE_TEAM_ID }}
           apple-codesign-certificate-p12: ${{ secrets.APPLE_DISTRIBUTION_CODESIGN_CERTIFICATE_P12 }}
           apple-codesign-certificate-password: ${{ secrets.APPLE_CODESIGN_CERTIFICATE_PASSWORD }}
