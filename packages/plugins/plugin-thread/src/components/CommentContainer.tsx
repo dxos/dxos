@@ -180,7 +180,13 @@ export const CommentContainer = ({
       </div>
       {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
       {RefArray.targets(thread.messages?.filter(isNonNullable) ?? []).map((message) => (
-        <MessageContainer key={message.id} message={message} members={members} onDelete={handleMessageDelete} />
+        <MessageContainer
+          key={message.id}
+          editable
+          message={message}
+          members={members}
+          onDelete={handleMessageDelete}
+        />
       ))}
       {/*
         TODO(wittjosiah): Can't autofocus this generally.

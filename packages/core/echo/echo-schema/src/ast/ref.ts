@@ -13,7 +13,7 @@ import {
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
-import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { getObjectIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
 import type { ObjectId } from '../object';
 import { type WithId } from '../types';
@@ -51,10 +51,10 @@ export interface Ref$<T extends WithId> extends S.SchemaClass<Ref<T>, EncodedRef
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
+  schemaIdentifier: string;
+
   isRef: (obj: any) => obj is Ref<any>;
   hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
-
-  schemaIdentifier: string;
 }
 
 /**
@@ -67,7 +67,7 @@ export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> 
   }
 
   return createEchoReferenceSchema(
-    getEchoIdentifierAnnotation(schema),
+    getObjectIdentifierAnnotation(schema),
     annotation.typename,
     annotation.version,
     getSchemaExpectedName(schema.ast),

@@ -19,8 +19,7 @@ export default () =>
     createSurface({
       id: `${THREAD_PLUGIN}/channel`,
       role: 'article',
-      filter: (data): data is { subject: ChannelType } =>
-        data.subject instanceof ChannelType && !!data.subject.threads[0],
+      filter: (data): data is { subject: ChannelType } => data.subject instanceof ChannelType,
       component: ({ data: { subject: channel }, role }) => {
         const layout = useLayout();
         const currentPosition = layout.active.findIndex((id) => id === channel.id);

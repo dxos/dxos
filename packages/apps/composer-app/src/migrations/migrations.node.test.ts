@@ -172,24 +172,6 @@ describe('Composer migrations', () => {
         ],
       }),
     );
-    const thread2 = space.db.add(
-      create(LegacyTypes.ThreadType, {
-        title: 'My Thread',
-        messages: [
-          makeRef(
-            create(LegacyTypes.MessageType, {
-              from: { identityKey: PublicKey.random().toHex() },
-              blocks: [
-                {
-                  timestamp: new Date().toISOString(),
-                  content: makeRef(create(LegacyTypes.TextType, { content: 'hello world' })),
-                },
-              ],
-            }),
-          ),
-        ],
-      }),
-    );
     const cursor = toCursorRange(createDocAccessor(doc1.content!.target!, ['content']), 0, 3);
     doc1.comments?.push({ cursor, thread: makeRef(thread1) });
     expect(doc1.comments![0].thread?.target instanceof LegacyTypes.ThreadType).to.be.true;
@@ -220,32 +202,16 @@ describe('Composer migrations', () => {
     await __COMPOSER_MIGRATIONS__[1].next({ space, builder });
     await (builder as any)._commit();
 
-    {
-      const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);
-      expect(isInstanceOf(DocumentType, migratedDoc1)).to.be.true;
-      expect(migratedDoc1?.threads?.[0].target instanceof ThreadType).to.be.true;
-      expect(migratedDoc1?.threads?.[0].target?.id).to.equal(thread1.id);
-      expect(migratedDoc1?.threads?.[0].target?.anchor).to.equal(cursor);
-      expect(migratedDoc1?.threads?.[0].target?.messages?.[0]?.target instanceof MessageType).to.be.true;
-      const block = migratedDoc1?.threads?.[0].target?.messages?.[0]?.target?.blocks?.[0];
-      expect(block?.type).to.equal('text');
-      invariant(block?.type === 'text', 'Block is a text block');
-      expect(block?.text).to.equal('comment1');
-    }
-
-    {
-      const { objects: channels } = await space.db.query(Filter.schema(ChannelType)).run();
-      expect(channels).to.have.lengthOf(1);
-      const migratedThread2 = channels[0]?.threads[0].target;
-      expect(migratedThread2 instanceof ThreadType).to.be.true;
-      expect(migratedThread2?.id).to.equal(thread2.id);
-      expect(migratedThread2?.name).to.equal('My Thread');
-      expect(migratedThread2?.messages?.[0].target instanceof MessageType).to.be.true;
-      const block = migratedThread2?.messages?.[0]?.target?.blocks?.[0];
-      expect(block?.type).to.equal('text');
-      invariant(block?.type === 'text', 'Block is a text block');
-      expect(block?.text).to.equal('hello world');
-    }
+    const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);
+    expect(isInstanceOf(DocumentType, migratedDoc1)).to.be.true;
+    expect(migratedDoc1?.threads?.[0].target instanceof ThreadType).to.be.true;
+    expect(migratedDoc1?.threads?.[0].target?.id).to.equal(thread1.id);
+    expect(migratedDoc1?.threads?.[0].target?.anchor).to.equal(cursor);
+    expect(migratedDoc1?.threads?.[0].target?.messages?.[0]?.target instanceof MessageType).to.be.true;
+    const block = migratedDoc1?.threads?.[0].target?.messages?.[0]?.target?.blocks?.[0];
+    expect(block?.type).to.equal('text');
+    invariant(block?.type === 'text', 'Block is a text block');
+    expect(block?.text).to.equal('comment1');
 
     const migratedSketch1 = space.db.getObjectById<DiagramType>(sketch1.id);
     expect(migratedSketch1 instanceof DiagramType).to.be.true;

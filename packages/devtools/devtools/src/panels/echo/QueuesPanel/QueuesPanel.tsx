@@ -66,13 +66,8 @@ export const QueuesPanel = () => {
     >
       <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
         <DynamicTable properties={properties} data={tableData} onRowClicked={handleRowClicked} />
-
         <div className={mx('flex overflow-auto', 'h-1/2')}>
-          {selected ? (
-            <ObjectDataViewer object={selectedVersionObject ?? selected} />
-          ) : (
-            'Select an object to inspect the contents'
-          )}
+          {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}
         </div>
       </div>
     </PanelContainer>

@@ -21,20 +21,21 @@ import { KANBAN_PLUGIN } from './meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-export const InitialSchemaAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialSchema');
-export const InitialPivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/InitialPivotColumn');
+// TODO(burdon): Move to FormatEnum or SDK.
+export const TypenameAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/Typename');
+export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
 
 export const CreateKanbanSchema = S.Struct({
   name: S.optional(S.String),
-  initialSchema: S.optional(
+  typename: S.optional(
     S.String.annotations({
-      [InitialSchemaAnnotationId]: true,
+      [TypenameAnnotationId]: true,
       [TitleAnnotationId]: 'Select card schema (leave empty to start fresh)',
     }),
   ),
   initialPivotColumn: S.optional(
     S.String.annotations({
-      [InitialPivotColumnAnnotationId]: true,
+      [PivotColumnAnnotationId]: true,
       [TitleAnnotationId]: 'Pivot column',
     }),
   ),
@@ -96,7 +97,7 @@ export type Location = {
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
 
-export const createKanban = async (props: { space: Space; initialSchema?: string; initialPivotColumn?: string }) => {
+export const createKanban = async (props: { space: Space; typename?: string; initialPivotColumn?: string }) => {
   const { kanban } = await initializeKanban(props);
   return kanban;
 };

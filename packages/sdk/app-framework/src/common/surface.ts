@@ -78,4 +78,9 @@ export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
   component: SurfaceComponent<GuardedType<SurfaceDefinition<T>['filter']>>;
 }>;
 
-export const createSurface = <T extends Record<string, any> = any>(definition: SurfaceDefinition<T>) => definition;
+/**
+ * Creates a surface definition.
+ */
+export const createSurface = <T extends Record<string, any> = any>(
+  definition: SurfaceDefinition<T>,
+): SurfaceDefinition<T> => definition;
