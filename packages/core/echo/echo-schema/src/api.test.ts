@@ -25,7 +25,7 @@ const Org = S.Struct({
   }),
 );
 
-type Org = S.TypeOf<typeof Org>;
+type Org = S.Schema.Type<typeof Org>;
 
 const Contact = S.Struct({
   name: S.String,
@@ -37,11 +37,11 @@ const Contact = S.Struct({
   }),
 );
 
-type Contact = S.TypeOf<typeof Contact>;
+type Contact = S.Schema.Type<typeof Contact>;
 
 describe('api review', () => {
   test('basic', () => {
-    const obj: Contact = {};
+    const obj: Contact = {} as Contact;
     getTypename(obj);
   });
 });
